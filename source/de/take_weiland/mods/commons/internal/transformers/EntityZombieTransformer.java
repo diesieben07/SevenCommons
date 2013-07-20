@@ -18,13 +18,7 @@ public class EntityZombieTransformer extends PrependingTransformer {
 
 	@Override
 	protected InsnList getPrepends(ClassNode clazz, MethodNode method) {
-		
-		System.out.println(clazz.methods.get(1).desc);
 		InsnList insns = new InsnList();
-		
-//		for (int i = 0; i < method.instructions.size(); i++) {
-//			System.out.println(method.instructions.get(i).getOpcode() + " : " + method.instructions.get(i).getType());
-//		}
 		
 		// load this
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
@@ -35,7 +29,7 @@ public class EntityZombieTransformer extends PrependingTransformer {
 		LabelNode skipReturn = new LabelNode();
 //		
 		// if zero returned (= false => don't cancel) skip the canceling (which is just a return)
-		insns.add(new JumpInsnNode(Opcodes.IFNE, skipReturn));
+		insns.add(new JumpInsnNode(Opcodes.IFEQ, skipReturn));
 		
 		// cancel the event (just return from the method)
 		insns.add(new InsnNode(Opcodes.RETURN));
