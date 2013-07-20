@@ -28,7 +28,7 @@ public class EntityZombieTransformer extends PrependingTransformer {
 
 		LabelNode skipReturn = new LabelNode();
 //		
-		// if zero returned (= false => don't cancel) skip the canceling (which is just a return)
+		// if zero returned (= false => don't cancel) skip the canceling
 		insns.add(new JumpInsnNode(Opcodes.IFEQ, skipReturn));
 		
 		// cancel the event (just return from the method)

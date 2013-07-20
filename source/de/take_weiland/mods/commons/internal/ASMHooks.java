@@ -13,6 +13,8 @@ public final class ASMHooks {
 
 	private ASMHooks() { }
 	
+	private static final int ZOMBIE_IS_CONVERTING_FLAG = 14;
+	
 	public static final void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {
 		MinecraftForge.EVENT_BUS.post(new PlayerCloneEvent(oldPlayer, newPlayer));
 	}
@@ -22,7 +24,12 @@ public final class ASMHooks {
 	}
 	
 	public static final boolean onZombieConvert(EntityZombie zombie) {
-		return MinecraftForge.EVENT_BUS.post(new ZombieConvertEvent(zombie));
+		if (MinecraftForge.EVENT_BUS.post(new ZombieConvertEvent(zombie))) {
+			zombie.getDataWatcher().updateObject(ZOMBIE_IS_CONVERTING_FLAG, Byte.valueOf((byte)0)); // reset the isConverting flag if the event was canceled
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 }
