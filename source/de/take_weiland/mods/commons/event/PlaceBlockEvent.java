@@ -13,15 +13,25 @@ public abstract class PlaceBlockEvent extends PlayerEvent {
 	public final int x;
 	public final int y;
 	public final int z;
+	
+	public final int side;
+	public final float hitX;
+	public final float hitY;
+	public final float hitZ;
+	
 	public final ItemStack item;
 	
-	public PlaceBlockEvent(EntityPlayer player, int x, int y, int z, ItemStack item) {
+	public PlaceBlockEvent(EntityPlayer player, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
 		super(player);
-		this.world = player.worldObj;
 		this.x = x;
 		this.y = y;
 		this.z = z;
+		this.side = side;
+		this.hitX = hitX;
+		this.hitY = hitY;
+		this.hitZ = hitZ;
 		this.item = item;
+		this.world = player.worldObj;
 	}
 
 	/**
@@ -29,12 +39,14 @@ public abstract class PlaceBlockEvent extends PlayerEvent {
 	 * @author diesieben07
 	 *
 	 */
+	@Cancelable
 	public static class Pre extends PlaceBlockEvent {
 
-		public Pre(EntityPlayer player, int x, int y, int z, ItemStack item) {
-			super(player, x, y, z, item);
+		public Pre(EntityPlayer player, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
+			super(player, x, y, z, side, hitX, hitY, hitZ, item);
 		}
-		
+
+
 	}
 	
 	/**
@@ -43,12 +55,11 @@ public abstract class PlaceBlockEvent extends PlayerEvent {
 	 * @author diesieben07
 	 *
 	 */
-	@Cancelable
 	public static class Post extends PlaceBlockEvent {
 
-		public Post(EntityPlayer player, int x, int y, int z, ItemStack item) {
-			super(player, x, y, z, item);
+		public Post(EntityPlayer player, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
+			super(player, x, y, z, side, hitX, hitY, hitZ, item);
 		}
-		
+
 	}
 }

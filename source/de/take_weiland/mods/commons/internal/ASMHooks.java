@@ -4,8 +4,10 @@ import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import de.take_weiland.mods.commons.event.LivingBreedEvent;
+import de.take_weiland.mods.commons.event.PlaceBlockEvent;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.ZombieConvertEvent;
 
@@ -32,4 +34,11 @@ public final class ASMHooks {
 		}
 	}
 	
+	public static final boolean onBlockPlacePre(EntityPlayer player, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
+		return MinecraftForge.EVENT_BUS.post(new PlaceBlockEvent.Pre(player, x, y, z, side, hitX, hitY, hitZ, item));
+	}
+	
+	public static final void onBlockPlacePost(EntityPlayer player, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
+		MinecraftForge.EVENT_BUS.post(new PlaceBlockEvent.Post(player, x, y, z, side, hitX, hitY, hitZ, item));
+	}
 }
