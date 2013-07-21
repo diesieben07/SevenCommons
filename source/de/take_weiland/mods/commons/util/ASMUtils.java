@@ -68,6 +68,10 @@ public final class ASMUtils {
 		return name.replace('.', '/');
 	}
 	
+	public static final String undoInternalName(String name) {
+		return name.replace('/', '.');
+	}
+	
 	public static final MethodInsnNode generateStaticMethodCall(String targetClass, String methodName, Type returnType, Type... params) {
 		return new MethodInsnNode(Opcodes.INVOKESTATIC, makeNameInternal(targetClass), methodName, Type.getMethodDescriptor(returnType, params));
 	}

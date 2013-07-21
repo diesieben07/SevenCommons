@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.transformers;
+package de.take_weiland.mods.commons.internal.transformers.mc;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -51,8 +51,8 @@ public class EntityZombieTransformer extends PrependingTransformer {
 	}
 
 	@Override
-	protected String getClassName() {
-		return "net.minecraft.entity.monster.EntityZombie";
+	protected boolean transforms(String className) {
+		return className.equals("net.minecraft.entity.monster.EntityZombie");
 	}
 
 }

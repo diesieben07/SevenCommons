@@ -4,6 +4,11 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 
+/**
+ * MethodTransformer that prepends instructions in front of the method code
+ * @author diesieben07
+ *
+ */
 public abstract class PrependingTransformer extends MethodTransformer {
 
 	@Override

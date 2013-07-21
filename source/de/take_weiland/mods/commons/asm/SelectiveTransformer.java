@@ -6,18 +6,23 @@ import org.objectweb.asm.tree.ClassNode;
 
 import net.minecraft.launchwrapper.IClassTransformer;
 
-public abstract class ClassTransformer implements IClassTransformer {
+/**
+ * IClassTransformer that selects the classes to be transformed via their name
+ * @author diesieben07
+ *
+ */
+public abstract class SelectiveTransformer implements IClassTransformer {
 
 	@Override
 	public final byte[] transform(String name, String transformedName, byte[] bytes) {
-		if (transformedName.equals(getClassName())) {
+		if (transforms(transformedName)) {
 			ClassReader reader = new ClassReader(bytes);
 			ClassNode clazz = new ClassNode();
 			reader.accept(clazz, 0);
 			
-			System.out.println("Transforming class " + transformedName);
-			
 			if (transform(clazz)) {
+				
+				System.out.println("Transforming class " + transformedName);
 				
 				ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
 				clazz.accept(writer);
@@ -27,7 +32,7 @@ public abstract class ClassTransformer implements IClassTransformer {
 		return bytes;
 	}
 	
-	protected abstract String getClassName();
+	protected abstract boolean transforms(String className);
 	
 	protected abstract boolean transform(ClassNode clazz);
 	

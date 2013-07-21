@@ -5,7 +5,12 @@ import org.objectweb.asm.tree.MethodNode;
 
 import de.take_weiland.mods.commons.util.ASMUtils;
 
-public abstract class MethodTransformer extends ClassTransformer {
+/**
+ * ClassTransformer to transform a single method
+ * @author diesieben07
+ *
+ */
+public abstract class MethodTransformer extends SelectiveTransformer {
 
 	@Override
 	protected final boolean transform(ClassNode clazz) {

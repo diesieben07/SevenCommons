@@ -1,0 +1,78 @@
+package de.take_weiland.mods.commons.network;
+
+import java.util.Map;
+import java.util.Set;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.INetworkManager;
+import net.minecraft.network.packet.Packet250CustomPayload;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
+import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteStreams;
+
+import cpw.mods.fml.common.network.IPacketHandler;
+import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.Player;
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.util.ModdingUtils;
+
+public final class ModPacketHandler implements IPacketHandler {
+
+	public static final void setupNetworking(Object mod, PacketType[] packets) {
+		new ModPacketHandler(mod, packets);
+	}
+	
+	private final Map<Integer, PacketType> packets;
+	
+	private ModPacketHandler(Object mod, PacketType[] packets) {
+		Set<String> channels = Sets.newHashSetWithExpectedSize(1);
+		
+		ImmutableMap.Builder<Integer, PacketType> builder = ImmutableMap.builder();
+		for (PacketType packet : packets) {
+			builder.put(Integer.valueOf(packet.getPacketId()), packet);
+			channels.add(packet.getChannel());
+		}
+		this.packets = builder.build();
+		
+		for (String channel : channels) {
+			NetworkRegistry.instance().registerChannel(this, channel);
+		}
+		
+		SevenCommons.LOGGER.info(String.format("Registered ModPacketHandler for %s", mod.getClass().getSimpleName()));
+	}
+	
+	@Override
+	public void onPacketData(INetworkManager manager, Packet250CustomPayload packet, Player player) {
+		ByteArrayDataInput data = ByteStreams.newDataInput(packet.data);
+		Integer packetId = Integer.valueOf(data.readUnsignedByte());
+
+		try {
+			PacketType type = packets.get(packetId);
+			if (type == null) {
+				throw new NetworkException(String.format("Unknown packetId: %s", packetId));
+			}
+		
+			handleReceivedPacket(type, data, (EntityPlayer)player);
+		} catch (Throwable t) {
+			SevenCommons.LOGGER.severe(String.format("Exception during packet handling for player %s with channel %s", ((EntityPlayer)player).username, packet.channel));
+			t.printStackTrace();
+			if (player instanceof EntityPlayerMP) {
+				((EntityPlayerMP)player).playerNetServerHandler.kickPlayerFromServer("Protocol Error!");
+			}
+		}
+	}
+	
+	private final void handleReceivedPacket(PacketType type, ByteArrayDataInput in, EntityPlayer player) throws ReflectiveOperationException {
+		ModPacket mp = type.getPacketClass().newInstance();
+		Side side = ModdingUtils.determineSide(player);
+		if (!mp.isValidForSide(side)) {
+			throw new NetworkException("Packet " + mp.getClass().getSimpleName() + " received for invalid side " + side);
+		}
+		mp.readData(in);
+		mp.execute(player, side);
+	}
+}

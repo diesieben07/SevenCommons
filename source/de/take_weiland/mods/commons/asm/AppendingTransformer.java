@@ -6,6 +6,11 @@ import org.objectweb.asm.tree.MethodNode;
 
 import de.take_weiland.mods.commons.util.ASMUtils;
 
+/**
+ * MethodTransformer that appends instructions to the method
+ * @author diesieben07
+ *
+ */
 public abstract class AppendingTransformer extends MethodTransformer {
 
 	@Override
