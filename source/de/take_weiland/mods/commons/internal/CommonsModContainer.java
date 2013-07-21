@@ -13,7 +13,6 @@ import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import de.take_weiland.mods.commons.event.PlaceBlockEvent;
-import de.take_weiland.mods.commons.util.ModdingUtils;
 
 public class CommonsModContainer extends DummyModContainer {
 
@@ -43,6 +42,5 @@ public class CommonsModContainer extends DummyModContainer {
 	
 	@ForgeSubscribe
 	public void onZombieConvert(PlaceBlockEvent.Pre event) {
-		
 	}
 }

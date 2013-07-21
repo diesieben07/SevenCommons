@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers.mc;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -19,10 +20,13 @@ import de.take_weiland.mods.commons.util.ASMUtils;
 
 public class ItemBlockTransformer extends MethodTransformer {
 
+	// TODO: find a different place for hooking this (placeBlockAt might get overridden by ItemBlock subclasses)
+	
 	@Override
 	protected boolean transform(ClassNode clazz, MethodNode method) {
 		final Type[] hookParams = new Type[] {
 			Type.getType(EntityPlayer.class),
+			Type.getType(World.class),
 			Type.INT_TYPE,
 			Type.INT_TYPE,
 			Type.INT_TYPE,
@@ -61,6 +65,7 @@ public class ItemBlockTransformer extends MethodTransformer {
 	
 	private static final void loadParams(InsnList insns) {
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 2)); // load the player
+		insns.add(new VarInsnNode(Opcodes.ALOAD, 3)); // load the world
 		
 		for (int i = 4; i <= 7; i++) { // load x, y, z, side
 			insns.add(new VarInsnNode(Opcodes.ILOAD, i));

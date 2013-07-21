@@ -21,8 +21,9 @@ public abstract class PlaceBlockEvent extends PlayerEvent {
 	
 	public final ItemStack item;
 	
-	public PlaceBlockEvent(EntityPlayer player, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
+	public PlaceBlockEvent(EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
 		super(player);
+		this.world = world;
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -31,7 +32,6 @@ public abstract class PlaceBlockEvent extends PlayerEvent {
 		this.hitY = hitY;
 		this.hitZ = hitZ;
 		this.item = item;
-		this.world = player.worldObj;
 	}
 
 	/**
@@ -42,8 +42,8 @@ public abstract class PlaceBlockEvent extends PlayerEvent {
 	@Cancelable
 	public static class Pre extends PlaceBlockEvent {
 
-		public Pre(EntityPlayer player, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
-			super(player, x, y, z, side, hitX, hitY, hitZ, item);
+		public Pre(EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
+			super(player, world, x, y, z, side, hitX, hitY, hitZ, item);
 		}
 
 
@@ -57,8 +57,8 @@ public abstract class PlaceBlockEvent extends PlayerEvent {
 	 */
 	public static class Post extends PlaceBlockEvent {
 
-		public Post(EntityPlayer player, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
-			super(player, x, y, z, side, hitX, hitY, hitZ, item);
+		public Post(EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
+			super(player, world, x, y, z, side, hitX, hitY, hitZ, item);
 		}
 
 	}
