@@ -72,6 +72,10 @@ public final class ASMUtils {
 		return name.replace('/', '.');
 	}
 	
+	public static final MethodInsnNode generateMethodCall(String targetClass, String methodName, Type returnType, Type... params) {
+		return new MethodInsnNode(Opcodes.INVOKEVIRTUAL, makeNameInternal(targetClass), methodName, Type.getMethodDescriptor(returnType, params));
+	}
+	
 	public static final MethodInsnNode generateStaticMethodCall(String targetClass, String methodName, Type returnType, Type... params) {
 		return new MethodInsnNode(Opcodes.INVOKESTATIC, makeNameInternal(targetClass), methodName, Type.getMethodDescriptor(returnType, params));
 	}

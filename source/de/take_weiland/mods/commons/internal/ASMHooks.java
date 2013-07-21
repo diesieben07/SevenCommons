@@ -42,4 +42,5 @@ public final class ASMHooks {
 	public static final void onBlockPlacePost(EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
 		MinecraftForge.EVENT_BUS.post(new PlaceBlockEvent.Post(player, world, x, y, z, side, hitX, hitY, hitZ, item));
 	}
+	
 }

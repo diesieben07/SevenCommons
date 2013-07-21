@@ -4,6 +4,8 @@ import java.util.Arrays;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -12,7 +14,6 @@ import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import de.take_weiland.mods.commons.event.PlaceBlockEvent;
 
 public class CommonsModContainer extends DummyModContainer {
 
@@ -40,7 +41,4 @@ public class CommonsModContainer extends DummyModContainer {
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
-	@ForgeSubscribe
-	public void onZombieConvert(PlaceBlockEvent.Pre event) {
-	}
 }
