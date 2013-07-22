@@ -2,21 +2,20 @@ package de.take_weiland.mods.commons.internal;
 
 import java.util.Arrays;
 
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.ForgeSubscribe;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
-
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModMetadata;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import de.take_weiland.mods.commons.updater.UpdateController;
 
 public class CommonsModContainer extends DummyModContainer {
 
+	private UpdateController updateController;
+	
 	public CommonsModContainer() {
 		super(new ModMetadata());
 		ModMetadata meta = getMetadata();
@@ -37,8 +36,9 @@ public class CommonsModContainer extends DummyModContainer {
 	}
 	
 	@Subscribe
-	public void preInit(FMLPreInitializationEvent event) {
-		MinecraftForge.EVENT_BUS.register(this);
+	public void postInit(FMLPostInitializationEvent event) {
+		updateController = new UpdateController();
+		updateController.searchForUpdates(Loader.instance().getIndexedModList().get("testmod"));
 	}
 	
 }
