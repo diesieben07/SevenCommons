@@ -32,7 +32,7 @@ public enum ModUpdateState {
 		
 		@Override
 		boolean canTransition(ModUpdateState state) {
-			return state == CHECKING_FAILED || state == UP_TO_DATE || state == UPDATES_AVAILABLE || state == CANNOT_INSTALL || state == MINECRAFT_OUTDATED;
+			return state == CHECKING_FAILED || state == UP_TO_DATE || state == UPDATES_AVAILABLE || state == MINECRAFT_OUTDATED;
 		}
 		
 	},
@@ -70,17 +70,6 @@ public enum ModUpdateState {
 		
 	},
 	/**
-	 * updates are available for this mod, but can't be auto-installed for whatever reason
-	 */
-	CANNOT_INSTALL {
-		
-		@Override
-		boolean canTransition(ModUpdateState state) {
-			return state == CHECKING;
-		}
-		
-	},
-	/**
 	 * there are updates available they are for a newer minecraft version
 	 */
 	MINECRAFT_OUTDATED {
@@ -98,7 +87,7 @@ public enum ModUpdateState {
 		
 		@Override
 		boolean canTransition(ModUpdateState state) {
-			return state == DOWNLOAD_FAILED || state == INSTALLING;
+			return state == DOWNLOAD_FAILED;
 		}
 		
 	},
@@ -114,34 +103,11 @@ public enum ModUpdateState {
 		
 	},
 	/**
-	 * installing the new version
-	 */
-	INSTALLING {
-		
-		@Override
-		boolean canTransition(ModUpdateState state) {
-			return state == INSTALL_FAILED || state == PENDING_RESTART;
-		}
-		
-	},
-	/**
-	 * failed to install for whatever reason
-	 */
-	INSTALL_FAILED {
-		
-		@Override
-		boolean canTransition(ModUpdateState state) {
-			return state == CHECKING || state == INSTALLING || state == DOWNLOADING;
-		}
-		
-	},
-	/**
 	 * installed successfully, pending a minecraft restart
 	 */
 	PENDING_RESTART;
 	
 	public ModUpdateState transition(ModUpdateState desiredState) {
-		System.out.println("TRANSITION FROM " + this + " TO " + desiredState);
 		if (canTransition(desiredState)) {
 			return desiredState;
 		} else {
