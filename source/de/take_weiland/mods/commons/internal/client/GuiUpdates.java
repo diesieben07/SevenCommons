@@ -86,13 +86,16 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		fontRenderer.drawString(mod.getState().toString(), 12, yPos + 11, 0xffffff);
 		if (selectedIndex == index) {
 			int percent = -1;
+			int scaled = 0;
 			synchronized (this) {
 				if (downloadTotal > 0) {
 					percent = (int) ((100F / downloadTotal) * downloadProgress);
+					scaled = (int) ((139F / downloadTotal) * downloadProgress);
 				}
 			}
 			if (percent > 0) {
-				fontRenderer.drawString(percent + "%", 12, yPos + 22, 0xffffff);
+				drawRect(12, yPos + 22, 12 + scaled, yPos + 31, 0xff00ff00);
+				drawCenteredString(fontRenderer, percent + "%", 12 + 139 / 2, yPos + 22, 0xffffff);
 			}
 		}
 	}
@@ -111,6 +114,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		switch (button.id) {
 		case BUTTON_BACK:
 			close();
+			break;
 		case BUTTON_SEARCH:
 			controller.searchForUpdates(mods.get(selectedIndex));
 			break;
@@ -154,8 +158,12 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	public void onDownloadProgress(UpdatableMod mod, int progress, int total) {
 		if (selectedIndex >= 0 && mod == mods.get(selectedIndex)) {
 			synchronized (this) {
-				downloadTotal = total;
-				downloadProgress = progress;
+				if (total == progress) {
+					downloadTotal = -1;
+				} else {
+					downloadTotal = total;
+					downloadProgress = progress;
+				}
 			}
 		}
 	}
