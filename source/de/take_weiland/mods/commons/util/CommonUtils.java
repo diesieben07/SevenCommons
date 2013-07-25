@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
+import java.util.List;
+
 public final class CommonUtils {
 
 	private CommonUtils() { }
@@ -16,4 +18,11 @@ public final class CommonUtils {
 		return arrayIndexExists(array, index) ? array[index] : defaultValue;
 	}
 	
+	public static final boolean listIndexExists(List<?> list, int index) {
+		return index >= 0 && index < list.size();
+	}
+	
+	public static final <T> T safeListAccess(List<T> list, int index) {
+		return listIndexExists(list, index) ? list.get(index) : null;
+	}
 }
