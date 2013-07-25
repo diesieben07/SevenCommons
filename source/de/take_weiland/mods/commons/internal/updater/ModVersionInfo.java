@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal.updater;
 
 import java.io.Reader;
+import java.util.List;
 import java.util.SortedSet;
 
 import net.minecraft.crash.CallableMinecraftVersion;
@@ -10,8 +11,12 @@ import argo.jdom.JsonRootNode;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.versioning.ArtifactVersion;
@@ -36,14 +41,14 @@ public final class ModVersionInfo {
 	
 	private final ModVersion currentVersion;
 	
-	private final SortedSet<ModVersion> versions;
+	private final List<ModVersion> versions;
 	
-	private final SortedSet<ModVersion> installableVersions;
+	private final List<ModVersion> installableVersions;
 	
-	private ModVersionInfo(ImmutableSortedSet<ModVersion> versions, ModVersion currentVersion) {
+	private ModVersionInfo(List<ModVersion> versions, ModVersion currentVersion) {
 		this.versions = versions;
 
-		this.installableVersions = Sets.filter(this.versions, INSTALLABLE_FILTER);
+		this.installableVersions = ImmutableList.copyOf(Iterables.filter(versions, INSTALLABLE_FILTER));
 		
 		this.currentVersion = currentVersion;
 	}
@@ -52,25 +57,25 @@ public final class ModVersionInfo {
 		return currentVersion;
 	}
 	
-	public SortedSet<ModVersion> getAvailableVersions() {
+	public List<ModVersion> getAvailableVersions() {
 		return versions;
 	}
 	
-	public SortedSet<ModVersion> getInstallableVersions() {
+	public List<ModVersion> getInstallableVersions() {
 		return installableVersions;
 	}
 	
 	public ModVersion getNewestInstallableVersion() {
-		return installableVersions.isEmpty() ? null : installableVersions.first();
+		return installableVersions.isEmpty() ? null : installableVersions.get(0);
 	}
 	
 	public ModVersion getNewestVersion() {
-		return versions.isEmpty() ? null : versions.first();
+		return versions.isEmpty() ? null : versions.get(0);
 	}
 	
 	public static final ModVersionInfo create(Reader reader, ModContainer mod) throws InvalidModVersionException {
 		try {
-			ImmutableSortedSet.Builder<ModVersion> versions = ImmutableSortedSet.naturalOrder();
+			ImmutableList.Builder<ModVersion> versions = ImmutableList.builder();
 			JsonRootNode json = JSON_PARSER.parse(reader);
 			
 			if (!json.isArrayNode()) {
@@ -89,8 +94,7 @@ public final class ModVersionInfo {
 				String url = versionNode.getStringValue("url");
 				versions.add(new ModVersion(new DefaultArtifactVersion(modVersion), minecraftVersion, url));
 			}
-			
-			return new ModVersionInfo(versions.build(), new ModVersion(mod.getProcessedVersion()));
+			return new ModVersionInfo(Ordering.natural().immutableSortedCopy(versions.build()), new ModVersion(mod.getProcessedVersion()));
 		} catch (Throwable t) {
 			Throwables.propagateIfPossible(t);
 			return invalid(t);
@@ -129,7 +133,5 @@ public final class ModVersionInfo {
 		public boolean canBeInstalled() {
 			return minecraftVersion.equals(MINECRAFT_VERSION);
 		}
-		
 	}
-	
 }

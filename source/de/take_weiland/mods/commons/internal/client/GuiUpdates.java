@@ -6,12 +6,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.util.EnumChatFormatting;
 
 import org.lwjgl.input.Keyboard;
 
 import com.google.common.collect.ImmutableList;
 
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
+import de.take_weiland.mods.commons.internal.updater.ModVersionInfo.ModVersion;
+import de.take_weiland.mods.commons.internal.updater.ModVersionInfo;
+import de.take_weiland.mods.commons.internal.updater.ModsFolderMod;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.internal.updater.UpdateStateListener;
@@ -21,19 +25,24 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	private static final int BUTTON_BACK = 0;
 	private static final int BUTTON_SEARCH = 1;
 	private static final int BUTTON_UPDATE = 2;
+	private static final int BUTTON_VERSION = 3;
 	
 	private final GuiScreen parent;
 	private final UpdateController controller;
 	private GuiSlotUpdateList scroller;
-	final List<UpdatableMod> mods;
+	final List<ModsFolderMod> mods;
 	
 	private GuiButton buttonCheckUpdates;
 	private GuiButton buttonDownloadUpdate;
+	private GuiButton buttonVersionSelect;
 	
 	private int downloadProgress;
 	private int downloadTotal = -1;
 	
 	int selectedIndex = -1;
+	
+	int selectedVersionIndex;
+	ModVersion selectedVersion = null;
 	
 	public GuiUpdates(GuiScreen parent, UpdateController controller) {
 		this.parent = parent;
@@ -61,6 +70,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		
 		buttonList.add((buttonCheckUpdates = new GuiButton(BUTTON_SEARCH, width - btnWidth - 20, height - 81, btnWidth, 20, checkTxt)));
 		buttonList.add((buttonDownloadUpdate = new GuiButton(BUTTON_UPDATE, width - btnWidth - 20, height - 111, btnWidth, 20, updateTxt)));
+		buttonList.add((buttonVersionSelect = new GuiButton(BUTTON_VERSION, width - btnWidth - 20, height - 141, btnWidth, 20, "")));
 		
 		updateButtonState();
 	}
@@ -110,6 +120,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 
 	@Override
 	protected void actionPerformed(GuiButton button) {
+		UpdatableMod mod;
 		super.actionPerformed(button);
 		switch (button.id) {
 		case BUTTON_BACK:
@@ -119,14 +130,25 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 			controller.searchForUpdates(mods.get(selectedIndex));
 			break;
 		case BUTTON_UPDATE:
-			UpdatableMod mod = mods.get(selectedIndex);
+			mod = mods.get(selectedIndex);
 			controller.update(mod, mod.getVersionInfo().getNewestInstallableVersion());
+			break;
+		case BUTTON_VERSION:
+			mod = mods.get(selectedIndex);
+			selectedVersionIndex++;
+			if (selectedVersionIndex >= mod.getVersionInfo().getAvailableVersions().size()) {
+				selectedVersionIndex = 0;
+			}
+			selectedVersion = mod.getVersionInfo().getAvailableVersions().get(selectedVersionIndex);
+			updateButtonState();
 			break;
 		}
 	}
 
 	void clickSlot(int index, boolean doubleClick) {
 		selectedIndex = index;
+		selectedVersion = null;
+		
 		synchronized (this) {
 			downloadTotal = -1;
 		}
@@ -134,12 +156,40 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	}
 	
 	private void updateButtonState() {
-		buttonCheckUpdates.drawButton = buttonDownloadUpdate.drawButton = selectedIndex >= 0;
+		UpdatableMod mod = selectedIndex >= 0 ? mods.get(selectedIndex) : null;
 		if (selectedIndex >= 0) {
-			UpdatableMod mod = mods.get(selectedIndex);
 			ModUpdateState state = mod.getState();
 			buttonCheckUpdates.enabled = state.canTransition(ModUpdateState.CHECKING);
 			buttonDownloadUpdate.enabled = state.canTransition(ModUpdateState.DOWNLOADING);
+			
+			if (selectedVersion == null) {
+				ModVersionInfo versions = mod.getVersionInfo();
+				if (versions != null) {
+					selectedVersion = versions == null ? null : versions.getNewestInstallableVersion();
+				} else {
+					selectedVersion = null;
+				}
+			}
+		}
+		
+		buttonCheckUpdates.drawButton = buttonDownloadUpdate.drawButton = selectedIndex >= 0;
+		
+		buttonVersionSelect.drawButton = selectedIndex >= 0 && selectedVersion != null;
+		
+		if (selectedVersion != null) {
+			String format;
+			EnumChatFormatting color;
+			if (selectedVersion == mod.getVersionInfo().getNewestInstallableVersion()) {
+				color = EnumChatFormatting.DARK_GREEN;
+				format = I18n.func_135053_a("sevencommons.ui.updates.newest");
+			} else if (selectedVersion.canBeInstalled()) {
+				color = EnumChatFormatting.YELLOW;
+				format = I18n.func_135053_a("sevencommons.ui.updates.installable");
+			} else {
+				color = EnumChatFormatting.RED;
+				format = I18n.func_135053_a("sevencommons.ui.updates.wrongmc");
+			}
+			buttonVersionSelect.displayString = String.format(color + format, EnumChatFormatting.RESET + selectedVersion.modVersion.toString() + color, selectedVersion.minecraftVersion);
 		}
 	}
 	

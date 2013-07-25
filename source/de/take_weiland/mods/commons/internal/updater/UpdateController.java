@@ -12,7 +12,7 @@ public interface UpdateController {
 	 */
 	public void searchForUpdates();
 	
-	public Collection<UpdatableMod> getMods();
+	public Collection<ModsFolderMod> getMods();
 	
 	public UpdatableMod getMod(ModContainer mod);
 

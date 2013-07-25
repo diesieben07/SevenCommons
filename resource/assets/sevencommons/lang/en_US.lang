@@ -1,2 +1,5 @@
 sevencommons.ui.updates.check=Check for Updates
 sevencommons.ui.updates.update=Install Update
+sevencommons.ui.updates.newest=Newest %s
+sevencommons.ui.updates.installable=Installable %s
+sevencommons.ui.updates.wrongmc=Wrong Minecraft (%2$s) %1$s
