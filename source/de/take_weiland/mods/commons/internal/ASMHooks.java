@@ -1,5 +1,9 @@
 package de.take_weiland.mods.commons.internal;
 
+import java.util.List;
+
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityAnimal;
@@ -11,6 +15,7 @@ import de.take_weiland.mods.commons.event.LivingBreedEvent;
 import de.take_weiland.mods.commons.event.PlaceBlockEvent;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.ZombieConvertEvent;
+import de.take_weiland.mods.commons.event.client.GuiInitEvent;
 
 public final class ASMHooks {
 
@@ -41,6 +46,10 @@ public final class ASMHooks {
 	
 	public static final void onBlockPlacePost(EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
 		MinecraftForge.EVENT_BUS.post(new PlaceBlockEvent.Post(player, world, x, y, z, side, hitX, hitY, hitZ, item));
+	}
+	
+	public static final void onGuiInit(GuiScreen gui, List<GuiButton> buttons) {
+		MinecraftForge.EVENT_BUS.post(new GuiInitEvent(gui, buttons));
 	}
 	
 }

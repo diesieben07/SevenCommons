@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.updater;
+package de.take_weiland.mods.commons.internal.updater;
 
 public enum ModUpdateState {
 
@@ -8,11 +8,21 @@ public enum ModUpdateState {
 	LOADING {
 		
 		@Override
-		boolean canTransition(ModUpdateState state) {
-			return state == CHECKING || state == UNAVAILABLE || state == DISABLED;
+		public boolean canTransition(ModUpdateState state) {
+			return state == AVAILABLE || state == UNAVAILABLE || state == DISABLED;
 		}
 		
-	},	
+	},
+	
+	AVAILABLE {
+		
+		@Override
+		public boolean canTransition(ModUpdateState state) {
+			return state == CHECKING;
+		}
+		
+	},
+	
 	/**
 	 * this mod doesn't support updating<br>
 	 * reasons:
@@ -31,7 +41,7 @@ public enum ModUpdateState {
 	CHECKING {
 		
 		@Override
-		boolean canTransition(ModUpdateState state) {
+		public boolean canTransition(ModUpdateState state) {
 			return state == CHECKING_FAILED || state == UP_TO_DATE || state == UPDATES_AVAILABLE || state == MINECRAFT_OUTDATED;
 		}
 		
@@ -42,7 +52,7 @@ public enum ModUpdateState {
 	CHECKING_FAILED {
 
 		@Override
-		boolean canTransition(ModUpdateState state) {
+		public boolean canTransition(ModUpdateState state) {
 			return state == CHECKING;
 		}
 		
@@ -53,7 +63,7 @@ public enum ModUpdateState {
 	UP_TO_DATE {
 		
 		@Override
-		boolean canTransition(ModUpdateState state) {
+		public boolean canTransition(ModUpdateState state) {
 			return state == CHECKING;
 		}
 		
@@ -64,7 +74,7 @@ public enum ModUpdateState {
 	UPDATES_AVAILABLE {
 		
 		@Override
-		boolean canTransition(ModUpdateState state) {
+		public boolean canTransition(ModUpdateState state) {
 			return state == CHECKING || state == DOWNLOADING;
 		}
 		
@@ -75,7 +85,7 @@ public enum ModUpdateState {
 	MINECRAFT_OUTDATED {
 		
 		@Override
-		boolean canTransition(ModUpdateState state) {
+		public boolean canTransition(ModUpdateState state) {
 			return state == CHECKING;
 		}
 		
@@ -86,8 +96,8 @@ public enum ModUpdateState {
 	DOWNLOADING {
 		
 		@Override
-		boolean canTransition(ModUpdateState state) {
-			return state == DOWNLOAD_FAILED;
+		public boolean canTransition(ModUpdateState state) {
+			return state == DOWNLOAD_FAILED || state == PENDING_RESTART;
 		}
 		
 	},
@@ -97,7 +107,7 @@ public enum ModUpdateState {
 	DOWNLOAD_FAILED {
 		
 		@Override
-		boolean canTransition(ModUpdateState state) {
+		public boolean canTransition(ModUpdateState state) {
 			return state == DOWNLOADING || state == CHECKING;
 		}
 		
@@ -115,7 +125,7 @@ public enum ModUpdateState {
 		}
 	}
 	
-	boolean canTransition(ModUpdateState state) {
+	public boolean canTransition(ModUpdateState state) {
 		return false;
 	}
 }

@@ -34,11 +34,6 @@ public final class ASMUtils {
 		return FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(className, methodName, desc);
 	}
 	
-	public static final String obfuscateSrg(String srgName) {
-		int lastUnderscore = srgName.lastIndexOf('_');
-		return lastUnderscore > 0 ? srgName.substring(lastUnderscore + 1) : srgName;
-	}
-	
 	public static final String getFieldDescriptor(ClassNode clazz, String fieldName) {
 		for (FieldNode field : clazz.fields) {
 			if (field.name.equals(fieldName)) {

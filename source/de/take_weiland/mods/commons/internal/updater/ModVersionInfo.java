@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.updater;
+package de.take_weiland.mods.commons.internal.updater;
 
 import java.io.Reader;
 import java.util.SortedSet;

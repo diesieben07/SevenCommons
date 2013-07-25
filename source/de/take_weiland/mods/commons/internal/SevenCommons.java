@@ -10,7 +10,9 @@ import de.take_weiland.mods.commons.internal.transformers.PacketTransformer;
 import de.take_weiland.mods.commons.internal.transformers.mc.EntityAIMateTransformer;
 import de.take_weiland.mods.commons.internal.transformers.mc.EntityPlayerTransformer;
 import de.take_weiland.mods.commons.internal.transformers.mc.EntityZombieTransformer;
+import de.take_weiland.mods.commons.internal.transformers.mc.GuiScreenTransformer;
 import de.take_weiland.mods.commons.internal.transformers.mc.ItemBlockTransformer;
+import de.take_weiland.mods.commons.internal.updater.UpdateInstaller;
 
 @MCVersion("1.6.2")
 @TransformerExclusions({
@@ -37,7 +39,8 @@ public class SevenCommons implements IFMLLoadingPlugin {
 			EntityAIMateTransformer.class.getCanonicalName(),
 			EntityZombieTransformer.class.getCanonicalName(),
 			PacketTransformer.class.getCanonicalName(),
-			ItemBlockTransformer.class.getCanonicalName()
+			ItemBlockTransformer.class.getCanonicalName(),
+			GuiScreenTransformer.class.getCanonicalName()
 		};
 	}
 
@@ -48,7 +51,7 @@ public class SevenCommons implements IFMLLoadingPlugin {
 
 	@Override
 	public String getSetupClass() {
-		return null;
+		return UpdateInstaller.class.getCanonicalName();
 	}
 
 	@Override

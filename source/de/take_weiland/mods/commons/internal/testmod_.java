@@ -10,7 +10,7 @@ public class testmod_ {
 	
 	@EventHandler
 	public void onPreINit(FMLPreInitializationEvent event) {
-		event.getModMetadata().updateUrl = "file:///C:/Users/Take/Desktop/test.txt";
+		event.getModMetadata().updateUrl = "http://www.take-weiland.de/test.txt";
 	}
 	
 }

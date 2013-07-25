@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.updater;
+package de.take_weiland.mods.commons.internal.updater;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -13,27 +13,27 @@ import cpw.mods.fml.common.ModContainer;
 
 public class UpdatableMod {
 
-	private static final List<String> INTERNAL_MODS = Arrays.asList(
-			"mcp", "forge", "fml", "minecraft"
-			);
+	private static final List<String> INTERNAL_MODS = Arrays.asList("mcp", "forge", "fml", "minecraft");
 	
+	private final UpdateController controller;
 	private final ModContainer container;
 	private URL updateURL;
 	private ModUpdateState state = ModUpdateState.LOADING;
 	private ModVersionInfo versionInfo;
 	private File source;
 	
-	public UpdatableMod(ModContainer container) {
+	public UpdatableMod(UpdateController controller, ModContainer container) {
 		this.container = container;
+		this.controller = controller;
 		if (INTERNAL_MODS.contains(container.getModId().toLowerCase())) {
 			transition(ModUpdateState.UNAVAILABLE);
-			UpdateController.LOGGER.info(String.format("Skipping FML-Internal mod %s", container.getModId()));
+			UpdateControllerLocal.LOGGER.info(String.format("Skipping FML-Internal mod %s", container.getModId()));
 			return;
 		}
 		
 		if ((updateURL = getUpdateURL(container)) == null) {
 			transition(ModUpdateState.UNAVAILABLE);
-			UpdateController.LOGGER.info(String.format("Skipping mod %s with invalid or missing update URL", container.getModId()));
+			UpdateControllerLocal.LOGGER.info(String.format("Skipping mod %s with invalid or missing update URL", container.getModId()));
 			return;
 		}
 		
@@ -51,7 +51,9 @@ public class UpdatableMod {
 		
 		if (source == null) {
 			transition(ModUpdateState.UNAVAILABLE);
-			UpdateController.LOGGER.warning(String.format("Cannot update mod %s because it's not a valid jar file!", container.getModId()));
+			UpdateControllerLocal.LOGGER.warning(String.format("Cannot update mod %s because it's not a valid jar file!", container.getModId()));
+		} else {
+			transition(ModUpdateState.AVAILABLE);
 		}
 	}
 	
@@ -80,10 +82,14 @@ public class UpdatableMod {
 	}
 	
 	public boolean transition(ModUpdateState desiredState) {
+		boolean success;
 		synchronized (this) {
-			System.out.println(container.getModId() + " " + state + " => " + desiredState);
-			return (state = state.transition(desiredState)) == desiredState;
+			success = (state = state.transition(desiredState)) == desiredState;
 		}
+		if (success) {
+			controller.onStateChange(this);
+		}
+		return success;
 	}
 	
 	public ModUpdateState getState() {

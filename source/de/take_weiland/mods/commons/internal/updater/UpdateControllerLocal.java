@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.updater;
+package de.take_weiland.mods.commons.internal.updater;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -10,12 +10,15 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -24,9 +27,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
-import de.take_weiland.mods.commons.updater.ModVersionInfo.ModVersion;
+import de.take_weiland.mods.commons.internal.updater.ModVersionInfo.ModVersion;
 
-public class UpdateController {
+public class UpdateControllerLocal implements UpdateController {
 
 	private static final String LOG_CHANNEL = "Sevens ModUpdater";
 	static final Logger LOGGER;
@@ -37,21 +40,23 @@ public class UpdateController {
 	}
 
 	private ListeningExecutorService executor;
-	
+
+	private final Set<UpdateStateListener> listeners = Sets.newHashSet();
 	private final Map<ModContainer, UpdatableMod> mods;
 	
-	public UpdateController() {
+	public UpdateControllerLocal() {
 		mods = Maps.toMap(Loader.instance().getActiveModList(), new Function<ModContainer, UpdatableMod>() {
 			
 			public UpdatableMod apply(ModContainer mod) {
-				return new UpdatableMod(mod);
+				return new UpdatableMod(UpdateControllerLocal.this, mod);
 			}
 			
 		});
 		executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3, new ThreadFactoryBuilder().setNameFormat("Sevens ModUpdater %d").build()));
 	}
 	
-	private UpdatableMod getMod(ModContainer modContainer) {
+	@Override
+	public UpdatableMod getMod(ModContainer modContainer) {
 		UpdatableMod mod = mods.get(modContainer);
 		if (mod == null) {
 			throw new IllegalArgumentException(String.format("Mod %s, hasn't been registered to the UpdateController!", modContainer.getModId()));
@@ -59,36 +64,37 @@ public class UpdateController {
 		return mod;
 	}
 	
-	/**
-	 * search for updates on all mods
-	 */
+	@Override
+	public Collection<UpdatableMod> getMods() {
+		return mods.values();
+	}
+	
+	@Override
 	public void searchForUpdates() {
 		for (UpdatableMod mod : mods.values()) {
 			searchForUpdates(mod);
 		}
 	}
 	
-	/**
-	 * search for updates on the given mod
-	 * @param modContainer the mod
-	 */
-	public void searchForUpdates(ModContainer modContainer) {
-		searchForUpdates(getMod(modContainer));
-	}
-	
-	private void searchForUpdates(UpdatableMod mod) {
+	@Override
+	public void searchForUpdates(UpdatableMod mod) {
+		validate(mod);
 		if (mod.transition(ModUpdateState.CHECKING)) {
 			executor.execute(new SearchUpdates(mod));
 		}
 	}
 	
-	public void update(ModContainer mod, ModVersion version) {
-		update(getMod(mod), version);
-	}
-	
-	void update(UpdatableMod mod, ModVersion version) {
+	@Override
+	public void update(UpdatableMod mod, ModVersion version) {
+		validate(mod);
 		if (mod.transition(ModUpdateState.DOWNLOADING)) {
 			executor.execute(new InstallUpdate(mod, version));
+		}
+	}
+	
+	private void validate(UpdatableMod mod) {
+		if (!mods.containsKey(mod.getContainer())) { // check for the container here since key searching is faster
+			throw new IllegalArgumentException(String.format("Mod %s not valid for this UpdateController!", mod.getContainer().getModId()));
 		}
 	}
 	
@@ -173,6 +179,23 @@ public class UpdateController {
 				LOGGER.warning(String.format("Failed to download update for mod %s, the download URL is invalid", mod.getContainer().getModId()));
 				mod.transition(ModUpdateState.DOWNLOAD_FAILED);
 			}
+		}
+	}
+
+	@Override
+	public void registerListener(UpdateStateListener listener) {
+		listeners.add(listener);
+	}
+
+	@Override
+	public void unregisterListener(UpdateStateListener listener) {
+		listeners.remove(listener);
+	}
+
+	@Override
+	public void onStateChange(UpdatableMod mod) {
+		for (UpdateStateListener listener : listeners) {
+			listener.onStateChange(mod);
 		}
 	}
 }

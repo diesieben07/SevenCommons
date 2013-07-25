@@ -20,12 +20,12 @@ public class EntityAIMateTransformer extends AppendingTransformer {
 		
 		// load this.theAnimal
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		String fieldTheAnimal = ASMUtils.useMcpNames() ? "theAnimal" : ASMUtils.obfuscateSrg("field_75390_d");
+		String fieldTheAnimal = ASMUtils.useMcpNames() ? "theAnimal" : "d";
 		insns.add(new FieldInsnNode(Opcodes.GETFIELD, clazz.name, fieldTheAnimal, ASMUtils.getFieldDescriptor(clazz, fieldTheAnimal)));
 		
 		// load this.targetMate
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		String fieldMate = ASMUtils.useMcpNames() ? "targetMate" : ASMUtils.obfuscateSrg("field_75391_e");
+		String fieldMate = ASMUtils.useMcpNames() ? "targetMate" : "e";
 		insns.add(new FieldInsnNode(Opcodes.GETFIELD, clazz.name, fieldMate, ASMUtils.getFieldDescriptor(clazz, fieldMate)));
 		
 		// load local var entityageable (the baby)
