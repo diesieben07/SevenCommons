@@ -34,4 +34,6 @@ public interface UpdateController {
 	public void unregisterListener(UpdateStateListener listener);
 	
 	public void onStateChange(UpdatableMod mod);
+	
+	public void onUpdateProgress(UpdatableMod mod, int progress, int total);
 }

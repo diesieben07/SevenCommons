@@ -73,6 +73,10 @@ public class UpdatableMod {
 		return container;
 	}
 	
+	public UpdateController getController() {
+		return controller;
+	}
+	
 	public URL getUpdateURL() {
 		return updateURL;
 	}

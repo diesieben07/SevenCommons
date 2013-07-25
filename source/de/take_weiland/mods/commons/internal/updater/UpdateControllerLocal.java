@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
@@ -162,19 +163,25 @@ public class UpdateControllerLocal implements UpdateController {
 				URL downloadURL = new URL(version.downloadURL);
 				
 				File tempFile = new File(mod.getSource().getAbsolutePath() + ".7update");
-				
-				
-				try (ReadableByteChannel in = Channels.newChannel(downloadURL.openStream());
-						FileChannel out = new FileOutputStream(tempFile).getChannel();) {
+				URLConnection conn;
+				try {
+					conn = downloadURL.openConnection();
 					
-					ByteStreams.copy(in, out);
-					
-					mod.transition(ModUpdateState.PENDING_RESTART);
+					try (ReadableByteChannel in = new MonitoringByteChannel(Channels.newChannel(conn.getInputStream()), mod, conn.getContentLength());
+							FileChannel out = new FileOutputStream(tempFile).getChannel();) {
+						
+						ByteStreams.copy(in, out);
+						
+						mod.transition(ModUpdateState.PENDING_RESTART);
+						
+					}
 					
 				} catch (IOException e) {
 					LOGGER.warning(String.format("IOException during update download for mod %s", mod.getContainer().getModId()));
 					mod.transition(ModUpdateState.DOWNLOAD_FAILED);
 				}
+				
+				
 			} catch (MalformedURLException e) {
 				LOGGER.warning(String.format("Failed to download update for mod %s, the download URL is invalid", mod.getContainer().getModId()));
 				mod.transition(ModUpdateState.DOWNLOAD_FAILED);
@@ -184,18 +191,33 @@ public class UpdateControllerLocal implements UpdateController {
 
 	@Override
 	public void registerListener(UpdateStateListener listener) {
-		listeners.add(listener);
+		synchronized (listeners) {
+			listeners.add(listener);
+		}
 	}
 
 	@Override
 	public void unregisterListener(UpdateStateListener listener) {
-		listeners.remove(listener);
+		synchronized (listeners) {
+			listeners.remove(listener);
+		}
 	}
 
 	@Override
 	public void onStateChange(UpdatableMod mod) {
-		for (UpdateStateListener listener : listeners) {
-			listener.onStateChange(mod);
+		synchronized (listeners) {
+			for (UpdateStateListener listener : listeners) {
+				listener.onStateChange(mod);
+			}
+		}
+	}
+	
+	@Override
+	public void onUpdateProgress(UpdatableMod mod, int progress, int total) {
+		synchronized (listeners) {
+			for (UpdateStateListener listener : listeners) {
+				listener.onDownloadProgress(mod, progress, total);
+			}
 		}
 	}
 }

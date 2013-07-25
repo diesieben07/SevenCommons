@@ -30,6 +30,9 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	private GuiButton buttonCheckUpdates;
 	private GuiButton buttonDownloadUpdate;
 	
+	private int downloadProgress;
+	private int downloadTotal = -1;
+	
 	int selectedIndex = -1;
 	
 	public GuiUpdates(GuiScreen parent, UpdateController controller) {
@@ -81,6 +84,17 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		UpdatableMod mod = mods.get(index);
 		fontRenderer.drawString(mod.getContainer().getName(), 12, yPos, 0xffffff);
 		fontRenderer.drawString(mod.getState().toString(), 12, yPos + 11, 0xffffff);
+		if (selectedIndex == index) {
+			int percent = -1;
+			synchronized (this) {
+				if (downloadTotal > 0) {
+					percent = (int) ((100F / downloadTotal) * downloadProgress);
+				}
+			}
+			if (percent > 0) {
+				fontRenderer.drawString(percent + "%", 12, yPos + 22, 0xffffff);
+			}
+		}
 	}
 
 	@Override
@@ -109,6 +123,9 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 
 	void clickSlot(int index, boolean doubleClick) {
 		selectedIndex = index;
+		synchronized (this) {
+			downloadTotal = -1;
+		}
 		updateButtonState();
 	}
 	
@@ -128,8 +145,18 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 
 	@Override
 	public void onStateChange(UpdatableMod mod) {
-		if (mod == mods.get(selectedIndex)) {
+		if (selectedIndex >= 0 && mod == mods.get(selectedIndex)) {
 			updateButtonState();
+		}
+	}
+
+	@Override
+	public void onDownloadProgress(UpdatableMod mod, int progress, int total) {
+		if (selectedIndex >= 0 && mod == mods.get(selectedIndex)) {
+			synchronized (this) {
+				downloadTotal = total;
+				downloadProgress = progress;
+			}
 		}
 	}
 }

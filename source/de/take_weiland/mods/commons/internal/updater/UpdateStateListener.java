@@ -4,4 +4,6 @@ public interface UpdateStateListener {
 
 	public void onStateChange(UpdatableMod mod);
 	
+	public void onDownloadProgress(UpdatableMod mod, int progress, int total);
+	
 }
