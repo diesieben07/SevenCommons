@@ -19,8 +19,8 @@ public interface UpdatableMod {
 
 	public abstract ModUpdateState getState();
 
-	public abstract ModVersionInfo getVersionInfo();
+	public abstract ModVersionCollection getVersions();
 
-	public abstract void setVersionInfo(ModVersionInfo versionInfo);
+	public abstract void setVersionInfo(ModVersionCollection versionInfo);
 
 }

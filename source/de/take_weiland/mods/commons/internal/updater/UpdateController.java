@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.updater;
 import java.util.Collection;
 
 import cpw.mods.fml.common.ModContainer;
-import de.take_weiland.mods.commons.internal.updater.ModVersionInfo.ModVersion;
+import de.take_weiland.mods.commons.internal.updater.ModVersionCollection.ModVersion;
 
 public interface UpdateController {
 

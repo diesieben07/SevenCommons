@@ -19,7 +19,7 @@ public class ModsFolderMod implements UpdatableMod {
 	private final ModContainer container;
 	private URL updateURL;
 	private ModUpdateState state = ModUpdateState.LOADING;
-	private ModVersionInfo versionInfo;
+	private ModVersionCollection versionInfo;
 	private File source;
 	
 	public ModsFolderMod(UpdateController controller, ModContainer container) {
@@ -109,12 +109,12 @@ public class ModsFolderMod implements UpdatableMod {
 	}
 
 	@Override
-	public ModVersionInfo getVersionInfo() {
+	public ModVersionCollection getVersions() {
 		return versionInfo;
 	}
 
 	@Override
-	public void setVersionInfo(ModVersionInfo versionInfo) {
+	public void setVersionInfo(ModVersionCollection versionInfo) {
 		this.versionInfo = versionInfo;
 	}
 }

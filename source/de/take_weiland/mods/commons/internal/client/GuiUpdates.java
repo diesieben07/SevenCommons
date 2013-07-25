@@ -14,7 +14,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
-import de.take_weiland.mods.commons.internal.updater.ModVersionInfo.ModVersion;
+import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
+import de.take_weiland.mods.commons.internal.updater.ModVersionCollection.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.ModsFolderMod;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
@@ -30,6 +31,10 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	private final String textCheckUpdates = I18n.func_135053_a("sevencommons.ui.updates.check");
 	private final String textChecking = I18n.func_135053_a("sevencommons.ui.updates.checking");
 	private final String textUpdate = I18n.func_135053_a("sevencommons.ui.updates.update");
+	private final String textPatchNotes = I18n.func_135053_a("sevencommons.ui.updates.patchnotes");
+	private final String textNoPatchNotes = I18n.func_135053_a("sevencommons.ui.updates.patchnotes.none");
+	private final String textCurrentVersion = I18n.func_135053_a("sevencommons.ui.updates.version.current");
+	private final String textNewVersion = I18n.func_135053_a("sevencommons.ui.updates.version.new");
 	
 	private final GuiScreen parent;
 	private final UpdateController controller;
@@ -70,8 +75,8 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		leftButtonsWidth = Math.max(leftButtonsWidth, fontRenderer.getStringWidth(textChecking)) + 10;
 		
 		buttonList.add((buttonCheckUpdates = new GuiButton(BUTTON_SEARCH, width - leftButtonsWidth - 20, height - 81, leftButtonsWidth, 20, "")));
-		buttonList.add((buttonDownloadUpdate = new GuiButton(BUTTON_UPDATE, width - leftButtonsWidth - 20, height - 111, leftButtonsWidth, 20, textUpdate)));
-		buttonList.add((buttonVersionSelect = new GuiButton(BUTTON_VERSION, width - leftButtonsWidth - 20, height - 141, leftButtonsWidth, 20, "")));
+		buttonList.add((buttonDownloadUpdate = new GuiButton(BUTTON_UPDATE, width - leftButtonsWidth - 20, height - 106, leftButtonsWidth, 20, textUpdate)));
+		buttonList.add((buttonVersionSelect = new GuiButton(BUTTON_VERSION, width - leftButtonsWidth - 20, height - 131, leftButtonsWidth, 20, "")));
 		
 		updateButtonState();
 	}
@@ -86,12 +91,35 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	public void drawScreen(int par1, int par2, float par3) {
 		scroller.drawScreen(par1, par2, par3);
 		
+		UpdatableMod mod = null;
+		if (selectedIndex >= 0) {
+			mod = mods.get(selectedIndex);
+		}
+		
 		drawCenteredString(fontRenderer, "Mod Updates", width / 2, 10, 0xffffff);
 		
+		boolean canDownload = mod == null ? false : mod.getState().canTransition(ModUpdateState.DOWNLOADING);
+		
 		if (selectedIndex >= 0) {
+			ModVersionCollection versions = mod.getVersions();
+			if (versions != null) {
+				String curr = versions.getCurrentVersion().modVersion.getVersionString();
+				fontRenderer.drawString(String.format(textCurrentVersion, curr), width - leftButtonsWidth - 20, height - 155, 0xffffff);
+				if (canDownload) {
+					fontRenderer.drawString(textNewVersion, width - leftButtonsWidth - 20, height - 143, 0xffffff);
+				}
+			}
+		}
+		
+		if (selectedIndex >= 0 && canDownload) {
 			ModVersion version = getSelectedVersion(mods.get(selectedIndex));
-			if (version != null && !Strings.isNullOrEmpty(version.patchNotes)) {
-				fontRenderer.drawSplitString(version.patchNotes, 170, 32, width - leftButtonsWidth - 190, 0xDDDDDD);
+			
+			if (version != null) {
+				boolean hasNotes = !Strings.isNullOrEmpty(version.patchNotes);
+				fontRenderer.drawString(hasNotes ? textPatchNotes : textNoPatchNotes, 170, 32, 0xffff00);
+				if (hasNotes) {
+					fontRenderer.drawSplitString(version.patchNotes, 170, 50, width - leftButtonsWidth - 190, 0xDDDDDD);
+				}
 			}
 		}
 		
@@ -139,10 +167,10 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 			break;
 		case BUTTON_UPDATE:
 			mod = mods.get(selectedIndex);
-			controller.update(mod, mod.getVersionInfo().getSelectedVersion());
+			controller.update(mod, mod.getVersions().getSelectedVersion());
 			break;
 		case BUTTON_VERSION:
-			mods.get(selectedIndex).getVersionInfo().selectNextVersion();
+			mods.get(selectedIndex).getVersions().selectNextVersion();
 			break;
 		}
 		updateButtonState();
@@ -161,7 +189,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		UpdatableMod mod = selectedIndex >= 0 ? mods.get(selectedIndex) : null;
 		
 		buttonCheckUpdates.drawButton = buttonDownloadUpdate.drawButton = selectedIndex >= 0;
-		buttonVersionSelect.drawButton = selectedIndex >= 0 && mod.getVersionInfo() != null;
+		buttonVersionSelect.drawButton = selectedIndex >= 0 && mod.getVersions() != null;
 		
 		if (selectedIndex >= 0) {
 			ModVersion selectedVersion = getSelectedVersion(mod);
@@ -169,7 +197,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 			if (selectedVersion != null) {
 				String format;
 				EnumChatFormatting color;
-				if (selectedVersion == mod.getVersionInfo().getNewestInstallableVersion()) {
+				if (selectedVersion == mod.getVersions().getNewestInstallableVersion()) {
 					color = EnumChatFormatting.DARK_GREEN;
 					format = I18n.func_135053_a("sevencommons.ui.updates.newest");
 				} else if (selectedVersion.canBeInstalled()) {
@@ -179,7 +207,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 					color = EnumChatFormatting.RED;
 					format = I18n.func_135053_a("sevencommons.ui.updates.wrongmc");
 				}
-				buttonVersionSelect.displayString = String.format(color + format, EnumChatFormatting.RESET + selectedVersion.modVersion.toString() + color, selectedVersion.minecraftVersion);
+				buttonVersionSelect.displayString = String.format(color + format, EnumChatFormatting.RESET + selectedVersion.modVersion.getVersionString() + color, selectedVersion.minecraftVersion);
 			}
 			
 			ModUpdateState state = mod.getState();
@@ -193,7 +221,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	}
 	
 	private static ModVersion getSelectedVersion(UpdatableMod mod) {
-		return mod.getVersionInfo() != null ? mod.getVersionInfo().getSelectedVersion() : null;
+		return mod.getVersions() != null ? mod.getVersions().getSelectedVersion() : null;
 	}
 	
 	private void close() {

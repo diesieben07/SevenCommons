@@ -1,6 +1,10 @@
 sevencommons.ui.updates.check=Check for Updates
 sevencommons.ui.updates.checking=Checking...
 sevencommons.ui.updates.update=Install Update
+sevencommons.ui.updates.patchnotes=Patch Notes:
+sevencommons.ui.updates.patchnotes.none=No Patch Notes available.
+sevencommons.ui.updates.version.current=Your Version: %s
+sevencommons.ui.updates.version.new=Select new Version:
 sevencommons.ui.updates.newest=Newest %s
 sevencommons.ui.updates.installable=Installable %s
 sevencommons.ui.updates.wrongmc=Wrong Minecraft (%2$s) %1$s

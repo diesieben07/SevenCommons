@@ -13,11 +13,11 @@ import java.nio.channels.ReadableByteChannel;
 import com.google.common.io.ByteStreams;
 
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
-import de.take_weiland.mods.commons.internal.updater.ModVersionInfo;
+import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
 import de.take_weiland.mods.commons.internal.updater.MonitoringByteChannel;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
-import de.take_weiland.mods.commons.internal.updater.ModVersionInfo.ModVersion;
+import de.take_weiland.mods.commons.internal.updater.ModVersionCollection.ModVersion;
 
 public class InstallUpdate implements Runnable {
 
@@ -26,7 +26,7 @@ public class InstallUpdate implements Runnable {
 	
 	public InstallUpdate(UpdatableMod mod, ModVersion version) {
 		this.mod = mod;
-		ModVersionInfo info = mod.getVersionInfo();
+		ModVersionCollection info = mod.getVersions();
 		if (info == null || !info.getInstallableVersions().contains(version)) {
 			throw new IllegalArgumentException(String.format("Version %s is not available for mod %s", version.modVersion, mod.getContainer().getModId()));
 		}

@@ -19,7 +19,7 @@ import cpw.mods.fml.common.versioning.ArtifactVersion;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import de.take_weiland.mods.commons.util.CommonUtils;
 
-public final class ModVersionInfo {
+public final class ModVersionCollection {
 
 	private static final JdomParser JSON_PARSER = new JdomParser();
 	static final String MINECRAFT_VERSION = new CallableMinecraftVersion(null).minecraftVersion();
@@ -44,7 +44,7 @@ public final class ModVersionInfo {
 	
 	private final List<ModVersion> installableVersions;
 	
-	private ModVersionInfo(List<ModVersion> versions, ModVersion currentVersion) {
+	private ModVersionCollection(List<ModVersion> versions, ModVersion currentVersion) {
 		this.versions = versions;
 
 		this.installableVersions = ImmutableList.copyOf(Iterables.filter(versions, INSTALLABLE_FILTER));
@@ -87,7 +87,7 @@ public final class ModVersionInfo {
 		return versions.isEmpty() ? null : versions.get(0);
 	}
 	
-	public static final ModVersionInfo create(Reader reader, ModContainer mod) throws InvalidModVersionException {
+	public static final ModVersionCollection create(Reader reader, ModContainer mod) throws InvalidModVersionException {
 		try {
 			ImmutableList.Builder<ModVersion> versions = ImmutableList.builder();
 			JsonRootNode json = JSON_PARSER.parse(reader);
@@ -109,7 +109,7 @@ public final class ModVersionInfo {
 				String patchNotes = versionNode.isStringValue("patchNotes") ? versionNode.getStringValue("patchNotes") : null;
 				versions.add(new ModVersion(new DefaultArtifactVersion(modVersion), minecraftVersion, url, patchNotes));
 			}
-			return new ModVersionInfo(Ordering.natural().immutableSortedCopy(versions.build()), new ModVersion(mod.getProcessedVersion()));
+			return new ModVersionCollection(Ordering.natural().reverse().immutableSortedCopy(versions.build()), new ModVersion(mod.getProcessedVersion()));
 		} catch (Throwable t) {
 			t.printStackTrace();
 			Throwables.propagateIfPossible(t);
@@ -121,7 +121,7 @@ public final class ModVersionInfo {
 		throw new InvalidModVersionException("Failed to parse ModVersionInfo");
 	}
 	
-	private static final ModVersionInfo invalid(Throwable t) throws InvalidModVersionException {
+	private static final ModVersionCollection invalid(Throwable t) throws InvalidModVersionException {
 		throw new InvalidModVersionException("Failed to parse ModVersionInfo", t);
 	}
 	

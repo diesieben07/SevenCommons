@@ -7,9 +7,9 @@ import java.net.URL;
 
 import de.take_weiland.mods.commons.internal.updater.InvalidModVersionException;
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
-import de.take_weiland.mods.commons.internal.updater.ModVersionInfo;
+import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
-import de.take_weiland.mods.commons.internal.updater.ModVersionInfo.ModVersion;
+import de.take_weiland.mods.commons.internal.updater.ModVersionCollection.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 
 public class SearchUpdates implements Runnable {
@@ -25,7 +25,7 @@ public class SearchUpdates implements Runnable {
 		URL url = mod.getUpdateURL();
 		try (Reader reader = new InputStreamReader(url.openStream())) {
 				
-			ModVersionInfo versionInfo = ModVersionInfo.create(reader, mod.getContainer());
+			ModVersionCollection versionInfo = ModVersionCollection.create(reader, mod.getContainer());
 			
 			mod.setVersionInfo(versionInfo);
 			
