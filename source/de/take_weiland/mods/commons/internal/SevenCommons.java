@@ -3,6 +3,8 @@ package de.take_weiland.mods.commons.internal;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import net.minecraft.crash.CallableMinecraftVersion;
+
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
@@ -25,6 +27,7 @@ public class SevenCommons implements IFMLLoadingPlugin {
 	public static boolean MCP_ENVIRONMENT;
 	
 	public static final Logger LOGGER = Logger.getLogger("SevenCommons");
+	public static final String MINECRAFT_VERSION = new CallableMinecraftVersion(null).minecraftVersion();
 	
 	@Override
 	@Deprecated

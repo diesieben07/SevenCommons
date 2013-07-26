@@ -4,12 +4,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.util.List;
 
+import argo.jdom.JdomParser;
+import argo.jdom.JsonNode;
+import argo.jdom.JsonRootNode;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+
+import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import de.take_weiland.mods.commons.internal.updater.InvalidModVersionException;
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
+import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
-import de.take_weiland.mods.commons.internal.updater.ModVersionCollection.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 
 public class SearchUpdates implements Runnable {
@@ -24,19 +33,18 @@ public class SearchUpdates implements Runnable {
 	public void run() {
 		URL url = mod.getUpdateURL();
 		try (Reader reader = new InputStreamReader(url.openStream())) {
-				
-			ModVersionCollection versionInfo = ModVersionCollection.create(reader, mod.getContainer());
+			ModVersionCollection versions = mod.getVersions();
 			
-			mod.setVersionInfo(versionInfo);
+			versions.injectAvailableVersions(SearchUpdates.parseVersionFile(reader));
 			
-			ModVersion newestInstallable = versionInfo.getNewestInstallableVersion();
-			ModVersion newest = versionInfo.getNewestVersion();
+			ModVersion newestInstallable = versions.getNewestInstallableVersion();
+			ModVersion newest = versions.getNewestVersion();
 			
-			if (newestInstallable != null && newestInstallable.compareTo(versionInfo.getCurrentVersion()) > 0) {
+			if (newestInstallable != null && newestInstallable.compareTo(versions.getCurrentVersion()) > 0) {
 				if (mod.transition(ModUpdateState.UPDATES_AVAILABLE)) {
 					UpdateControllerLocal.LOGGER.info("Updates available for mod " + mod.getContainer().getModId());
 				}
-			} else if (newest != null && newest.compareTo(versionInfo.getCurrentVersion()) > 0) {
+			} else if (newest != null && newest.compareTo(versions.getCurrentVersion()) > 0) {
 				if (mod.transition(ModUpdateState.MINECRAFT_OUTDATED)) {
 					UpdateControllerLocal.LOGGER.info("Cannot update mod " + mod.getContainer().getModId() + " because Minecraft is outdated.");
 				}
@@ -53,5 +61,49 @@ public class SearchUpdates implements Runnable {
 			UpdateControllerLocal.LOGGER.warning(String.format("Version Info-File for mod %s is invalid", mod.getContainer().getModId()));
 			mod.transition(ModUpdateState.CHECKING_FAILED);
 		}
-	}	
+	}
+	
+	private  static final String[] JSON_KEYS = new String[] {
+		"version",	"minecraftVersion", "url"		
+	};
+	
+	private static final JdomParser JSON_PARSER = new JdomParser();
+
+	private  static final List<ModVersion> parseVersionFile(Reader reader) throws InvalidModVersionException {
+		try {
+			ImmutableList.Builder<ModVersion> versions = ImmutableList.builder();
+			JsonRootNode json = JSON_PARSER.parse(reader);
+			
+			if (!json.isArrayNode()) {
+				invalid();
+			}
+			
+			for (JsonNode versionNode : json.getElements()) {
+				for (String key : JSON_KEYS) {
+					if (!versionNode.isStringValue(key)) {
+						invalid();
+					}
+				}
+				
+				String modVersion = versionNode.getStringValue("version");
+				String minecraftVersion = versionNode.getStringValue("minecraftVersion");
+				String url = versionNode.getStringValue("url");
+				String patchNotes = versionNode.isStringValue("patchNotes") ? versionNode.getStringValue("patchNotes") : null;
+				versions.add(new ModVersion(new DefaultArtifactVersion(modVersion), minecraftVersion, url, patchNotes));
+			}
+			return versions.build();
+		} catch (Throwable t) {
+			t.printStackTrace();
+			Throwables.propagateIfPossible(t);
+			return invalid(t);
+		}
+	}
+	
+	private static final void invalid() throws InvalidModVersionException {
+		throw new InvalidModVersionException("Failed to parse ModVersionInfo");
+	}
+	
+	private static final List<ModVersion> invalid(Throwable t) throws InvalidModVersionException {
+		throw new InvalidModVersionException("Failed to parse ModVersionInfo", t);
+	}
 }

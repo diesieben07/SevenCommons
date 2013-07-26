@@ -1,9 +1,6 @@
 package de.take_weiland.mods.commons.internal.updater;
 
-import java.util.Collection;
-
-import cpw.mods.fml.common.ModContainer;
-import de.take_weiland.mods.commons.internal.updater.ModVersionCollection.ModVersion;
+import java.util.List;
 
 public interface UpdateController {
 
@@ -12,10 +9,12 @@ public interface UpdateController {
 	 */
 	public void searchForUpdates();
 	
-	public Collection<ModsFolderMod> getMods();
+	/**
+	 * 
+	 * @return
+	 */
+	public List<UpdatableMod> getMods();
 	
-	public UpdatableMod getMod(ModContainer mod);
-
 	/**
 	 * search for updates on the given mod
 	 * @param modContainer the mod
@@ -35,5 +34,4 @@ public interface UpdateController {
 	
 	public void onStateChange(UpdatableMod mod);
 	
-	public void onUpdateProgress(UpdatableMod mod, int progress, int total);
 }

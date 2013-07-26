@@ -11,12 +11,10 @@ import net.minecraft.util.EnumChatFormatting;
 import org.lwjgl.input.Keyboard;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
+import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
-import de.take_weiland.mods.commons.internal.updater.ModVersionCollection.ModVersion;
-import de.take_weiland.mods.commons.internal.updater.ModsFolderMod;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.internal.updater.UpdateStateListener;
@@ -39,22 +37,19 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	private final GuiScreen parent;
 	private final UpdateController controller;
 	private GuiSlotUpdateList scroller;
-	final List<ModsFolderMod> mods;
+	final List<UpdatableMod> mods;
 	
 	private int leftButtonsWidth;
 	private GuiButton buttonCheckUpdates;
 	private GuiButton buttonDownloadUpdate;
 	private GuiButton buttonVersionSelect;
 	
-	private int downloadProgress;
-	private int downloadTotal = -1;
-	
 	int selectedIndex = -1;
 	
 	public GuiUpdates(GuiScreen parent, UpdateController controller) {
 		this.parent = parent;
 		this.controller = controller;
-		mods = ImmutableList.copyOf(controller.getMods());
+		mods = controller.getMods();
 		controller.registerListener(this);
 	}
 	
@@ -90,29 +85,28 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	@Override
 	public void drawScreen(int par1, int par2, float par3) {
 		scroller.drawScreen(par1, par2, par3);
-		
-		UpdatableMod mod = null;
-		if (selectedIndex >= 0) {
-			mod = mods.get(selectedIndex);
-		}
-		
+
 		drawCenteredString(fontRenderer, "Mod Updates", width / 2, 10, 0xffffff);
 		
-		boolean canDownload = mod == null ? false : mod.getState().canTransition(ModUpdateState.DOWNLOADING);
+		if (selectedIndex < 0) {
+			return;
+		}
 		
-		if (selectedIndex >= 0) {
-			ModVersionCollection versions = mod.getVersions();
-			if (versions != null) {
-				String curr = versions.getCurrentVersion().modVersion.getVersionString();
-				fontRenderer.drawString(String.format(textCurrentVersion, curr), width - leftButtonsWidth - 20, height - 155, 0xffffff);
-				if (canDownload) {
-					fontRenderer.drawString(textNewVersion, width - leftButtonsWidth - 20, height - 143, 0xffffff);
-				}
+		UpdatableMod mod = mods.get(selectedIndex);
+		
+		boolean canDownload = mod.getState().canTransition(ModUpdateState.DOWNLOADING);
+		
+		ModVersionCollection versions = mod.getVersions();
+		if (versions != null) {
+			String curr = versions.getCurrentVersion().modVersion.getVersionString();
+			fontRenderer.drawString(String.format(textCurrentVersion, curr), width - leftButtonsWidth - 20, height - 155, 0xffffff);
+			if (canDownload) {
+				fontRenderer.drawString(textNewVersion, width - leftButtonsWidth - 20, height - 143, 0xffffff);
 			}
 		}
 		
-		if (selectedIndex >= 0 && canDownload) {
-			ModVersion version = getSelectedVersion(mods.get(selectedIndex));
+		if (canDownload) {
+			ModVersion version = getSelectedVersion(mod);
 			
 			if (version != null) {
 				boolean hasNotes = !Strings.isNullOrEmpty(version.patchNotes);
@@ -130,19 +124,13 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		UpdatableMod mod = mods.get(index);
 		fontRenderer.drawString(mod.getContainer().getName(), 12, yPos, 0xffffff);
 		fontRenderer.drawString(mod.getState().toString(), 12, yPos + 11, 0xffffff);
-		if (selectedIndex == index) {
-			int percent = -1;
-			int scaled = 0;
-			synchronized (this) {
-				if (downloadTotal > 0) {
-					percent = (int) ((100F / downloadTotal) * downloadProgress);
-					scaled = (int) ((139F / downloadTotal) * downloadProgress);
-				}
-			}
-			if (percent > 0) {
-				drawRect(12, yPos + 22, 12 + scaled, yPos + 31, 0xff00ff00);
-				drawCenteredString(fontRenderer, percent + "%", 12 + 139 / 2, yPos + 22, 0xffffff);
-			}
+		
+		int percent = mod.getDowloadProgress(100);
+		if (percent > 0) {
+			int scaled = mod.getDowloadProgress(139);
+		
+			drawRect(12, yPos + 22, 12 + scaled, yPos + 31, 0xff00ff00);
+			drawCenteredString(fontRenderer, percent + "%", 12 + 139 / 2, yPos + 22, 0xffffff);
 		}
 	}
 
@@ -179,9 +167,6 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	void clickSlot(int index, boolean doubleClick) {
 		selectedIndex = index;
 		
-		synchronized (this) {
-			downloadTotal = -1;
-		}
 		updateButtonState();
 	}
 	
@@ -235,17 +220,4 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		}
 	}
 
-	@Override
-	public void onDownloadProgress(UpdatableMod mod, int progress, int total) {
-		if (selectedIndex >= 0 && mod == mods.get(selectedIndex)) {
-			synchronized (this) {
-				if (total == progress) {
-					downloadTotal = -1;
-				} else {
-					downloadTotal = total;
-					downloadProgress = progress;
-				}
-			}
-		}
-	}
 }

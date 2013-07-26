@@ -7,20 +7,22 @@ import cpw.mods.fml.common.ModContainer;
 
 public interface UpdatableMod {
 
-	public abstract ModContainer getContainer();
+	public ModContainer getContainer();
 
-	public abstract UpdateController getController();
+	public UpdateController getController();
 
-	public abstract URL getUpdateURL();
+	public URL getUpdateURL();
 
-	public abstract File getSource();
+	public File getSource();
 
-	public abstract boolean transition(ModUpdateState desiredState);
+	public boolean transition(ModUpdateState desiredState);
 
-	public abstract ModUpdateState getState();
+	public ModUpdateState getState();
 
-	public abstract ModVersionCollection getVersions();
-
-	public abstract void setVersionInfo(ModVersionCollection versionInfo);
-
+	public ModVersionCollection getVersions();
+	
+	public void setDownloadProgress(int progress, int total);
+	
+	public int getDowloadProgress(int max);
+	
 }

@@ -4,40 +4,26 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
 
 import com.google.common.base.Strings;
 
 import cpw.mods.fml.common.ModContainer;
 
-public class ModsFolderMod implements UpdatableMod {
+public class ModsFolderMod extends AbstractUpdatableMod {
 
-	private static final List<String> INTERNAL_MODS = Arrays.asList("mcp", "forge", "fml", "minecraft");
-	
-	private final UpdateController controller;
-	private final ModContainer container;
 	private URL updateURL;
-	private ModUpdateState state = ModUpdateState.LOADING;
-	private ModVersionCollection versionInfo;
 	private File source;
 	
-	public ModsFolderMod(UpdateController controller, ModContainer container) {
-		this.container = container;
-		this.controller = controller;
-		if (INTERNAL_MODS.contains(container.getModId().toLowerCase())) {
+	public ModsFolderMod(ModContainer mod, UpdateController controller) {
+		super(mod, controller);
+		
+		if ((updateURL = getUpdateURL(mod)) == null) {
 			transition(ModUpdateState.UNAVAILABLE);
-			UpdateControllerLocal.LOGGER.info(String.format("Skipping FML-Internal mod %s", container.getModId()));
+			UpdateControllerLocal.LOGGER.info(String.format("Skipping mod %s with invalid or missing update URL", mod.getModId()));
 			return;
 		}
 		
-		if ((updateURL = getUpdateURL(container)) == null) {
-			transition(ModUpdateState.UNAVAILABLE);
-			UpdateControllerLocal.LOGGER.info(String.format("Skipping mod %s with invalid or missing update URL", container.getModId()));
-			return;
-		}
-		
-		Object sourceObj = container.getMod() == null ? container : container.getMod();
+		Object sourceObj = mod.getMod() == null ? mod : mod.getMod();
 		URL sourceLoc = sourceObj.getClass().getProtectionDomain().getCodeSource().getLocation();
 		
 		try {
@@ -51,7 +37,7 @@ public class ModsFolderMod implements UpdatableMod {
 		
 		if (source == null) {
 			transition(ModUpdateState.UNAVAILABLE);
-			UpdateControllerLocal.LOGGER.warning(String.format("Cannot update mod %s because it's not a valid jar file!", container.getModId()));
+			UpdateControllerLocal.LOGGER.warning(String.format("Cannot update mod %s because it's not a valid jar file!", mod.getModId()));
 		} else {
 			transition(ModUpdateState.AVAILABLE);
 		}
@@ -70,16 +56,6 @@ public class ModsFolderMod implements UpdatableMod {
 	}
 	
 	@Override
-	public ModContainer getContainer() {
-		return container;
-	}
-	
-	@Override
-	public UpdateController getController() {
-		return controller;
-	}
-	
-	@Override
 	public URL getUpdateURL() {
 		return updateURL;
 	}
@@ -87,34 +63,5 @@ public class ModsFolderMod implements UpdatableMod {
 	@Override
 	public File getSource() {
 		return source;
-	}
-	
-	@Override
-	public boolean transition(ModUpdateState desiredState) {
-		boolean success;
-		synchronized (this) {
-			success = (state = state.transition(desiredState)) == desiredState;
-		}
-		if (success) {
-			controller.onStateChange(this);
-		}
-		return success;
-	}
-	
-	@Override
-	public ModUpdateState getState() {
-		synchronized (this) {
-			return state;
-		}
-	}
-
-	@Override
-	public ModVersionCollection getVersions() {
-		return versionInfo;
-	}
-
-	@Override
-	public void setVersionInfo(ModVersionCollection versionInfo) {
-		this.versionInfo = versionInfo;
 	}
 }

@@ -13,11 +13,11 @@ import java.nio.channels.ReadableByteChannel;
 import com.google.common.io.ByteStreams;
 
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
+import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
 import de.take_weiland.mods.commons.internal.updater.MonitoringByteChannel;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
-import de.take_weiland.mods.commons.internal.updater.ModVersionCollection.ModVersion;
 
 public class InstallUpdate implements Runnable {
 

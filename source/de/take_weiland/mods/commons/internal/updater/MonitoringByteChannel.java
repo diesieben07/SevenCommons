@@ -33,7 +33,7 @@ public class MonitoringByteChannel implements ReadableByteChannel {
 		if (read >= 0) {
 			progress += read;
 		}
-		mod.getController().onUpdateProgress(mod, progress, total);
+		mod.setDownloadProgress(progress, total);
 		return read;
 	}
 
