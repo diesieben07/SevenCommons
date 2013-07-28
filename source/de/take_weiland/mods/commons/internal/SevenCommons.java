@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
+import java.io.File;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -27,6 +28,8 @@ public class SevenCommons implements IFMLLoadingPlugin {
 	
 	public static final Logger LOGGER = Logger.getLogger("SevenCommons");
 	public static final String MINECRAFT_VERSION = new CallableMinecraftVersion(null).minecraftVersion();
+	
+	public static File source;
 	
 	@Override
 	@Deprecated
@@ -59,5 +62,6 @@ public class SevenCommons implements IFMLLoadingPlugin {
 	@Override
 	public void injectData(Map<String, Object> data) {
 		MCP_ENVIRONMENT = !((Boolean)data.get("runtimeDeobfuscationEnabled")).booleanValue();
+		source = (File)data.get("coremodLocation");
 	}
 }

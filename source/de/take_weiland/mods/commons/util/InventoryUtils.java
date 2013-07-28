@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.util;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Random;
 
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.IInventory;
@@ -39,16 +40,15 @@ public final class InventoryUtils {
 	}
 	
 	public static final <T extends TileEntity & IInventory> void spillContents(T tileEntity) {
-		for (int slot = 0; slot < tileEntity.getSizeInventory(); slot++) {
-            ItemStack stack = tileEntity.getStackInSlot(slot);
-
+		for (ItemStack stack : iterate(tileEntity)) {
             if (stack != null) {
-                float randomPositionX = tileEntity.worldObj.rand.nextFloat() * 0.8F + 0.1F;
-                float randomPositionY = tileEntity.worldObj.rand.nextFloat() * 0.8F + 0.1F;
-                float randomPositionZ = tileEntity.worldObj.rand.nextFloat() * 0.8F + 0.1F;
+            	Random rand = tileEntity.worldObj.rand;
+                float randomPositionX = rand.nextFloat() * 0.8F + 0.1F;
+                float randomPositionY = rand.nextFloat() * 0.8F + 0.1F;
+                float randomPositionZ = rand.nextFloat() * 0.8F + 0.1F;
 
                 while (stack.stackSize > 0) {
-                    int partialStackSize = tileEntity.worldObj.rand.nextInt(21) + 10;
+                    int partialStackSize = rand.nextInt(21) + 10;
 
                     if (partialStackSize > stack.stackSize) {
                         partialStackSize = stack.stackSize;
@@ -62,9 +62,9 @@ public final class InventoryUtils {
                     }
 
                     float motionMultiplier = 0.05F;
-                    itemEntity.motionX = tileEntity.worldObj.rand.nextGaussian() * motionMultiplier;
-                    itemEntity.motionY = tileEntity.worldObj.rand.nextGaussian() * motionMultiplier + 0.2F;
-                    itemEntity.motionZ = tileEntity.worldObj.rand.nextGaussian() * motionMultiplier;
+                    itemEntity.motionX = rand.nextGaussian() * motionMultiplier;
+                    itemEntity.motionY = rand.nextGaussian() * motionMultiplier + 0.2F;
+                    itemEntity.motionZ = rand.nextGaussian() * motionMultiplier;
                     tileEntity.worldObj.spawnEntityInWorld(itemEntity);
                 }
             }
@@ -90,33 +90,37 @@ public final class InventoryUtils {
 		}
 	}
 	
+	public static final Iterator<ItemStack> iterator(final IInventory inventory) {
+		return new Iterator<ItemStack>() {
+
+			private int next = 0;
+			
+			@Override
+			public boolean hasNext() {
+				return next < inventory.getSizeInventory();
+			}
+
+			@Override
+			public ItemStack next() {
+				if (!hasNext()) {
+					throw new NoSuchElementException();
+				}
+				return inventory.getStackInSlot(next++);
+			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException("Can't modify Inventory size!");
+			}
+		};
+	}
+	
 	public static final Iterable<ItemStack> iterate(final IInventory inventory) {
 		return new Iterable<ItemStack>() {
 			
 			@Override
 			public Iterator<ItemStack> iterator() {
-				return new Iterator<ItemStack>() {
-
-					private int next = 0;
-					
-					@Override
-					public boolean hasNext() {
-						return next < inventory.getSizeInventory();
-					}
-
-					@Override
-					public ItemStack next() {
-						if (!hasNext()) {
-							throw new NoSuchElementException();
-						}
-						return inventory.getStackInSlot(next++);
-					}
-
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException("Can't modify Inventory size!");
-					}
-				};
+				return InventoryUtils.iterator(inventory);
 			}
 		};
 	}

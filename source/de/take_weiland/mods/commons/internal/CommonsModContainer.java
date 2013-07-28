@@ -92,30 +92,16 @@ public class CommonsModContainer extends DummyModContainer {
 			event.registerServerCommand(new CommandUpdates(updateCommand));
 		}
 	}
-
-	private static File source;
-	
-	static {
-		try {
-			source = new File(CommonsModContainer.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-		} catch (Throwable t) {
-			// Ummm ?
-			Throwables.propagate(t);
-		}
-	}
 	
 	@Override
 	public File getSource() {
-		return source;
+		return SevenCommons.source;
 	}
 
 	@Override
 	public Class<?> getCustomResourcePackClass() {
-		if (source == null) {
-			return null;
-		}
 		try {
-			return source.isDirectory() ? Class.forName("de.take_weiland.mods.commons.internal.CommonsFolderResourcePack") : Class.forName("de.take_weiland.mods.commons.internal.CommonsFileResourcePack");
+			return SevenCommons.source.isDirectory() ? Class.forName("de.take_weiland.mods.commons.internal.CommonsFolderResourcePack") : Class.forName("de.take_weiland.mods.commons.internal.CommonsFileResourcePack");
 		} catch (ClassNotFoundException e) {
 			return null;
 		} 
