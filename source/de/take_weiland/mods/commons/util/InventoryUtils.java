@@ -39,10 +39,15 @@ public final class InventoryUtils {
         }
 	}
 	
-	public static final <T extends TileEntity & IInventory> void spillContents(T tileEntity) {
+	public static final <T extends TileEntity & IInventory> void spillContents(TileEntity tile) {
+		if (!(tile instanceof IInventory)) {
+			return;
+		}
+		@SuppressWarnings("unchecked")
+		T tileEntity = (T)tile;
+		Random rand = tileEntity.worldObj.rand;
 		for (ItemStack stack : iterate(tileEntity)) {
             if (stack != null) {
-            	Random rand = tileEntity.worldObj.rand;
                 float randomPositionX = rand.nextFloat() * 0.8F + 0.1F;
                 float randomPositionY = rand.nextFloat() * 0.8F + 0.1F;
                 float randomPositionZ = rand.nextFloat() * 0.8F + 0.1F;
