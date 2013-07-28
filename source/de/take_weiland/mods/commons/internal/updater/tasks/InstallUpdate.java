@@ -28,7 +28,7 @@ public class InstallUpdate implements Runnable {
 		this.mod = mod;
 		ModVersionCollection info = mod.getVersions();
 		if (info == null || !info.getInstallableVersions().contains(version)) {
-			throw new IllegalArgumentException(String.format("Version %s is not available for mod %s", version.modVersion, mod.getContainer().getModId()));
+			throw new IllegalArgumentException(String.format("Version %s is not available for mod %s", version.modVersion, mod.getModId()));
 		}
 		this.version = version;
 	}
@@ -53,11 +53,11 @@ public class InstallUpdate implements Runnable {
 				}
 				
 			} catch (IOException e) {
-				UpdateControllerLocal.LOGGER.warning(String.format("IOException during update download for mod %s", mod.getContainer().getModId()));
+				UpdateControllerLocal.LOGGER.warning(String.format("IOException during update download for mod %s", mod.getModId()));
 				mod.transition(ModUpdateState.DOWNLOAD_FAILED);
 			}
 		} catch (MalformedURLException e) {
-			UpdateControllerLocal.LOGGER.warning(String.format("Failed to download update for mod %s, the download URL is invalid", mod.getContainer().getModId()));
+			UpdateControllerLocal.LOGGER.warning(String.format("Failed to download update for mod %s, the download URL is invalid", mod.getModId()));
 			mod.transition(ModUpdateState.DOWNLOAD_FAILED);
 		}
 	}

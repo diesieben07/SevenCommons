@@ -29,7 +29,7 @@ public class GuiSlotUpdateList extends GuiScrollingList {
 
 	@Override
 	protected void drawBackground() {
-		parent.drawDefaultBackground();
+		parent.drawBackground(0);
 	}
 
 	@Override

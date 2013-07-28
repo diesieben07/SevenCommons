@@ -9,7 +9,7 @@ public enum ModUpdateState {
 		
 		@Override
 		public boolean canTransition(ModUpdateState state) {
-			return state == AVAILABLE || state == UNAVAILABLE || state == DISABLED;
+			return state == AVAILABLE || state == UNAVAILABLE;
 		}
 		
 	},
@@ -31,10 +31,6 @@ public enum ModUpdateState {
 	 * <li>update URL is invalid
 	 */
 	UNAVAILABLE,
-	/**
-	 * update checking has been disabled
-	 */
-	DISABLED,
 	/**
 	 * checking for updates (downloading version info)
 	 */
@@ -80,7 +76,7 @@ public enum ModUpdateState {
 		
 	},
 	/**
-	 * there are updates available they are for a newer minecraft version
+	 * there are updates available, but they are for a newer minecraft version
 	 */
 	MINECRAFT_OUTDATED {
 		

@@ -26,14 +26,14 @@ public final class ModPacketHandler implements IPacketHandler {
 		new ModPacketHandler(mod, packets);
 	}
 	
-	private final Map<Integer, PacketType> packets;
+	private final Map<Byte, PacketType> packets;
 	
 	private ModPacketHandler(Object mod, PacketType[] packets) {
 		Set<String> channels = Sets.newHashSetWithExpectedSize(1);
 		
-		ImmutableMap.Builder<Integer, PacketType> builder = ImmutableMap.builder();
+		ImmutableMap.Builder<Byte, PacketType> builder = ImmutableMap.builder();
 		for (PacketType packet : packets) {
-			builder.put(Integer.valueOf(packet.getPacketId()), packet);
+			builder.put(Byte.valueOf(packet.getPacketId()), packet);
 			channels.add(packet.getChannel());
 		}
 		this.packets = builder.build();
@@ -48,7 +48,7 @@ public final class ModPacketHandler implements IPacketHandler {
 	@Override
 	public void onPacketData(INetworkManager manager, Packet250CustomPayload packet, Player player) {
 		ByteArrayDataInput data = ByteStreams.newDataInput(packet.data);
-		Integer packetId = Integer.valueOf(data.readUnsignedByte());
+		Byte packetId = Byte.valueOf(data.readByte());
 
 		try {
 			PacketType type = packets.get(packetId);
@@ -57,7 +57,7 @@ public final class ModPacketHandler implements IPacketHandler {
 			}
 		
 			handleReceivedPacket(type, data, (EntityPlayer)player);
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			SevenCommons.LOGGER.severe(String.format("Exception during packet handling for player %s with channel %s", ((EntityPlayer)player).username, packet.channel));
 			t.printStackTrace();
 			if (player instanceof EntityPlayerMP) {
@@ -68,7 +68,7 @@ public final class ModPacketHandler implements IPacketHandler {
 	
 	private final void handleReceivedPacket(PacketType type, ByteArrayDataInput in, EntityPlayer player) throws ReflectiveOperationException {
 		ModPacket mp = type.getPacketClass().newInstance();
-		Side side = ModdingUtils.determineSide(player);
+		Side side = ModdingUtils.getSide(player);
 		if (!mp.isValidForSide(side)) {
 			throw new NetworkException("Packet " + mp.getClass().getSimpleName() + " received for invalid side " + side);
 		}

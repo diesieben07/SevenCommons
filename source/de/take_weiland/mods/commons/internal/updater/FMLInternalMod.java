@@ -5,10 +5,11 @@ import java.net.URL;
 
 import cpw.mods.fml.common.ModContainer;
 
-public class FMLInternalMod extends AbstractUpdatableMod {
+public class FMLInternalMod extends ModContainerMod {
 
 	public FMLInternalMod(ModContainer mod, UpdateController controller) {
 		super(mod, controller);
+		transition(ModUpdateState.UNAVAILABLE);
 	}
 
 	@Override

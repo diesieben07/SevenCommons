@@ -35,30 +35,30 @@ public class SearchUpdates implements Runnable {
 		try (Reader reader = new InputStreamReader(url.openStream())) {
 			ModVersionCollection versions = mod.getVersions();
 			
-			versions.injectAvailableVersions(SearchUpdates.parseVersionFile(reader));
+			versions.injectAvailableVersions(SearchUpdates.parseVersionFile(mod, reader));
 			
 			ModVersion newestInstallable = versions.getNewestInstallableVersion();
 			ModVersion newest = versions.getNewestVersion();
 			
-			if (newestInstallable != null && newestInstallable.compareTo(versions.getCurrentVersion()) > 0) {
+			if (newestInstallable != null && newestInstallable.modVersion.compareTo(versions.getCurrentVersion().modVersion) > 0) {
 				if (mod.transition(ModUpdateState.UPDATES_AVAILABLE)) {
-					UpdateControllerLocal.LOGGER.info("Updates available for mod " + mod.getContainer().getModId());
+					UpdateControllerLocal.LOGGER.info("Updates available for mod " + mod.getModId());
 				}
-			} else if (newest != null && newest.compareTo(versions.getCurrentVersion()) > 0) {
+			} else if (newest != null && newest.modVersion.compareTo(versions.getCurrentVersion().modVersion) > 0) {
 				if (mod.transition(ModUpdateState.MINECRAFT_OUTDATED)) {
-					UpdateControllerLocal.LOGGER.info("Cannot update mod " + mod.getContainer().getModId() + " because Minecraft is outdated.");
+					UpdateControllerLocal.LOGGER.info("Cannot update mod " + mod.getModId() + " because Minecraft is outdated.");
 				}
 			} else {
 				if (mod.transition(ModUpdateState.UP_TO_DATE)) {
-					UpdateControllerLocal.LOGGER.info("Mod " + mod.getContainer().getModId() + " is up to date.");
+					UpdateControllerLocal.LOGGER.info("Mod " + mod.getModId() + " is up to date.");
 				}
 			}
 			
 		} catch (IOException e) {
-			UpdateControllerLocal.LOGGER.warning(String.format("IOException during update checking for mod %s", mod.getContainer().getModId()));
+			UpdateControllerLocal.LOGGER.warning(String.format("IOException during update checking for mod %s", mod.getModId()));
 			mod.transition(ModUpdateState.CHECKING_FAILED);
 		} catch (InvalidModVersionException e) {
-			UpdateControllerLocal.LOGGER.warning(String.format("Version Info-File for mod %s is invalid", mod.getContainer().getModId()));
+			UpdateControllerLocal.LOGGER.warning(String.format("Version Info-File for mod %s is invalid", mod.getModId()));
 			mod.transition(ModUpdateState.CHECKING_FAILED);
 		}
 	}
@@ -69,7 +69,7 @@ public class SearchUpdates implements Runnable {
 	
 	private static final JdomParser JSON_PARSER = new JdomParser();
 
-	private  static final List<ModVersion> parseVersionFile(Reader reader) throws InvalidModVersionException {
+	private  static final List<ModVersion> parseVersionFile(UpdatableMod mod, Reader reader) throws InvalidModVersionException {
 		try {
 			ImmutableList.Builder<ModVersion> versions = ImmutableList.builder();
 			JsonRootNode json = JSON_PARSER.parse(reader);
@@ -89,7 +89,7 @@ public class SearchUpdates implements Runnable {
 				String minecraftVersion = versionNode.getStringValue("minecraftVersion");
 				String url = versionNode.getStringValue("url");
 				String patchNotes = versionNode.isStringValue("patchNotes") ? versionNode.getStringValue("patchNotes") : null;
-				versions.add(new ModVersion(new DefaultArtifactVersion(modVersion), minecraftVersion, url, patchNotes));
+				versions.add(new ModVersion(mod, new DefaultArtifactVersion(modVersion), minecraftVersion, url, patchNotes));
 			}
 			return versions.build();
 		} catch (Throwable t) {

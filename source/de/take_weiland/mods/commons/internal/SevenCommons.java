@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import net.minecraft.crash.CallableMinecraftVersion;
-
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
@@ -19,7 +18,7 @@ import de.take_weiland.mods.commons.internal.updater.UpdateInstaller;
 @MCVersion("1.6.2")
 @TransformerExclusions({
 		"de.take_weiland.mods.commons.internal.",
-		"de.take_weiland.mods.commons.util"		
+		"de.take_weiland.mods.commons.util."		
 	})
 public class SevenCommons implements IFMLLoadingPlugin {
 

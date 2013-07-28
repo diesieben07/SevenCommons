@@ -1,10 +1,11 @@
 package de.take_weiland.mods.commons.internal.client;
 
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.ResourceLocation;
+
+import org.lwjgl.opengl.GL11;
+
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
 
 public class GuiButtonUpdates extends GuiButton {
@@ -18,7 +19,7 @@ public class GuiButtonUpdates extends GuiButton {
 	@Override
 	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
 		if (super.mousePressed(mc, mouseX, mouseY)) {
-			mc.displayGuiScreen(new GuiUpdates(mc.currentScreen, CommonsModContainer.instance.getLocalUpdateController()));
+			mc.displayGuiScreen(new GuiUpdates(mc.currentScreen, CommonsModContainer.updateController));
 			return true;
 		} else {
 			return false;

@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
-import cpw.mods.fml.common.ModContainer;
 import net.minecraft.client.resources.FileResourcePack;
+import cpw.mods.fml.common.ModContainer;
 
 public class CommonsFileResourcePack extends FileResourcePack {
 

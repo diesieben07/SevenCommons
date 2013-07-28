@@ -3,29 +3,45 @@ package de.take_weiland.mods.commons.util;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableList;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+
+import com.google.common.collect.ImmutableList;
+
 import cpw.mods.fml.relauncher.Side;
 
 public final class ModdingUtils {
 
 	private ModdingUtils() { }
 	
-	public static final Side determineSide(Entity entity) {
-		return determineSide(entity.worldObj);
-	}
-	
-	public static final Side determineSide(TileEntity tileEntity) {
-		return determineSide(tileEntity.worldObj);
-	}
-	
-	public static final Side determineSide(World world) {
+	/**
+	 * gets the logical side (ServerThread/ClientThread) based on the given world
+	 * @param world
+	 * @return the logical side
+	 */
+	public static final Side getSide(World world) {
 		return world.isRemote ? Side.CLIENT : Side.SERVER;
+	}
+	
+	/**
+	 * convenience method. Identical to {@link ModdingUtils#getSide(World) ModdingUtils.getSide(entity.worldObj)} with 
+	 * @param tileEntity
+	 * @return
+	 */
+	public static final Side getSide(Entity entity) {
+		return getSide(entity.worldObj);
+	}
+	
+	/**
+	 * convenience method. Identical to {@link ModdingUtils#getSide(World) ModdingUtils.getSide(tileEntity.worldObj)} with 
+	 * @param tileEntity
+	 * @return
+	 */
+	public static final Side getSide(TileEntity tileEntity) {
+		return getSide(tileEntity.worldObj);
 	}
 	
 	@SuppressWarnings("unchecked")

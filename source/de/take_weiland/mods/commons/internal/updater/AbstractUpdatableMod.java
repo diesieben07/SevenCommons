@@ -1,13 +1,12 @@
 package de.take_weiland.mods.commons.internal.updater;
 
-import cpw.mods.fml.common.ModContainer;
+import cpw.mods.fml.common.versioning.ArtifactVersion;
 
 public abstract class AbstractUpdatableMod implements UpdatableMod {
 
 	private final Object stateLock = new Object();
 	private final Object downloadLock = new Object();
 	
-	protected final ModContainer mod;
 	protected final UpdateController controller;
 	private final ModVersionCollection versions;
 	
@@ -15,15 +14,9 @@ public abstract class AbstractUpdatableMod implements UpdatableMod {
 	private int downloadProgress = -1;
 	private int downloadTotal;
 
-	public AbstractUpdatableMod(ModContainer mod, UpdateController controller) {
-		this.mod = mod;
+	public AbstractUpdatableMod(UpdateController controller, ArtifactVersion currentVersion) {
 		this.controller = controller;
-		versions = new ModVersionCollection(mod);
-	}
-
-	@Override
-	public final ModContainer getContainer() {
-		return mod;
+		versions = new ModVersionCollection(this, currentVersion);
 	}
 
 	@Override
@@ -64,6 +57,7 @@ public abstract class AbstractUpdatableMod implements UpdatableMod {
 			this.downloadProgress = progress;
 			this.downloadTotal = total;
 		}
+		controller.onDownloadProgressChange(this);
 	}
 
 	@Override
@@ -75,5 +69,10 @@ public abstract class AbstractUpdatableMod implements UpdatableMod {
 				return (int) (max / (float)downloadTotal * downloadProgress);
 			}
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return "AbstractUpdatableMod [" + getModId() + "]";
 	}
 }

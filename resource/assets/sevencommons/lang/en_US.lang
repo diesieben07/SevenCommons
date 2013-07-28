@@ -7,4 +7,9 @@ sevencommons.ui.updates.version.current=Your Version: %s
 sevencommons.ui.updates.version.new=Select new Version:
 sevencommons.ui.updates.newest=Newest %s
 sevencommons.ui.updates.installable=Installable %s
+sevencommons.ui.updates.installed=Installed %s
 sevencommons.ui.updates.wrongmc=Wrong Minecraft (%2$s) %1$s
+
+sevencommons.updates.noplayer=You need to be a player to do this!
+sevencommons.updates.noop=You need to be an Operator to do this!
+sevencommons.updates.disabled=The ModUpdater is disabled on this server.

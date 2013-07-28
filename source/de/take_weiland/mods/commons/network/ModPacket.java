@@ -17,6 +17,7 @@ import com.google.common.io.ByteStreams;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.util.CommonUtils;
 import de.take_weiland.mods.commons.util.ModdingUtils;
 
 /**
@@ -64,7 +65,7 @@ public abstract class ModPacket {
 	public final Packet getVanillaPacket() {
 		ByteArrayDataOutput out = ByteStreams.newDataOutput();
 		
-		out.writeByte(getType().getPacketId());
+		out.write(getType().getPacketId());
 		writeData(out);
 		return PacketDispatcher.getPacket(getType().getChannel(), out.toByteArray());
 	}
@@ -106,7 +107,7 @@ public abstract class ModPacket {
 	}
 	
 	public final void sendToAllTracking(Entity entity) {
-		if (ModdingUtils.determineSide(entity).isServer()) {
+		if (ModdingUtils.getSide(entity).isServer()) {
 			((WorldServer)entity.worldObj).getEntityTracker().sendPacketToAllPlayersTrackingEntity(entity, getVanillaPacket());
 		}
 	}
@@ -119,4 +120,13 @@ public abstract class ModPacket {
 			}
 		}
 	}
+	
+	public static final void writeEnum(Enum<?> element, ByteArrayDataOutput out) {
+		out.writeByte(element.ordinal());
+	}
+	
+	public static final <E extends Enum<E>> E readEnum(Class<E> clazz, ByteArrayDataInput in) {
+		return CommonUtils.safeArrayAccess(clazz.getEnumConstants(), in.readUnsignedByte());
+	}
+	
 }

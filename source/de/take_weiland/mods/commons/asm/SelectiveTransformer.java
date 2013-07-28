@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.asm;
 
+import net.minecraft.launchwrapper.IClassTransformer;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
-
-import net.minecraft.launchwrapper.IClassTransformer;
 
 /**
  * IClassTransformer that selects the classes to be transformed via their name

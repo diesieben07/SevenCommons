@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.internal.updater;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface UpdateController {
 
@@ -13,7 +13,9 @@ public interface UpdateController {
 	 * 
 	 * @return
 	 */
-	public List<UpdatableMod> getMods();
+	public Collection<UpdatableMod> getMods();
+	
+	public UpdatableMod getMod(String modId);
 	
 	/**
 	 * search for updates on the given mod
@@ -33,5 +35,7 @@ public interface UpdateController {
 	public void unregisterListener(UpdateStateListener listener);
 	
 	public void onStateChange(UpdatableMod mod);
+	
+	public void onDownloadProgressChange(UpdatableMod mod);
 	
 }

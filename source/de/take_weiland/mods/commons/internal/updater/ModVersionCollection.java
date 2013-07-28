@@ -3,13 +3,11 @@ package de.take_weiland.mods.commons.internal.updater;
 import java.util.Collections;
 import java.util.List;
 
-
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 
-import cpw.mods.fml.common.ModContainer;
+import cpw.mods.fml.common.versioning.ArtifactVersion;
 import de.take_weiland.mods.commons.util.CommonUtils;
 
 public final class ModVersionCollection {
@@ -31,15 +29,22 @@ public final class ModVersionCollection {
 	
 	private List<ModVersion> installableVersions;
 	
-	public ModVersionCollection(ModContainer mod) {
-		currentVersion = new ModVersion(mod.getProcessedVersion());
+	public ModVersionCollection(UpdatableMod mod, ModVersion currentVersion) {
+		this.currentVersion = currentVersion;
+		installableVersions = versions = Collections.emptyList();
+	}
+	
+	public ModVersionCollection(UpdatableMod mod, ArtifactVersion currentVersion) {
+		this.currentVersion = new ModVersion(mod, currentVersion);
 		installableVersions = versions = Collections.emptyList();
 	}
 	
 	public void injectAvailableVersions(List<ModVersion> unsortedVersions) {
-		versions = Ordering.natural().reverse().immutableSortedCopy(unsortedVersions);
+		versions = ModVersion.MOD_VERSION_ORDERING.immutableSortedCopy(unsortedVersions);
 		installableVersions = ImmutableList.copyOf(Iterables.filter(versions, INSTALLABLE_FILTER));
-		selectedVersion = versions.indexOf(installableVersions.get(0));
+		if (!installableVersions.isEmpty()) {
+			selectedVersion = versions.indexOf(installableVersions.get(0));
+		}
 	}
 	
 	public ModVersion getSelectedVersion() {

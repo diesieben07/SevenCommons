@@ -9,7 +9,7 @@ import com.google.common.base.Strings;
 
 import cpw.mods.fml.common.ModContainer;
 
-public class ModsFolderMod extends AbstractUpdatableMod {
+public class ModsFolderMod extends ModContainerMod {
 
 	private URL updateURL;
 	private File source;

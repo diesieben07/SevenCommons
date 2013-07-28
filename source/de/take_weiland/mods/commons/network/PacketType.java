@@ -12,7 +12,7 @@ public interface PacketType {
 	 * gets this packet's id. must not exceed 255 (1 byte)
 	 * @return packet id
 	 */
-	public int getPacketId();
+	public byte getPacketId();
 	
 	public Class<? extends ModPacket> getPacketClass();
 	
