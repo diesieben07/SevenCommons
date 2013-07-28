@@ -1,5 +1,8 @@
 package de.take_weiland.mods.commons.util;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -70,6 +73,7 @@ public final class InventoryUtils {
 	
 	public static final NBTTagList writeInventory(IInventory inventory) {
 		NBTTagList nbt = new NBTTagList();
+
 		for (int i = 0; i < inventory.getSizeInventory(); i++) {
 			ItemStack item = inventory.getStackInSlot(i);
 			NBTTagCompound itemCompound = item.writeToNBT(new NBTTagCompound());
@@ -85,4 +89,36 @@ public final class InventoryUtils {
 			inventory.setInventorySlotContents(UnsignedShorts.toInt(nbt.getShort("slot")), item);
 		}
 	}
+	
+	public static final Iterable<ItemStack> iterate(final IInventory inventory) {
+		return new Iterable<ItemStack>() {
+			
+			@Override
+			public Iterator<ItemStack> iterator() {
+				return new Iterator<ItemStack>() {
+
+					private int next = 0;
+					
+					@Override
+					public boolean hasNext() {
+						return next < inventory.getSizeInventory();
+					}
+
+					@Override
+					public ItemStack next() {
+						if (!hasNext()) {
+							throw new NoSuchElementException();
+						}
+						return inventory.getStackInSlot(next++);
+					}
+
+					@Override
+					public void remove() {
+						throw new UnsupportedOperationException("Can't modify Inventory size!");
+					}
+				};
+			}
+		};
+	}
+	
 }
