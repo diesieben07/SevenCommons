@@ -4,6 +4,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 
 public final class InventoryUtils {
@@ -65,5 +66,23 @@ public final class InventoryUtils {
                 }
             }
         }
+	}
+	
+	public static final NBTTagList writeInventory(IInventory inventory) {
+		NBTTagList nbt = new NBTTagList();
+		for (int i = 0; i < inventory.getSizeInventory(); i++) {
+			ItemStack item = inventory.getStackInSlot(i);
+			NBTTagCompound itemCompound = item.writeToNBT(new NBTTagCompound());
+			itemCompound.setShort("slot", UnsignedShorts.checkedCast(i));
+			nbt.appendTag(itemCompound);
+		}
+		return nbt;
+	}
+	
+	public static final void readInventory(IInventory inventory, NBTTagList nbtList) {
+		for (NBTTagCompound nbt : ModdingUtils.<NBTTagCompound>iterate(nbtList)) {
+			ItemStack item = ItemStack.loadItemStackFromNBT(nbt);
+			inventory.setInventorySlotContents(UnsignedShorts.toInt(nbt.getShort("slot")), item);
+		}
 	}
 }

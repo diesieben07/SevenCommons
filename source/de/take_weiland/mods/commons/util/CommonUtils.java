@@ -25,4 +25,5 @@ public final class CommonUtils {
 	public static final <T> T safeListAccess(List<T> list, int index) {
 		return listIndexExists(list, index) ? list.get(index) : null;
 	}
+	
 }

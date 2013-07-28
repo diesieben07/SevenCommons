@@ -5,12 +5,15 @@ import java.util.Set;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 import com.google.common.collect.ImmutableList;
 
+import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 
 public final class ModdingUtils {
@@ -67,5 +70,15 @@ public final class ModdingUtils {
 	
 	public static final boolean isOp(EntityPlayer player) {
 		return getOpsRaw().contains(player.username.toLowerCase());
+	}
+	
+	/**
+	 * view the given NBTTagList as an iterable list
+	 * the type parameter T can be used if you are sure that this list only contains NBT-Tags of the given type
+	 * @param nbtList
+	 * @return
+	 */
+	public static final <T extends NBTBase> List<T> iterate(final NBTTagList nbtList) {
+		return ReflectionHelper.getPrivateValue(NBTTagList.class, nbtList, 0); // TODO: avoid reflection
 	}
 }
