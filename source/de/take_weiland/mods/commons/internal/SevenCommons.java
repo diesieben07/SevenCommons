@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.internal;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import net.minecraft.crash.CallableMinecraftVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
@@ -27,7 +27,7 @@ public class SevenCommons implements IFMLLoadingPlugin {
 	public static boolean MCP_ENVIRONMENT;
 	
 	public static final Logger LOGGER = Logger.getLogger("SevenCommons");
-	public static final String MINECRAFT_VERSION = new CallableMinecraftVersion(null).minecraftVersion();
+	public static final String MINECRAFT_VERSION = "1.6.2";
 	
 	public static File source;
 	
@@ -63,5 +63,13 @@ public class SevenCommons implements IFMLLoadingPlugin {
 	public void injectData(Map<String, Object> data) {
 		MCP_ENVIRONMENT = !((Boolean)data.get("runtimeDeobfuscationEnabled")).booleanValue();
 		source = (File)data.get("coremodLocation");
+		if (source == null) {
+			try {
+				source = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+				// oops
+			}
+		}
 	}
 }
