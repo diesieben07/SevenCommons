@@ -9,7 +9,7 @@ public final class UnsignedShorts {
 	}
 	
 	public static final short checkedCast(int value) {
-		if (value >> Short.SIZE == 0) {
+		if (value >> Short.SIZE != 0) {
 			throw new IllegalArgumentException("Unsigned Short out of range: " + value);
 		}
 		return (short)value;

@@ -30,6 +30,8 @@ public final class InventoryUtils {
 
                 if (stack.stackSize == 0) {
                 	inventory.setInventorySlotContents(slot, null);
+                } else {
+                	inventory.onInventoryChanged();
                 }
                 
                 return returnStack;
@@ -83,9 +85,11 @@ public final class InventoryUtils {
 
 		for (int i = 0; i < inventory.getSizeInventory(); i++) {
 			ItemStack item = inventory.getStackInSlot(i);
-			NBTTagCompound itemCompound = item.writeToNBT(new NBTTagCompound());
-			itemCompound.setShort("slot", UnsignedShorts.checkedCast(i));
-			nbt.appendTag(itemCompound);
+			if (item != null) {
+				NBTTagCompound itemCompound = item.writeToNBT(new NBTTagCompound());
+				itemCompound.setShort("slot", UnsignedShorts.checkedCast(i));
+				nbt.appendTag(itemCompound);
+			}
 		}
 		return nbt;
 	}
@@ -97,7 +101,12 @@ public final class InventoryUtils {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static final Iterator<ItemStack> iterator(final IInventory inventory) {
+		if (inventory instanceof Iterable) {
+			return ((Iterable<ItemStack>)inventory).iterator();
+		}
+		
 		return new Iterator<ItemStack>() {
 
 			private int next = 0;
@@ -122,7 +131,11 @@ public final class InventoryUtils {
 		};
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static final Iterable<ItemStack> iterate(final IInventory inventory) {
+		if (inventory instanceof Iterable) {
+			return (Iterable<ItemStack>)inventory;
+		}
 		return new Iterable<ItemStack>() {
 			
 			@Override

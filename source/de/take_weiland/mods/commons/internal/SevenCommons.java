@@ -2,19 +2,18 @@ package de.take_weiland.mods.commons.internal;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
-import de.take_weiland.mods.commons.internal.transformers.PacketTransformer;
-import de.take_weiland.mods.commons.internal.transformers.mc.EntityAIMateTransformer;
-import de.take_weiland.mods.commons.internal.transformers.mc.EntityPlayerTransformer;
-import de.take_weiland.mods.commons.internal.transformers.mc.EntityZombieTransformer;
-import de.take_weiland.mods.commons.internal.transformers.mc.GuiScreenTransformer;
-import de.take_weiland.mods.commons.internal.transformers.mc.ItemBlockTransformer;
-import de.take_weiland.mods.commons.internal.updater.UpdateInstaller;
+import de.take_weiland.mods.commons.asm.proxy.TargetClass;
+import de.take_weiland.mods.commons.internal.proxy.NBTListProxy;
 
 @MCVersion("1.6.2")
 @TransformerExclusions({
@@ -31,32 +30,56 @@ public class SevenCommons implements IFMLLoadingPlugin {
 	
 	public static File source;
 	
-	@Override
-	@Deprecated
-	public String[] getLibraryRequestClass() {
-		return null;
+	private static Multimap<String, Class<?>> proxyInterfaces = HashMultimap.create();
+	
+	static {
+		
+		registerProxyInterface(NBTListProxy.class);
+		
 	}
-
+	
+	public static void registerProxyInterface(Class<?> proxy) {
+		if (!proxy.isInterface()) {
+			throw new IllegalArgumentException("ProxyInterface " + proxy.getSimpleName() + " is not an interface!");
+		}
+		
+		if (!proxy.isAnnotationPresent(TargetClass.class)) {
+			throw new IllegalArgumentException("ProxyInterface " + proxy.getSimpleName() + " is missing @TargetClass annotation!");
+		}
+		
+		String target = proxy.getAnnotation(TargetClass.class).value();
+		proxyInterfaces.put(target, proxy);
+	}
+	
+	public static Collection<Class<?>> getProxyInterfaces(String className) {
+		return proxyInterfaces.get(className);
+	}
+	
+	public static boolean hasProxyInterface(String className) {
+		return proxyInterfaces.containsKey(className);
+	}
+	
 	@Override
 	public String[] getASMTransformerClass() {
 		return new String[] {
-			EntityPlayerTransformer.class.getCanonicalName(),
-			EntityAIMateTransformer.class.getCanonicalName(),
-			EntityZombieTransformer.class.getCanonicalName(),
-			PacketTransformer.class.getCanonicalName(),
-			ItemBlockTransformer.class.getCanonicalName(),
-			GuiScreenTransformer.class.getCanonicalName()
+			"de.take_weiland.mods.commons.internal.transformers.mc.EntityPlayerTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.mc.EntityAIMateTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.mc.EntityZombieTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.mc.ItemBlockTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.mc.GuiScreenTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.PacketTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.ProxyInterfaceInjector"
 		};
 	}
 
 	@Override
 	public String getModContainerClass() {
-		return CommonsModContainer.class.getCanonicalName();
+		return "de.take_weiland.mods.commons.internal.CommonsModContainer";
 	}
 
 	@Override
 	public String getSetupClass() {
-		return UpdateInstaller.class.getCanonicalName();
+		return "de.take_weiland.mods.commons.internal.updater.UpdateInstaller";
 	}
 
 	@Override
@@ -71,5 +94,11 @@ public class SevenCommons implements IFMLLoadingPlugin {
 				// oops
 			}
 		}
+	}
+	
+	@Override
+	@Deprecated
+	public String[] getLibraryRequestClass() {
+		return null;
 	}
 }

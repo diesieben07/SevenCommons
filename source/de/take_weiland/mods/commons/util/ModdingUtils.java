@@ -13,8 +13,8 @@ import net.minecraft.world.World;
 
 import com.google.common.collect.ImmutableList;
 
-import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.proxy.NBTListProxy;
 
 public final class ModdingUtils {
 
@@ -79,6 +79,6 @@ public final class ModdingUtils {
 	 * @return
 	 */
 	public static final <T extends NBTBase> List<T> iterate(final NBTTagList nbtList) {
-		return ReflectionHelper.getPrivateValue(NBTTagList.class, nbtList, 0); // TODO: avoid reflection
+		return ((NBTListProxy)nbtList).getWrappedList();
 	}
 }
