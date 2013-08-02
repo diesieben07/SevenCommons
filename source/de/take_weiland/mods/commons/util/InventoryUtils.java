@@ -41,6 +41,12 @@ public final class InventoryUtils {
         }
 	}
 	
+	public static final ItemStack getAndRemove(IInventory inventory, int slot) {
+		ItemStack item = inventory.getStackInSlot(slot);
+		inventory.setInventorySlotContents(slot, null);
+		return item;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static final <T extends TileEntity & IInventory> void spillIfInventory(TileEntity te) {
 		if (te instanceof IInventory) {
