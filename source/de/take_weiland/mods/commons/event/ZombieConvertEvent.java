@@ -12,8 +12,11 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 @Cancelable
 public class ZombieConvertEvent extends LivingEvent {
 
+	public final EntityZombie zombie;
+	
 	public ZombieConvertEvent(EntityZombie entity) {
 		super(entity);
+		zombie = entity;
 	}
 
 }
