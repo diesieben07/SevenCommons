@@ -21,15 +21,20 @@ import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.internal_t.network.CommonsPackets;
 import de.take_weiland.mods.commons.network.ModPacketHandler;
+import de.take_weiland.mods.commons.util.config.ConfigInjector;
+import de.take_weiland.mods.commons.util.config.GetProperty;
 
 public class CommonsModContainer extends DummyModContainer {
 
 	public static SevenCommonsProxy proxy;
 	public static CommonsModContainer instance;
-	public static Configuration config;
-	public static boolean updaterEnabled;
 	public static UpdateController updateController;
-	public static String updateCommand;
+	
+	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
+	public static boolean updaterEnabled = true;
+	
+	@GetProperty(comment = "The name of the command used to access the update feature on a server")
+	public static String updateCommand = "modupdates";
 	
 	public CommonsModContainer() {
 		super(new ModMetadata());
@@ -69,9 +74,8 @@ public class CommonsModContainer extends DummyModContainer {
 	
 	@Subscribe
 	public void preInit(FMLPreInitializationEvent event) {
-		config = new Configuration(event.getSuggestedConfigurationFile());
-		
-		updaterEnabled = config.get(Configuration.CATEGORY_GENERAL, "enableUpdater", true).getBoolean(true);
+		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
+		ConfigInjector.inject(config, getClass());
 		
 		ModPacketHandler.setupNetworking(this, CommonsPackets.values());
 		proxy.preInit(event);
@@ -88,7 +92,6 @@ public class CommonsModContainer extends DummyModContainer {
 	@Subscribe
 	public void serverStarting(FMLServerStartingEvent event) {
 		if (event.getSide().isServer()) {
-			updateCommand = config.get(Configuration.CATEGORY_GENERAL, "updatesCommand", "modUpdates").getString();
 			event.registerServerCommand(new CommandUpdates(updateCommand));
 		}
 	}

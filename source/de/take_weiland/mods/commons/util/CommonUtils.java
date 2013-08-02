@@ -26,4 +26,7 @@ public final class CommonUtils {
 		return listIndexExists(list, index) ? list.get(index) : null;
 	}
 	
+	public static final String capitalize(String string) {
+		return string.length() == 0 ? string : Character.toUpperCase(string.charAt(0)) + string.substring(1);
+	}
 }
