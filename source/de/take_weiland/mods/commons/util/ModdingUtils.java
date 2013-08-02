@@ -10,6 +10,8 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.world.WorldEvent;
 
 import com.google.common.collect.ImmutableList;
 
@@ -30,8 +32,8 @@ public final class ModdingUtils {
 	}
 	
 	/**
-	 * convenience method. Identical to {@link ModdingUtils#getSide(World) ModdingUtils.getSide(entity.worldObj)} with 
-	 * @param tileEntity
+	 * convenience method. Identical to {@link ModdingUtils#getSide(World) ModdingUtils.getSide(entity.worldObj)} 
+	 * @param entity
 	 * @return
 	 */
 	public static final Side getSide(Entity entity) {
@@ -39,12 +41,30 @@ public final class ModdingUtils {
 	}
 	
 	/**
-	 * convenience method. Identical to {@link ModdingUtils#getSide(World) ModdingUtils.getSide(tileEntity.worldObj)} with 
+	 * convenience method. Identical to {@link ModdingUtils#getSide(World) ModdingUtils.getSide(tileEntity.worldObj)} 
 	 * @param tileEntity
 	 * @return
 	 */
 	public static final Side getSide(TileEntity tileEntity) {
 		return getSide(tileEntity.worldObj);
+	}
+	
+	/**
+	 * convenience method. Identical to {@link ModdingUtils#getSide(World) ModdingUtils.getSide(event.entity.worldObj)} 
+	 * @param event
+	 * @return
+	 */
+	public static final Side getSide(EntityEvent event) {
+		return getSide(event.entity.worldObj);
+	}
+	
+	/**
+	 * convenience method. Identical to {@link ModdingUtils#getSide(World) ModdingUtils.getSide(event.world)} 
+	 * @param event
+	 * @return
+	 */
+	public static final Side getSide(WorldEvent event) {
+		return getSide(event.world);
 	}
 	
 	@SuppressWarnings("unchecked")
