@@ -19,7 +19,7 @@ public interface UpdateController {
 	
 	/**
 	 * search for updates on the given mod
-	 * @param modContainer the mod
+	 * @param mod the mod
 	 */
 	public void searchForUpdates(UpdatableMod mod);
 

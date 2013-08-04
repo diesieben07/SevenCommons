@@ -5,8 +5,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
-import de.take_weiland.mods.commons.internal_t.network.PacketDownloadProgress;
-import de.take_weiland.mods.commons.internal_t.network.PacketModState;
+import de.take_weiland.mods.commons.internal.network.PacketDownloadProgress;
+import de.take_weiland.mods.commons.internal.network.PacketModState;
 
 public class PlayerUpdateInformation implements IExtendedEntityProperties, UpdateStateListener {
 

@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.network;
 
-import java.util.Set;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.packet.Packet;
@@ -13,6 +11,7 @@ import net.minecraft.world.WorldServer;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import com.google.common.primitives.UnsignedBytes;
 
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
@@ -54,20 +53,29 @@ public abstract class ModPacket {
 	protected abstract PacketType getType();
 	
 	/**
-	 * determines if the given side can receive this packet
-	 * @param side
-	 * @return true if it is valid for the given side to receive this packet
+	 * determines if the given logical side can receive this packet
+	 * @param side the logical side
+	 * @return true if it is valid for the given logical side to receive this packet
 	 */
 	protected boolean isValidForSide(Side side) {
 		return true;
 	}
 	
+	private Packet packet;
+	
+	/**
+	 * generate a new Vanilla {@link Packet} that represents this packet
+	 * @return a packet
+	 */
 	public final Packet getVanillaPacket() {
-		ByteArrayDataOutput out = ByteStreams.newDataOutput();
-		
-		out.write(getType().getPacketId());
-		writeData(out);
-		return PacketDispatcher.getPacket(getType().getChannel(), out.toByteArray());
+		if (packet == null) {
+			ByteArrayDataOutput out = ByteStreams.newDataOutput();
+			
+			out.write(getType().getPacketId());
+			writeData(out);
+			packet = PacketDispatcher.getPacket(getType().getChannel(), out.toByteArray());
+		}
+		return packet;
 	}
 	
 	public final void sendToServer() {
@@ -113,16 +121,14 @@ public abstract class ModPacket {
 	}
 	
 	public final void sendToOps() {
-		Set<String> ops = ModdingUtils.getOpsRaw();
-		for (EntityPlayer player : ModdingUtils.getAllPlayers()) {
-			if (ops.contains(player.username.toLowerCase().trim())) {
-				PacketDispatcher.sendPacketToPlayer(getVanillaPacket(), (Player)player);
-			}
+		Packet packet = getVanillaPacket();
+		for (EntityPlayer op : ModdingUtils.getOps()) {
+			PacketDispatcher.sendPacketToPlayer(packet, (Player)op);
 		}
 	}
 	
 	public static final void writeEnum(Enum<?> element, ByteArrayDataOutput out) {
-		out.writeByte(element.ordinal());
+		out.writeByte(UnsignedBytes.checkedCast(element.ordinal()));
 	}
 	
 	public static final <E extends Enum<E>> E readEnum(Class<E> clazz, ByteArrayDataInput in) {

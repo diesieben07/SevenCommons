@@ -4,8 +4,8 @@ import java.util.Collection;
 
 import com.google.common.collect.Maps;
 
-import de.take_weiland.mods.commons.internal_t.network.PacketUpdateAction;
-import de.take_weiland.mods.commons.internal_t.network.PacketUpdateAction.Action;
+import de.take_weiland.mods.commons.internal.network.PacketUpdateAction;
+import de.take_weiland.mods.commons.internal.network.PacketUpdateAction.Action;
 
 public class UpdateControllerRemote extends AbstractUpdateController {
 

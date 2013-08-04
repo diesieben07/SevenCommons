@@ -7,10 +7,10 @@ import net.minecraftforge.event.entity.EntityEvent;
 import cpw.mods.fml.common.IPlayerTracker;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.internal.network.PacketDownloadProgress;
+import de.take_weiland.mods.commons.internal.network.PacketModState;
+import de.take_weiland.mods.commons.internal.network.PacketViewUpdates;
 import de.take_weiland.mods.commons.internal.updater.PlayerUpdateInformation;
-import de.take_weiland.mods.commons.internal_t.network.PacketDownloadProgress;
-import de.take_weiland.mods.commons.internal_t.network.PacketModState;
-import de.take_weiland.mods.commons.internal_t.network.PacketViewUpdates;
 
 public class ServerProxy implements SevenCommonsProxy, IPlayerTracker {
 

@@ -6,7 +6,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
-import de.take_weiland.mods.commons.internal_t.network.PacketViewUpdates;
+import de.take_weiland.mods.commons.internal.network.PacketViewUpdates;
 
 public class CommandUpdates extends CommandBase {
 

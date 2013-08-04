@@ -16,13 +16,15 @@ import cpw.mods.fml.common.event.FMLConstructionEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.registry.TickRegistry;
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.config.ConfigInjector;
+import de.take_weiland.mods.commons.config.GetProperty;
+import de.take_weiland.mods.commons.internal.network.CommonsPackets;
 import de.take_weiland.mods.commons.internal.updater.CommandUpdates;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
-import de.take_weiland.mods.commons.internal_t.network.CommonsPackets;
 import de.take_weiland.mods.commons.network.ModPacketHandler;
-import de.take_weiland.mods.commons.util.config.ConfigInjector;
-import de.take_weiland.mods.commons.util.config.GetProperty;
 
 public class CommonsModContainer extends DummyModContainer {
 
@@ -78,6 +80,8 @@ public class CommonsModContainer extends DummyModContainer {
 		ConfigInjector.inject(config, getClass());
 		
 		ModPacketHandler.setupNetworking(this, CommonsPackets.values());
+		TickRegistry.registerTickHandler(new CommonsPlayerTicker(), Side.SERVER);
+		
 		proxy.preInit(event);
 	}
 	

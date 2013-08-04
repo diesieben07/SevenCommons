@@ -13,9 +13,24 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 @Cancelable
 public class LivingBreedEvent extends LivingEvent {
 
+	/**
+	 * the animal spawning the child
+	 */
 	public final EntityAnimal animal;
+	
+	/**
+	 * the animal's mate
+	 */
 	public final EntityAnimal mate;
+	
+	/**
+	 * the child being spawned
+	 */
 	public final EntityAgeable child;
+	
+	/**
+	 * the amount of experience being spawned, may be changed
+	 */
 	public int xp;
 	
 	public LivingBreedEvent(EntityAnimal animal, EntityAnimal mate, EntityAgeable child) {

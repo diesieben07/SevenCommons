@@ -12,6 +12,9 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
  */
 public class PlayerCloneEvent extends PlayerEvent {
 
+	/**
+	 * the new player instance
+	 */
 	public final EntityPlayer newPlayer;
 	
 	public PlayerCloneEvent(EntityPlayer oldPlayer, EntityPlayer newPlayer) {

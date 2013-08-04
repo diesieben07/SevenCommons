@@ -3,10 +3,8 @@ package de.take_weiland.mods.commons.asm;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import de.take_weiland.mods.commons.util.ASMUtils;
-
 /**
- * ClassTransformer to transform a single method
+ * A {@link SelectiveTransformer} that also selects which methods to transform
  * @author diesieben07
  *
  */
@@ -15,17 +13,28 @@ public abstract class MethodTransformer extends SelectiveTransformer {
 	@Override
 	protected final boolean transform(ClassNode clazz) {
 		for (MethodNode method : clazz.methods) {
-			if (method.name.equals(getMcpMethod()) || ASMUtils.deobfuscate(clazz.name, method).equals(getSrgMethod())) {
-				System.out.println("Transforming method " + getMcpMethod());
+			if (transforms(clazz, method)) {
+				System.out.println("Transforming method " + method.name);
 				return transform(clazz, method);
 			}
 		}
 		return false;
 	}
 	
-	protected abstract String getMcpMethod();
+	/**
+	 * if the given MethodNode in the given Class should be transformed
+	 * @param clazz the class being transformed
+	 * @param method the method being transformed
+	 * @return if the method should be transformed
+	 */
+	protected abstract boolean transforms(ClassNode clazz, MethodNode method);
 	
-	protected abstract String getSrgMethod();
-				
+	/**
+	 * called to transform the given method in the given class.
+	 * @param clazz the class in which the method resides
+	 * @param method the method to be transformed
+	 * @return true if the method was actually transformed
+	 */
 	protected abstract boolean transform(ClassNode clazz, MethodNode method);
+
 }

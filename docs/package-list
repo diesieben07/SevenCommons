@@ -1,0 +1,15 @@
+de.take_weiland.mods.commons.asm
+de.take_weiland.mods.commons.asm.proxy
+de.take_weiland.mods.commons.asm.transformers
+de.take_weiland.mods.commons.config
+de.take_weiland.mods.commons.event
+de.take_weiland.mods.commons.event.client
+de.take_weiland.mods.commons.internal
+de.take_weiland.mods.commons.internal.client
+de.take_weiland.mods.commons.internal.network
+de.take_weiland.mods.commons.internal.updater
+de.take_weiland.mods.commons.internal.updater.tasks
+de.take_weiland.mods.commons.network
+de.take_weiland.mods.commons.templates
+de.take_weiland.mods.commons.util
+net.minecraft.item

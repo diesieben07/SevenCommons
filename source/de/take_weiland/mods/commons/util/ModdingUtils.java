@@ -13,10 +13,11 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.world.WorldEvent;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.proxy.NBTListProxy;
 
 public final class ModdingUtils {
 
@@ -67,38 +68,76 @@ public final class ModdingUtils {
 		return getSide(event.world);
 	}
 	
+	private static EntityPlayer activePlayer;
+	
+	/**
+	 * gets the player that is "in charge" of doing stuff at the moment (placing blocks, etc. etc.)
+	 * @return
+	 */
+	public static final EntityPlayer getActivePlayer() {
+		return activePlayer;
+	}
+	
+	/**
+	 * internal method - DO NOT CALL!
+	 * @param player
+	 */
+	public static final void setActivePlayer(EntityPlayer player) {
+		activePlayer = player;
+	}
+	
+	/**
+	 * gets a List of all players currently on the server
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public static final List<EntityPlayer> getAllPlayers() {
 		return MinecraftServer.getServer().getConfigurationManager().playerEntityList;
 	}
 	
+	/**
+	 * gets a Set containing all operator usernames in lowercase 
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public static final Set<String> getOpsRaw() {
 		return MinecraftServer.getServer().getConfigurationManager().getOps();
 	}
 	
-	public static final List<EntityPlayer> getOps() {
-		ImmutableList.Builder<EntityPlayer> ops = ImmutableList.builder();
-		Set<String> opsRaw = getOpsRaw();
-		for (EntityPlayer player : getAllPlayers()) {
-			if (opsRaw.contains(player.username.toLowerCase().trim())) {
-				ops.add(player);
+	/**
+	 * gets an Iterable for iterating over all the Operators in this server<br>
+	 * If you need a Collection use {@link ImmutableSet#copyOf(Iterable) ImmutableSet.copyOf(ModdingUtils.getOps())}
+	 * @return
+	 */
+	public static final Iterable<EntityPlayer> getOps() {
+		final Set<String> ops = getOpsRaw();
+		return Iterables.filter(getAllPlayers(), new Predicate<EntityPlayer>() {
+			
+			@Override
+			public boolean apply(EntityPlayer player) {
+				return ops.contains(player.username.toLowerCase().trim());
 			}
-		}
-		return ops.build();
-	}
-	
-	public static final boolean isOp(EntityPlayer player) {
-		return getOpsRaw().contains(player.username.toLowerCase());
+			
+		});
 	}
 	
 	/**
-	 * view the given NBTTagList as an iterable list
-	 * the type parameter T can be used if you are sure that this list only contains NBT-Tags of the given type
-	 * @param nbtList
-	 * @return
+	 * returns true if the given player is an operator
+	 * @param player the player to check
+	 * @return true if the player is an operator
 	 */
-	public static final <T extends NBTBase> List<T> iterate(final NBTTagList nbtList) {
+	public static final boolean isOp(EntityPlayer player) {
+		return getOpsRaw().contains(player.username.toLowerCase().trim());
+	}
+	
+	/**
+	 * view the given NBTTagList as a {@link List}
+	 * the type parameter T can be used if you are sure that this list only contains NBT-Tags of the given type
+	 * @param nbtList the list to view
+	 * @return a modifiable list view of the NBTTagList
+	 */
+	public static final <T extends NBTBase> List<T> asList(NBTTagList nbtList) {
 		return ((NBTListProxy)nbtList).getWrappedList();
 	}
+	
 }
