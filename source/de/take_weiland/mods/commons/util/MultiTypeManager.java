@@ -43,6 +43,10 @@ public abstract class MultiTypeManager<T extends Enum<T> & MultiType> {
 		return CommonUtils.defaultedArrayAccess(types, meta, defaultValue);
 	}
 	
+	public final T[] getTypes() {
+		return types;
+	}
+	
 	public abstract ItemStack getStack(int meta, int quantity);
 	
 	private final T[] types;

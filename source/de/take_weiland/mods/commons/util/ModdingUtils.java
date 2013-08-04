@@ -5,7 +5,9 @@ import java.util.Set;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
@@ -138,6 +140,13 @@ public final class ModdingUtils {
 	 */
 	public static final <T extends NBTBase> List<T> asList(NBTTagList nbtList) {
 		return ((NBTListProxy)nbtList).getWrappedList();
+	}
+	
+	public static final NBTTagCompound getAttachedNbt(ItemStack stack) {
+		if (stack.stackTagCompound == null) {
+			stack.stackTagCompound = new NBTTagCompound();
+		}
+		return stack.stackTagCompound;
 	}
 	
 }
