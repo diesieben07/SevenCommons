@@ -15,7 +15,7 @@ import de.take_weiland.mods.commons.util.MultiTypeManager;
 
 public abstract class MultiTypedItem<T extends Enum<T> & MultiType> extends AbstractItem {
 
-	protected final MultiTypeManager<T> manager;
+	private final MultiTypeManager<T> manager;
 	private final Icon[] icons;
 	
 	public MultiTypedItem(Configuration config, String baseName, int defaultId, Class<T> types, T defaultType) {

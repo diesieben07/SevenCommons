@@ -17,14 +17,17 @@ public abstract class AbstractItem extends Item {
 	
 	public AbstractItem(String baseName, int itemId) {
 		super(itemId);
-		GameRegistry.registerItem(this, baseName);
 		this.baseName = baseName;
 		modId = Loader.instance().activeModContainer().getModId();
+		
+		GameRegistry.registerItem(this, baseName);
+		
+		func_111206_d(modId + ":" + baseName); // setIconName
 	}
 
 	@Override
 	public String getLocalizedName(ItemStack stack) { // very bad naming here... returns something like "item.foobar", ".name" gets appended elsewhere
-		return "item." + baseName;
+		return "item." + modId + "." + baseName;
 	}
 
 }

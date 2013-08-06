@@ -83,8 +83,8 @@ public class CommonsModContainer extends DummyModContainer {
 		TickRegistry.registerTickHandler(new CommonsPlayerTicker(), Side.SERVER);
 		
 		proxy.preInit(event);
-	}
-	
+	}	
+
 	@Subscribe
 	public void postInit(FMLPostInitializationEvent event) {
 		if (updaterEnabled) {
