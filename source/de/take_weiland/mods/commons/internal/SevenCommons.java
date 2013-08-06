@@ -12,6 +12,7 @@ import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.proxy.ProxyInterfaceRegistry;
+import de.take_weiland.mods.commons.util.EntityRendererProxy;
 import de.take_weiland.mods.commons.util.NBTListProxy;
 
 @MCVersion("1.6.2")
@@ -33,6 +34,7 @@ public class SevenCommons implements IFMLLoadingPlugin {
 	static {
 		
 		ProxyInterfaceRegistry.registerProxyInterface(NBTListProxy.class);
+		ProxyInterfaceRegistry.registerProxyInterface(EntityRendererProxy.class);
 		
 	}
 	

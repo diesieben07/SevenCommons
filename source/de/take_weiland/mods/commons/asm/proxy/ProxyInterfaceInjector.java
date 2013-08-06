@@ -127,8 +127,9 @@ public class ProxyInterfaceInjector extends SelectiveTransformer {
 			Type paramType = Type.getType(parameters[0]);
 			
 			boolean cast = false;
-			if (paramType.equals(expectedType)) {
+			if (!paramType.equals(expectedType)) {
 				System.err.println("!! Warning: Unexpected parameter type in @Setter method " + proxyMethod.getName() + " in " + proxyMethod.getDeclaringClass().getSimpleName() + ". Things might break!");
+				System.err.println("Expected: " + expectedType.getClassName() + " but got: " + paramType.getClassName());
 				cast = true;
 			}
 			
