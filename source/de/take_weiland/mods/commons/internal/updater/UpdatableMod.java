@@ -29,6 +29,7 @@ public interface UpdatableMod {
 		}
 	};
 	
+	@SuppressWarnings("unchecked") // dang you java 6
 	public static final Comparator<UpdatableMod> ACTIVE_AND_NAME_ORDER = Ordering.compound(Arrays.asList(ACTIVE_ORDER, NAME_ORDER));
 	
 	public String getModId();

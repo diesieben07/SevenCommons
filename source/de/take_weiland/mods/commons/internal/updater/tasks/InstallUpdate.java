@@ -10,6 +10,8 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 
+import org.apache.commons.io.IOUtils;
+
 import com.google.common.io.ByteStreams;
 
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
@@ -40,21 +42,25 @@ public class InstallUpdate implements Runnable {
 			
 			File tempFile = new File(mod.getSource().getAbsolutePath() + ".7update");
 			URLConnection conn;
+			ReadableByteChannel in = null;
+			FileChannel out = null;
 			try {
 				conn = downloadURL.openConnection();
 				
-				try (ReadableByteChannel in = new MonitoringByteChannel(Channels.newChannel(conn.getInputStream()), mod, conn.getContentLength());
-						FileChannel out = new FileOutputStream(tempFile).getChannel();) {
+				in = new MonitoringByteChannel(Channels.newChannel(conn.getInputStream()), mod, conn.getContentLength());
+				out = new FileOutputStream(tempFile).getChannel();
 					
-					ByteStreams.copy(in, out);
+				ByteStreams.copy(in, out);
 					
-					mod.transition(ModUpdateState.PENDING_RESTART);
+				mod.transition(ModUpdateState.PENDING_RESTART);
 					
-				}
 				
 			} catch (IOException e) {
 				UpdateControllerLocal.LOGGER.warning(String.format("IOException during update download for mod %s", mod.getModId()));
 				mod.transition(ModUpdateState.DOWNLOAD_FAILED);
+			} finally {
+				IOUtils.closeQuietly(in);
+				IOUtils.closeQuietly(out);
 			}
 		} catch (MalformedURLException e) {
 			UpdateControllerLocal.LOGGER.warning(String.format("Failed to download update for mod %s, the download URL is invalid", mod.getModId()));

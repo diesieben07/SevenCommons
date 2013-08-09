@@ -1,10 +1,13 @@
 package de.take_weiland.mods.commons.internal.updater.tasks;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.util.List;
+
+import org.apache.commons.io.IOUtils;
 
 import argo.jdom.JdomParser;
 import argo.jdom.JsonNode;
@@ -32,7 +35,11 @@ public class SearchUpdates implements Runnable {
 	@Override
 	public void run() {
 		URL url = mod.getUpdateURL();
-		try (Reader reader = new InputStreamReader(url.openStream())) {
+		Reader reader = null;
+		
+		try {
+			reader = new BufferedReader(new InputStreamReader(url.openStream()));
+			
 			ModVersionCollection versions = mod.getVersions();
 			
 			versions.injectAvailableVersions(SearchUpdates.parseVersionFile(mod, reader));
@@ -60,6 +67,8 @@ public class SearchUpdates implements Runnable {
 		} catch (InvalidModVersionException e) {
 			UpdateControllerLocal.LOGGER.warning(String.format("Version Info-File for mod %s is invalid", mod.getModId()));
 			mod.transition(ModUpdateState.CHECKING_FAILED);
+		} finally {
+			IOUtils.closeQuietly(reader);
 		}
 	}
 	
