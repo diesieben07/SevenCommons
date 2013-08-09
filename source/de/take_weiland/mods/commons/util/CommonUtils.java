@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
+import java.util.Arrays;
 import java.util.List;
 
 public final class CommonUtils {
@@ -28,5 +29,16 @@ public final class CommonUtils {
 	
 	public static final String capitalize(String string) {
 		return string.length() == 0 ? string : Character.toUpperCase(string.charAt(0)) + string.substring(1);
+	}
+
+	public static final <T> T[] shrinkArray(T[] array) {
+		int newLength = -1;
+		for (int i = 0; i < array.length; i++) {
+			if (array[i] == null) {
+				newLength = i;
+				break;
+			}
+		}
+		return newLength >= 0 ? Arrays.copyOf(array, newLength) : array;
 	}
 }

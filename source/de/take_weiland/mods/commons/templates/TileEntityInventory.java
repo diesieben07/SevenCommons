@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.templates;
 
-import de.take_weiland.mods.commons.util.InventoryUtils;
+import de.take_weiland.mods.commons.util.Inventories;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -13,7 +13,10 @@ public abstract class TileEntityInventory extends TileEntityAbstract<TileEntityI
 		storage = provideStorage();
 	}
 	
-	protected abstract ItemStack[] provideStorage();
+	protected ItemStack[] provideStorage() {
+		return new ItemStack[getSizeInventory()];
+		
+	}
 	
 	protected abstract String getDefaultName();
 	
@@ -24,12 +27,12 @@ public abstract class TileEntityInventory extends TileEntityAbstract<TileEntityI
 
 	@Override
 	public ItemStack decrStackSize(int slot, int count) {
-		return InventoryUtils.decreaseStackSize(this, slot, count);
+		return Inventories.decreaseStackSize(this, slot, count);
 	}
 
 	@Override
 	public ItemStack getStackInSlotOnClosing(int slot) {
-		return InventoryUtils.getAndRemove(this, slot);
+		return Inventories.getAndRemove(this, slot);
 	}
 
 	@Override

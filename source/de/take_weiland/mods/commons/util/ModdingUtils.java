@@ -149,4 +149,22 @@ public final class ModdingUtils {
 		return stack.stackTagCompound;
 	}
 	
+	public static final NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {
+		if (!parent.hasKey(key)) {
+			parent.setCompoundTag(key, parent);
+		}
+		return parent.getCompoundTag(key);
+	}
+	
+	public static final NBTTagCompound getEntityData(Entity entity) {
+		if (entity instanceof EntityPlayer) {
+			return getOrCreateCompound(entity.getEntityData(), EntityPlayer.PERSISTED_NBT_TAG);
+		} else {
+			return entity.getEntityData();
+		}
+	}
+	
+	public static final NBTTagCompound getEntityData(Entity entity, String subKey) {
+		return getOrCreateCompound(getEntityData(entity), subKey);
+	}
 }

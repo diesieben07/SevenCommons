@@ -17,9 +17,9 @@ import net.minecraft.tileentity.TileEntity;
  * @author diesieben07
  *
  */
-public final class InventoryUtils {
+public final class Inventories {
 
-	private InventoryUtils() { }
+	private Inventories() { }
 	
 	/**
 	 * generic implementation for {@link IInventory#decrStackSize}
@@ -201,7 +201,7 @@ public final class InventoryUtils {
 			
 			@Override
 			public Iterator<ItemStack> iterator() {
-				return InventoryUtils.newIterator(inventory);
+				return Inventories.newIterator(inventory);
 			}
 		};
 	}

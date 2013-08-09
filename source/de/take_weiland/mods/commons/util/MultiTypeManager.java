@@ -1,17 +1,18 @@
 package de.take_weiland.mods.commons.util;
 
+import de.take_weiland.mods.commons.templates.Type;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
-public abstract class MultiTypeManager<T extends Enum<T> & MultiType> {
+public abstract class MultiTypeManager<T extends Enum<T> & Type> {
 
-	public static final <T extends Enum<T> & MultiType> MultiTypeManager<T> create(Item item, Class<T> types, T defaultValue) {
+	public static final <T extends Enum<T> & Type> MultiTypeManager<T> create(Item item, Class<T> types, T defaultValue) {
 		return new MultiTypeManager.ForItem<T>(item, types.getEnumConstants(), defaultValue);
 	}
 	
-	public static final <T extends Enum<T> & MultiType> MultiTypeManager<T> create(Block block, Class<T> types, T defaultValue) {
+	public static final <T extends Enum<T> & Type> MultiTypeManager<T> create(Block block, Class<T> types, T defaultValue) {
 		return new MultiTypeManager.ForBlock<T>(block, types.getEnumConstants(), defaultValue);
 	}
 	
@@ -57,7 +58,7 @@ public abstract class MultiTypeManager<T extends Enum<T> & MultiType> {
 		this.defaultValue = defaultValue;
 	}
 	
-	private static class ForItem<T extends Enum<T> & MultiType> extends MultiTypeManager<T> {
+	private static class ForItem<T extends Enum<T> & Type> extends MultiTypeManager<T> {
 
 		private final Item item;
 		
@@ -73,7 +74,7 @@ public abstract class MultiTypeManager<T extends Enum<T> & MultiType> {
 		
 	}
 	
-	private static class ForBlock<T extends Enum<T> & MultiType> extends MultiTypeManager<T> {
+	private static class ForBlock<T extends Enum<T> & Type> extends MultiTypeManager<T> {
 
 		private final Block block;
 		
