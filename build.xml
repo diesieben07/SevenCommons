@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project default="build">
 
-	<property file="sevencommons.properties"></property>
+	<property file="sevencommons.properties" />
+	<property file="buildnumber.properties" />
+	
+	<target name="inc-buildnumber">
+		<propertyfile file="buildnumber.properties">
+			<entry key="buildnumber" default="1" type="int" operation="+"/>	
+		</propertyfile>
+	</target>
 	
 	<target name="clean">
 		<delete dir="${forge-root}/mcp/src/minecraft/de/take_weiland"></delete>
@@ -36,7 +43,7 @@
 	</target>
 	
 	<target name="create_jar" depends="reobfuscate">
-		<jar destfile="./build/SevenCommons-${mod-version}-${mc-version}.jar">
+		<jar destfile="./build/SevenCommons-${mod-version}-build${buildnumber}-${mc-version}.jar">
 			<manifest>
 				<attribute name="FMLCorePlugin" value="de.take_weiland.mods.commons.internal.SevenCommons"/>
 			</manifest>
@@ -46,7 +53,7 @@
 		</jar>
 	</target>
 	
-	<target name="build">
+	<target name="build" depends="inc-buildnumber">
 		<antcall target="create_jar"></antcall>
 		<antcall target="clean"></antcall>
 	</target>
