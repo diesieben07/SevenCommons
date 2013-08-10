@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project default="build">
+
+	<property file="sevencommons.properties"></property>
+	
+	<target name="clean">
+		<delete dir="${forge-root}/mcp/src/minecraft/de/take_weiland"></delete>
+	</target>
+	
+	<target name="copysource" depends="clean">
+		<copy todir="${forge-root}/mcp/src/minecraft/">
+			<fileset dir="./source/">
+    			<include name="**/*.java"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="recompile" depends="copysource">
+		<exec dir="${forge-root}/mcp/" executable="cmd" osfamily="windows">
+					<arg value="/c recompile.bat" />
+				</exec>
+				
+				<exec dir="${forge-root}/mcp/" executable="bash" osfamily="unix">
+					<arg value="recompile.sh" />
+				</exec>
+	</target>
+	
+	<target name="reobfuscate" depends="recompile">
+		<exec dir="${forge-root}/mcp/" executable="cmd" osfamily="windows">
+			<arg value="/c reobfuscate.bat" />
+		</exec>
+		
+		<exec dir="${forge-root}/mcp/" executable="bash" osfamily="unix">
+			<arg value="reobfuscate.sh" />
+		</exec>
+	</target>
+	
+	<target name="create_jar" depends="reobfuscate">
+		<jar destfile="./build/SevenCommons-${mod-version}-${mc-version}.jar">
+			<manifest>
+				<attribute name="FMLCorePlugin" value="de.take_weiland.mods.commons.internal.SevenCommons"/>
+			</manifest>
+			
+			<fileset dir="${forge-root}/mcp/reobf/minecraft/"></fileset>
+			<fileset dir="resource/"></fileset>
+		</jar>
+	</target>
+	
+	<target name="build">
+		<antcall target="create_jar"></antcall>
+		<antcall target="clean"></antcall>
+	</target>
+
+</project>
