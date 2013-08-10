@@ -3,6 +3,9 @@
 
 	<property file="sevencommons.properties" />
 	<property file="buildnumber.properties" />
+	<property file="signing.properties" prefix="sign" />
+	
+	<property name="jar-name" value="./build/SevenCommons-${mod-version}-build${buildnumber}-${mc-version}.jar"></property>
 	
 	<target name="inc-buildnumber">
 		<propertyfile file="buildnumber.properties">
@@ -43,7 +46,7 @@
 	</target>
 	
 	<target name="create_jar" depends="reobfuscate">
-		<jar destfile="./build/SevenCommons-${mod-version}-build${buildnumber}-${mc-version}.jar">
+		<jar destfile="${jar-name}">
 			<manifest>
 				<attribute name="FMLCorePlugin" value="de.take_weiland.mods.commons.internal.SevenCommons"/>
 			</manifest>
@@ -53,9 +56,18 @@
 		</jar>
 	</target>
 	
-	<target name="build" depends="inc-buildnumber">
-		<antcall target="create_jar"></antcall>
-		<antcall target="clean"></antcall>
+	<target name="sign_jar" depends="create_jar">
+		<delete file="${sign.store.file}"></delete>
+		<genkey alias="${sign.alias}" storepass="${sign.store.pass}" keypass="${sign.key.pass}" keystore="${sign.store.file}" dname="${sign.dname}">
+		</genkey>
+		<signjar jar="${jar-name}" alias="${sign.alias}" keypass="${sign.key.pass}" keystore="${sign.store.file}" storepass="${sign.store.pass}">		
+		</signjar>
+	</target>
+	
+	<target name="build">
+		<antcall target="inc-buildnumber" />
+		<antcall target="sign_jar" />
+		<antcall target="clean" />
 	</target>
 
 </project>
