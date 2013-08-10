@@ -3,9 +3,18 @@
 
 	<property file="sevencommons.properties" />
 	<property file="buildnumber.properties" />
-	<property file="signing.properties" prefix="sign" />
 	
-	<property name="jar-name" value="./build/SevenCommons-${mod-version}-build${buildnumber}-${mc-version}.jar"></property>
+	<property name="build-info" value="${mod-version}-build${buildnumber}-${mc-version}" />
+	<property name="build-dir" value="build/${build-info}" />
+	<property name="jar-postfix" value="-${build-info}.jar"></property>
+	<property name="jar-prefix" value="${build-dir}/Sevencommons-"></property>
+	<property name="obf-jar-name" value="${jar-prefix}obf${jar-postfix}"></property>
+	<property name="mcp-jar-name" value="${jar-prefix}mcp${jar-postfix}"></property>
+	<property name="api-jar-name" value="${jar-prefix}api${jar-postfix}"></property>
+	
+	<property name="root-package" value="de/take_weiland/mods/commons" />
+	<property name="api-package" value="${root-package}/api" />
+	<property name="fml-plugin" value="de.take_weiland.mods.commons.internal.SevenCommons" />
 	
 	<target name="inc-buildnumber">
 		<propertyfile file="buildnumber.properties">
@@ -14,7 +23,7 @@
 	</target>
 	
 	<target name="clean">
-		<delete dir="${forge-root}/mcp/src/minecraft/de/take_weiland"></delete>
+		<delete dir="${forge-root}/mcp/src/minecraft/${root-package}"></delete>
 	</target>
 	
 	<target name="copysource" depends="clean">
@@ -25,14 +34,18 @@
 		</copy>
 	</target>
 	
+	<target name="make_build_dir">
+		<mkdir dir="${build-dir}" />
+	</target>
+	
 	<target name="recompile" depends="copysource">
 		<exec dir="${forge-root}/mcp/" executable="cmd" osfamily="windows">
-					<arg value="/c recompile.bat" />
-				</exec>
+			<arg value="/c recompile.bat" />
+		</exec>
 				
-				<exec dir="${forge-root}/mcp/" executable="bash" osfamily="unix">
-					<arg value="recompile.sh" />
-				</exec>
+		<exec dir="${forge-root}/mcp/" executable="bash" osfamily="unix">
+			<arg value="recompile.sh" />
+		</exec>
 	</target>
 	
 	<target name="reobfuscate" depends="recompile">
@@ -45,29 +58,43 @@
 		</exec>
 	</target>
 	
-	<target name="create_jar" depends="reobfuscate">
-		<jar destfile="${jar-name}">
+	<target name="create_jars" depends="reobfuscate, make_build_dir">
+		<jar destfile="${obf-jar-name}">
 			<manifest>
-				<attribute name="FMLCorePlugin" value="de.take_weiland.mods.commons.internal.SevenCommons"/>
+				<attribute name="FMLCorePlugin" value="${fml-plugin}"/>
 			</manifest>
 			
 			<fileset dir="${forge-root}/mcp/reobf/minecraft/"></fileset>
 			<fileset dir="resource/"></fileset>
 		</jar>
+		
+		<jar destfile="${mcp-jar-name}">
+			<manifest>
+				<attribute name="FMLCorePlugin" value="${fml-plugin}"/>
+			</manifest>
+			<fileset dir="${forge-root}/mcp/bin/minecraft">
+				<exclude name="*"/>
+				<include name="${root-package}/**" />
+				<exclude name="${api-package}/**" />
+			</fileset>
+			
+			<fileset dir="resource/" />
+		</jar>
+		
+		<jar destfile="${api-jar-name}">
+			<fileset dir="${forge-root}/mcp/bin/minecraft">
+				<exclude name="*" />
+				<include name="${api-package}/**" />
+			</fileset>
+		</jar>
+		
+		<antcall target="clean" /> <!-- cleanup behind us -->
 	</target>
 	
-	<target name="sign_jar" depends="create_jar">
-		<delete file="${sign.store.file}"></delete>
-		<genkey alias="${sign.alias}" storepass="${sign.store.pass}" keypass="${sign.key.pass}" keystore="${sign.store.file}" dname="${sign.dname}">
-		</genkey>
-		<signjar jar="${jar-name}" alias="${sign.alias}" keypass="${sign.key.pass}" keystore="${sign.store.file}" storepass="${sign.store.pass}">		
-		</signjar>
-	</target>
 	
 	<target name="build">
 		<antcall target="inc-buildnumber" />
-		<antcall target="sign_jar" />
-		<antcall target="clean" />
+		<antcall target="create_jars" />
 	</target>
 
 </project>
