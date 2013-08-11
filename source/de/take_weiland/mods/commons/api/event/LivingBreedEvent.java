@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.event;
+package de.take_weiland.mods.commons.api.event;
 
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.passive.EntityAnimal;

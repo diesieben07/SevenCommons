@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.updater;
+package de.take_weiland.mods.commons.internal;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -7,10 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
-import net.minecraft.crash.CallableMinecraftVersion;
+import net.minecraft.launchwrapper.LaunchClassLoader;
 import cpw.mods.fml.relauncher.IFMLCallHook;
+import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 
-public class UpdateInstaller implements IFMLCallHook {
+public class SevenCommonsCallHook implements IFMLCallHook {
 
 	public static final String UPDATE_POSTFIX = ".7update";
 	public static final String BACKUP_POSTFIX = ".backup";
@@ -55,13 +56,14 @@ public class UpdateInstaller implements IFMLCallHook {
 	@Override
 	public void injectData(Map<String, Object> data) {
 		mcDir = (File) data.get("mcLocation");
+		SevenCommons.CLASSLOADER = (LaunchClassLoader)data.get("classLoader");
 	}
 	
 	private File[] getModFolders() {
 		File modsDir = new File(mcDir, "mods");
 		return new File[] {
 			modsDir,
-			new File(modsDir, new CallableMinecraftVersion(null).minecraftVersion())
+			new File(modsDir, SevenCommons.MINECRAFT_VERSION)
 		};
 	}
 

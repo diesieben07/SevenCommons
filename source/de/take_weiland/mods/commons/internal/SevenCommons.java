@@ -5,6 +5,8 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import net.minecraft.launchwrapper.LaunchClassLoader;
+
 import org.objectweb.asm.Type;
 
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
@@ -15,7 +17,7 @@ import de.take_weiland.mods.commons.asm.proxy.ProxyInterfaceRegistry;
 import de.take_weiland.mods.commons.util.EntityRendererProxy;
 import de.take_weiland.mods.commons.util.NBTListProxy;
 
-@MCVersion("1.6.2")
+@MCVersion(SevenCommons.MINECRAFT_VERSION)
 @TransformerExclusions({
 		"de.take_weiland.mods.commons.asm.",
 		"de.take_weiland.mods.commons.util.",
@@ -28,6 +30,8 @@ public class SevenCommons implements IFMLLoadingPlugin {
 	
 	public static final Logger LOGGER = Logger.getLogger("SevenCommons");
 	public static final String MINECRAFT_VERSION = "1.6.2";
+	
+	public static LaunchClassLoader CLASSLOADER;
 	
 	static File source;
 	
@@ -45,7 +49,6 @@ public class SevenCommons implements IFMLLoadingPlugin {
 	public String[] getASMTransformerClass() {
 		return new String[] {
 			"de.take_weiland.mods.commons.asm.transformers.EntityAIMateTransformer",
-			"de.take_weiland.mods.commons.asm.transformers.EntityPlayerMPTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.EntityPlayerTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.EntityZombieTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.GuiScreenTransformer",
@@ -62,7 +65,7 @@ public class SevenCommons implements IFMLLoadingPlugin {
 
 	@Override
 	public String getSetupClass() {
-		return "de.take_weiland.mods.commons.internal.updater.UpdateInstaller";
+		return "de.take_weiland.mods.commons.internal.SevenCommonsCallHook";
 	}
 
 	@Override

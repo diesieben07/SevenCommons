@@ -4,4 +4,4 @@
  * 
  * @author diesieben07
  */
-package de.take_weiland.mods.commons.event.client;
+package de.take_weiland.mods.commons.api.event.client;

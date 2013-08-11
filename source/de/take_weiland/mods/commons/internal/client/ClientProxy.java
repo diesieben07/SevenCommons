@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
-import de.take_weiland.mods.commons.event.client.GuiInitEvent;
+import de.take_weiland.mods.commons.api.event.client.GuiInitEvent;
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
 import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
 import de.take_weiland.mods.commons.internal.network.PacketDownloadProgress;

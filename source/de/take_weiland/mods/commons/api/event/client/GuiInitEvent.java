@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.event.client;
+package de.take_weiland.mods.commons.api.event.client;
 
 import java.util.List;
 

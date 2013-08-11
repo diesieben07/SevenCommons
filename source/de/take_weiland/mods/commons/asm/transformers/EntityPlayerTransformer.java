@@ -15,8 +15,8 @@ public class EntityPlayerTransformer extends AppendingTransformer {
 
 	@Override
 	protected InsnList getAppends(ClassNode clazz, MethodNode method) {
-		InsnList insns = new InsnList();
 		
+		InsnList insns = new InsnList();
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 1)); // load this = the new player
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0)); // load the first parameter = the old player
 		

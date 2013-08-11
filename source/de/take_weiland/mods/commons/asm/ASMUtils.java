@@ -1,8 +1,10 @@
 package de.take_weiland.mods.commons.asm;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -79,5 +81,20 @@ public final class ASMUtils {
 		int opcode = Modifier.isStatic(method.getModifiers()) ? Opcodes.INVOKESTATIC : Opcodes.INVOKEVIRTUAL;
 		return new MethodInsnNode(opcode, Type.getInternalName(method.getDeclaringClass()), method.getName(), Type.getMethodDescriptor(method));
 	}
-	
+
+	public static ClassNode getClassNode(byte[] bytes) {
+		ClassReader reader = new ClassReader(bytes);
+		ClassNode clazz = new ClassNode();
+		reader.accept(clazz, 0);
+		return clazz;
+	}
+
+	public static ClassNode getClassNode(String name) {
+		try {
+			return getClassNode(SevenCommons.CLASSLOADER.getClassBytes(name));
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 }

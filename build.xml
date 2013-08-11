@@ -56,11 +56,11 @@
 	
 	<target name="reobfuscate" depends="recompile">
 		<exec dir="${sevencommons.forge-root}/mcp/" executable="cmd" osfamily="windows">
-			<arg value="/c reobfuscate.bat" />
+			<arg value="/c reobfuscate_srg.bat" />
 		</exec>
 		
 		<exec dir="${sevencommons.forge-root}/mcp/" executable="bash" osfamily="unix">
-			<arg value="reobfuscate.sh" />
+			<arg value="reobfuscate_srg.sh" />
 		</exec>
 	</target>
 	
