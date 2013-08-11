@@ -94,6 +94,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float par3) {
 		scroller.drawScreen(mouseX, mouseY, par3);
+		super.drawScreen(mouseX, mouseY, par3);
 
 		drawCenteredString(fontRenderer, "Mod Updates", width / 2, 10, 0xffffff);
 		
@@ -122,8 +123,6 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 				}
 			}
 		}
-		
-		super.drawScreen(mouseX, mouseY, par3);
 	}
 	
 	void drawSlot(int index, int yPos) {
