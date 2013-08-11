@@ -83,7 +83,7 @@ public class PacketUpdateAction extends ModPacket {
 				}
 				break;
 			case CLOSE_SCREEN:
-				CommonsModContainer.updateController.unregisterListener((PlayerUpdateInformation)player.getExtendedProperties(PlayerUpdateInformation.IDENTIFIER));
+				localUpdater.unregisterListener((PlayerUpdateInformation)player.getExtendedProperties(PlayerUpdateInformation.IDENTIFIER));
 				break;
 			}
 		}

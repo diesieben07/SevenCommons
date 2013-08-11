@@ -8,13 +8,14 @@ import java.lang.reflect.Modifier;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.Property;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.util.CommonUtils;
 
 public final class ConfigInjector {
 
@@ -65,12 +66,17 @@ public final class ConfigInjector {
 			final Class<?> fieldType = field.getType();
 			
 			if ((isItem || isBlock) && !fieldType.equals(int.class)) {
-				SevenCommons.LOGGER.warning(String.format("Field %s in class %s has @%s annotation but in not of type int. That is invalid!", field.getName(), clazz.getSimpleName(), isItem ? "Item" : "Block"));
+				SevenCommons.LOGGER.warning(String.format("Field %s in class %s has @%s annotation but is not of type int. That is invalid!", field.getName(), clazz.getSimpleName(), isItem ? "Item" : "Block"));
 				continue;
 			}
 			
 			if (!Modifier.isStatic(field.getModifiers())) {
 				SevenCommons.LOGGER.warning(String.format("Field %s in class %s has @GetProperty annotation but is not static. That is invalid!", field.getName(), clazz.getSimpleName()));
+				continue;
+			}
+			
+			if (!validTypes.contains(fieldType)) {
+				SevenCommons.LOGGER.warning(String.format("Field %s in class %s is of Type %s which is not valid in a configuration!", field.getName(), clazz.getSimpleName(), fieldType.getSimpleName()));
 				continue;
 			}
 			
@@ -80,10 +86,6 @@ public final class ConfigInjector {
 			final String name = Optional.fromNullable(Strings.emptyToNull(ann.name())).or(field.getName());
 			
 			final String category = Optional.fromNullable(Strings.emptyToNull(ann.category())).or(isItem ? Configuration.CATEGORY_ITEM : isBlock ? Configuration.CATEGORY_BLOCK : Configuration.CATEGORY_GENERAL);
-			
-			if (!validTypes.contains(fieldType)) {
-				SevenCommons.LOGGER.warning(String.format("Field %s in class %s is of Type %s which is not valid in a configuration!", field.getName(), clazz.getSimpleName(), fieldType.getSimpleName()));
-			}
 			
 			try {
 				String getMethod = "get";
@@ -114,12 +116,11 @@ public final class ConfigInjector {
 				Class<?> rawType = fieldType.isArray() ? fieldType.getComponentType() : fieldType;
 				StringBuilder mName = new StringBuilder().append("get");
 				
-				mName.append(CommonUtils.capitalize(rawType.getSimpleName()));
+				mName.append(StringUtils.capitalize(rawType.getSimpleName()));
 				
 				if (fieldType.isArray()) {
 					mName.append("List");
 				}
-				
 				
 				Class<?>[] paramTypes = fieldType.isPrimitive() ? new Class<?>[] {fieldType} : new Class<?>[0];
 				
