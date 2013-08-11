@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.util;
 
-import java.util.Arrays;
 import java.util.List;
 
 public final class CommonUtils {
@@ -25,16 +24,5 @@ public final class CommonUtils {
 	
 	public static final <T> T safeListAccess(List<T> list, int index) {
 		return listIndexExists(list, index) ? list.get(index) : null;
-	}
-	
-	public static final <T> T[] shrinkArray(T[] array) {
-		int newLength = -1;
-		for (int i = 0; i < array.length; i++) {
-			if (array[i] == null) {
-				newLength = i;
-				break;
-			}
-		}
-		return newLength >= 0 ? Arrays.copyOf(array, newLength) : array;
 	}
 }
