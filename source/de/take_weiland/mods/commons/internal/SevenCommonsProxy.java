@@ -1,9 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import de.take_weiland.mods.commons.internal.network.PacketDownloadProgress;
-import de.take_weiland.mods.commons.internal.network.PacketModState;
-import de.take_weiland.mods.commons.internal.network.PacketViewUpdates;
 
 public interface SevenCommonsProxy {
 	

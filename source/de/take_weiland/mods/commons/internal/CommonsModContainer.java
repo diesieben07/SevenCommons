@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.internal;
 
 import java.io.File;
-import java.util.Arrays;
 
 import net.minecraftforge.common.Configuration;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
@@ -20,13 +20,12 @@ import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.config.ConfigInjector;
 import de.take_weiland.mods.commons.config.GetProperty;
-import de.take_weiland.mods.commons.internal.network.CommonsPackets;
 import de.take_weiland.mods.commons.internal.updater.CommandUpdates;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.network.ModPacketHandler;
 
-public class CommonsModContainer extends DummyModContainer {
+public final class CommonsModContainer extends DummyModContainer {
 
 	public static SevenCommonsProxy proxy;
 	public static CommonsModContainer instance;
@@ -43,7 +42,7 @@ public class CommonsModContainer extends DummyModContainer {
 		ModMetadata meta = getMetadata();
 		meta.name = "SevenCommons";
 		meta.modId = "sevencommons";
-		meta.authorList = Arrays.asList("diesieben07");
+		meta.authorList = ImmutableList.of("diesieben07");
 		meta.version = "1.0";
 		
 		meta.description = "Provides various Utilities for other mods.";
@@ -66,7 +65,7 @@ public class CommonsModContainer extends DummyModContainer {
 			if (event.getSide().isServer()) {
 				proxy = (SevenCommonsProxy) Class.forName("de.take_weiland.mods.commons.internal.ServerProxy").newInstance();
 			} else {
-				proxy = (SevenCommonsProxy) Class.forName("de.take_weiland.mods.commons.internal.client.ClientProxy").newInstance();
+				proxy = (SevenCommonsProxy) Class.forName("de.take_weiland.mods.commons.internal.ClientProxy").newInstance();
 			}
 		} catch (Throwable t) {
 			// nope

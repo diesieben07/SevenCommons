@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.network;
+package de.take_weiland.mods.commons.internal;
 
 import java.util.Collection;
 import java.util.List;
@@ -10,7 +10,6 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
 import de.take_weiland.mods.commons.internal.updater.ClientDummyUpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
 import de.take_weiland.mods.commons.internal.updater.ModVersion;

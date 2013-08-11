@@ -12,7 +12,7 @@ import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 
-public class EntityAIMateTransformer extends AppendingTransformer {
+public final class EntityAIMateTransformer extends AppendingTransformer {
 
 	@Override
 	protected InsnList getAppends(ClassNode clazz, MethodNode method) {

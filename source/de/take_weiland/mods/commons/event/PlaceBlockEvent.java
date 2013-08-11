@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.api.event;
+package de.take_weiland.mods.commons.event;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;

@@ -12,7 +12,7 @@ import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
 import de.take_weiland.mods.commons.network.ModPacket;
 
-public class PacketTransformer extends SelectiveTransformer {
+public final class PacketTransformer extends SelectiveTransformer {
 
 	@Override
 	protected boolean transform(ClassNode clazz) {

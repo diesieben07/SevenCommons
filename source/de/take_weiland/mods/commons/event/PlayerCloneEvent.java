@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.api.event;
+package de.take_weiland.mods.commons.event;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.IExtendedEntityProperties;
@@ -10,7 +10,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
  * @author diesieben07
  *
  */
-public class PlayerCloneEvent extends PlayerEvent {
+public final class PlayerCloneEvent extends PlayerEvent {
 
 	/**
 	 * the new player instance

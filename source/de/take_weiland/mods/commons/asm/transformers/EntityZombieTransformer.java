@@ -14,7 +14,7 @@ import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.PrependingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 
-public class EntityZombieTransformer extends PrependingTransformer {
+public final class EntityZombieTransformer extends PrependingTransformer {
 
 	@Override
 	protected InsnList getPrepends(ClassNode clazz, MethodNode method) {

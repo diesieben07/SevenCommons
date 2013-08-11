@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
 
+
 public class GuiButtonUpdates extends GuiButton {
 
 	public static final ResourceLocation texture = new ResourceLocation("sevencommons:updates.png");

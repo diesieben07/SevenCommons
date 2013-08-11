@@ -14,8 +14,8 @@ import org.lwjgl.input.Keyboard;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
-import de.take_weiland.mods.commons.internal.network.PacketUpdateAction;
-import de.take_weiland.mods.commons.internal.network.PacketUpdateAction.Action;
+import de.take_weiland.mods.commons.internal.PacketUpdateAction;
+import de.take_weiland.mods.commons.internal.PacketUpdateAction.Action;
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
 import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;

@@ -5,12 +5,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
-import de.take_weiland.mods.commons.api.event.client.GuiInitEvent;
+import de.take_weiland.mods.commons.event.client.GuiInitEvent;
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
+import de.take_weiland.mods.commons.internal.PacketDownloadProgress;
+import de.take_weiland.mods.commons.internal.PacketModState;
+import de.take_weiland.mods.commons.internal.PacketViewUpdates;
 import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
-import de.take_weiland.mods.commons.internal.network.PacketDownloadProgress;
-import de.take_weiland.mods.commons.internal.network.PacketModState;
-import de.take_weiland.mods.commons.internal.network.PacketViewUpdates;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerRemote;
 
 public class ClientProxy implements SevenCommonsProxy {

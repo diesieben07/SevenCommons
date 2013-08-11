@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.api.event;
+package de.take_weiland.mods.commons.event;
 
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.passive.EntityAnimal;
@@ -11,7 +11,7 @@ import net.minecraftforge.event.entity.living.LivingEvent;
  *
  */
 @Cancelable
-public class LivingBreedEvent extends LivingEvent {
+public final class LivingBreedEvent extends LivingEvent {
 
 	/**
 	 * the animal spawning the child

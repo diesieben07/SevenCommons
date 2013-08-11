@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Set;
 
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.Property;
@@ -21,7 +22,7 @@ public final class ConfigInjector {
 
 	private ConfigInjector() { }
 	
-	private static final ImmutableSet<Class<?>> validTypes = ImmutableSet.<Class<?>>of(
+	private static final Set<Class<?>> validTypes = ImmutableSet.<Class<?>>of(
 			int.class, boolean.class, double.class, String.class,
 			int[].class, boolean[].class, double[].class, String[].class);
 	

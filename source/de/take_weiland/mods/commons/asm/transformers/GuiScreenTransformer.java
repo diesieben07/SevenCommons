@@ -15,7 +15,7 @@ import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 
-public class GuiScreenTransformer extends AppendingTransformer {
+public final class GuiScreenTransformer extends AppendingTransformer {
 
 	@Override
 	protected InsnList getAppends(ClassNode clazz, MethodNode method) {

@@ -12,7 +12,7 @@ import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingPrependingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 
-public class NetServerHandlerTransformer extends AppendingPrependingTransformer {
+public final class NetServerHandlerTransformer extends AppendingPrependingTransformer {
 
 	@Override
 	protected InsnList getAppends(ClassNode clazz, MethodNode method) {

@@ -13,16 +13,16 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
 
-import de.take_weiland.mods.commons.api.event.LivingBreedEvent;
-import de.take_weiland.mods.commons.api.event.PlaceBlockEvent;
-import de.take_weiland.mods.commons.api.event.PlayerCloneEvent;
-import de.take_weiland.mods.commons.api.event.ZombieConvertEvent;
-import de.take_weiland.mods.commons.api.event.client.GuiInitEvent;
+import de.take_weiland.mods.commons.event.LivingBreedEvent;
+import de.take_weiland.mods.commons.event.PlaceBlockEvent;
+import de.take_weiland.mods.commons.event.PlayerCloneEvent;
+import de.take_weiland.mods.commons.event.ZombieConvertEvent;
+import de.take_weiland.mods.commons.event.client.GuiInitEvent;
 import de.take_weiland.mods.commons.util.ModdingUtils;
 
 /**
  * A class containing methods called from ASM generated code.<br>
- * Do not use.
+ * Do not use in mod code.
  * @author diesieben07
  *
  */

@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.asm.proxy;
+package de.take_weiland.mods.commons.asmproxy;
 
 import java.util.Collection;
 

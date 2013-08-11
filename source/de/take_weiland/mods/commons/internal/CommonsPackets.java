@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.network;
+package de.take_weiland.mods.commons.internal;
 
 import com.google.common.primitives.UnsignedBytes;
 

@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.asm.proxy;
+package de.take_weiland.mods.commons.asmproxy;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
 
-public class ProxyInterfaceInjector extends SelectiveTransformer {
+public final class ProxyInterfaceInjector extends SelectiveTransformer {
 
 	private final Map<Class<? extends Annotation>, Injector> handlers = ImmutableMap.of(
 			Getter.class, new GetterInjector(),
@@ -58,7 +58,7 @@ public class ProxyInterfaceInjector extends SelectiveTransformer {
 		return ProxyInterfaceRegistry.hasProxyInterface(className);
 	}
 
-	private static interface Injector {
+	static interface Injector {
 		
 		boolean inject(ClassNode clazz, Method proxyMethod);
 		

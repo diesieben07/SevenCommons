@@ -13,7 +13,7 @@ import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.proxy.ProxyInterfaceRegistry;
+import de.take_weiland.mods.commons.asmproxy.ProxyInterfaceRegistry;
 import de.take_weiland.mods.commons.util.EntityRendererProxy;
 import de.take_weiland.mods.commons.util.NBTListProxy;
 
@@ -23,7 +23,7 @@ import de.take_weiland.mods.commons.util.NBTListProxy;
 		"de.take_weiland.mods.commons.util.",
 		"de.take_weiland.mods.commons.network.",
 	})
-public class SevenCommons implements IFMLLoadingPlugin {
+public final class SevenCommons implements IFMLLoadingPlugin {
 
 	public static final String ASM_HOOK_CLASS = "de.take_weiland.mods.commons.asm.ASMHooks";
 	public static boolean MCP_ENVIRONMENT;
@@ -54,7 +54,7 @@ public class SevenCommons implements IFMLLoadingPlugin {
 			"de.take_weiland.mods.commons.asm.transformers.GuiScreenTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.NetServerHandlerTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.PacketTransformer",
-			"de.take_weiland.mods.commons.asm.proxy.ProxyInterfaceInjector"
+			"de.take_weiland.mods.commons.asmproxy.ProxyInterfaceInjector"
 		};
 	}
 

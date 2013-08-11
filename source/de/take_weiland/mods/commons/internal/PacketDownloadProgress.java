@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.network;
+package de.take_weiland.mods.commons.internal;
 
 import net.minecraft.entity.player.EntityPlayer;
 
@@ -6,7 +6,6 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.network.ModPacket;
 import de.take_weiland.mods.commons.network.PacketType;

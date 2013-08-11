@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.api.event.client;
+package de.take_weiland.mods.commons.event.client;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import net.minecraftforge.event.Event;
  * @author diesieben07
  *
  */
-public class GuiInitEvent extends Event {
+public final class GuiInitEvent extends Event {
 
 	/**
 	 * the GuiScreen being initialized

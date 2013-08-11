@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.api.event;
+package de.take_weiland.mods.commons.event;
 
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityVillager;
@@ -11,7 +11,7 @@ import net.minecraftforge.event.entity.living.LivingEvent;
  *
  */
 @Cancelable
-public class ZombieConvertEvent extends LivingEvent {
+public final class ZombieConvertEvent extends LivingEvent {
 
 	/**
 	 * the zombie being converted
