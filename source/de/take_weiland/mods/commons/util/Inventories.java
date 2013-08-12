@@ -142,7 +142,7 @@ public final class Inventories {
 	 * @param nbtList the NBTTagList containing the serialized contents
 	 */
 	public static final void readInventory(IInventory inventory, NBTTagList nbtList) {
-		for (NBTTagCompound nbt : ModdingUtils.<NBTTagCompound>asList(nbtList)) {
+		for (NBTTagCompound nbt : NBT.<NBTTagCompound>asList(nbtList)) {
 			ItemStack item = ItemStack.loadItemStackFromNBT(nbt);
 			inventory.setInventorySlotContents(UnsignedShorts.toInt(nbt.getShort("slot")), item);
 		}

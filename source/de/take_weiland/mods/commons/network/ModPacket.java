@@ -17,7 +17,8 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.util.CommonUtils;
-import de.take_weiland.mods.commons.util.ModdingUtils;
+import de.take_weiland.mods.commons.util.Sides;
+import de.take_weiland.mods.commons.util.Players;
 
 /**
  * Root class for all your mod packets<br>
@@ -115,14 +116,14 @@ public abstract class ModPacket {
 	}
 	
 	public final void sendToAllTracking(Entity entity) {
-		if (ModdingUtils.getSide(entity).isServer()) {
+		if (Sides.logical(entity).isServer()) {
 			((WorldServer)entity.worldObj).getEntityTracker().sendPacketToAllPlayersTrackingEntity(entity, getVanillaPacket());
 		}
 	}
 	
 	public final void sendToOps() {
 		Packet packet = getVanillaPacket();
-		for (EntityPlayer op : ModdingUtils.getOps()) {
+		for (EntityPlayer op : Players.getOps()) {
 			PacketDispatcher.sendPacketToPlayer(packet, (Player)op);
 		}
 	}

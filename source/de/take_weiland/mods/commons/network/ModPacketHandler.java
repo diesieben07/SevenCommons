@@ -18,7 +18,7 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.util.ModdingUtils;
+import de.take_weiland.mods.commons.util.Sides;
 
 public final class ModPacketHandler implements IPacketHandler {
 
@@ -68,7 +68,7 @@ public final class ModPacketHandler implements IPacketHandler {
 	
 	private final void handleReceivedPacket(PacketType type, ByteArrayDataInput in, EntityPlayer player) throws ReflectiveOperationException {
 		ModPacket mp = type.getPacketClass().newInstance();
-		Side side = ModdingUtils.getSide(player);
+		Side side = Sides.logical(player);
 		if (!mp.isValidForSide(side)) {
 			throw new NetworkException("Packet " + mp.getClass().getSimpleName() + " received for invalid side " + side);
 		}

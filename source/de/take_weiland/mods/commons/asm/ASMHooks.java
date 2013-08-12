@@ -11,14 +11,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
-
-
 import de.take_weiland.mods.commons.event.LivingBreedEvent;
 import de.take_weiland.mods.commons.event.PlaceBlockEvent;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.ZombieConvertEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
-import de.take_weiland.mods.commons.util.ModdingUtils;
 
 /**
  * A class containing methods called from ASM generated code.<br>
@@ -63,11 +60,4 @@ public final class ASMHooks {
 		MinecraftForge.EVENT_BUS.post(new GuiInitEvent(gui, buttons));
 	}
 	
-	public static final void setActivePlayer(EntityPlayer player) {
-		ModdingUtils.setActivePlayer(player);
-	}
-	
-	public static final void resetActivePlayer() {
-		ModdingUtils.setActivePlayer(null);
-	}
 }

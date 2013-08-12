@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.base.Preconditions;
+
 public final class UnsignedShorts {
 
 	private UnsignedShorts() { }
@@ -9,9 +11,7 @@ public final class UnsignedShorts {
 	}
 	
 	public static final short checkedCast(int value) {
-		if (value >> Short.SIZE != 0) {
-			throw new IllegalArgumentException("Unsigned Short out of range: " + value);
-		}
+		Preconditions.checkArgument(value >> Short.SIZE == 0, "out of range: %s", Integer.valueOf(value));
 		return (short)value;
 	}
 	

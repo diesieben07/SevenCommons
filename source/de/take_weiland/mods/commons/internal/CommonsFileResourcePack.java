@@ -6,7 +6,7 @@ import cpw.mods.fml.common.ModContainer;
 public class CommonsFileResourcePack extends FileResourcePack {
 
 	public CommonsFileResourcePack(ModContainer mc) {
-		super(CommonsModContainer.instance.getSource());
+		super(SevenCommons.source);
 	}
 	
 	@Override

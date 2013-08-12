@@ -15,7 +15,6 @@ public abstract class TileEntityInventory extends TileEntityAbstract<TileEntityI
 	
 	protected ItemStack[] provideStorage() {
 		return new ItemStack[getSizeInventory()];
-		
 	}
 	
 	protected abstract String getDefaultName();
@@ -55,9 +54,6 @@ public abstract class TileEntityInventory extends TileEntityAbstract<TileEntityI
 	public int getInventoryStackLimit() {
 		return 64;
 	}
-
-	@Override
-	public void onInventoryChanged() { }
 
 	@Override
 	public boolean isUseableByPlayer(EntityPlayer player) {
