@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.templates;
+package de.take_weiland.mods.commons.util;
 
 import java.util.List;
 
@@ -6,7 +6,8 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.util.CommonUtils;
+import de.take_weiland.mods.commons.templates.Type;
+import de.take_weiland.mods.commons.templates.Typed;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -19,12 +20,12 @@ public final class Items {
 	public static final void init(Item item, String baseName) {
 		String modId = Loader.instance().activeModContainer().getModId();
 		
-		item.func_111206_d(modId + ":" + baseName); // setIconName
-		item.setUnlocalizedName(modId + "." + baseName); // full unlocalized key is "item.MODID.NAME.name"		
+		item.func_111206_d(getIconName(modId, baseName)); // setIconName
+		item.setUnlocalizedName(getLanguageKey(modId, baseName)); // full unlocalized key is "item.MODID.NAME.name"		
 		
 		GameRegistry.registerItem(item, baseName);
 	}
-	
+
 	public static final <E extends Type, T extends Item & Typed<E>> ItemStack getStack(T item, E type) {
 		return getStack(item, type, 1);
 	}
@@ -54,6 +55,14 @@ public final class Items {
 		}
 		
 		return icons;
+	}
+
+	static String getIconName(String modId, String iconName) {
+		return modId + ":" + iconName;
+	}
+	
+	static String getLanguageKey(String modId, String baseName) {
+		return modId + "." + baseName;
 	}
 	
 }

@@ -22,7 +22,7 @@ public final class Sides {
 	}
 	
 	/**
-	 * convenience method. Identical to {@link Sides#logical(World) ModdingUtils.getSide(entity.worldObj)} 
+	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(entity.worldObj)} 
 	 * @param entity
 	 * @return
 	 */
@@ -31,7 +31,7 @@ public final class Sides {
 	}
 	
 	/**
-	 * convenience method. Identical to {@link Sides#logical(World) ModdingUtils.getSide(tileEntity.worldObj)} 
+	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(tileEntity.worldObj)} 
 	 * @param tileEntity
 	 * @return
 	 */
@@ -40,7 +40,7 @@ public final class Sides {
 	}
 	
 	/**
-	 * convenience method. Identical to {@link Sides#logical(World) ModdingUtils.getSide(event.entity.worldObj)} 
+	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(event.entity.worldObj)} 
 	 * @param event
 	 * @return
 	 */
@@ -49,7 +49,7 @@ public final class Sides {
 	}
 	
 	/**
-	 * convenience method. Identical to {@link Sides#logical(World) ModdingUtils.getSide(event.world)} 
+	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(event.world)} 
 	 * @param event
 	 * @return
 	 */

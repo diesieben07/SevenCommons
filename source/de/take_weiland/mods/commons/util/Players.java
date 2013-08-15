@@ -16,12 +16,12 @@ public final class Players {
 
 	/**
 	 * gets an Iterable for iterating over all the Operators in this server<br>
-	 * If you need a Collection use {@link ImmutableSet#copyOf(Iterable) ImmutableSet.copyOf(ModdingUtils.getOps())}
+	 * If you need a Collection use {@link ImmutableSet#copyOf(Iterable) ImmutableSet.copyOf(Players.getOps())}
 	 * @return
 	 */
 	public static final Iterable<EntityPlayer> getOps() {
-		final Set<String> ops = Players.getOpsRaw();
-		return Iterables.filter(Players.getAll(), new Predicate<EntityPlayer>() {
+		final Set<String> ops = getOpsRaw();
+		return Iterables.filter(getAll(), new Predicate<EntityPlayer>() {
 			
 			@Override
 			public boolean apply(EntityPlayer player) {
