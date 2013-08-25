@@ -16,10 +16,10 @@ import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
-import de.take_weiland.mods.commons.network.ModPacket;
+import de.take_weiland.mods.commons.network.StreamPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 
-public class PacketViewUpdates extends ModPacket {
+public class PacketViewUpdates extends StreamPacket {
 
 	private Collection<UpdatableMod> mods;
 	

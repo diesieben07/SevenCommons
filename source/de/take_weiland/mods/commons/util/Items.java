@@ -34,8 +34,12 @@ public final class Items {
 		return new ItemStack(item, quantity, type.getMeta());
 	}
 	
+	public static final <E extends Type> E getType(Typed<E> item, int meta) {
+		return CommonUtils.defaultedArrayAccess(item.getTypes(), meta, item.getDefault());
+	}
+	
 	public static final <E extends Type> E getType(Typed<E> item, ItemStack stack) {
-		return CommonUtils.defaultedArrayAccess(item.getTypes(), stack.getItemDamage(), item.getDefault());
+		return getType(item, stack.getItemDamage());
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })

@@ -10,8 +10,6 @@ import net.minecraft.network.packet.Packet250CustomPayload;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteStreams;
 
 import cpw.mods.fml.common.network.IPacketHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
@@ -47,8 +45,8 @@ public final class ModPacketHandler implements IPacketHandler {
 	
 	@Override
 	public void onPacketData(INetworkManager manager, Packet250CustomPayload packet, Player player) {
-		ByteArrayDataInput data = ByteStreams.newDataInput(packet.data);
-		Byte packetId = Byte.valueOf(data.readByte());
+		byte[] data = packet.data;
+		Byte packetId = Byte.valueOf(data[0]);
 
 		try {
 			PacketType type = packets.get(packetId);
@@ -66,13 +64,13 @@ public final class ModPacketHandler implements IPacketHandler {
 		}
 	}
 	
-	private final void handleReceivedPacket(PacketType type, ByteArrayDataInput in, EntityPlayer player) throws ReflectiveOperationException {
+	private final void handleReceivedPacket(PacketType type, byte[] data, EntityPlayer player) throws ReflectiveOperationException {
 		ModPacket mp = type.getPacketClass().newInstance();
 		Side side = Sides.logical(player);
 		if (!mp.isValidForSide(side)) {
 			throw new NetworkException("Packet " + mp.getClass().getSimpleName() + " received for invalid side " + side);
 		}
-		mp.readData(in);
+		mp.readData(data);
 		mp.execute(player, side);
 	}
 }

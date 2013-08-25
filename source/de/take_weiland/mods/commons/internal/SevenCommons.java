@@ -21,8 +21,8 @@ import de.take_weiland.mods.commons.util.NBTListProxy;
 @TransformerExclusions({
 		"de.take_weiland.mods.commons.asm.",
 		"de.take_weiland.mods.commons.util.",
-		"de.take_weiland.mods.commons.network.",
-	})
+		"de.take_weiland.mods.commons.network."
+		})
 public final class SevenCommons implements IFMLLoadingPlugin {
 
 	public static final String ASM_HOOK_CLASS = "de.take_weiland.mods.commons.asm.ASMHooks";

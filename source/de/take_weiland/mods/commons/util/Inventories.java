@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Random;
 
 import net.minecraft.block.Block;
@@ -11,6 +10,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+
+import com.google.common.collect.AbstractIterator;
 
 /**
  * A collection of static utility methods regarding implementors of {@link IInventory}
@@ -163,26 +164,13 @@ public final class Inventories {
 	}
 	
 	static final Iterator<ItemStack> newIterator(final IInventory inventory) {
-		return new Iterator<ItemStack>() {
+		return new AbstractIterator<ItemStack>() {
 
 			private int next = 0;
 			
 			@Override
-			public boolean hasNext() {
-				return next < inventory.getSizeInventory();
-			}
-
-			@Override
-			public ItemStack next() {
-				if (!hasNext()) {
-					throw new NoSuchElementException();
-				}
-				return inventory.getStackInSlot(next++);
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException("Can't modify Inventory size!");
+			protected ItemStack computeNext() {
+				return next == inventory.getSizeInventory() ? endOfData() : inventory.getStackInSlot(++next);
 			}
 		};
 	}

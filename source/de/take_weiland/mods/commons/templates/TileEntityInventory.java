@@ -4,10 +4,11 @@ import de.take_weiland.mods.commons.util.Inventories;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
-public abstract class TileEntityInventory extends TileEntityAbstract<TileEntityInventory> implements IInventory {
+public abstract class TileEntityInventory extends TileEntityAbstract implements IInventory {
 
-	private ItemStack[] storage;
+	protected final ItemStack[] storage;
 	
 	public TileEntityInventory() {
 		storage = provideStorage();
@@ -61,14 +62,26 @@ public abstract class TileEntityInventory extends TileEntityAbstract<TileEntityI
 	}
 
 	@Override
+	public boolean isItemValidForSlot(int slot, ItemStack item) {
+		return true;
+	}
+
+	@Override
+	public void readFromNBT(NBTTagCompound nbt) {
+		super.readFromNBT(nbt);
+		Inventories.readInventory(this, nbt.getTagList("items"));
+	}
+
+	@Override
+	public void writeToNBT(NBTTagCompound nbt) {
+		super.writeToNBT(nbt);
+		nbt.setTag("items", Inventories.writeInventory(this));
+	}
+	
+	@Override
 	public void openChest() { }
 
 	@Override
 	public void closeChest() { }
-
-	@Override
-	public boolean isItemValidForSlot(int slot, ItemStack item) {
-		return true;
-	}
 
 }

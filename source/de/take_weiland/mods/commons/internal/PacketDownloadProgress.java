@@ -7,10 +7,10 @@ import com.google.common.io.ByteArrayDataOutput;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
-import de.take_weiland.mods.commons.network.ModPacket;
+import de.take_weiland.mods.commons.network.StreamPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 
-public class PacketDownloadProgress extends ModPacket {
+public class PacketDownloadProgress extends StreamPacket {
 
 	private String modId;
 	private int downloadProgress;

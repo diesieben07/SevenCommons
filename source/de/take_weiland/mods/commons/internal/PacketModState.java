@@ -8,10 +8,10 @@ import com.google.common.io.ByteArrayDataOutput;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
-import de.take_weiland.mods.commons.network.ModPacket;
+import de.take_weiland.mods.commons.network.StreamPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 
-public class PacketModState extends ModPacket {
+public class PacketModState extends StreamPacket {
 
 	private String modId;
 	private ModUpdateState state;

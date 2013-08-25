@@ -12,11 +12,11 @@ import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.PlayerUpdateInformation;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
-import de.take_weiland.mods.commons.network.ModPacket;
+import de.take_weiland.mods.commons.network.StreamPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.util.CommonUtils;
 
-public class PacketUpdateAction extends ModPacket {
+public class PacketUpdateAction extends StreamPacket {
 
 	private Action action;
 	private String modId;

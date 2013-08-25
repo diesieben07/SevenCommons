@@ -2,16 +2,14 @@ package de.take_weiland.mods.commons.templates;
 
 import net.minecraft.tileentity.TileEntity;
 
-public abstract class TileEntityAbstract<C extends TileEntityAbstract<C>> extends TileEntity {
+public abstract class TileEntityAbstract extends TileEntity {
 
 	private boolean namingAllowed = true;
 	private boolean hasName = false;
 	private String name;
 	
-	@SuppressWarnings("unchecked")
-	protected final C disallowNaming() {
+	protected final void disallowNaming() {
 		namingAllowed = false;
-		return (C) this;
 	}
 	
 	public final boolean hasCustomName() {
@@ -30,4 +28,5 @@ public abstract class TileEntityAbstract<C extends TileEntityAbstract<C>> extend
 	public final String getCustomName() {
 		return name;
 	}
+	
 }
