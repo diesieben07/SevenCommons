@@ -60,5 +60,13 @@ public final class Blocks {
 	public static final <T extends Block & Typed<?>> Icon[] registerIcons(T block, IconRegister register) {
 		return Items.registerIcons(block, SCBlockAccessor.getIconName(block), register);
 	}
+	
+	public static final <E extends Type, T extends Block & Typed<E>> ItemStack getStack(T item, E type) {
+		return getStack(item, type, 1);
+	}
+	
+	public static final <E extends Type, T extends Block & Typed<E>> ItemStack getStack(T item, E type, int quantity) {
+		return new ItemStack(item, quantity, type.getMeta());
+	}
 
 }
