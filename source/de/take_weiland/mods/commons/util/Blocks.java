@@ -3,12 +3,17 @@ package de.take_weiland.mods.commons.util;
 import java.util.List;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.SCBlockAccessor;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.templates.Type;
 import de.take_weiland.mods.commons.templates.Typed;
 
@@ -44,6 +49,11 @@ public final class Blocks {
 		for (Type type : block.getTypes()) {
 			stacks.add(new ItemStack(block, 1, type.getMeta()));
 		}
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public static final <T extends Block & Typed<?>> Icon[] registerIcons(T block, IconRegister register) {
+		return Items.registerIcons(block, SCBlockAccessor.getIconName(block), register);
 	}
 
 }
