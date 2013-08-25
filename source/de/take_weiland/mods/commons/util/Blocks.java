@@ -16,13 +16,14 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.templates.Type;
 import de.take_weiland.mods.commons.templates.Typed;
+import de.take_weiland.mods.commons.templates.TypedItemBlock;
 
 public final class Blocks {
 
 	private Blocks() { }
 	
 	public static final void init(Block block, String baseName) {
-		init(block, baseName, ItemBlock.class);
+		init(block, baseName, block instanceof Typed ? TypedItemBlock.class : ItemBlock.class);
 	}
 	
 	public static final void init(Block block, String baseName, Class<? extends ItemBlock> itemClass) {
@@ -32,6 +33,10 @@ public final class Blocks {
 		block.setUnlocalizedName(Items.getLanguageKey(modId, baseName));
 		
 		GameRegistry.registerBlock(block, itemClass, baseName);
+	}
+	
+	public static <E extends Type, T extends Block & Typed<E>> String getUnlocalizedName(T block, ItemStack stack) {
+		return block.getUnlocalizedName() + "." + Items.getType(block, stack).getName();
 	}
 	
 	public static final void genericBreak(Block block, World world, int x, int y, int z, int meta) {
