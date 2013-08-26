@@ -19,7 +19,7 @@ public abstract class SelectiveTransformer implements IClassTransformer {
 		if (transforms(transformedName)) {
 			ClassNode clazz = ASMUtils.getClassNode(bytes);
 			
-			if (transform(clazz)) {
+			if (transform(clazz, transformedName)) {
 				
 				System.out.println("Transforming class " + transformedName);
 				
@@ -33,6 +33,6 @@ public abstract class SelectiveTransformer implements IClassTransformer {
 	
 	protected abstract boolean transforms(String className);
 	
-	protected abstract boolean transform(ClassNode clazz);
+	protected abstract boolean transform(ClassNode clazz, String className);
 	
 }

@@ -15,7 +15,7 @@ import de.take_weiland.mods.commons.network.StreamPacket;
 public final class PacketTransformer extends SelectiveTransformer {
 
 	@Override
-	protected boolean transform(ClassNode clazz) {
+	protected boolean transform(ClassNode clazz, String className) {
 		try {
 			Class<?> superClass = getClass().getClassLoader().loadClass(ASMUtils.undoInternalName(clazz.superName));
 			if (!StreamPacket.class.isAssignableFrom(superClass) || hasDefaultConstructor(clazz)) {

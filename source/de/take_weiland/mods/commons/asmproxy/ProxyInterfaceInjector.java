@@ -27,8 +27,8 @@ public final class ProxyInterfaceInjector extends SelectiveTransformer {
 			Setter.class, new SetterInjector());
 	
 	@Override
-	protected boolean transform(ClassNode clazz) {
-		Collection<Class<?>> proxies = ProxyInterfaceRegistry.getProxyInterfaces(ASMUtils.undoInternalName(clazz.name));
+	protected boolean transform(ClassNode clazz, String className) {
+		Collection<Class<?>> proxies = ProxyInterfaceRegistry.getProxyInterfaces(className);
 		boolean transformed = false;
 		
 		proxies:
