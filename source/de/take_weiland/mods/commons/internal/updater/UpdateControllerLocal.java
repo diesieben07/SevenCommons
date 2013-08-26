@@ -7,6 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -35,15 +37,22 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 		List<UpdatableMod> mods = Lists.transform(Loader.instance().getActiveModList(), new Function<ModContainer, UpdatableMod>() {
 			@Override
 			public UpdatableMod apply(ModContainer container) {
-				if (INTERNAL_MODS.contains(container.getModId().toLowerCase())) {
-					return new FMLInternalMod(container, UpdateControllerLocal.this);
-				} else {
-					return new ModsFolderMod(container, UpdateControllerLocal.this);
+				try {
+					if (INTERNAL_MODS.contains(container.getModId().toLowerCase())) {
+						return new FMLInternalMod(container, UpdateControllerLocal.this);
+					} else {
+						return new ModsFolderMod(container, UpdateControllerLocal.this);
+					}
+				} catch (Throwable t) {
+					LOGGER.severe("Unexpected exception during UpdateableMod parsing!");
+					LOGGER.severe("ModID: " + container.getModId());
+					t.printStackTrace();
+					return null;
 				}
 			}
 		});
 		
-		this.mods = Maps.uniqueIndex(mods, ID_RETRIEVER);
+		this.mods = Maps.uniqueIndex(Iterables.filter(mods, Predicates.notNull()), ID_RETRIEVER);
 		
 		executor = Executors.newFixedThreadPool(3, new ThreadFactoryBuilder().setNameFormat("Sevens ModUpdater %d").build());
 	}

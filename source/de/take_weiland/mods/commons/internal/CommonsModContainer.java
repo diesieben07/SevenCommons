@@ -4,7 +4,6 @@ import java.io.File;
 
 import net.minecraftforge.common.Configuration;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -80,14 +79,8 @@ public final class CommonsModContainer extends DummyModContainer {
 	@Subscribe
 	public void postInit(FMLPostInitializationEvent event) {
 		if (updaterEnabled) {
-			System.out.println("enabling updater...");
-			try {
-				updateController = new UpdateControllerLocal();
-				updateController.searchForUpdates();
-			} catch (Throwable t) {
-				t.printStackTrace();
-				Throwables.propagate(t);
-			}
+			updateController = new UpdateControllerLocal();
+			updateController.searchForUpdates();
 		}
 	}
 	
