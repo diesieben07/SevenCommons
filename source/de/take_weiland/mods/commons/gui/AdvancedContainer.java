@@ -27,6 +27,6 @@ public interface AdvancedContainer<T extends IInventory> {
 
 	void writeSyncData(ByteArrayDataOutput out, boolean all);
 
-	boolean needsSyncing();
+	boolean querySyncData();
 	
 }

@@ -4,7 +4,6 @@ import java.io.File;
 
 import net.minecraftforge.common.Configuration;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -12,7 +11,6 @@ import com.google.common.eventbus.Subscribe;
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
-import cpw.mods.fml.common.event.FMLConstructionEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
@@ -58,21 +56,18 @@ public final class CommonsModContainer extends DummyModContainer {
 	}
 	
 	@Subscribe
-	public void constructing(FMLConstructionEvent event) {
+	public void preInit(FMLPreInitializationEvent event) {
 		try { // my version of @SidedProxy
 			if (event.getSide().isServer()) {
 				proxy = (SevenCommonsProxy) Class.forName("de.take_weiland.mods.commons.internal.ServerProxy").newInstance();
 			} else {
-				proxy = (SevenCommonsProxy) Class.forName("de.take_weiland.mods.commons.internal.ClientProxy").newInstance();
+				proxy = (SevenCommonsProxy) Class.forName("de.take_weiland.mods.commons.internal.client.ClientProxy").newInstance();
 			}
 		} catch (Throwable t) {
 			// nope
-			Throwables.propagate(t);
+			t.printStackTrace();
 		}
-	}
-	
-	@Subscribe
-	public void preInit(FMLPreInitializationEvent event) {
+		
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 		ConfigInjector.inject(config, getClass());
 		

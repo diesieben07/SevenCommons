@@ -2,6 +2,8 @@ package de.take_weiland.mods.commons.asm;
 
 import java.util.List;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.EntityAgeable;
@@ -56,6 +58,7 @@ public final class ASMHooks {
 		MinecraftForge.EVENT_BUS.post(new PlaceBlockEvent.Post(player, world, x, y, z, side, hitX, hitY, hitZ, item));
 	}
 	
+	@SideOnly(Side.CLIENT)
 	public static final void onGuiInit(GuiScreen gui, List<GuiButton> buttons) {
 		MinecraftForge.EVENT_BUS.post(new GuiInitEvent(gui, buttons));
 	}

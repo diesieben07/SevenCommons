@@ -71,7 +71,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	}
 	
 	@Override
-	public boolean needsSyncing() {
+	public boolean querySyncData() {
 		return false;
 	}
 	
@@ -96,7 +96,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	@Override
 	public void detectAndSendChanges() {
 		super.detectAndSendChanges();
-		if (!noSync && enableSyncing() && needsSyncing()) {
+		if (!noSync && enableSyncing() && querySyncData()) {
 			new PacketContainerSync(this, false).sendTo(viewingPlayers);
 		}
 	}
