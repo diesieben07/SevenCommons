@@ -26,6 +26,9 @@ public class ModsFolderMod extends ModContainerMod {
 		Object sourceObj = mod.getMod() == null ? mod : mod.getMod();
 		URL sourceLoc = sourceObj.getClass().getProtectionDomain().getCodeSource().getLocation();
 		
+		UpdateControllerLocal.LOGGER.fine("Attempting to parse Mod-Zip URL for mod " + mod.getModId());
+		UpdateControllerLocal.LOGGER.fine("URL is " + sourceLoc.toString());
+		
 		try {
 			File file = new File(sourceLoc.toURI());
 			
