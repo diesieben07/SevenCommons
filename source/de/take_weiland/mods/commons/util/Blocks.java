@@ -35,8 +35,16 @@ public final class Blocks {
 		GameRegistry.registerBlock(block, itemClass, baseName);
 	}
 	
+	public static <E extends Type, T extends Block & Typed<E>> String getUnlocalizedName(T block, E type) {
+		return block.getUnlocalizedName() + "." + type.getName();
+	}
+	
+	public static <E extends Type, T extends Block & Typed<E>> String getUnlocalizedName(T block, int meta) {
+		return getUnlocalizedName(block, Items.getType(block, meta));
+	}
+	
 	public static <E extends Type, T extends Block & Typed<E>> String getUnlocalizedName(T block, ItemStack stack) {
-		return block.getUnlocalizedName() + "." + Items.getType(block, stack).getName();
+		return getUnlocalizedName(block, Items.getType(block, stack));
 	}
 	
 	public static final void genericBreak(Block block, World world, int x, int y, int z, int meta) {

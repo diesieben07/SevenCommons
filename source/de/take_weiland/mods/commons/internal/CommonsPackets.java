@@ -11,7 +11,8 @@ public enum CommonsPackets implements PacketType {
 	UPDATE_ACTION(PacketUpdateAction.class),
 	MOD_STATE(PacketModState.class),
 	DOWNLOAD_PROGRESS(PacketDownloadProgress.class),
-	TE_SYNC(PacketTileEntitySync.class);
+	TE_SYNC(PacketTileEntitySync.class),
+	CONTAINER_SYNC(PacketContainerSync.class);
 	
 	private static final String CHANNEL = "SevenCommons";
 	

@@ -2,13 +2,20 @@ package de.take_weiland.mods.commons.util;
 
 import static net.minecraft.inventory.SCContainerAccessor.addSlot;
 import static net.minecraft.inventory.SCContainerAccessor.mergeItemStack;
+
+import com.google.common.collect.Iterables;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.SCContainerAccessor;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.Packet;
+import de.take_weiland.mods.commons.gui.AbstractContainer;
 import de.take_weiland.mods.commons.gui.AdvancedContainer;
+import de.take_weiland.mods.commons.internal.PacketContainerSync;
 
 public final class Containers {
 
@@ -79,4 +86,19 @@ public final class Containers {
 		return result;
 	}
 
+	public static <T extends Container & AdvancedContainer<?>> Packet getSyncPacket(T container, boolean syncAll) {
+		return new PacketContainerSync(container, syncAll).getVanillaPacket();
+	}
+	
+	public static Iterable<EntityPlayer> getViewingPlayers(Container c) {
+		return c instanceof AbstractContainer ? ((AbstractContainer<?>)c).viewingPlayers : Iterables.filter(SCContainerAccessor.getCrafters(c), EntityPlayer.class);
+	}
+	
+	/**
+	 * @deprecated use {@link AbstractContainer#viewingPlayers}
+	 */
+	@Deprecated
+	public static Iterable<EntityPlayer> getViewingPlayers(AbstractContainer<?> c) {
+		return c.viewingPlayers;
+	}
 }

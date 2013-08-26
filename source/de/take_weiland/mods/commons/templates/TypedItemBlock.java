@@ -12,6 +12,7 @@ public class TypedItemBlock extends ItemBlock {
 	public TypedItemBlock(int itemId, Block block) {
 		super(itemId);
 		this.block = block;
+		setHasSubtypes(true);
 	}
 
 	@Override

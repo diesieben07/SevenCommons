@@ -109,9 +109,13 @@ public abstract class ModPacket {
 	}
 
 	public final void sendToOps() {
+		sendTo(Players.getOps());
+	}
+	
+	public final void sendTo(Iterable<EntityPlayer> players) {
 		Packet packet = getVanillaPacket();
-		for (EntityPlayer op : Players.getOps()) {
-			PacketDispatcher.sendPacketToPlayer(packet, (Player)op);
+		for (EntityPlayer player : players) {
+			PacketDispatcher.sendPacketToPlayer(packet, (Player)player);
 		}
 	}
 
