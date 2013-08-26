@@ -15,6 +15,12 @@ public class GuiButtonUpdates extends GuiButton {
 	
 	public GuiButtonUpdates(int id, int x, int y) {
 		super(id, x, y, 20, 20, "");
+		if (CommonsModContainer.updateController == null) {
+			throw new IllegalStateException("Update Button should not exist when updateController is null!");
+		}
+		if (!CommonsModContainer.updaterEnabled) {
+			throw new IllegalStateException("Update Button should not exist when updates are disabled!");
+		}
 	}
 
 	@Override
