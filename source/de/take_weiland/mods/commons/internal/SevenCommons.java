@@ -9,6 +9,8 @@ import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import org.objectweb.asm.Type;
 
+import com.google.common.base.Throwables;
+
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
@@ -75,8 +77,8 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 			try {
 				source = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
 			} catch (URISyntaxException e) {
-				e.printStackTrace();
-				// oops
+				LOGGER.severe("Failed to acquire source location for SevenCommons!");
+				Throwables.propagate(e);
 			}
 		}
 	}

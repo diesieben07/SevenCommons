@@ -5,6 +5,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteArrayDataInput;
@@ -21,15 +22,28 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	
 	protected final EntityPlayer player;
 	
+	private final int firstPlayerSlot;
+	
 	public final Iterable<EntityPlayer> viewingPlayers = Iterables.filter(crafters, EntityPlayer.class);
 	
 	protected AbstractContainer(T upper, EntityPlayer player) {
 		inventory = upper;
 		this.player = player;
 		addSlots();
+		firstPlayerSlot = inventorySlots.size();
 		Containers.addPlayerInventory(this, player.inventory);
 	}
 	
+	@SuppressWarnings("unchecked")
+	protected AbstractContainer(World world, int x, int y, int z, EntityPlayer player) {
+		this((T) world.getBlockTileEntity(x, y, z), player);
+	}
+	
+	@Override
+	public int getFirstPlayerSlot() {
+		return firstPlayerSlot;
+	}
+
 	protected abstract void addSlots();
 	
 	@Override
@@ -71,7 +85,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	}
 	
 	@Override
-	public boolean querySyncData() {
+	public boolean prepareSyncData() {
 		return false;
 	}
 	
@@ -96,7 +110,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	@Override
 	public void detectAndSendChanges() {
 		super.detectAndSendChanges();
-		if (!noSync && enableSyncing() && querySyncData()) {
+		if (!noSync && enableSyncing() && prepareSyncData()) {
 			new PacketContainerSync(this, false).sendTo(viewingPlayers);
 		}
 	}

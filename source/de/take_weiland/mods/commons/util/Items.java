@@ -26,13 +26,25 @@ public final class Items {
 		
 		if (item instanceof Typed) {
 			SCItemAccessor.setHasSubtypes(item);
+			
+			if (item instanceof Typed) {
+				registerSubtypes(item, baseName); // moved to seperate method to keep people from messing with the Type parameter
+			}
 		}
 		
 		GameRegistry.registerItem(item, baseName);
 	}
 	
+	private static <T extends Item & Typed<E>, E extends Type> void registerSubtypes(Item item, String baseName) {
+		@SuppressWarnings("unchecked")
+		T typed = (T)item;
+		for (E type : typed.getTypes()) {
+			GameRegistry.registerCustomItemStack(Items.getLanguageKey(baseName, type.getName()), getStack(typed, type));
+		}
+	}
+	
 	public static <E extends Type, T extends Item & Typed<E>> String getUnlocalizedName(T item, ItemStack stack) {
-		return item.getUnlocalizedName() + "." + getType(item, stack).getName();
+		return item.getUnlocalizedName() + "." + Multitypes.getType(item, stack).getName();
 	}
 
 	public static final <E extends Type, T extends Item & Typed<E>> ItemStack getStack(T item, E type) {
@@ -41,14 +53,6 @@ public final class Items {
 	
 	public static final <E extends Type, T extends Item & Typed<E>> ItemStack getStack(T item, E type, int quantity) {
 		return new ItemStack(item, quantity, type.getMeta());
-	}
-	
-	public static final <E extends Type> E getType(Typed<E> item, int meta) {
-		return CommonUtils.defaultedArrayAccess(item.getTypes(), meta, item.getDefault());
-	}
-	
-	public static final <E extends Type> E getType(Typed<E> item, ItemStack stack) {
-		return getType(item, stack.getItemDamage());
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })

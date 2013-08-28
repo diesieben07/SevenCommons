@@ -14,7 +14,7 @@ import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.network.StreamPacket;
 import de.take_weiland.mods.commons.network.PacketType;
-import de.take_weiland.mods.commons.util.CommonUtils;
+import de.take_weiland.mods.commons.util.CollectionUtils;
 
 public class PacketUpdateAction extends StreamPacket {
 
@@ -76,7 +76,7 @@ public class PacketUpdateAction extends StreamPacket {
 				localUpdater.searchForUpdates();
 				break;
 			case UPDATE:
-				ModVersion version = CommonUtils.safeListAccess(mod.getVersions().getAvailableVersions(), versionIndex);
+				ModVersion version = CollectionUtils.safeListAccess(mod.getVersions().getAvailableVersions(), versionIndex);
 				if (version != null) {
 					localUpdater.update(mod, version);
 				}

@@ -15,7 +15,7 @@ import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.util.CommonUtils;
+import de.take_weiland.mods.commons.util.CollectionUtils;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.Sides;
 
@@ -87,7 +87,7 @@ public abstract class ModPacket {
 	}
 
 	public final void sendToAllNear(World world, double x, double y, double z, double radius) {
-		MinecraftServer.getServer().getConfigurationManager().sendToAllNear(x, y, z, radius, world.provider.dimensionId, getVanillaPacket());
+		sendToAllNear(world.provider.dimensionId, x, y, z, radius);
 	}
 
 	public final void sendToAllNear(int dimension, double x, double y, double z, double radius) {
@@ -95,11 +95,11 @@ public abstract class ModPacket {
 	}
 
 	public final void sendToAllNear(Entity entity, double radius) {
-		sendToAllNear(entity.worldObj, entity.posX, entity.posY, entity.posZ, radius);
+		sendToAllNear(entity.worldObj.provider.dimensionId, entity.posX, entity.posY, entity.posZ, radius);
 	}
 
 	public final void sendToAllNear(TileEntity tileEntity, double radius) {
-		sendToAllNear(tileEntity.worldObj, tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord, radius);
+		sendToAllNear(tileEntity.worldObj.provider.dimensionId, tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord, radius);
 	}
 
 	public final void sendToAllTracking(Entity entity) {
@@ -120,7 +120,7 @@ public abstract class ModPacket {
 	}
 
 	public static final <E extends Enum<E>> E readEnum(Class<E> clazz, ByteArrayDataInput in) {
-		return CommonUtils.safeArrayAccess(clazz.getEnumConstants(), in.readUnsignedByte());
+		return CollectionUtils.safeArrayAccess(clazz.getEnumConstants(), in.readUnsignedByte());
 	}
 
 	public static final void writeEnum(Enum<?> element, ByteArrayDataOutput out) {

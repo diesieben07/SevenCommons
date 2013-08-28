@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import cpw.mods.fml.common.versioning.ArtifactVersion;
-import de.take_weiland.mods.commons.util.CommonUtils;
+import de.take_weiland.mods.commons.util.CollectionUtils;
 
 public final class ModVersionCollection {
 
@@ -48,7 +48,7 @@ public final class ModVersionCollection {
 	}
 	
 	public ModVersion getSelectedVersion() {
-		return CommonUtils.safeListAccess(versions, selectedVersion);
+		return CollectionUtils.safeListAccess(versions, selectedVersion);
 	}
 	
 	public void selectNextVersion() {
@@ -73,10 +73,10 @@ public final class ModVersionCollection {
 	}
 	
 	public ModVersion getNewestInstallableVersion() {
-		return CommonUtils.safeListAccess(installableVersions, 0);
+		return CollectionUtils.safeListAccess(installableVersions, 0);
 	}
 	
 	public ModVersion getNewestVersion() {
-		return CommonUtils.safeListAccess(versions, 0);
+		return CollectionUtils.safeListAccess(versions, 0);
 	}
 }

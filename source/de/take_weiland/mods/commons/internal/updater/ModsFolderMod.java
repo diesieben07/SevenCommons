@@ -30,10 +30,12 @@ public class ModsFolderMod extends ModContainerMod {
 		UpdateControllerLocal.LOGGER.fine("URL is " + sourceLoc.toString());
 		
 		try {
-			File file = new File(sourceLoc.toURI());
-			
-			if (file.isFile() && (file.getPath().endsWith(".jar") || file.getPath().endsWith(".zip"))) {
-				source = file;
+			if (sourceLoc.getProtocol().equals("jar")) {
+				File file = new File(sourceLoc.toURI());
+				
+				if (file.isFile() && (file.getPath().endsWith(".jar") || file.getPath().endsWith(".zip"))) {
+					source = file;
+				}
 			}
 		} catch (URISyntaxException e) { // ok, no jar source file
 		}

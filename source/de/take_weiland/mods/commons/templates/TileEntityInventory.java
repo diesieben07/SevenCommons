@@ -1,12 +1,11 @@
 package de.take_weiland.mods.commons.templates;
 
-import de.take_weiland.mods.commons.util.Inventories;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import de.take_weiland.mods.commons.util.Inventories;
 
-public abstract class TileEntityInventory extends TileEntityAbstract implements IInventory {
+public abstract class TileEntityInventory extends TileEntityAbstract implements AdvancedInventory {
 
 	protected final ItemStack[] storage;
 	
@@ -14,6 +13,11 @@ public abstract class TileEntityInventory extends TileEntityAbstract implements 
 		storage = provideStorage();
 	}
 	
+	@Override
+	public ItemStack[] getStorage() {
+		return storage;
+	}
+
 	protected ItemStack[] provideStorage() {
 		return new ItemStack[getSizeInventory()];
 	}

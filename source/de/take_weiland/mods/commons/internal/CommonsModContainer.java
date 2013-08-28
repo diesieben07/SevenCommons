@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
+import cpw.mods.fml.client.FMLFileResourcePack;
+import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
@@ -98,10 +100,7 @@ public final class CommonsModContainer extends DummyModContainer {
 
 	@Override
 	public Class<?> getCustomResourcePackClass() {
-		try {
-			return SevenCommons.source.isDirectory() ? Class.forName("de.take_weiland.mods.commons.internal.CommonsFolderResourcePack") : Class.forName("de.take_weiland.mods.commons.internal.CommonsFileResourcePack");
-		} catch (ClassNotFoundException e) {
-			return null;
-		} 
+		return getSource().isDirectory() ? FMLFolderResourcePack.class : FMLFileResourcePack.class;
 	}
+
 }

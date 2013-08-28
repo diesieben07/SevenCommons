@@ -33,18 +33,30 @@ public final class Blocks {
 		block.setUnlocalizedName(Items.getLanguageKey(modId, baseName));
 		
 		GameRegistry.registerBlock(block, itemClass, baseName);
+		
+		if (block instanceof Typed) {
+			registerSubtypes(block, baseName); // moved to separate method so people don't mess with the ugly type parameter hack
+		}
+	}
+	
+	private static <T extends Block & Typed<E>, E extends Type> void registerSubtypes(Block block, String baseName) {
+		@SuppressWarnings("unchecked")
+		T typed = (T)block;
+		for (E type : typed.getTypes()) {
+			GameRegistry.registerCustomItemStack(Items.getLanguageKey(baseName, type.getName()), getStack(typed, type));
+		}
 	}
 	
 	public static <E extends Type, T extends Block & Typed<E>> String getUnlocalizedName(T block, E type) {
-		return block.getUnlocalizedName() + "." + type.getName();
+		return Items.getLanguageKey(block.getUnlocalizedName(), type.getName());
 	}
 	
 	public static <E extends Type, T extends Block & Typed<E>> String getUnlocalizedName(T block, int meta) {
-		return getUnlocalizedName(block, Items.getType(block, meta));
+		return getUnlocalizedName(block, Multitypes.getType(block, meta));
 	}
 	
 	public static <E extends Type, T extends Block & Typed<E>> String getUnlocalizedName(T block, ItemStack stack) {
-		return getUnlocalizedName(block, Items.getType(block, stack));
+		return getUnlocalizedName(block, Multitypes.getType(block, stack));
 	}
 	
 	public static final void genericBreak(Block block, World world, int x, int y, int z, int meta) {
@@ -69,12 +81,12 @@ public final class Blocks {
 		return Items.registerIcons(block, SCBlockAccessor.getIconName(block), register);
 	}
 	
-	public static final <E extends Type, T extends Block & Typed<E>> ItemStack getStack(T item, E type) {
-		return getStack(item, type, 1);
+	public static final <E extends Type, T extends Block & Typed<E>> ItemStack getStack(T block, E type) {
+		return getStack(block, type, 1);
 	}
 	
-	public static final <E extends Type, T extends Block & Typed<E>> ItemStack getStack(T item, E type, int quantity) {
-		return new ItemStack(item, quantity, type.getMeta());
+	public static final <E extends Type, T extends Block & Typed<E>> ItemStack getStack(T block, E type, int quantity) {
+		return new ItemStack(block, quantity, type.getMeta());
 	}
 
 }

@@ -42,7 +42,7 @@ public class SearchUpdates implements Runnable {
 			
 			ModVersionCollection versions = mod.getVersions();
 			
-			versions.injectAvailableVersions(SearchUpdates.parseVersionFile(mod, reader));
+			versions.injectAvailableVersions(parseVersionFile(mod, reader));
 			
 			ModVersion newestInstallable = versions.getNewestInstallableVersion();
 			ModVersion newest = versions.getNewestVersion();

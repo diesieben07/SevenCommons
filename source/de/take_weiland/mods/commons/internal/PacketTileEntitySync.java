@@ -29,7 +29,7 @@ public class PacketTileEntitySync extends ModPacket {
 	
 	@Override
 	protected void readData(byte[] data) {
-		in = ByteStreams.newDataInput(data);
+		in = ByteStreams.newDataInput(data, 1); // don't want the packetId
 		x = in.readInt();
 		y = in.readInt();
 		z = in.readInt();
