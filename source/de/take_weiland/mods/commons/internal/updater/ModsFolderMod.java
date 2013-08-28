@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.internal.updater;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -31,13 +33,13 @@ public class ModsFolderMod extends ModContainerMod {
 		
 		try {
 			if (sourceLoc.getProtocol().equals("jar")) {
-				File file = new File(sourceLoc.toURI());
-				
-				if (file.isFile() && (file.getPath().endsWith(".jar") || file.getPath().endsWith(".zip"))) {
-					source = file;
-				}
+				JarURLConnection connection = (JarURLConnection) sourceLoc.openConnection();
+				source = new File(connection.getJarFileURL().toURI());
 			}
-		} catch (URISyntaxException e) { // ok, no jar source file
+		} catch (IOException e) {
+			exception(e, mod);
+		} catch (URISyntaxException e) {
+			exception(e, mod);
 		}
 		
 		if (source == null) {
@@ -46,6 +48,11 @@ public class ModsFolderMod extends ModContainerMod {
 		} else {
 			transition(ModUpdateState.AVAILABLE);
 		}
+	}
+	
+	private static void exception(Exception e, ModContainer mod) {
+		UpdateControllerLocal.LOGGER.warning(String.format("Exception during parsing Zip-URL for mod %s", mod.getModId()));
+		e.printStackTrace();
 	}
 	
 	private static URL getUpdateURL(ModContainer mc) {
