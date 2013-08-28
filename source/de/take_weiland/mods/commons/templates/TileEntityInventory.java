@@ -1,12 +1,18 @@
 package de.take_weiland.mods.commons.templates;
 
+import java.util.List;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+
+import com.google.common.collect.Lists;
+
 import de.take_weiland.mods.commons.util.Inventories;
 
 public abstract class TileEntityInventory extends TileEntityAbstract implements AdvancedInventory {
 
+	private List<AdvancedInventory.Listener> listeners;
 	protected final ItemStack[] storage;
 	
 	public TileEntityInventory() {
@@ -87,5 +93,30 @@ public abstract class TileEntityInventory extends TileEntityAbstract implements 
 
 	@Override
 	public void closeChest() { }
+
+	@Override
+	public void registerListener(Listener listener) {
+		if (listeners == null) {
+			listeners = Lists.newArrayListWithCapacity(3);
+		}
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeListener(Listener listener) {
+		if (listeners != null) {
+			listeners.remove(listener);
+		}
+	}
+
+	@Override
+	public void onInventoryChanged() {
+		if (listeners != null) {
+			for (Listener listener : listeners) {
+				listener.onInventoryChanged(this);
+			}
+		}
+		super.onInventoryChanged();
+	}
 
 }

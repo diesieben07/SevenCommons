@@ -1,11 +1,17 @@
 package de.take_weiland.mods.commons.templates;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 import net.minecraft.item.ItemStack;
 import de.take_weiland.mods.commons.util.CollectionUtils;
 import de.take_weiland.mods.commons.util.Inventories;
 
 public abstract class AbstractInventory implements AdvancedInventory {
 
+	private List<AdvancedInventory.Listener> listeners;
+	
 	protected final ItemStack[] storage;
 	
 	protected AbstractInventory() {
@@ -50,7 +56,13 @@ public abstract class AbstractInventory implements AdvancedInventory {
 	}
 
 	@Override
-	public void onInventoryChanged() { }
+	public void onInventoryChanged() {
+		if (listeners != null) {
+			for (Listener listener : listeners) {
+				listener.onInventoryChanged(this);
+			}
+		}
+	}
 	
 	@Override
 	public void openChest() { }
@@ -61,6 +73,21 @@ public abstract class AbstractInventory implements AdvancedInventory {
 	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack item) {
 		return true;
+	}
+
+	@Override
+	public void registerListener(Listener listener) {
+		if (listeners == null) {
+			listeners = Lists.newArrayListWithCapacity(3);
+		}
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeListener(Listener listener) {
+		if (listeners != null) {
+			listeners.remove(listener);
+		}
 	}
 
 }
