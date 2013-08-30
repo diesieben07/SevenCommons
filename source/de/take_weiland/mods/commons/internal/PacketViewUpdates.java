@@ -16,12 +16,13 @@ import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
-import de.take_weiland.mods.commons.network.StreamPacket;
 import de.take_weiland.mods.commons.network.PacketType;
+import de.take_weiland.mods.commons.network.StreamPacket;
 
 public class PacketViewUpdates extends StreamPacket {
 
-	private Collection<UpdatableMod> mods;
+	private Collection<? extends UpdatableMod> mods;
+	private Collection<ClientDummyUpdatableMod> clientMods;
 	
 	public PacketViewUpdates(UpdateController controller) {
 		mods = controller.getMods();
@@ -30,7 +31,7 @@ public class PacketViewUpdates extends StreamPacket {
 	@Override
 	protected void readData(ByteArrayDataInput in) {
 		int modCount = in.readUnsignedShort();
-		mods = Lists.newArrayListWithCapacity(modCount);
+		clientMods = Lists.newArrayListWithCapacity(modCount);
 		
 		for (int i = 0; i < modCount; i++) {
 			ClientDummyUpdatableMod mod = new ClientDummyUpdatableMod();
@@ -54,14 +55,14 @@ public class PacketViewUpdates extends StreamPacket {
 			mod.setVersions(versionCollection);
 			
 			versionCollection.injectAvailableVersions(versions);
-			mods.add(mod);
+			clientMods.add(mod);
 		}
 	}
 
 	@Override
 	protected void writeData(ByteArrayDataOutput out) {
-		out.writeShort(getMods().size());
-		for (UpdatableMod mod : getMods()) {
+		out.writeShort(mods.size());
+		for (UpdatableMod mod : mods) {
 			out.writeUTF(mod.getModId());
 			out.writeUTF(mod.getName());
 			writeEnum(mod.getState(), out);
@@ -90,8 +91,8 @@ public class PacketViewUpdates extends StreamPacket {
 		return CommonsPackets.VIEW_UPDATES;
 	}
 
-	public Collection<UpdatableMod> getMods() {
-		return mods;
+	public Collection<ClientDummyUpdatableMod> getMods() {
+		return clientMods;
 	}
 
 }

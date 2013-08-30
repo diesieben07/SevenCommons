@@ -23,27 +23,40 @@ public class PacketUpdateAction extends StreamPacket {
 	private int versionIndex = -1;
 	
 	public PacketUpdateAction(Action action) {
+		if (action.hasModId || action.hasVersionIndex) {
+			wrongArgs(action);
+		}
 		this.action = action;
 	}
 	
-	public PacketUpdateAction(Action action, String modIndex) {
+	public PacketUpdateAction(Action action, String modId) {
+		if (!action.hasModId || action.hasVersionIndex) {
+			wrongArgs(action);
+		}
 		this.action = action;
-		this.modId = modIndex;
+		this.modId = modId;
 	}
 	
-	public PacketUpdateAction(Action action, String modIndex, int versionIndex) {
+	public PacketUpdateAction(Action action, String modId, int versionIndex) {
+		if (!action.hasModId || !action.hasVersionIndex) {
+			wrongArgs(action);
+		}
 		this.action = action;
-		this.modId = modIndex;
+		this.modId = modId;
 		this.versionIndex = versionIndex;
+	}
+	
+	private static void wrongArgs(Action action) {
+		throw new IllegalArgumentException("Wrong argument count for action " + action);
 	}
 	
 	@Override
 	protected void readData(ByteArrayDataInput in) {
 		action = readEnum(Action.class, in);
-		if (action != Action.SEARCH_ALL && action != Action.CLOSE_SCREEN) {
+		if (action.hasModId) {
 			modId = in.readUTF();
 		}
-		if (action == Action.UPDATE) {
+		if (action.hasVersionIndex) {
 			versionIndex = in.readUnsignedShort();
 		}
 	}
@@ -51,10 +64,10 @@ public class PacketUpdateAction extends StreamPacket {
 	@Override
 	protected void writeData(ByteArrayDataOutput out) {
 		writeEnum(action, out);
-		if (modId != null) {
+		if (action.hasModId) {
 			out.writeUTF(modId);
 		}
-		if (versionIndex > 0) {
+		if (action.hasVersionIndex) {
 			out.writeShort(versionIndex);
 		}
 	}
@@ -84,6 +97,10 @@ public class PacketUpdateAction extends StreamPacket {
 			case CLOSE_SCREEN:
 				localUpdater.unregisterListener((PlayerUpdateInformation)player.getExtendedProperties(PlayerUpdateInformation.IDENTIFIER));
 				break;
+			case RESTART_MINECRAFT:
+				if (!localUpdater.restartMinecraft()) {
+					new PacketClientAction(PacketClientAction.Action.RESTART_FAILURE).sendToPlayer(player);
+				}
 			}
 		}
 	}
@@ -100,7 +117,15 @@ public class PacketUpdateAction extends StreamPacket {
 
 	public static enum Action {
 		
-		SEARCH_ALL, SEARCH, UPDATE, CLOSE_SCREEN
+		SEARCH_ALL(false, false), SEARCH(true, false), UPDATE(true, true), CLOSE_SCREEN(false, false), RESTART_MINECRAFT(false, false);
+		
+		final boolean hasModId;
+		final boolean hasVersionIndex;
+		
+		private Action(boolean hasModId, boolean hasVersionIndex) {
+			this.hasModId = hasModId;
+			this.hasVersionIndex = hasVersionIndex;
+		}
 		
 	}
 }

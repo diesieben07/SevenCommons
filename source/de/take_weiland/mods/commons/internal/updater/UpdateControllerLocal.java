@@ -1,8 +1,12 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
@@ -16,6 +20,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
+import de.take_weiland.mods.commons.internal.CommonsModContainer;
 import de.take_weiland.mods.commons.internal.updater.tasks.InstallUpdate;
 import de.take_weiland.mods.commons.internal.updater.tasks.SearchUpdates;
 
@@ -31,7 +36,7 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 		LOGGER = Logger.getLogger(LOG_CHANNEL);
 	}
 	
-	private final Executor executor;
+	private final ExecutorService executor;
 
 	public UpdateControllerLocal() {
 		List<UpdatableMod> mods = Lists.transform(Loader.instance().getActiveModList(), new Function<ModContainer, UpdatableMod>() {
@@ -77,6 +82,55 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 		if (!mods.containsKey(mod.getModId())) { // check key here, its faster
 			throw new IllegalArgumentException(String.format("Mod %s not valid for this UpdateController!", mod.getModId()));
 		}
+	}
+
+	@Override
+	public boolean restartMinecraft() {
+//		if (true) return false;
+		RuntimeMXBean mxBean = ManagementFactory.getRuntimeMXBean();
+		String jvm = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+		
+		if (System.getProperty("os.name").toLowerCase().contains("win")) {
+			jvm += ".exe ";
+		} else {
+			jvm += " ";
+		}
+		
+		if (!new File(jvm).canExecute()) {
+			return false;
+		}
+		
+		StringBuilder cmd = new StringBuilder();
+		
+		cmd.append(jvm);
+		
+        for (String jvmArg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
+            cmd.append(jvmArg + " ");
+        }
+        cmd.append("-cp ").append(mxBean.getClassPath()).append(" ");
+        String sunCommand = System.getProperty("sun.java.command");
+        
+        if (sunCommand == null) {
+        	return false;
+        }
+        
+        int spaceIdx = sunCommand.indexOf(' ');
+        
+        String mainClass = spaceIdx == -1 ? sunCommand : sunCommand.substring(0, spaceIdx);
+        String mainArgs = spaceIdx == -1 ? "" : sunCommand.substring(spaceIdx + 1);
+        
+        cmd.append(mainClass).append(" ");
+        cmd.append(mainArgs);
+        
+        try {
+			Runtime.getRuntime().exec(cmd.toString());
+		} catch (IOException e) {
+			return false;
+		}
+        		
+		
+		CommonsModContainer.proxy.shutdownMinecraft();
+		return true;
 	}
 	
 }

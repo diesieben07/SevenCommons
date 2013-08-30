@@ -13,7 +13,7 @@ public interface UpdateController {
 	 * 
 	 * @return
 	 */
-	public Collection<UpdatableMod> getMods();
+	public Collection<? extends UpdatableMod> getMods();
 	
 	public UpdatableMod getMod(String modId);
 	
@@ -37,5 +37,7 @@ public interface UpdateController {
 	public void onStateChange(UpdatableMod mod);
 	
 	public void onDownloadProgressChange(UpdatableMod mod);
+
+	public boolean restartMinecraft();
 	
 }

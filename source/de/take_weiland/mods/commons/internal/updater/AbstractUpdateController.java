@@ -20,10 +20,10 @@ public abstract class AbstractUpdateController implements UpdateController {
 	};
 	
 	private final Set<UpdateStateListener> stateListeners = Sets.newHashSet();
-	protected Map<String, UpdatableMod> mods = Collections.emptyMap();
+	protected Map<String, ? extends UpdatableMod> mods = Collections.emptyMap();
 
 	@Override
-	public Collection<UpdatableMod> getMods() {
+	public Collection<? extends UpdatableMod> getMods() {
 		return mods.values();
 	}
 

@@ -58,6 +58,7 @@ public class ClientDummyUpdatableMod implements UpdatableMod {
 	@Override
 	public boolean transition(ModUpdateState desiredState) {
 		state = desiredState;
+		controller.onStateChange(this);
 		return true;
 	}
 
@@ -82,6 +83,7 @@ public class ClientDummyUpdatableMod implements UpdatableMod {
 		}
 		this.downloadProgress = progress;
 		this.downloadTotal = total;
+		controller.onDownloadProgressChange(this);
 	}
 
 	@Override

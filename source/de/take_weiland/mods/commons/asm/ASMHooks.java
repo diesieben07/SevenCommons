@@ -2,19 +2,16 @@ package de.take_weiland.mods.commons.asm;
 
 import java.util.List;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.event.LivingBreedEvent;
-import de.take_weiland.mods.commons.event.PlaceBlockEvent;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.ZombieConvertEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
@@ -48,14 +45,6 @@ public final class ASMHooks {
 		} else {
 			return false;
 		}
-	}
-	
-	public static final boolean onBlockPlacePre(EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
-		return MinecraftForge.EVENT_BUS.post(new PlaceBlockEvent.Pre(player, world, x, y, z, side, hitX, hitY, hitZ, item));
-	}
-	
-	public static final void onBlockPlacePost(EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, ItemStack item) {
-		MinecraftForge.EVENT_BUS.post(new PlaceBlockEvent.Post(player, world, x, y, z, side, hitX, hitY, hitZ, item));
 	}
 	
 	@SideOnly(Side.CLIENT)

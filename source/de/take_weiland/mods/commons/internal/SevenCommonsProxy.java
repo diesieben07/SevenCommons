@@ -11,5 +11,9 @@ public interface SevenCommonsProxy {
 	public void handleModState(PacketModState packet);
 
 	public void handleDownloadProgress(PacketDownloadProgress packet);
+
+	public void shutdownMinecraft();
+	
+	public void displayRestartFailure();
 	
 }

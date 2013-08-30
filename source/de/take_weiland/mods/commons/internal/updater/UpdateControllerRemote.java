@@ -9,8 +9,11 @@ import de.take_weiland.mods.commons.internal.PacketUpdateAction.Action;
 
 public class UpdateControllerRemote extends AbstractUpdateController {
 
-	public UpdateControllerRemote(Collection<UpdatableMod> mods) {
+	public UpdateControllerRemote(Collection<ClientDummyUpdatableMod> mods) {
 		this.mods = Maps.uniqueIndex(mods, ID_RETRIEVER);
+		for (ClientDummyUpdatableMod mod : mods) {
+			mod.setController(this);
+		}
 	}
 	
 	@Override
@@ -26,6 +29,12 @@ public class UpdateControllerRemote extends AbstractUpdateController {
 	@Override
 	public void update(UpdatableMod mod, ModVersion version) {
 		new PacketUpdateAction(Action.UPDATE, mod.getModId(), mod.getVersions().getAvailableVersions().indexOf(version)).sendToServer();
+	}
+
+	@Override
+	public boolean restartMinecraft() {
+		new PacketUpdateAction(Action.RESTART_MINECRAFT).sendToServer();
+		return true;
 	}
 
 }

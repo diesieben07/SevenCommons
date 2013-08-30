@@ -29,6 +29,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	private static final int BUTTON_SEARCH = 1;
 	private static final int BUTTON_UPDATE = 2;
 	private static final int BUTTON_VERSION = 3;
+	private static final int BUTTON_RESTART = 4;
 	
 	private final String textCheckUpdates = I18n.func_135053_a("sevencommons.ui.updates.check");
 	private final String textChecking = I18n.func_135053_a("sevencommons.ui.updates.checking");
@@ -37,16 +38,18 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	private final String textNoPatchNotes = I18n.func_135053_a("sevencommons.ui.updates.patchnotes.none");
 	private final String textCurrentVersion = I18n.func_135053_a("sevencommons.ui.updates.version.current");
 	private final String textNewVersion = I18n.func_135053_a("sevencommons.ui.updates.version.new");
+	private final String textRestart = I18n.func_135053_a("sevencommons.ui.updates.restart");
 	
 	private final GuiScreen parent;
 	final UpdateController controller;
 	private GuiSlotUpdateList scroller;
 	final List<UpdatableMod> mods;
 	
-	private int leftButtonsWidth;
+	private int rightButtonsWidth;
 	private GuiButton buttonCheckUpdates;
 	private GuiButton buttonDownloadUpdate;
 	private GuiButton buttonVersionSelect;
+	private GuiButton buttonRestartMinecraft;
 	
 	int selectedIndex = -1;
 	private UpdatableMod selectedMod;
@@ -74,16 +77,19 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		
 		buttonList.add(new GuiButton(BUTTON_BACK, width / 2 - 50, height - 40, 100, 20, "Back"));
 		
-		leftButtonsWidth = Math.max(fontRenderer.getStringWidth(textCheckUpdates), fontRenderer.getStringWidth(textUpdate));
-		leftButtonsWidth = Math.max(leftButtonsWidth, fontRenderer.getStringWidth(textChecking)) + 10;
+		rightButtonsWidth = Math.max(fontRenderer.getStringWidth(textCheckUpdates), fontRenderer.getStringWidth(textUpdate));
+		rightButtonsWidth = Math.max(rightButtonsWidth, fontRenderer.getStringWidth(textChecking));
+		rightButtonsWidth = Math.max(rightButtonsWidth, fontRenderer.getStringWidth(textRestart)) + 10;
 		
-		buttonList.add((buttonCheckUpdates = new GuiButton(BUTTON_SEARCH, width - leftButtonsWidth - 20, height - 81, leftButtonsWidth, 20, "")));
-		buttonList.add((buttonDownloadUpdate = new GuiButton(BUTTON_UPDATE, width - leftButtonsWidth - 20, height - 106, leftButtonsWidth, 20, textUpdate)));
-		buttonList.add((buttonVersionSelect = new GuiButton(BUTTON_VERSION, width - leftButtonsWidth - 20, height - 131, leftButtonsWidth, 20, "")));
+		buttonList.add((buttonCheckUpdates = new GuiButton(BUTTON_SEARCH, width - rightButtonsWidth - 20, height - 40, rightButtonsWidth, 20, "")));
+		buttonList.add((buttonDownloadUpdate = new GuiButton(BUTTON_UPDATE, width - rightButtonsWidth - 20, height - 65, rightButtonsWidth, 20, textUpdate)));
+		buttonList.add((buttonVersionSelect = new GuiButton(BUTTON_VERSION, width - rightButtonsWidth - 20, height - 90, rightButtonsWidth, 20, "")));
+		
+		buttonList.add((buttonRestartMinecraft = new GuiButton(BUTTON_RESTART, width - rightButtonsWidth - 20, height - 140, rightButtonsWidth, 20, textRestart)));
 		
 		updateButtonState();
 	}
-	
+
 	@Override
 	public void onGuiClosed() {
 		super.onGuiClosed();
@@ -94,41 +100,43 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float par3) {
 		scroller.drawScreen(mouseX, mouseY, par3);
-		super.drawScreen(mouseX, mouseY, par3);
 
 		drawCenteredString(fontRenderer, "Mod Updates", width / 2, 10, 0xffffff);
 		
-		if (selectedMod == null) {
-			return;
-		}
-		
-		ModUpdateState state = selectedMod.getState();
-		
-		boolean canDownload = state.canTransition(ModUpdateState.DOWNLOADING);
-		
-		ModVersionCollection versions = selectedMod.getVersions();
-		String curr = versions.getCurrentVersion().modVersion.getVersionString();
-		fontRenderer.drawString(String.format(textCurrentVersion, curr), width - leftButtonsWidth - 20, height - 155, 0xffffff);
-		
-		if (canDownload) {
-			fontRenderer.drawString(textNewVersion, width - leftButtonsWidth - 20, height - 143, 0xffffff);
-
-			ModVersion version = versions.getSelectedVersion();
+		if (selectedMod != null) {
+			ModUpdateState state = selectedMod.getState();
 			
-			if (version != null) {
-				boolean hasNotes = !Strings.isNullOrEmpty(version.patchNotes);
-				fontRenderer.drawString(hasNotes ? textPatchNotes : textNoPatchNotes, 170, 32, 0xffff00);
-				if (hasNotes) {
-					fontRenderer.drawSplitString(version.patchNotes, 170, 50, width - leftButtonsWidth - 190, 0xDDDDDD);
+			fontRenderer.drawSplitString(state.getLongDescription(), width - rightButtonsWidth - 20, 32, rightButtonsWidth, 0xffffff);
+			
+			boolean canDownload = state.canTransition(ModUpdateState.DOWNLOADING);
+			
+			ModVersionCollection versions = selectedMod.getVersions();
+			String curr = versions.getCurrentVersion().modVersion.getVersionString();
+			fontRenderer.drawString(String.format(textCurrentVersion, curr), width - rightButtonsWidth - 20, height - 114, 0xffffff);
+			
+			if (canDownload) {
+				fontRenderer.drawString(textNewVersion, width - rightButtonsWidth - 20, height - 102, 0xffffff);
+
+				ModVersion version = versions.getSelectedVersion();
+				
+				if (version != null) {
+					boolean hasNotes = !Strings.isNullOrEmpty(version.patchNotes);
+					fontRenderer.drawString(hasNotes ? textPatchNotes : textNoPatchNotes, 170, 32, 0xffff00);
+					if (hasNotes) {
+						fontRenderer.drawSplitString(version.patchNotes, 170, 50, width - rightButtonsWidth - 190, 0xDDDDDD);
+					}
 				}
 			}
 		}
+		super.drawScreen(mouseX, mouseY, par3);
 	}
 	
 	void drawSlot(int index, int yPos) {
 		UpdatableMod mod = mods.get(index);
 		fontRenderer.drawString(mod.getName(), 12, yPos, 0xffffff);
-		fontRenderer.drawString(mod.getState().toString(), 12, yPos + 11, 0xffffff);
+		
+		ModUpdateState state = mod.getState();
+		fontRenderer.drawString(state.getDescriptionColor() + state.getShortDescription(), 12, yPos + 11, 0xffffff);
 		
 		int percent = mod.getDowloadProgress(100);
 		if (percent > 0) {
@@ -163,10 +171,15 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		case BUTTON_VERSION:
 			selectedMod.getVersions().selectNextVersion();
 			break;
+		case BUTTON_RESTART:
+			if (!controller.restartMinecraft()) {
+				mc.displayGuiScreen(new GuiRestartFailure(this));
+			}
+			break;
 		}
 		updateButtonState();
 	}
-
+	
 	void clickSlot(int index, boolean doubleClick) {
 		selectedIndex = index;
 		selectedMod = mods.get(index);
@@ -174,9 +187,9 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	}
 	
 	private void updateButtonState() {
-		
 		buttonCheckUpdates.drawButton = buttonDownloadUpdate.drawButton = selectedIndex >= 0;
 		buttonVersionSelect.drawButton = false;
+		buttonRestartMinecraft.drawButton = false;
 		
 		if (selectedMod == null) {
 			return;
@@ -210,6 +223,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		buttonVersionSelect.drawButton = !selectedMod.getVersions().getAvailableVersions().isEmpty() && state.canTransition(ModUpdateState.DOWNLOADING);
 		
 		buttonCheckUpdates.displayString = state == ModUpdateState.CHECKING ? textChecking : textCheckUpdates;
+		buttonRestartMinecraft.drawButton = state == ModUpdateState.PENDING_RESTART;
 	}
 	
 	private void close() {

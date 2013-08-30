@@ -44,8 +44,19 @@ public class ClientProxy implements SevenCommonsProxy {
 	@Override
 	public void handleDownloadProgress(PacketDownloadProgress packet) {
 		if (mc.currentScreen instanceof GuiUpdates) {
-			System.out.println(packet.getDownloadProgress());
 			((GuiUpdates) mc.currentScreen).controller.getMod(packet.getModId()).setDownloadProgress(packet.getDownloadProgress(), 100);
+		}
+	}
+
+	@Override
+	public void shutdownMinecraft() {
+		mc.shutdown();
+	}
+
+	@Override
+	public void displayRestartFailure() {
+		if (mc.currentScreen instanceof GuiUpdates) {
+			mc.displayGuiScreen(new GuiRestartFailure(mc.currentScreen));
 		}
 	}
 

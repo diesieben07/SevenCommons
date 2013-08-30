@@ -1,3 +1,5 @@
+sevencommons.ui.ok=OK
+
 sevencommons.ui.updates.check=Check for Updates
 sevencommons.ui.updates.checking=Checking...
 sevencommons.ui.updates.update=Install Update
@@ -9,6 +11,31 @@ sevencommons.ui.updates.newest=Newest %s
 sevencommons.ui.updates.installable=Installable %s
 sevencommons.ui.updates.installed=Installed %s
 sevencommons.ui.updates.wrongmc=Wrong Minecraft (%2$s) %1$s
+sevencommons.ui.updates.restart=Restart now
+
+sevencommons.updates.state.loading=Loading...
+sevencommons.updates.state.available=Available
+sevencommons.updates.state.unavailable=Unavailable
+sevencommons.updates.state.checking=Checking...
+sevencommons.updates.state.checkingFailed=Checking failed
+sevencommons.updates.state.upToDate=Up to date
+sevencommons.updates.state.updatesAvailable=Updates available
+sevencommons.updates.state.minecraftOutdated=Minecraft outdated
+sevencommons.updates.state.downloading=Downloading
+sevencommons.updates.state.downloadFailed=Downloading failed
+sevencommons.updates.state.pendingRestart=Pending restart
+
+sevencommons.updates.state.loading.long=Initializing the Updater...
+sevencommons.updates.state.available.long=This Mod is available for automatic updating.
+sevencommons.updates.state.unavailable.long=This Mod is not available for automatic updating. Ask your Mod Author to provide a vaild updateUrl or revisit his installation Method.
+sevencommons.updates.state.checking.long=Searching for updates for this mod.
+sevencommons.updates.state.checkingFailed.long=Failed to check for updates for this mod. Your internet connection may be broken or the provided version-file is invalid.
+sevencommons.updates.state.upToDate.long=This mod is up to date. All good!
+sevencommons.updates.state.updatesAvailable.long=Updates available for this mod.
+sevencommons.updates.state.minecraftOutdated.long=There are updates available for this mod, but they require a newer version of Minecraft.
+sevencommons.updates.state.downloading.long=Downloading the update...
+sevencommons.updates.state.downloadFailed.long=Failed to download the update. Check your internet connection.
+sevencommons.updates.state.pendingRestart.long=You need to restart Minecraft for the update to take effect.
 
 sevencommons.updates.noplayer=You need to be a player to do this!
 sevencommons.updates.noop=You need to be an Operator to do this!

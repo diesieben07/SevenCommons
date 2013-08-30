@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
@@ -46,5 +47,13 @@ public class ServerProxy implements SevenCommonsProxy, IPlayerTracker {
 
 	@Override
 	public void onPlayerRespawn(EntityPlayer player) { }
+
+	@Override
+	public void shutdownMinecraft() {
+		MinecraftServer.getServer().initiateShutdown();
+	}
+
+	@Override
+	public void displayRestartFailure() { }
 
 }

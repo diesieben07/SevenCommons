@@ -1,11 +1,14 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import net.minecraft.client.resources.I18n;
+import net.minecraft.util.EnumChatFormatting;
+
 public enum ModUpdateState {
 
 	/**
 	 * the default state for every mod 
 	 */
-	LOADING {
+	LOADING("loading") {
 		
 		@Override
 		public boolean canTransition(ModUpdateState state) {
@@ -14,7 +17,7 @@ public enum ModUpdateState {
 		
 	},
 	
-	AVAILABLE {
+	AVAILABLE("available") {
 		
 		@Override
 		public boolean canTransition(ModUpdateState state) {
@@ -30,11 +33,11 @@ public enum ModUpdateState {
 	 * <li>doesn't provide an update URL
 	 * <li>update URL is invalid
 	 */
-	UNAVAILABLE,
+	UNAVAILABLE("unavailable"),
 	/**
 	 * checking for updates (downloading version info)
 	 */
-	CHECKING {
+	CHECKING("checking") {
 		
 		@Override
 		public boolean canTransition(ModUpdateState state) {
@@ -45,7 +48,7 @@ public enum ModUpdateState {
 	/**
 	 * failed downloading the version info
 	 */
-	CHECKING_FAILED {
+	CHECKING_FAILED("checkingFailed") {
 
 		@Override
 		public boolean canTransition(ModUpdateState state) {
@@ -56,7 +59,7 @@ public enum ModUpdateState {
 	/**
 	 * mod is up to date
 	 */
-	UP_TO_DATE {
+	UP_TO_DATE("upToDate") {
 		
 		@Override
 		public boolean canTransition(ModUpdateState state) {
@@ -67,7 +70,7 @@ public enum ModUpdateState {
 	/**
 	 * updates are available for this mod which can be auto-installed
 	 */
-	UPDATES_AVAILABLE {
+	UPDATES_AVAILABLE("updatesAvailable") {
 		
 		@Override
 		public boolean canTransition(ModUpdateState state) {
@@ -78,7 +81,7 @@ public enum ModUpdateState {
 	/**
 	 * there are updates available, but they are for a newer minecraft version
 	 */
-	MINECRAFT_OUTDATED {
+	MINECRAFT_OUTDATED("minecraftOutdated") {
 		
 		@Override
 		public boolean canTransition(ModUpdateState state) {
@@ -89,7 +92,7 @@ public enum ModUpdateState {
 	/**
 	 * in progress of downloading the new version
 	 */
-	DOWNLOADING {
+	DOWNLOADING("downloading") {
 		
 		@Override
 		public boolean canTransition(ModUpdateState state) {
@@ -100,7 +103,7 @@ public enum ModUpdateState {
 	/**
 	 * failed downloading the new version
 	 */
-	DOWNLOAD_FAILED {
+	DOWNLOAD_FAILED("downloadFailed") {
 		
 		@Override
 		public boolean canTransition(ModUpdateState state) {
@@ -111,7 +114,13 @@ public enum ModUpdateState {
 	/**
 	 * installed successfully, pending a minecraft restart
 	 */
-	PENDING_RESTART;
+	PENDING_RESTART("pendingRestart");
+	
+	private final String langKey;
+	
+	private ModUpdateState(String langKey) {
+		this.langKey = langKey;
+	}
 	
 	public ModUpdateState transition(ModUpdateState desiredState) {
 		if (canTransition(desiredState)) {
@@ -123,5 +132,34 @@ public enum ModUpdateState {
 	
 	public boolean canTransition(ModUpdateState state) {
 		return false;
+	}
+	
+	public String getShortDescription() {
+		return I18n.func_135053_a("sevencommons.updates.state." + langKey);
+	}
+	
+	public String getLongDescription() {
+		return I18n.func_135053_a("sevencommons.updates.state." + langKey + ".long");
+	}
+	
+	public EnumChatFormatting getDescriptionColor() {
+		switch (this) {
+		case LOADING:
+		case AVAILABLE:
+		case CHECKING:
+		case DOWNLOADING:
+			return EnumChatFormatting.AQUA;
+		case CHECKING_FAILED:
+		case DOWNLOAD_FAILED:
+		case UNAVAILABLE:
+			return EnumChatFormatting.RED;
+		case MINECRAFT_OUTDATED:
+		case UPDATES_AVAILABLE:
+		case PENDING_RESTART:
+			return EnumChatFormatting.YELLOW;
+		case UP_TO_DATE:
+		default:
+			return EnumChatFormatting.GREEN;
+		}
 	}
 }
