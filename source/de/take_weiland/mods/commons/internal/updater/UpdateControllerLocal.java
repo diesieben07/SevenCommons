@@ -120,9 +120,7 @@ public class UpdateControllerLocal extends AbstractUpdateController {
         
         try {
 			ProcessBuilder builder = new ProcessBuilder(cmd);
-        	builder.redirectOutput(Redirect.INHERIT);
-        	builder.redirectError(Redirect.INHERIT);
-        	builder.redirectInput(Redirect.INHERIT);
+        	builder.inheritIO();
 			builder.start();
 		} catch (IOException e) {
 			return false;
