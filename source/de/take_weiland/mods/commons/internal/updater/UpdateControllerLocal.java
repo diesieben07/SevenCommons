@@ -2,8 +2,10 @@ package de.take_weiland.mods.commons.internal.updater;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -12,6 +14,7 @@ import java.util.logging.Logger;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -91,39 +94,36 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 		String jvm = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
 		
 		if (System.getProperty("os.name").toLowerCase().contains("win")) {
-			jvm += ".exe ";
-		} else {
-			jvm += " ";
+			jvm += ".exe";
 		}
+		
+		ArrayList<String> cmd = Lists.newArrayList();
 		
 		if (!new File(jvm).canExecute()) {
 			return false;
 		}
 		
-		StringBuilder cmd = new StringBuilder();
+		cmd.add(jvm);
 		
-		cmd.append(jvm);
+		cmd.add("-cp");
+		cmd.add(mxBean.getClassPath());
 		
-        for (String jvmArg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
-            cmd.append(jvmArg + " ");
-        }
-        cmd.append("-cp ").append(mxBean.getClassPath()).append(" ");
+        cmd.addAll(mxBean.getInputArguments());
+        
         String sunCommand = System.getProperty("sun.java.command");
         
         if (sunCommand == null) {
         	return false;
         }
         
-        int spaceIdx = sunCommand.indexOf(' ');
-        
-        String mainClass = spaceIdx == -1 ? sunCommand : sunCommand.substring(0, spaceIdx);
-        String mainArgs = spaceIdx == -1 ? "" : sunCommand.substring(spaceIdx + 1);
-        
-        cmd.append(mainClass).append(" ");
-        cmd.append(mainArgs);
+        Iterables.addAll(cmd, Splitter.on(' ').omitEmptyStrings().trimResults().split(sunCommand));
         
         try {
-			Runtime.getRuntime().exec(cmd.toString());
+			ProcessBuilder builder = new ProcessBuilder(cmd);
+        	builder.redirectOutput(Redirect.INHERIT);
+        	builder.redirectError(Redirect.INHERIT);
+        	builder.redirectInput(Redirect.INHERIT);
+			builder.start();
 		} catch (IOException e) {
 			return false;
 		}
