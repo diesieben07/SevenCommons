@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.internal.updater;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ProcessBuilder.Redirect;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.util.ArrayList;
@@ -13,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -89,7 +89,6 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 
 	@Override
 	public boolean restartMinecraft() {
-//		if (true) return false;
 		RuntimeMXBean mxBean = ManagementFactory.getRuntimeMXBean();
 		String jvm = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
 		
@@ -97,11 +96,11 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 			jvm += ".exe";
 		}
 		
-		ArrayList<String> cmd = Lists.newArrayList();
-		
 		if (!new File(jvm).canExecute()) {
 			return false;
 		}
+		
+		ArrayList<String> cmd = Lists.newArrayList();
 		
 		cmd.add(jvm);
 		
@@ -118,6 +117,8 @@ public class UpdateControllerLocal extends AbstractUpdateController {
         
         Iterables.addAll(cmd, Splitter.on(' ').omitEmptyStrings().trimResults().split(sunCommand));
         
+        
+        System.out.println(Joiner.on(' ').join(cmd));
         try {
 			ProcessBuilder builder = new ProcessBuilder(cmd);
         	builder.inheritIO();
@@ -126,7 +127,6 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 			return false;
 		}
         		
-		
 		CommonsModContainer.proxy.shutdownMinecraft();
 		return true;
 	}

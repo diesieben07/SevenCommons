@@ -27,16 +27,24 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	public final Iterable<EntityPlayer> viewingPlayers = Iterables.filter(crafters, EntityPlayer.class);
 	
 	protected AbstractContainer(T upper, EntityPlayer player) {
+		this(upper, player, 8, 84);
+	}
+	
+	protected AbstractContainer(T upper, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
 		inventory = upper;
 		this.player = player;
 		addSlots();
 		firstPlayerSlot = inventorySlots.size();
-		Containers.addPlayerInventory(this, player.inventory);
+		Containers.addPlayerInventory(this, player.inventory, playerInventoryX, playerInventoryY);
+	}
+	
+	protected AbstractContainer(World world, int x, int y, int z, EntityPlayer player) {
+		this(world, x, y, z, player, 8, 84);
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected AbstractContainer(World world, int x, int y, int z, EntityPlayer player) {
-		this((T) world.getBlockTileEntity(x, y, z), player);
+	protected AbstractContainer(World world, int x, int y, int z, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
+		this((T) world.getBlockTileEntity(x, y, z), player, playerInventoryX, playerInventoryY);
 	}
 	
 	@Override
