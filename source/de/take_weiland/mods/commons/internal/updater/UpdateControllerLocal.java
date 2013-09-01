@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,6 +18,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -127,26 +129,28 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 			return false;
 		}
 
-		List<String> mainCommand = ImmutableList.copyOf(Splitter.on(' ').omitEmptyStrings().trimResults().split(sunJavaCommand));
+		Iterator<String> mainCommand = Splitter.on(' ').omitEmptyStrings().trimResults().split(sunJavaCommand).iterator();
 
-		if (mainCommand.isEmpty()) {
+		if (!mainCommand.hasNext()) {
 			return false;
 		}
+		
+		String mainCommandFirst = mainCommand.next();
 
 		// program main is a jar
-		if (mainCommand.get(0).endsWith(".jar")) {
+		if (mainCommandFirst.endsWith(".jar")) {
 			// if it's a jar, add -jar mainJar
 			command.add("-jar");
-			command.add("\"" + new File(mainCommand.get(0)).getPath() + "\"");
+			command.add("\"" + new File(mainCommandFirst).getPath() + "\"");
 		} else {
 			// else it's a .class, add the classpath and mainClass
 			command.add("-cp");
 			command.add("\"" + System.getProperty("java.class.path") + "\"");
-			command.add(mainCommand.get(0));
+			command.add(mainCommandFirst);
 		}
 
 		// finally add program arguments
-		command.addAll(mainCommand.subList(1, mainCommand.size()));
+		Iterators.addAll(command, mainCommand);
 
 		System.out.println(Joiner.on(' ').join(command));
 		
