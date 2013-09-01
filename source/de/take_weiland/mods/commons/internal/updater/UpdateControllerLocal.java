@@ -3,8 +3,6 @@ package de.take_weiland.mods.commons.internal.updater;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -13,8 +11,11 @@ import java.util.logging.Logger;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -89,46 +90,125 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 
 	@Override
 	public boolean restartMinecraft() {
-		RuntimeMXBean mxBean = ManagementFactory.getRuntimeMXBean();
-		String jvm = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+		// inspired from http://java.dzone.com/articles/programmatically-restart-java
 		
+		final List<String> command = Lists.newArrayList();
+
+		String javaBinary = System.getProperty("java.home") + "/bin/java";
+
 		if (System.getProperty("os.name").toLowerCase().contains("win")) {
-			jvm += ".exe";
+			javaBinary += ".exe";
 		}
 		
-		if (!new File(jvm).canExecute()) {
+		if (!new File(javaBinary).canExecute()) {
 			return false;
 		}
+
+		// java binary
+		command.add("\"" + javaBinary + "\"");
+
+		// vm arguments
+		List<String> vmArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
+
+		// if it's the agent argument : we ignore it otherwise the
+		// address of the old application and the new one will be in conflict
+		command.addAll(Collections2.filter(vmArguments, new Predicate<String>() {
+
+			@Override
+			public boolean apply(String arg) {
+				return !arg.contains("-agentlib");
+			}
+			
+		}));
 		
-		ArrayList<String> cmd = Lists.newArrayList();
+		// program main and program arguments
+		String sunJavaCommand = System.getProperty("sun.java.command");
+		if (sunJavaCommand == null) {
+			return false;
+		}
+
+		List<String> mainCommand = ImmutableList.copyOf(Splitter.on(' ').omitEmptyStrings().trimResults().split(sunJavaCommand));
+
+		if (mainCommand.isEmpty()) {
+			return false;
+		}
+
+		// program main is a jar
+		if (mainCommand.get(0).endsWith(".jar")) {
+			// if it's a jar, add -jar mainJar
+			command.add("-jar");
+			command.add("\"" + new File(mainCommand.get(0)).getPath() + "\"");
+		} else {
+			// else it's a .class, add the classpath and mainClass
+			command.add("-cp");
+			command.add("\"" + System.getProperty("java.class.path") + "\"");
+			command.add(mainCommand.get(0));
+		}
+
+		// finally add program arguments
+		command.addAll(mainCommand.subList(1, mainCommand.size()));
+
+		System.out.println(Joiner.on(' ').join(command));
 		
-		cmd.add(jvm);
-		
-		cmd.add("-cp");
-		cmd.add(mxBean.getClassPath());
-		
-        cmd.addAll(mxBean.getInputArguments());
-        
-        String sunCommand = System.getProperty("sun.java.command");
-        
-        if (sunCommand == null) {
-        	return false;
-        }
-        
-        Iterables.addAll(cmd, Splitter.on(' ').omitEmptyStrings().trimResults().split(sunCommand));
-        
-        
-        System.out.println(Joiner.on(' ').join(cmd));
-        try {
-			ProcessBuilder builder = new ProcessBuilder(cmd);
-        	builder.inheritIO();
+		try {
+			ProcessBuilder builder = new ProcessBuilder(command);
+			builder.inheritIO();
 			builder.start();
 		} catch (IOException e) {
 			return false;
 		}
+		
+//		RuntimeMXBean mxBean = ManagementFactory.getRuntimeMXBean();
+//		String jvm = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+//		
+//		if (System.getProperty("os.name").toLowerCase().contains("win")) {
+//			jvm += ".exe";
+//		}
+//		
+//		if (!new File(jvm).canExecute()) {
+//			return false;
+//		}
+//		
+//		ArrayList<String> cmd = Lists.newArrayList();
+//		
+//		cmd.add(jvm);
+//		
+//		cmd.add("-cp");
+//		cmd.add(mxBean.getClassPath());
+//		
+//        cmd.addAll(Lists.transform(mxBean.getInputArguments(), new Function<String, String>() {
+//
+//			@Override
+//			public String apply(String input) {
+//				input = input.trim();
+//				if (!input.startsWith("-")) {
+//					input = "-" + input;
+//				}
+//				return input;
+//			}
+//		}));
+//        
+//        String sunCommand = System.getProperty("sun.java.command");
+//        
+//        if (sunCommand == null) {
+//        	return false;
+//        }
+//        
+//        Iterables.addAll(cmd, Splitter.on(' ').omitEmptyStrings().trimResults().split(sunCommand));
+//        
+//        System.out.println(Joiner.on(' ').join(cmd));
+//        try {
+//			ProcessBuilder builder = new ProcessBuilder(cmd);
+//        	builder.inheritIO();
+//			builder.start();
+//		} catch (IOException e) {
+//			return false;
+//		}
         		
 		CommonsModContainer.proxy.shutdownMinecraft();
 		return true;
 	}
+	
+	
 	
 }
