@@ -25,7 +25,7 @@ public final class GuiRendering {
 				gui.drawTexturedModelRectFromIcon(x + col * 16, y + row * 16, icon, 16, 16);
 			}
 		}
-		gui.getMinecraft().renderEngine.func_110577_a(gui.getTexture());
+		gui.getMinecraft().renderEngine.bindTexture(gui.getTexture());
 		gui.drawTexturedModalRect(x + width, y, x + width, y, xSize - (x + width), height);
 		gui.drawTexturedModalRect(x, y + height, x, y + height, width, ySize - (y + height));
 	}
@@ -39,7 +39,7 @@ public final class GuiRendering {
 			Icon fluidIcon = fluid.getStillIcon();
 			int fluidHeight = MathHelper.ceiling_float_int((fluidStack.amount / (float)tank.getCapacity()) * fullHeight);
 
-			engine.func_110577_a(engine.func_130087_a(fluid.getSpriteNumber()));
+			engine.bindTexture(engine.getResourceLocation(fluid.getSpriteNumber()));
 			fillAreaWithIcon(fluidIcon, x, y + fullHeight - fluidHeight, width, fluidHeight, gui);
 		}
 	}

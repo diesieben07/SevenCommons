@@ -8,7 +8,7 @@ public final class GuiRestartFailure extends GuiScreen {
 
 	private final GuiScreen parent;
 	
-	private final String textOk = I18n.func_135053_a("sevencommons.ui.ok");
+	private final String textOk = I18n.getString("sevencommons.ui.ok");
 
 	public GuiRestartFailure(GuiScreen currentScreen) {
 		parent = currentScreen;

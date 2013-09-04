@@ -135,11 +135,11 @@ public enum ModUpdateState {
 	}
 	
 	public String getShortDescription() {
-		return I18n.func_135053_a("sevencommons.updates.state." + langKey);
+		return I18n.getString("sevencommons.updates.state." + langKey);
 	}
 	
 	public String getLongDescription() {
-		return I18n.func_135053_a("sevencommons.updates.state." + langKey + ".long");
+		return I18n.getString("sevencommons.updates.state." + langKey + ".long");
 	}
 	
 	public EnumChatFormatting getDescriptionColor() {

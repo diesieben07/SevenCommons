@@ -9,7 +9,7 @@ public final class SCItemAccessor {
 
 	@SideOnly(Side.CLIENT)
 	public static String getIconName(Item item) {
-		return item.func_111208_A();
+		return item.getIconString();
 	}
 	
 	public static void setHasSubtypes(Item item) {

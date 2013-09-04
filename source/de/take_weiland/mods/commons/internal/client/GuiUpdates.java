@@ -31,14 +31,14 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	private static final int BUTTON_VERSION = 3;
 	private static final int BUTTON_RESTART = 4;
 	
-	private final String textCheckUpdates = I18n.func_135053_a("sevencommons.ui.updates.check");
-	private final String textChecking = I18n.func_135053_a("sevencommons.ui.updates.checking");
-	private final String textUpdate = I18n.func_135053_a("sevencommons.ui.updates.update");
-	private final String textPatchNotes = I18n.func_135053_a("sevencommons.ui.updates.patchnotes");
-	private final String textNoPatchNotes = I18n.func_135053_a("sevencommons.ui.updates.patchnotes.none");
-	private final String textCurrentVersion = I18n.func_135053_a("sevencommons.ui.updates.version.current");
-	private final String textNewVersion = I18n.func_135053_a("sevencommons.ui.updates.version.new");
-	private final String textRestart = I18n.func_135053_a("sevencommons.ui.updates.restart");
+	private final String textCheckUpdates = I18n.getString("sevencommons.ui.updates.check");
+	private final String textChecking = I18n.getString("sevencommons.ui.updates.checking");
+	private final String textUpdate = I18n.getString("sevencommons.ui.updates.update");
+	private final String textPatchNotes = I18n.getString("sevencommons.ui.updates.patchnotes");
+	private final String textNoPatchNotes = I18n.getString("sevencommons.ui.updates.patchnotes.none");
+	private final String textCurrentVersion = I18n.getString("sevencommons.ui.updates.version.current");
+	private final String textNewVersion = I18n.getString("sevencommons.ui.updates.version.new");
+	private final String textRestart = I18n.getString("sevencommons.ui.updates.restart");
 	
 	private final GuiScreen parent;
 	final UpdateController controller;
@@ -202,16 +202,16 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 			EnumChatFormatting color;
 			if (selectedVersion == selectedMod.getVersions().getNewestInstallableVersion()) {
 				color = EnumChatFormatting.DARK_GREEN;
-				format = I18n.func_135053_a("sevencommons.ui.updates.newest");
+				format = I18n.getString("sevencommons.ui.updates.newest");
 			} else if (selectedVersion.canBeInstalled()) {
 				color = EnumChatFormatting.YELLOW;
-				format = I18n.func_135053_a("sevencommons.ui.updates.installable");
+				format = I18n.getString("sevencommons.ui.updates.installable");
 			} else if (selectedVersion.modVersion.getVersionString().equals(selectedMod.getVersions().getCurrentVersion().modVersion.getVersionString())) {
 				color = EnumChatFormatting.BLUE;
-				format = I18n.func_135053_a("sevencommons.ui.updates.installed");
+				format = I18n.getString("sevencommons.ui.updates.installed");
 			} else {
 				color = EnumChatFormatting.RED;
-				format = I18n.func_135053_a("sevencommons.ui.updates.wrongmc");
+				format = I18n.getString("sevencommons.ui.updates.wrongmc");
 			}
 			buttonVersionSelect.displayString = String.format(color + format, EnumChatFormatting.RESET + selectedVersion.modVersion.getVersionString() + color, selectedVersion.minecraftVersion);
 		}

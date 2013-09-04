@@ -36,7 +36,7 @@ public abstract class AbstractGuiContainer<R extends IInventory, T extends Conta
 	@Override
 	protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
 		if (texture != null) {
-			mc.renderEngine.func_110577_a(texture);
+			mc.renderEngine.bindTexture(texture);
 			drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
 		}
 	}

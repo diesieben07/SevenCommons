@@ -21,7 +21,7 @@ public final class Items {
 	public static final void init(Item item, String baseName) {
 		String modId = Loader.instance().activeModContainer().getModId();
 		
-		item.func_111206_d(getIconName(modId, baseName)); // setIconName
+		item.setTextureName(getIconName(modId, baseName));
 		item.setUnlocalizedName(getLanguageKey(modId, baseName)); // full unlocalized key is "item.MODID.NAME.name"		
 		
 		if (item instanceof Typed) {

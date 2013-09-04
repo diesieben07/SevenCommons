@@ -29,7 +29,7 @@ public final class Blocks {
 	public static final void init(Block block, String baseName, Class<? extends ItemBlock> itemClass) {
 		String modId = Loader.instance().activeModContainer().getModId();
 		
-		block.func_111022_d(Items.getIconName(modId, baseName)); // set icon name
+		block.setTextureName(Items.getIconName(modId, baseName));
 		block.setUnlocalizedName(Items.getLanguageKey(modId, baseName));
 		
 		GameRegistry.registerBlock(block, itemClass, baseName);

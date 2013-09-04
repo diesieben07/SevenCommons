@@ -38,7 +38,7 @@ public class GuiButtonUpdates extends GuiButton {
 		super.drawButton(mc, mouseX, mouseY);
 		if (drawButton) {
 			GL11.glColor3f(1, 1, 1);
-			mc.renderEngine.func_110577_a(texture);
+			mc.renderEngine.bindTexture(texture);
 			drawTexturedModalRect(xPosition + 2, yPosition + 2, 0, 0, 16, 16);
 		}
 	}

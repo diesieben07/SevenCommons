@@ -75,9 +75,9 @@ public class PacketUpdateAction extends StreamPacket {
 	@Override
 	protected void execute(EntityPlayer player, Side side) {
 		if (!player.canCommandSenderUseCommand(4, CommonsModContainer.updateCommand)) {
-			player.sendChatToPlayer(ChatMessageComponent.func_111077_e("sevencommons.updates.noop").func_111059_a(EnumChatFormatting.RED));
+			player.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("sevencommons.updates.noop").setColor(EnumChatFormatting.RED));
 		} else if (!CommonsModContainer.updaterEnabled) {
-			player.sendChatToPlayer(ChatMessageComponent.func_111077_e("sevencommons.updates.disabled"));
+			player.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("sevencommons.updates.disabled"));
 		} else {
 			UpdateController localUpdater = CommonsModContainer.updateController;
 			UpdatableMod mod = modId == null ? null : localUpdater.getMod(modId);
