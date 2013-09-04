@@ -8,11 +8,11 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.network.ModPacket;
+import de.take_weiland.mods.commons.network.AbstractModPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.templates.SyncedTileEntity;
 
-public class PacketTileEntitySync extends ModPacket {
+public class PacketTileEntitySync extends AbstractModPacket {
 
 	private int x;
 	private int y;
@@ -36,9 +36,9 @@ public class PacketTileEntitySync extends ModPacket {
 	}
 
 	@Override
-	protected byte[] writeData(byte packetId) {
+	protected byte[] writeData() {
 		ByteArrayDataOutput out = ByteStreams.newDataOutput();
-		out.writeByte(packetId);
+		out.writeByte(getType().getPacketId());
 		out.writeInt(x);
 		out.writeInt(y);
 		out.writeInt(z);

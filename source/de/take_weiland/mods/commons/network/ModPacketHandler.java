@@ -65,7 +65,7 @@ public final class ModPacketHandler implements IPacketHandler {
 	}
 	
 	private final void handleReceivedPacket(PacketType type, byte[] data, EntityPlayer player) throws ReflectiveOperationException {
-		ModPacket mp = type.getPacketClass().newInstance();
+		AbstractModPacket mp = type.getPacketClass().newInstance();
 		Side side = Sides.logical(player);
 		if (!mp.isValidForSide(side)) {
 			throw new NetworkException("Packet " + mp.getClass().getSimpleName() + " received for invalid side " + side);

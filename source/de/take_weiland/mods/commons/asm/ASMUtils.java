@@ -1,20 +1,27 @@
 package de.take_weiland.mods.commons.asm;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Iterator;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterators;
+
 import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.util.CollectionUtils;
 
 public final class ASMUtils {
 
@@ -96,5 +103,27 @@ public final class ASMUtils {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public static boolean hasAnnotation(FieldNode field, Class<? extends Annotation> annotation) {
+		return hasAnnotation(field, Type.getType(annotation));
+	}
+	
+	public static boolean hasAnnotation(FieldNode field, Type annotation) {
+		return containsAnnotation(Iterators.concat(CollectionUtils.nullToEmpty(field.visibleAnnotations).iterator(), CollectionUtils.nullToEmpty(field.invisibleAnnotations).iterator()), annotation.getDescriptor());
+	}
+	
+	private static boolean containsAnnotation(Iterator<AnnotationNode> annotations, final String annotationDesc) {
+		return Iterators.any(annotations, new Predicate<AnnotationNode>() {
+
+			@Override
+			public boolean apply(AnnotationNode node) {
+				return node.desc.equals(annotationDesc);
+			}
+		});
+	}
+	
+	public static boolean isPrimitive(Type type) {
+		return type.getSort() != Type.ARRAY && type.getSort() != Type.OBJECT && type.getSort() != Type.METHOD;
 	}
 }

@@ -28,7 +28,7 @@ public class PlayerUpdateInformation implements IExtendedEntityProperties, Updat
 
 	@Override
 	public void onStateChange(UpdatableMod mod) {
-		new PacketModState(mod, mod.getState()).sendToPlayer(player);
+		new PacketModState(mod, mod.getState()).sendTo(player);
 	}
 
 	@Override
@@ -36,7 +36,7 @@ public class PlayerUpdateInformation implements IExtendedEntityProperties, Updat
 		int progress = mod.getDowloadProgress(100);
 		if (oldDownloadProgress != progress) {
 			oldDownloadProgress = progress;
-			new PacketDownloadProgress(mod, progress).sendToPlayer(player);
+			new PacketDownloadProgress(mod, progress).sendTo(player);
 		}
 	}
 

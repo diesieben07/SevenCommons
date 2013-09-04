@@ -2,8 +2,9 @@ package de.take_weiland.mods.commons.internal;
 
 import com.google.common.primitives.UnsignedBytes;
 
-import de.take_weiland.mods.commons.network.ModPacket;
+import de.take_weiland.mods.commons.network.AbstractModPacket;
 import de.take_weiland.mods.commons.network.PacketType;
+import de.take_weiland.mods.commons.syncing.PacketSync;
 
 public enum CommonsPackets implements PacketType {
 	
@@ -12,14 +13,14 @@ public enum CommonsPackets implements PacketType {
 	MOD_STATE(PacketModState.class),
 	DOWNLOAD_PROGRESS(PacketDownloadProgress.class),
 	TE_SYNC(PacketTileEntitySync.class),
-	CONTAINER_SYNC(PacketContainerSync.class),
-	CLIENT_ACTION(PacketClientAction.class);
+	CLIENT_ACTION(PacketClientAction.class),
+	SYNC(PacketSync.class);
 	
 	private static final String CHANNEL = "SevenCommons";
 	
-	private final Class<? extends ModPacket> clazz;
+	private final Class<? extends AbstractModPacket> clazz;
 	
-	private CommonsPackets(Class<? extends ModPacket> clazz) {
+	private CommonsPackets(Class<? extends AbstractModPacket> clazz) {
 		this.clazz = clazz;
 	}
 
@@ -34,7 +35,7 @@ public enum CommonsPackets implements PacketType {
 	}
 
 	@Override
-	public Class<? extends ModPacket> getPacketClass() {
+	public Class<? extends AbstractModPacket> getPacketClass() {
 		return clazz;
 	}
 

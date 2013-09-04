@@ -4,7 +4,7 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
-public abstract class StreamPacket extends ModPacket {
+public abstract class StreamPacket extends AbstractModPacket {
 
 	/**
 	 * reads this packet's data from the stream
@@ -23,9 +23,9 @@ public abstract class StreamPacket extends ModPacket {
 	}
 
 	@Override
-	protected final byte[] writeData(byte packetId) {
+	protected final byte[] writeData() {
 		ByteArrayDataOutput out = ByteStreams.newDataOutput(getExpectedSize());
-		out.writeByte(packetId);
+		out.writeByte(getType().getPacketId());
 		writeData(out);
 		return out.toByteArray();
 	}

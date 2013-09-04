@@ -23,7 +23,7 @@ public abstract class SelectiveTransformer implements IClassTransformer {
 				
 				System.out.println("Transforming class " + transformedName);
 				
-				ClassWriter writer = new ExtendedClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+				ClassWriter writer = new ExtendedClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
 				clazz.accept(writer);
 				bytes = writer.toByteArray();
 			}

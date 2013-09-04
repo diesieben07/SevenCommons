@@ -11,12 +11,14 @@ import org.objectweb.asm.Type;
 
 import com.google.common.base.Throwables;
 
+import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asmproxy.ProxyInterfaceRegistry;
 import de.take_weiland.mods.commons.util.EntityRendererProxy;
+import de.take_weiland.mods.commons.util.EntityTrackerProxy;
 import de.take_weiland.mods.commons.util.NBTListProxy;
 
 @MCVersion(SevenCommons.MINECRAFT_VERSION)
@@ -30,7 +32,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	public static final String ASM_HOOK_CLASS = "de.take_weiland.mods.commons.asm.ASMHooks";
 	public static boolean MCP_ENVIRONMENT;
 	
-	public static final Logger LOGGER = Logger.getLogger("SevenCommons");
+	public static final Logger LOGGER;
 	public static final String MINECRAFT_VERSION = "1.6.2";
 	
 	public static LaunchClassLoader CLASSLOADER;
@@ -38,9 +40,12 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	static File source;
 	
 	static {
+		FMLLog.makeLog("SevenCommons");
+		LOGGER = Logger.getLogger("SevenCommons");
 		
 		ProxyInterfaceRegistry.registerProxyInterface(NBTListProxy.class);
 		ProxyInterfaceRegistry.registerProxyInterface(EntityRendererProxy.class);
+		ProxyInterfaceRegistry.registerProxyInterface(EntityTrackerProxy.class);
 		
 	}
 	
@@ -55,7 +60,8 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 			"de.take_weiland.mods.commons.asm.transformers.EntityZombieTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.GuiScreenTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.PacketTransformer",
-			"de.take_weiland.mods.commons.asmproxy.ProxyInterfaceInjector"
+			"de.take_weiland.mods.commons.asmproxy.ProxyInterfaceInjector",
+			"de.take_weiland.mods.commons.asm.transformers.SyncedTransformer"
 		};
 	}
 

@@ -34,7 +34,7 @@ public class CommandUpdates extends CommandBase {
 			throw new CommandException("sevencommons.updates.disabled");
 		} else {
 			EntityPlayer player = (EntityPlayer) sender;
-			new PacketViewUpdates(CommonsModContainer.updateController).sendToPlayer(player);
+			new PacketViewUpdates(CommonsModContainer.updateController).sendTo(player);
 			CommonsModContainer.updateController.registerListener((PlayerUpdateInformation) player.getExtendedProperties(PlayerUpdateInformation.IDENTIFIER));
 		}
 	}

@@ -99,7 +99,7 @@ public class PacketUpdateAction extends StreamPacket {
 				break;
 			case RESTART_MINECRAFT:
 				if (!localUpdater.restartMinecraft()) {
-					new PacketClientAction(PacketClientAction.Action.RESTART_FAILURE).sendToPlayer(player);
+					new PacketClientAction(PacketClientAction.Action.RESTART_FAILURE).sendTo(player);
 				}
 			}
 		}

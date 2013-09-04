@@ -14,6 +14,6 @@ public interface PacketType {
 	 */
 	public byte getPacketId();
 	
-	public Class<? extends ModPacket> getPacketClass();
+	public Class<? extends AbstractModPacket> getPacketClass();
 	
 }

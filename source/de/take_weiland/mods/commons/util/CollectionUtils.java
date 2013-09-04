@@ -1,6 +1,11 @@
 package de.take_weiland.mods.commons.util;
 
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+
+import com.google.common.base.Supplier;
+import com.google.common.collect.AbstractIterator;
 
 public final class CollectionUtils {
 
@@ -24,6 +29,34 @@ public final class CollectionUtils {
 	
 	public static <T> T safeListAccess(List<T> list, int index) {
 		return listIndexExists(list, index) ? list.get(index) : null;
+	}
+	
+	public static <T> Iterator<T> nCallsIterator(final Supplier<T> supplier, final int n) {
+		return new AbstractIterator<T>() {
+
+			private int counter = 0;
+			
+			@Override
+			protected T computeNext() {
+				return ++counter <= n ? supplier.get() : endOfData(); 
+			}
+			
+		};
+	}
+	
+	public static <T> Iterable<T> nCalls(final Supplier<T> supplier, final int n) {
+		return new Iterable<T>() {
+
+			@Override
+			public Iterator<T> iterator() {
+				return nCallsIterator(supplier, n);
+			}
+			
+		};
+	}
+	
+	public static <T> List<T> nullToEmpty(List<T> nullable) {
+		return nullable == null ? Collections.<T>emptyList() : nullable;
 	}
 	
 }

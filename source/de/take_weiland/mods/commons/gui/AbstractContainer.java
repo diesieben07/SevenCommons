@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.gui;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
@@ -8,11 +9,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 import com.google.common.collect.Iterables;
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.PacketContainerSync;
+import de.take_weiland.mods.commons.syncing.Synced;
+import de.take_weiland.mods.commons.syncing.Syncing;
 import de.take_weiland.mods.commons.util.Containers;
 import de.take_weiland.mods.commons.util.Sides;
 
@@ -88,39 +88,32 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 		return Containers.transferStack(this, player, slot);
 	}
 	
-	protected boolean enableSyncing() {
-		return false;
-	}
-	
-	@Override
-	public boolean prepareSyncData() {
-		return false;
-	}
-	
-	@Override
-	public void writeSyncData(ByteArrayDataOutput out, boolean all) { }
-	
-	@Override
-	public void readSyncData(ByteArrayDataInput in) { }
-
-	private boolean noSync = false;
+	private final boolean isSynced = this instanceof Synced;
+	private boolean noTwiceSyncHack = false;
 
 	@Override
 	public void addCraftingToCrafters(ICrafting crafter) {
-		noSync = true; // dirty hack to stop sending data twice because super.addCraftingToCrafters calls detectAndSendChanges
+		noTwiceSyncHack = true;
 		super.addCraftingToCrafters(crafter);
-		noSync = false;
-		if (enableSyncing() && crafter instanceof EntityPlayer) {
-			new PacketContainerSync(this, true).sendToPlayer((EntityPlayer) crafter);
+		noTwiceSyncHack = false;
+		if (isSynced && crafter instanceof EntityPlayerMP) {
+			Syncing.getSyncPacket(castMe(), true).sendTo(player);
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <R extends Container & Synced> R castMe() {
+		return (R)this;
 	}
 
 	@Override
 	public void detectAndSendChanges() {
-		super.detectAndSendChanges();
-		if (!noSync && enableSyncing() && prepareSyncData()) {
-			new PacketContainerSync(this, false).sendTo(viewingPlayers);
+		if (!noTwiceSyncHack) {
+			super.detectAndSendChanges();
+			if (isSynced) {
+				Syncing.getSyncPacket(castMe(), false).sendTo(viewingPlayers);
+			}
 		}
 	}
-
+	
 }
