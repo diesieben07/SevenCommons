@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 import com.google.common.collect.Iterables;
+import com.google.common.primitives.UnsignedBytes;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.syncing.Synced;
@@ -74,6 +75,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 
 	@Override
 	public boolean enchantItem(EntityPlayer player, int id) {
+		id = UnsignedBytes.toInt((byte)id);
 		clickButton(Sides.logical(player), player, id);
 		return true;
 	}
@@ -97,7 +99,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 		super.addCraftingToCrafters(crafter);
 		noTwiceSyncHack = false;
 		if (isSynced && crafter instanceof EntityPlayerMP) {
-			Syncing.getSyncPacket(castMe(), true).sendTo(player);
+			Syncing.getSyncPacket(castMe(), true).sendTo((EntityPlayer)crafter);
 		}
 	}
 	

@@ -9,8 +9,6 @@ public interface AdvancedContainer<T extends IInventory> {
 
 	boolean handlesButton(EntityPlayer player, int buttonId);
 	
-	void clickButton(Side side, EntityPlayer player, int buttonId);
-	
 	T inventory();
 	
 	EntityPlayer getPlayer();
@@ -18,5 +16,7 @@ public interface AdvancedContainer<T extends IInventory> {
 	int getMergeTargetSlot(ItemStack stack);
 	
 	int getFirstPlayerSlot();
+
+	void clickButton(Side side, EntityPlayer player, int buttonId);
 	
 }

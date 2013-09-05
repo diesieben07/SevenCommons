@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.client;
 
 import com.google.common.primitives.UnsignedBytes;
 
+import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.gui.AdvancedContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -31,20 +32,29 @@ public abstract class AbstractGuiContainer<R extends IInventory, T extends Conta
 		return texture;
 	}
 	
+	protected final void bindTexture() {
+		mc.renderEngine.bindTexture(texture);
+	}
+	
 	protected abstract ResourceLocation provideTexture();
 
 	@Override
 	protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
 		if (texture != null) {
-			mc.renderEngine.bindTexture(texture);
+			bindTexture();
 			drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
 		}
+	}
+	
+	protected final void triggerButton(int buttonId) {
+		mc.playerController.sendEnchantPacket(container.windowId, UnsignedBytes.checkedCast(buttonId));
+		container.clickButton(Side.CLIENT, mc.thePlayer, buttonId);
 	}
 
 	@Override
 	protected void actionPerformed(GuiButton button) {
 		if (container.handlesButton(mc.thePlayer, button.id)) {
-			mc.playerController.sendEnchantPacket(container.windowId, UnsignedBytes.checkedCast(button.id));
+			triggerButton(button.id);
 		}
 	}
 

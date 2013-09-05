@@ -30,13 +30,13 @@ public final class Syncing {
 	}
 	
 	public static void restoreSyncData(SyncedFieldAccessor accessor, ByteArrayDataInput in) {
-		boolean lastField;
 		do {
-			byte fieldAndIsLast = in.readByte();
-			lastField = (fieldAndIsLast & 0x80) != 0;
-			int fieldIndex = fieldAndIsLast & 0x7F;
-			accessor.receiveField(fieldIndex, in);
-		} while (!lastField);
+			byte field = in.readByte();
+			if (field < 0) {
+				break;
+			}
+			accessor.receiveField(field, in);
+		} while (true);
 		
 		accessor.uploadSyncedFields();
 	}
@@ -55,10 +55,13 @@ public final class Syncing {
 					out = type.provideDataOutput();
 					type.outputInstanceInfo(synced, out);
 				}
-				boolean lastField = field == fields - 1;
-				out.writeByte((field & 0x7F) | (lastField ? 0x80 : 0x00));
+				out.writeByte(field);
 				accessor.sendField(field, out);
 			}
+		}
+		
+		if (out != null) {
+			out.writeByte(-1);
 		}
 		
 		if (!forceSync) {
