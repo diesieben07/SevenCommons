@@ -83,7 +83,12 @@ public final class Blocks {
 	
 	@SideOnly(Side.CLIENT)
 	public static final <T extends Block & Typed<?>> Icon[] registerIcons(T block, IconRegister register) {
-		return Items.registerIcons(block, SCBlockAccessor.getIconName(block), register);
+		return Items.registerIcons(block, SCBlockAccessor.getIconName(block), "", register);
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public static final <T extends Block & Typed<?>> Icon[] registerIcons(T block, String postfix, IconRegister register) {
+		return Items.registerIcons(block, SCBlockAccessor.getIconName(block), "_" + postfix, register);
 	}
 	
 	public static Icon registerIcon(Block block, IconRegister register, String subName) {

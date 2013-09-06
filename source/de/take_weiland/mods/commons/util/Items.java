@@ -63,22 +63,29 @@ public final class Items {
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static final <T extends Item & Typed<?>> Icon[] registerIcons(T item, IconRegister register) {
-		return registerIcons(item, SCItemAccessor.getIconName(item), register);
+	public static final <T extends Item & Typed<?>> Icon[] registerIcons(T item, String postfix, IconRegister register) {
+		return registerIcons(item, SCItemAccessor.getIconName(item), "_" + postfix, register);
 	}
 	
-	public static Icon registerIcon(Item item, IconRegister register, String subName) {
-		return registerIcon(SCItemAccessor.getIconName(item), subName, register);
+	
+	@SideOnly(Side.CLIENT)
+	public static final <T extends Item & Typed<?>> Icon[] registerIcons(T item, IconRegister register) {
+		return registerIcons(item, SCItemAccessor.getIconName(item), "", register);
 	}
 	
 	@SideOnly(Side.CLIENT)
-	static Icon[] registerIcons(Typed<?> typed, String prefix, IconRegister register) {
+	public static Icon registerIcon(Item item, String postfix, IconRegister register) {
+		return registerIcon(SCItemAccessor.getIconName(item), postfix, register);
+	}
+	
+	@SideOnly(Side.CLIENT)
+	static Icon[] registerIcons(Typed<?> typed, String prefix, String postfix, IconRegister register) {
 		Type[] types = typed.getTypes();
 		Icon[] icons = new Icon[types.length];
 		prefix += "_";
 		
 		for (int i = 0; i < types.length; i++) {
-			icons[i] = register.registerIcon(prefix + types[i].getName());
+			icons[i] = register.registerIcon(prefix + types[i].getName() + postfix);
 		}
 		
 		return icons;
