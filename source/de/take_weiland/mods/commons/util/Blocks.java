@@ -14,6 +14,7 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import de.take_weiland.mods.commons.templates.AdvancedItemBlock;
 import de.take_weiland.mods.commons.templates.Type;
 import de.take_weiland.mods.commons.templates.Typed;
 import de.take_weiland.mods.commons.templates.TypedItemBlock;
@@ -22,8 +23,12 @@ public final class Blocks {
 
 	private Blocks() { }
 	
+	public static final int BLOCK_UPDATE = 1;
+	public static final int UPDATE_CLIENTS = 2;
+	public static final int PREVENT_RERENDER = 4;
+	
 	public static final void init(Block block, String baseName) {
-		init(block, baseName, block instanceof Typed ? TypedItemBlock.class : ItemBlock.class);
+		init(block, baseName, block instanceof Typed ? TypedItemBlock.class : AdvancedItemBlock.class);
 	}
 	
 	public static final void init(Block block, String baseName, Class<? extends ItemBlock> itemClass) {
@@ -79,6 +84,10 @@ public final class Blocks {
 	@SideOnly(Side.CLIENT)
 	public static final <T extends Block & Typed<?>> Icon[] registerIcons(T block, IconRegister register) {
 		return Items.registerIcons(block, SCBlockAccessor.getIconName(block), register);
+	}
+	
+	public static Icon registerIcon(Block block, IconRegister register, String subName) {
+		return Items.registerIcon(SCBlockAccessor.getIconName(block), subName, register);
 	}
 	
 	public static final <E extends Type, T extends Block & Typed<E>> ItemStack getStack(T block, E type) {

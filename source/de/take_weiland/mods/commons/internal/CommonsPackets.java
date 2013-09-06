@@ -12,7 +12,6 @@ public enum CommonsPackets implements PacketType {
 	UPDATE_ACTION(PacketUpdateAction.class),
 	MOD_STATE(PacketModState.class),
 	DOWNLOAD_PROGRESS(PacketDownloadProgress.class),
-	TE_SYNC(PacketTileEntitySync.class),
 	CLIENT_ACTION(PacketClientAction.class),
 	SYNC(PacketSync.class);
 	

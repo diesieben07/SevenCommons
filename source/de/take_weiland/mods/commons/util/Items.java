@@ -67,6 +67,10 @@ public final class Items {
 		return registerIcons(item, SCItemAccessor.getIconName(item), register);
 	}
 	
+	public static Icon registerIcon(Item item, IconRegister register, String subName) {
+		return registerIcon(SCItemAccessor.getIconName(item), subName, register);
+	}
+	
 	@SideOnly(Side.CLIENT)
 	static Icon[] registerIcons(Typed<?> typed, String prefix, IconRegister register) {
 		Type[] types = typed.getTypes();
@@ -78,6 +82,11 @@ public final class Items {
 		}
 		
 		return icons;
+	}
+	
+	@SideOnly(Side.CLIENT)
+	static Icon registerIcon(String prefix, String suffix, IconRegister register) {
+		return register.registerIcon(prefix + "_" + suffix);
 	}
 
 	static String getIconName(String modId, String iconName) {
