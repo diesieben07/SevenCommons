@@ -1,7 +1,16 @@
 package de.take_weiland.mods.commons.client;
 
+import static net.minecraftforge.common.ForgeDirection.DOWN;
+import static net.minecraftforge.common.ForgeDirection.EAST;
+import static net.minecraftforge.common.ForgeDirection.NORTH;
+import static net.minecraftforge.common.ForgeDirection.SOUTH;
+import static net.minecraftforge.common.ForgeDirection.UP;
+import static net.minecraftforge.common.ForgeDirection.WEST;
+import net.minecraft.block.Block;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.SCGuiContainerAccessor;
+import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
@@ -9,9 +18,9 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 
-public final class GuiRendering {
+public final class Rendering {
 
-	private GuiRendering() { }
+	private Rendering() { }
 	
 	public static final <T extends GuiContainer & ContainerGui<?>> void fillAreaWithIcon(Icon icon, int x, int y, int width, int height, T gui) {
 		int xSize = SCGuiContainerAccessor.getSizeX(gui);
@@ -42,6 +51,40 @@ public final class GuiRendering {
 			engine.bindTexture(engine.getResourceLocation(fluid.getSpriteNumber()));
 			fillAreaWithIcon(fluidIcon, x, y + fullHeight - fluidHeight, width, fluidHeight, gui);
 		}
+	}
+
+	public static void drawInventoryBlock(Block block, RenderBlocks renderer, int meta) {
+		Tessellator t = Tessellator.instance;
+		
+		t.startDrawingQuads();
+		t.setNormal(-1, 0, 0);
+		renderer.renderFaceXNeg(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, WEST.ordinal(), meta));
+		t.draw();
+		
+		t.startDrawingQuads();
+		t.setNormal(1, 0, 0);
+		renderer.renderFaceXPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, EAST.ordinal(), meta));
+		t.draw();
+		
+		t.startDrawingQuads();
+		t.setNormal(0, 0, -1);
+		renderer.renderFaceZNeg(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, NORTH.ordinal(), meta));
+		t.draw();
+		
+		t.startDrawingQuads();
+		t.setNormal(0, 0, 1);
+		renderer.renderFaceZPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, SOUTH.ordinal(), meta));
+		t.draw();
+		
+		t.startDrawingQuads();
+		t.setNormal(0, -1, 0);
+		renderer.renderFaceYNeg(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, DOWN.ordinal(), meta));
+		t.draw();
+		
+		t.startDrawingQuads();
+		t.setNormal(0, 1, 0);
+		renderer.renderFaceYPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, UP.ordinal(), meta));
+		t.draw();
 	}
 
 }
