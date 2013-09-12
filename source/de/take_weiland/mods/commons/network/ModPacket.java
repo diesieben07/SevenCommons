@@ -10,6 +10,10 @@ public interface ModPacket {
 	void sendToServer();
 
 	void sendTo(EntityPlayer player);
+	
+	void sendTo(EntityPlayer... players);
+	
+	void sendTo(Iterable<? extends EntityPlayer> players);
 
 	void sendToAll();
 
@@ -29,8 +33,6 @@ public interface ModPacket {
 
 	void sendToOps();
 
-	void sendTo(Iterable<? extends EntityPlayer> players);
-	
 	public static final ModPacket DUMMY_PACKET = new ModPacket() {
 		
 		@Override
@@ -68,6 +70,9 @@ public interface ModPacket {
 		
 		@Override
 		public void sendTo(EntityPlayer player) { }
+
+		@Override
+		public void sendTo(EntityPlayer... players) { }
 	};
 
 }

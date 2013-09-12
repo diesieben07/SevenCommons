@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.util;
 
 import java.util.List;
 
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -19,13 +18,6 @@ public final class NBT {
 	 */
 	public static final <T extends NBTBase> List<T> asList(NBTTagList nbtList) {
 		return ((NBTListProxy)nbtList).getWrappedList();
-	}
-
-	public static final NBTTagCompound getAttachedNbt(ItemStack stack) {
-		if (stack.stackTagCompound == null) {
-			stack.stackTagCompound = new NBTTagCompound();
-		}
-		return stack.stackTagCompound;
 	}
 
 	public static final NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {

@@ -8,7 +8,6 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-import com.google.common.collect.Iterables;
 import com.google.common.primitives.UnsignedBytes;
 
 import cpw.mods.fml.relauncher.Side;
@@ -24,8 +23,6 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	protected final EntityPlayer player;
 	
 	private final int firstPlayerSlot;
-	
-	public final Iterable<EntityPlayer> viewingPlayers = Iterables.filter(crafters, EntityPlayer.class);
 	
 	protected AbstractContainer(T upper, EntityPlayer player) {
 		this(upper, player, 8, 84);
@@ -113,7 +110,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 		if (!noTwiceSyncHack) {
 			super.detectAndSendChanges();
 			if (isSynced) {
-				Syncing.getSyncPacket(castMe(), false).sendTo(viewingPlayers);
+				Syncing.getSyncPacket(castMe(), false).sendTo(player);
 			}
 		}
 	}

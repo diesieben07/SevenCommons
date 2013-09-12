@@ -23,7 +23,7 @@ public abstract class AbstractGuiContainer<R extends IInventory, T extends Conta
 	}
 
 	@Override
-	public Minecraft getMinecraft() {
+	public final Minecraft getMinecraft() {
 		return mc;
 	}
 

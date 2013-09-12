@@ -168,6 +168,11 @@ public final class Inventories {
 		}
 	}
 	
+	/**
+	 * Utility method, equal to {@link Inventories#iterator(IInventory, boolean) Inventories.iterator(inventory, true)}
+	 * @param inventory
+	 * @return
+	 */
 	public static Iterator<ItemStack> iterator(final IInventory inventory) {
 		return iterator(inventory, true);
 	}
@@ -175,6 +180,7 @@ public final class Inventories {
 	/**
 	 * Generate an Iterator for the given {@link IInventory}
 	 * @param inventory
+	 * @param includeNulls if empty ItemStacks should be included in the iterator
 	 * @return
 	 */
 	public static Iterator<ItemStack> iterator(final IInventory inventory, boolean includeNulls) {
@@ -191,14 +197,17 @@ public final class Inventories {
 		return includeNulls ? it : Iterators.filter(it, Predicates.notNull());
 	}
 	
+	/**
+	 * Utility method, equal to {@link Inventories#iterate(IInventory, boolean) Inventories.iterate(inventory, true)}
+	 * @param inventory
+	 * @return
+	 */
 	public static Iterable<ItemStack> iterate(IInventory inventory) {
 		return iterate(inventory, true);
 	}
 	
 	/**
-	 * Generate an {@link Iterable} for the given {@link IInventory}
-	 * @param inventory the Inventory
-	 * @return an Iterable that returns the stacks in the inventory in order
+	 * Generate an {@link Iterable} that calls {@link Inventories#iterator(IInventory, boolean) Inventories.iterator}
 	 */
 	public static Iterable<ItemStack> iterate(final IInventory inventory, final boolean includeNulls) {
 		return new Iterable<ItemStack>() {

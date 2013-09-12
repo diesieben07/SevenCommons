@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 public final class ItemStacks {
 
@@ -53,6 +54,13 @@ public final class ItemStacks {
 	
 	public static ItemStack emptyToNull(ItemStack stack) {
 		return stack == null || stack.stackSize <= 0 ? null : stack;
+	}
+
+	public static final NBTTagCompound getNbt(ItemStack stack) {
+		if (stack.stackTagCompound == null) {
+			stack.stackTagCompound = new NBTTagCompound();
+		}
+		return stack.stackTagCompound;
 	}
 
 }

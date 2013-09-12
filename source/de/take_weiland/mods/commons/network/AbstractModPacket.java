@@ -75,6 +75,22 @@ public abstract class AbstractModPacket implements ModPacket {
 	public final void sendTo(EntityPlayer player) {
 		PacketDispatcher.sendPacketToPlayer(getVanillaPacket(), (Player)player);
 	}
+	
+	@Override
+	public void sendTo(EntityPlayer... players) {
+		Packet packet = getVanillaPacket();
+		for (EntityPlayer player : players) {
+			PacketDispatcher.sendPacketToPlayer(packet, (Player)player);
+		}
+	}
+	
+	@Override
+	public final void sendTo(Iterable<? extends EntityPlayer> players) {
+		Packet packet = getVanillaPacket();
+		for (EntityPlayer player : players) {
+			PacketDispatcher.sendPacketToPlayer(packet, (Player)player);
+		}
+	}
 
 	@Override
 	public final void sendToAll() {
@@ -123,14 +139,6 @@ public abstract class AbstractModPacket implements ModPacket {
 		sendTo(Players.getOps());
 	}
 	
-	@Override
-	public final void sendTo(Iterable<? extends EntityPlayer> players) {
-		Packet packet = getVanillaPacket();
-		for (EntityPlayer player : players) {
-			PacketDispatcher.sendPacketToPlayer(packet, (Player)player);
-		}
-	}
-
 	public static final <E extends Enum<E>> E readEnum(Class<E> clazz, ByteArrayDataInput in) {
 		return CollectionUtils.safeArrayAccess(clazz.getEnumConstants(), in.readUnsignedByte());
 	}

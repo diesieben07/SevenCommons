@@ -59,4 +59,20 @@ public final class CollectionUtils {
 		return nullable == null ? Collections.<T>emptyList() : nullable;
 	}
 	
+	public static <T> void foreach(Iterable<T> it, Consumer<T> c) {
+		foreach(it.iterator(), c);
+	}
+	
+	public static <T> void foreach(Iterator<T> it, Consumer<T> c) {
+		while (it.hasNext()) {
+			c.apply(it.next());
+		}
+	}
+	
+	public static <T> void foreach(T[] arr, Consumer<T> c) {
+		for (T t : arr) {
+			c.apply(t);
+		}
+	}
+	
 }

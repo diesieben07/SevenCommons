@@ -6,13 +6,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.SCContainerAccessor;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-
-import com.google.common.collect.Iterables;
-
-import de.take_weiland.mods.commons.gui.AbstractContainer;
 import de.take_weiland.mods.commons.gui.AdvancedContainer;
 
 public final class Containers {
@@ -38,6 +33,13 @@ public final class Containers {
 		}
 	}
 
+	/**
+	 * generic implementation for {@link Container#transferStackInSlot}
+	 * @param container
+	 * @param player
+	 * @param slotIndex
+	 * @return
+	 */
 	public static <T extends Container & AdvancedContainer<?>> ItemStack transferStack(T container, EntityPlayer player, int slotIndex) {
 		ItemStack result = null;
 		
@@ -82,17 +84,5 @@ public final class Containers {
 		}
 
 		return result;
-	}
-	
-	public static Iterable<EntityPlayer> getViewingPlayers(Container c) {
-		return c instanceof AbstractContainer ? ((AbstractContainer<?>)c).viewingPlayers : Iterables.filter(SCContainerAccessor.getCrafters(c), EntityPlayer.class);
-	}
-	
-	/**
-	 * @deprecated use {@link AbstractContainer#viewingPlayers}
-	 */
-	@Deprecated
-	public static Iterable<EntityPlayer> getViewingPlayers(AbstractContainer<?> c) {
-		return c.viewingPlayers;
 	}
 }

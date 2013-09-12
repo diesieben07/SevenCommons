@@ -28,5 +28,10 @@ public class AdvancedItemBlock<T extends Block> extends ItemBlock {
 		}
 		return result;
 	}
+
+	@Override
+	public String getUnlocalizedNameInefficiently(ItemStack item) {
+		return getUnlocalizedName(item); // some optimization
+	}
 	
 }
