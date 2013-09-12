@@ -2,9 +2,10 @@ package de.take_weiland.mods.commons.templates;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
-import de.take_weiland.mods.commons.util.Blocks;
+import de.take_weiland.mods.commons.util.Multitypes;
+import de.take_weiland.mods.commons.util.Names;
 
-public class TypedItemBlock<T extends Block & Typed<R>, R extends Type> extends AdvancedItemBlock<T> {
+public class TypedItemBlock<T extends Block & Typed<R>, R extends Type<R>> extends AdvancedItemBlock<T> {
 
 	public TypedItemBlock(int itemId, Block block) {
 		super(itemId, block);
@@ -13,7 +14,7 @@ public class TypedItemBlock<T extends Block & Typed<R>, R extends Type> extends 
 
 	@Override
 	public String getUnlocalizedName(ItemStack stack) {
-		return Blocks.getUnlocalizedName(block, stack);
+		return Names.combine(block, Multitypes.getType(block, stack));
 	}
 	
 	@Override

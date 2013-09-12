@@ -4,7 +4,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.SCBlockAccessor;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.Loader;
@@ -32,7 +31,7 @@ public final class Blocks {
 		String modId = Loader.instance().activeModContainer().getModId();
 		
 		block.setTextureName(Items.getIconName(modId, baseName));
-		block.setUnlocalizedName(Items.getLanguageKey(modId, baseName));
+		block.setUnlocalizedName(Names.combine(modId, baseName));
 		
 		GameRegistry.registerBlock(block, itemClass, baseName);
 		
@@ -41,16 +40,8 @@ public final class Blocks {
 		}
 	}
 	
-	public static <E extends Type, T extends Block & Typed<E>> String getUnlocalizedName(T block, E type) {
-		return Items.getLanguageKey(block.getUnlocalizedName(), type.getName());
-	}
-	
-	public static <E extends Type, T extends Block & Typed<E>> String getUnlocalizedName(T block, int meta) {
-		return getUnlocalizedName(block, Multitypes.getType(block, meta));
-	}
-	
-	public static <E extends Type, T extends Block & Typed<E>> String getUnlocalizedName(T block, ItemStack stack) {
-		return getUnlocalizedName(block, Multitypes.getType(block, stack));
+	public static <E extends Type<E>, T extends Block & Typed<E>> String getUnlocalizedName(T block, E type) {
+		return Names.combine(block, type);
 	}
 	
 	public static final void genericBreak(Block block, World world, int x, int y, int z, int meta) {

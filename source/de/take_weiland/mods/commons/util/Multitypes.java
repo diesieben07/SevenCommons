@@ -20,11 +20,11 @@ public final class Multitypes {
 
 	private Multitypes() { }
 
-	public static final <E extends Type> E getType(Typed<E> typed, int meta) {
+	public static final <E extends Type<E>> E getType(Typed<E> typed, int meta) {
 		return CollectionUtils.defaultedArrayAccess(typed.getTypes(), meta, typed.getDefault());
 	}
 
-	public static final <E extends Type> E getType(Typed<E> typed, ItemStack stack) {
+	public static final <E extends Type<E>> E getType(Typed<E> typed, ItemStack stack) {
 		return getType(typed, stack.getItemDamage());
 	}
 	
@@ -32,10 +32,10 @@ public final class Multitypes {
 		return Iterators.transform(Iterators.forArray(typed.getTypes()), GET_STACK_FUNC);
 	}
 	
-	public static <T extends Item & Typed<R>, R extends Type> List<ItemStack> allStacks(T typed) {
+	public static <T extends Item & Typed<R>, R extends Type<R>> List<ItemStack> allStacks(T typed) {
 		return ImmutableList.copyOf(allStacksLazy(typed));
 	}
-	public static <T extends Block & Typed<R>, R extends Type> List<ItemStack> allStacks(T typed) {
+	public static <T extends Block & Typed<R>, R extends Type<R>> List<ItemStack> allStacks(T typed) {
 		return ImmutableList.copyOf(allStacksLazy(typed));
 	}
 	
@@ -56,9 +56,13 @@ public final class Multitypes {
 	};
 
 	static void registerSubtypes(Typed<?> typed, String baseName) {
-		for (Type type : typed.getTypes()) {
-			GameRegistry.registerCustomItemStack(Items.getLanguageKey(baseName, type.getName()), type.stack());
+		for (Type<?> type : typed.getTypes()) {
+			GameRegistry.registerCustomItemStack(Names.combine(baseName, type), type.stack());
 		}
+	}
+
+	public static ItemStack stack(Type<?> type, int quantity) {
+		return type.getTyped().stack(quantity, type.ordinal());
 	}
 	
 }

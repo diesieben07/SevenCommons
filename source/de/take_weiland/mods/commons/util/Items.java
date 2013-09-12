@@ -35,7 +35,7 @@ public final class Items {
 		String modId = Loader.instance().activeModContainer().getModId();
 		
 		item.setTextureName(getIconName(modId, baseName));
-		item.setUnlocalizedName(getLanguageKey(modId, baseName)); // full unlocalized key is "item.MODID.NAME.name"		
+		item.setUnlocalizedName(Names.combine(modId, baseName)); // full unlocalized key is "item.MODID.NAME.name"		
 		
 		if (item instanceof Typed) {
 			SCItemAccessor.setHasSubtypes(item);
@@ -46,17 +46,6 @@ public final class Items {
 		}
 		
 		GameRegistry.registerItem(item, baseName);
-	}
-	
-	/**
-	 * get the Unlocalized name for the given Subtyped Item based on the stack damage value<br>
-	 * will return something like <tt>item.ItemBaseName.SubtypeName</tt>
-	 * @param item
-	 * @param stack
-	 * @return
-	 */
-	public static <E extends Type, T extends Item & Typed<E>> String getUnlocalizedName(T item, ItemStack stack) {
-		return item.getUnlocalizedName() + "." + Multitypes.getType(item, stack).getName();
 	}
 	
 	/**
@@ -100,11 +89,11 @@ public final class Items {
 	
 	@SideOnly(Side.CLIENT)
 	static Icon[] registerIcons(Typed<?> typed, final String prefix, final String postfix, final IconRegister register) {
-		Type[] types = typed.getTypes();
+		Type<?>[] types = typed.getTypes();
 		Icon[] icons = new Icon[types.length];
 		
 		for (int i = 0; i < types.length; ++i) {
-			icons[i] = register.registerIcon(prefix + "_" + types[i].getName() + postfix);
+			icons[i] = register.registerIcon(prefix + "_" + types[i].unlocalizedName() + postfix);
 		}
 		
 		return icons;
@@ -117,10 +106,6 @@ public final class Items {
 
 	static String getIconName(String modId, String iconName) {
 		return modId + ":" + iconName;
-	}
-	
-	static String getLanguageKey(String modId, String baseName) {
-		return modId + "." + baseName;
 	}
 	
 }

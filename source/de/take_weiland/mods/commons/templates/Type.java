@@ -1,9 +1,10 @@
 package de.take_weiland.mods.commons.templates;
 
-public interface Type extends Stackable {
+public interface Type<T extends Type<T>> extends Stackable, Named {
 
-	String getName();
+	// named ordinal for easier Enums
+	int ordinal();
 	
-	int getMeta();
+	Typed<T> getTyped();
 	
 }
