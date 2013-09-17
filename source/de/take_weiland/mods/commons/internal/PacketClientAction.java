@@ -1,13 +1,11 @@
 package de.take_weiland.mods.commons.internal;
 
 import net.minecraft.entity.player.EntityPlayer;
-
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.network.StreamPacket;
+import de.take_weiland.mods.commons.util.MinecraftDataInput;
+import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
 public class PacketClientAction extends StreamPacket {
 
@@ -18,22 +16,22 @@ public class PacketClientAction extends StreamPacket {
 	}
 
 	@Override
-	protected void readData(ByteArrayDataInput in) {
-		action = readEnum(Action.class, in);
+	protected void readData(MinecraftDataInput in) {
+		action = in.readEnum(Action.class);
 	}
 
 	@Override
-	protected void writeData(ByteArrayDataOutput out) {
-		writeEnum(action, out);
+	protected void writeData(MinecraftDataOutput out) {
+		out.writeEnum(action);
 	}
 
 	@Override
-	protected boolean isValidForSide(Side side) {
+	public boolean isValidForSide(Side side) {
 		return side.isClient();
 	}
 
 	@Override
-	protected void execute(EntityPlayer player, Side side) {
+	public void execute(EntityPlayer player, Side side) {
 		switch (action) {
 		case RESTART_FAILURE:
 			CommonsModContainer.proxy.displayRestartFailure();
@@ -42,7 +40,7 @@ public class PacketClientAction extends StreamPacket {
 	}
 
 	@Override
-	protected PacketType getType() {
+	public PacketType type() {
 		return CommonsPackets.CLIENT_ACTION;
 	}
 	

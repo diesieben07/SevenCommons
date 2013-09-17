@@ -1,15 +1,13 @@
 package de.take_weiland.mods.commons.internal;
 
 import net.minecraft.entity.player.EntityPlayer;
-
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
-import de.take_weiland.mods.commons.network.StreamPacket;
 import de.take_weiland.mods.commons.network.PacketType;
+import de.take_weiland.mods.commons.network.StreamPacket;
+import de.take_weiland.mods.commons.util.MinecraftDataInput;
+import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
 public class PacketModState extends StreamPacket {
 
@@ -22,29 +20,29 @@ public class PacketModState extends StreamPacket {
 	}
 
 	@Override
-	protected void readData(ByteArrayDataInput in) {
+	protected void readData(MinecraftDataInput in) {
 		modId = in.readUTF();
-		state = readEnum(ModUpdateState.class, in);
+		state = in.readEnum(ModUpdateState.class);
 	}
 
 	@Override
-	protected void writeData(ByteArrayDataOutput out) {
+	protected void writeData(MinecraftDataOutput out) {
 		out.writeUTF(modId);
-		writeEnum(state, out);
+		out.writeEnum(state);
 	}
 
 	@Override
-	protected boolean isValidForSide(Side side) {
+	public boolean isValidForSide(Side side) {
 		return side.isClient();
 	}
 
 	@Override
-	protected void execute(EntityPlayer player, Side side) {
+	public void execute(EntityPlayer player, Side side) {
 		CommonsModContainer.proxy.handleModState(this);
 	}
 
 	@Override
-	protected PacketType getType() {
+	public PacketType type() {
 		return CommonsPackets.MOD_STATE;
 	}
 

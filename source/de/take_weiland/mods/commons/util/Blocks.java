@@ -11,7 +11,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.templates.AdvancedItemBlock;
-import de.take_weiland.mods.commons.templates.Type;
 import de.take_weiland.mods.commons.templates.Typed;
 import de.take_weiland.mods.commons.templates.TypedItemBlock;
 
@@ -31,17 +30,13 @@ public final class Blocks {
 		String modId = Loader.instance().activeModContainer().getModId();
 		
 		block.setTextureName(Items.getIconName(modId, baseName));
-		block.setUnlocalizedName(Names.combine(modId, baseName));
+		block.setUnlocalizedName(modId + "." +  baseName);
 		
 		GameRegistry.registerBlock(block, itemClass, baseName);
 		
 		if (block instanceof Typed) {
 			Multitypes.registerSubtypes((Typed<?>)block, baseName);
 		}
-	}
-	
-	public static <E extends Type<E>, T extends Block & Typed<E>> String getUnlocalizedName(T block, E type) {
-		return Names.combine(block, type);
 	}
 	
 	public static final void genericBreak(Block block, World world, int x, int y, int z, int meta) {

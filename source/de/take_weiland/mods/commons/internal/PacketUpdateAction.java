@@ -3,18 +3,16 @@ package de.take_weiland.mods.commons.internal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatMessageComponent;
 import net.minecraft.util.EnumChatFormatting;
-
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.PlayerUpdateInformation;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
-import de.take_weiland.mods.commons.network.StreamPacket;
 import de.take_weiland.mods.commons.network.PacketType;
+import de.take_weiland.mods.commons.network.StreamPacket;
 import de.take_weiland.mods.commons.util.CollectionUtils;
+import de.take_weiland.mods.commons.util.MinecraftDataInput;
+import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
 public class PacketUpdateAction extends StreamPacket {
 
@@ -51,8 +49,8 @@ public class PacketUpdateAction extends StreamPacket {
 	}
 	
 	@Override
-	protected void readData(ByteArrayDataInput in) {
-		action = readEnum(Action.class, in);
+	protected void readData(MinecraftDataInput in) {
+		action = in.readEnum(Action.class);
 		if (action.hasModId) {
 			modId = in.readUTF();
 		}
@@ -62,8 +60,8 @@ public class PacketUpdateAction extends StreamPacket {
 	}
 
 	@Override
-	protected void writeData(ByteArrayDataOutput out) {
-		writeEnum(action, out);
+	protected void writeData(MinecraftDataOutput out) {
+		out.writeEnum(action);
 		if (action.hasModId) {
 			out.writeUTF(modId);
 		}
@@ -73,7 +71,7 @@ public class PacketUpdateAction extends StreamPacket {
 	}
 
 	@Override
-	protected void execute(EntityPlayer player, Side side) {
+	public void execute(EntityPlayer player, Side side) {
 		if (!player.canCommandSenderUseCommand(4, CommonsModContainer.updateCommand)) {
 			player.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("sevencommons.updates.noop").setColor(EnumChatFormatting.RED));
 		} else if (!CommonsModContainer.updaterEnabled) {
@@ -106,12 +104,12 @@ public class PacketUpdateAction extends StreamPacket {
 	}
 	
 	@Override
-	protected boolean isValidForSide(Side side) {
+	public boolean isValidForSide(Side side) {
 		return side.isServer();
 	}
 
 	@Override
-	protected PacketType getType() {
+	public PacketType type() {
 		return CommonsPackets.UPDATE_ACTION;
 	}
 

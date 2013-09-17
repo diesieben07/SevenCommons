@@ -15,16 +15,12 @@ public abstract class AbstractInventory implements AdvancedInventory {
 	protected final ItemStack[] storage;
 	
 	protected AbstractInventory() {
-		storage = provideStorage();
+		storage = new ItemStack[getSizeInventory()];
 	}
 	
 	@Override
 	public ItemStack[] getStorage() {
 		return storage;
-	}
-
-	protected ItemStack[] provideStorage() {
-		return new ItemStack[getSizeInventory()];
 	}
 
 	@Override

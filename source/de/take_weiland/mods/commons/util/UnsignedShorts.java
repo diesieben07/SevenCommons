@@ -6,11 +6,13 @@ public final class UnsignedShorts {
 
 	private UnsignedShorts() { }
 	
-	public static final int toInt(short unsigned) {
+	public static final int MAX_VALUE = 0xFFFF;
+	
+	public static int toInt(short unsigned) {
 		return unsigned & 0xFFFF;
 	}
 	
-	public static final short checkedCast(int value) {
+	public static short checkedCast(int value) {
 		Preconditions.checkArgument(value >> Short.SIZE == 0, "out of range: %s", Integer.valueOf(value));
 		return (short)value;
 	}

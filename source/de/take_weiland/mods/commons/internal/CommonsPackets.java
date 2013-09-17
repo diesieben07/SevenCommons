@@ -1,8 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
-import com.google.common.primitives.UnsignedBytes;
-
-import de.take_weiland.mods.commons.network.AbstractModPacket;
+import de.take_weiland.mods.commons.network.ModPacket;
+import de.take_weiland.mods.commons.network.PacketTransport;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.syncing.PacketSync;
 
@@ -15,27 +14,25 @@ public enum CommonsPackets implements PacketType {
 	CLIENT_ACTION(PacketClientAction.class),
 	SYNC(PacketSync.class);
 	
-	private static final String CHANNEL = "SevenCommons";
+	private final Class<? extends ModPacket> clazz;
 	
-	private final Class<? extends AbstractModPacket> clazz;
-	
-	private CommonsPackets(Class<? extends AbstractModPacket> clazz) {
+	private CommonsPackets(Class<? extends ModPacket> clazz) {
 		this.clazz = clazz;
 	}
 
 	@Override
-	public String getChannel() {
-		return CHANNEL;
+	public int packetId() {
+		return ordinal();
 	}
 
 	@Override
-	public byte getPacketId() {
-		return UnsignedBytes.checkedCast(ordinal());
-	}
-
-	@Override
-	public Class<? extends AbstractModPacket> getPacketClass() {
+	public Class<? extends ModPacket> packetClass() {
 		return clazz;
+	}
+
+	@Override
+	public PacketTransport transport() {
+		return CommonsModContainer.packetTransport;
 	}
 
 }

@@ -1,14 +1,12 @@
 package de.take_weiland.mods.commons.internal;
 
 import net.minecraft.entity.player.EntityPlayer;
-
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
-import de.take_weiland.mods.commons.network.StreamPacket;
 import de.take_weiland.mods.commons.network.PacketType;
+import de.take_weiland.mods.commons.network.StreamPacket;
+import de.take_weiland.mods.commons.util.MinecraftDataInput;
+import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
 public class PacketDownloadProgress extends StreamPacket {
 
@@ -26,29 +24,29 @@ public class PacketDownloadProgress extends StreamPacket {
 	}
 
 	@Override
-	protected void readData(ByteArrayDataInput in) {
+	protected void readData(MinecraftDataInput in) {
 		modId = in.readUTF();
 		downloadProgress = in.readByte();
 	}
 
 	@Override
-	protected void writeData(ByteArrayDataOutput out) {
+	protected void writeData(MinecraftDataOutput out) {
 		out.writeUTF(modId);
 		out.writeByte(downloadProgress);
 	}
 
 	@Override
-	protected void execute(EntityPlayer player, Side side) {
+	public void execute(EntityPlayer player, Side side) {
 		CommonsModContainer.proxy.handleDownloadProgress(this);
 	}
 
 	@Override
-	protected boolean isValidForSide(Side side) {
+	public boolean isValidForSide(Side side) {
 		return side.isClient();
 	}
 
 	@Override
-	protected PacketType getType() {
+	public PacketType type() {
 		return CommonsPackets.DOWNLOAD_PROGRESS;
 	}
 

@@ -6,8 +6,6 @@ import java.util.List;
 import net.minecraft.entity.player.EntityPlayer;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.ClientDummyUpdatableMod;
@@ -18,6 +16,8 @@ import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.network.StreamPacket;
+import de.take_weiland.mods.commons.util.MinecraftDataInput;
+import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
 public class PacketViewUpdates extends StreamPacket {
 
@@ -29,7 +29,7 @@ public class PacketViewUpdates extends StreamPacket {
 	}
 	
 	@Override
-	protected void readData(ByteArrayDataInput in) {
+	protected void readData(MinecraftDataInput in) {
 		int modCount = in.readUnsignedShort();
 		clientMods = Lists.newArrayListWithCapacity(modCount);
 		
@@ -38,7 +38,7 @@ public class PacketViewUpdates extends StreamPacket {
 			String modId = in.readUTF();
 			String name = in.readUTF();
 			
-			ModUpdateState state = readEnum(ModUpdateState.class, in);
+			ModUpdateState state = in.readEnum(ModUpdateState.class);
 			
 			ModVersion current = ModVersion.read(mod, in);
 			int versionCount = in.readUnsignedShort();
@@ -60,12 +60,12 @@ public class PacketViewUpdates extends StreamPacket {
 	}
 
 	@Override
-	protected void writeData(ByteArrayDataOutput out) {
+	protected void writeData(MinecraftDataOutput out) {
 		out.writeShort(mods.size());
 		for (UpdatableMod mod : mods) {
 			out.writeUTF(mod.getModId());
 			out.writeUTF(mod.getName());
-			writeEnum(mod.getState(), out);
+			out.writeEnum(mod.getState());
 			
 			mod.getVersions().getCurrentVersion().write(out);
 			
@@ -77,17 +77,17 @@ public class PacketViewUpdates extends StreamPacket {
 	}
 
 	@Override
-	protected boolean isValidForSide(Side side) {
+	public boolean isValidForSide(Side side) {
 		return side.isClient();
 	}
 	
 	@Override
-	protected void execute(EntityPlayer player, Side side) {
+	public void execute(EntityPlayer player, Side side) {
 		CommonsModContainer.proxy.handleViewUpdates(this);
 	}
 
 	@Override
-	protected PacketType getType() {
+	public PacketType type() {
 		return CommonsPackets.VIEW_UPDATES;
 	}
 

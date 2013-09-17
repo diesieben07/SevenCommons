@@ -7,25 +7,25 @@ import net.minecraft.tileentity.TileEntity;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 
-import de.take_weiland.mods.commons.network.ModPacket;
+import de.take_weiland.mods.commons.network.SendablePacket;
 
 public final class Syncing {
 
 	private Syncing() { }
 	
-	public static <T extends Container & Synced> ModPacket getSyncPacket(T synced, boolean forceSync) {
+	public static <T extends Container & Synced> SendablePacket getSyncPacket(T synced, boolean forceSync) {
 		return syncImpl(synced, SyncedType.CONTAINER, forceSync);
 	}
 	
-	public static <T extends Entity & Synced> ModPacket getSyncPacket(T synced, boolean forceSync) {
+	public static <T extends Entity & Synced> SendablePacket getSyncPacket(T synced, boolean forceSync) {
 		return syncImpl(synced, SyncedType.ENTITY, forceSync);
 	}
 	
-	public static <T extends TileEntity & Synced> ModPacket getSyncPacket(T synced, boolean forceSync) {
+	public static <T extends TileEntity & Synced> SendablePacket getSyncPacket(T synced, boolean forceSync) {
 		return syncImpl(synced, SyncedType.TILE_ENTITY, forceSync);
 	}
 	
-	public static <T extends Synced> ModPacket getSyncPacket(T synced, SyncedType<? super T> type, boolean forceSync) {
+	public static <T extends Synced> SendablePacket getSyncPacket(T synced, SyncedType<? super T> type, boolean forceSync) {
 		return syncImpl(synced, type, forceSync);
 	}
 	
@@ -41,7 +41,7 @@ public final class Syncing {
 		accessor.uploadSyncedFields();
 	}
 	
-	private static <T extends Synced> ModPacket syncImpl(T synced, SyncedType<? super T> type, boolean forceSync) {
+	private static <T extends Synced> SendablePacket syncImpl(T synced, SyncedType<? super T> type, boolean forceSync) {
 		SyncedFieldAccessor accessor = (SyncedFieldAccessor)synced;
 		int fields = accessor.getFieldCount();
 		
@@ -68,7 +68,7 @@ public final class Syncing {
 			accessor.updateFields();
 		}
 		
-		return out == null ? ModPacket.DUMMY_PACKET : type.providePacket(out);
+		return out == null ? SendablePacket.DUMMY : type.providePacket(out);
 	}
 
 }

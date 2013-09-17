@@ -21,13 +21,15 @@ import de.take_weiland.mods.commons.config.GetProperty;
 import de.take_weiland.mods.commons.internal.updater.CommandUpdates;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
-import de.take_weiland.mods.commons.network.ModPacketHandler;
+import de.take_weiland.mods.commons.network.PacketTransport;
+import de.take_weiland.mods.commons.network.PacketTransports;
 
 public final class CommonsModContainer extends DummyModContainer {
 
 	public static SevenCommonsProxy proxy;
 	public static CommonsModContainer instance;
 	public static UpdateController updateController;
+	public static PacketTransport packetTransport;
 	
 	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
 	public static boolean updaterEnabled = true;
@@ -73,7 +75,7 @@ public final class CommonsModContainer extends DummyModContainer {
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 		ConfigInjector.inject(config, getClass());
 		
-		ModPacketHandler.setupNetworking(this, CommonsPackets.values());
+		packetTransport = PacketTransports.withPacket250("SevenCommons", CommonsPackets.values());
 		
 		proxy.preInit(event);
 	}	

@@ -5,6 +5,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import com.google.common.primitives.Bytes;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.CommonsPackets;
@@ -22,22 +23,22 @@ public final class PacketSync extends AbstractModPacket {
 		this.out = out;
 	}
 
-	static void addPacketId(ByteArrayDataOutput out) {
-		out.writeByte(CommonsPackets.SYNC.getPacketId());
+	@Override
+	public void handleData(byte[] data, int offset) {
+		in = ByteStreams.newDataInput(data, offset);
 	}
 
 	@Override
-	protected void readData(byte[] data) {
-		in = ByteStreams.newDataInput(data, 1);
+	public byte[] getData(int spareBytes) {
+		if (spareBytes >= 0) {
+			return Bytes.concat(new byte[spareBytes], out.toByteArray());
+		} else {
+			return out.toByteArray();
+		}
 	}
 
 	@Override
-	protected byte[] writeData() {
-		return out.toByteArray();
-	}
-
-	@Override
-	protected void execute(EntityPlayer player, Side side) {
+	public void execute(EntityPlayer player, Side side) {
 		int typeId = in.readUnsignedByte();
 		SyncedType<?> type = CollectionUtils.safeArrayAccess(SyncedType.TYPES, typeId);
 		if (type != null) {
@@ -55,12 +56,12 @@ public final class PacketSync extends AbstractModPacket {
 	}
 
 	@Override
-	protected boolean isValidForSide(Side side) {
+	public boolean isValidForSide(Side side) {
 		return side.isClient();
 	}
 
 	@Override
-	protected PacketType getType() {
+	public PacketType type() {
 		return CommonsPackets.SYNC;
 	}
 

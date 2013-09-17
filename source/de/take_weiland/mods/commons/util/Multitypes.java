@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 
 import com.google.common.base.Function;
@@ -22,6 +23,12 @@ public final class Multitypes {
 
 	public static final <E extends Type<E>> E getType(Typed<E> typed, int meta) {
 		return CollectionUtils.defaultedArrayAccess(typed.getTypes(), meta, typed.getDefault());
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <E extends Type<E>> E getType(ItemStack stack) {
+		Item item = stack.getItem();
+		return getType((Typed<E>)(item instanceof ItemBlock ? Block.blocksList[((ItemBlock)item).getBlockID()] : item), stack);
 	}
 
 	public static final <E extends Type<E>> E getType(Typed<E> typed, ItemStack stack) {
@@ -47,6 +54,10 @@ public final class Multitypes {
 		}
 	}
 	
+	public static <T extends Type<T>, E extends Typed<T>> String name(T type) {
+		return type.getTyped().subtypeName(type);
+	}
+	
 	private static final Function<Stackable, ItemStack> GET_STACK_FUNC = new Function<Stackable, ItemStack>() {
 
 		@Override
@@ -55,9 +66,9 @@ public final class Multitypes {
 		}
 	};
 
-	static void registerSubtypes(Typed<?> typed, String baseName) {
-		for (Type<?> type : typed.getTypes()) {
-			GameRegistry.registerCustomItemStack(Names.combine(baseName, type), type.stack());
+	static <T extends Type<T>> void registerSubtypes(Typed<T> typed, String baseName) {
+		for (T type : typed.getTypes()) {
+			GameRegistry.registerCustomItemStack(name(type), type.stack());
 		}
 	}
 

@@ -35,7 +35,7 @@ public final class Items {
 		String modId = Loader.instance().activeModContainer().getModId();
 		
 		item.setTextureName(getIconName(modId, baseName));
-		item.setUnlocalizedName(Names.combine(modId, baseName)); // full unlocalized key is "item.MODID.NAME.name"		
+		item.setUnlocalizedName(modId + "." + baseName); // full unlocalized key is "item.MODID.NAME.name"		
 		
 		if (item instanceof Typed) {
 			SCItemAccessor.setHasSubtypes(item);

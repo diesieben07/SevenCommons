@@ -26,6 +26,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	
 	protected AbstractContainer(T upper, EntityPlayer player) {
 		this(upper, player, 8, 84);
+		upper.openChest();
 	}
 	
 	protected AbstractContainer(T upper, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
@@ -113,6 +114,11 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 				Syncing.getSyncPacket(castMe(), false).sendTo(player);
 			}
 		}
+	}
+
+	@Override
+	public void onContainerClosed(EntityPlayer player) {
+		inventory.closeChest();
 	}
 	
 }

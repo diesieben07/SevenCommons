@@ -9,7 +9,7 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
-import de.take_weiland.mods.commons.network.AbstractModPacket;
+import de.take_weiland.mods.commons.network.ModPacket;
 
 interface SyncedType<T> {
 
@@ -19,14 +19,13 @@ interface SyncedType<T> {
 	
 	ByteArrayDataOutput provideDataOutput();
 	
-	AbstractModPacket providePacket(ByteArrayDataOutput out);
+	ModPacket providePacket(ByteArrayDataOutput out);
 	
 	static abstract class DefaultSyncedType<T> implements SyncedType<T> {
 
 		@Override
 		public ByteArrayDataOutput provideDataOutput() {
 			ByteArrayDataOutput out = ByteStreams.newDataOutput();
-			PacketSync.addPacketId(out);
 			writeTypeId(out);
 			return out;
 		}
@@ -34,7 +33,7 @@ interface SyncedType<T> {
 		protected abstract void writeTypeId(ByteArrayDataOutput out);
 
 		@Override
-		public AbstractModPacket providePacket(ByteArrayDataOutput out) {
+		public ModPacket providePacket(ByteArrayDataOutput out) {
 			return new PacketSync(out);
 		}
 		

@@ -7,16 +7,17 @@ import de.take_weiland.mods.commons.gui.AdvancedContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.util.ResourceLocation;
 
-public abstract class AbstractGuiContainer<R extends IInventory, T extends Container & AdvancedContainer<R>> extends GuiContainer implements ContainerGui<T> {
+public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & AdvancedContainer<I>> extends GuiContainer implements ContainerGui<C> {
 
 	private final ResourceLocation texture;
-	protected final T container;
+	protected final C container;
 	
-	public AbstractGuiContainer(T container) {
+	public AbstractGuiContainer(C container) {
 		super(container);
 		this.container = container;
 		texture = provideTexture();
@@ -46,6 +47,13 @@ public abstract class AbstractGuiContainer<R extends IInventory, T extends Conta
 		}
 	}
 	
+	@Override
+	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+		IInventory inv = container.inventory();
+		String invName = inv.isInvNameLocalized() ? inv.getInvName() : I18n.getString(inv.getInvName());
+		this.fontRenderer.drawString(invName, 8, 6, 0x404040);
+	}
+
 	protected final void triggerButton(int buttonId) {
 		mc.playerController.sendEnchantPacket(container.windowId, UnsignedBytes.checkedCast(buttonId));
 		container.clickButton(Side.CLIENT, mc.thePlayer, buttonId);

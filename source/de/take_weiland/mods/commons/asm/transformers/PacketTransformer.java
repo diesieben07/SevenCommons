@@ -10,15 +10,19 @@ import org.objectweb.asm.tree.VarInsnNode;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
-import de.take_weiland.mods.commons.network.AbstractModPacket;
+import de.take_weiland.mods.commons.network.ModPacket;
 
 public final class PacketTransformer extends SelectiveTransformer {
 
 	@Override
 	protected boolean transform(ClassNode clazz, String className) {
+		if ((clazz.access & Opcodes.ACC_INTERFACE) == Opcodes.ACC_INTERFACE) {
+			return false;
+		}
+		
 		try {
 			Class<?> superClass = getClass().getClassLoader().loadClass(ASMUtils.undoInternalName(clazz.superName));
-			if (!AbstractModPacket.class.isAssignableFrom(superClass) || hasDefaultConstructor(clazz)) {
+			if (!ModPacket.class.isAssignableFrom(superClass) || hasDefaultConstructor(clazz)) {
 				return false;
 			}
 		} catch (ClassNotFoundException e) {

@@ -6,4 +6,6 @@ public interface Typed<E extends Type<E>> extends Named, Stackable {
 	
 	public E getDefault();
 	
+	String subtypeName(E subtype);
+	
 }
