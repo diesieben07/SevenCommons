@@ -31,6 +31,14 @@ public final class CollectionUtils {
 		return listIndexExists(list, index) ? list.get(index) : null;
 	}
 	
+	public static int sumLengths(byte[][] arrays) {
+		int n = 0;
+		for (byte[] b : arrays) {
+			n += b.length;
+		}
+		return n;
+	}
+	
 	public static <T> Iterator<T> nCallsIterator(final Supplier<T> supplier, final int n) {
 		return new AbstractIterator<T>() {
 

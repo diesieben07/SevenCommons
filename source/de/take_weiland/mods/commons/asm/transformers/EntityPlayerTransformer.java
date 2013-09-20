@@ -7,6 +7,7 @@ import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -29,12 +30,12 @@ public final class EntityPlayerTransformer extends AppendingTransformer {
 
 	@Override
 	protected String getMcpMethod() {
-		return "clonePlayer";
+		return ASMConstants.M_CLONE_PLAYER_MCP;
 	}
 
 	@Override
 	protected String getSrgMethod() {
-		return "func_71049_a";
+		return ASMConstants.M_CLONE_PLAYER_SRG;
 	}
 
 	@Override

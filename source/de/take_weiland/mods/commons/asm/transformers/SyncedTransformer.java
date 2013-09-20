@@ -1,9 +1,24 @@
 package de.take_weiland.mods.commons.asm.transformers;
 
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.ATHROW;
+import static org.objectweb.asm.Opcodes.BIPUSH;
+import static org.objectweb.asm.Opcodes.DUP;
+import static org.objectweb.asm.Opcodes.GETFIELD;
+import static org.objectweb.asm.Opcodes.GOTO;
+import static org.objectweb.asm.Opcodes.ILOAD;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.INVOKESTATIC;
+import static org.objectweb.asm.Opcodes.IRETURN;
+import static org.objectweb.asm.Opcodes.NEW;
+import static org.objectweb.asm.Opcodes.PUTFIELD;
+import static org.objectweb.asm.Opcodes.RETURN;
+import static org.objectweb.asm.Opcodes.SIPUSH;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -26,8 +41,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
@@ -35,6 +48,8 @@ import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.syncing.Synced;
 import de.take_weiland.mods.commons.syncing.SyncedFieldAccessor;
 import de.take_weiland.mods.commons.util.CollectionUtils;
+import de.take_weiland.mods.commons.util.MinecraftDataInput;
+import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
 public class SyncedTransformer extends SelectiveTransformer {
 
@@ -42,13 +57,13 @@ public class SyncedTransformer extends SelectiveTransformer {
 	static final Type SYNC = Type.getType(Synced.Sync.class);
 	private static final Type SYNCED_FIELD_ACCESSOR = Type.getType(SyncedFieldAccessor.class);
 	
-	private static final Type BYTE_ARRAY_DATA_OUTPUT = Type.getType(ByteArrayDataOutput.class);
-	private static final Type BYTE_ARRAY_DATA_INPUT = Type.getType(ByteArrayDataInput.class);
+	private static final Type DATA_OUTPUT = Type.getType(MinecraftDataOutput.class);
+	private static final Type DATA_INPUT = Type.getType(MinecraftDataInput.class);
 	
 	private static final Type ASM_HOOKS = Type.getObjectType(ASMUtils.makeNameInternal(SevenCommons.ASM_HOOK_CLASS));
 	
 	private static final Type RUNTIME_EXCEPTION = Type.getType(RuntimeException.class);
-	private static final String[] RUNTIME_EXCEPTION_NAME_ARRAY = new String[] { RUNTIME_EXCEPTION.getInternalName() };
+	private static final String[] RUNTIME_EXCEPTION_NAME_ARRAY = { RUNTIME_EXCEPTION.getInternalName() };
 	
 	
 	private static final String METHOD_SYNC_SEND = "syncSend";
@@ -56,13 +71,13 @@ public class SyncedTransformer extends SelectiveTransformer {
 	private static final String METHOD_SYNC_RECEIVE = "syncReceive";
 	
 	private static final String METHOD_SEND_FIELD = "sendField";
-	private static final String SEND_FIELD_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, BYTE_ARRAY_DATA_OUTPUT);
+	private static final String SEND_FIELD_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, DATA_OUTPUT);
 	
 	private static final String METHOD_NEEDS_UPDATE = "needsUpdate";
 	private static final String NEEDS_UPDATE_DESC = Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.INT_TYPE);
 	
 	private static final String METHOD_RECEIVE_FIELD = "receiveField";
-	private static final String RECEIVE_FIELD_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, BYTE_ARRAY_DATA_INPUT);
+	private static final String RECEIVE_FIELD_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, DATA_INPUT);
 	
 	private static final String METHOD_GET_FIELD_COUNT = "getFieldCount";
 	private static final String GET_FIELD_COUNT_DESC = Type.getMethodDescriptor(Type.INT_TYPE);
@@ -84,7 +99,7 @@ public class SyncedTransformer extends SelectiveTransformer {
 	private static final String STRING_SIGNATURE = Type.getDescriptor(String.class);
 	private static final String FLUID_STACK_SIGNATURE = FLUID_STACK.getDescriptor();
 
-	static final List<String> VALID_SYNC_TYPES = ImmutableList.of(
+	static final Collection<String> VALID_SYNC_TYPES = ImmutableList.of(
 			BOOLEAN_SIGNATURE, BYTE_SIGNATURE, SHORT_SIGNATURE, INT_SIGNATURE,
 			LONG_SIGNATURE, FLOAT_SIGNATURE, DOUBLE_SIGNATURE, STRING_SIGNATURE, FLUID_STACK_SIGNATURE);
 	
@@ -206,7 +221,7 @@ public class SyncedTransformer extends SelectiveTransformer {
 			insns.add(jumpTargets[fieldIndex]);
 			
 			insns.add(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
-			insns.add(new MethodInsnNode(INVOKESTATIC, ASM_HOOKS.getInternalName(), METHOD_SYNC_SEND, Type.getMethodDescriptor(Type.VOID_TYPE, BYTE_ARRAY_DATA_OUTPUT, fieldType)));
+			insns.add(new MethodInsnNode(INVOKESTATIC, ASM_HOOKS.getInternalName(), METHOD_SYNC_SEND, Type.getMethodDescriptor(Type.VOID_TYPE, DATA_OUTPUT, fieldType)));
 			insns.add(new JumpInsnNode(GOTO, afterSwitch));
 		}
 		
@@ -269,7 +284,7 @@ public class SyncedTransformer extends SelectiveTransformer {
 			
 			insns.add(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
 			insns.add(new VarInsnNode(ALOAD, 2)); // the ByteArrayDataInput
-			insns.add(new MethodInsnNode(INVOKESTATIC, ASM_HOOKS.getInternalName(), METHOD_SYNC_RECEIVE, Type.getMethodDescriptor(fieldType, fieldType, BYTE_ARRAY_DATA_INPUT)));
+			insns.add(new MethodInsnNode(INVOKESTATIC, ASM_HOOKS.getInternalName(), METHOD_SYNC_RECEIVE, Type.getMethodDescriptor(fieldType, fieldType, DATA_INPUT)));
 			
 			insns.add(new FieldInsnNode(PUTFIELD, clazz.name, field.name, field.desc));
 			

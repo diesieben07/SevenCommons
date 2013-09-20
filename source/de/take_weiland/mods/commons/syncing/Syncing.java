@@ -3,11 +3,9 @@ package de.take_weiland.mods.commons.syncing;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
-
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-
 import de.take_weiland.mods.commons.network.SendablePacket;
+import de.take_weiland.mods.commons.util.MinecraftDataInput;
+import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
 public final class Syncing {
 
@@ -29,7 +27,7 @@ public final class Syncing {
 		return syncImpl(synced, type, forceSync);
 	}
 	
-	public static void restoreSyncData(SyncedFieldAccessor accessor, ByteArrayDataInput in) {
+	public static void restoreSyncData(SyncedFieldAccessor accessor, MinecraftDataInput in) {
 		do {
 			byte field = in.readByte();
 			if (field < 0) {
@@ -45,7 +43,7 @@ public final class Syncing {
 		SyncedFieldAccessor accessor = (SyncedFieldAccessor)synced;
 		int fields = accessor.getFieldCount();
 		
-		ByteArrayDataOutput out = null;
+		MinecraftDataOutput out = null;
 		
 		accessor.downloadSyncedFields();
 		

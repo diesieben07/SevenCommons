@@ -4,12 +4,12 @@ import java.util.Comparator;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Ordering;
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
 
 import cpw.mods.fml.common.versioning.ArtifactVersion;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.util.MinecraftDataInput;
+import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
 public final class ModVersion {
 	
@@ -35,13 +35,13 @@ public final class ModVersion {
 		return modVersion.compareTo(mod.getVersions().getCurrentVersion().modVersion) != 0 && minecraftVersion.equals(SevenCommons.MINECRAFT_VERSION);
 	}
 	
-	public void write(ByteArrayDataOutput out) {
+	public void write(MinecraftDataOutput out) {
 		out.writeUTF(modVersion.getVersionString());
 		out.writeUTF(Strings.nullToEmpty(minecraftVersion));
 		out.writeUTF(Strings.nullToEmpty(patchNotes));
 	}
 	
-	public static ModVersion read(UpdatableMod mod, ByteArrayDataInput in) {
+	public static ModVersion read(UpdatableMod mod, MinecraftDataInput in) {
 		ArtifactVersion version = new DefaultArtifactVersion(in.readUTF());
 		String minecraftVersion = in.readUTF();
 		String patchNotes = in.readUTF();

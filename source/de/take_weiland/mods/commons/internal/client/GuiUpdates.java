@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.internal.client;
 
+import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToServer;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -94,7 +96,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	public void onGuiClosed() {
 		super.onGuiClosed();
 		controller.unregisterListener(this);
-		new PacketUpdateAction(Action.CLOSE_SCREEN).sendToServer();
+		sendPacketToServer(new PacketUpdateAction(Action.CLOSE_SCREEN).make());
 	}
 
 	@Override

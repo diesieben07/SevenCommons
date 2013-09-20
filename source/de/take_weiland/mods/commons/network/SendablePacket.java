@@ -11,8 +11,6 @@ public interface SendablePacket {
 
 	void sendTo(EntityPlayer player);
 	
-	void sendTo(EntityPlayer... players);
-	
 	void sendTo(Iterable<? extends EntityPlayer> players);
 
 	void sendToAll();
@@ -62,9 +60,6 @@ public static final SendablePacket DUMMY = new SendablePacket() {
 		
 		@Override
 		public void sendTo(Iterable<? extends EntityPlayer> players) { }
-		
-		@Override
-		public void sendTo(EntityPlayer... players) { }
 		
 		@Override
 		public void sendTo(EntityPlayer player) { }

@@ -4,7 +4,10 @@ import java.util.List;
 import java.util.Set;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -19,12 +22,12 @@ public final class Players {
 	 * If you need a Collection use {@link ImmutableSet#copyOf(Iterable) ImmutableSet.copyOf(Players.getOps())}
 	 * @return
 	 */
-	public static final Iterable<EntityPlayer> getOps() {
+	public static final Iterable<EntityPlayerMP> getOps() {
 		final Set<String> ops = getOpsRaw();
-		return Iterables.filter(getAll(), new Predicate<EntityPlayer>() {
+		return Iterables.filter(getAll(), new Predicate<EntityPlayerMP>() {
 			
 			@Override
-			public boolean apply(EntityPlayer player) {
+			public boolean apply(EntityPlayerMP player) {
 				return ops.contains(player.username.toLowerCase().trim());
 			}
 			
@@ -54,8 +57,18 @@ public final class Players {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static final List<EntityPlayer> getAll() {
+	public static final List<EntityPlayerMP> getAll() {
 		return MinecraftServer.getServer().getConfigurationManager().playerEntityList;
 	}
-
+	
+	@SuppressWarnings("unchecked")
+	public static final List<EntityPlayer> getAll(World world) {
+		return world.playerEntities;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static final List<EntityPlayerMP> getAll(WorldServer world) {
+		return world.playerEntities;
+	}
+	
 }

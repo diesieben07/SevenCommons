@@ -6,4 +6,6 @@ public interface PacketTransport {
 
 	Packet toVanilla(ModPacket packet);
 	
+	int bytePrefixCount();
+	
 }

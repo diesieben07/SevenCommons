@@ -11,6 +11,7 @@ import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -19,7 +20,7 @@ public final class GuiScreenTransformer extends AppendingTransformer {
 
 	@Override
 	protected InsnList getAppends(ClassNode clazz, MethodNode method) {
-		String buttonListField = ASMUtils.useMcpNames() ? "buttonList" : "i";
+		String buttonListField = ASMUtils.useMcpNames() ? ASMConstants.F_BUTTON_LIST_MCP : ASMConstants.F_BUTTON_LIST_OBF;
 		
 		InsnList insns = new InsnList();
 		
@@ -34,12 +35,12 @@ public final class GuiScreenTransformer extends AppendingTransformer {
 	
 	@Override
 	protected String getMcpMethod() {
-		return "setWorldAndResolution";
+		return ASMConstants.M_SET_WORLD_AND_RESOLUTION_MCP;
 	}
 
 	@Override
 	protected String getSrgMethod() {
-		return "func_73872_a";
+		return ASMConstants.M_SET_WORLD_AND_RESOLUTION_SRG;
 	}
 
 	@Override

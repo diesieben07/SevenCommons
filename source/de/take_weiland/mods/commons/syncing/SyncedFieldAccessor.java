@@ -1,17 +1,17 @@
 package de.take_weiland.mods.commons.syncing;
 
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
+import de.take_weiland.mods.commons.util.MinecraftDataInput;
+import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
 public interface SyncedFieldAccessor extends Synced {
 	
 	int getFieldCount();
 	
-	void sendField(int fieldIndex, ByteArrayDataOutput out);
+	void sendField(int fieldIndex, MinecraftDataOutput out);
 	
 	boolean needsUpdate(int fieldIndex);
 	
-	void receiveField(int fieldIndex, ByteArrayDataInput in);
+	void receiveField(int fieldIndex, MinecraftDataInput in);
 	
 	void updateFields();
 	

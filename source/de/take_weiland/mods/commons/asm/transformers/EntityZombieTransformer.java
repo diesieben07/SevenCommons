@@ -10,6 +10,7 @@ import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.PrependingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -42,12 +43,12 @@ public final class EntityZombieTransformer extends PrependingTransformer {
 
 	@Override
 	protected String getMcpMethod() {
-		return "convertToVillager";
+		return ASMConstants.M_CONVERT_TO_VILLAGER_MCP;
 	}
 
 	@Override
 	protected String getSrgMethod() {
-		return "func_82232_p";
+		return ASMConstants.M_CONVERT_TO_VILLAGER_SRG;
 	}
 
 	@Override

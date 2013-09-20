@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.asm.transformers;
 
+import static de.take_weiland.mods.commons.asm.ASMConstants.*;
+
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -20,12 +22,12 @@ public final class EntityAIMateTransformer extends AppendingTransformer {
 		
 		// load this.theAnimal
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		String fieldTheAnimal = ASMUtils.useMcpNames() ? "theAnimal" : "d";
+		String fieldTheAnimal = ASMUtils.useMcpNames() ? F_THE_ANIMAL_MCP : F_THE_ANIMAL_OBF;
 		insns.add(new FieldInsnNode(Opcodes.GETFIELD, clazz.name, fieldTheAnimal, ASMUtils.getFieldDescriptor(clazz, fieldTheAnimal)));
 		
 		// load this.targetMate
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		String fieldMate = ASMUtils.useMcpNames() ? "targetMate" : "e";
+		String fieldMate = ASMUtils.useMcpNames() ? F_TARGET_MATE_MCP : F_TARGET_MATE_OBF;
 		insns.add(new FieldInsnNode(Opcodes.GETFIELD, clazz.name, fieldMate, ASMUtils.getFieldDescriptor(clazz, fieldMate)));
 		
 		// load local var entityageable (the baby)
@@ -42,12 +44,12 @@ public final class EntityAIMateTransformer extends AppendingTransformer {
 
 	@Override
 	protected String getMcpMethod() {
-		return "spawnBaby";
+		return M_SPAWN_BABY_MCP;
 	}
 
 	@Override
 	protected String getSrgMethod() {
-		return "func_75388_i";
+		return M_SPAWN_BABY_SRG;
 	}
 
 	@Override

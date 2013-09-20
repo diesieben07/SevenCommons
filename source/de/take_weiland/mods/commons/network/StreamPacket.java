@@ -1,9 +1,7 @@
 package de.take_weiland.mods.commons.network;
 
 import de.take_weiland.mods.commons.util.MinecraftDataInput;
-import de.take_weiland.mods.commons.util.MinecraftDataInputImpl;
 import de.take_weiland.mods.commons.util.MinecraftDataOutput;
-import de.take_weiland.mods.commons.util.MinecraftDataOutputImpl;
 
 public abstract class StreamPacket extends AbstractModPacket {
 
@@ -16,18 +14,16 @@ public abstract class StreamPacket extends AbstractModPacket {
 	}
 	
 	@Override
-	public final byte[] getData(int spareBytes) {
-		MinecraftDataOutput out = MinecraftDataOutputImpl.create(expectedSize() + spareBytes);
-		for (int i = 0; i < spareBytes; i++) {
-			out.writeByte(0);
-		}
+	public final byte[] getData(int offset) {
+		MinecraftDataOutput out = MinecraftDataOutput.create(expectedSize() + offset);
+		out.skip(offset);
 		writeData(out);
-		return out.toByteArray();
+		return out.toNewArray();
 	}
 
 	@Override
 	public final void handleData(byte[] data, int offset) {
-		MinecraftDataInput in = MinecraftDataInputImpl.create(data, offset);
+		MinecraftDataInput in = MinecraftDataInput.create(data, offset, data.length);
 		readData(in);
 	}
 

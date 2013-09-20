@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToServer;
+
 import java.util.Collection;
 
 import com.google.common.collect.Maps;
@@ -18,22 +20,22 @@ public class UpdateControllerRemote extends AbstractUpdateController {
 	
 	@Override
 	public void searchForUpdates() {
-		new PacketUpdateAction(Action.SEARCH_ALL).sendToServer();
+		sendPacketToServer(new PacketUpdateAction(Action.SEARCH_ALL).make());
 	}
 
 	@Override
 	public void searchForUpdates(UpdatableMod mod) {
-		new PacketUpdateAction(Action.SEARCH, mod.getModId()).sendToServer();
+		sendPacketToServer(new PacketUpdateAction(Action.SEARCH, mod.getModId()).make());
 	}
 
 	@Override
 	public void update(UpdatableMod mod, ModVersion version) {
-		new PacketUpdateAction(Action.UPDATE, mod.getModId(), mod.getVersions().getAvailableVersions().indexOf(version)).sendToServer();
+		sendPacketToServer(new PacketUpdateAction(Action.UPDATE, mod.getModId(), mod.getVersions().getAvailableVersions().indexOf(version)).make());
 	}
 
 	@Override
 	public boolean restartMinecraft() {
-		new PacketUpdateAction(Action.RESTART_MINECRAFT).sendToServer();
+		sendPacketToServer(new PacketUpdateAction(Action.RESTART_MINECRAFT).make());
 		return true;
 	}
 
