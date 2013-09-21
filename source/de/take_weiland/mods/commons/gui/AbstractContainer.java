@@ -1,9 +1,7 @@
 package de.take_weiland.mods.commons.gui;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -11,8 +9,6 @@ import net.minecraft.world.World;
 import com.google.common.primitives.UnsignedBytes;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.syncing.Synced;
-import de.take_weiland.mods.commons.syncing.Syncing;
 import de.take_weiland.mods.commons.util.Containers;
 import de.take_weiland.mods.commons.util.Sides;
 
@@ -86,34 +82,6 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	@Override
 	public ItemStack transferStackInSlot(EntityPlayer player, int slot) {
 		return Containers.transferStack(this, player, slot);
-	}
-	
-	private final boolean isSynced = this instanceof Synced;
-	private boolean noTwiceSyncHack = false;
-
-	@Override
-	public void addCraftingToCrafters(ICrafting crafter) {
-		noTwiceSyncHack = true;
-		super.addCraftingToCrafters(crafter);
-		noTwiceSyncHack = false;
-		if (isSynced && crafter instanceof EntityPlayerMP) {
-			Syncing.getSyncPacket(castMe(), true).sendTo((EntityPlayer)crafter);
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	private <R extends Container & Synced> R castMe() {
-		return (R)this;
-	}
-
-	@Override
-	public void detectAndSendChanges() {
-		if (!noTwiceSyncHack) {
-			super.detectAndSendChanges();
-			if (isSynced) {
-				Syncing.getSyncPacket(castMe(), false).sendTo(player);
-			}
-		}
 	}
 
 	@Override

@@ -13,13 +13,18 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-public abstract class AbstractModPacket implements ModPacket {
+public abstract class AbstractPacket implements SinglePacket {
 
 	private Packet vanillaPacket;
 	
 	@Override
 	public final Packet make() {
-		return vanillaPacket != null ? vanillaPacket : (vanillaPacket = type().transport().toVanilla(this));
+		return vanillaPacket != null ? vanillaPacket : (vanillaPacket = type().transport().make(this));
+	}
+
+	@Override
+	public int expectedSize() {
+		return 32;
 	}
 
 	@Override

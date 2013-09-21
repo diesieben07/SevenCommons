@@ -1,13 +1,28 @@
 package de.take_weiland.mods.commons.network;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentMap;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.INetworkManager;
+import net.minecraft.network.NetLoginHandler;
+import net.minecraft.network.NetServerHandler;
+import net.minecraft.network.packet.NetHandler;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.world.WorldServer;
+
+import com.google.common.collect.MapMaker;
+import com.google.common.primitives.UnsignedBytes;
+
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
+import de.take_weiland.mods.commons.internal.CommonsModContainer;
+import de.take_weiland.mods.commons.util.CollectionUtils;
 import de.take_weiland.mods.commons.util.Sides;
 
 public final class Packets {
@@ -40,4 +55,27 @@ public final class Packets {
 		}
 	}
 	
+	public static INetworkManager getNetworkManager(NetHandler netHandler) {
+		if (!netHandler.isServerHandler()) {
+			return CommonsModContainer.proxy.getNetworkManagerFromClient(netHandler);
+		} else if (netHandler instanceof NetServerHandler) {
+			return ((NetServerHandler)netHandler).netManager;
+		} else {
+			return ((NetLoginHandler)netHandler).myTCPConnection;
+		}
+	}
+	
+	public static void writeEnum(DataOutput out, Enum<?> e) throws IOException {
+		out.writeByte(UnsignedBytes.checkedCast(e.ordinal()));
+	}
+	
+	public static <E extends Enum<E>> E readEnum(DataInput in, Class<E> clazz) throws IOException {
+		return CollectionUtils.safeArrayAccess(clazz.getEnumConstants(), in.readUnsignedByte());
+	}
+	
+	private static final MapMaker mapMaker = new MapMaker().concurrencyLevel(2).weakKeys();
+
+	public static ConcurrentMap<INetworkManager, InputStream[]> newMulitpartTracker() {
+		return Packets.mapMaker.makeMap();
+	}
 }

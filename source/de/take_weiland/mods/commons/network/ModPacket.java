@@ -1,21 +1,24 @@
 package de.take_weiland.mods.commons.network;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.network.packet.Packet;
 import cpw.mods.fml.relauncher.Side;
 
 public interface ModPacket extends SendablePacket {
 
 	PacketType type();
 	
-	byte[] getData(int offset);
+	void read(EntityPlayer player, InputStream in) throws IOException;
 	
-	void handleData(byte[] data, int offset);
+	void write(OutputStream out) throws IOException;
 	
 	boolean isValidForSide(Side side);
-
+	
 	void execute(EntityPlayer player, Side side);
 	
-	Packet make();
+	int expectedSize();
 	
 }

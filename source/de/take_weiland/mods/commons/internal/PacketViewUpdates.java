@@ -1,5 +1,11 @@
 package de.take_weiland.mods.commons.internal;
 
+import static de.take_weiland.mods.commons.network.Packets.readEnum;
+import static de.take_weiland.mods.commons.network.Packets.writeEnum;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -14,12 +20,10 @@ import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
+import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
-import de.take_weiland.mods.commons.network.StreamPacket;
-import de.take_weiland.mods.commons.util.MinecraftDataInput;
-import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
-public class PacketViewUpdates extends StreamPacket {
+public class PacketViewUpdates extends DataPacket {
 
 	private Collection<? extends UpdatableMod> mods;
 	private Collection<ClientDummyUpdatableMod> clientMods;
@@ -29,7 +33,7 @@ public class PacketViewUpdates extends StreamPacket {
 	}
 	
 	@Override
-	protected void readData(MinecraftDataInput in) {
+	protected void read(EntityPlayer player, DataInputStream in) throws IOException {
 		int modCount = in.readUnsignedShort();
 		clientMods = Lists.newArrayListWithCapacity(modCount);
 		
@@ -38,7 +42,7 @@ public class PacketViewUpdates extends StreamPacket {
 			String modId = in.readUTF();
 			String name = in.readUTF();
 			
-			ModUpdateState state = in.readEnum(ModUpdateState.class);
+			ModUpdateState state = readEnum(in, ModUpdateState.class);
 			
 			ModVersion current = ModVersion.read(mod, in);
 			int versionCount = in.readUnsignedShort();
@@ -60,12 +64,12 @@ public class PacketViewUpdates extends StreamPacket {
 	}
 
 	@Override
-	protected void writeData(MinecraftDataOutput out) {
+	protected void write(DataOutputStream out) throws IOException {
 		out.writeShort(mods.size());
 		for (UpdatableMod mod : mods) {
 			out.writeUTF(mod.getModId());
 			out.writeUTF(mod.getName());
-			out.writeEnum(mod.getState());
+			writeEnum(out, mod.getState());
 			
 			mod.getVersions().getCurrentVersion().write(out);
 			

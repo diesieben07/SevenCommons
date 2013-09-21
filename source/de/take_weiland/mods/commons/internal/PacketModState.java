@@ -1,15 +1,20 @@
 package de.take_weiland.mods.commons.internal;
 
+import static de.take_weiland.mods.commons.network.Packets.readEnum;
+import static de.take_weiland.mods.commons.network.Packets.writeEnum;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import net.minecraft.entity.player.EntityPlayer;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
+import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
-import de.take_weiland.mods.commons.network.StreamPacket;
-import de.take_weiland.mods.commons.util.MinecraftDataInput;
-import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
-public class PacketModState extends StreamPacket {
+public class PacketModState extends DataPacket {
 
 	private String modId;
 	private ModUpdateState state;
@@ -20,15 +25,15 @@ public class PacketModState extends StreamPacket {
 	}
 
 	@Override
-	protected void readData(MinecraftDataInput in) {
+	protected void read(EntityPlayer player, DataInputStream in) throws IOException {
 		modId = in.readUTF();
-		state = in.readEnum(ModUpdateState.class);
+		state = readEnum(in, ModUpdateState.class);
 	}
 
 	@Override
-	protected void writeData(MinecraftDataOutput out) {
+	protected void write(DataOutputStream out) throws IOException {
 		out.writeUTF(modId);
-		out.writeEnum(state);
+		writeEnum(out, state);
 	}
 
 	@Override

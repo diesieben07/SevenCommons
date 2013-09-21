@@ -4,8 +4,10 @@ import net.minecraft.network.packet.Packet;
 
 public interface PacketTransport {
 
-	Packet toVanilla(ModPacket packet);
+	Packet make(ModPacket packet);
 	
-	int bytePrefixCount();
+	Packet[] makeMulti(MultipartPacket packet);
+	
+	int maxPacketSize();
 	
 }

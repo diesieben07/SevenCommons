@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.internal;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.INetworkManager;
+import net.minecraft.network.packet.NetHandler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
@@ -55,5 +57,10 @@ public class ServerProxy implements SevenCommonsProxy, IPlayerTracker {
 
 	@Override
 	public void displayRestartFailure() { }
+
+	@Override
+	public INetworkManager getNetworkManagerFromClient(NetHandler clientHandler) {
+		return null;
+	}
 
 }

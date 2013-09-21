@@ -1,5 +1,9 @@
 package de.take_weiland.mods.commons.network;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.List;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.Packet;
@@ -12,10 +16,10 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
 
-class Packet250Transport extends PacketTransportAbstract implements IPacketHandler {
+final class Packet250Transport extends PacketTransportAbstract implements IPacketHandler {
 
-	private static final int PREFIX_COUNT = 1;
-	final String channel;
+	private static final int MAX_SIZE = 32767 - 1;
+	private final String channel;
 	
 	Packet250Transport(String channel, PacketType[] packets) {
 		super(packets);
@@ -24,22 +28,39 @@ class Packet250Transport extends PacketTransportAbstract implements IPacketHandl
 	}
 	
 	@Override
-	public Packet toVanilla(ModPacket packet) {
-		byte[] data = packet.getData(PREFIX_COUNT);
-		data[0] = UnsignedBytes.checkedCast(packet.type().packetId());
-		return PacketDispatcher.getPacket(channel, data);
+	public Packet make(ModPacket packet) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream(packet.expectedSize() + 1);
+		out.write(UnsignedBytes.checkedCast(packet.type().packetId()));
+		writePacket(packet, out);
+		return PacketDispatcher.getPacket(channel, out.toByteArray());
+	}
+
+	@Override
+	public Packet[] makeMulti(MultipartPacket packet) {
+		final List<byte[]> streams = makeMultiparts(packet, new byte[] { UnsignedBytes.checkedCast(packet.type().packetId()) });
+		
+		int numPackets = streams.size();
+		Packet[] packets = new Packet[numPackets];
+		for (int i = 0; i < numPackets; ++i) {
+			byte[] data = streams.get(i);
+			data[2] = UnsignedBytes.checkedCast(numPackets);
+			
+			packets[i] = PacketDispatcher.getPacket(channel, data);
+		}
+		
+		return packets;
 	}
 	
 	@Override
 	public void onPacketData(INetworkManager manager, Packet250CustomPayload vanillaPacket, Player fmlPlayer) {
-		byte[] data = vanillaPacket.data;
-		int packetId = UnsignedBytes.toInt(data[0]);
-		finishPacketRecv(packetId, (EntityPlayer)fmlPlayer, data, PREFIX_COUNT);
-	}
-
-	@Override
-	public int bytePrefixCount() {
-		return PREFIX_COUNT;
+		ByteArrayInputStream in = new ByteArrayInputStream(vanillaPacket.data);
+		int packetId = in.read();
+		finishPacketRecv(manager, packetId, (EntityPlayer)fmlPlayer, in);
 	}
 	
+	@Override
+	public int maxPacketSize() {
+		return MAX_SIZE;
+	}
+
 }

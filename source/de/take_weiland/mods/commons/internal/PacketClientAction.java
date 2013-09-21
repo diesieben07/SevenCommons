@@ -1,13 +1,18 @@
 package de.take_weiland.mods.commons.internal;
 
+import static de.take_weiland.mods.commons.network.Packets.readEnum;
+import static de.take_weiland.mods.commons.network.Packets.writeEnum;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import net.minecraft.entity.player.EntityPlayer;
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
-import de.take_weiland.mods.commons.network.StreamPacket;
-import de.take_weiland.mods.commons.util.MinecraftDataInput;
-import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
-public class PacketClientAction extends StreamPacket {
+public class PacketClientAction extends DataPacket {
 
 	private Action action;
 	
@@ -16,13 +21,13 @@ public class PacketClientAction extends StreamPacket {
 	}
 
 	@Override
-	protected void readData(MinecraftDataInput in) {
-		action = in.readEnum(Action.class);
+	protected void read(EntityPlayer player, DataInputStream in) throws IOException {
+		action = readEnum(in, Action.class);
 	}
 
 	@Override
-	protected void writeData(MinecraftDataOutput out) {
-		out.writeEnum(action);
+	protected void write(DataOutputStream out) throws IOException {
+		writeEnum(out, action);
 	}
 
 	@Override

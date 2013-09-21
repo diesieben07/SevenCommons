@@ -1,14 +1,16 @@
 package de.take_weiland.mods.commons.internal;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import net.minecraft.entity.player.EntityPlayer;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
+import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
-import de.take_weiland.mods.commons.network.StreamPacket;
-import de.take_weiland.mods.commons.util.MinecraftDataInput;
-import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
-public class PacketDownloadProgress extends StreamPacket {
+public class PacketDownloadProgress extends DataPacket {
 
 	private String modId;
 	private int downloadProgress;
@@ -24,13 +26,13 @@ public class PacketDownloadProgress extends StreamPacket {
 	}
 
 	@Override
-	protected void readData(MinecraftDataInput in) {
+	protected void read(EntityPlayer player, DataInputStream in) throws IOException {
 		modId = in.readUTF();
 		downloadProgress = in.readByte();
 	}
 
 	@Override
-	protected void writeData(MinecraftDataOutput out) {
+	protected void write(DataOutputStream out) throws IOException {
 		out.writeUTF(modId);
 		out.writeByte(downloadProgress);
 	}

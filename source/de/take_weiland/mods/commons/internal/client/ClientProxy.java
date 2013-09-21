@@ -3,6 +3,9 @@ package de.take_weiland.mods.commons.internal.client;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.multiplayer.NetClientHandler;
+import net.minecraft.network.INetworkManager;
+import net.minecraft.network.packet.NetHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
@@ -58,6 +61,11 @@ public class ClientProxy implements SevenCommonsProxy {
 		if (mc.currentScreen instanceof GuiUpdates) {
 			mc.displayGuiScreen(new GuiRestartFailure(mc.currentScreen));
 		}
+	}
+
+	@Override
+	public INetworkManager getNetworkManagerFromClient(NetHandler clientHandler) {
+		return ((NetClientHandler)clientHandler).getNetManager();
 	}
 
 }
