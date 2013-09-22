@@ -23,8 +23,8 @@ class Packet131Transport extends PacketTransportAbstract implements ITinyPacketH
 
 	private final Object mod;
 	
-	Packet131Transport(Object mod, PacketType[] packets) {
-		super(packets);
+	<E extends Enum<E> & PacketType> Packet131Transport(Object mod, Class<E> typeClass) {
+		super(typeClass);
 		this.mod = mod;
 		NetworkModHandler nmh = FMLNetworkHandler.instance().findNetworkModHandler(mod);
 		ReflectionHelper.setPrivateValue(NetworkModHandler.class, nmh, this, "tinyPacketHandler");
@@ -32,14 +32,18 @@ class Packet131Transport extends PacketTransportAbstract implements ITinyPacketH
 	
 	@Override
 	public Packet make(ModPacket packet) {
+		PacketType type = checkNonMulti(packet);
+		
 		ByteArrayOutputStream out = new ByteArrayOutputStream(packet.expectedSize());
 		writePacket(packet, out);
-		return PacketDispatcher.getTinyPacket(mod, UnsignedShorts.checkedCast(packet.type().packetId()), out.toByteArray());
+		return PacketDispatcher.getTinyPacket(mod, UnsignedShorts.checkedCast(type.packetId()), out.toByteArray());
 	}
 	
 	@Override
-	public Packet[] makeMulti(MultipartPacket packet) {
-		short packetId = UnsignedShorts.checkedCast(packet.type().packetId());
+	public Packet[] makeMulti(ModPacket packet) {
+		PacketType type = checkMulti(packet);
+		
+		short packetId = UnsignedShorts.checkedCast(type.packetId());
 		
 		final List<byte[]> chunks = makeMultiparts(packet, ArrayUtils.EMPTY_BYTE_ARRAY);
 		

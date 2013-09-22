@@ -33,4 +33,9 @@ public enum CommonsPackets implements PacketType {
 		return CommonsModContainer.packetTransport;
 	}
 
+	@Override
+	public boolean isMultipart() {
+		return false;
+	}
+
 }

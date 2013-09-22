@@ -3,9 +3,7 @@ package de.take_weiland.mods.commons.network;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentMap;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -16,7 +14,6 @@ import net.minecraft.network.packet.NetHandler;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.world.WorldServer;
 
-import com.google.common.collect.MapMaker;
 import com.google.common.primitives.UnsignedBytes;
 
 import cpw.mods.fml.common.network.PacketDispatcher;
@@ -73,9 +70,4 @@ public final class Packets {
 		return CollectionUtils.safeArrayAccess(clazz.getEnumConstants(), in.readUnsignedByte());
 	}
 	
-	private static final MapMaker mapMaker = new MapMaker().concurrencyLevel(2).weakKeys();
-
-	public static ConcurrentMap<INetworkManager, InputStream[]> newMulitpartTracker() {
-		return Packets.mapMaker.makeMap();
-	}
 }

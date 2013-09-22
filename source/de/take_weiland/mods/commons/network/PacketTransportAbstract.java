@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,11 +15,11 @@ import net.minecraft.util.MathHelper;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.MapMaker;
 import com.google.common.io.OutputSupplier;
 import com.google.common.primitives.UnsignedBytes;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.network.MultipartPacket.MultipartPacketType;
 import de.take_weiland.mods.commons.util.CollectionUtils;
 import de.take_weiland.mods.commons.util.Consumer;
 import de.take_weiland.mods.commons.util.Sides;
@@ -26,17 +27,29 @@ import de.take_weiland.mods.commons.util.SplittingOutputStream;
 
 abstract class PacketTransportAbstract implements PacketTransport {
 	
+	private static final MapMaker mapMaker = new MapMaker().concurrencyLevel(2).weakKeys();
+	
 	protected final PacketType[] packets;
+	protected final EnumMap<?, Map<INetworkManager, InputStream[]>> trackers;
 
-	protected PacketTransportAbstract(PacketType[] types) {
+	protected <E extends Enum<E> & PacketType> PacketTransportAbstract(Class<E> typeClass) {
+		E[] types = typeClass.getEnumConstants();
+		
+		EnumMap<E, Map<INetworkManager, InputStream[]>> trackers = new EnumMap<E, Map<INetworkManager, InputStream[]>>(typeClass);
 		PacketType[] packets = new PacketType[types.length];
-		for (PacketType type : types) {
+		
+		for (E type : types) {
 			int packetId = type.packetId();
 			if (!CollectionUtils.arrayIndexExists(packets, packetId)) {
 				packets = Arrays.copyOf(packets, packetId + 1);
 			}
 			packets[packetId] = type;
+			if (type.isMultipart()) {
+				trackers.put(type, mapMaker.<INetworkManager, InputStream[]>makeMap());
+			}
 		}
+		
+		this.trackers = trackers;
 		this.packets = packets;
 	}
 	
@@ -56,7 +69,7 @@ abstract class PacketTransportAbstract implements PacketTransport {
 		}
 	}
 	
-	protected final List<byte[]> makeMultiparts(MultipartPacket packet, final byte[] prefix) {
+	protected final List<byte[]> makeMultiparts(ModPacket packet, final byte[] prefix) {
 		final int maxSize = maxPacketSize();
 		
 		final int expectedSize = packet.expectedSize();
@@ -109,8 +122,8 @@ abstract class PacketTransportAbstract implements PacketTransport {
 	protected final void finishPacketRecv(INetworkManager manager, int packetId, EntityPlayer player, InputStream in) {
 		PacketType type = getType(packetId);
 		try {
-			if (type instanceof MultipartPacketType) {
-				handleMultipart(manager, (MultipartPacketType)type, player, in);
+			if (type.isMultipart()) {
+				handleMultipart(manager, type, player, in);
 			} else {
 				receivePacket(manager, type, player, in);
 			}
@@ -130,13 +143,13 @@ abstract class PacketTransportAbstract implements PacketTransport {
 		packet.execute(player, side);
 	}
 	
-	private void handleMultipart(INetworkManager manager, MultipartPacketType type, EntityPlayer player, InputStream in) throws IOException {
+	private void handleMultipart(INetworkManager manager, PacketType type, EntityPlayer player, InputStream in) throws IOException {
 		int partIndex = in.read();
 		int partCount = in.read();
 		
 		System.out.println("received part " + partIndex + " / " + partCount);
 		
-		Map<INetworkManager, InputStream[]> tracker = type.tracker();
+		Map<INetworkManager, InputStream[]> tracker = trackerFor(type);
 		InputStream[] parts = tracker.get(manager);
 		if (parts == null) {
 			tracker.put(manager, (parts = new InputStream[partCount]));
@@ -158,6 +171,10 @@ abstract class PacketTransportAbstract implements PacketTransport {
 		}
 	}
 
+	private Map<INetworkManager, InputStream[]> trackerFor(PacketType type) {
+		return trackers.get(type);
+	}
+
 	void writePacket(ModPacket packet, ByteArrayOutputStream out) {
 		try {
 			packet.write(out);
@@ -168,5 +185,21 @@ abstract class PacketTransportAbstract implements PacketTransport {
 		if (size > maxPacketSize()) {
 			throw PacketTransports.tooBigException(size, maxPacketSize());
 		}
+	}
+
+	protected PacketType checkNonMulti(ModPacket packet) {
+		PacketType type = packet.type();
+		if (type.isMultipart()) {
+			throw new IllegalArgumentException("Cannot make non-multipart packet from multipart!");
+		}
+		return type;
+	}
+	
+	protected PacketType checkMulti(ModPacket packet) {
+		PacketType type = packet.type();
+		if (!type.isMultipart()) {
+			throw new IllegalArgumentException("Cannot make multipart packet from non-multipart!");
+		}
+		return type;
 	}
 }

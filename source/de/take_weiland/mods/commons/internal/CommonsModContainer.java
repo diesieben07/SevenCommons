@@ -75,7 +75,7 @@ public final class CommonsModContainer extends DummyModContainer {
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 		ConfigInjector.inject(config, getClass());
 		
-		packetTransport = PacketTransports.withPacket250("SevenCommons", CommonsPackets.values());
+		packetTransport = PacketTransports.withPacket250("SevenCommons", CommonsPackets.class);
 		
 		proxy.preInit(event);
 	}	

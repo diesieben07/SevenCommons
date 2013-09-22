@@ -6,7 +6,7 @@ public interface PacketTransport {
 
 	Packet make(ModPacket packet);
 	
-	Packet[] makeMulti(MultipartPacket packet);
+	Packet[] makeMulti(ModPacket packet);
 	
 	int maxPacketSize();
 	

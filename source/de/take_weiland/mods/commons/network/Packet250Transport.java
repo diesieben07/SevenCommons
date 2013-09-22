@@ -21,23 +21,27 @@ final class Packet250Transport extends PacketTransportAbstract implements IPacke
 	private static final int MAX_SIZE = 32767 - 1;
 	private final String channel;
 	
-	Packet250Transport(String channel, PacketType[] packets) {
-		super(packets);
+	<E extends Enum<E> & PacketType> Packet250Transport(String channel, Class<E> typeClass) {
+		super(typeClass);
 		this.channel = channel;
 		NetworkRegistry.instance().registerChannel(this, channel);
 	}
 	
 	@Override
 	public Packet make(ModPacket packet) {
+		PacketType type = checkNonMulti(packet);
+		
 		ByteArrayOutputStream out = new ByteArrayOutputStream(packet.expectedSize() + 1);
-		out.write(UnsignedBytes.checkedCast(packet.type().packetId()));
+		out.write(UnsignedBytes.checkedCast(type.packetId()));
 		writePacket(packet, out);
 		return PacketDispatcher.getPacket(channel, out.toByteArray());
 	}
 
 	@Override
-	public Packet[] makeMulti(MultipartPacket packet) {
-		final List<byte[]> streams = makeMultiparts(packet, new byte[] { UnsignedBytes.checkedCast(packet.type().packetId()) });
+	public Packet[] makeMulti(ModPacket packet) {
+		PacketType type = checkMulti(packet);
+		
+		final List<byte[]> streams = makeMultiparts(packet, new byte[] { UnsignedBytes.checkedCast(type.packetId()) });
 		
 		int numPackets = streams.size();
 		Packet[] packets = new Packet[numPackets];

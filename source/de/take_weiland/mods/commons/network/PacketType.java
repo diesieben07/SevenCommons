@@ -12,4 +12,6 @@ public interface PacketType {
 	
 	Class<? extends ModPacket> packetClass();
 	
+	boolean isMultipart();
+	
 }

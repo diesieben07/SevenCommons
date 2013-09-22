@@ -10,12 +10,12 @@ public final class PacketTransports {
 
 	private PacketTransports() { }
 	
-	public static PacketTransport withPacket250(String channel, PacketType[] packets) {
-		return new Packet250Transport(channel, packets);
+	public static <E extends Enum<E> & PacketType> PacketTransport withPacket250(String channel, Class<E> typeClass) {
+		return new Packet250Transport(channel, typeClass);
 	}
 	
-	public static PacketTransport withPacket131(Object mod, PacketType[] packets) {
-		return new Packet131Transport(mod, packets);
+	public static <E extends Enum<E> & PacketType> PacketTransport withPacket131(Object mod, Class<E> typeClass) {
+		return new Packet131Transport(mod, typeClass);
 	}
 	
 	static final Map<Class<?>, Integer> classToIdMap;
