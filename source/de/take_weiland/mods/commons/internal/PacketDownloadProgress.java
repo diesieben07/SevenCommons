@@ -26,7 +26,7 @@ public class PacketDownloadProgress extends DataPacket {
 	}
 
 	@Override
-	protected void read(EntityPlayer player, DataInputStream in) throws IOException {
+	protected void read(EntityPlayer player, Side side, DataInputStream in) throws IOException {
 		modId = in.readUTF();
 		downloadProgress = in.readByte();
 	}

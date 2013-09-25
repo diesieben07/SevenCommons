@@ -1,8 +1,9 @@
 package de.take_weiland.mods.commons.network;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.List;
+
+import org.apache.commons.io.output.ByteArrayOutputStream;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.INetworkManager;

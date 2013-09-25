@@ -17,7 +17,7 @@ import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
-import de.take_weiland.mods.commons.util.CollectionUtils;
+import de.take_weiland.mods.commons.util.JavaUtils;
 
 public class PacketUpdateAction extends DataPacket {
 
@@ -54,7 +54,7 @@ public class PacketUpdateAction extends DataPacket {
 	}
 	
 	@Override
-	protected void read(EntityPlayer player, DataInputStream in) throws IOException {
+	protected void read(EntityPlayer player, Side side, DataInputStream in) throws IOException {
 		action = readEnum(in, Action.class);
 		if (action.hasModId) {
 			modId = in.readUTF();
@@ -92,7 +92,7 @@ public class PacketUpdateAction extends DataPacket {
 				localUpdater.searchForUpdates();
 				break;
 			case UPDATE:
-				ModVersion version = CollectionUtils.safeListAccess(mod.getVersions().getAvailableVersions(), versionIndex);
+				ModVersion version = JavaUtils.safeListAccess(mod.getVersions().getAvailableVersions(), versionIndex);
 				if (version != null) {
 					localUpdater.update(mod, version);
 				}

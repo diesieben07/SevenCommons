@@ -11,13 +11,13 @@ public interface ModPacket extends SendablePacket {
 
 	PacketType type();
 	
-	void read(EntityPlayer player, InputStream in) throws IOException;
+	void read(EntityPlayer player, Side side, InputStream in) throws IOException;
+	
+	void execute(EntityPlayer player, Side side);
 	
 	void write(OutputStream out) throws IOException;
 	
 	boolean isValidForSide(Side side);
-	
-	void execute(EntityPlayer player, Side side);
 	
 	int expectedSize();
 	

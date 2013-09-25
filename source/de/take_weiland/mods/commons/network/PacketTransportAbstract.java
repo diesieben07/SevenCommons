@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.network;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -8,6 +7,8 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.io.output.ByteArrayOutputStream;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.INetworkManager;
@@ -20,7 +21,7 @@ import com.google.common.io.OutputSupplier;
 import com.google.common.primitives.UnsignedBytes;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.util.CollectionUtils;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Consumer;
 import de.take_weiland.mods.commons.util.Sides;
 import de.take_weiland.mods.commons.util.SplittingOutputStream;
@@ -40,7 +41,7 @@ abstract class PacketTransportAbstract implements PacketTransport {
 		
 		for (E type : types) {
 			int packetId = type.packetId();
-			if (!CollectionUtils.arrayIndexExists(packets, packetId)) {
+			if (!JavaUtils.arrayIndexExists(packets, packetId)) {
 				packets = Arrays.copyOf(packets, packetId + 1);
 			}
 			packets[packetId] = type;
@@ -54,7 +55,7 @@ abstract class PacketTransportAbstract implements PacketTransport {
 	}
 	
 	protected final PacketType getType(int packetId) {
-		PacketType packetType = CollectionUtils.safeArrayAccess(packets, packetId);
+		PacketType packetType = JavaUtils.safeArrayAccess(packets, packetId);
 		if (packetType == null) {
 			throw new NetworkException(String.format("Unknown PacketId: %d", Integer.valueOf(packetId)));
 		}
@@ -139,7 +140,7 @@ abstract class PacketTransportAbstract implements PacketTransport {
 			throw new NetworkException(String.format("Received Packet %s for invalid side %s", packet.getClass().getName(), side));
 		}
 			
-		packet.read(player, in);
+		packet.read(player, side, in);
 		packet.execute(player, side);
 	}
 	
@@ -187,7 +188,7 @@ abstract class PacketTransportAbstract implements PacketTransport {
 		}
 	}
 
-	protected PacketType checkNonMulti(ModPacket packet) {
+	protected static PacketType checkNonMulti(ModPacket packet) {
 		PacketType type = packet.type();
 		if (type.isMultipart()) {
 			throw new IllegalArgumentException("Cannot make non-multipart packet from multipart!");
@@ -195,7 +196,7 @@ abstract class PacketTransportAbstract implements PacketTransport {
 		return type;
 	}
 	
-	protected PacketType checkMulti(ModPacket packet) {
+	protected static PacketType checkMulti(ModPacket packet) {
 		PacketType type = packet.type();
 		if (!type.isMultipart()) {
 			throw new IllegalArgumentException("Cannot make multipart packet from non-multipart!");

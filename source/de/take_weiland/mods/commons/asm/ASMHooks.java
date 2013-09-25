@@ -10,17 +10,12 @@ import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fluids.FluidStack;
-
-import com.google.common.base.Strings;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.event.LivingBreedEvent;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.ZombieConvertEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
-import de.take_weiland.mods.commons.util.MinecraftDataInput;
-import de.take_weiland.mods.commons.util.MinecraftDataOutput;
 
 /**
  * A class containing methods called from ASM generated code.<br>
@@ -93,77 +88,77 @@ public final class ASMHooks {
 	public static boolean syncCompare(String oldValue, String newValue) {
 		return oldValue == null ? newValue != null : !oldValue.equals(newValue);
 	}
-	
-	public static void syncSend(MinecraftDataOutput out, FluidStack fluid) {
-		out.writeFluidStack(fluid);
-	}
-	
-	public static void syncSend(MinecraftDataOutput out, boolean value) {
-		out.writeBoolean(value);
-	}
-	
-	public static void syncSend(MinecraftDataOutput out, byte value) {
-		out.writeByte(value);
-	}
-	
-	public static void syncSend(MinecraftDataOutput out, short value) {
-		out.writeShort(value);
-	}
-	
-	public static void syncSend(MinecraftDataOutput out, int value) {
-		out.writeInt(value);
-	}
-	
-	public static void syncSend(MinecraftDataOutput out, long value) {
-		out.writeLong(value);
-	}
-	
-	public static void syncSend(MinecraftDataOutput out, float value) {
-		out.writeFloat(value);
-	}
-	
-	public static void syncSend(MinecraftDataOutput out, double value) {
-		out.writeDouble(value);
-	}
-	
-	public static void syncSend(MinecraftDataOutput out, String value) {
-		out.writeUTF(Strings.nullToEmpty(value));
-	}
-	
-	public static boolean syncReceive(boolean marker, MinecraftDataInput in) {
-		return in.readBoolean();
-	}
-	
-	public static byte syncReceive(byte marker, MinecraftDataInput in) {
-		return in.readByte();
-	}
-	
-	public static short syncReceive(short marker, MinecraftDataInput in) {
-		return in.readShort();
-	}
-	
-	public static int syncReceive(int marker, MinecraftDataInput in) {
-		return in.readInt();
-	}
-	
-	public static long syncReceive(long marker, MinecraftDataInput in) {
-		return in.readLong();
-	}
-	
-	public static float syncReceive(float marker, MinecraftDataInput in) {
-		return in.readFloat();
-	}
-	
-	public static double syncReceive(double marker, MinecraftDataInput in) {
-		return in.readDouble();
-	}
-	
-	public static String syncReceive(String marker, MinecraftDataInput in) {
-		return in.readUTF();
-	}
-	
-	public static FluidStack syncReceive(FluidStack old, MinecraftDataInput in) {
-		return in.readFluidStack();
-	}
+//	
+//	public static void syncSend(MinecraftDataOutput out, FluidStack fluid) {
+//		out.writeFluidStack(fluid);
+//	}
+//	
+//	public static void syncSend(MinecraftDataOutput out, boolean value) {
+//		out.writeBoolean(value);
+//	}
+//	
+//	public static void syncSend(MinecraftDataOutput out, byte value) {
+//		out.writeByte(value);
+//	}
+//	
+//	public static void syncSend(MinecraftDataOutput out, short value) {
+//		out.writeShort(value);
+//	}
+//	
+//	public static void syncSend(MinecraftDataOutput out, int value) {
+//		out.writeInt(value);
+//	}
+//	
+//	public static void syncSend(MinecraftDataOutput out, long value) {
+//		out.writeLong(value);
+//	}
+//	
+//	public static void syncSend(MinecraftDataOutput out, float value) {
+//		out.writeFloat(value);
+//	}
+//	
+//	public static void syncSend(MinecraftDataOutput out, double value) {
+//		out.writeDouble(value);
+//	}
+//	
+//	public static void syncSend(MinecraftDataOutput out, String value) {
+//		out.writeUTF(Strings.nullToEmpty(value));
+//	}
+//	
+//	public static boolean syncReceive(boolean marker, MinecraftDataInput in) {
+//		return in.readBoolean();
+//	}
+//	
+//	public static byte syncReceive(byte marker, MinecraftDataInput in) {
+//		return in.readByte();
+//	}
+//	
+//	public static short syncReceive(short marker, MinecraftDataInput in) {
+//		return in.readShort();
+//	}
+//	
+//	public static int syncReceive(int marker, MinecraftDataInput in) {
+//		return in.readInt();
+//	}
+//	
+//	public static long syncReceive(long marker, MinecraftDataInput in) {
+//		return in.readLong();
+//	}
+//	
+//	public static float syncReceive(float marker, MinecraftDataInput in) {
+//		return in.readFloat();
+//	}
+//	
+//	public static double syncReceive(double marker, MinecraftDataInput in) {
+//		return in.readDouble();
+//	}
+//	
+//	public static String syncReceive(String marker, MinecraftDataInput in) {
+//		return in.readUTF();
+//	}
+//	
+//	public static FluidStack syncReceive(FluidStack old, MinecraftDataInput in) {
+//		return in.readFluidStack();
+//	}
 	
 }

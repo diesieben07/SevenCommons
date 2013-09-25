@@ -21,7 +21,7 @@ import com.google.common.collect.Iterators;
 
 import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.util.CollectionUtils;
+import de.take_weiland.mods.commons.util.JavaUtils;
 
 public final class ASMUtils {
 
@@ -110,7 +110,7 @@ public final class ASMUtils {
 	}
 	
 	public static boolean hasAnnotation(FieldNode field, Type annotation) {
-		return containsAnnotation(Iterators.concat(CollectionUtils.nullToEmpty(field.visibleAnnotations).iterator(), CollectionUtils.nullToEmpty(field.invisibleAnnotations).iterator()), annotation.getDescriptor());
+		return containsAnnotation(Iterators.concat(JavaUtils.nullToEmpty(field.visibleAnnotations).iterator(), JavaUtils.nullToEmpty(field.invisibleAnnotations).iterator()), annotation.getDescriptor());
 	}
 	
 	private static boolean containsAnnotation(Iterator<AnnotationNode> annotations, final String annotationDesc) {

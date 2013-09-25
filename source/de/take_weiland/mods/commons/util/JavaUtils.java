@@ -7,9 +7,9 @@ import java.util.List;
 import com.google.common.base.Supplier;
 import com.google.common.collect.AbstractIterator;
 
-public final class CollectionUtils {
+public final class JavaUtils {
 
-	private CollectionUtils() { }
+	private JavaUtils() { }
 	
 	public static <T> T safeArrayAccess(T[] array, int index) {
 		return arrayIndexExists(array, index) ? array[index] : null;
@@ -29,14 +29,6 @@ public final class CollectionUtils {
 	
 	public static <T> T safeListAccess(List<T> list, int index) {
 		return listIndexExists(list, index) ? list.get(index) : null;
-	}
-	
-	public static int sumLengths(byte[][] arrays) {
-		int n = 0;
-		for (byte[] b : arrays) {
-			n += b.length;
-		}
-		return n;
 	}
 	
 	public static <T> Iterator<T> nCallsIterator(final Supplier<T> supplier, final int n) {

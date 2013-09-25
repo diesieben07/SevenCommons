@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 import net.minecraft.item.ItemStack;
-import de.take_weiland.mods.commons.util.CollectionUtils;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Inventories;
 
 public abstract class AbstractInventory implements AdvancedInventory {
@@ -19,13 +19,13 @@ public abstract class AbstractInventory implements AdvancedInventory {
 	}
 	
 	@Override
-	public ItemStack[] getStorage() {
+	public ItemStack[] getItemStorage() {
 		return storage;
 	}
 
 	@Override
 	public ItemStack getStackInSlot(int slot) {
-		return CollectionUtils.safeArrayAccess(storage, slot);
+		return JavaUtils.safeArrayAccess(storage, slot);
 	}
 
 	@Override

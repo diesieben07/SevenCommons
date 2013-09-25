@@ -5,7 +5,7 @@ import net.minecraft.item.ItemStack;
 
 public interface AdvancedInventory extends IInventory {
 
-	ItemStack[] getStorage();
+	ItemStack[] getItemStorage();
 	
 	void registerListener(Listener listener);
 	

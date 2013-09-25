@@ -1,11 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
-import java.util.Iterator;
 import java.util.List;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 
 import com.google.common.base.Function;
@@ -22,28 +18,19 @@ public final class Multitypes {
 	private Multitypes() { }
 
 	public static final <E extends Type<E>> E getType(Typed<E> typed, int meta) {
-		return CollectionUtils.defaultedArrayAccess(typed.getTypes(), meta, typed.getDefault());
+		return JavaUtils.defaultedArrayAccess(typed.getTypes(), meta, typed.getDefault());
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static <E extends Type<E>> E getType(ItemStack stack) {
-		Item item = stack.getItem();
-		return getType((Typed<E>)(item instanceof ItemBlock ? Block.blocksList[((ItemBlock)item).getBlockID()] : item), stack);
-	}
-
 	public static final <E extends Type<E>> E getType(Typed<E> typed, ItemStack stack) {
 		return getType(typed, stack.getItemDamage());
 	}
 	
-	public static Iterator<ItemStack> allStacksLazy(Typed<?> typed) {
-		return Iterators.transform(Iterators.forArray(typed.getTypes()), GET_STACK_FUNC);
+	public static <T extends Typed<R>, R extends Type<R>> List<ItemStack> allStacks(T typed) {
+		return stacks(typed.getTypes());
 	}
 	
-	public static <T extends Item & Typed<R>, R extends Type<R>> List<ItemStack> allStacks(T typed) {
-		return ImmutableList.copyOf(allStacksLazy(typed));
-	}
-	public static <T extends Block & Typed<R>, R extends Type<R>> List<ItemStack> allStacks(T typed) {
-		return ImmutableList.copyOf(allStacksLazy(typed));
+	public static <T extends Typed<R>, R extends Type<R>> List<ItemStack> stacks(R... types) {
+		return ImmutableList.copyOf(Iterators.transform(Iterators.forArray(types), GET_STACK_FUNC));
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -65,6 +52,10 @@ public final class Multitypes {
 			return input.stack();
 		}
 	};
+	
+	public static Function<Stackable, ItemStack> getStackFunction() {
+		return GET_STACK_FUNC;
+	}
 
 	static <T extends Type<T>> void registerSubtypes(Typed<T> typed, String baseName) {
 		for (T type : typed.getTypes()) {

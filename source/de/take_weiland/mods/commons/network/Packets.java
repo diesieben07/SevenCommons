@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.network;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Iterator;
 
 import net.minecraft.entity.Entity;
@@ -19,7 +19,7 @@ import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
-import de.take_weiland.mods.commons.util.CollectionUtils;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 
 public final class Packets {
@@ -62,12 +62,12 @@ public final class Packets {
 		}
 	}
 	
-	public static void writeEnum(DataOutput out, Enum<?> e) throws IOException {
-		out.writeByte(UnsignedBytes.checkedCast(e.ordinal()));
+	public static void writeEnum(OutputStream out, Enum<?> e) throws IOException {
+		out.write(UnsignedBytes.checkedCast(e.ordinal()));
 	}
 	
-	public static <E extends Enum<E>> E readEnum(DataInput in, Class<E> clazz) throws IOException {
-		return CollectionUtils.safeArrayAccess(clazz.getEnumConstants(), in.readUnsignedByte());
+	public static <E extends Enum<E>> E readEnum(InputStream in, Class<E> clazz) throws IOException {
+		return JavaUtils.safeArrayAccess(clazz.getEnumConstants(), in.read());
 	}
 	
 }

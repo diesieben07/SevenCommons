@@ -21,7 +21,7 @@ public class PacketClientAction extends DataPacket {
 	}
 
 	@Override
-	protected void read(EntityPlayer player, DataInputStream in) throws IOException {
+	protected void read(EntityPlayer player, Side side, DataInputStream in) throws IOException {
 		action = readEnum(in, Action.class);
 	}
 

@@ -20,7 +20,7 @@ public abstract class TileEntityInventory extends TileEntityAbstract implements 
 	}
 	
 	@Override
-	public ItemStack[] getStorage() {
+	public ItemStack[] getItemStorage() {
 		return storage;
 	}
 

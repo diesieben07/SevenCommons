@@ -33,7 +33,7 @@ public class PacketViewUpdates extends DataPacket {
 	}
 	
 	@Override
-	protected void read(EntityPlayer player, DataInputStream in) throws IOException {
+	protected void read(EntityPlayer player, Side side, DataInputStream in) throws IOException {
 		int modCount = in.readUnsignedShort();
 		clientMods = Lists.newArrayListWithCapacity(modCount);
 		
@@ -61,6 +61,7 @@ public class PacketViewUpdates extends DataPacket {
 			versionCollection.injectAvailableVersions(versions);
 			clientMods.add(mod);
 		}
+		
 	}
 
 	@Override
@@ -79,17 +80,18 @@ public class PacketViewUpdates extends DataPacket {
 			}
 		}
 	}
+	
+	@Override
+	public void execute(EntityPlayer player, Side side) {
+		CommonsModContainer.proxy.handleViewUpdates(this);
+	}
+	
 
 	@Override
 	public boolean isValidForSide(Side side) {
 		return side.isClient();
 	}
 	
-	@Override
-	public void execute(EntityPlayer player, Side side) {
-		CommonsModContainer.proxy.handleViewUpdates(this);
-	}
-
 	@Override
 	public PacketType type() {
 		return CommonsPackets.VIEW_UPDATES;
