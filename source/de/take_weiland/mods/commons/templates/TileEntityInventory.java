@@ -58,7 +58,7 @@ public abstract class TileEntityInventory extends TileEntityAbstract implements 
 
 	@Override
 	public boolean isInvNameLocalized() {
-		return !hasCustomName();
+		return hasCustomName();
 	}
 
 	@Override

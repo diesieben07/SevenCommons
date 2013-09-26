@@ -1,5 +1,9 @@
 package de.take_weiland.mods.commons.gui;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
@@ -89,4 +93,21 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 		inventory.closeChest();
 	}
 	
+	@Override
+	public boolean isSynced() {
+		return false;
+	}
+	
+	@Override
+	public void writeSyncData(DataOutputStream out) throws IOException { }
+	
+	@Override
+	public void readSyncData(DataInputStream in) throws IOException { }
+
+	@Override
+	public void detectAndSendChanges() {
+		super.detectAndSendChanges();
+		Containers.sync(this);
+	}
+
 }

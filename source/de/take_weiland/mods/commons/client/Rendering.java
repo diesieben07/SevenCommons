@@ -6,6 +6,9 @@ import static net.minecraftforge.common.ForgeDirection.NORTH;
 import static net.minecraftforge.common.ForgeDirection.SOUTH;
 import static net.minecraftforge.common.ForgeDirection.UP;
 import static net.minecraftforge.common.ForgeDirection.WEST;
+
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.SCGuiContainerAccessor;
@@ -48,6 +51,7 @@ public final class Rendering {
 			Icon fluidIcon = fluid.getStillIcon();
 			int fluidHeight = MathHelper.ceiling_float_int((fluidStack.amount / (float)tank.getCapacity()) * fullHeight);
 
+			GL11.glColor3f(1, 1, 1);
 			engine.bindTexture(engine.getResourceLocation(fluid.getSpriteNumber()));
 			fillAreaWithIcon(fluidIcon, x, y + fullHeight - fluidHeight, width, fluidHeight, gui);
 		}

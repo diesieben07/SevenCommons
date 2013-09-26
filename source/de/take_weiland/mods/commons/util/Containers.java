@@ -3,12 +3,14 @@ package de.take_weiland.mods.commons.util;
 import static net.minecraft.inventory.SCContainerAccessor.addSlot;
 import static net.minecraft.inventory.SCContainerAccessor.mergeItemStack;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import de.take_weiland.mods.commons.gui.AdvancedContainer;
+import de.take_weiland.mods.commons.internal.PacketSync;
 
 public final class Containers {
 
@@ -84,5 +86,11 @@ public final class Containers {
 		}
 
 		return result;
+	}
+
+	public static void sync(AdvancedContainer<?> container) {
+		if (container.isSynced() && container.getPlayer() instanceof EntityPlayerMP) {
+			new PacketSync(container).sendTo(container.getPlayer());
+		}
 	}
 }

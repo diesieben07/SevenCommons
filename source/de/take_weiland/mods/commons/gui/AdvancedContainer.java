@@ -1,5 +1,9 @@
 package de.take_weiland.mods.commons.gui;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -18,5 +22,11 @@ public interface AdvancedContainer<T extends IInventory> {
 	int getFirstPlayerSlot();
 
 	void clickButton(Side side, EntityPlayer player, int buttonId);
+
+	public abstract void readSyncData(DataInputStream in) throws IOException;
+
+	public abstract void writeSyncData(DataOutputStream out) throws IOException;
+
+	public abstract boolean isSynced();
 	
 }
