@@ -43,22 +43,25 @@ public abstract class AbstractInventory implements AdvancedInventory {
 		if (slot >= 0 && slot < storage.length) {
 			storage[slot] = item;
 		}
-		onInventoryChanged();
+		onChange();
 	}
 
 	@Override
 	public int getInventoryStackLimit() {
 		return 64;
 	}
-
+	
 	@Override
-	public void onInventoryChanged() {
+	public void onChange() {
 		if (listeners != null) {
 			for (Listener listener : listeners) {
 				listener.onInventoryChanged(this);
 			}
 		}
 	}
+	
+	@Override
+	public void onInventoryChanged() { }
 	
 	@Override
 	public void openChest() { }

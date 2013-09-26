@@ -41,6 +41,19 @@ public final class Multitypes {
 		}
 	}
 	
+	public static boolean is(ItemStack stack, Type<?> type) {
+		return type.getTyped().isThis(stack) && type.ordinal() == stack.getItemDamage();
+	}
+	
+	public static boolean isAny(ItemStack stack, Stackable... stackables) {
+		for (Stackable s : stackables) {
+			if (s.isThis(stack)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public static <T extends Type<T>, E extends Typed<T>> String name(T type) {
 		return type.getTyped().subtypeName(type);
 	}
@@ -64,7 +77,9 @@ public final class Multitypes {
 	}
 
 	public static ItemStack stack(Type<?> type, int quantity) {
-		return type.getTyped().stack(quantity, type.ordinal());
+		ItemStack stack = type.getTyped().stack(quantity);
+		stack.setItemDamage(type.ordinal());
+		return stack;
 	}
 	
 }

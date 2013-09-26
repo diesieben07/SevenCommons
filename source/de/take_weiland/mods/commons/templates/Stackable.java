@@ -8,6 +8,6 @@ public interface Stackable {
 	
 	ItemStack stack(int quantity);
 	
-	ItemStack stack(int quantity, int meta);
+	boolean isThis(ItemStack stack);
 	
 }

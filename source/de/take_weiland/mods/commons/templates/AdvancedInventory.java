@@ -7,6 +7,8 @@ public interface AdvancedInventory extends IInventory {
 
 	ItemStack[] getItemStorage();
 	
+	void onChange();
+	
 	void registerListener(Listener listener);
 	
 	void removeListener(Listener listener);

@@ -48,7 +48,7 @@ public abstract class TileEntityInventory extends TileEntityAbstract implements 
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack item) {
 		storage[slot] = item;
-		onInventoryChanged();
+		onChange();
 	}
 
 	@Override
@@ -79,13 +79,13 @@ public abstract class TileEntityInventory extends TileEntityAbstract implements 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
-		Inventories.readInventory(this, nbt.getTagList("items"));
+		Inventories.readInventory(storage, nbt.getTagList("items"));
 	}
 
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
-		nbt.setTag("items", Inventories.writeInventory(this));
+		nbt.setTag("items", Inventories.writeInventory(storage));
 	}
 	
 	@Override
@@ -110,13 +110,12 @@ public abstract class TileEntityInventory extends TileEntityAbstract implements 
 	}
 
 	@Override
-	public void onInventoryChanged() {
+	public void onChange() {
 		if (listeners != null) {
 			for (Listener listener : listeners) {
 				listener.onInventoryChanged(this);
 			}
 		}
-		super.onInventoryChanged();
 	}
 
 }

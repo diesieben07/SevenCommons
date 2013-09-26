@@ -16,6 +16,8 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
 
+import de.take_weiland.mods.commons.templates.AdvancedInventory;
+
 /**
  * A collection of static utility methods regarding implementors of {@link IInventory}
  * @author diesieben07
@@ -32,7 +34,7 @@ public final class Inventories {
 	 * @param count the number of items to be depleted
 	 * @return the stack being depleted from the inventory
 	 */
-	public static ItemStack decreaseStackSize(IInventory inventory, int slot, int count) {
+	public static ItemStack decreaseStackSize(AdvancedInventory inventory, int slot, int count) {
 		ItemStack stack = inventory.getStackInSlot(slot);
 
 		if (stack != null) {
@@ -48,7 +50,7 @@ public final class Inventories {
                 if (stack.stackSize == 0) {
                 	inventory.setInventorySlotContents(slot, null);
                 } else {
-                	inventory.onInventoryChanged();
+                	inventory.onChange();
                 }
                 
                 return returnStack;
@@ -138,14 +140,14 @@ public final class Inventories {
 	/**
 	 * Serialize an {@link IInventory} to a {@link NBTTagList}<br>
 	 * The contents may be read back with {@link #readInventory}
-	 * @param inventory the inventory to write
+	 * @param stacks the ItemStacks to write
 	 * @return the NBTTagList containing the serialized contents of the inventory
 	 */
-	public static NBTTagList writeInventory(IInventory inventory) {
+	public static NBTTagList writeInventory(ItemStack[] stacks) {
 		NBTTagList nbt = new NBTTagList();
-
-		for (int i = 0; i < inventory.getSizeInventory(); i++) {
-			ItemStack item = inventory.getStackInSlot(i);
+		int len = stacks.length;
+		for (int i = 0; i < len; i++) {
+			ItemStack item = stacks[i];
 			if (item != null) {
 				NBTTagCompound itemCompound = item.writeToNBT(new NBTTagCompound());
 				itemCompound.setShort("slot", UnsignedShorts.checkedCast(i));
@@ -158,13 +160,13 @@ public final class Inventories {
 	/**
 	 * Unserialize an {@link IInventory} from a {@link NBTTagList}<br>
 	 * The format of the NBT should match that produced by {@link #writeInventory}
-	 * @param inventory the inventory to be unserialized
+	 * @param stacks the array to be filled
 	 * @param nbtList the NBTTagList containing the serialized contents
 	 */
-	public static void readInventory(IInventory inventory, NBTTagList nbtList) {
+	public static void readInventory(ItemStack[] stacks, NBTTagList nbtList) {
 		for (NBTTagCompound nbt : NBT.<NBTTagCompound>asList(nbtList)) {
 			ItemStack item = ItemStack.loadItemStackFromNBT(nbt);
-			inventory.setInventorySlotContents(UnsignedShorts.toInt(nbt.getShort("slot")), item);
+			stacks[UnsignedShorts.toInt(nbt.getShort("slot"))] = item;
 		}
 	}
 	

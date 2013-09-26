@@ -16,7 +16,7 @@ public abstract class ItemInventory extends AbstractInventory {
 	protected ItemInventory(ItemStack item, String nbtKey) {
 		originalStack = item;
 		this.nbtKey = nbtKey;
-		Inventories.readInventory(this, ItemStacks.getNbt(item).getTagList(nbtKey));
+		Inventories.readInventory(storage, ItemStacks.getNbt(item).getTagList(nbtKey));
 	}
 	
 	protected ItemInventory(ItemStack item) {
@@ -29,8 +29,13 @@ public abstract class ItemInventory extends AbstractInventory {
 	}
 	
 	@Override
-	public void closeChest() {
-		originalStack.stackTagCompound.setTag(nbtKey, Inventories.writeInventory(this));
+	public void onChange() {
+		super.onChange();
+		saveData();
+	}
+
+	protected void saveData() {
+		originalStack.stackTagCompound.setTag(nbtKey, Inventories.writeInventory(storage));
 	}
 	
 	public abstract static class WithPlayer extends ItemInventory {
@@ -56,6 +61,11 @@ public abstract class ItemInventory extends AbstractInventory {
 		@Override
 		public boolean isUseableByPlayer(EntityPlayer player) {
 			return player == this.player;
+		}
+
+		protected void saveData() {
+			super.saveData();
+			player.setCurrentItemOrArmor(0, originalStack);
 		}
 		
 	}
