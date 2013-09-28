@@ -6,9 +6,6 @@ import static net.minecraftforge.common.ForgeDirection.NORTH;
 import static net.minecraftforge.common.ForgeDirection.SOUTH;
 import static net.minecraftforge.common.ForgeDirection.UP;
 import static net.minecraftforge.common.ForgeDirection.WEST;
-
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.SCGuiContainerAccessor;
@@ -20,6 +17,8 @@ import net.minecraft.util.MathHelper;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
+
+import org.lwjgl.opengl.GL11;
 
 public final class Rendering {
 
@@ -89,6 +88,43 @@ public final class Rendering {
 		t.setNormal(0, 1, 0);
 		renderer.renderFaceYPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, UP.ordinal(), meta));
 		t.draw();
+	}
+	
+	public static void drawRectWithZlevel(int xMin, int yMin, int xMax, int yMax, int zLevel, int color) {
+		int temp;
+
+		if (xMin < xMax) {
+			temp = xMin;
+			xMin = xMax;
+			xMax = temp;
+		}
+
+		if (yMin < yMax) {
+			temp = yMin;
+			yMin = yMax;
+			yMax = temp;
+		}
+
+		float a = (float) (color >> 24 & 255) / 255.0F;
+		float r = (float) (color >> 16 & 255) / 255.0F;
+		float g = (float) (color >> 8 & 255) / 255.0F;
+		float b = (float) (color & 255) / 255.0F;
+		
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glDisable(GL11.GL_TEXTURE_2D);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glColor4f(r, g, b, a);
+		
+		Tessellator t = Tessellator.instance;
+		t.startDrawingQuads();
+		t.addVertex(xMin, yMax, zLevel);
+		t.addVertex(xMax, yMax, zLevel);
+		t.addVertex(xMax, yMin, zLevel);
+		t.addVertex(xMin, yMin, zLevel);
+		t.draw();
+		
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glDisable(GL11.GL_BLEND);
 	}
 
 }

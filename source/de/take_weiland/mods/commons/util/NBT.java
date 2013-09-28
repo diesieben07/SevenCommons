@@ -22,7 +22,7 @@ public final class NBT {
 
 	public static final NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {
 		if (!parent.hasKey(key)) {
-			parent.setCompoundTag(key, parent);
+			parent.setCompoundTag(key, new NBTTagCompound());
 		}
 		return parent.getCompoundTag(key);
 	}

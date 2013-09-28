@@ -7,9 +7,9 @@ import java.io.IOException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.gui.AdvancedContainer;
 import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
+import de.take_weiland.mods.commons.templates.AdvancedContainer;
 
 public class PacketSync extends DataPacket {
 

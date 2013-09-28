@@ -9,19 +9,21 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import de.take_weiland.mods.commons.gui.AdvancedContainer;
 import de.take_weiland.mods.commons.internal.PacketSync;
+import de.take_weiland.mods.commons.templates.AdvancedContainer;
+import de.take_weiland.mods.commons.templates.ItemInventory;
+import de.take_weiland.mods.commons.templates.SlotNoPickup;
 
 public final class Containers {
 
 	private Containers() {
 	}
 
-	public static final void addPlayerInventory(Container container, InventoryPlayer inventoryPlayer) {
+	public static <T extends Container & AdvancedContainer<?>> void addPlayerInventory(T container, InventoryPlayer inventoryPlayer) {
 		addPlayerInventory(container, inventoryPlayer, 8, 84);
 	}
 
-	public static final void addPlayerInventory(Container container, InventoryPlayer inventoryPlayer, int xStart, int yStart) {
+	public static <T extends Container & AdvancedContainer<?>> void addPlayerInventory(T container, InventoryPlayer inventoryPlayer, int xStart, int yStart) {
 		// add the upper 3 rows
 		for (int j = 0; j < 3; j++) {
 			for (int i = 0; i < 9; i++) {
@@ -29,9 +31,15 @@ public final class Containers {
 			}
 		}
 
+		IInventory inv = container.inventory();
+		int blockedSlot = inv instanceof ItemInventory.WithPlayer ? ((ItemInventory.WithPlayer)inv).getHotbarIndex() : -1;
 		// add the hotbar
 		for (int k = 0; k < 9; k++) {
-			addSlot(container, new Slot(inventoryPlayer, k, xStart + k * 18, yStart + 58));
+			if (k == blockedSlot) {
+				addSlot(container, new SlotNoPickup(inventoryPlayer, k, xStart + k * 18, yStart + 58));
+			} else {
+				addSlot(container, new Slot(inventoryPlayer, k, xStart + k * 18, yStart + 58));
+			}
 		}
 	}
 

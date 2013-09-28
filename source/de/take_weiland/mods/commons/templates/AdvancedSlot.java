@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.gui;
+package de.take_weiland.mods.commons.templates;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;

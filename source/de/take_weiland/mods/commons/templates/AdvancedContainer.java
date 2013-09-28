@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.gui;
+package de.take_weiland.mods.commons.templates;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

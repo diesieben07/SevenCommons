@@ -1,10 +1,11 @@
 package de.take_weiland.mods.commons.templates;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import de.take_weiland.mods.commons.util.Inventories;
-import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import de.take_weiland.mods.commons.util.ItemStacks;
+import de.take_weiland.mods.commons.util.NBT;
 
 public abstract class ItemInventory extends AbstractInventory {
 
@@ -14,9 +15,10 @@ public abstract class ItemInventory extends AbstractInventory {
 	protected final String nbtKey;
 	
 	protected ItemInventory(ItemStack item, String nbtKey) {
+		super();
 		originalStack = item;
 		this.nbtKey = nbtKey;
-		Inventories.readInventory(storage, ItemStacks.getNbt(item).getTagList(nbtKey));
+		readFromNbt(getNbt());
 	}
 	
 	protected ItemInventory(ItemStack item) {
@@ -34,27 +36,36 @@ public abstract class ItemInventory extends AbstractInventory {
 		saveData();
 	}
 
+	private NBTTagCompound getNbt() {
+		return NBT.getOrCreateCompound(ItemStacks.getNbt(originalStack), nbtKey);
+	}
+	
 	protected void saveData() {
-		originalStack.stackTagCompound.setTag(nbtKey, Inventories.writeInventory(storage));
+		writeToNbt(getNbt());
 	}
 	
 	public abstract static class WithPlayer extends ItemInventory {
 
+		protected final int hotbarIndex;
 		protected final EntityPlayer player;
 		
 		protected WithPlayer(EntityPlayer player, String nbtKey) {
 			super(getStack(player), nbtKey);
 			this.player = player;
+			hotbarIndex = player.inventory.currentItem;
 		}
 		
 		protected WithPlayer(EntityPlayer player) {
 			this(player, DEFAULT_NBT_KEY);
 		}
 		
+		public final int getHotbarIndex() {
+			return hotbarIndex;
+		}
+		
 		private static ItemStack getStack(EntityPlayer player) {
 			checkNotNull(player, "Player must not be null!");
-			ItemStack stack = player.getCurrentEquippedItem();
-			checkNotNull(stack, "Player needs to have an Item equipped!");
+			ItemStack stack = checkNotNull(player.getCurrentEquippedItem(), "Player needs to have an Item equipped!");
 			return stack;
 		}
 		

@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Inventories;
 
@@ -87,6 +88,14 @@ public abstract class AbstractInventory implements AdvancedInventory {
 		if (listeners != null) {
 			listeners.remove(listener);
 		}
+	}
+
+	protected void writeToNbt(NBTTagCompound nbt) {
+		nbt.setTag("slots", Inventories.writeInventory(storage));
+	}
+
+	protected void readFromNbt(NBTTagCompound nbt) {
+		Inventories.readInventory(storage, nbt.getTagList("slots"));
 	}
 
 }
