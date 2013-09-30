@@ -2,9 +2,12 @@ package de.take_weiland.mods.commons.util;
 
 import java.util.List;
 
+import com.google.common.base.Function;
+
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 
 public final class NBT {
 
@@ -32,6 +35,19 @@ public final class NBT {
 			parent.setTag(key, new NBTTagList());
 		}
 		return parent.getTagList(key);
+	}
+	
+	private static final Function<NBTTagString, String> GET_STRING_FUNC = new Function<NBTTagString, String>() {
+
+		@Override
+		public String apply(NBTTagString input) {
+			return input.data;
+		}
+		
+	};
+
+	public static Function<NBTTagString, String> getStringFunction() {
+		return GET_STRING_FUNC;
 	}
 	
 }

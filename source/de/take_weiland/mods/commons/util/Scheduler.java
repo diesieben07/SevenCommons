@@ -36,6 +36,16 @@ public final class Scheduler implements ITickHandler {
 		schedule(task, 0, false);
 	}
 	
+	public void throwInMainThread(final Throwable t) {
+		schedule(new Runnable() {
+			
+			@Override
+			public void run() {
+				JavaUtils.throwUnchecked(t);
+			}
+		});	
+	}
+	
 	private static Scheduler server, client;
 	
 	private static class Task implements Comparable<Task> {

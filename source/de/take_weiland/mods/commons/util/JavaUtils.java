@@ -74,5 +74,15 @@ public final class JavaUtils {
 			c.apply(t);
 		}
 	}
+
+	public static RuntimeException throwUnchecked(Throwable t) {
+		JavaUtils.<RuntimeException>throwUnchecked0(t);
+		throw new AssertionError("unreachable");
+	}
+	
+	@SuppressWarnings("unchecked")
+	private static <T extends Throwable> void throwUnchecked0(Throwable t) throws T {
+		throw (T)t;
+	}
 	
 }
