@@ -1,9 +1,5 @@
 package de.take_weiland.mods.commons.templates;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
@@ -16,7 +12,7 @@ import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.util.Containers;
 import de.take_weiland.mods.commons.util.Sides;
 
-public abstract class AbstractContainer<T extends IInventory> extends Container implements AdvancedContainer<T> {
+public abstract class AbstractContainer<T extends IInventory> extends Container implements SCContainer<T> {
 
 	protected final T inventory;
 	
@@ -25,7 +21,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	private final int firstPlayerSlot;
 	
 	protected AbstractContainer(T upper, EntityPlayer player) {
-		this(upper, player, 8, 84);
+		this(upper, player, Containers.PLAYER_INV_X_DEFAULT, Containers.PLAYER_INV_Y_DEFAULT);
 		upper.openChest();
 	}
 	
@@ -38,7 +34,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	}
 	
 	protected AbstractContainer(World world, int x, int y, int z, EntityPlayer player) {
-		this(world, x, y, z, player, 8, 84);
+		this(world, x, y, z, player, Containers.PLAYER_INV_X_DEFAULT, Containers.PLAYER_INV_Y_DEFAULT);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -52,6 +48,16 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	}
 
 	protected abstract void addSlots();
+	
+	protected int getSlotFor(ItemStack item) {
+		return -1;
+	}
+	
+	@Override
+	public int[] getSlotsFor(ItemStack item) {
+		int target = getSlotFor(item);
+		return target == -1 ? null : new int[] { target, target + 1 };
+	}
 	
 	@Override
 	public final T inventory() {
@@ -69,12 +75,12 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	}
 	
 	@Override
-	public void clickButton(Side side, EntityPlayer player, int buttonId) { }
+	public void onButtonClick(Side side, EntityPlayer player, int buttonId) { }
 
 	@Override
 	public boolean enchantItem(EntityPlayer player, int id) {
 		id = UnsignedBytes.toInt((byte)id);
-		clickButton(Sides.logical(player), player, id);
+		onButtonClick(Sides.logical(player), player, id);
 		return true;
 	}
 
@@ -93,21 +99,30 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 		inventory.closeChest();
 	}
 	
-	@Override
-	public boolean isSynced() {
-		return false;
+	public static abstract class Synced<T extends IInventory> extends AbstractContainer<T> implements SyncedContainer<T> {
+
+		protected Synced(T upper, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
+			super(upper, player, playerInventoryX, playerInventoryY);
+		}
+
+		protected Synced(T upper, EntityPlayer player) {
+			super(upper, player);
+		}
+
+		protected Synced(World world, int x, int y, int z, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
+			super(world, x, y, z, player, playerInventoryX, playerInventoryY);
+		}
+
+		protected Synced(World world, int x, int y, int z, EntityPlayer player) {
+			super(world, x, y, z, player);
+		}
+
+		@Override
+		public void detectAndSendChanges() {
+			super.detectAndSendChanges();
+			Containers.sync(this);
+		}
+		
 	}
 	
-	@Override
-	public void writeSyncData(DataOutputStream out) throws IOException { }
-	
-	@Override
-	public void readSyncData(DataInputStream in) throws IOException { }
-
-	@Override
-	public void detectAndSendChanges() {
-		super.detectAndSendChanges();
-		Containers.sync(this);
-	}
-
 }

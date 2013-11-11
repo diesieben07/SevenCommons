@@ -1,17 +1,17 @@
 package de.take_weiland.mods.commons.templates;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Inventories;
+import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.Listenable;
+import de.take_weiland.mods.commons.util.ListenerArrayList;
+import de.take_weiland.mods.commons.util.ListenerList;
 
-public abstract class AbstractInventory implements AdvancedInventory {
+public abstract class AbstractInventory<T extends AbstractInventory<T>> implements SCInventory<T> {
 
-	private List<AdvancedInventory.Listener> listeners;
+	@SuppressWarnings("unchecked")
+	private final ListenerList<T> listeners = ListenerArrayList.create((T)this);
 	
 	protected final ItemStack[] storage;
 	
@@ -53,15 +53,6 @@ public abstract class AbstractInventory implements AdvancedInventory {
 	}
 	
 	@Override
-	public void onChange() {
-		if (listeners != null) {
-			for (Listener listener : listeners) {
-				listener.onInventoryChanged(this);
-			}
-		}
-	}
-	
-	@Override
 	public void onInventoryChanged() { }
 	
 	@Override
@@ -75,21 +66,6 @@ public abstract class AbstractInventory implements AdvancedInventory {
 		return true;
 	}
 
-	@Override
-	public void registerListener(Listener listener) {
-		if (listeners == null) {
-			listeners = Lists.newArrayListWithCapacity(3);
-		}
-		listeners.add(listener);
-	}
-
-	@Override
-	public void removeListener(Listener listener) {
-		if (listeners != null) {
-			listeners.remove(listener);
-		}
-	}
-
 	protected void writeToNbt(NBTTagCompound nbt) {
 		nbt.setTag("slots", Inventories.writeInventory(storage));
 	}
@@ -97,5 +73,19 @@ public abstract class AbstractInventory implements AdvancedInventory {
 	protected void readFromNbt(NBTTagCompound nbt) {
 		Inventories.readInventory(storage, nbt.getTagList("slots"));
 	}
+	
+	@Override
+	public void onChange() {
+		listeners.onChange();
+	}
 
+	@Override
+	public void addListener(Listenable.Listener<? super T> listener) {
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeListener(Listenable.Listener<? super T> listener) {
+		listeners.remove(listener);
+	}
 }

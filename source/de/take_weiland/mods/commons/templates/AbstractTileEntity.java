@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.templates;
 
 import net.minecraft.tileentity.TileEntity;
 
-public abstract class TileEntityAbstract extends TileEntity {
+public abstract class AbstractTileEntity extends TileEntity {
 
 	private boolean hasName = false;
 	private String name;

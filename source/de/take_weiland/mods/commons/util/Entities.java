@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.util;
 import java.util.Collections;
 import java.util.Set;
 
+import de.take_weiland.mods.commons.network.Packets;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;
@@ -41,7 +42,7 @@ public final class Entities {
 	
 	/**
 	 * get all players tracking the given entity<br>
-	 * If you want to send a Packet to these, use {@link ModPacket_OLD#sendToAllTracking}
+	 * If you want to send a Packet to these, use {@link Packets#sendPacketToAllTracking}
 	 * @param entity
 	 * @return
 	 */

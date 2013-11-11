@@ -7,7 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import de.take_weiland.mods.commons.util.NBT;
 
-public abstract class ItemInventory extends AbstractInventory {
+public abstract class ItemInventory<T extends ItemInventory<T>> extends AbstractInventory<T> {
 
 	private static final String DEFAULT_NBT_KEY = "inventory";
 	
@@ -44,13 +44,13 @@ public abstract class ItemInventory extends AbstractInventory {
 		writeToNbt(getNbt());
 	}
 	
-	public abstract static class WithPlayer extends ItemInventory {
+	public abstract static class WithPlayer<T extends WithPlayer<T>> extends ItemInventory<T> {
 
 		protected final int hotbarIndex;
 		protected final EntityPlayer player;
 		
 		protected WithPlayer(EntityPlayer player, String nbtKey) {
-			super(getStack(player), nbtKey);
+			super(checkNotNull(checkNotNull(player, "Player must not be null!").getCurrentEquippedItem(), "Player needs to have an Item equipped!"), nbtKey);
 			this.player = player;
 			hotbarIndex = player.inventory.currentItem;
 		}
@@ -61,12 +61,6 @@ public abstract class ItemInventory extends AbstractInventory {
 		
 		public final int getHotbarIndex() {
 			return hotbarIndex;
-		}
-		
-		private static ItemStack getStack(EntityPlayer player) {
-			checkNotNull(player, "Player must not be null!");
-			ItemStack stack = checkNotNull(player.getCurrentEquippedItem(), "Player needs to have an Item equipped!");
-			return stack;
 		}
 		
 		@Override

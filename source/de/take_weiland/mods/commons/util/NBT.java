@@ -19,11 +19,11 @@ public final class NBT {
 	 * @param nbtList the list to view
 	 * @return a modifiable list view of the NBTTagList
 	 */
-	public static final <T extends NBTBase> List<T> asList(NBTTagList nbtList) {
+	public static <T extends NBTBase> List<T> asList(NBTTagList nbtList) {
 		return ((NBTListProxy)nbtList).getWrappedList();
 	}
 
-	public static final NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {
+	public static NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {
 		if (!parent.hasKey(key)) {
 			parent.setCompoundTag(key, new NBTTagCompound());
 		}
@@ -37,17 +37,19 @@ public final class NBT {
 		return parent.getTagList(key);
 	}
 	
-	private static final Function<NBTTagString, String> GET_STRING_FUNC = new Function<NBTTagString, String>() {
-
+	private static enum NbtStringDataFunction implements Function<NBTTagString, String> {
+		
+		INSTANCE;
+		
 		@Override
 		public String apply(NBTTagString input) {
 			return input.data;
 		}
 		
-	};
+	}
 
 	public static Function<NBTTagString, String> getStringFunction() {
-		return GET_STRING_FUNC;
+		return NbtStringDataFunction.INSTANCE;
 	}
 	
 }

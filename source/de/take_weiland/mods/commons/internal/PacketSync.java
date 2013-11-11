@@ -9,13 +9,13 @@ import net.minecraft.inventory.Container;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
-import de.take_weiland.mods.commons.templates.AdvancedContainer;
+import de.take_weiland.mods.commons.templates.SyncedContainer;
 
 public class PacketSync extends DataPacket {
 
-	private AdvancedContainer<?> container;
+	private SyncedContainer<?> container;
 	
-	public PacketSync(AdvancedContainer<?> container) {
+	public PacketSync(SyncedContainer<?> container) {
 		this.container = container;
 	}
 	
@@ -28,8 +28,8 @@ public class PacketSync extends DataPacket {
 	@Override
 	public void read(EntityPlayer player, Side side, DataInputStream in) throws IOException {
 		int windowId = in.readByte();
-		if (player.openContainer.windowId == windowId && player.openContainer instanceof AdvancedContainer) {
-			((AdvancedContainer<?>) player.openContainer).readSyncData(in);
+		if (player.openContainer.windowId == windowId && player.openContainer instanceof SyncedContainer) {
+			((SyncedContainer<?>) player.openContainer).readSyncData(in);
 		}
 	}
 

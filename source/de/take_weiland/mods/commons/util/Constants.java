@@ -45,5 +45,9 @@ public final class Constants {
 	public static final int DYE_GREEN = 2;
 	public static final int DYE_RED = 1;
 	public static final int DYE_BLACK = 0;
+	
+	public static final int SET_UPDATE_NEIGHBOURS = 1;
+	public static final int SET_UPDATE_CLIENT = 2;
+	public static final int SET_PREVENT_RERENDER = 4;
 
 }

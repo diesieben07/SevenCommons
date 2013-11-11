@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.client;
 import com.google.common.primitives.UnsignedBytes;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.templates.AdvancedContainer;
+import de.take_weiland.mods.commons.templates.SCContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -12,7 +12,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.util.ResourceLocation;
 
-public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & AdvancedContainer<I>> extends GuiContainer implements ContainerGui<C> {
+public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & SCContainer<I>> extends GuiContainer implements ContainerGui<C> {
 
 	private final ResourceLocation texture;
 	protected final String inventoryName;
@@ -59,7 +59,7 @@ public abstract class AbstractGuiContainer<I extends IInventory, C extends Conta
 
 	protected final void triggerButton(int buttonId) {
 		mc.playerController.sendEnchantPacket(container.windowId, UnsignedBytes.checkedCast(buttonId));
-		container.clickButton(Side.CLIENT, mc.thePlayer, buttonId);
+		container.onButtonClick(Side.CLIENT, mc.thePlayer, buttonId);
 	}
 
 	@Override

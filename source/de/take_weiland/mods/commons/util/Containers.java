@@ -3,27 +3,30 @@ package de.take_weiland.mods.commons.util;
 import static net.minecraft.inventory.SCContainerAccessor.addSlot;
 import static net.minecraft.inventory.SCContainerAccessor.mergeItemStack;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import de.take_weiland.mods.commons.internal.PacketSync;
-import de.take_weiland.mods.commons.templates.AdvancedContainer;
+import de.take_weiland.mods.commons.templates.SCContainer;
 import de.take_weiland.mods.commons.templates.ItemInventory;
 import de.take_weiland.mods.commons.templates.SlotNoPickup;
+import de.take_weiland.mods.commons.templates.SyncedContainer;
 
 public final class Containers {
+
+	public static final int PLAYER_INV_Y_DEFAULT = 84;
+	public static final int PLAYER_INV_X_DEFAULT = 8;
 
 	private Containers() {
 	}
 
-	public static <T extends Container & AdvancedContainer<?>> void addPlayerInventory(T container, InventoryPlayer inventoryPlayer) {
-		addPlayerInventory(container, inventoryPlayer, 8, 84);
+	public static <T extends Container & SCContainer<?>> void addPlayerInventory(T container, InventoryPlayer inventoryPlayer) {
+		addPlayerInventory(container, inventoryPlayer, PLAYER_INV_X_DEFAULT, PLAYER_INV_Y_DEFAULT);
 	}
 
-	public static <T extends Container & AdvancedContainer<?>> void addPlayerInventory(T container, InventoryPlayer inventoryPlayer, int xStart, int yStart) {
+	public static <T extends Container & SCContainer<?>> void addPlayerInventory(T container, InventoryPlayer inventoryPlayer, int xStart, int yStart) {
 		// add the upper 3 rows
 		for (int j = 0; j < 3; j++) {
 			for (int i = 0; i < 9; i++) {
@@ -32,7 +35,7 @@ public final class Containers {
 		}
 
 		IInventory inv = container.inventory();
-		int blockedSlot = inv instanceof ItemInventory.WithPlayer ? ((ItemInventory.WithPlayer)inv).getHotbarIndex() : -1;
+		int blockedSlot = inv instanceof ItemInventory.WithPlayer ? ((ItemInventory.WithPlayer<?>)inv).getHotbarIndex() : -1;
 		// add the hotbar
 		for (int k = 0; k < 9; k++) {
 			if (k == blockedSlot) {
@@ -50,7 +53,7 @@ public final class Containers {
 	 * @param slotIndex
 	 * @return
 	 */
-	public static <T extends Container & AdvancedContainer<?>> ItemStack transferStack(T container, EntityPlayer player, int slotIndex) {
+	public static <T extends Container & SCContainer<?>> ItemStack transferStack(T container, EntityPlayer player, int slotIndex) {
 		ItemStack result = null;
 		
 		Slot slot = (Slot) container.inventorySlots.get(slotIndex);
@@ -64,9 +67,9 @@ public final class Containers {
 			int firstPlayerSlot = container.getFirstPlayerSlot();
 			
 			if (slot.inventory == playerInv) {
-				int targetSlot = container.getMergeTargetSlot(stackInSlot);
-				if (targetSlot >= 0) {
-					if (!mergeItemStack(container, stackInSlot, targetSlot, targetSlot + 1, false)) {
+				int[] targetSlots = container.getSlotsFor(stackInSlot);
+				if (targetSlots != null && targetSlots.length == 2) {
+					if (!mergeItemStack(container, stackInSlot, targetSlots[0], targetSlots[1], false)) {
 						return null;
 					}
 				} else if (slotIndex >= firstPlayerSlot && slotIndex < firstPlayerSlot + 27) {
@@ -96,8 +99,8 @@ public final class Containers {
 		return result;
 	}
 
-	public static void sync(AdvancedContainer<?> container) {
-		if (container.isSynced() && container.getPlayer() instanceof EntityPlayerMP) {
+	public static void sync(SyncedContainer<?> container) {
+		if (Sides.logical(container.getPlayer()).isServer()) {
 			new PacketSync(container).sendTo(container.getPlayer());
 		}
 	}

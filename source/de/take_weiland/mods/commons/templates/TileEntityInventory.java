@@ -1,18 +1,18 @@
 package de.take_weiland.mods.commons.templates;
 
-import java.util.List;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-
-import com.google.common.collect.Lists;
-
 import de.take_weiland.mods.commons.util.Inventories;
+import de.take_weiland.mods.commons.util.Listenable;
+import de.take_weiland.mods.commons.util.ListenerArrayList;
+import de.take_weiland.mods.commons.util.ListenerList;
 
-public abstract class TileEntityInventory extends TileEntityAbstract implements AdvancedInventory {
+public abstract class TileEntityInventory<T extends TileEntityInventory<T>> extends AbstractTileEntity implements SCInventory<T> {
 
-	private List<AdvancedInventory.Listener> listeners;
+	@SuppressWarnings("unchecked")
+	private final ListenerList<T> listeners = ListenerArrayList.create((T)this);
+	
 	protected final ItemStack[] storage;
 	
 	public TileEntityInventory() {
@@ -95,27 +95,18 @@ public abstract class TileEntityInventory extends TileEntityAbstract implements 
 	public void closeChest() { }
 
 	@Override
-	public void registerListener(Listener listener) {
-		if (listeners == null) {
-			listeners = Lists.newArrayListWithCapacity(3);
-		}
+	public void addListener(Listenable.Listener<? super T> listener) {
 		listeners.add(listener);
 	}
 
 	@Override
-	public void removeListener(Listener listener) {
-		if (listeners != null) {
-			listeners.remove(listener);
-		}
+	public void removeListener(Listenable.Listener<? super T> listener) {
+		listeners.remove(listener);
 	}
 
 	@Override
 	public void onChange() {
-		if (listeners != null) {
-			for (Listener listener : listeners) {
-				listener.onInventoryChanged(this);
-			}
-		}
+		listeners.onChange();
 	}
 
 }

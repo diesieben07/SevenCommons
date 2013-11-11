@@ -1,13 +1,11 @@
 package de.take_weiland.mods.commons.templates;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
+import de.take_weiland.mods.commons.templates.Metadata.BlockMeta;
 import de.take_weiland.mods.commons.util.Multitypes;
 
-public class TypedItemBlock<T extends Block & Typed<R>, R extends Type<R>> extends AdvancedItemBlock<T> {
+public class TypedItemBlock<BLOCK extends Block & HasMetadata<TYPE>, TYPE extends BlockMeta> extends SCItemBlock<BLOCK> {
 
 	public TypedItemBlock(int itemId, Block block) {
 		super(itemId, block);
@@ -15,14 +13,13 @@ public class TypedItemBlock<T extends Block & Typed<R>, R extends Type<R>> exten
 	}
 	
 	@Override
-	@SideOnly(Side.CLIENT)
-	public String getItemDisplayName(ItemStack stack) {
-		return I18n.getString(Multitypes.name(Multitypes.getType(block, stack)));
+	public int getMetadata(int itemMeta) {
+		return itemMeta;
 	}
 
 	@Override
-	public int getMetadata(int itemMeta) {
-		return itemMeta;
+	public String getUnlocalizedName(ItemStack stack) {
+		return super.getUnlocalizedName(stack) + "." + Multitypes.getType(block, stack).unlocalizedName();
 	}
 
 }

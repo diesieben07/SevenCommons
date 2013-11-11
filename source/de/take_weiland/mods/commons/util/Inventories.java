@@ -16,7 +16,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
 
-import de.take_weiland.mods.commons.templates.AdvancedInventory;
+import de.take_weiland.mods.commons.templates.SCInventory;
 
 /**
  * A collection of static utility methods regarding implementors of {@link IInventory}
@@ -34,7 +34,7 @@ public final class Inventories {
 	 * @param count the number of items to be depleted
 	 * @return the stack being depleted from the inventory
 	 */
-	public static ItemStack decreaseStackSize(AdvancedInventory inventory, int slot, int count) {
+	public static ItemStack decreaseStackSize(SCInventory<?> inventory, int slot, int count) {
 		ItemStack stack = inventory.getStackInSlot(slot);
 
 		if (stack != null) {
@@ -75,26 +75,21 @@ public final class Inventories {
 	
 	/**
 	 * calls {@link #spill} only if the given TileEntity implements {@link IInventory}
-	 * @param tileEntity the TileEntity
+	 * @param te the TileEntity
 	 */
-	public static void spillIfInventory(TileEntity tileEntity) {
-		if (tileEntity instanceof IInventory) {
-			spillCastImpl(tileEntity); // separate method so people don't mess with the type parameter hack
+	public static void spillIfInventory(TileEntity te) {
+		if (te instanceof IInventory) {
+			spill(te.worldObj, te.xCoord, te.yCoord, te.zCoord, (IInventory) te);
 		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	private static <T extends TileEntity & IInventory> void spillCastImpl(TileEntity te) {
-		spill((T)te);
 	}
 	
 	/**
 	 * spill the contents of a {@link TileEntity} that also implements {@link IInventory} into the world.<br>
 	 * Usually used in {@link Block#breakBlock}
-	 * @param tileEntity the TileEntity
+	 * @param te the TileEntity
 	 */
-	public static <T extends TileEntity & IInventory> void spill(T tileEntity) {
-		spill(tileEntity.worldObj, tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord, tileEntity);
+	public static <T extends TileEntity & IInventory> void spill(T te) {
+		spill(te.worldObj, te.xCoord, te.yCoord, te.zCoord, te);
 	}
 	
 	/**

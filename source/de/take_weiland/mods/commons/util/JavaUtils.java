@@ -1,9 +1,12 @@
 package de.take_weiland.mods.commons.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.AbstractIterator;
 
@@ -73,6 +76,15 @@ public final class JavaUtils {
 		for (T t : arr) {
 			c.apply(t);
 		}
+	}
+	
+	public static <T, R> R[] transform(T[] in, R[] out, Function<T, R> func) {
+		int l = in.length;
+		checkArgument(l == out.length);
+		for (int i = 0; i < l; ++i) {
+			out[i] = func.apply(in[i]);
+		}
+		return out;
 	}
 
 	public static RuntimeException throwUnchecked(Throwable t) {

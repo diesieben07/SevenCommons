@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.Lists;
@@ -15,7 +16,7 @@ import cpw.mods.fml.common.TickType;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-public final class Scheduler implements ITickHandler {
+public final class Scheduler implements ITickHandler, Executor {
 
 	public static Scheduler server() {
 		return server != null ? server : (server = new Scheduler(Side.SERVER));
@@ -32,12 +33,13 @@ public final class Scheduler implements ITickHandler {
 		}
 	}
 	
-	public void schedule(Runnable task) {
+	@Override
+	public void execute(Runnable task) {
 		schedule(task, 0, false);
 	}
 	
 	public void throwInMainThread(final Throwable t) {
-		schedule(new Runnable() {
+		execute(new Runnable() {
 			
 			@Override
 			public void run() {
@@ -109,7 +111,7 @@ public final class Scheduler implements ITickHandler {
 			}
 		}
 		for (int i = sn.size() - 1; i >= 0; --i) { // traverse backwards so we can fast-remove
-			if (sn.get(i).tickEnd) {
+			if (sn.get(i).tickEnd) { // if we encounter the first tickEnd element, all others will be tickEnd, too, so we can stop traversing
 				break;
 			}
 			sn.remove(i).r.run();

@@ -7,12 +7,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-public class AdvancedItemBlock<T extends Block> extends ItemBlock {
+public class SCItemBlock<T extends Block> extends ItemBlock {
 
 	protected final T block;
 	
 	@SuppressWarnings("unchecked")
-	public AdvancedItemBlock(int itemId, Block block) {
+	public SCItemBlock(int itemId, Block block) {
 		super(itemId);
 		this.block = (T) block;
 	}
