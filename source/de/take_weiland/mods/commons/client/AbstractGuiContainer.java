@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.client;
 
+import org.lwjgl.opengl.GL11;
+
 import com.google.common.primitives.UnsignedBytes;
 
 import cpw.mods.fml.relauncher.Side;
@@ -14,7 +16,7 @@ import net.minecraft.util.ResourceLocation;
 
 public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & SCContainer<I>> extends GuiContainer implements ContainerGui<C> {
 
-	private final ResourceLocation texture;
+	protected final ResourceLocation texture;
 	protected final String inventoryName;
 	
 	protected final C container;
@@ -39,6 +41,7 @@ public abstract class AbstractGuiContainer<I extends IInventory, C extends Conta
 	}
 	
 	protected final void bindTexture() {
+		GL11.glColor3f(1, 1, 1);
 		mc.renderEngine.bindTexture(texture);
 	}
 	

@@ -15,6 +15,10 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 	
 	protected final ItemStack[] storage;
 	
+	protected AbstractInventory(int size) {
+		storage = new ItemStack[size];
+	}
+	
 	protected AbstractInventory() {
 		storage = new ItemStack[getSizeInventory()];
 	}
@@ -66,11 +70,11 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 		return true;
 	}
 
-	protected void writeToNbt(NBTTagCompound nbt) {
+	public void writeToNbt(NBTTagCompound nbt) {
 		nbt.setTag("slots", Inventories.writeInventory(storage));
 	}
 
-	protected void readFromNbt(NBTTagCompound nbt) {
+	public void readFromNbt(NBTTagCompound nbt) {
 		Inventories.readInventory(storage, nbt.getTagList("slots"));
 	}
 	

@@ -122,7 +122,6 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 			super.detectAndSendChanges();
 			Containers.sync(this);
 		}
-		
 	}
 	
 }
