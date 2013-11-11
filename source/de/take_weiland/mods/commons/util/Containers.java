@@ -57,6 +57,11 @@ public final class Containers {
 		ItemStack result = null;
 		
 		Slot slot = (Slot) container.inventorySlots.get(slotIndex);
+		
+		int firstPlayerSlot = container.getFirstPlayerSlot();
+		if (firstPlayerSlot < 0) {
+			return null;
+		}
 
 		if (slot != null && slot.getHasStack()) {
 			
@@ -64,7 +69,6 @@ public final class Containers {
 			result = stackInSlot.copy();
 
 			IInventory playerInv = container.getPlayer().inventory;
-			int firstPlayerSlot = container.getFirstPlayerSlot();
 			
 			if (slot.inventory == playerInv) {
 				int[] targetSlots = container.getSlotsFor(stackInSlot);

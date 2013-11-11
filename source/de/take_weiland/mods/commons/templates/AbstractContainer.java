@@ -29,8 +29,12 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 		inventory = upper;
 		this.player = player;
 		addSlots();
-		firstPlayerSlot = inventorySlots.size();
-		Containers.addPlayerInventory(this, player.inventory, playerInventoryX, playerInventoryY);
+		if (playerInventoryX >= 0) {
+			firstPlayerSlot = inventorySlots.size();
+			Containers.addPlayerInventory(this, player.inventory, playerInventoryX, playerInventoryY);
+		} else {
+			firstPlayerSlot = -1;
+		}
 	}
 	
 	protected AbstractContainer(World world, int x, int y, int z, EntityPlayer player) {
