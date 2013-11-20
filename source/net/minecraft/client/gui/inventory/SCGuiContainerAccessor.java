@@ -1,6 +1,5 @@
 package net.minecraft.client.gui.inventory;
 
-
 public final class SCGuiContainerAccessor {
 
 	private SCGuiContainerAccessor() { }
@@ -12,5 +11,5 @@ public final class SCGuiContainerAccessor {
 	public static int getSizeY(GuiContainer gui) {
 		return gui.ySize;
 	}
-
+	
 }

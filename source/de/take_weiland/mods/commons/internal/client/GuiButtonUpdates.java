@@ -11,7 +11,7 @@ import de.take_weiland.mods.commons.internal.CommonsModContainer;
 
 public class GuiButtonUpdates extends GuiButton {
 
-	public static final ResourceLocation texture = new ResourceLocation("sevencommons:updates.png");
+	public static final ResourceLocation texture = new ResourceLocation("sevencommons:gui.png");
 	
 	public GuiButtonUpdates(int id, int x, int y) {
 		super(id, x, y, 20, 20, "");
