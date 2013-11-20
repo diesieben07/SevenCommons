@@ -49,9 +49,11 @@ public abstract class ScrollPane extends Gui {
 	}
 
 	public final void draw(int mouseX, int mouseY) {
-		glColor3f(1, 1, 1);
+		float yTranslate = computeYTranslate();
 		mouseX -= x;
-		mouseY -= y;
+		mouseY -= yTranslate;
+		
+		glColor3f(1, 1, 1);
 		if (needsScrollbar()) {
 			int scale = Guis.computeGuiScale(mc);
 			
@@ -60,7 +62,7 @@ public abstract class ScrollPane extends Gui {
 			
 			glPushMatrix();
 			
-			glTranslatef(x, y -((scrollbarY) / (float)(height - scrollbarHeight)) * (contentHeight - height), 0);
+			glTranslatef(x, yTranslate, 0);
 			
 			drawInternal(mouseX, mouseY);
 			
@@ -80,6 +82,10 @@ public abstract class ScrollPane extends Gui {
 		}
 	}
 
+	private float computeYTranslate() {
+		return y - ((scrollbarY) / (float)(height - scrollbarHeight)) * (contentHeight - height);
+	}
+
 	private void drawInternal(int mouseX, int mouseY) {
 		drawImpl();
 		int n = buttons.size();
@@ -93,14 +99,15 @@ public abstract class ScrollPane extends Gui {
 	}
 	
 	public final void onMouseClick(int mouseX, int mouseY, int btn) {
-		mouseX -= x;
-		mouseY -= y;
 		if (btn == 0) {
 			if (Guis.isPointInRegion(x + (width - scrollbarWidth), y + scrollbarY, scrollbarWidth, scrollbarHeight, mouseX, mouseY)) {
 				isDragging = true;
 				scrollbarClickOffset = mouseY - (y + scrollbarY);
 			}
 		}
+		
+		mouseX -= x;
+		mouseY -= computeYTranslate();
 		if (isPointInRegion(0, 0, width, height, mouseX, mouseY)) {
 			for (GuiButton button : buttons) {
 				if (button.mousePressed(mc, mouseX, mouseY)) {
