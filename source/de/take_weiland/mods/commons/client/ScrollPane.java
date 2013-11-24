@@ -17,6 +17,8 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.SCGuiScreenAccessor;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.inventory.SCGuiContainerAccessor;
 import net.minecraft.util.MathHelper;
 
 import com.google.common.collect.Lists;
@@ -54,31 +56,26 @@ public abstract class ScrollPane extends Gui {
 		mouseY -= yTranslate;
 		
 		glColor3f(1, 1, 1);
+		int scale = Guis.computeGuiScale(mc);
+		
+		glScissor(0, mc.displayHeight - (y + height) * scale, (width + x) * scale, height * scale);
+		
+//		System.out.println(width + ", " + x);
+		glEnable(GL_SCISSOR_TEST);
+		
+		glPushMatrix();
+		
+		glTranslatef(x, yTranslate, 0);
+		
+		drawInternal(mouseX, mouseY);
+		
+		glPopMatrix();
+		
+		glDisable(GL_SCISSOR_TEST);
+		
 		if (needsScrollbar()) {
-			int scale = Guis.computeGuiScale(mc);
-			
-			glScissor(0, mc.displayHeight - (y + height) * scale, mc.displayWidth - width * scale, height * scale);
-			glEnable(GL_SCISSOR_TEST);
-			
-			glPushMatrix();
-			
-			glTranslatef(x, yTranslate, 0);
-			
-			drawInternal(mouseX, mouseY);
-			
-			glPopMatrix();
-			
-			glDisable(GL_SCISSOR_TEST);
-			
 			int scrollbarX = x + (width - scrollbarWidth);
 			drawScrollbar(scrollbarX, y + scrollbarY, scrollbarX + scrollbarWidth, y + scrollbarY + scrollbarHeight);
-		} else {
-			glPushMatrix();
-			glTranslatef(x, y, 0);
-			
-			drawInternal(mouseX, mouseY);
-			
-			glPopMatrix();
 		}
 	}
 
@@ -99,7 +96,7 @@ public abstract class ScrollPane extends Gui {
 	}
 	
 	public final void onMouseClick(int mouseX, int mouseY, int btn) {
-		if (btn == 0) {
+		if (btn == 0 && needsScrollbar()) {
 			if (Guis.isPointInRegion(x + (width - scrollbarWidth), y + scrollbarY, scrollbarWidth, scrollbarHeight, mouseX, mouseY)) {
 				isDragging = true;
 				scrollbarClickOffset = mouseY - (y + scrollbarY);
@@ -150,6 +147,10 @@ public abstract class ScrollPane extends Gui {
 		this.height = height;
 	}
 	
+	public final void setContentHeight(int contentHeight) {
+		this.contentHeight = contentHeight;
+	}
+
 	public final void clearButtons() {
 		buttons.clear();
 	}

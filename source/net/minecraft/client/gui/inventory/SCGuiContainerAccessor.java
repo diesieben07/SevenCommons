@@ -12,4 +12,12 @@ public final class SCGuiContainerAccessor {
 		return gui.ySize;
 	}
 	
+	public static int getGuiLeft(GuiContainer gui) {
+		return gui.guiLeft;
+	}
+	
+	public static int getGuiTop(GuiContainer gui) {
+		return gui.guiTop;
+	}
+	
 }
