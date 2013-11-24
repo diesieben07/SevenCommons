@@ -17,14 +17,14 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.SCGuiScreenAccessor;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.gui.inventory.SCGuiContainerAccessor;
 import net.minecraft.util.MathHelper;
 
 import com.google.common.collect.Lists;
 
 public abstract class ScrollPane extends Gui {
 
+	private boolean clip;
+	
 	private int x;
 	private int y;
 	private int width;
@@ -58,10 +58,10 @@ public abstract class ScrollPane extends Gui {
 		glColor3f(1, 1, 1);
 		int scale = Guis.computeGuiScale(mc);
 		
-		glScissor(0, mc.displayHeight - (y + height) * scale, (width + x) * scale, height * scale);
-		
-//		System.out.println(width + ", " + x);
-		glEnable(GL_SCISSOR_TEST);
+		if (clip) {
+			glScissor(0, mc.displayHeight - (y + height) * scale, (width + x) * scale, height * scale);
+			glEnable(GL_SCISSOR_TEST);
+		}
 		
 		glPushMatrix();
 		
@@ -71,7 +71,9 @@ public abstract class ScrollPane extends Gui {
 		
 		glPopMatrix();
 		
-		glDisable(GL_SCISSOR_TEST);
+		if (clip) {
+			glDisable(GL_SCISSOR_TEST);
+		}
 		
 		if (needsScrollbar()) {
 			int scrollbarX = x + (width - scrollbarWidth);
@@ -158,6 +160,10 @@ public abstract class ScrollPane extends Gui {
 	public final void addButton(GuiButton button) {
 		buttons.add(button);
 	}
+	
+	public final void setClip(boolean clip) {
+		this.clip = clip;
+	}
 
 	protected void drawScrollbar(int x, int y, int x2, int y2) {
 		drawRect(x, y, x2, y2, 0xff000000);
@@ -170,7 +176,6 @@ public abstract class ScrollPane extends Gui {
 	protected abstract void drawImpl();
 	
 	protected void handleMouseClick(int relX, int relY, int btn) {
-		System.out.println(relX + ", " + relY);
 	}
-	
+
 }
