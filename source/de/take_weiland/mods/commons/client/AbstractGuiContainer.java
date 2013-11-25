@@ -40,7 +40,7 @@ public abstract class AbstractGuiContainer<I extends IInventory, C extends Conta
 		return texture;
 	}
 	
-	protected final void bindTexture() {
+	public final void bindTexture() {
 		GL11.glColor3f(1, 1, 1);
 		mc.renderEngine.bindTexture(texture);
 	}
@@ -70,6 +70,10 @@ public abstract class AbstractGuiContainer<I extends IInventory, C extends Conta
 		if (container.handlesButton(mc.thePlayer, button.id)) {
 			triggerButton(button.id);
 		}
+	}
+
+	public final C getContainer() {
+		return container;
 	}
 
 }

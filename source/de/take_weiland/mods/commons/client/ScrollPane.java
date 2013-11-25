@@ -25,20 +25,20 @@ public abstract class ScrollPane extends Gui {
 
 	private boolean clip;
 	
-	private int x;
-	private int y;
-	private int width;
-	private int height;
-	private int contentHeight;
+	protected int x;
+	protected int y;
+	protected int width;
+	protected int height;
+	protected int contentHeight;
 	
-	private int scrollbarWidth = 10;
-	private int scrollbarHeight = 30;
+	protected int scrollbarWidth = 10;
+	protected int scrollbarHeight = 30;
 	private int scrollbarClickOffset = 0;
 	private int scrollbarY = 0;
 	private boolean isDragging = false;
 	
 	private final GuiScreen screen;
-	private final Minecraft mc = Minecraft.getMinecraft();
+	protected final Minecraft mc = Minecraft.getMinecraft();
 	private final List<GuiButton> buttons = Lists.newArrayList();
 	
 	public ScrollPane(GuiScreen screen, int x, int y, int width, int height, int contentHeight) {
@@ -49,8 +49,22 @@ public abstract class ScrollPane extends Gui {
 		this.height = height;
 		this.contentHeight = contentHeight;
 	}
+	
+	private int newScrollIfInside;
+	
+	public final void onMouseWheel(int dWheel) {
+		if (needsScrollbar() && dWheel != 0) {
+			dWheel = -Integer.signum(dWheel) * 5;
+			newScrollIfInside = MathHelper.clamp_int(scrollbarY + dWheel, -1, height - scrollbarHeight);
+		}
+	}
 
 	public final void draw(int mouseX, int mouseY) {
+		if (newScrollIfInside >= 0 && Guis.isPointInRegion(x, y, width, height, mouseX, mouseY)) {
+			scrollbarY = newScrollIfInside;
+			newScrollIfInside = -1;
+		}
+		
 		float yTranslate = computeYTranslate();
 		mouseX -= x;
 		mouseY -= yTranslate;
@@ -128,7 +142,6 @@ public abstract class ScrollPane extends Gui {
 			scrollbarY = MathHelper.clamp_int(mouseY - y - scrollbarClickOffset, 0, height - scrollbarHeight);
 		}
 	}
-
 	public final void setScrollbarWidth(int scrollbarWidth) {
 		this.scrollbarWidth = scrollbarWidth;
 	}
