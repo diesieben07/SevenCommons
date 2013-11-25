@@ -188,7 +188,6 @@ public abstract class ScrollPane extends Gui {
 	
 	protected abstract void drawImpl();
 	
-	protected void handleMouseClick(int relX, int relY, int btn) {
-	}
+	protected void handleMouseClick(int relX, int relY, int btn) { }
 
 }

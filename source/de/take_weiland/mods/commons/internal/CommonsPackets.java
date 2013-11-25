@@ -11,7 +11,8 @@ public enum CommonsPackets implements PacketType {
 	MOD_STATE(PacketModState.class),
 	DOWNLOAD_PROGRESS(PacketDownloadProgress.class),
 	CLIENT_ACTION(PacketClientAction.class),
-	SYNC(PacketSync.class);
+	SYNC(PacketSync.class),
+	INV_NAME(PacketInventoryName.class);
 	
 	private final Class<? extends ModPacket> clazz;
 	

@@ -17,17 +17,12 @@ import net.minecraft.util.ResourceLocation;
 public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & SCContainer<I>> extends GuiContainer implements ContainerGui<C> {
 
 	protected final ResourceLocation texture;
-	protected final String inventoryName;
-	
 	protected final C container;
 	
 	public AbstractGuiContainer(C container) {
 		super(container);
 		this.container = container;
 		texture = provideTexture();
-		
-		IInventory inv = container.inventory();
-		inventoryName = inv.isInvNameLocalized() ? inv.getInvName() : I18n.getString(inv.getInvName());
 	}
 
 	@Override
@@ -57,7 +52,12 @@ public abstract class AbstractGuiContainer<I extends IInventory, C extends Conta
 	
 	@Override
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-		this.fontRenderer.drawString(inventoryName, 8, 6, 0x404040);
+		fontRenderer.drawString(getInvDisplayName(), 8, 6, 0x404040);
+	}
+
+	protected final String getInvDisplayName() {
+		IInventory inv = container.inventory();
+		return inv.isInvNameLocalized() ? inv.getInvName() : I18n.getString(inv.getInvName());
 	}
 
 	protected final void triggerButton(int buttonId) {
