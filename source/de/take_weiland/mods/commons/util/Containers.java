@@ -105,7 +105,7 @@ public final class Containers {
 
 	public static void sync(SyncedContainer<?> container) {
 		if (Sides.logical(container.getPlayer()).isServer()) {
-			new PacketSync(container).sendTo(container.getPlayer());
+			new PacketSync(container).sendToIfNeeded(container.getPlayer());
 		}
 	}
 }

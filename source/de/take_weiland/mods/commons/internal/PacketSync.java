@@ -1,11 +1,14 @@
 package de.take_weiland.mods.commons.internal;
 
+import static de.take_weiland.mods.commons.network.Packets.sendPacketToPlayer;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.network.packet.Packet;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
@@ -14,6 +17,7 @@ import de.take_weiland.mods.commons.templates.SyncedContainer;
 public class PacketSync extends DataPacket {
 
 	private SyncedContainer<?> container;
+	private boolean needsToSend;
 	
 	public PacketSync(SyncedContainer<?> container) {
 		this.container = container;
@@ -22,7 +26,7 @@ public class PacketSync extends DataPacket {
 	@Override
 	public void write(DataOutputStream out) throws IOException {
 		out.writeByte(((Container)container).windowId);
-		container.writeSyncData(out);
+		needsToSend = container.writeSyncData(out);
 	}
 	
 	@Override
@@ -44,5 +48,12 @@ public class PacketSync extends DataPacket {
 	@Override
 	public PacketType type() {
 		return CommonsPackets.SYNC;
+	}
+	
+	public void sendToIfNeeded(EntityPlayer player) {
+		Packet vanilla = make();
+		if (needsToSend) {
+			sendPacketToPlayer(vanilla, player);
+		}
 	}
 }

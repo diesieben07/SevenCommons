@@ -10,6 +10,6 @@ public interface SyncedContainer<T extends IInventory> extends SCContainer<T> {
 
 	void readSyncData(DataInputStream in) throws IOException;
 
-	void writeSyncData(DataOutputStream out) throws IOException;
+	boolean writeSyncData(DataOutputStream out) throws IOException;
 	
 }
