@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.updater;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -43,5 +44,10 @@ public class CommandUpdates extends CommandBase {
 	public int getRequiredPermissionLevel() {
 		return 4;
 	}
+
+    @Override
+    public int compareTo(Object iCommand) {
+        return 0;
+    }
 
 }

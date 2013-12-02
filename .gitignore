@@ -1,2 +1,7 @@
+.gradle/**
+.idea/**
 build/**
-signing.properties
+eclipse/**
+out/**
+run/**
+SevenCommons.iml

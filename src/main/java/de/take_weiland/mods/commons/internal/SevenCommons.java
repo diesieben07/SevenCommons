@@ -88,9 +88,9 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 		}
 	}
 	
-	@Override
-	@Deprecated
-	public String[] getLibraryRequestClass() {
-		return null;
-	}
+//	@Override
+//	@Deprecated
+//	public String[] getLibraryRequestClass() {
+//		return null;
+//	}
 }
