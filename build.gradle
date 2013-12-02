@@ -37,6 +37,8 @@ task fullBuild {
 
 processResources
 {
+    from (sourceSets.main.resources.srcDirs)
+
     // replace stuff in mcmod.info, nothing else
     //from(sourceSets.main.resources.srcDirs) {
      //   include 'mcmod/info'
