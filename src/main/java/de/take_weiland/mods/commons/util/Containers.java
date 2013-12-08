@@ -71,7 +71,7 @@ public final class Containers {
 			IInventory playerInv = container.getPlayer().inventory;
 			
 			if (slot.inventory == playerInv) {
-				int[] targetSlots = container.getSlotsFor(stackInSlot);
+				int[] targetSlots = container.getSlotRange(stackInSlot);
 				if (targetSlots != null && targetSlots.length == 2) {
 					if (!mergeItemStack(container, stackInSlot, targetSlots[0], targetSlots[1], false)) {
 						return null;

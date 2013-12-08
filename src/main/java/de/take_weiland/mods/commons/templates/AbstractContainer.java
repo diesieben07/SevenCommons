@@ -61,7 +61,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	}
 	
 	@Override
-	public int[] getSlotsFor(ItemStack item) {
+	public int[] getSlotRange(ItemStack item) {
 		int target = getSlotFor(item);
 		return target == -1 ? null : new int[] { target, target + 1 };
 	}
