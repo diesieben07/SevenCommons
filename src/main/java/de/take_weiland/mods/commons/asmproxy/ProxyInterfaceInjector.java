@@ -79,6 +79,9 @@ public final class ProxyInterfaceInjector extends SelectiveTransformer {
 			Type expectedType = Type.getType(ASMUtils.getFieldDescriptor(clazz, field));
 			
 			Type returnType = Type.getReturnType(proxyMethod);
+			if (!ASMUtils.isPrimitive(returnType)) {
+				returnType = Type.getObjectType(ASMUtils.obfuscateClass(proxyMethod.getReturnType().getCanonicalName()));
+			}
 			
 			boolean cast = false;
 			if (!returnType.equals(expectedType)) {
@@ -111,6 +114,7 @@ public final class ProxyInterfaceInjector extends SelectiveTransformer {
 		@Override
 		public boolean inject(ClassNode clazz, Method proxyMethod) {
 			Setter ann = proxyMethod.getAnnotation(Setter.class);
+			
 			Type returnType = Type.getReturnType(proxyMethod);
 			if (!returnType.equals(Type.VOID_TYPE)) {
 				System.err.println("Invalid return type in @Setter method " + proxyMethod.getName() + " in " + proxyMethod.getDeclaringClass().getSimpleName());

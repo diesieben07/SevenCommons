@@ -6,6 +6,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Iterator;
 
+import net.minecraft.launchwrapper.IClassNameTransformer;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -17,6 +19,7 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
@@ -95,10 +98,31 @@ public final class ASMUtils {
 		reader.accept(clazz, 0);
 		return clazz;
 	}
+	
+	private static IClassNameTransformer nameTransformer;
+	private static boolean nameTransChecked = false;
+	
+	public static IClassNameTransformer getClassNameTransformer() {
+		if (!nameTransChecked) {
+			Iterable<IClassNameTransformer> nameTransformers = Iterables.filter(SevenCommons.CLASSLOADER.getTransformers(), IClassNameTransformer.class);
+			nameTransformer = Iterables.getOnlyElement(nameTransformers, null);
+		}
+		return nameTransformer;
+	}
+	
+	public static String deobfuscateClass(String obfName) {
+		IClassNameTransformer t = getClassNameTransformer();
+		return ASMUtils.makeNameInternal(t == null ? obfName : t.remapClassName(obfName));
+	}
+	
+	public static String obfuscateClass(String deobfName) {
+		IClassNameTransformer t = getClassNameTransformer();
+		return ASMUtils.makeNameInternal(t == null ? deobfName : t.unmapClassName(deobfName));
+	}
 
 	public static ClassNode getClassNode(String name) {
 		try {
-			return getClassNode(SevenCommons.CLASSLOADER.getClassBytes(name));
+			return getClassNode(SevenCommons.CLASSLOADER.getClassBytes(obfuscateClass(name)));
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
