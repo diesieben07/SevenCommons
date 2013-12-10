@@ -21,6 +21,12 @@ minecraft {
 	version = "1.6.4-9.11.1.964"
 }
 
+jar {
+	manifest {
+        attributes 'FMLCorePlugin': 'de.take_weiland.mods.commons.internal.SevenCommons'
+    }
+}
+
 task deobfJar(type: Jar) {
     from sourceSets.main.output
     appendix = 'deobf'
