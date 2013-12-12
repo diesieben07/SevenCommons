@@ -16,7 +16,7 @@ public abstract class SelectiveTransformer implements IClassTransformer {
 
 	@Override
 	public final byte[] transform(String name, String transformedName, byte[] bytes) {
-		if (transforms(transformedName)) {
+		if (bytes != null && transforms(transformedName)) {
 			ClassNode clazz = ASMUtils.getClassNode(bytes);
 			
 			if (transform(clazz, transformedName)) {
