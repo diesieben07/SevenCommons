@@ -70,7 +70,7 @@ public abstract class ScrollPane extends Gui {
 		mouseY -= yTranslate;
 		
 		glColor3f(1, 1, 1);
-		int scale = Guis.computeGuiScale(mc);
+		int scale = Guis.computeGuiScale();
 		
 		if (clip) {
 			glScissor(0, mc.displayHeight - (y + height) * scale, (width + x) * scale, height * scale);

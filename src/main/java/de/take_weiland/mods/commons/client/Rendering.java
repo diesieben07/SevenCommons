@@ -6,9 +6,14 @@ import static net.minecraftforge.common.ForgeDirection.NORTH;
 import static net.minecraftforge.common.ForgeDirection.SOUTH;
 import static net.minecraftforge.common.ForgeDirection.UP;
 import static net.minecraftforge.common.ForgeDirection.WEST;
+import static org.lwjgl.opengl.GL11.GL_SCISSOR_TEST;
+import static org.lwjgl.opengl.GL11.glColor3f;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glScissor;
 import net.minecraft.block.Block;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.gui.inventory.SCGuiContainerAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -21,38 +26,41 @@ import net.minecraftforge.fluids.IFluidTank;
 import org.lwjgl.opengl.GL11;
 
 public final class Rendering {
-
+	
 	private Rendering() { }
 	
-	public static final <T extends GuiContainer & ContainerGui<?>> void fillAreaWithIcon(Icon icon, int x, int y, int width, int height, T gui) {
-		int xSize = SCGuiContainerAccessor.getSizeX(gui);
-		int ySize = SCGuiContainerAccessor.getSizeY(gui);
+	private static final Gui gui = new Gui();
+	
+	public static final void fillAreaWithIcon(Icon icon, int x, int y, int width, int height) {
+		int scale = Guis.computeGuiScale();
+
+		glScissor(0, Minecraft.getMinecraft().displayHeight - (y + height) * scale, (width + x) * scale, height * scale);
+		glEnable(GL_SCISSOR_TEST);
 		
 		int cols = MathHelper.ceiling_float_int(width / 16F);
 		int rows = MathHelper.ceiling_float_int(height / 16F);
-//		System.out.println("cols: " + cols + " / rows: " + rows);
 		for (int row = 0; row < rows; row++) {
 			for (int col = 0; col < cols; col++) {
 				gui.drawTexturedModelRectFromIcon(x + col * 16, y + row * 16, icon, 16, 16);
 			}
 		}
-		gui.getMinecraft().renderEngine.bindTexture(gui.getTexture());
-		gui.drawTexturedModalRect(x + width, y, x + width, y, xSize - (x + width), height);
-		gui.drawTexturedModalRect(x, y + height, x, y + height, width, ySize - (y + height));
+		
+		glDisable(GL_SCISSOR_TEST);
 	}
 	
-	public static final <T extends GuiContainer & ContainerGui<?>> void drawFluidStack(IFluidTank tank, int x, int y, int width, int fullHeight, T gui) {
+	public static final void drawFluidStack(IFluidTank tank, int x, int y, int width, int fullHeight) {
+		TextureManager renderEngine = Minecraft.getMinecraft().renderEngine;
+		
 		FluidStack fluidStack = tank.getFluid();
 
 		if (fluidStack != null) {
 			Fluid fluid = fluidStack.getFluid();
-			TextureManager engine = gui.getMinecraft().renderEngine;
 			Icon fluidIcon = fluid.getStillIcon();
 			int fluidHeight = MathHelper.ceiling_float_int((fluidStack.amount / (float)tank.getCapacity()) * fullHeight);
 
-			GL11.glColor3f(1, 1, 1);
-			engine.bindTexture(engine.getResourceLocation(fluid.getSpriteNumber()));
-			fillAreaWithIcon(fluidIcon, x, y + fullHeight - fluidHeight, width, fluidHeight, gui);
+			glColor3f(1, 1, 1);
+			renderEngine.bindTexture(renderEngine.getResourceLocation(fluid.getSpriteNumber()));
+			fillAreaWithIcon(fluidIcon, x, y + fullHeight - fluidHeight, width, fluidHeight);
 		}
 	}
 

@@ -22,7 +22,8 @@ public final class Guis {
 		return pointX >= x && pointX < x + width && pointY >= y && pointY < y + height;
 	}
 	
-	public static int computeGuiScale(Minecraft mc) {
+	public static int computeGuiScale() {
+		Minecraft mc = Minecraft.getMinecraft();
 		int scaleFactor = 1;
 
 		int k = mc.gameSettings.guiScale;
