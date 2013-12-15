@@ -5,6 +5,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 
 public class SCItemBlock<T extends Block> extends ItemBlock {
@@ -32,6 +33,11 @@ public class SCItemBlock<T extends Block> extends ItemBlock {
 	@Override
 	public String getUnlocalizedNameInefficiently(ItemStack item) {
 		return getUnlocalizedName(item); // some optimization
+	}
+
+	@Override
+	public Icon getIconFromDamage(int meta) {
+		return block.getIcon(0, meta);
 	}
 	
 }
