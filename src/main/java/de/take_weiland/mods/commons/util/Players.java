@@ -22,7 +22,7 @@ public final class Players {
 	 * If you need a Collection use {@link ImmutableSet#copyOf(Iterable) ImmutableSet.copyOf(Players.getOps())}
 	 * @return
 	 */
-	public static final Iterable<EntityPlayerMP> getOps() {
+	public static Iterable<EntityPlayerMP> getOps() {
 		final Set<String> ops = getOpsRaw();
 		return Iterables.filter(getAll(), new Predicate<EntityPlayerMP>() {
 			
@@ -39,7 +39,7 @@ public final class Players {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static final Set<String> getOpsRaw() {
+	public static Set<String> getOpsRaw() {
 		return MinecraftServer.getServer().getConfigurationManager().getOps();
 	}
 
@@ -48,7 +48,7 @@ public final class Players {
 	 * @param player the player to check
 	 * @return true if the player is an operator
 	 */
-	public static final boolean isOp(EntityPlayer player) {
+	public static boolean isOp(EntityPlayer player) {
 		return getOpsRaw().contains(player.username.toLowerCase().trim());
 	}
 
@@ -57,18 +57,22 @@ public final class Players {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static final List<EntityPlayerMP> getAll() {
+	public static List<EntityPlayerMP> getAll() {
 		return MinecraftServer.getServer().getConfigurationManager().playerEntityList;
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static final List<EntityPlayer> getAll(World world) {
+	public static List<EntityPlayer> getAll(World world) {
 		return world.playerEntities;
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static final List<EntityPlayerMP> getAll(WorldServer world) {
+	public static List<EntityPlayerMP> getAll(WorldServer world) {
 		return world.playerEntities;
+	}
+	
+	public static EntityPlayerMP forName(String name) {
+		return MinecraftServer.getServer().getConfigurationManager().getPlayerForUsername(name);
 	}
 	
 }
