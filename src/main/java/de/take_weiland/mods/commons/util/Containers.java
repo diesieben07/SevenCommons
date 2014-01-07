@@ -71,9 +71,11 @@ public final class Containers {
 			IInventory playerInv = container.getPlayer().inventory;
 			
 			if (slot.inventory == playerInv) {
-				int[] targetSlots = container.getSlotRange(stackInSlot);
-				if (targetSlots != null && targetSlots.length == 2) {
-					if (!mergeItemStack(container, stackInSlot, targetSlots[0], targetSlots[1], false)) {
+				long enc = container.getSlotRange(stackInSlot);
+				int targetBegin = JavaUtils.encodeIntA(enc);
+				int targetEnd = JavaUtils.encodeIntB(enc);
+				if (targetBegin != -1) {
+					if (!mergeItemStack(container, stackInSlot, targetBegin, targetEnd, false)) {
 						return null;
 					}
 				} else if (slotIndex >= firstPlayerSlot && slotIndex < firstPlayerSlot + 27) {

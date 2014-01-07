@@ -96,5 +96,17 @@ public final class JavaUtils {
 	private static <T extends Throwable> void throwUnchecked0(Throwable t) throws T {
 		throw (T)t;
 	}
+
+	public static long encodeInts(int a, int b) {
+		return (((long)a) << 32) | (a & 0xffffffffL);
+	}
+	
+	public static int encodeIntA(long l) {
+		return (int)(l >> 32);
+	}
+	
+	public static int encodeIntB(long l) {
+		return (int)l;
+	}
 	
 }

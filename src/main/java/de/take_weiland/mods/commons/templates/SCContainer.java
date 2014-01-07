@@ -13,7 +13,7 @@ public interface SCContainer<T extends IInventory> {
 	
 	EntityPlayer getPlayer();
 	
-	int[] getSlotRange(ItemStack stack);
+	long getSlotRange(ItemStack stack);
 	
 	int getFirstPlayerSlot();
 

@@ -13,6 +13,7 @@ import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.PacketInventoryName;
 import de.take_weiland.mods.commons.util.Containers;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 
 public abstract class AbstractContainer<T extends IInventory> extends Container implements SCContainer<T> {
@@ -61,9 +62,9 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	}
 	
 	@Override
-	public int[] getSlotRange(ItemStack item) {
+	public long getSlotRange(ItemStack item) {
 		int target = getSlotFor(item);
-		return target == -1 ? null : new int[] { target, target + 1 };
+		return target == -1 ? JavaUtils.encodeInts(-1, -1) : JavaUtils.encodeInts(target, target + 1);
 	}
 	
 	@Override
