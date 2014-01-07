@@ -64,11 +64,13 @@ dependencies {
     deployerJars "org.apache.maven.wagon:wagon-ftp:2.2"
 }
 
-uploadArchives {
-    repositories.mavenDeployer {
-        configuration = configurations.deployerJars
-        repository(url: "ftp://take-weiland.de/maven") {
-            authentication(userName: mavenUser, password: mavenPassword)
-        }
-    }
+if (project.hasProperty("mavenUser")) {
+	uploadArchives {
+		repositories.mavenDeployer {
+			configuration = configurations.deployerJars
+			repository(url: "ftp://take-weiland.de/maven") {
+				authentication(userName: mavenUser, password: mavenPassword)
+			}
+		}
+	}
 }
