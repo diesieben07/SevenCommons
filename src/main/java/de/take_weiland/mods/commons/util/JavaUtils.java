@@ -101,11 +101,11 @@ public final class JavaUtils {
 		return (((long)a) << 32) | (a & 0xffffffffL);
 	}
 	
-	public static int encodeIntA(long l) {
+	public static int decodeIntA(long l) {
 		return (int)(l >> 32);
 	}
 	
-	public static int encodeIntB(long l) {
+	public static int decodeIntB(long l) {
 		return (int)l;
 	}
 	

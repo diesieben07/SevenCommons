@@ -72,8 +72,8 @@ public final class Containers {
 			
 			if (slot.inventory == playerInv) {
 				long enc = container.getSlotRange(stackInSlot);
-				int targetBegin = JavaUtils.encodeIntA(enc);
-				int targetEnd = JavaUtils.encodeIntB(enc);
+				int targetBegin = JavaUtils.decodeIntA(enc);
+				int targetEnd = JavaUtils.decodeIntB(enc);
 				if (targetBegin != -1) {
 					if (!mergeItemStack(container, stackInSlot, targetBegin, targetEnd, false)) {
 						return null;
