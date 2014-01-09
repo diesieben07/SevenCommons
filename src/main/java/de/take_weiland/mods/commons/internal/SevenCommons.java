@@ -20,6 +20,7 @@ import de.take_weiland.mods.commons.asmproxy.ProxyInterfaceRegistry;
 import de.take_weiland.mods.commons.util.EntityRendererProxy;
 import de.take_weiland.mods.commons.util.EntityTrackerProxy;
 import de.take_weiland.mods.commons.util.NBTListProxy;
+import de.take_weiland.mods.commons.util.TextureManagerProxy;
 
 @MCVersion(SevenCommons.MINECRAFT_VERSION)
 @TransformerExclusions({
@@ -46,6 +47,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 		ProxyInterfaceRegistry.registerProxyInterface(NBTListProxy.class);
 		ProxyInterfaceRegistry.registerProxyInterface(EntityRendererProxy.class);
 		ProxyInterfaceRegistry.registerProxyInterface(EntityTrackerProxy.class);
+		ProxyInterfaceRegistry.registerProxyInterface(TextureManagerProxy.class);
 		
 	}
 	

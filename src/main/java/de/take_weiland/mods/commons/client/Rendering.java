@@ -8,6 +8,7 @@ import static net.minecraftforge.common.ForgeDirection.UP;
 import static net.minecraftforge.common.ForgeDirection.WEST;
 import static org.lwjgl.opengl.GL11.GL_SCISSOR_TEST;
 import static org.lwjgl.opengl.GL11.glColor3f;
+import static org.lwjgl.opengl.GL11.glDeleteTextures;
 import static org.lwjgl.opengl.GL11.glDisable;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glScissor;
@@ -17,13 +18,17 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.TextureObject;
 import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 
 import org.lwjgl.opengl.GL11;
+
+import de.take_weiland.mods.commons.util.TextureManagerProxy;
 
 public final class Rendering {
 	
@@ -133,6 +138,13 @@ public final class Rendering {
 		
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glDisable(GL11.GL_BLEND);
+	}
+	
+	public static void unloadTexture(ResourceLocation loc) {
+		TextureObject tex = ((TextureManagerProxy)Minecraft.getMinecraft().renderEngine).getTexturesMap().remove(loc);
+		if (tex != null) {
+			glDeleteTextures(tex.getGlTextureId());
+		}
 	}
 
 }

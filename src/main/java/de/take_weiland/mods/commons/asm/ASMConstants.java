@@ -34,6 +34,9 @@ public final class ASMConstants {
 	
 	public static final String F_TRACKED_ENTITY_IDS_OBF = "c";
 	public static final String F_TRACKED_ENTITY_IDS_MCP = "trackedEntityIDs";
+	
+	public static final String F_MAP_TEXTURE_OBJECTS_OBF = "a";
+	public static final String F_MAP_TEXTURE_OBJECTS_MCP = "mapTextureObjects";
 
 	private ASMConstants() { }
 	
