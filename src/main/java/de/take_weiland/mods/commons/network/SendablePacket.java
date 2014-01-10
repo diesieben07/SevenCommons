@@ -7,6 +7,8 @@ import net.minecraft.world.World;
 
 public interface SendablePacket {
 
+	void sendTo(PacketTarget target);
+	
 	void sendToServer();
 
 	void sendTo(EntityPlayer player);
@@ -63,6 +65,9 @@ public static final SendablePacket DUMMY = new SendablePacket() {
 		
 		@Override
 		public void sendTo(EntityPlayer player) { }
+
+		@Override
+		public void sendTo(PacketTarget target) { }
 		
 	};
 	

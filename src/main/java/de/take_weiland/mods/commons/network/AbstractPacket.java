@@ -26,6 +26,11 @@ public abstract class AbstractPacket implements SinglePacket {
 	public int expectedSize() {
 		return 32;
 	}
+	
+	@Override
+	public void sendTo(PacketTarget target) {
+		target.send(make());
+	}
 
 	@Override
 	public void sendToServer() {

@@ -46,14 +46,19 @@ public final class ItemStacks {
 		return containsSameImpl(from, into) && from.stackSize + into.stackSize <= into.getMaxStackSize();
 	}
 	
-	public static boolean containsSame(ItemStack stack1, ItemStack stack2) {
-		if (stack1 == stack2) {
+	@Deprecated()
+	public static boolean containsSame(ItemStack a, ItemStack b) {
+		return equal(a, b);
+	}
+	
+	public static boolean equal(ItemStack a, ItemStack b) {
+		if (a == b) {
 			return true;
 		}
-		if (stack1 == null ^ stack2 == null) {
+		if (a == null ^ b == null) {
 			return false;
 		}
-		return containsSameImpl(stack1, stack2);
+		return containsSameImpl(a, b);
 	}
 	
 	private static boolean containsSameImpl(ItemStack stack1, ItemStack stack2) {

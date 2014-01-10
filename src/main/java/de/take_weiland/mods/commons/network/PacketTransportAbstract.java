@@ -182,9 +182,8 @@ abstract class PacketTransportAbstract implements PacketTransport {
 		} catch (IOException e) {
 			throw PacketTransports.wrapIOException(packet, e);
 		}
-		int size = out.size();
-		if (size > maxPacketSize()) {
-			throw PacketTransports.tooBigException(size, maxPacketSize());
+		if (out.size() > maxPacketSize()) {
+			throw PacketTransports.tooBigException(out.size(), maxPacketSize());
 		}
 	}
 

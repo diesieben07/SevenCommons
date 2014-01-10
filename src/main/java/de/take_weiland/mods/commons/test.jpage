@@ -1,0 +1,1 @@
+System.out.println(java.util.Arrays.toString(de.take_weiland.mods.commons.util.JavaUtils.getEnumValues(de.take_weiland.mods.commons.internal.updater.ModUpdateState.class)));
