@@ -16,7 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.SCGuiScreenAccessor;
+import net.minecraft.client.gui.SCGuiAccessor;
 import net.minecraft.util.MathHelper;
 
 import com.google.common.collect.Lists;
@@ -124,7 +124,7 @@ public abstract class ScrollPane extends Gui {
 		if (isPointInRegion(0, 0, width, height, mouseX, mouseY)) {
 			for (GuiButton button : buttons) {
 				if (button.mousePressed(mc, mouseX, mouseY)) {
-					SCGuiScreenAccessor.actionPerfomed(screen, button);
+					SCGuiAccessor.actionPerfomed(screen, button);
 				}
 			}
 		}

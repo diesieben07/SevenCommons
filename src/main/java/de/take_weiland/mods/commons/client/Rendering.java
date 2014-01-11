@@ -6,8 +6,14 @@ import static net.minecraftforge.common.ForgeDirection.NORTH;
 import static net.minecraftforge.common.ForgeDirection.SOUTH;
 import static net.minecraftforge.common.ForgeDirection.UP;
 import static net.minecraftforge.common.ForgeDirection.WEST;
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_SCISSOR_TEST;
+import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glColor3f;
+import static org.lwjgl.opengl.GL11.glColor4f;
 import static org.lwjgl.opengl.GL11.glDeleteTextures;
 import static org.lwjgl.opengl.GL11.glDisable;
 import static org.lwjgl.opengl.GL11.glEnable;
@@ -15,6 +21,7 @@ import static org.lwjgl.opengl.GL11.glScissor;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.SCGuiAccessor;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -25,9 +32,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
-
-import org.lwjgl.opengl.GL11;
-
 import de.take_weiland.mods.commons.util.TextureManagerProxy;
 
 public final class Rendering {
@@ -103,41 +107,47 @@ public final class Rendering {
 		t.draw();
 	}
 	
-	public static void drawRectWithZlevel(int xMin, int yMin, int xMax, int yMax, int zLevel, int color) {
-		int temp;
-
-		if (xMin < xMax) {
-			temp = xMin;
-			xMin = xMax;
-			xMax = temp;
-		}
-
-		if (yMin < yMax) {
-			temp = yMin;
-			yMin = yMax;
-			yMax = temp;
-		}
-
+	public static void drawColoredRect(int x, int y, int width, int height, int color) {
+		drawColoredRect(x, y, width, height, color, getZLevel());
+	}
+	
+	public static void drawColoredRect(int x, int y, int width, int height, int color, float zLevel) {
 		float a = (float) (color >> 24 & 255) / 255.0F;
 		float r = (float) (color >> 16 & 255) / 255.0F;
 		float g = (float) (color >> 8 & 255) / 255.0F;
 		float b = (float) (color & 255) / 255.0F;
 		
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glColor4f(r, g, b, a);
+		glEnable(GL_BLEND);
+		glDisable(GL_TEXTURE_2D);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glColor4f(r, g, b, a);
 		
 		Tessellator t = Tessellator.instance;
 		t.startDrawingQuads();
-		t.addVertex(xMin, yMax, zLevel);
-		t.addVertex(xMax, yMax, zLevel);
-		t.addVertex(xMax, yMin, zLevel);
-		t.addVertex(xMin, yMin, zLevel);
+		
+		t.addVertex(x, y + height, zLevel);
+		t.addVertex(x + width, y + height, zLevel);
+		t.addVertex(x + width, y, zLevel);
+		t.addVertex(x, y, zLevel);
+		
 		t.draw();
 		
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glDisable(GL11.GL_BLEND);
+		glEnable(GL_TEXTURE_2D);
+		glDisable(GL_BLEND);
+	}
+	
+	public static void drawTexturedQuadFit(int x, int y, int width, int height) {
+		drawTexturedQuadFit(x, y, width, height, getZLevel());
+	}
+	
+	public static void drawTexturedQuadFit(int x, int y, int width, int height, float zLevel) {
+		Tessellator t = Tessellator.instance;
+		t.startDrawingQuads();
+		t.addVertexWithUV(x + 0, y + height, zLevel, 0, 1);
+		t.addVertexWithUV(x + width, y + height, zLevel, 1, 1);
+		t.addVertexWithUV(x + width, y + 0, zLevel, 1, 0);
+		t.addVertexWithUV(x + 0, y + 0, zLevel, 0, 0);
+		t.draw();
 	}
 	
 	public static void unloadTexture(ResourceLocation loc) {
@@ -145,6 +155,11 @@ public final class Rendering {
 		if (tex != null) {
 			glDeleteTextures(tex.getGlTextureId());
 		}
+	}
+	
+
+	private static float getZLevel() {
+		return SCGuiAccessor.getZLevel(Minecraft.getMinecraft().currentScreen);
 	}
 
 }

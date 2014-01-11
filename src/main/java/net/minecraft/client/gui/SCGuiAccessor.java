@@ -1,11 +1,15 @@
 package net.minecraft.client.gui;
 
-public final class SCGuiScreenAccessor {
+public final class SCGuiAccessor {
 
-	private SCGuiScreenAccessor() { }
+	private SCGuiAccessor() { }
 	
 	public static void actionPerfomed(GuiScreen gui, GuiButton btn) {
 		gui.actionPerformed(btn);
+	}
+	
+	public static float getZLevel(Gui gui) {
+		return gui.zLevel;
 	}
 	
 }
