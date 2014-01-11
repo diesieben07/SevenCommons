@@ -71,12 +71,12 @@ dependencies {
     deployerJars "org.apache.maven.wagon:wagon-ftp:2.2"
 }
 
-if (project.hasProperty("mavenUser")) {
+if (ENV.SC_MAVEN_URL) {
 	uploadArchives {
 		repositories.mavenDeployer {
 			configuration = configurations.deployerJars
-			repository(url: mavenURL) {
-				authentication(userName: mavenUser, password: mavenPassword)
+			repository(url: ENV.SC_MAVEN_URL) {
+				authentication(userName: ENV.SC_MAVEN_USER, password: ENV.SC_MAVEN_PASS)
 			}
 		}
 	}
