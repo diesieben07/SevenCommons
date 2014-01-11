@@ -15,7 +15,7 @@ apply plugin: 'forge'
 apply plugin: 'maven'
 
 version = "0.1.4"
-ENV = System.getenv()
+def ENV = System.getenv()
 if (ENV.DRONE_BUILD_NUMBER) {
 	version += "." + ENV.DRONE_BUILD_NUMBER
 } else {
