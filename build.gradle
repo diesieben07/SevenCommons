@@ -14,7 +14,14 @@ buildscript {
 apply plugin: 'forge'
 apply plugin: 'maven'
 
-version = "0.1.4-SNAPSHOT"
+version = "0.1.4"
+ENV = System.getenv()
+if (ENV.DRONE_BUILD_NUMBER) {
+	version += "." + ENV.DRONE_BUILD_NUMBER
+} else {
+	version += ".local"
+}
+
 group= "de.take_weiland.mods.commons" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "SevenCommons"
 
