@@ -14,7 +14,7 @@ buildscript {
 apply plugin: 'forge'
 apply plugin: 'maven'
 
-version = "0.1.4"
+version = "0.1"
 def ENV = System.getenv()
 if (ENV.DRONE_BUILD_NUMBER) {
 	version += "." + ENV.DRONE_BUILD_NUMBER
