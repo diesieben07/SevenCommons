@@ -98,7 +98,7 @@ public final class JavaUtils {
 	}
 
 	public static long encodeInts(int a, int b) {
-		return (((long)a) << 32) | (a & 0xffffffffL);
+		return (((long)a) << 32) | (b & 0xffffffffL);
 	}
 	
 	public static int decodeIntA(long l) {
