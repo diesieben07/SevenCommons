@@ -68,7 +68,7 @@ if (project.hasProperty("mavenUser")) {
 	uploadArchives {
 		repositories.mavenDeployer {
 			configuration = configurations.deployerJars
-			repository(url: "ftp://take-weiland.de/maven") {
+			repository(url: mavenURL) {
 				authentication(userName: mavenUser, password: mavenPassword)
 			}
 		}
