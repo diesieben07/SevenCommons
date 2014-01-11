@@ -159,11 +159,22 @@ public abstract class ScrollPane extends Gui {
 	}
 
 	public final void setHeight(int height) {
+		if (this.height != height) {
+			recalcScrollbar();
+		}
 		this.height = height;
 	}
 	
 	public final void setContentHeight(int contentHeight) {
+		if (this.contentHeight != contentHeight) {
+			recalcScrollbar();
+		}
 		this.contentHeight = contentHeight;
+	}
+	
+	private void recalcScrollbar() {
+		scrollbarY = 0;
+		isDragging = false;
 	}
 
 	public final void clearButtons() {
