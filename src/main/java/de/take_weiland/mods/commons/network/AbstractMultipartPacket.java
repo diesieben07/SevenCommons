@@ -28,6 +28,13 @@ public abstract class AbstractMultipartPacket implements MultipartPacket {
 	}
 
 	@Override
+	public void sendTo(PacketTarget target) {
+		for (Packet p : make()) {
+			target.send(p);
+		}
+	}
+
+	@Override
 	public void sendToServer() {
 		for (Packet p : make()) {
 			sendPacketToServer(p);
