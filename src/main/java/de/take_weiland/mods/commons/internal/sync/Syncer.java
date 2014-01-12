@@ -16,7 +16,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.sun.istack.internal.logging.Logger;
 
 import de.take_weiland.mods.commons.asm.transformers.SyncingTransformer;
 import de.take_weiland.mods.commons.network.Packets;
