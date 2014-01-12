@@ -35,6 +35,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	
 	public static final Logger LOGGER;
 	public static final String MINECRAFT_VERSION = "1.6.4";
+	public static final String VERSION = "@VERSION@";	
 	
 	public static LaunchClassLoader CLASSLOADER;
 	

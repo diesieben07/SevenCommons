@@ -43,7 +43,7 @@ public final class CommonsModContainer extends DummyModContainer {
 		meta.name = "SevenCommons";
 		meta.modId = "sevencommons";
 		meta.authorList = ImmutableList.of("diesieben07");
-		meta.version = "0.1.4-SNAPSHOT";
+		meta.version = SevenCommons.VERSION;
 		
 		meta.description = "Provides various Utilities for other mods.";
 		
