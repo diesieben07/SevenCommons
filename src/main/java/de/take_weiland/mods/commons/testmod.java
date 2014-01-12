@@ -1,8 +1,10 @@
 package de.take_weiland.mods.commons;
 
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.world.World;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.IPlayerTracker;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
@@ -28,8 +30,7 @@ public class testmod {
 			
 			@Override
 			public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-				// TODO Auto-generated method stub
-				return null;
+				return new TestGuiContainer((Container) getServerGuiElement(ID, player, world, x, y, z));
 			}
 		});
 		
@@ -52,16 +53,49 @@ public class testmod {
 	}
 	
 	@Synced
-	private static class TestContainer extends Container {
+	static class TestContainer extends Container {
 
 		@Synced
 		private boolean synced = false;
 		
 		@Override
 		public boolean canInteractWith(EntityPlayer entityplayer) {
+			int a = 5;
+			switch (a) {
+			case -1:
+				break;
+			case 0:
+				break;
+			case 1:
+				break;
+			}
 			return true;
 		}
+
+		@Override
+		public void detectAndSendChanges() {
+			super.detectAndSendChanges();
+			synced = !synced;
+		}
 		
+		
+	}
+	
+	static class TestGuiContainer extends GuiContainer {
+
+		public TestGuiContainer(Container par1Container) {
+			super(par1Container);
+		}
+
+		@Override
+		protected void drawGuiContainerBackgroundLayer(float f, int i, int j) {
+			drawBackground(0);
+		}
+
+		@Override
+		public void updateScreen() {
+			super.updateScreen();
+		}
 		
 		
 		

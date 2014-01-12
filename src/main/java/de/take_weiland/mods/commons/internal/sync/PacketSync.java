@@ -41,6 +41,7 @@ public class PacketSync extends DataPacket {
 			out.writeInt(te.zCoord);
 			break;
 		}
+		obj._SC_SYNC_write(out);
 	}
 
 	@Override

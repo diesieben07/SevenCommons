@@ -10,7 +10,6 @@ class EnumGetterShared implements EnumValueGetter {
 	
 	@Override
 	public <T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
-		System.out.println("getting enum constants with JavaLangAccess");
 		return langAcc.getEnumConstantsShared(clazz);
 	}
 

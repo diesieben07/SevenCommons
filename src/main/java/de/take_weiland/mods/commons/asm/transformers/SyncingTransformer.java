@@ -2,10 +2,16 @@ package de.take_weiland.mods.commons.asm.transformers;
 
 import static de.take_weiland.mods.commons.asm.ASMUtils.hasAnnotation;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.*;
+import static org.objectweb.asm.Type.BOOLEAN_TYPE;
+import static org.objectweb.asm.Type.INT_TYPE;
+import static org.objectweb.asm.Type.VOID_TYPE;
+import static org.objectweb.asm.Type.getMethodDescriptor;
+import static org.objectweb.asm.Type.getObjectType;
+import static org.objectweb.asm.Type.getType;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -13,7 +19,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
@@ -39,13 +44,14 @@ import de.take_weiland.mods.commons.asm.SelectiveTransformer;
 import de.take_weiland.mods.commons.internal.sync.SyncType;
 import de.take_weiland.mods.commons.internal.sync.SyncedObject;
 import de.take_weiland.mods.commons.internal.sync.Syncer;
-import de.take_weiland.mods.commons.network.ModPacket;
 
 public class SyncingTransformer extends SelectiveTransformer {
 
-	private static final Type SYNCED_TYPE_TYPE = getType(SyncedObject.class);
+	private static final Type SYNC_TYPE_TYPE = getType(SyncType.class);
+	private static final Type SYNCED_OBJECT_TYPE = getType(SyncedObject.class);
 	private static final String PERFORM_SYNC = "performSync";
-	private static final String PERFORM_SYNC_DESC = getMethodDescriptor(VOID_TYPE, SYNCED_TYPE_TYPE);
+	private static final String PERFORM_SYNC_DESC = getMethodDescriptor(VOID_TYPE, SYNCED_OBJECT_TYPE, SYNC_TYPE_TYPE);
+	
 	private static final String SYNCER_WRITE = "write";
 	private static final Type DATA_OUTPUT = Type.getType(DataOutput.class);
 	private static final Type DATA_INPUT = getType(DataInput.class);
@@ -180,7 +186,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 	private InsnList createPerformSyncCall(ClassNode clazz, SyncType type) {
 		InsnList insns = new InsnList();
 		insns.add(new VarInsnNode(ALOAD, 0));
-		insns.add(new FieldInsnNode(GETSTATIC, SYNCED_TYPE_TYPE.getInternalName(), type.name(), SYNCED_TYPE_TYPE.getDescriptor()));
+		insns.add(new FieldInsnNode(GETSTATIC, SYNC_TYPE_TYPE.getInternalName(), type.name(), SYNC_TYPE_TYPE.getDescriptor()));
 		insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, PERFORM_SYNC, PERFORM_SYNC_DESC));
 		return insns;
 	}
@@ -214,7 +220,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 		
 		// code is basically (except some special cases for primitives)
 		// public boolean _SC_SYNC_isDirty() {
-		//     if (!Syncer.equal(this.field0, this.field0_SC_SYNC)) {
+		//     if (!Syncer.equal(this.field0, this.field0_SC_SYNC, Foobar.class)) {
 		//         return true;
 		//     }
 		//     ... // for every field
@@ -264,10 +270,12 @@ public class SyncingTransformer extends SelectiveTransformer {
 		// code is basically (except some special cases for primitives)
 		// public void _SC_SYNC_write(DataOutput out) {
 		//     if (Syncer.equal(this.field0, this.field0_SC_SYNC)) {
+		//         Syncer.writeIdx(idx, out);
 		//         Syncer.write(this.field0, out);
 		//         this.field0_SC_SYNC = this.field0;
 		//     }
 		//     ... // for every field
+		//     Syncer.writeIdx(-1, out);
 		// }
 	}
 	
@@ -276,14 +284,16 @@ public class SyncingTransformer extends SelectiveTransformer {
 		InsnList insns = method.instructions;
 		
 		LabelNode readNext = new LabelNode();
-		LabelNode last = new LabelNode();
+		LabelNode finish = new LabelNode();
 		
 		insns.add(readNext);
+		
 		insns.add(new VarInsnNode(ALOAD, 1));
 		insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, READ_IDX, READ_IDX_DESC));
+
 		insns.add(new InsnNode(DUP));
-		insns.add(new InsnNode(ICONST_M1));
-		insns.add(new JumpInsnNode(IF_ICMPEQ, last));
+		insns.add(new IntInsnNode(BIPUSH, -1));
+		insns.add(new JumpInsnNode(IF_ICMPEQ, finish));
 		
 		int len = fields.size();
 		LabelNode[] labels = new LabelNode[len];
@@ -300,7 +310,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 			
 			insns.add(label);
 			
-			insns.add(new VarInsnNode(ALOAD, 0));
+			insns.add(new VarInsnNode(ALOAD, 0)); // for later PUTFIELD
 			insns.add(new VarInsnNode(ALOAD, 1));
 			
 			Type fieldType = getType(field.desc);
@@ -308,7 +318,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 				insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, "read_" + fieldType.getClassName(), getMethodDescriptor(fieldType, DATA_INPUT)));
 			} else {
 				insns.add(new LdcInsnNode(fieldType));
-				insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, "read", getMethodDescriptor(OBJECT_TYPE, CLASS_TYPE, DATA_INPUT)));
+				insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, "read", getMethodDescriptor(OBJECT_TYPE, DATA_INPUT, CLASS_TYPE)));
 				insns.add(new TypeInsnNode(CHECKCAST, fieldType.getDescriptor()));
 			}
 			insns.add(new FieldInsnNode(PUTFIELD, clazz.name, field.name, field.desc));
@@ -317,11 +327,29 @@ public class SyncingTransformer extends SelectiveTransformer {
 		
 		insns.add(dflt);
 		insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, "throwErr", getMethodDescriptor(VOID_TYPE)));
+		insns.add(new InsnNode(RETURN));
 		
-		insns.add(last);
+		insns.add(finish);
+		insns.add(new InsnNode(POP));
 		insns.add(new InsnNode(RETURN));
 		
 		clazz.methods.add(method);
+		
+		// code is basically (except some special cases for primitives)
+		// public void _SC_SYNC_read(DataInput in) {
+		//     while (true) {
+		//         switch (Syncer.readIdx(out)) {
+		//         case -1:
+		//             return;
+		//         case 0:
+		//             this.field0 = Syncer.read(Foo.class, in);
+		//             break;
+		//         case 1:
+		//             this.field1 = Syncer.read(Bar.class, in);
+		//             break;
+		//         }
+		//     }
+		// }
 	}
 
 	private void addGetField(ClassNode clazz, InsnList insns, FieldNode field) {
@@ -329,18 +357,13 @@ public class SyncingTransformer extends SelectiveTransformer {
 		insns.add(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
 	}
 	
-	private void addGetClass(InsnList insns) {
-		insns.add(new InsnNode(DUP));
-		insns.add(new MethodInsnNode(INVOKEVIRTUAL, OBJECT_TYPE.getInternalName(), "getClass", getMethodDescriptor(CLASS_TYPE)));
-	}
-
 	private void addCheckEqual(InsnList insns, FieldNode field) {
 		Type fieldType = getType(field.desc);
 		if (ASMUtils.isPrimitive(fieldType)) {
 			insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, SYNCER_EQUAL, getMethodDescriptor(BOOLEAN_TYPE, fieldType, fieldType)));
 		} else {
-			addGetClass(insns);
-			insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, SYNCER_EQUAL, getMethodDescriptor(BOOLEAN_TYPE, OBJECT_TYPE, OBJECT_TYPE)));
+			insns.add(new LdcInsnNode(fieldType));
+			insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, SYNCER_EQUAL, getMethodDescriptor(BOOLEAN_TYPE, OBJECT_TYPE, OBJECT_TYPE, CLASS_TYPE)));
 		}
 	}
 	
@@ -349,7 +372,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 		boolean isPrimitive = ASMUtils.isPrimitive(fieldType);
 		
 		if (!isPrimitive) {
-			addGetClass(insns);
+			insns.add(new LdcInsnNode(fieldType));
 		}
 		
 		insns.add(new VarInsnNode(ALOAD, 1)); // the data output
@@ -361,41 +384,6 @@ public class SyncingTransformer extends SelectiveTransformer {
 		}
 	}
 
-//	private void addSyncMethod(ClassNode clazz, List<FieldNode> fields) {
-//		String desc = Type.getMethodDescriptor(VOID_TYPE, INT_TYPE, DATA_OUTPUT);
-//		String[] exceptions = { Type.getInternalName(IOException.class) };
-//		MethodNode method = new MethodNode(ACC_PRIVATE, SYNC_METHOD, desc, null, exceptions);
-//		InsnList insns = method.instructions;
-//		
-//		insns.add(new VarInsnNode(ALOAD, 1)); // load fieldIdx
-//		insns.add(new VarInsnNode(ALOAD, 2)); // load DataOutput
-//		insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, WRITE_IDX, WRITE_IDX_DESC)); // write the field index
-//		
-//		insns.add(new VarInsnNode(ALOAD, 1)); // load fieldIdx for switch
-//		
-//		LabelNode dflt = new LabelNode();
-//		LabelNode[] labels = new LabelNode[fields.size()];
-//		insns.add(new TableSwitchInsnNode(0, fields.size(), dflt, labels));
-//		
-//		for (int i = 0; i < labels.length; ++i) {
-//			FieldNode field = fields.get(i);
-//			insns.add(labels[i]); // jump target for i-th field
-//			
-//			insns.add(new VarInsnNode(ALOAD, 0)); // load this for GETFIELD
-//			insns.add(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
-//			
-//			insns.add(new VarInsnNode(ALOAD, 2)); // load DataOutput
-//			
-//			insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, WRITE, Type.getMethodDescriptor(VOID_TYPE, Type.getType(field.desc), DATA_OUTPUT)));
-//		}
-//		
-//		
-//		insns.add(new VarInsnNode(ALOAD, 2)); // load DataOutput
-//		insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, WRITE_TERMINATION, WRITE_TERMINATION_DESC));
-//		
-//		clazz.methods.add(method);
-//	}
-	
 	private boolean canSync(FieldNode field) {
 		return ASMUtils.isPrimitive(Type.getType(field.desc));
 	}
