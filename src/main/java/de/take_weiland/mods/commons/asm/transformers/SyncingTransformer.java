@@ -1,7 +1,27 @@
 package de.take_weiland.mods.commons.asm.transformers;
 
 import static de.take_weiland.mods.commons.asm.ASMUtils.hasAnnotation;
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
+import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.BIPUSH;
+import static org.objectweb.asm.Opcodes.CHECKCAST;
+import static org.objectweb.asm.Opcodes.DUP;
+import static org.objectweb.asm.Opcodes.GETFIELD;
+import static org.objectweb.asm.Opcodes.GETSTATIC;
+import static org.objectweb.asm.Opcodes.GOTO;
+import static org.objectweb.asm.Opcodes.ICONST_0;
+import static org.objectweb.asm.Opcodes.ICONST_1;
+import static org.objectweb.asm.Opcodes.ICONST_M1;
+import static org.objectweb.asm.Opcodes.IFNE;
+import static org.objectweb.asm.Opcodes.IF_ICMPEQ;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.INVOKESTATIC;
+import static org.objectweb.asm.Opcodes.IRETURN;
+import static org.objectweb.asm.Opcodes.POP;
+import static org.objectweb.asm.Opcodes.PUTFIELD;
+import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.Type.VOID_TYPE;
@@ -11,7 +31,6 @@ import static org.objectweb.asm.Type.getType;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -45,6 +64,12 @@ import de.take_weiland.mods.commons.internal.sync.SyncType;
 import de.take_weiland.mods.commons.internal.sync.SyncedObject;
 import de.take_weiland.mods.commons.internal.sync.Syncer;
 
+/**
+ * This class is pure black magic.
+ * Only touch if you know your way around bytecode.
+ * @author diesieben07
+ *
+ */
 public class SyncingTransformer extends SelectiveTransformer {
 
 	private static final Type SYNC_TYPE_TYPE = getType(SyncType.class);
@@ -64,8 +89,6 @@ public class SyncingTransformer extends SelectiveTransformer {
 	
 	private static final String WRITE_TERMINATION = "writeTermination";
 	private static final String WRITE_TERMINATION_DESC = Type.getMethodDescriptor(VOID_TYPE, DATA_OUTPUT);
-	
-//	private static final String WRITE = "write";
 	
 	private static final String IS_DIRTY = "_SC_SYNC_isDirty";
 	private static final String IS_DIRTY_DESC = Type.getMethodDescriptor(BOOLEAN_TYPE);
@@ -111,12 +134,8 @@ public class SyncingTransformer extends SelectiveTransformer {
 		List<FieldNode> companions = Lists.newArrayList();
 		for (FieldNode field : ImmutableList.copyOf(clazz.fields)) { // copy the list because we add to it
 			if (hasAnnotation(field, SYNCED_ANN)) {
-				if (!canSync(field)) {
-					LOGGER.warning(String.format("Field %s in Class %s cannot be synced!", field.name, className));
-				} else {
-					syncedFields.add(field);
-					companions.add(createCompanion(clazz, field));
-				}
+				syncedFields.add(field);
+				companions.add(createCompanion(clazz, field));
 			}
 		}
 		
@@ -284,28 +303,26 @@ public class SyncingTransformer extends SelectiveTransformer {
 		InsnList insns = method.instructions;
 		
 		LabelNode readNext = new LabelNode();
-		LabelNode finish = new LabelNode();
 		
 		insns.add(readNext);
 		
 		insns.add(new VarInsnNode(ALOAD, 1));
 		insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, READ_IDX, READ_IDX_DESC));
-
-		insns.add(new InsnNode(DUP));
-		insns.add(new IntInsnNode(BIPUSH, -1));
-		insns.add(new JumpInsnNode(IF_ICMPEQ, finish));
 		
 		int len = fields.size();
-		LabelNode[] labels = new LabelNode[len];
-		for (int i = 0; i < len; ++i) {
+		LabelNode[] labels = new LabelNode[len + 1];
+		for (int i = 0; i < len + 1; ++i) {
 			labels[i] = new LabelNode();
 		}
 		LabelNode dflt = new LabelNode();
 		
-		insns.add(new TableSwitchInsnNode(0, len - 1, dflt, labels));
+		insns.add(new TableSwitchInsnNode(-1, len - 1, dflt, labels));
+		
+		insns.add(labels[0]);
+		insns.add(new InsnNode(RETURN));
 		
 		for (int i = 0; i < len; ++i) {
-			LabelNode label = labels[i];
+			LabelNode label = labels[i + 1];
 			FieldNode field = fields.get(i);
 			
 			insns.add(label);
@@ -327,10 +344,6 @@ public class SyncingTransformer extends SelectiveTransformer {
 		
 		insns.add(dflt);
 		insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, "throwErr", getMethodDescriptor(VOID_TYPE)));
-		insns.add(new InsnNode(RETURN));
-		
-		insns.add(finish);
-		insns.add(new InsnNode(POP));
 		insns.add(new InsnNode(RETURN));
 		
 		clazz.methods.add(method);
@@ -382,10 +395,6 @@ public class SyncingTransformer extends SelectiveTransformer {
 		} else {
 			insns.add(new MethodInsnNode(INVOKESTATIC, SYNCER_CLASS, SYNCER_WRITE, getMethodDescriptor(VOID_TYPE, fieldType, CLASS_TYPE, DATA_OUTPUT)));
 		}
-	}
-
-	private boolean canSync(FieldNode field) {
-		return ASMUtils.isPrimitive(Type.getType(field.desc));
 	}
 	
 	private FieldNode createCompanion(ClassNode clazz, FieldNode field) {

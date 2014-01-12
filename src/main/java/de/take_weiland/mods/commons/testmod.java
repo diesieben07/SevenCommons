@@ -58,6 +58,10 @@ public class testmod {
 		@Synced
 		private boolean synced = false;
 		
+		@Synced
+		private int testus = -3;
+		
+		
 		@Override
 		public boolean canInteractWith(EntityPlayer entityplayer) {
 			int a = 5;
