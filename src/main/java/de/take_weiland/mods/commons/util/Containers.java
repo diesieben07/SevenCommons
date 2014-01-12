@@ -8,7 +8,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import de.take_weiland.mods.commons.internal.PacketSync;
+import de.take_weiland.mods.commons.internal.PacketContainerSync;
 import de.take_weiland.mods.commons.templates.SCContainer;
 import de.take_weiland.mods.commons.templates.ItemInventory;
 import de.take_weiland.mods.commons.templates.SlotNoPickup;
@@ -107,7 +107,7 @@ public final class Containers {
 
 	public static void sync(SyncedContainer<?> container) {
 		if (Sides.logical(container.getPlayer()).isServer()) {
-			new PacketSync(container).sendToIfNeeded(container.getPlayer());
+			new PacketContainerSync(container).sendToIfNeeded(container.getPlayer());
 		}
 	}
 }

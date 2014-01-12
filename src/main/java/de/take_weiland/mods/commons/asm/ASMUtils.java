@@ -137,6 +137,14 @@ public final class ASMUtils {
 		return containsAnnotation(Iterators.concat(JavaUtils.nullToEmpty(field.visibleAnnotations).iterator(), JavaUtils.nullToEmpty(field.invisibleAnnotations).iterator()), annotation.getDescriptor());
 	}
 	
+	public static boolean hasAnnotation(ClassNode clazz, Class<? extends Annotation> annotation) {
+		return hasAnnotation(clazz, Type.getType(annotation));
+	}
+	
+	public static boolean hasAnnotation(ClassNode clazz, Type annotation) {
+		return containsAnnotation(Iterators.concat(JavaUtils.nullToEmpty(clazz.visibleAnnotations).iterator(), JavaUtils.nullToEmpty(clazz.invisibleAnnotations).iterator()), annotation.getDescriptor());
+	}
+	
 	private static boolean containsAnnotation(Iterator<AnnotationNode> annotations, final String annotationDesc) {
 		return Iterators.any(annotations, new Predicate<AnnotationNode>() {
 

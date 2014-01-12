@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
+import de.take_weiland.mods.commons.internal.sync.PacketSync;
 import de.take_weiland.mods.commons.network.ModPacket;
 import de.take_weiland.mods.commons.network.PacketTransport;
 import de.take_weiland.mods.commons.network.PacketType;
@@ -11,8 +12,9 @@ public enum CommonsPackets implements PacketType {
 	MOD_STATE(PacketModState.class),
 	DOWNLOAD_PROGRESS(PacketDownloadProgress.class),
 	CLIENT_ACTION(PacketClientAction.class),
-	SYNC(PacketSync.class),
-	INV_NAME(PacketInventoryName.class);
+	SYNC_CONTAINER(PacketContainerSync.class),
+	INV_NAME(PacketInventoryName.class),
+	SYNC(PacketSync.class);
 	
 	private final Class<? extends ModPacket> clazz;
 	

@@ -14,12 +14,12 @@ import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.templates.SyncedContainer;
 
-public class PacketSync extends DataPacket {
+public class PacketContainerSync extends DataPacket {
 
 	private SyncedContainer<?> container;
 	private boolean needsToSend;
 	
-	public PacketSync(SyncedContainer<?> container) {
+	public PacketContainerSync(SyncedContainer<?> container) {
 		this.container = container;
 	}
 	
@@ -47,7 +47,7 @@ public class PacketSync extends DataPacket {
 
 	@Override
 	public PacketType type() {
-		return CommonsPackets.SYNC;
+		return CommonsPackets.SYNC_CONTAINER;
 	}
 	
 	public void sendToIfNeeded(EntityPlayer player) {

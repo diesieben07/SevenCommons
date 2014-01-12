@@ -1,10 +1,6 @@
 package de.take_weiland.mods.commons.network;
 
 import java.io.IOException;
-import java.util.Map;
-
-import net.minecraft.network.packet.Packet;
-import cpw.mods.fml.relauncher.ReflectionHelper;
 
 public final class PacketTransports {
 
@@ -16,12 +12,6 @@ public final class PacketTransports {
 	
 	public static <E extends Enum<E> & PacketType> PacketTransport withPacket131(Object mod, Class<E> typeClass) {
 		return new Packet131Transport(mod, typeClass);
-	}
-	
-	static final Map<Class<?>, Integer> classToIdMap;
-	
-	static {
-		classToIdMap = ReflectionHelper.getPrivateValue(Packet.class, null, 1);
 	}
 	
 	static final RuntimeException tooBigException(int size, int maxSize) {

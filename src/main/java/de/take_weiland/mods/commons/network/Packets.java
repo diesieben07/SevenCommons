@@ -1,14 +1,17 @@
 package de.take_weiland.mods.commons.network;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.List;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.SCContainerAccessor;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.INetworkManager;
@@ -16,6 +19,9 @@ import net.minecraft.network.NetLoginHandler;
 import net.minecraft.network.NetServerHandler;
 import net.minecraft.network.packet.NetHandler;
 import net.minecraft.network.packet.Packet;
+import net.minecraft.server.management.PlayerInstance;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -57,6 +63,33 @@ public final class Packets {
 		}
 	}
 	
+	public static void sendPacketToAllTracking(Packet p, TileEntity te) {
+		sendPacketToAllTrackingChunk(p, te.worldObj, te.xCoord >> 4, te.zCoord >> 4);
+	}
+	
+	public static void sendPacketToAllTrackingChunk(Packet p, World w, int chunkX, int chunkZ) {
+		if (Sides.logical(w).isServer()) {
+			PlayerInstance pi = ((WorldServer)w).getPlayerManager().getOrCreateChunkWatcher(chunkX, chunkZ, false);
+			if (pi != null) {
+				pi.sendToAllPlayersWatchingChunk(p);
+			}
+		}
+	}
+	
+	public static void sendPacketToViewing(Packet packet, Container c) {
+//		Could use the shorter
+//		Packets.sendPacketToPlayers(packet, Iterators.filter(crafters.iterator(), EntityPlayerMP.class));
+//		but this version here avoids the object spam of the above
+		List<ICrafting> crafters = SCContainerAccessor.getCrafters(c);
+		int len = crafters.size();
+		for (int i = 0; i < len; ++i) {
+			ICrafting crafter = crafters.get(i);
+			if (crafter instanceof EntityPlayerMP) {
+				PacketDispatcher.sendPacketToPlayer(packet, (Player) crafter);
+			}
+		}
+	}
+	
 	public static INetworkManager getNetworkManager(NetHandler netHandler) {
 		if (!netHandler.isServerHandler()) {
 			return CommonsModContainer.proxy.getNetworkManagerFromClient(netHandler);
@@ -67,33 +100,32 @@ public final class Packets {
 		}
 	}
 	
-	public static void writeEnum(OutputStream out, Enum<?> e) throws IOException {
-		out.write(UnsignedBytes.checkedCast(e.ordinal()));
+	public static void writeEnum(DataOutput out, Enum<?> e) throws IOException {
+		out.writeByte(UnsignedBytes.checkedCast(e.ordinal()));
 	}
 	
-	public static <E extends Enum<E>> E readEnum(InputStream in, Class<E> clazz) throws IOException {
-		return JavaUtils.safeArrayAccess(clazz.getEnumConstants(), in.read());
+	public static <E extends Enum<E>> E readEnum(DataInput in, Class<E> clazz) throws IOException {
+		return JavaUtils.byOrdinal(clazz, in.readUnsignedByte());
 	}
 	
-	public static void writeNbt(OutputStream out, NBTTagCompound nbt) throws IOException {
+	public static void writeNbt(DataOutput out, NBTTagCompound nbt) throws IOException {
 		if (nbt == null) {
-			out.write(0);
+			out.writeBoolean(true);
 		} else {
-			out.write(1);
-			CompressedStreamTools.writeCompressed(nbt, out);
+			out.writeBoolean(false);
+			CompressedStreamTools.write(nbt, out);
 		}
 	}
 	
-	public static NBTTagCompound readNbt(InputStream in) throws IOException {
-		int isNull = in.read();
-		if (isNull == 0) {
+	public static NBTTagCompound readNbt(DataInput in) throws IOException {
+		if (in.readBoolean()) {
 			return null;
 		} else {
-			return CompressedStreamTools.readCompressed(in);
+			return CompressedStreamTools.read(in);
 		}
 	}
 	
-	public static void writeFluidStack(DataOutputStream out, FluidStack stack) throws IOException {
+	public static void writeFluidStack(DataOutput out, FluidStack stack) throws IOException {
 		if (stack == null) {
 			out.writeShort(-1);
 		} else {
@@ -103,7 +135,7 @@ public final class Packets {
 		}
 	}
 	
-	public static FluidStack readFluidStack(DataInputStream in) throws IOException {
+	public static FluidStack readFluidStack(DataInput in) throws IOException {
 		short fluidId = in.readShort();
 		if (fluidId < 0) {
 			return null;
@@ -114,5 +146,5 @@ public final class Packets {
 			return stack;
 		}
 	}
-	
+
 }

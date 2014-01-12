@@ -10,6 +10,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.AbstractIterator;
 
+import de.take_weiland.mods.commons.internal.SevenCommons;
+
 public final class JavaUtils {
 
 	private JavaUtils() { }
@@ -107,6 +109,32 @@ public final class JavaUtils {
 	
 	public static int decodeIntB(long l) {
 		return (int)l;
+	}
+	
+	public static <T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
+		return ENUM_GETTER.getEnumValues(clazz);
+	}
+	
+	public static <T extends Enum<T>> T byOrdinal(Class<T> clazz, int ordinal) {
+		return safeArrayAccess(getEnumValues(clazz), ordinal);
+	}
+	
+	interface EnumValueGetter {
+		
+		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz);
+		
+	}
+	
+	private static EnumValueGetter ENUM_GETTER;
+	
+	static {
+		try {
+			Class.forName("sun.misc.SharedSecrets");
+			ENUM_GETTER = Class.forName("de.take_weiland.mods.commons.util.EnumGetterShared").asSubclass(EnumValueGetter.class).newInstance();
+		} catch (Exception e) {
+			SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
+			ENUM_GETTER = new EnumGetterCloned();
+		}
 	}
 	
 }
