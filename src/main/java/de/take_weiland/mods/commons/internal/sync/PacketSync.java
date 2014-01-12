@@ -16,12 +16,20 @@ import de.take_weiland.mods.commons.network.Packets;
 
 public class PacketSync extends DataPacket {
 
+	private String entityPropsName;
+	private Entity entity;
 	private SyncedObject obj;
 	private SyncType type;
 	
 	public PacketSync(SyncedObject obj, SyncType type) {
 		this.obj = obj;
 		this.type = type;
+	}
+	
+	public PacketSync(SyncedObject obj, SyncType type, String entityPropsName, Entity entity) {
+		this(obj, type);
+		this.entity = entity;
+		this.entityPropsName = entityPropsName;
 	}
 
 	@Override
@@ -40,6 +48,9 @@ public class PacketSync extends DataPacket {
 			out.writeInt(te.yCoord);
 			out.writeInt(te.zCoord);
 			break;
+		case ENTITY_PROPS:
+			out.writeInt(entity.entityId);
+			out.writeUTF(entityPropsName);
 		}
 		obj._SC_SYNC_write(out);
 	}
@@ -64,6 +75,11 @@ public class PacketSync extends DataPacket {
 			int z = in.readInt();
 			readObj = player.worldObj.getBlockTileEntity(x, y, z);
 			break;
+		case ENTITY_PROPS:
+			Entity e = player.worldObj.getEntityByID(in.readInt());
+			if (e != null) {
+				readObj = e.getExtendedProperties(in.readUTF());
+			}
 		}
 		if (readObj instanceof SyncedObject) {
 			((SyncedObject) readObj)._SC_SYNC_read(in);

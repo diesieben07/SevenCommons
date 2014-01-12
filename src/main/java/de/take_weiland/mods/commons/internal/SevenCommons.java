@@ -63,7 +63,8 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 			"de.take_weiland.mods.commons.asm.transformers.GuiScreenTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.PacketTransformer",
 			"de.take_weiland.mods.commons.asmproxy.ProxyInterfaceInjector",
-			"de.take_weiland.mods.commons.asm.transformers.SyncingTransformer"
+			"de.take_weiland.mods.commons.asm.transformers.SyncingTransformer",
+			"de.take_weiland.mods.commons.asm.transformers.EntityTransformer"
 		};
 	}
 

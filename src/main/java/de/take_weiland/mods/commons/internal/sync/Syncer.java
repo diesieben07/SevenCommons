@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.sync;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import net.minecraft.entity.Entity;
@@ -10,6 +11,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.fluids.FluidStack;
 
 import com.google.common.base.Objects;
@@ -111,6 +113,25 @@ public class Syncer {
 		});
 	}
 	
+	public static Map<String, IExtendedEntityProperties> onNewEntityProperty(Map<String, IExtendedEntityProperties> prevMap, String key, IExtendedEntityProperties props) {
+		if (props instanceof SyncedObject) {
+			(prevMap == null ? prevMap = Maps.newHashMap() : prevMap).put(key, props);
+		}
+		return prevMap;
+	}
+	
+	public static void syncProperties(Entity e, Map<String, IExtendedEntityProperties> syncedObjects) {
+		if (syncedObjects != null) {
+			for (Map.Entry<String, IExtendedEntityProperties> entry : syncedObjects.entrySet()) {
+				SyncedObject obj = (SyncedObject) entry.getValue();
+				if (obj._SC_SYNC_isDirty()) {
+					Packet p = new PacketSync(obj, SyncType.ENTITY_PROPS, entry.getKey(), e).make();
+					Packets.sendPacketToAllAssociated(p, e);
+				}
+			}
+		}
+	}
+	
 	@SuppressWarnings("unchecked") // safe casts, because the map only gets filled from registerSyncer
 	private static <T> TypeSyncer<T> syncerFor(Class<T> oClass) {
 		TypeSyncer<?> syncer = customSyncers.get(oClass);
@@ -140,6 +161,8 @@ public class Syncer {
 			case ENTITY:
 				Packets.sendPacketToAllTracking(packet, (Entity)obj);
 				break;
+			case ENTITY_PROPS:
+				throw new AssertionError("This is not reachable!");
 			}
 		}
 	}

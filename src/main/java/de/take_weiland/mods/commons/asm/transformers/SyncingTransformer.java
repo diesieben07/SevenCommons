@@ -1,42 +1,27 @@
 package de.take_weiland.mods.commons.asm.transformers;
 
 import static de.take_weiland.mods.commons.asm.ASMUtils.hasAnnotation;
-import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
-import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.BIPUSH;
-import static org.objectweb.asm.Opcodes.CHECKCAST;
-import static org.objectweb.asm.Opcodes.DUP;
-import static org.objectweb.asm.Opcodes.GETFIELD;
-import static org.objectweb.asm.Opcodes.GETSTATIC;
-import static org.objectweb.asm.Opcodes.GOTO;
-import static org.objectweb.asm.Opcodes.ICONST_0;
-import static org.objectweb.asm.Opcodes.ICONST_1;
-import static org.objectweb.asm.Opcodes.ICONST_M1;
-import static org.objectweb.asm.Opcodes.IFNE;
-import static org.objectweb.asm.Opcodes.IF_ICMPEQ;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.IRETURN;
-import static org.objectweb.asm.Opcodes.POP;
-import static org.objectweb.asm.Opcodes.PUTFIELD;
-import static org.objectweb.asm.Opcodes.RETURN;
+import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.Type.VOID_TYPE;
+import static org.objectweb.asm.Type.getDescriptor;
+import static org.objectweb.asm.Type.getInternalName;
 import static org.objectweb.asm.Type.getMethodDescriptor;
 import static org.objectweb.asm.Type.getObjectType;
 import static org.objectweb.asm.Type.getType;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
+import net.minecraftforge.common.IExtendedEntityProperties;
 
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -61,6 +46,7 @@ import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
 import de.take_weiland.mods.commons.internal.sync.SyncType;
+import de.take_weiland.mods.commons.internal.sync.SyncedEntityProperties;
 import de.take_weiland.mods.commons.internal.sync.SyncedObject;
 import de.take_weiland.mods.commons.internal.sync.Syncer;
 
@@ -81,7 +67,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 	private static final Type DATA_OUTPUT = Type.getType(DataOutput.class);
 	private static final Type DATA_INPUT = getType(DataInput.class);
 	private static final String SYNC_METHOD = "_sc_sync";
-	private static final String SYNCER_CLASS = Type.getInternalName(Syncer.class);
+	public static final String SYNCER_CLASS = Type.getInternalName(Syncer.class);
 	private static final String WRITE_IDX = "writeIdx";
 	private static final String WRITE_IDX_DESC = Type.getMethodDescriptor(VOID_TYPE, INT_TYPE, DATA_OUTPUT);
 	private static final String READ_IDX = "readIdx";
@@ -104,6 +90,9 @@ public class SyncingTransformer extends SelectiveTransformer {
 	private static final Type SYNCED_ANN = getObjectType("de/take_weiland/mods/commons/sync/Synced");
 	
 	private static final String SYNCER_EQUAL = "equal";
+	
+	private static final String SYNCED_PROPS_ENTITY = "_SC_SYNC_entity";
+	private static final String SYNCED_PROPS_GET_ENTITY = "_SC_SYNC_getEntity";
 	
 	public static final Logger LOGGER;
 	
@@ -149,6 +138,8 @@ public class SyncingTransformer extends SelectiveTransformer {
 				type = SyncType.TILE_ENTITY;
 			} else if (Container.class.isAssignableFrom(superClass)) {
 				type = SyncType.CONTAINER;
+			} else if (ASMUtils.isAssignableFrom(ASMUtils.getClassInfo(Type.getInternalName(IExtendedEntityProperties.class)), ASMUtils.getClassInfo(className))) {
+				type = SyncType.ENTITY_PROPS;
 			} else {
 				LOGGER.warning("Cannot sync class " + clazz.name + "!");
 				return false;
@@ -173,6 +164,9 @@ public class SyncingTransformer extends SelectiveTransformer {
 				name = ASMUtils.useMcpNames() ? "detectAndSendChanges" : "func_75142_b";
 				addOrCreateMethod(clazz, name, getMethodDescriptor(VOID_TYPE), insns);
 				break;
+			case ENTITY_PROPS:
+				// entity properties are synced from elsewhere
+				break;
 			}
 			
 			clazz.interfaces.add(getType(SyncedObject.class).getInternalName());
@@ -192,9 +186,11 @@ public class SyncingTransformer extends SelectiveTransformer {
 		}
 		if (method == null) {
 			method = new MethodNode(ACC_PUBLIC, name, desc, null, null);
-			insns.insert(new MethodInsnNode(INVOKESPECIAL, clazz.superName, name, desc));
-			insns.insert(new VarInsnNode(ALOAD, 0)); // reverse order because of insert!
-			insns.add(new InsnNode(RETURN));
+			if (!"java/lang/Object".equals(clazz.superName)) {
+				insns.insert(new MethodInsnNode(INVOKESPECIAL, clazz.superName, name, desc));
+				insns.insert(new VarInsnNode(ALOAD, 0)); // reverse order because of insert!
+				insns.add(new InsnNode(RETURN));
+			}
 			method.instructions = insns;
 			clazz.methods.add(method);
 		} else {
@@ -385,7 +381,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 		boolean isPrimitive = ASMUtils.isPrimitive(fieldType);
 		
 		if (!isPrimitive) {
-			insns.add(new LdcInsnNode(fieldType));
+			insns.add(new LdcInsnNode(fieldType)); // TODO: is this an ASM bug? ASM seems to use the type descriptor here, instead of the internal name
 		}
 		
 		insns.add(new VarInsnNode(ALOAD, 1)); // the data output

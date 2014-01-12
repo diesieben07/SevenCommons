@@ -63,6 +63,12 @@ public final class Packets {
 		}
 	}
 	
+	public static void sendPacketToAllAssociated(Packet p, Entity entity) {
+		if (Sides.logical(entity).isServer()) {
+			((WorldServer)entity.worldObj).getEntityTracker().sendPacketToAllAssociatedPlayers(entity, p);
+		}
+	}
+	
 	public static void sendPacketToAllTracking(Packet p, TileEntity te) {
 		sendPacketToAllTrackingChunk(p, te.worldObj, te.xCoord >> 4, te.zCoord >> 4);
 	}

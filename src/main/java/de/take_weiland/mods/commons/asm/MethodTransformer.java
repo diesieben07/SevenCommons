@@ -11,7 +11,7 @@ import org.objectweb.asm.tree.MethodNode;
 public abstract class MethodTransformer extends SelectiveTransformer {
 
 	@Override
-	protected final boolean transform(ClassNode clazz, String className) {
+	protected boolean transform(ClassNode clazz, String className) {
 		for (MethodNode method : clazz.methods) {
 			if (transforms(clazz, method)) {
 				System.out.println("Transforming method " + method.name);

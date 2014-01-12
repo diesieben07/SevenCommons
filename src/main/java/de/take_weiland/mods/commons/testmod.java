@@ -1,9 +1,19 @@
 package de.take_weiland.mods.commons;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraftforge.common.IExtendedEntityProperties;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.ForgeSubscribe;
+import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.IPlayerTracker;
 import cpw.mods.fml.common.Mod;
@@ -21,6 +31,7 @@ public class testmod {
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
+		MinecraftForge.EVENT_BUS.register(this);
 		NetworkRegistry.instance().registerGuiHandler(this, new IGuiHandler() {
 			
 			@Override
@@ -52,11 +63,27 @@ public class testmod {
 		});
 	}
 	
+	@ForgeSubscribe
+	public void onEntityConstruct(EntityEvent.EntityConstructing event) {
+		if (event.entity instanceof EntityPlayer) {
+			event.entity.registerExtendedProperties("foo.bar", new TestExtendedProperties());
+		}
+	}
+	
+	@ForgeSubscribe
+	public void onEntityTick(LivingUpdateEvent event) {
+		if (event.entity instanceof EntityPlayer && event.entity.worldObj.isRemote) {
+			System.out.println(((TestExtendedProperties)event.entity.getExtendedProperties("foo.bar")).foobar);
+		} else if (event.entity instanceof EntityPlayerMP) {
+			((TestExtendedProperties)event.entity.getExtendedProperties("foo.bar")).foobar += 1;
+		}
+	}
+	
 	@Synced
 	static class TestContainer extends Container {
 
 		@Synced
-		private boolean synced = false;
+		private ItemStack synced = new ItemStack(Block.stone);
 		
 		@Synced
 		private int testus = -3;
@@ -64,6 +91,7 @@ public class testmod {
 		
 		@Override
 		public boolean canInteractWith(EntityPlayer entityplayer) {
+			ItemStack.class.getClass();
 			int a = 5;
 			switch (a) {
 			case -1:
@@ -79,7 +107,7 @@ public class testmod {
 		@Override
 		public void detectAndSendChanges() {
 			super.detectAndSendChanges();
-			synced = !synced;
+			synced.stackSize++;
 		}
 		
 		
@@ -101,7 +129,31 @@ public class testmod {
 			super.updateScreen();
 		}
 		
+	}
+	
+	@Synced
+	static class TestExtendedProperties implements IExtendedEntityProperties {
+
+		@Synced
+		private int foobar = -3;
 		
+		@Override
+		public void saveNBTData(NBTTagCompound compound) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void loadNBTData(NBTTagCompound compound) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void init(Entity entity, World world) {
+			// TODO Auto-generated method stub
+			
+		}
 		
 	}
 
