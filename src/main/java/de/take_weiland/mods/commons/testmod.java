@@ -25,8 +25,8 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.sync.Synced;
 
-@Mod(modid = "testmod", name = "testmod", version = "0.1")
-@NetworkMod()
+//@Mod(modid = "testmod", name = "testmod", version = "0.1")
+//@NetworkMod()
 public class testmod {
 
 	@EventHandler
