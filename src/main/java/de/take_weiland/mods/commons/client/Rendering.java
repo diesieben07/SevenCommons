@@ -136,6 +136,31 @@ public final class Rendering {
 		glDisable(GL_BLEND);
 	}
 	
+	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uEnd, int vEnd, int texSize, float zLevel) {
+		drawTexturedQuad(x, y, width, height, u, v, uEnd, vEnd, texSize, texSize, zLevel);
+	}
+	
+	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uEnd, int vEnd, int texSize) {
+		drawTexturedQuad(x, y, width, height, u, v, uEnd, vEnd, texSize, texSize, getZLevel());
+	}
+	
+	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uEnd, int vEnd, int texSizeX, int texSizeY) {
+		drawTexturedQuad(x, y, width, height, u, v, uEnd, vEnd, texSizeX, texSizeY, getZLevel());
+	}
+	
+	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uEnd, int vEnd, int texSizeX, int texSizeY, float zLevel) {
+		float uFact = 1f / texSizeX;
+		float vFact = 1f / texSizeY;
+		
+		Tessellator t = Tessellator.instance;
+		t.startDrawingQuads();
+		t.addVertexWithUV(x + 0, y + height, zLevel, u * uFact, vEnd * vFact);
+		t.addVertexWithUV(x + width, y + height, zLevel, uEnd * uFact, vEnd * vFact);
+		t.addVertexWithUV(x + width, y + 0, zLevel, uEnd * uFact, v * vFact);
+		t.addVertexWithUV(x + 0, y + 0, zLevel, u * uFact, v * vFact);
+		t.draw();
+	}
+	
 	public static void drawTexturedQuadFit(int x, int y, int width, int height) {
 		drawTexturedQuadFit(x, y, width, height, getZLevel());
 	}
