@@ -136,21 +136,24 @@ public final class Rendering {
 		glDisable(GL_BLEND);
 	}
 	
-	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uEnd, int vEnd, int texSize, float zLevel) {
-		drawTexturedQuad(x, y, width, height, u, v, uEnd, vEnd, texSize, texSize, zLevel);
+	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uSize, int vSize, int texSize, float zLevel) {
+		drawTexturedQuad(x, y, width, height, u, v, uSize, vSize, texSize, texSize, zLevel);
 	}
 	
-	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uEnd, int vEnd, int texSize) {
-		drawTexturedQuad(x, y, width, height, u, v, uEnd, vEnd, texSize, texSize, getZLevel());
+	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uSize, int vSize, int texSize) {
+		drawTexturedQuad(x, y, width, height, u, v, uSize, vSize, texSize, texSize, getZLevel());
 	}
 	
-	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uEnd, int vEnd, int texSizeX, int texSizeY) {
-		drawTexturedQuad(x, y, width, height, u, v, uEnd, vEnd, texSizeX, texSizeY, getZLevel());
+	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uSize, int vSize, int texSizeX, int texSizeY) {
+		drawTexturedQuad(x, y, width, height, u, v, uSize, vSize, texSizeX, texSizeY, getZLevel());
 	}
 	
-	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uEnd, int vEnd, int texSizeX, int texSizeY, float zLevel) {
+	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uSize, int vSize, int texSizeX, int texSizeY, float zLevel) {
 		float uFact = 1f / texSizeX;
 		float vFact = 1f / texSizeY;
+		
+		int uEnd = u + uSize;
+		int vEnd = v + vSize;
 		
 		Tessellator t = Tessellator.instance;
 		t.startDrawingQuads();
