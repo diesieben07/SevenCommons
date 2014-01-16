@@ -24,10 +24,11 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.sync.Synced;
+import de.take_weiland.mods.commons.util.Players;
 
-//@Mod(modid = "testmod", name = "testmod", version = "0.1")
-//@NetworkMod()
-public class testmod {
+//@Mod(modid = "testmodsc", name = "testmodsc", version = "0.1")
+@NetworkMod()
+public class testmod_sc {
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
@@ -55,7 +56,7 @@ public class testmod {
 			
 			@Override
 			public void onPlayerLogin(EntityPlayer player) {
-				player.openGui(testmod.this, 0, player.worldObj, 0, 0, 0);
+				player.openGui(testmod_sc.this, 0, player.worldObj, 0, 0, 0);
 			}
 			
 			@Override
@@ -72,17 +73,14 @@ public class testmod {
 	
 	@ForgeSubscribe
 	public void onEntityTick(LivingUpdateEvent event) {
-		if (event.entity instanceof EntityPlayer && event.entity.worldObj.isRemote) {
-			System.out.println(((TestExtendedProperties)event.entity.getExtendedProperties("foo.bar")).foobar);
-		} else if (event.entity instanceof EntityPlayerMP) {
-			((TestExtendedProperties)event.entity.getExtendedProperties("foo.bar")).foobar += 1;
+		if (event.entity instanceof EntityPlayer && !event.entity.worldObj.isRemote) {
+//			System.out.println(Players.getFacing((EntityPlayer) event.entity));
 		}
 	}
 	
 	@Synced
 	static class TestContainer extends Container {
 
-		@Synced
 		private ItemStack synced = new ItemStack(Block.stone);
 		
 		@Synced
