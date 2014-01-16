@@ -6,11 +6,8 @@ import java.util.Set;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.Direction;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.ForgeDirection;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -76,11 +73,6 @@ public final class Players {
 	
 	public static EntityPlayerMP forName(String name) {
 		return MinecraftServer.getServer().getConfigurationManager().getPlayerForUsername(name);
-	}
-	
-	public static ForgeDirection getFacing(EntityPlayer player) {
-		int dir = MathHelper.floor_double((player.rotationYaw * 4 / 360) + 0.5) & 3;
-		return ForgeDirection.VALID_DIRECTIONS[Direction.directionToFacing[dir]];
 	}
 	
 }

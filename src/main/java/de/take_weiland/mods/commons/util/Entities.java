@@ -5,11 +5,15 @@ import java.util.Set;
 
 import de.take_weiland.mods.commons.network.Packets;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.Direction;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.ForgeDirection;
 
 public final class Entities {
 
@@ -54,6 +58,11 @@ public final class Entities {
 		} else {
 			return Collections.emptySet();
 		}
+	}
+	
+	public static ForgeDirection getFacing(Entity entity) {
+		int dir = MathHelper.floor_double((entity.rotationYaw * 4 / 360) + 0.5) & 3;
+		return ForgeDirection.VALID_DIRECTIONS[Direction.directionToFacing[dir]];
 	}
 
 }
