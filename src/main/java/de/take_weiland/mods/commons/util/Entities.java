@@ -3,9 +3,7 @@ package de.take_weiland.mods.commons.util;
 import java.util.Collections;
 import java.util.Set;
 
-import de.take_weiland.mods.commons.network.Packets;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -14,6 +12,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.ForgeDirection;
+import de.take_weiland.mods.commons.network.Packets;
 
 public final class Entities {
 
