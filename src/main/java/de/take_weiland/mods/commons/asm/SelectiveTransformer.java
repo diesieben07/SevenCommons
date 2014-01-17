@@ -1,16 +1,10 @@
 package de.take_weiland.mods.commons.asm;
 
 
-import java.io.PrintWriter;
-
 import net.minecraft.launchwrapper.IClassTransformer;
 
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.util.CheckClassAdapter;
-
-import de.take_weiland.mods.commons.asm.transformers.SyncingTransformer;
 
 
 /**
@@ -32,9 +26,6 @@ public abstract class SelectiveTransformer implements IClassTransformer {
 				ClassWriter writer = new ExtendedClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
 				clazz.accept(writer);
 				bytes = writer.toByteArray();
-				if (this instanceof SyncingTransformer) {
-					CheckClassAdapter.verify(new ClassReader(bytes), false, new PrintWriter(System.out));
-				}
 			}
 		}
 		return bytes;

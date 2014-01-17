@@ -1,10 +1,8 @@
 package de.take_weiland.mods.commons;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -14,9 +12,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
-import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.IPlayerTracker;
-import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
@@ -24,7 +20,6 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.sync.Synced;
-import de.take_weiland.mods.commons.util.Players;
 
 //@Mod(modid = "testmodsc", name = "testmodsc", version = "0.1")
 @NetworkMod()
@@ -73,15 +68,20 @@ public class testmod_sc {
 	
 	@ForgeSubscribe
 	public void onEntityTick(LivingUpdateEvent event) {
-		if (event.entity instanceof EntityPlayer && !event.entity.worldObj.isRemote) {
-//			System.out.println(Players.getFacing((EntityPlayer) event.entity));
+		if (event.entity instanceof EntityPlayer) {
+//			if (event.entity.worldObj.isRemote) {
+//				System.out.println(((TestExtendedProperties)event.entity.getExtendedProperties("foo.bar")).foobar);
+//			} else {
+//				((TestExtendedProperties)event.entity.getExtendedProperties("foo.bar")).foobar += ".bar";
+//			}
 		}
 	}
 	
 	@Synced
 	static class TestContainer extends Container {
 
-		private ItemStack synced = new ItemStack(Block.stone);
+		@Synced
+		private String synced = "foo";
 		
 		@Synced
 		private int testus = -3;
@@ -105,7 +105,7 @@ public class testmod_sc {
 		@Override
 		public void detectAndSendChanges() {
 			super.detectAndSendChanges();
-			synced.stackSize++;
+			synced += ".";
 		}
 		
 		
@@ -133,7 +133,7 @@ public class testmod_sc {
 	static class TestExtendedProperties implements IExtendedEntityProperties {
 
 		@Synced
-		private int foobar = -3;
+		private String foobar = "as";
 		
 		@Override
 		public void saveNBTData(NBTTagCompound compound) {
