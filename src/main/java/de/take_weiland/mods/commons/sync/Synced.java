@@ -15,7 +15,7 @@ public @interface Synced {
 	@Target(ElementType.FIELD)
 	static @interface DefineSyncer {
 		
-		int id();
+		int value();
 		
 	}
 	

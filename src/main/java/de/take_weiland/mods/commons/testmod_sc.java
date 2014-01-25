@@ -1,5 +1,8 @@
 package de.take_weiland.mods.commons;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.lang.annotation.ElementType;
 
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -24,6 +27,7 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.sync.Synced;
+import de.take_weiland.mods.commons.sync.TypeSyncer;
 
 @Mod(modid = "testmodsc", name = "testmodsc", version = "0.1")
 @NetworkMod()
@@ -118,15 +122,34 @@ public class testmod_sc {
 	@Synced
 	static class TestContainer extends Container {
 
-		@Synced
+		@Synced(useSyncer = 0)
 		private String synced = "foo";
 		
 		@Synced
 		private int testus = -3;
 		
-		@Synced
-		private ElementType foobar = ElementType.ANNOTATION_TYPE;
-		
+		@Synced.DefineSyncer(0)
+		private static TypeSyncer<String> customSyncer = new TypeSyncer<String>() {
+
+			@Override
+			public boolean equal(String now, String prev) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			@Override
+			public void write(String instance, DataOutput out)
+					throws IOException {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public String read(DataInput in) throws IOException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		};
 		
 		@Override
 		public boolean canInteractWith(EntityPlayer entityplayer) {
