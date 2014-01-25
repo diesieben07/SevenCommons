@@ -114,11 +114,11 @@ public final class SyncASMHooks {
 		}
 	}
 	
-	public static Object read(DataInput in, int idx, TypeSyncer<Object> syncer) throws IOException {
+	public static Object read(DataInput in, int idx, Object old, TypeSyncer<Object> syncer) throws IOException {
 		if ((idx & 0x40) == 0x40) { // 0100 0000
 			return null;
 		} else {
-			return syncer.read(in);
+			return syncer.read(old, in);
 		}
 	}
 	

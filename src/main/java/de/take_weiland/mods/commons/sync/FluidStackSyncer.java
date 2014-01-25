@@ -21,7 +21,7 @@ final class FluidStackSyncer implements TypeSyncer<FluidStack> {
 	}
 
 	@Override
-	public FluidStack read(DataInput in) throws IOException {
+	public FluidStack read(FluidStack old, DataInput in) throws IOException {
 		return Packets.readFluidStack(in);
 	}
 

@@ -21,7 +21,7 @@ final class ItemStackSyncer implements TypeSyncer<ItemStack> {
 	}
 
 	@Override
-	public ItemStack read(DataInput in) throws IOException {
+	public ItemStack read(ItemStack old, DataInput in) throws IOException {
 		return Packet.readItemStack(in);
 	}
 

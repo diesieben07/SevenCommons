@@ -17,7 +17,7 @@ final class StringSyncer implements TypeSyncer<String> {
 	}
 
 	@Override
-	public String read(DataInput in) throws IOException {
+	public String read(String old, DataInput in) throws IOException {
 		return in.readUTF();
 	}
 

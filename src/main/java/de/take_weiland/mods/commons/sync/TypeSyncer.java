@@ -16,6 +16,6 @@ public interface TypeSyncer<T> {
 	
 	void write(T instance, DataOutput out) throws IOException;
 	
-	T read(DataInput in) throws IOException;
+	T read(T oldInstance, DataInput in) throws IOException;
 	
 }

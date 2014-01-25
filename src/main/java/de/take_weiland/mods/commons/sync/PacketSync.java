@@ -24,8 +24,6 @@ public class PacketSync extends DataPacket {
 		Object readObj = type.recreate(player, in);
 		if (readObj instanceof SyncedObject) {
 			((SyncedObject) readObj)._sc_sync_read(in);
-		} else {
-			System.err.println("Invalid Object received in syncing: " + readObj);
 		}
 	}
 

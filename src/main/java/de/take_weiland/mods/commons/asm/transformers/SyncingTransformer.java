@@ -296,8 +296,10 @@ public class SyncingTransformer extends SelectiveTransformer {
 			
 			name = "read";
 			if (!isSpecialCase) {
+				insns.add(new VarInsnNode(ALOAD, 0));
+				insns.add(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
 				insns.add(new FieldInsnNode(GETSTATIC, clazz.name, syncer.name, syncer.desc));
-				desc = getMethodDescriptor(getType(Object.class), getType(DataInput.class), INT_TYPE, getType(TypeSyncer.class));
+				desc = getMethodDescriptor(getType(Object.class), getType(DataInput.class), INT_TYPE, getType(Object.class), getType(TypeSyncer.class));
 				insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
 				insns.add(new TypeInsnNode(CHECKCAST, fieldType.getInternalName()));
 			} else {

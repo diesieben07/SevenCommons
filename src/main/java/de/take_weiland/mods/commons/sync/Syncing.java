@@ -4,6 +4,7 @@ import java.util.Map;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidTank;
 
 import com.google.common.collect.Maps;
 
@@ -22,8 +23,9 @@ public final class Syncing {
 	
 	static {
 		registerSyncer(String.class, new StringSyncer());
-		registerSyncer(FluidStack.class, new FluidStackSyncer());;
+		registerSyncer(FluidStack.class, new FluidStackSyncer());
 		registerSyncer(ItemStack.class, new ItemStackSyncer());
+		registerSyncer(FluidTank.class, new FluidTankSyncer());
 	}
 	
 }

@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.lang.annotation.ElementType;
 
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
@@ -18,7 +17,6 @@ import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import cpw.mods.fml.common.IPlayerTracker;
-import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
@@ -29,7 +27,7 @@ import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 
-@Mod(modid = "testmodsc", name = "testmodsc", version = "0.1")
+//@Mod(modid = "testmodsc", name = "testmodsc", version = "0.1")
 @NetworkMod()
 public class testmod_sc {
 
@@ -123,10 +121,10 @@ public class testmod_sc {
 	static class TestContainer extends Container {
 
 		@Synced(useSyncer = 0)
-		private String synced = "foo";
+		String synced = "foo";
 		
 		@Synced
-		private int testus = -3;
+		int testus = -3;
 		
 		@Synced.DefineSyncer(0)
 		private static TypeSyncer<String> customSyncer = new TypeSyncer<String>() {
@@ -145,7 +143,7 @@ public class testmod_sc {
 			}
 
 			@Override
-			public String read(DataInput in) throws IOException {
+			public String read(String old, DataInput in) throws IOException {
 				// TODO Auto-generated method stub
 				return null;
 			}
@@ -192,6 +190,8 @@ public class testmod_sc {
 		@Override
 		public void updateScreen() {
 			super.updateScreen();
+			System.out.println(((TestContainer)inventorySlots).synced);
+			System.out.println(((TestContainer)inventorySlots).testus);
 		}
 		
 	}
