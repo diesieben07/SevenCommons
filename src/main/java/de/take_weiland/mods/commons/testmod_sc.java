@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons;
 
+import java.lang.annotation.ElementType;
+
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -13,15 +15,17 @@ import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import cpw.mods.fml.common.IPlayerTracker;
+import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.sync.Synced;
 
-//@Mod(modid = "testmodsc", name = "testmodsc", version = "0.1")
+@Mod(modid = "testmodsc", name = "testmodsc", version = "0.1")
 @NetworkMod()
 public class testmod_sc {
 
@@ -62,8 +66,13 @@ public class testmod_sc {
 	@ForgeSubscribe
 	public void onEntityConstruct(EntityEvent.EntityConstructing event) {
 		if (event.entity instanceof EntityPlayer) {
-			event.entity.registerExtendedProperties("foo.bar", new TestExtendedProperties());
+//			event.entity.registerExtendedProperties("foo.bar", new TestExtendedProperties());
 		}
+	}
+	
+	@ForgeSubscribe
+	public void onEntityTrack(PlayerStartTrackingEvent event) {
+//		System.out.println("Start tracking: " + event.tracked);
 	}
 	
 	@ForgeSubscribe
@@ -77,6 +86,35 @@ public class testmod_sc {
 		}
 	}
 	
+	static class TestEntity extends Entity {
+
+		public TestEntity(World par1World) {
+			super(par1World);
+		}
+		
+		@Synced
+		private int foobar = 2;
+
+		@Override
+		protected void entityInit() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		protected void readEntityFromNBT(NBTTagCompound nbttagcompound) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		protected void writeEntityToNBT(NBTTagCompound nbttagcompound) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+	
 	@Synced
 	static class TestContainer extends Container {
 
@@ -86,6 +124,9 @@ public class testmod_sc {
 		@Synced
 		private int testus = -3;
 		
+		@Synced
+		private ElementType foobar = ElementType.ANNOTATION_TYPE;
+		
 		
 		@Override
 		public boolean canInteractWith(EntityPlayer entityplayer) {
@@ -93,6 +134,8 @@ public class testmod_sc {
 			int a = 5;
 			switch (a) {
 			case -1:
+				break;
+			default:
 				break;
 			case 0:
 				break;
@@ -105,7 +148,8 @@ public class testmod_sc {
 		@Override
 		public void detectAndSendChanges() {
 			super.detectAndSendChanges();
-			synced += ".";
+			synced = String.valueOf(Math.random());
+			testus = (int) (Math.random() * 400);
 		}
 		
 		
@@ -129,7 +173,6 @@ public class testmod_sc {
 		
 	}
 	
-	@Synced
 	static class TestExtendedProperties implements IExtendedEntityProperties {
 
 		@Synced

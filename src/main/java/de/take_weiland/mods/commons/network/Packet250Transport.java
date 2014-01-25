@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.network;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -26,6 +28,20 @@ final class Packet250Transport extends PacketTransportAbstract implements IPacke
 		super(typeClass);
 		this.channel = channel;
 		NetworkRegistry.instance().registerChannel(this, channel);
+	}
+	
+	@Override
+	public void prepareOutput(DataOutput out, PacketType type) {
+		try {
+			out.writeByte(UnsignedBytes.checkedCast(type.packetId()));
+		} catch (IOException e) {
+			throw PacketTransports.wrapIOException(type, e);
+		}
+	}
+
+	@Override
+	public Packet make(byte[] data, PacketType type) {
+		return PacketDispatcher.getPacket(channel, data);
 	}
 	
 	@Override

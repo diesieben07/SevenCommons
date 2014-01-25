@@ -6,10 +6,16 @@ import java.io.IOException;
 
 public interface TypeSyncer<T> {
 
-	boolean equal(T a, T b);
+	/**
+	 * determine if the two values are equal
+	 * @param now guaranteed to be non-null
+	 * @param prev may be null
+	 * @return
+	 */
+	boolean equal(T now, T prev);
 	
 	void write(T instance, DataOutput out) throws IOException;
 	
-	T read(Class<? extends T> clazz, DataInput in) throws IOException;
+	T read(DataInput in) throws IOException;
 	
 }

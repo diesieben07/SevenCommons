@@ -16,6 +16,7 @@ import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.config.ConfigInjector;
 import de.take_weiland.mods.commons.config.GetProperty;
 import de.take_weiland.mods.commons.internal.updater.CommandUpdates;
@@ -78,6 +79,8 @@ public final class CommonsModContainer extends DummyModContainer {
 		packetTransport = PacketTransports.withPacket250("SevenCommons", CommonsPackets.class);
 		
 		proxy.preInit(event);
+		
+		GameRegistry.registerPlayerTracker(new SCEventHandler());
 	}	
 
 	@Subscribe

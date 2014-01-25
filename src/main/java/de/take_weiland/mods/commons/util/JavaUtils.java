@@ -9,6 +9,7 @@ import java.util.List;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.Iterables;
 
 import de.take_weiland.mods.commons.internal.SevenCommons;
 
@@ -62,6 +63,10 @@ public final class JavaUtils {
 	
 	public static <T> List<T> nullToEmpty(List<T> nullable) {
 		return nullable == null ? Collections.<T>emptyList() : nullable;
+	}
+	
+	public static <T> Iterable<T> concatNullable(Iterable<T> a, Iterable<T> b) {
+		return a == null ? (b == null ? Collections.<T>emptyList() : b) : (b == null ? a : Iterables.<T>concat(a, b));
 	}
 	
 	public static <T> void foreach(Iterable<T> it, Consumer<T> c) {

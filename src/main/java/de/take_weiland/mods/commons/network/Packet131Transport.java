@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.network;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataOutput;
 import java.util.List;
 
 import net.minecraft.network.packet.NetHandler;
@@ -28,6 +29,16 @@ class Packet131Transport extends PacketTransportAbstract implements ITinyPacketH
 		this.mod = mod;
 		NetworkModHandler nmh = FMLNetworkHandler.instance().findNetworkModHandler(mod);
 		ReflectionHelper.setPrivateValue(NetworkModHandler.class, nmh, this, "tinyPacketHandler");
+	}
+	
+	@Override
+	public void prepareOutput(DataOutput out, PacketType type) {
+		// nothing to do
+	}
+
+	@Override
+	public Packet make(byte[] data, PacketType type) {
+		return PacketDispatcher.getTinyPacket(mod, UnsignedShorts.checkedCast(type.packetId()), data);
 	}
 	
 	@Override

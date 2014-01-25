@@ -9,4 +9,14 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD, ElementType.TYPE })
 public @interface Synced {
 
+	int useSyncer() default -1;
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	static @interface DefineSyncer {
+		
+		int id();
+		
+	}
+	
 }

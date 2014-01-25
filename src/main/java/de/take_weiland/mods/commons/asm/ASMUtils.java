@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 
 import net.minecraft.launchwrapper.IClassNameTransformer;
 
@@ -24,10 +23,8 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 
 import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -136,34 +133,51 @@ public final class ASMUtils {
 		}
 	}
 	
-	public static boolean hasAnnotation(FieldNode field, Class<? extends Annotation> annotation) {
-		return hasAnnotation(field, Type.getType(annotation));
+	public static AnnotationNode getAnnotation(FieldNode field, Class<? extends Annotation> ann) {
+		return getAnnotation(JavaUtils.concatNullable(field.visibleAnnotations, field.invisibleAnnotations), ann);
 	}
 	
-	public static boolean hasAnnotation(FieldNode field, Type annotation) {
-		return containsAnnotation(Iterators.concat(JavaUtils.nullToEmpty(field.visibleAnnotations).iterator(), JavaUtils.nullToEmpty(field.invisibleAnnotations).iterator()), annotation.getDescriptor());
+	public static AnnotationNode getAnnotation(ClassNode clazz, Class<? extends Annotation> ann) {
+		return getAnnotation(JavaUtils.concatNullable(clazz.visibleAnnotations, clazz.invisibleAnnotations), ann);
+	}
+	
+	public static AnnotationNode getAnnotation(MethodNode method, Class<? extends Annotation> ann) {
+		return getAnnotation(JavaUtils.concatNullable(method.visibleAnnotations, method.invisibleAnnotations), ann);
+	}
+	
+	public static AnnotationNode getAnnotation(Iterable<AnnotationNode> annotations, Class<? extends Annotation> ann) {
+		String desc = Type.getDescriptor(ann);
+		for (AnnotationNode node : annotations) {
+			if (node.desc.equals(desc)) {
+				return node;
+			}
+		}
+		return null;
+	}
+	
+	public static boolean hasAnnotation(FieldNode field, Class<? extends Annotation> annotation) {
+		return getAnnotation(field, annotation) != null;
 	}
 	
 	public static boolean hasAnnotation(ClassNode clazz, Class<? extends Annotation> annotation) {
-		return hasAnnotation(clazz, Type.getType(annotation));
+		return getAnnotation(clazz, annotation) != null;
 	}
 	
-	public static boolean hasAnnotation(ClassNode clazz, Type annotation) {
-		return containsAnnotation(Iterators.concat(JavaUtils.nullToEmpty(clazz.visibleAnnotations).iterator(), JavaUtils.nullToEmpty(clazz.invisibleAnnotations).iterator()), annotation.getDescriptor());
+	public static boolean hasAnnotation(MethodNode method, Class<? extends Annotation> annotation) {
+		return getAnnotation(method, annotation) != null;
 	}
-	
-	private static boolean containsAnnotation(Iterator<AnnotationNode> annotations, final String annotationDesc) {
-		return Iterators.any(annotations, new Predicate<AnnotationNode>() {
 
-			@Override
-			public boolean apply(AnnotationNode node) {
-				return node.desc.equals(annotationDesc);
-			}
-		});
-	}
 	
 	public static boolean isPrimitive(Type type) {
 		return type.getSort() != Type.ARRAY && type.getSort() != Type.OBJECT && type.getSort() != Type.METHOD;
+	}
+	
+	public static ClassInfo getClassInfo(Class<?> clazz) {
+		return new ClassInfoFromClazz(clazz);
+	}
+	
+	public static ClassInfo getClassInfo(ClassNode clazz) {
+		return new ClassInfoFromNode(clazz);
 	}
 	
 	public static ClassInfo getClassInfo(String className) {
