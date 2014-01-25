@@ -107,6 +107,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 		inventory.closeChest();
 	}
 	
+	@Deprecated
 	public static abstract class Synced<T extends IInventory> extends AbstractContainer<T> implements SyncedContainer<T> {
 
 		protected Synced(T upper, EntityPlayer player, int playerInventoryX, int playerInventoryY) {

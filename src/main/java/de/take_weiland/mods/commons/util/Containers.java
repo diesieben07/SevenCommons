@@ -105,6 +105,7 @@ public final class Containers {
 		return result;
 	}
 
+	@Deprecated
 	public static void sync(SyncedContainer<?> container) {
 		if (Sides.logical(container.getPlayer()).isServer()) {
 			new PacketContainerSync(container).sendToIfNeeded(container.getPlayer());
