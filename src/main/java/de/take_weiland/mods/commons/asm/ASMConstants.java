@@ -37,7 +37,31 @@ public final class ASMConstants {
 	
 	public static final String F_MAP_TEXTURE_OBJECTS_OBF = "a";
 	public static final String F_MAP_TEXTURE_OBJECTS_MCP = "mapTextureObjects";
-
+	
+	public static final String F_MY_ENTITY_MCP = "myEntity";
+	public static final String F_MY_ENTITY_SRG = "field_73132_a";
+	
+	public static final String M_TRY_START_WATCHING_THIS_MCP = "tryStartWachingThis";
+	public static final String M_TRY_START_WATCHING_THIS_SRG = "func_73117_b";
+	
+	public static final String M_ON_UPDATE_MCP = "onUpdate";
+	public static final String M_ON_UPDATE_SRG = "func_70071_h_";
+	
+	public static final String M_UPDATE_ENTITY_MCP = "updateEntity";
+	public static final String M_UPDATE_ENTITY_SRG = "func_70316_g";
+	
+	public static final String M_DETECT_AND_SEND_CHANGES_MCP = "detectAndSendChanges";
+	public static final String M_DETECT_AND_SEND_CHANGES_SRG = "func_75142_b";
+	
+	public static final String F_IS_REMOTE_MCP = "isRemote";
+	public static final String F_IS_REMOTE_SRG = "field_72995_K";
+	
+	public static final String F_WORLD_OBJ_TILEENTITY_MCP = "worldObj";
+	public static final String F_WORLD_OBJ_TILEENTITY_SRG = "field_70331_k";
+	
+	public static final String F_WORLD_OBJ_ENTITY_MCP = "worldObj";
+	public static final String F_WORLD_OBJ_ENTITY_SRG = "field_70170_p";
+	
 	private ASMConstants() { }
 	
 }

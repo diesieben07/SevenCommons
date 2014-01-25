@@ -62,7 +62,6 @@ public final class SyncASMHooks {
 	
 	public static List<IExtendedEntityProperties> onNewEntityProperty(Entity owner, List<IExtendedEntityProperties> syncedList, String identifier, IExtendedEntityProperties props) {
 		if (Sides.logical(owner).isServer() && props instanceof SyncedEntityProperties) {
-			System.out.println("new property: " + identifier);
 			(syncedList == null ? syncedList = Lists.newArrayList() : syncedList).add(props);
 			((SyncedEntityProperties)props)._sc_sync_injectData(owner, identifier, syncedList.size() - 1);
 		}
@@ -197,7 +196,7 @@ public final class SyncASMHooks {
 		return out;
 	}
 	
-	public static <E extends Enum<E>>Enum<?> read_Enum(DataInput in, Class<E> clazz) throws IOException {
+	public static <E extends Enum<E>> Enum<?> read_Enum(DataInput in, Class<E> clazz) throws IOException {
 		return Packets.readEnum(in, clazz);
 	}
 	

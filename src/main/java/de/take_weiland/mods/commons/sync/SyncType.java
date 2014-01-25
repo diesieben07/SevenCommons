@@ -12,6 +12,7 @@ import net.minecraft.tileentity.TileEntity;
 
 import com.google.common.io.ByteArrayDataOutput;
 
+import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.internal.EntityProxy;
 import de.take_weiland.mods.commons.network.Packets;
@@ -20,7 +21,7 @@ import de.take_weiland.mods.commons.util.UnsignedShorts;
 
 public enum SyncType {
 
-	ENTITY("net/minecraft/entity/Entity", "worldObj", "field_70170_p") {
+	ENTITY("net/minecraft/entity/Entity", ASMConstants.F_WORLD_OBJ_ENTITY_MCP, ASMConstants.F_WORLD_OBJ_ENTITY_SRG) {
 		
 		@Override
 		public void sendPacket(Object entity, Packet p) {
@@ -39,7 +40,7 @@ public enum SyncType {
 		
 	},
 	
-	TILE_ENTITY("net/minecraft/tileentity/TileEntity", "worldObj", "field_70331_k") {
+	TILE_ENTITY("net/minecraft/tileentity/TileEntity", ASMConstants.F_WORLD_OBJ_TILEENTITY_MCP, ASMConstants.F_WORLD_OBJ_TILEENTITY_SRG) {
 		
 		@Override
 		public void sendPacket(Object te, Packet p) {

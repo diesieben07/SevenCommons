@@ -69,6 +69,7 @@ import com.google.common.io.ByteArrayDataOutput;
 import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
+import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
 import de.take_weiland.mods.commons.asm.SyncASMHooks;
 import de.take_weiland.mods.commons.sync.SyncType;
@@ -152,15 +153,15 @@ public class SyncingTransformer extends SelectiveTransformer {
 			String name;
 			switch (type) {
 			case ENTITY:
-				name = ASMUtils.useMcpNames() ? "onUpdate" : "func_70071_h_";
+				name = ASMUtils.useMcpNames() ? ASMConstants.M_ON_UPDATE_MCP : ASMConstants.M_ON_UPDATE_SRG;
 				addOrCreateMethod(clazz, name, getMethodDescriptor(VOID_TYPE), insns);
 				break;
 			case TILE_ENTITY:
-				name = ASMUtils.useMcpNames() ? "updateEntity" : "func_70316_g";
+				name = ASMUtils.useMcpNames() ? ASMConstants.M_UPDATE_ENTITY_MCP : ASMConstants.M_UPDATE_ENTITY_SRG;
 				addOrCreateMethod(clazz, name, getMethodDescriptor(VOID_TYPE), insns);
 				break;
 			case CONTAINER:
-				name = ASMUtils.useMcpNames() ? "detectAndSendChanges" : "func_75142_b";
+				name = ASMUtils.useMcpNames() ? ASMConstants.M_DETECT_AND_SEND_CHANGES_MCP : ASMConstants.M_DETECT_AND_SEND_CHANGES_SRG;
 				addOrCreateMethod(clazz, name, getMethodDescriptor(VOID_TYPE), insns);
 				break;
 			case ENTITY_PROPS:
@@ -544,7 +545,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 			Type world = getObjectType("net/minecraft/world/World");
 			insns.add(new FieldInsnNode(GETFIELD, worldOwner, worldName, world.getDescriptor()));
 			
-			String name = ASMUtils.useMcpNames() ? "isRemote" : "field_72995_K";
+			String name = ASMUtils.useMcpNames() ? ASMConstants.F_IS_REMOTE_MCP : ASMConstants.F_IS_REMOTE_SRG;
 			insns.add(new FieldInsnNode(GETFIELD, world.getInternalName(), name, BOOLEAN_TYPE.getDescriptor()));
 			
 			whenClient = new LabelNode();

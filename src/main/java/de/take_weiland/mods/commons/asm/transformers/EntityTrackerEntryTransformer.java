@@ -18,11 +18,11 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SingleMethodTransformer;
 
 public class EntityTrackerEntryTransformer extends SingleMethodTransformer {
-
 
 	@Override
 	protected boolean transform(ClassNode clazz, MethodNode method) {
@@ -41,7 +41,7 @@ public class EntityTrackerEntryTransformer extends SingleMethodTransformer {
 		
 		insns.add(new VarInsnNode(ALOAD, 1)); // the player
 		insns.add(new VarInsnNode(ALOAD, 0));
-		String name = ASMUtils.useMcpNames() ? "myEntity" : "field_73132_a";
+		String name = ASMUtils.useMcpNames() ? ASMConstants.F_MY_ENTITY_MCP : ASMConstants.F_MY_ENTITY_SRG;
 		String desc = entity.getDescriptor();
 		insns.add(new FieldInsnNode(GETFIELD, clazz.name, name, desc));
 		
@@ -72,12 +72,12 @@ public class EntityTrackerEntryTransformer extends SingleMethodTransformer {
 
 	@Override
 	protected String getMcpMethod() {
-		return "tryStartWachingThis";
+		return ASMConstants.M_TRY_START_WATCHING_THIS_MCP;
 	}
 
 	@Override
 	protected String getSrgMethod() {
-		return ""; // TODO
+		return ASMConstants.M_TRY_START_WATCHING_THIS_SRG;
 	}
 
 	@Override
