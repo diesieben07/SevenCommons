@@ -12,6 +12,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.ForgeDirection;
+import de.take_weiland.mods.commons.internal.CommonsModContainer;
 import de.take_weiland.mods.commons.network.Packets;
 
 public final class Entities {
@@ -52,7 +53,7 @@ public final class Entities {
 	@SuppressWarnings("unchecked")
 	public static Set<EntityPlayerMP> getTrackingPlayers(Entity entity) {
 		if (Sides.logical(entity).isServer()) {
-			EntityTrackerEntry entry = (EntityTrackerEntry) ((EntityTrackerProxy)((WorldServer)entity.worldObj).getEntityTracker()).getTrackerMap().lookup(entity.entityId);
+			EntityTrackerEntry entry = (EntityTrackerEntry) CommonsModContainer.reflector.getTrackerMap(((WorldServer) entity.worldObj).getEntityTracker()).lookup(entity.entityId);
 			return entry == null ? Collections.emptySet() : entry.trackingPlayers;
 		} else {
 			return Collections.emptySet();

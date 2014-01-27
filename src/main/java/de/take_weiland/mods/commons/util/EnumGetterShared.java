@@ -4,7 +4,6 @@ import sun.misc.JavaLangAccess;
 import sun.misc.SharedSecrets;
 import de.take_weiland.mods.commons.util.JavaUtils.EnumValueGetter;
 
-@SuppressWarnings("restriction")
 class EnumGetterShared implements EnumValueGetter {
 
 	private JavaLangAccess langAcc = SharedSecrets.getJavaLangAccess();

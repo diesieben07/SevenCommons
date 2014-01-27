@@ -62,6 +62,9 @@ public final class ASMConstants {
 	public static final String F_WORLD_OBJ_ENTITY_MCP = "worldObj";
 	public static final String F_WORLD_OBJ_ENTITY_SRG = "field_70170_p";
 	
+	public static final String F_TIMER_MCP = "timer";
+	public static final String F_TIMER_SRG = "field_71428_T";
+	
 	private ASMConstants() { }
 	
 }
