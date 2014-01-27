@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -140,6 +141,32 @@ public final class JavaUtils {
 			SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
 			ENUM_GETTER = new EnumGetterCloned();
 		}
+	}
+	
+	private static Object unsafe;
+	private static boolean unsafeChecked;
+	
+	private static void initUnsafe() {
+		if (unsafeChecked) {
+			return;
+		}
+		try {
+			Field field = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe");
+			field.setAccessible(true);
+			unsafe = field.get(null);
+		} catch (Exception e) {
+			// no unsafe
+		}
+	}
+
+	public static boolean hasUnsafe() {
+		initUnsafe();
+		return unsafe != null;
+	}
+	
+	public static Object getUnsafe() {
+		initUnsafe();
+		return unsafe;
 	}
 	
 }
