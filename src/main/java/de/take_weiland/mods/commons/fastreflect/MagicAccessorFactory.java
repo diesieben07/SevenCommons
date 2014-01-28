@@ -32,7 +32,7 @@ import org.objectweb.asm.Type;
 import sun.misc.Unsafe;
 import de.take_weiland.mods.commons.util.JavaUtils;
 
-public class MagicAccessorFactory extends AbstractAccessorFactory {
+class MagicAccessorFactory extends AbstractAccessorFactory {
 
 	private static final Unsafe unsafe = (Unsafe) JavaUtils.getUnsafe();
 	private static final AtomicInteger nextId = new AtomicInteger(0); 

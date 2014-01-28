@@ -8,7 +8,6 @@ import java.util.Arrays;
 
 import com.google.common.reflect.Reflection;
 
-
 final class ReflectiveAccessorFactory extends AbstractAccessorFactory {
 
 	@Override
