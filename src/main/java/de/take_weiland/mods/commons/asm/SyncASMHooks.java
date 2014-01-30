@@ -1,5 +1,17 @@
 package de.take_weiland.mods.commons.asm;
 
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.ARETURN;
+import static org.objectweb.asm.Opcodes.CHECKCAST;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
+import static org.objectweb.asm.Opcodes.RETURN;
+import static org.objectweb.asm.Opcodes.V1_6;
+import static org.objectweb.asm.Type.VOID_TYPE;
+import static org.objectweb.asm.Type.getMethodDescriptor;
+import static org.objectweb.asm.Type.getType;
+
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.List;
@@ -9,10 +21,16 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.packet.Packet;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
+
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
+import de.take_weiland.mods.commons.fastreflect.Fastreflect;
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
 import de.take_weiland.mods.commons.internal.CommonsPackets;
 import de.take_weiland.mods.commons.internal.EntityProxy;
@@ -51,6 +69,45 @@ public final class SyncASMHooks {
 		return out;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public static Function<?, Packet> makeSyncGroupInvoker(Class<?> toSync, String targetName) throws Exception {
+		String targetDesc = getMethodDescriptor(getType(Packet.class));
+		ClassWriter cw = new ClassWriter(0);
+		MethodVisitor mv;
+		
+		String name = Fastreflect.nextDynamicClassName();
+		
+		cw.visit(V1_6, ACC_PUBLIC, name, null, "java/lang/Object", new String[] { "com/google/common/base/Function" });
+		cw.visitSource(".dynamic", null);
+		
+		mv = cw.visitMethod(ACC_PUBLIC, "<init>", getMethodDescriptor(VOID_TYPE), null, null);
+		mv.visitCode();
+		
+		mv.visitVarInsn(ALOAD, 0);
+		mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", getMethodDescriptor(VOID_TYPE));
+		mv.visitInsn(RETURN);
+		
+		mv.visitMaxs(1, 1);
+		mv.visitEnd();
+		
+		Type targetType = getType(toSync);
+		mv = cw.visitMethod(ACC_PUBLIC, "apply", getMethodDescriptor(getType(Object.class), getType(Object.class)), null, null);
+		mv.visitCode();
+		
+		mv.visitVarInsn(ALOAD, 1);
+		mv.visitTypeInsn(CHECKCAST, targetType.getInternalName());
+		mv.visitMethodInsn(INVOKEVIRTUAL, targetType.getInternalName(), targetName, targetDesc);
+		
+		mv.visitInsn(ARETURN);
+		
+		mv.visitMaxs(1, 3);
+		
+		mv.visitEnd();
+		
+		cw.visitEnd();
+		return Fastreflect.defineDynamicClass(cw.toByteArray()).asSubclass(Function.class).newInstance();
+	}
+	
 
 	public static void syncEntityPropertyIds(EntityPlayer player, Entity tracked) {
 		List<SyncedEntityProperties> props = ((EntityProxy) tracked)._sc_sync_getSyncedProperties();
@@ -83,6 +140,15 @@ public final class SyncASMHooks {
 			throw new RuntimeException("Couldn't determine syncer for " + type.getName());
 		}
 		return syncer;
+	}
+	
+	public static Packet endSyncMakePacket(ByteArrayDataOutput out, Object syncedObj, SyncType type) {
+		if (out != null) {
+			out.writeByte(0x80); // 1000 0000
+			return CommonsModContainer.packetTransport.make(out.toByteArray(), CommonsPackets.SYNC);
+		} else {
+			return null;
+		}
 	}
 	
 	public static void endSync(ByteArrayDataOutput out, Object syncedObj, SyncType type) {

@@ -23,7 +23,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -32,17 +31,15 @@ import org.objectweb.asm.Type;
 import sun.misc.Unsafe;
 import de.take_weiland.mods.commons.util.JavaUtils;
 
-class MagicAccessorFactory extends AbstractAccessorFactory {
+class SunProprietaryStrategy extends AbstractStrategy {
 
 	private static final Unsafe unsafe = (Unsafe) JavaUtils.getUnsafe();
-	private static final AtomicInteger nextId = new AtomicInteger(0); 
-	
 	@Override
 	public <T> T createAccessor(Class<T> iface) {
 		InterfaceInfo info = analyze(iface);
 		ClassWriter cw = new ClassWriter(0);
 		
-		cw.visit(V1_6, ACC_PUBLIC, nextUniqueName(), null, "sun/reflect/MagicAccessorImpl", new String[] { getInternalName(iface) });
+		cw.visit(V1_6, ACC_PUBLIC, Fastreflect.nextDynamicClassName(), null, "sun/reflect/MagicAccessorImpl", new String[] { getInternalName(iface) });
 		cw.visitSource(".dynamic", null);
 		
 		makeConstructor(cw);
@@ -61,7 +58,7 @@ class MagicAccessorFactory extends AbstractAccessorFactory {
 		
 		cw.visitEnd();
 		
-		Class<?> clazz = unsafe.defineAnonymousClass(MagicAccessorFactory.class, cw.toByteArray(), null);
+		Class<?> clazz = Fastreflect.defineDynamicClass(cw.toByteArray());
 		try {
 			return clazz.asSubclass(iface).newInstance();
 		} catch (Exception e) {
@@ -69,6 +66,11 @@ class MagicAccessorFactory extends AbstractAccessorFactory {
 		}
 	}
 	
+	@Override
+	public Class<?> defineDynClass(byte[] clazz, Class<?> context) {
+		return unsafe.defineAnonymousClass(context, clazz, null);
+	}
+
 	private void makeConstructor(ClassWriter cw) {
 		String name = "<init>";
 		String desc = getMethodDescriptor(VOID_TYPE);
@@ -164,10 +166,6 @@ class MagicAccessorFactory extends AbstractAccessorFactory {
 		mv.visitMaxs(isStatic ? len - 1 : len, len + 1);
 		
 		mv.visitEnd();
-	}
-
-	private String nextUniqueName() {
-		return "de/take_weiland/mods/commons/fastreflect/dyn/DynAccessor" + nextId.getAndIncrement();
 	}
 
 }

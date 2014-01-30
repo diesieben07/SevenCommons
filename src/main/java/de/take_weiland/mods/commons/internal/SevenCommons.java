@@ -21,7 +21,7 @@ import de.take_weiland.mods.commons.asm.ASMUtils;
 @TransformerExclusions({
 		"de.take_weiland.mods.commons.asm.",
 		"de.take_weiland.mods.commons.util.",
-		"de.take_weiland.mods.commons.network."
+		"de.take_weiland.mods.commons.network.",
 		})
 public final class SevenCommons implements IFMLLoadingPlugin {
 

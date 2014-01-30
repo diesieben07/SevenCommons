@@ -10,7 +10,7 @@ import com.google.common.collect.Maps;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.ReflectionHelper.UnableToFindMethodException;
 
-abstract class AbstractAccessorFactory implements AccessorFactory {
+abstract class AbstractStrategy implements FastreflectStrategy {
 
 	void validateInterface(Class<?> iface) {
 		if (!iface.isInterface()) {

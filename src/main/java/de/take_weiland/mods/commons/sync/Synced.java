@@ -11,6 +11,8 @@ public @interface Synced {
 
 	int useSyncer() default -1;
 	
+	int syncGroup() default -1;
+	
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	static @interface DefineSyncer {
@@ -19,4 +21,11 @@ public @interface Synced {
 		
 	}
 	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	static @interface SyncGroupHandler {
+		
+		int syncGroup();
+		
+	}
 }

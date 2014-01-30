@@ -4,12 +4,15 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import com.google.common.base.Function;
+
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
@@ -17,6 +20,7 @@ import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import cpw.mods.fml.common.IPlayerTracker;
+import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
@@ -27,7 +31,7 @@ import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 
-//@Mod(modid = "testmodsc", name = "testmodsc", version = "0.1")
+@Mod(modid = "testmodsc", name = "testmodsc", version = "0.1")
 @NetworkMod()
 public class testmod_sc {
 
@@ -123,8 +127,11 @@ public class testmod_sc {
 		@Synced(useSyncer = 0)
 		String synced = "foo";
 		
-		@Synced
+		@Synced(syncGroup = 2)
 		int testus = -3;
+		
+		@Synced.SyncGroupHandler(syncGroup = 2)
+		private static Function<TestContainer, Packet> group2handler;
 		
 		@Synced.DefineSyncer(0)
 		private static TypeSyncer<String> customSyncer = new TypeSyncer<String>() {

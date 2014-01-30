@@ -1,31 +1,54 @@
 package de.take_weiland.mods.commons.fastreflect;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
+
 import com.google.common.base.Preconditions;
 
+import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import de.take_weiland.mods.commons.util.JavaUtils;
 
 public final class Fastreflect {
 
 	public static <T> T createAccessor(Class<T> iface) {
-		return factory.createAccessor(Preconditions.checkNotNull(iface));
+		return strategy.createAccessor(Preconditions.checkNotNull(iface));
 	}
 	
-	private static final AccessorFactory factory;
+	public static Class<?> defineDynamicClass(byte[] clazz) {
+		return defineDynamicClass(clazz, Fastreflect.class);
+	}
+	
+	public static Class<?> defineDynamicClass(byte[] clazz, Class<?> context) {
+		return strategy.defineDynClass(clazz, context);
+	}
+	
+	public static String nextDynamicClassName() {
+		return "de/take_weiland/mods/commons/fastreflect/dyn/Dyn" + nextId.getAndIncrement();
+	}
+	
+	private static final FastreflectStrategy strategy;
+	private static final Logger logger;
 	
 	static {
-		factory = selectFactory();
+		strategy = selectStrategy();
+		FMLLog.makeLog("SC|Fastreflect");
+		logger = Logger.getLogger("SC|Fastreflect");
 	}
 
-	private static AccessorFactory selectFactory() {
+	private static FastreflectStrategy selectStrategy() {
 		if (JavaUtils.hasUnsafe()) {
 			try {
-				return Class.forName("de.take_weiland.mods.commons.fastreflect.MagicAccessorFactory").asSubclass(AccessorFactory.class).newInstance();
+				return Class.forName("de.take_weiland.mods.commons.fastreflect.SunProprietaryStrategy").asSubclass(FastreflectStrategy.class).newInstance();
 			} catch (Exception e) {
 				// then not
 			}
+			logger.warning("Using slow Strategy! This may lead to performance penalties. Please use Oracle's VM.");
 		}
-		System.out.println("Using slow AccessorFactory!");
-		return new ReflectiveAccessorFactory();
+		
+		return new ReflectiveStrategy();
 	}
-	
+
+	static final AtomicInteger nextId = new AtomicInteger(0);
+
 }

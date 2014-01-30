@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 import com.google.common.reflect.Reflection;
 
-final class ReflectiveAccessorFactory extends AbstractAccessorFactory {
+final class ReflectiveStrategy extends AbstractStrategy {
 
 	@Override
 	public <T> T createAccessor(Class<T> iface) {
@@ -40,6 +40,23 @@ final class ReflectiveAccessorFactory extends AbstractAccessorFactory {
 				throw new IllegalStateException(String.format("Something somewhere went wrong, don't know how to handle method %s", method.getName()));
 			}
 		});
+	}
+
+	@Override
+	public Class<?> defineDynClass(byte[] clazz, Class<?> context) {
+		return new AnonClassLoader(context.getClassLoader()).define(clazz);
+	}
+	
+	private static class AnonClassLoader extends ClassLoader {
+		
+		AnonClassLoader(ClassLoader parent) {
+			super(parent);
+		}
+
+		Class<?> define(byte[] clazz) {
+			return defineClass(null, clazz, 0, clazz.length);
+		}
+		
 	}
 
 }

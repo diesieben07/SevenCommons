@@ -2,10 +2,12 @@ package de.take_weiland.mods.commons.asm.transformers;
 
 import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
+import static org.objectweb.asm.Opcodes.ACC_PROTECTED;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import static org.objectweb.asm.Opcodes.ACONST_NULL;
 import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.ARETURN;
 import static org.objectweb.asm.Opcodes.BIPUSH;
 import static org.objectweb.asm.Opcodes.CHECKCAST;
 import static org.objectweb.asm.Opcodes.DUP;
@@ -36,10 +38,13 @@ import java.io.DataInput;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
@@ -61,9 +66,12 @@ import org.objectweb.asm.tree.TableSwitchInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
+import com.google.common.collect.Sets;
 import com.google.common.io.ByteArrayDataOutput;
 
 import cpw.mods.fml.common.FMLLog;
@@ -93,9 +101,9 @@ public class SyncingTransformer extends SelectiveTransformer {
 	
 	@Override
 	protected boolean transforms(String className) {
-		return !className.startsWith("net.minecraft.") && !className.startsWith("de.take_weiland.mods.commons.sync.");
+		return !className.startsWith("net.minecraft.") && !className.startsWith("de.take_weiland.mods.commons.sync.") && !className.startsWith("cpw.mods.") && !className.startsWith("net.minecraftforge.");
 	}
-
+	
 	@Override
 	protected boolean transform(ClassNode clazz, String className) {
 		if (!ASMUtils.hasAnnotation(clazz, Synced.class) || (clazz.access & ACC_INTERFACE) == ACC_INTERFACE) {
@@ -109,10 +117,14 @@ public class SyncingTransformer extends SelectiveTransformer {
 			return false;
 		}
 		
-		List<FieldNode> syncedFields = Lists.newArrayList();
+		List<FieldWithGroup> syncedFields = Lists.newArrayList();
 		List<FieldNode> companions = Lists.newArrayList();
 		List<FieldNode> syncerFields = Lists.newArrayList();
+		List<FieldWithGroup> groupHandlerFields = Lists.newArrayList();
 		BitSet specialCases = new BitSet();
+		
+		Set<Integer> syncGroups = Sets.newHashSet();
+		
 		int i = 0;
 		for (FieldNode field : ImmutableList.copyOf(clazz.fields)) { // copy the list because we add to it
 			AnnotationNode synced = ASMUtils.getAnnotation(field, Synced.class);
@@ -120,9 +132,17 @@ public class SyncingTransformer extends SelectiveTransformer {
 				boolean isSpecialCase = isSpecialCase(getType(field.desc));
 				specialCases.set(i++, isSpecialCase);
 				
-				syncedFields.add(field);
+				Integer group = getGroup(synced);
+				syncGroups.add(group);
+				
+				syncedFields.add(new FieldWithGroup(field, group.intValue()));
 				companions.add(createCompanion(clazz, field));
 				syncerFields.add(findOrCreateSyncer(clazz, field, synced, isSpecialCase));
+			}
+			AnnotationNode groupHandler = ASMUtils.getAnnotation(field, Synced.SyncGroupHandler.class);
+			if (groupHandler != null) {
+				field.access = (field.access & ~(ACC_PRIVATE | ACC_PROTECTED)) | ACC_PUBLIC; // make it public
+				groupHandlerFields.add(new FieldWithGroup(field, ((Integer) groupHandler.values.get(1)).intValue()));
 			}
 		}
 		
@@ -143,13 +163,18 @@ public class SyncingTransformer extends SelectiveTransformer {
 				return false;
 			}
 			
+			Map<Integer, MethodNode> syncMethods = Maps.newHashMap();
+			for (Integer group : syncGroups) {
+				MethodNode syncMethod = createSyncMethod(clazz, group, type, syncedFields, companions, syncerFields, specialCases);
+				syncMethods.put(group, syncMethod);
+			}
+			MethodNode defaultSyncMethod = syncMethods.get(Integer.valueOf(-1));
+			
 			FieldNode isInit = createIsInitField(clazz);
-			MethodNode initMethod = createInitMethod(clazz, isInit, syncedFields, syncerFields, specialCases);
+			MethodNode initMethod = createInitMethod(clazz, isInit, syncedFields, syncerFields, specialCases, groupHandlerFields, syncMethods);
 			injectInitCalls(clazz, initMethod);
 			
-			MethodNode syncMethod = createSyncMethod(clazz, type, syncedFields, companions, syncerFields, specialCases);
-			
-			InsnList insns = createPerformSyncCall(clazz, type.getRootClass(), type.getWorldFieldName(), syncMethod);
+			InsnList insns = createPerformSyncCall(clazz, type.getRootClass(), type.getWorldFieldName(), defaultSyncMethod);
 			String name;
 			switch (type) {
 			case ENTITY:
@@ -165,7 +190,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 				addOrCreateMethod(clazz, name, getMethodDescriptor(VOID_TYPE), insns);
 				break;
 			case ENTITY_PROPS:
-				addTickMethod(clazz, syncMethod);
+				addTickMethod(clazz, defaultSyncMethod);
 				
 				FieldNode owner = createOwnerField(clazz);
 				FieldNode index = createIndexField(clazz);
@@ -188,6 +213,18 @@ public class SyncingTransformer extends SelectiveTransformer {
 		}
 		
 		return true;
+	}
+
+	private Integer getGroup(AnnotationNode synced) {
+		if (synced.values == null) {
+			return Integer.valueOf(-1);
+		}
+		for (int i = 0; i < synced.values.size(); i += 2) {
+			if (synced.values.get(i).equals("syncGroup")) {
+				return (Integer)synced.values.get(i + 1);
+			}
+		}
+		return Integer.valueOf(-1);
 	}
 
 	private void createGetter(ClassNode clazz, String name, FieldNode field) {
@@ -258,7 +295,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 		clazz.methods.add(method);
 	}
 
-	private void createReadMethod(ClassNode clazz, List<FieldNode> syncedFields, List<FieldNode> syncerFields, BitSet specialCases) {
+	private void createReadMethod(ClassNode clazz, List<FieldWithGroup> syncedFields, List<FieldNode> syncerFields, BitSet specialCases) {
 		String name = "_sc_sync_read";
 		String desc = getMethodDescriptor(VOID_TYPE, getType(DataInput.class));
 		MethodNode method = new MethodNode(ACC_PUBLIC, name, desc, null, null);
@@ -287,7 +324,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 		
 		insns.add(new TableSwitchInsnNode(-1, len - 1, dflt, ObjectArrays.concat(finish, labels)));
 		for (int i = 0; i < len; ++i) {
-			FieldNode field = syncedFields.get(i);
+			FieldNode field = syncedFields.get(i).field;
 			FieldNode syncer = syncerFields.get(i);
 			boolean isSpecialCase = specialCases.get(i);
 			Type fieldType = getType(field.desc);
@@ -344,7 +381,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 		return field;
 	}
 	
-	private MethodNode createInitMethod(ClassNode clazz, FieldNode isInit, List<FieldNode> fields, List<FieldNode> syncers, BitSet specialCases) {
+	private MethodNode createInitMethod(ClassNode clazz, FieldNode isInit, List<FieldWithGroup> fields, List<FieldNode> syncers, BitSet specialCases, List<FieldWithGroup> groupHandlers, Map<Integer, MethodNode> syncMethods) {
 		String name = "_sc_sync_doInit";
 		String desc = getMethodDescriptor(VOID_TYPE);
 		MethodNode method = new MethodNode(ACC_PRIVATE | ACC_STATIC, name, desc, null, null);
@@ -364,7 +401,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 		desc = getMethodDescriptor(typeSyncerType, classType);
 		int len = fields.size();
 		for (int i = 0; i < len; ++i) {
-			FieldNode field = fields.get(i);
+			FieldNode field = fields.get(i).field;
 			FieldNode syncer = syncers.get(i);
 			boolean isSpecialCase = specialCases.get(i);
 			
@@ -377,6 +414,19 @@ public class SyncingTransformer extends SelectiveTransformer {
 		}
 		insns.add(new InsnNode(ICONST_1));
 		insns.add(new FieldInsnNode(PUTSTATIC, clazz.name, isInit.name, isInit.desc));
+		
+		desc = getMethodDescriptor(getType(Function.class), getType(Class.class), getType(String.class));
+		for (FieldWithGroup groupHandler : groupHandlers) {
+			if (groupHandler.group == -1) {
+				continue;
+			}
+			MethodNode syncMethod = syncMethods.get(Integer.valueOf(groupHandler.group));
+			insns.add(new LdcInsnNode(getObjectType(clazz.name)));
+			insns.add(new LdcInsnNode(syncMethod.name));
+			insns.add(new MethodInsnNode(INVOKESTATIC, owner, "makeSyncGroupInvoker", desc));
+			insns.add(new FieldInsnNode(PUTSTATIC, clazz.name, groupHandler.field.name, groupHandler.field.desc));
+		}
+		
 		insns.add(new InsnNode(RETURN));
 		
 		clazz.methods.add(method);
@@ -447,7 +497,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 		return syncer;
 	}
 	
-	private MethodNode createSyncMethod(ClassNode clazz, SyncType syncType, List<FieldNode> fields, List<FieldNode> companions, List<FieldNode> syncers, BitSet specialCases) {
+	private MethodNode createSyncMethod(ClassNode clazz, Integer group, SyncType syncType, List<FieldWithGroup> fields, List<FieldNode> companions, List<FieldNode> syncers, BitSet specialCases) {
 		assert(fields.size() == companions.size() && companions.size() == syncers.size());
 		
 		Type BADOType = getType(ByteArrayDataOutput.class);
@@ -456,8 +506,8 @@ public class SyncingTransformer extends SelectiveTransformer {
 		Type syncTypeType = getType(SyncType.class);
 		
 		String syncASMHooks = getInternalName(SyncASMHooks.class);
-		String name = "_sc_sync_sync";
-		String desc = Type.getMethodDescriptor(VOID_TYPE);
+		String name = "_sc_sync_sync$" + group.toString().replace('-', 'm');
+		String desc = group.intValue() == -1 ? Type.getMethodDescriptor(VOID_TYPE) : getMethodDescriptor(getType(Packet.class));
 		MethodNode method = new MethodNode(ACC_PRIVATE, name, desc, null, null);
 		InsnList insns = method.instructions;
 		
@@ -465,7 +515,11 @@ public class SyncingTransformer extends SelectiveTransformer {
 		
 		int len = fields.size();
 		for (int i = 0; i < len; ++i) {
-			FieldNode field = fields.get(i);
+			FieldWithGroup fieldWithGroup = fields.get(i);
+			if (fieldWithGroup.group != group.intValue()) {
+				continue;
+			}
+			FieldNode field = fieldWithGroup.field;
 			FieldNode companion = companions.get(i);
 			FieldNode syncer = syncers.get(i);
 			boolean isSpecialCase = specialCases.get(i);
@@ -506,11 +560,17 @@ public class SyncingTransformer extends SelectiveTransformer {
 		insns.add(new VarInsnNode(ALOAD, 0));
 		insns.add(new FieldInsnNode(GETSTATIC, syncTypeType.getInternalName(), syncType.name(), syncTypeType.getDescriptor()));
 		
-		name = "endSync";
-		desc = getMethodDescriptor(VOID_TYPE, BADOType, objectType, syncTypeType);
-		insns.add(new MethodInsnNode(INVOKESTATIC, syncASMHooks, name, desc));
-		
-		insns.add(new InsnNode(RETURN));
+		if (group.intValue() == -1) {
+			name = "endSync";
+			desc = getMethodDescriptor(VOID_TYPE, BADOType, objectType, syncTypeType);
+			insns.add(new MethodInsnNode(INVOKESTATIC, syncASMHooks, name, desc));
+			insns.add(new InsnNode(RETURN));
+		} else {
+			name = "endSyncMakePacket";
+			desc = getMethodDescriptor(getType(Packet.class), BADOType, objectType, syncTypeType);
+			insns.add(new MethodInsnNode(INVOKESTATIC, syncASMHooks, name, desc));
+			insns.add(new InsnNode(ARETURN));
+		}
 		
 		clazz.methods.add(method);
 		return method;
