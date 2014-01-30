@@ -31,6 +31,7 @@ import org.objectweb.asm.Type;
 import sun.misc.Unsafe;
 import de.take_weiland.mods.commons.util.JavaUtils;
 
+@SuppressWarnings("restriction")
 class SunProprietaryStrategy extends AbstractStrategy {
 
 	private static final Unsafe unsafe = (Unsafe) JavaUtils.getUnsafe();

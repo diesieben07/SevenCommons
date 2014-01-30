@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 import com.google.common.base.Preconditions;
 
 import cpw.mods.fml.common.FMLLog;
-import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import de.take_weiland.mods.commons.util.JavaUtils;
 
 public final class Fastreflect {
