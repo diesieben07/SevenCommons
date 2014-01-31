@@ -42,8 +42,9 @@ public final class Fastreflect {
 			} catch (Exception e) {
 				// then not
 			}
-			logger.warning("Using slow Strategy! This may lead to performance penalties. Please use Oracle's VM.");
 		}
+		
+		logger.warning("Using slow Strategy! This may lead to performance penalties. Please use Oracle's VM.");
 		
 		return new ReflectiveStrategy();
 	}
