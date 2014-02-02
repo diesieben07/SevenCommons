@@ -26,6 +26,7 @@ group= "de.take_weiland.mods.commons" // http://maven.apache.org/guides/mini/gui
 archivesBaseName = "SevenCommons"
 
 sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 minecraft {
 	version = "1.6.4-9.11.1.964"
