@@ -9,7 +9,7 @@ public final class Network {
 	private Network() { }
 	
 	public static <TYPE extends Enum<TYPE>> PacketFactory<TYPE> makeFactory(String channel, Class<TYPE> typeClass, PacketHandler<TYPE> handler) {
-		return new FMLPacketHandlerImpl<>(channel, handler, typeClass);
+		return new FMLPacketHandlerImpl<TYPE>(channel, handler, typeClass);
 	}
 	
 	public static <TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> PacketFactory<TYPE> simplePacketHandler(String channel, Class<TYPE> typeClass) {
