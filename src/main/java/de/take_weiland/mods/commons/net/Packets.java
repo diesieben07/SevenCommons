@@ -153,32 +153,40 @@ public final class Packets {
 		}
 	}
 	
-	public static void writeEnum(WritableDataBuf out, Enum<?> e) throws IOException {
+	public static void writeEnum(WritableDataBuf out, Enum<?> e) {
 		out.putVarInt(e.ordinal());
 	}
 	
-	public static <E extends Enum<E>> E readEnum(DataBuf in, Class<E> clazz) throws IOException {
+	public static <E extends Enum<E>> E readEnum(DataBuf in, Class<E> clazz) {
 		return JavaUtils.byOrdinal(clazz, in.getVarInt());
 	}
 	
-	public static void writeNbt(WritableDataBuf out, NBTTagCompound nbt) throws IOException {
+	public static void writeNbt(WritableDataBuf out, NBTTagCompound nbt) {
 		if (nbt == null) {
 			out.putBoolean(true);
 		} else {
 			out.putBoolean(false);
-			CompressedStreamTools.write(nbt, out.asDataOutput());
+			try {
+				CompressedStreamTools.write(nbt, out.asDataOutput());
+			} catch (IOException e) {
+				throw new AssertionError("Impossible");
+			}
 		}
 	}
 	
-	public static NBTTagCompound readNbt(DataBuf in) throws IOException {
+	public static NBTTagCompound readNbt(DataBuf in) {
 		if (in.getBoolean()) {
 			return null;
 		} else {
-			return CompressedStreamTools.read(in.asDataInput());
+			try {
+				return CompressedStreamTools.read(in.asDataInput());
+			} catch (IOException e) {
+				throw new AssertionError("Impossible");
+			}
 		}
 	}
 	
-	public static void writeFluidStack(WritableDataBuf out, FluidStack stack) throws IOException {
+	public static void writeFluidStack(WritableDataBuf out, FluidStack stack) {
 		if (stack == null) {
 			out.putVarInt(-1);
 		} else {
@@ -188,7 +196,7 @@ public final class Packets {
 		}
 	}
 	
-	public static FluidStack readFluidStack(DataBuf in) throws IOException {
+	public static FluidStack readFluidStack(DataBuf in) {
 		int fluidId = in.getVarInt();
 		if (fluidId < 0) {
 			return null;
