@@ -8,9 +8,11 @@ import cpw.mods.fml.relauncher.Side;
 
 public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> implements SimplePacket {
 
-	protected abstract void handle(DataBuf buffer, EntityPlayer player, Side side);
+	protected abstract boolean validOn(Side side);
 	
 	protected abstract void write(WritableDataBuf buffer);
+	
+	protected abstract void handle(DataBuf buffer, EntityPlayer player, Side side);
 	
 	protected int expectedSize() {
 		return 32;
