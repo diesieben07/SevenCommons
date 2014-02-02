@@ -45,7 +45,7 @@ public final class PacketTransformer extends SelectiveTransformer {
 		createGetter(clazz, factory, "_sc_getFactory");
 		createGetter(clazz, type, "_sc_getType");
 		
-		clazz.interfaces.add("de/take_weiland/mods/commons/netx/PacketWithFactory");
+		clazz.interfaces.add("de/take_weiland/mods/commons/net/PacketWithFactory");
 		
 		return true;
 	}
