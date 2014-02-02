@@ -31,7 +31,7 @@ public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>
 		@SuppressWarnings("unchecked")
 		PacketWithFactory<TYPE> pwf = (PacketWithFactory<TYPE>) this;
 		
-		PacketBuilder builder = pwf._sc_getFactory().builder(pwf._sc_getType());
+		PacketBuilder builder = pwf._sc_getFactory().builder(pwf._sc_getType(), expectedSize());
 		write(builder);
 		return builder.toPacket();
 	}
