@@ -152,5 +152,52 @@ public final class Packets {
 			return stack;
 		}
 	}
+	
+	public static void writeEnum(WritableDataBuf out, Enum<?> e) throws IOException {
+		out.putVarInt(e.ordinal());
+	}
+	
+	public static <E extends Enum<E>> E readEnum(DataBuf in, Class<E> clazz) throws IOException {
+		return JavaUtils.byOrdinal(clazz, in.getVarInt());
+	}
+	
+	public static void writeNbt(WritableDataBuf out, NBTTagCompound nbt) throws IOException {
+		if (nbt == null) {
+			out.putBoolean(true);
+		} else {
+			out.putBoolean(false);
+			CompressedStreamTools.write(nbt, out.asDataOutput());
+		}
+	}
+	
+	public static NBTTagCompound readNbt(DataBuf in) throws IOException {
+		if (in.getBoolean()) {
+			return null;
+		} else {
+			return CompressedStreamTools.read(in.asDataInput());
+		}
+	}
+	
+	public static void writeFluidStack(WritableDataBuf out, FluidStack stack) throws IOException {
+		if (stack == null) {
+			out.putVarInt(-1);
+		} else {
+			out.putVarInt(stack.fluidID);
+			out.putVarInt(stack.amount);
+			writeNbt(out, stack.tag);
+		}
+	}
+	
+	public static FluidStack readFluidStack(DataBuf in) throws IOException {
+		int fluidId = in.getVarInt();
+		if (fluidId < 0) {
+			return null;
+		} else {
+			int amount = in.getVarInt();
+			FluidStack stack = new FluidStack(fluidId, amount);
+			stack.tag = readNbt(in);
+			return stack;
+		}
+	}
 
 }
