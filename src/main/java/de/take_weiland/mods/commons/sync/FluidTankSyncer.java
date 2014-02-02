@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
-import de.take_weiland.mods.commons.network.Packets;
+import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.util.Fluids;
 
 final class FluidTankSyncer implements TypeSyncer<FluidTank> {

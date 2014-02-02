@@ -15,7 +15,7 @@ import com.google.common.io.ByteArrayDataOutput;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.internal.EntityProxy;
-import de.take_weiland.mods.commons.network.Packets;
+import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 

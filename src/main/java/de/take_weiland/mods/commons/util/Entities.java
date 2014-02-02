@@ -13,7 +13,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.ForgeDirection;
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
-import de.take_weiland.mods.commons.network.Packets;
+import de.take_weiland.mods.commons.net.Packets;
 
 public final class Entities {
 

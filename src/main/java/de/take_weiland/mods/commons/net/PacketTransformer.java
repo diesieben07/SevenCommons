@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.netx;
+package de.take_weiland.mods.commons.net;
 
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;

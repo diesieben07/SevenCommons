@@ -54,7 +54,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 			"de.take_weiland.mods.commons.asm.transformers.SyncingTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.EntityTrackerEntryTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.EntityTransformer",
-			"de.take_weiland.mods.commons.netx.PacketTransformer"
+			"de.take_weiland.mods.commons.net.PacketTransformer"
 		};
 	}
 

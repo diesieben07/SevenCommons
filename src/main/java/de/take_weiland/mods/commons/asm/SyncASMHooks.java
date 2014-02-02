@@ -34,7 +34,7 @@ import de.take_weiland.mods.commons.fastreflect.Fastreflect;
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
 import de.take_weiland.mods.commons.internal.CommonsPackets;
 import de.take_weiland.mods.commons.internal.EntityProxy;
-import de.take_weiland.mods.commons.network.Packets;
+import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.sync.PacketEntityPropsIds;
 import de.take_weiland.mods.commons.sync.SyncType;
 import de.take_weiland.mods.commons.sync.SyncedEntityProperties;

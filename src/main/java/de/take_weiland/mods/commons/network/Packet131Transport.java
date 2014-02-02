@@ -18,6 +18,7 @@ import cpw.mods.fml.common.network.ITinyPacketHandler;
 import cpw.mods.fml.common.network.NetworkModHandler;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.ReflectionHelper;
+import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 
 class Packet131Transport extends PacketTransportAbstract implements ITinyPacketHandler {

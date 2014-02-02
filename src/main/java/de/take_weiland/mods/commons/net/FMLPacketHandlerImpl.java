@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.netx;
+package de.take_weiland.mods.commons.net;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -24,7 +24,6 @@ import cpw.mods.fml.common.network.IPacketHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
-import de.take_weiland.mods.commons.network.Packets;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.MiscUtil;
 import de.take_weiland.mods.commons.util.Sides;

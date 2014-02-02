@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
-import static de.take_weiland.mods.commons.network.Packets.readEnum;
-import static de.take_weiland.mods.commons.network.Packets.writeEnum;
+import static de.take_weiland.mods.commons.net.Packets.readEnum;
+import static de.take_weiland.mods.commons.net.Packets.writeEnum;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

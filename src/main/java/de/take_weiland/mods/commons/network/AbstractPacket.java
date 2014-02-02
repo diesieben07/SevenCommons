@@ -4,9 +4,9 @@ import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToAllAround
 import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToAllInDimension;
 import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToAllPlayers;
 import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToServer;
-import static de.take_weiland.mods.commons.network.Packets.sendPacketToAllTracking;
-import static de.take_weiland.mods.commons.network.Packets.sendPacketToPlayer;
-import static de.take_weiland.mods.commons.network.Packets.sendPacketToPlayers;
+import static de.take_weiland.mods.commons.net.Packets.sendPacketToAllTracking;
+import static de.take_weiland.mods.commons.net.Packets.sendPacketToPlayer;
+import static de.take_weiland.mods.commons.net.Packets.sendPacketToPlayers;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.packet.Packet;

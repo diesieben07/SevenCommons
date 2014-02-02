@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.netx;
+package de.take_weiland.mods.commons.net;
 
 interface PacketFactoryInternal<TYPE extends Enum<TYPE>> {
 

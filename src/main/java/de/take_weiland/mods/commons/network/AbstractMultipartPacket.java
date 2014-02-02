@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.network;
 import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToAllInDimension;
 import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToAllPlayers;
 import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToServer;
-import static de.take_weiland.mods.commons.network.Packets.sendPacketToPlayer;
+import static de.take_weiland.mods.commons.net.Packets.sendPacketToPlayer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;

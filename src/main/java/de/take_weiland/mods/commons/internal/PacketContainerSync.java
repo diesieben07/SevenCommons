@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
-import static de.take_weiland.mods.commons.network.Packets.sendPacketToPlayer;
+import static de.take_weiland.mods.commons.net.Packets.sendPacketToPlayer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
