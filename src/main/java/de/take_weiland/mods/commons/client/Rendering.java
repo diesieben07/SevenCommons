@@ -32,7 +32,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
+import de.take_weiland.mods.commons.util.MiscUtil;
 
 public final class Rendering {
 	
@@ -179,7 +179,7 @@ public final class Rendering {
 	}
 	
 	public static void unloadTexture(ResourceLocation loc) {
-		TextureObject tex = CommonsModContainer.reflector.getTexturesMap(Minecraft.getMinecraft().renderEngine).remove(loc);
+		TextureObject tex = MiscUtil.getReflector().getTexturesMap(Minecraft.getMinecraft().renderEngine).remove(loc);
 		if (tex != null) {
 			glDeleteTextures(tex.getGlTextureId());
 		}

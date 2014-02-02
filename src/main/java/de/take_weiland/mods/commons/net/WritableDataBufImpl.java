@@ -123,6 +123,26 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 	}
 
 	@Override
+	public PacketBuilder putString(String s) {
+		if (s == null) {
+			return putVarInt(-1);
+		}
+		int len = s.length();
+		putVarInt(len);
+		grow0(len << 1);
+		int pos = this.pos;
+		byte[] buf = this.buf;
+		for (int i = 0; i < len; ++i) {
+			char c = s.charAt(i);
+			int p = pos + (i << 1);
+			buf[p] = (byte) ((c >>> 8) & 0xff);
+			buf[p + 1] = (byte) (c & 0xff);
+		}
+		pos += len << 1;
+		return this;
+	}
+
+	@Override
 	public PacketBuilder put(byte[] bytes) {
 		return put(bytes, 0, bytes.length);
 	}

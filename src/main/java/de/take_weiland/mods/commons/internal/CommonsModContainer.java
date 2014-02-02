@@ -19,13 +19,11 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.config.ConfigInjector;
 import de.take_weiland.mods.commons.config.GetProperty;
-import de.take_weiland.mods.commons.fastreflect.Fastreflect;
 import de.take_weiland.mods.commons.internal.updater.CommandUpdates;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.network.PacketTransport;
 import de.take_weiland.mods.commons.network.PacketTransports;
-import de.take_weiland.mods.commons.util.SCReflector;
 
 public final class CommonsModContainer extends DummyModContainer {
 
@@ -33,7 +31,6 @@ public final class CommonsModContainer extends DummyModContainer {
 	public static CommonsModContainer instance;
 	public static UpdateController updateController;
 	public static PacketTransport packetTransport;
-	public static SCReflector reflector;
 	
 	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
 	public static boolean updaterEnabled = true;
@@ -78,8 +75,6 @@ public final class CommonsModContainer extends DummyModContainer {
 		
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 		ConfigInjector.inject(config, getClass());
-		
-		reflector = Fastreflect.createAccessor(SCReflector.class);
 		
 		packetTransport = PacketTransports.withPacket250("SevenCommons", CommonsPackets.class);
 		

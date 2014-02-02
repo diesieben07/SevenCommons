@@ -1,11 +1,5 @@
 package de.take_weiland.mods.commons.client;
 
-import org.lwjgl.opengl.GL11;
-
-import com.google.common.primitives.UnsignedBytes;
-
-import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.templates.SCContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -13,6 +7,13 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.util.ResourceLocation;
+
+import org.lwjgl.opengl.GL11;
+
+import com.google.common.primitives.UnsignedBytes;
+
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.templates.SCContainer;
 
 public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & SCContainer<I>> extends GuiContainer implements ContainerGui<C> {
 

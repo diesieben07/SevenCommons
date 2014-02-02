@@ -16,8 +16,6 @@ import static de.take_weiland.mods.commons.asm.ASMConstants.F_TRACKED_ENTITY_IDS
 import java.util.List;
 import java.util.Map;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -29,6 +27,9 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.util.IntHashMap;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Timer;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.fastreflect.Getter;
 import de.take_weiland.mods.commons.fastreflect.Setter;
 
@@ -64,6 +65,7 @@ public interface SCReflector {
 	@Getter(field = { F_MAP_TEXTURE_OBJECTS_MCP, F_MAP_TEXTURE_OBJECTS_OBF })
 	Map<ResourceLocation, TextureObject> getTexturesMap(TextureManager manager);
 	
+	@Unsafe
 	@Getter(field = "packetClassToIdMap")
 	Map<Class<? extends Packet>, Integer> getClassToIdMap(Packet dummy);
 	

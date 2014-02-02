@@ -121,6 +121,23 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
+	public String getString() {
+		int len = getVarInt();
+		if (len < 0) {
+			return null;
+		}
+		checkRemaining(len << 1);
+		int pos = this.pos;
+		byte[] buf = this.buf;
+		char[] chars = new char[len];
+		for (int i = 0; i < len; ++i) {
+			int p = pos + i << 1;
+			chars[i] = Chars.fromBytes(buf[p], buf[p + 1]);
+		}
+		return new String(chars);
+	}
+
+	@Override
 	public int getUnsignedByte() {
 		return UnsignedBytes.toInt(getByte());
 	}

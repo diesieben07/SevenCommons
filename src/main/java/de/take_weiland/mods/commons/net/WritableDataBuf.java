@@ -14,6 +14,8 @@ public interface WritableDataBuf extends DataBuf {
 	WritableDataBuf putFloat(float f);
 	WritableDataBuf putDouble(double d);
 	
+	WritableDataBuf putString(String s);
+	
 	WritableDataBuf putVarInt(int i);
 	WritableDataBuf putUnsignedByte(int i);
 	WritableDataBuf putUnsignedShort(int i);

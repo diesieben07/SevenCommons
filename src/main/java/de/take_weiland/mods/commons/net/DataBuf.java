@@ -17,6 +17,8 @@ public interface DataBuf {
 	float getFloat();
 	double getDouble();
 	
+	String getString();
+	
 	int getVarInt();
 	
 	int getUnsignedByte();

@@ -12,6 +12,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterables;
 
+import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 
 public final class JavaUtils {
@@ -117,12 +118,19 @@ public final class JavaUtils {
 		return (int)l;
 	}
 	
+	@Deprecated
+	@Unsafe
 	public static <T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
+		return getEnumConstantsShared(clazz);
+	}
+	
+	@Unsafe
+	public static <T extends Enum<T>> T[] getEnumConstantsShared(Class<T> clazz) {
 		return ENUM_GETTER.getEnumValues(clazz);
 	}
 	
 	public static <T extends Enum<T>> T byOrdinal(Class<T> clazz, int ordinal) {
-		return safeArrayAccess(getEnumValues(clazz), ordinal);
+		return safeArrayAccess(getEnumConstantsShared(clazz), ordinal);
 	}
 	
 	interface EnumValueGetter {
@@ -159,11 +167,13 @@ public final class JavaUtils {
 		}
 	}
 
+	@Unsafe
 	public static boolean hasUnsafe() {
 		initUnsafe();
 		return unsafe != null;
 	}
 	
+	@Unsafe
 	public static Object getUnsafe() {
 		initUnsafe();
 		return unsafe;

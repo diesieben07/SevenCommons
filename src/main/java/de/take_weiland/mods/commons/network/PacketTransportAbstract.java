@@ -8,11 +8,11 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.util.MathHelper;
+
+import org.apache.commons.io.output.ByteArrayOutputStream;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -21,8 +21,8 @@ import com.google.common.io.OutputSupplier;
 import com.google.common.primitives.UnsignedBytes;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Consumer;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import de.take_weiland.mods.commons.util.SplittingOutputStream;
 

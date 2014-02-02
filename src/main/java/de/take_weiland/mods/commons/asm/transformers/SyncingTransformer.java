@@ -75,9 +75,9 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteArrayDataOutput;
 
 import cpw.mods.fml.common.FMLLog;
+import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
-import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
 import de.take_weiland.mods.commons.asm.SyncASMHooks;
 import de.take_weiland.mods.commons.sync.SyncType;

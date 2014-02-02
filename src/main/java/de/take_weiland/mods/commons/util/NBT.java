@@ -2,13 +2,12 @@ package de.take_weiland.mods.commons.util;
 
 import java.util.List;
 
-import com.google.common.base.Function;
-
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+
+import com.google.common.base.Function;
 
 public final class NBT {
 
@@ -21,7 +20,7 @@ public final class NBT {
 	 * @return a modifiable list view of the NBTTagList
 	 */
 	public static <T extends NBTBase> List<T> asList(NBTTagList nbtList) {
-		return CommonsModContainer.reflector.getWrappedList(nbtList);
+		return MiscUtil.getReflector().getWrappedList(nbtList);
 	}
 
 	public static NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {

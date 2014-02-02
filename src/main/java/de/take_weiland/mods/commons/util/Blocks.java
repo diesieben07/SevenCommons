@@ -5,9 +5,9 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.templates.SCItemBlock;
 import de.take_weiland.mods.commons.templates.HasMetadata;
 import de.take_weiland.mods.commons.templates.Metadata.BlockMeta;
+import de.take_weiland.mods.commons.templates.SCItemBlock;
 import de.take_weiland.mods.commons.templates.TypedItemBlock;
 
 public final class Blocks {

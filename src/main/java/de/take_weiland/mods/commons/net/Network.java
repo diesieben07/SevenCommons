@@ -14,7 +14,7 @@ public final class Network {
 	
 	public static <TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> PacketFactory<TYPE> simplePacketHandler(String channel, Class<TYPE> typeClass) {
 		PacketFactory<TYPE> factory = new FMLPacketHandlerImpl<TYPE>(channel, SimplePacketHandler.<TYPE>instance(), typeClass);
-		injectTypesAndFactory(JavaUtils.getEnumValues(typeClass), factory);
+		injectTypesAndFactory(JavaUtils.getEnumConstantsShared(typeClass), factory);
 		return factory;
 	}
 	

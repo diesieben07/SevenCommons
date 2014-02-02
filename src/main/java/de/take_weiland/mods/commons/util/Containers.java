@@ -9,8 +9,8 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import de.take_weiland.mods.commons.internal.PacketContainerSync;
-import de.take_weiland.mods.commons.templates.SCContainer;
 import de.take_weiland.mods.commons.templates.ItemInventory;
+import de.take_weiland.mods.commons.templates.SCContainer;
 import de.take_weiland.mods.commons.templates.SlotNoPickup;
 import de.take_weiland.mods.commons.templates.SyncedContainer;
 

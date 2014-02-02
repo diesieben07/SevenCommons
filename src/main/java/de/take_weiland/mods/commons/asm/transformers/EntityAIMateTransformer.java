@@ -1,6 +1,11 @@
 package de.take_weiland.mods.commons.asm.transformers;
 
-import static de.take_weiland.mods.commons.asm.ASMConstants.*;
+import static de.take_weiland.mods.commons.asm.ASMConstants.F_TARGET_MATE_MCP;
+import static de.take_weiland.mods.commons.asm.ASMConstants.F_TARGET_MATE_OBF;
+import static de.take_weiland.mods.commons.asm.ASMConstants.F_THE_ANIMAL_MCP;
+import static de.take_weiland.mods.commons.asm.ASMConstants.F_THE_ANIMAL_OBF;
+import static de.take_weiland.mods.commons.asm.ASMConstants.M_SPAWN_BABY_MCP;
+import static de.take_weiland.mods.commons.asm.ASMConstants.M_SPAWN_BABY_SRG;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;

@@ -12,6 +12,7 @@ public interface PacketBuilder extends WritableDataBuf {
 	PacketBuilder putChar(char c);
 	PacketBuilder putFloat(float f);
 	PacketBuilder putDouble(double d);
+	PacketBuilder putString(String s);
 	
 	PacketBuilder putVarInt(int i);
 	PacketBuilder putUnsignedByte(int i);

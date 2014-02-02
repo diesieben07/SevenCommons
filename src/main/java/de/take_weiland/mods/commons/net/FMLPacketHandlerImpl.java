@@ -42,7 +42,7 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		this.channel = channel;
 		this.handler = handler;
 		this.typeClass = typeClass;
-		this.idSize = IdSize.forCount(JavaUtils.getEnumValues(typeClass).length);
+		this.idSize = IdSize.forCount(JavaUtils.getEnumConstantsShared(typeClass).length);
 		MAX_SINGLE_SIZE = Short.MAX_VALUE - 1 - idSize.byteSize; // bug in Packet250CustomPayload only allows Short.MAX_VALUE - 1 bytes
 		MAX_PART_SIZE = MAX_SINGLE_SIZE - 2; // need two additional bytes for partIndex and partCount
 		NetworkRegistry.instance().registerChannel(this, channel);
