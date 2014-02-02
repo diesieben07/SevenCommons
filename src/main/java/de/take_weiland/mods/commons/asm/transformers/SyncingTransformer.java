@@ -101,7 +101,7 @@ public class SyncingTransformer extends SelectiveTransformer {
 	
 	@Override
 	protected boolean transforms(String className) {
-		return !className.startsWith("net.minecraft.") && !className.startsWith("de.take_weiland.mods.commons.sync.") && !className.startsWith("cpw.mods.") && !className.startsWith("net.minecraftforge.");
+		return !className.startsWith("net.minecraft.") && !className.startsWith("de.take_weiland.mods.commons.") && !className.startsWith("cpw.mods.") && !className.startsWith("net.minecraftforge.");
 	}
 	
 	@Override

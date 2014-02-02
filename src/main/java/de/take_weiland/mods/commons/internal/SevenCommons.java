@@ -20,7 +20,6 @@ import de.take_weiland.mods.commons.asm.ASMUtils;
 @MCVersion(SevenCommons.MINECRAFT_VERSION)
 @TransformerExclusions({
 		"de.take_weiland.mods.commons.asm.",
-		"de.take_weiland.mods.commons.util.",
 		"de.take_weiland.mods.commons.network.",
 		})
 public final class SevenCommons implements IFMLLoadingPlugin {
@@ -54,7 +53,8 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 			"de.take_weiland.mods.commons.asm.transformers.PacketTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.SyncingTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.EntityTrackerEntryTransformer",
-			"de.take_weiland.mods.commons.asm.transformers.EntityTransformer"
+			"de.take_weiland.mods.commons.asm.transformers.EntityTransformer",
+			"de.take_weiland.mods.commons.netx.PacketTransformer"
 		};
 	}
 
