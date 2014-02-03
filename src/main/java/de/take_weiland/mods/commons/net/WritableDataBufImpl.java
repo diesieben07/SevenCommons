@@ -104,10 +104,11 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 		grow0(size);
 		int pos = this.pos;
 		byte[] buf = this.buf;
-		while ((i & DataBufImpl.notFirst7Bits) != 0) {
+		while ((i & notFirst7Bits) != 0) {
 			buf[pos++] = (byte) (i & first7Bits | 128);
 			i >>>= 7;
 		}
+		buf[pos] = (byte) (i & first7Bits);
 		this.pos += size;
 		return this;
 	}
