@@ -18,8 +18,10 @@ public interface PacketBuilder extends WritableDataBuf {
 	PacketBuilder putUnsignedByte(int i);
 	PacketBuilder putUnsignedShort(int i);
 	
-	PacketBuilder put(byte[] bytes);
-	PacketBuilder put(byte[] bytes, int off, int len);
+	PacketBuilder putBytes(byte[] bytes);
+	
+	PacketBuilder putRaw(byte[] bytes);
+	PacketBuilder putRaw(byte[] bytes, int off, int len);
 	
 	PacketBuilder grow(int n);
 	

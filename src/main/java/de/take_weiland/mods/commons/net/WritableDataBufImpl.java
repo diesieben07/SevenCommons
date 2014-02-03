@@ -143,12 +143,19 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 	}
 
 	@Override
-	public PacketBuilder put(byte[] bytes) {
-		return put(bytes, 0, bytes.length);
+	public PacketBuilder putBytes(byte[] bytes) {
+		putVarInt(bytes.length);
+		putRaw(bytes);
+		return null;
 	}
 
 	@Override
-	public PacketBuilder put(byte[] arr, int off, int len) {
+	public PacketBuilder putRaw(byte[] bytes) {
+		return putRaw(bytes, 0, bytes.length);
+	}
+
+	@Override
+	public PacketBuilder putRaw(byte[] arr, int off, int len) {
 		DataBuffers.validateArray(arr, off, len);
         grow0(len);
         System.arraycopy(arr, off, buf, pos, len);

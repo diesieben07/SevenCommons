@@ -159,13 +159,13 @@ class DataBufImpl implements DataBuf {
 
 	@Override
 	public byte[] getByteArray(byte[] target) {
-		int length = getVarInt();
-		checkRemaining(length);
-		if (target.length < length) {
-			target = new byte[length];
+		int len = getVarInt();
+		checkRemaining(len);
+		if (target.length < len) {
+			target = new byte[len];
 		}
-		System.arraycopy(buf, pos, target, 0, length);
-		pos += length;
+		System.arraycopy(buf, pos, target, 0, len);
+		pos += len;
 		return target;
 	}
 	
@@ -213,6 +213,7 @@ class DataBufImpl implements DataBuf {
 	public int copyTo(OutputStream out, int amount) throws IOException {
 		amount = amount < 0 ? available() : Math.min(amount, available());
 		out.write(buf, pos, amount);
+		pos += amount;
 		return amount;
 	}
 
@@ -220,6 +221,7 @@ class DataBufImpl implements DataBuf {
 	public int copyTo(DataOutput out, int amount) throws IOException {
 		amount = amount < 0 ? available() : Math.min(amount, available());
 		out.write(buf, pos, amount);
+		pos += amount;
 		return amount;
 	}
 
@@ -232,6 +234,7 @@ class DataBufImpl implements DataBuf {
 	public int copyTo(byte[] buf, int off, int len) {
 		len = Math.min(available(), len);
 		System.arraycopy(this.buf, pos, buf, off, len);
+		pos += len;
 		return len;
 	}
 

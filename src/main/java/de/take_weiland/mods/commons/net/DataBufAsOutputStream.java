@@ -18,12 +18,12 @@ class DataBufAsOutputStream extends OutputStream {
 
 	@Override
 	public void write(byte[] b) throws IOException {
-		buf.put(b);
+		buf.putRaw(b);
 	}
 
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException {
-		buf.put(b, off, len);
+		buf.putRaw(b, off, len);
 	}
 
 }

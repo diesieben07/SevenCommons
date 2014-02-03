@@ -20,8 +20,10 @@ public interface WritableDataBuf extends DataBuf {
 	WritableDataBuf putUnsignedByte(int i);
 	WritableDataBuf putUnsignedShort(int i);
 	
-	WritableDataBuf put(byte[] bytes);
-	WritableDataBuf put(byte[] bytes, int off, int len);
+	WritableDataBuf putBytes(byte[] bytes);
+	
+	WritableDataBuf putRaw(byte[] bytes);
+	WritableDataBuf putRaw(byte[] bytes, int off, int len);
 	
 	/**
 	 * grows the internal buffer so that it can hold at least n additional bytes<br>
