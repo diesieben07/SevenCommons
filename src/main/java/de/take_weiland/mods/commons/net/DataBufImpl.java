@@ -131,7 +131,7 @@ class DataBufImpl implements DataBuf {
 		byte[] buf = this.buf;
 		char[] chars = new char[len];
 		for (int i = 0; i < len; ++i) {
-			int p = pos + i << 1;
+			int p = pos + (i << 1);
 			chars[i] = Chars.fromBytes(buf[p], buf[p + 1]);
 		}
 		return new String(chars);
