@@ -1,8 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 
 public interface TypeSyncer<T> {
 
@@ -14,8 +13,8 @@ public interface TypeSyncer<T> {
 	 */
 	boolean equal(T now, T prev);
 	
-	void write(T instance, DataOutput out) throws IOException;
+	void write(T instance, WritableDataBuf out);
 	
-	T read(T oldInstance, DataInput in) throws IOException;
+	T read(T oldInstance, DataBuf in);
 	
 }

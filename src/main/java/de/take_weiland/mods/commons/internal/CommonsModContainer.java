@@ -1,13 +1,8 @@
 package de.take_weiland.mods.commons.internal;
 
-import java.io.File;
-
-import net.minecraftforge.common.Configuration;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-
 import cpw.mods.fml.client.FMLFileResourcePack;
 import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.common.DummyModContainer;
@@ -22,8 +17,13 @@ import de.take_weiland.mods.commons.config.GetProperty;
 import de.take_weiland.mods.commons.internal.updater.CommandUpdates;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
+import de.take_weiland.mods.commons.net.Network;
+import de.take_weiland.mods.commons.net.PacketFactory;
 import de.take_weiland.mods.commons.network.PacketTransport;
 import de.take_weiland.mods.commons.network.PacketTransports;
+import net.minecraftforge.common.Configuration;
+
+import java.io.File;
 
 public final class CommonsModContainer extends DummyModContainer {
 
@@ -31,6 +31,7 @@ public final class CommonsModContainer extends DummyModContainer {
 	public static CommonsModContainer instance;
 	public static UpdateController updateController;
 	public static PacketTransport packetTransport;
+    public static PacketFactory<SCPacket.Type> packetFactory;
 	
 	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
 	public static boolean updaterEnabled = true;
@@ -75,8 +76,9 @@ public final class CommonsModContainer extends DummyModContainer {
 		
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 		ConfigInjector.inject(config, getClass());
-		
-		packetTransport = PacketTransports.withPacket250("SevenCommons", CommonsPackets.class);
+
+		packetFactory = Network.simplePacketHandler("SevenCommons", SCPacket.Type.class);
+		packetTransport = PacketTransports.withPacket250("SevenCommons_OLD", CommonsPackets.class);
 		
 		proxy.preInit(event);
 		

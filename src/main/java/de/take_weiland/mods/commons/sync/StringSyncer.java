@@ -1,10 +1,9 @@
 package de.take_weiland.mods.commons.sync;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 
-final class StringSyncer implements TypeSyncer<String> {
+public final class StringSyncer implements TypeSyncer<String> {
 
 	@Override
 	public boolean equal(String a, String b) {
@@ -12,13 +11,13 @@ final class StringSyncer implements TypeSyncer<String> {
 	}
 
 	@Override
-	public void write(String instance, DataOutput out) throws IOException {
-		out.writeUTF(instance);
+	public void write(String instance, WritableDataBuf out) {
+		out.putString(instance);
 	}
 
 	@Override
-	public String read(String old, DataInput in) throws IOException {
-		return in.readUTF();
+	public String read(String old, DataBuf in) {
+		return in.getString();
 	}
 
 }

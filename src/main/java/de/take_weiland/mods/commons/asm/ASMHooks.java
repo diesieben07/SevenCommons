@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.asm;
 
 import java.util.List;
 
+import de.take_weiland.mods.commons.sync.SyncASMHooks;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;

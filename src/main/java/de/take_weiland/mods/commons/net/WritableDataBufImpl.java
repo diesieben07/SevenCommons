@@ -26,14 +26,14 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 	}
 
 	@Override
-	public PacketBuilder putByte(byte b) {
+	public PacketBuilder putByte(int b) {
 		grow0(1);
-		buf[pos++] = b;
+		buf[pos++] = (byte) b;
 		return this;
 	}
 
 	@Override
-	public PacketBuilder putShort(short s) {
+	public PacketBuilder putShort(int s) {
 		grow0(2);
 		int pos = this.pos;
 		byte[] buf = this.buf;

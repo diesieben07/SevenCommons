@@ -1,36 +1,15 @@
-package de.take_weiland.mods.commons.asm.transformers;
-
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ARETURN;
-import static org.objectweb.asm.Opcodes.DUP;
-import static org.objectweb.asm.Opcodes.GETFIELD;
-import static org.objectweb.asm.Opcodes.INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.PUTFIELD;
-import static org.objectweb.asm.Opcodes.RETURN;
-import static org.objectweb.asm.Type.VOID_TYPE;
-import static org.objectweb.asm.Type.getDescriptor;
-import static org.objectweb.asm.Type.getMethodDescriptor;
-import static org.objectweb.asm.Type.getObjectType;
-import static org.objectweb.asm.Type.getType;
-
-import java.util.List;
-
-import net.minecraftforge.common.IExtendedEntityProperties;
-
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.VarInsnNode;
+package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
+import net.minecraftforge.common.IExtendedEntityProperties;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.*;
+
+import java.util.List;
+
+import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Type.*;
 
 public class EntityTransformer extends SelectiveTransformer {
 
@@ -131,6 +110,7 @@ public class EntityTransformer extends SelectiveTransformer {
 	
 	@Override
 	protected boolean transforms(String className) {
+		if (true) return false;
 		return "net.minecraft.entity.Entity".equals(className);
 	}
 

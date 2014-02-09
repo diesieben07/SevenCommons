@@ -1,12 +1,10 @@
 package de.take_weiland.mods.commons.sync;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
-import net.minecraftforge.fluids.FluidStack;
+import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.Packets;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.util.Fluids;
+import net.minecraftforge.fluids.FluidStack;
 
 final class FluidStackSyncer implements TypeSyncer<FluidStack> {
 
@@ -16,12 +14,12 @@ final class FluidStackSyncer implements TypeSyncer<FluidStack> {
 	}
 
 	@Override
-	public void write(FluidStack instance, DataOutput out) throws IOException {
+	public void write(FluidStack instance, WritableDataBuf out) {
 		Packets.writeFluidStack(out, instance);
 	}
 
 	@Override
-	public FluidStack read(FluidStack old, DataInput in) throws IOException {
+	public FluidStack read(FluidStack old, DataBuf in) {
 		return Packets.readFluidStack(in);
 	}
 

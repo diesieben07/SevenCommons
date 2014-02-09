@@ -1,13 +1,18 @@
 package de.take_weiland.mods.commons.net;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.EnumMap;
-import java.util.Map;
-
+import com.google.common.collect.MapMaker;
+import com.google.common.primitives.Shorts;
+import com.google.common.primitives.UnsignedBytes;
+import cpw.mods.fml.common.network.IPacketHandler;
+import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.PacketDispatcher;
+import cpw.mods.fml.common.network.Player;
+import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.MiscUtil;
+import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.Container;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.NetHandler;
 import net.minecraft.network.packet.Packet;
@@ -16,17 +21,11 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
-import com.google.common.collect.MapMaker;
-import com.google.common.primitives.Shorts;
-import com.google.common.primitives.UnsignedBytes;
-
-import cpw.mods.fml.common.network.IPacketHandler;
-import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.network.PacketDispatcher;
-import cpw.mods.fml.common.network.Player;
-import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.MiscUtil;
-import de.take_weiland.mods.commons.util.Sides;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.EnumMap;
+import java.util.Map;
 
 final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHandler, PacketFactory<TYPE>, PacketFactoryInternal<TYPE> {
 
@@ -397,7 +396,16 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		public void sendToAllTracking(TileEntity te) {
 			Packets.sendPacketToAllTracking(this, te);
 		}
-		
+
+		@Override
+		public void sendToAllAssociated(Entity e) {
+			Packets.sendPacketToAllAssociated(this, e);
+		}
+
+		@Override
+		public void sendToViewing(Container c) {
+			Packets.sendPacketToViewing(this, c);
+		}
 	}
 	
 	static class MultiPacketWrapper implements SimplePacket {
@@ -498,7 +506,20 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 				Packets.sendPacketToAllTracking(p, te);
 			}
 		}
-		
+
+		@Override
+		public void sendToAllAssociated(Entity e) {
+			for (Packet p : parts) {
+				Packets.sendPacketToAllAssociated(p, e);
+			}
+		}
+
+		@Override
+		public void sendToViewing(Container c) {
+			for (Packet p : parts) {
+				Packets.sendPacketToViewing(p, c);
+			}
+		}
 	}
 	
 }

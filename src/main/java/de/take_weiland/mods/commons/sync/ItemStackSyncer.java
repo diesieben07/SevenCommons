@@ -1,12 +1,10 @@
 package de.take_weiland.mods.commons.sync;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.Packet;
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.Packets;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.util.ItemStacks;
+import net.minecraft.item.ItemStack;
 
 final class ItemStackSyncer implements TypeSyncer<ItemStack> {
 
@@ -16,13 +14,13 @@ final class ItemStackSyncer implements TypeSyncer<ItemStack> {
 	}
 
 	@Override
-	public void write(ItemStack instance, DataOutput out) throws IOException {
-		Packet.writeItemStack(instance, out);
+	public void write(ItemStack instance, WritableDataBuf out) {
+		Packets.writeItemStack(out, instance);
 	}
 
 	@Override
-	public ItemStack read(ItemStack old, DataInput in) throws IOException {
-		return Packet.readItemStack(in);
+	public ItemStack read(ItemStack old, DataBuf in) {
+		return Packets.readItemStack(in);
 	}
 
 }

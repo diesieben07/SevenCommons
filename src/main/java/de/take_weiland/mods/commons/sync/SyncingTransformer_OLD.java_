@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.asm.transformers;
+package de.take_weiland.mods.commons.sync;
 
 import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
@@ -79,10 +79,6 @@ import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
-import de.take_weiland.mods.commons.asm.SyncASMHooks;
-import de.take_weiland.mods.commons.sync.SyncType;
-import de.take_weiland.mods.commons.sync.Synced;
-import de.take_weiland.mods.commons.sync.TypeSyncer;
 
 /**
  * This class is pretty much pure black magic.
@@ -90,7 +86,7 @@ import de.take_weiland.mods.commons.sync.TypeSyncer;
  * @author diesieben07
  *
  */
-public class SyncingTransformer extends SelectiveTransformer {
+public class SyncingTransformer_OLD extends SelectiveTransformer {
 
 	public static final Logger LOGGER;
 	

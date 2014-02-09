@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.asm.transformers;
+package de.take_weiland.mods.commons.sync;
 
 import org.objectweb.asm.tree.FieldNode;
 

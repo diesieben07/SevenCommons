@@ -6,7 +6,7 @@ import net.minecraftforge.event.EventPriority;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
 import cpw.mods.fml.common.IPlayerTracker;
-import de.take_weiland.mods.commons.asm.SyncASMHooks;
+import de.take_weiland.mods.commons.sync.SyncASMHooks;
 
 public final class SCEventHandler implements IPlayerTracker {
 
@@ -19,7 +19,7 @@ public final class SCEventHandler implements IPlayerTracker {
 
 	@Override
 	public void onPlayerLogin(EntityPlayer player) {
-		SyncASMHooks.syncEntityPropertyIds(player, player);
+		//SyncASMHooks.syncEntityPropertyIds(player, player);
 	}
 	
 	@Override

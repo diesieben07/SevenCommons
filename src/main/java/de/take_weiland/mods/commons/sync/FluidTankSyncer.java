@@ -1,13 +1,11 @@
 package de.take_weiland.mods.commons.sync;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.Packets;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
+import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
-import de.take_weiland.mods.commons.net.Packets;
-import de.take_weiland.mods.commons.util.Fluids;
 
 final class FluidTankSyncer implements TypeSyncer<FluidTank> {
 
@@ -17,15 +15,15 @@ final class FluidTankSyncer implements TypeSyncer<FluidTank> {
 	}
 
 	@Override
-	public void write(FluidTank instance, DataOutput out) throws IOException {
+	public void write(FluidTank instance, WritableDataBuf out) {
 		Packets.writeFluidStack(out, instance.getFluid());
 	}
 
 	@Override
-	public FluidTank read(FluidTank old, DataInput in) throws IOException {
+	public FluidTank read(FluidTank old, DataBuf in) {
 		FluidStack fluid = Packets.readFluidStack(in);
 		if (old == null) {
-			throw new IllegalStateException("Can't sync null FluidTank!");
+			throw new IllegalArgumentException("Can't sync null FluidTank!");
 		}
 		old.setFluid(fluid);
 		return old;

@@ -6,8 +6,8 @@ import java.io.OutputStream;
 public interface WritableDataBuf extends DataBuf {
 
 	WritableDataBuf putBoolean(boolean b);
-	WritableDataBuf putByte(byte b);
-	WritableDataBuf putShort(short s);
+	WritableDataBuf putByte(int b);
+	WritableDataBuf putShort(int s);
 	WritableDataBuf putInt(int i);
 	WritableDataBuf putLong(long l);
 	WritableDataBuf putChar(char c);

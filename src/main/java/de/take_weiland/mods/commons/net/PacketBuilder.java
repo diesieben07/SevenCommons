@@ -5,8 +5,8 @@ public interface PacketBuilder extends WritableDataBuf {
 	SimplePacket toPacket();
 	
 	PacketBuilder putBoolean(boolean b);
-	PacketBuilder putByte(byte b);
-	PacketBuilder putShort(short s);
+	PacketBuilder putByte(int b);
+	PacketBuilder putShort(int s);
 	PacketBuilder putInt(int i);
 	PacketBuilder putLong(long l);
 	PacketBuilder putChar(char c);

@@ -1,21 +1,18 @@
 package de.take_weiland.mods.commons.internal;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.logging.Logger;
-
-import net.minecraft.launchwrapper.LaunchClassLoader;
-
-import org.objectweb.asm.Type;
-
 import com.google.common.base.Throwables;
-
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import de.take_weiland.mods.commons.asm.ASMUtils;
+import net.minecraft.launchwrapper.LaunchClassLoader;
+import org.objectweb.asm.Type;
+
+import java.io.File;
+import java.net.URISyntaxException;
+import java.util.Map;
+import java.util.logging.Logger;
 
 @MCVersion(SevenCommons.MINECRAFT_VERSION)
 @TransformerExclusions({
@@ -51,9 +48,9 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 			"de.take_weiland.mods.commons.asm.transformers.EntityZombieTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.GuiScreenTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.PacketTransformer",
-			"de.take_weiland.mods.commons.asm.transformers.SyncingTransformer",
+			"de.take_weiland.mods.commons.sync.SyncingTransformer",
 			"de.take_weiland.mods.commons.asm.transformers.EntityTrackerEntryTransformer",
-			"de.take_weiland.mods.commons.asm.transformers.EntityTransformer",
+			"de.take_weiland.mods.commons.sync.EntityTransformer",
 			"de.take_weiland.mods.commons.net.PacketTransformer"
 		};
 	}

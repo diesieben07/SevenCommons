@@ -1,0 +1,107 @@
+package de.take_weiland.mods.commons;
+
+import cpw.mods.fml.common.IPlayerTracker;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.network.IGuiHandler;
+import cpw.mods.fml.common.network.NetworkMod;
+import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
+import de.take_weiland.mods.commons.sync.StringSyncer;
+import de.take_weiland.mods.commons.sync.Synced;
+import de.take_weiland.mods.commons.sync.TypeSyncer;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.Container;
+import net.minecraft.world.World;
+
+@Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
+@NetworkMod()
+public class testmod_sc {
+
+	@Mod.EventHandler
+	public void preInit(FMLPreInitializationEvent event) {
+		NetworkRegistry.instance().registerGuiHandler(this, new IGuiHandler() {
+			@Override
+			public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+				return new TestContainer();
+			}
+
+			@Override
+			public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+				return new TestGuiContainer((Container) getServerGuiElement(ID, player, world, x, y, z));
+			}
+		});
+
+		GameRegistry.registerPlayerTracker(new IPlayerTracker() {
+			@Override
+			public void onPlayerLogin(EntityPlayer player) {
+				player.openGui(testmod_sc.this, 0, player.worldObj, 0, 0, 0);
+			}
+
+			@Override
+			public void onPlayerLogout(EntityPlayer player) { }
+
+			@Override
+			public void onPlayerChangedDimension(EntityPlayer player) { }
+
+			@Override
+			public void onPlayerRespawn(EntityPlayer player) { }
+		});
+	}
+
+
+	private static class TestGuiContainer extends GuiContainer {
+
+		public TestGuiContainer(Container c) {
+			super(c);
+		}
+
+		@Override
+		protected void drawGuiContainerBackgroundLayer(float f, int i, int j) {
+			drawBackground(0);
+		}
+	}
+
+	@Synced
+	private static class TestContainer extends Container {
+
+		@Synced(syncer = StringSyncer.class)
+		private Object sync;
+
+		@Synced
+		private String foobar;
+
+		@Synced(syncer = TestSyncer.class)
+		private Object foobarusMaximus;
+
+		@Override
+		public boolean canInteractWith(EntityPlayer entityplayer) {
+			return true;
+		}
+	}
+
+	public static class TestSyncer implements TypeSyncer<Object> {
+
+		public TestSyncer(Object instance) {
+
+		}
+
+		@Override
+		public boolean equal(Object now, Object prev) {
+			return false;
+		}
+
+		@Override
+		public void write(Object instance, WritableDataBuf out) {
+
+		}
+
+		@Override
+		public Object read(Object oldInstance, DataBuf in) {
+			return null;
+		}
+	}
+}

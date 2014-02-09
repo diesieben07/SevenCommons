@@ -1,7 +1,16 @@
 package de.take_weiland.mods.commons.asm;
 
-import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
-import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
+import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
+import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.util.JavaUtils;
+import net.minecraft.launchwrapper.IClassNameTransformer;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -10,25 +19,8 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 
-import net.minecraft.launchwrapper.IClassNameTransformer;
-
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
-
-import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
-import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.util.JavaUtils;
+import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
+import static org.objectweb.asm.Opcodes.*;
 
 public final class ASMUtils {
 
@@ -132,7 +124,7 @@ public final class ASMUtils {
 			return null;
 		}
 	}
-	
+
 	public static AnnotationNode getAnnotation(FieldNode field, Class<? extends Annotation> ann) {
 		return getAnnotation(JavaUtils.concatNullable(field.visibleAnnotations, field.invisibleAnnotations), ann);
 	}

@@ -1,9 +1,9 @@
 package de.take_weiland.mods.commons.sync;
 
-import java.io.DataInput;
+import de.take_weiland.mods.commons.net.DataBuf;
 
 public interface SyncedObject {
 
-	void _sc_sync_read(DataInput in);
+	void _sc_sync_read(DataBuf in);
 	
 }

@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -32,6 +33,10 @@ public interface SimplePacket {
 	void sendToAllTracking(Entity entity);
 	
 	void sendToAllTracking(TileEntity te);
+
+	void sendToAllAssociated(Entity e);
+
+	void sendToViewing(Container c);
 	
 	public static final SimplePacket DUMMY = new SimplePacket() {
 
@@ -74,6 +79,11 @@ public interface SimplePacket {
 		@Override
 		public void sendToAllTracking(TileEntity te) { }
 
+		@Override
+		public void sendToAllAssociated(Entity e) { }
+
+		@Override
+		public void sendToViewing(Container c) { }
 	};
 	
 }

@@ -1,17 +1,18 @@
 package de.take_weiland.mods.commons.net;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-
+import com.google.common.primitives.UnsignedBytes;
+import cpw.mods.fml.common.network.PacketDispatcher;
+import cpw.mods.fml.common.network.Player;
+import de.take_weiland.mods.commons.internal.CommonsModContainer;
+import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.SCContainerAccessor;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.INetworkManager;
@@ -25,13 +26,11 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fluids.FluidStack;
 
-import com.google.common.primitives.UnsignedBytes;
-
-import cpw.mods.fml.common.network.PacketDispatcher;
-import cpw.mods.fml.common.network.Player;
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
-import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.Sides;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
 public final class Packets {
 
@@ -204,6 +203,30 @@ public final class Packets {
 			int amount = in.getVarInt();
 			FluidStack stack = new FluidStack(fluidId, amount);
 			stack.tag = readNbt(in);
+			return stack;
+		}
+	}
+
+	public static void writeItemStack(WritableDataBuf out, ItemStack stack) {
+		if (stack == null) {
+			out.putShort(-1);
+		} else {
+			out.putShort(stack.itemID);
+			out.putByte(stack.stackSize);
+			out.putShort(stack.getItemDamage());
+			writeNbt(out, stack.stackTagCompound);
+		}
+	}
+
+	public static ItemStack readItemStack(DataBuf in) {
+		int id = in.getShort();
+		if (id < 0) {
+			return null;
+		} else {
+			int size = in.getByte();
+			int damage = in.getShort();
+			ItemStack stack = new ItemStack(id, size, damage);
+			stack.stackTagCompound = readNbt(in);
 			return stack;
 		}
 	}

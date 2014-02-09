@@ -1,25 +1,21 @@
 package de.take_weiland.mods.commons.sync;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.entity.player.EntityPlayer;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.CommonsPackets;
+import de.take_weiland.mods.commons.internal.SCPacket;
+import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.Packets;
-import de.take_weiland.mods.commons.network.DataPacket;
-import de.take_weiland.mods.commons.network.PacketType;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
+import net.minecraft.entity.player.EntityPlayer;
 
-public class PacketSync extends DataPacket {
+public class PacketSync extends SCPacket {
 
 	@Override
-	protected void write(DataOutputStream out) throws IOException {
+	protected void write(WritableDataBuf out) {
 		throw new UnsupportedOperationException("This should never be called!");
 	}
 
 	@Override
-	protected void read(EntityPlayer player, Side side, DataInputStream in) throws IOException {
+	protected void handle(DataBuf in, EntityPlayer player, Side side) {
 		SyncType type = Packets.readEnum(in, SyncType.class);
 		Object readObj = type.recreate(player, in);
 		if (readObj instanceof SyncedObject) {
@@ -28,15 +24,8 @@ public class PacketSync extends DataPacket {
 	}
 
 	@Override
-	public void execute(EntityPlayer player, Side side) { }
-
-	@Override
-	public boolean isValidForSide(Side side) {
+	public boolean validOn(Side side) {
 		return side.isClient();
 	}
 
-	@Override
-	public PacketType type() {
-		return CommonsPackets.SYNC;
-	}
 }

@@ -4,7 +4,6 @@ import de.take_weiland.mods.commons.network.ModPacket;
 import de.take_weiland.mods.commons.network.PacketTransport;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.sync.PacketEntityPropsIds;
-import de.take_weiland.mods.commons.sync.PacketSync;
 
 public enum CommonsPackets implements PacketType {
 	
@@ -15,7 +14,7 @@ public enum CommonsPackets implements PacketType {
 	CLIENT_ACTION(PacketClientAction.class),
 	SYNC_CONTAINER(PacketContainerSync.class),
 	INV_NAME(PacketInventoryName.class),
-	SYNC(PacketSync.class),
+	//SYNC(PacketSync.class),
 	SYNC_ENTITY_PROPS_IDS(PacketEntityPropsIds.class);
 	
 	private final Class<? extends ModPacket> clazz;
