@@ -74,7 +74,7 @@ public final class EntityTransformer extends SelectiveTransformer {
 		insns.add(new VarInsnNode(ALOAD, 1));
 		insns.add(new VarInsnNode(ALOAD, 2));
 
-		String owner = "de/take_weiland/mods/commons/sync/SyncASMHooks";
+		String owner = "de/take_weiland/mods/commons/internal/SyncASMHooks";
 		String name = "onNewEntityProperty";
 		String desc = getMethodDescriptor(listType, getObjectType(clazz.name), listType, getType(String.class), getType(IExtendedEntityProperties.class));
 		insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
@@ -90,7 +90,7 @@ public final class EntityTransformer extends SelectiveTransformer {
 		insns.add(new InsnNode(DUP));
 		insns.add(new FieldInsnNode(GETFIELD, clazz.name, syncedProps.name, syncedProps.desc));
 
-		String owner = "de/take_weiland/mods/commons/sync/SyncASMHooks";
+		String owner = "de/take_weiland/mods/commons/internal/SyncASMHooks";
 		String name = "tickSyncedProperties";
 		String desc = getMethodDescriptor(VOID_TYPE, getObjectType(clazz.name), getType(List.class));
 		insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
