@@ -137,7 +137,7 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 			buf[p] = (byte) ((c >>> 8) & 0xff);
 			buf[p + 1] = (byte) (c & 0xff);
 		}
-		pos += len << 1;
+		this.pos += len << 1;
 		return this;
 	}
 

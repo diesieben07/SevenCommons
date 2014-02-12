@@ -126,6 +126,7 @@ class DataBufImpl implements DataBuf {
 			int p = pos + (i << 1);
 			chars[i] = Chars.fromBytes(buf[p], buf[p + 1]);
 		}
+		this.pos += len << 1;
 		return new String(chars);
 	}
 
