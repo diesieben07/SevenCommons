@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.PacketWithFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -36,84 +37,84 @@ public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>
 		write(builder);
 		return builder.toPacket();
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public final TYPE type() {
 		return ((PacketWithFactory<TYPE>) this)._sc_getType();
 	}
 
 	@Override
-	public void sendTo(PacketTarget target) {
+	public final void sendTo(PacketTarget target) {
 		make().sendTo(target);
 	}
 
 	@Override
-	public void sendToServer() {
+	public final void sendToServer() {
 		make().sendToServer();
 	}
 
 	@Override
-	public void sendTo(EntityPlayer player) {
+	public final void sendTo(EntityPlayer player) {
 		make().sendTo(player);
 	}
 
 	@Override
-	public void sendTo(Iterable<? extends EntityPlayer> players) {
+	public final void sendTo(Iterable<? extends EntityPlayer> players) {
 		make().sendTo(players);
 	}
 
 	@Override
-	public void sendToAll() {
+	public final void sendToAll() {
 		make().sendToAll();
 	}
 
 	@Override
-	public void sendToAllInDimension(int dimension) {
+	public final void sendToAllInDimension(int dimension) {
 		make().sendToAllInDimension(dimension);
 	}
 
 	@Override
-	public void sendToAllInDimension(World world) {
+	public final void sendToAllInDimension(World world) {
 		make().sendToAllInDimension(world);
 	}
 
 	@Override
-	public void sendToAllNear(World world, double x, double y, double z, double radius) {
+	public final void sendToAllNear(World world, double x, double y, double z, double radius) {
 		make().sendToAllNear(world, x, y, z, radius);
 	}
 
 	@Override
-	public void sendToAllNear(int dimension, double x, double y, double z, double radius) {
+	public final void sendToAllNear(int dimension, double x, double y, double z, double radius) {
 		make().sendToAllNear(dimension, x, y, z, radius);
 	}
 
 	@Override
-	public void sendToAllNear(Entity entity, double radius) {
+	public final void sendToAllNear(Entity entity, double radius) {
 		make().sendToAllNear(entity, radius);
 	}
 
 	@Override
-	public void sendToAllNear(TileEntity te, double radius) {
+	public final void sendToAllNear(TileEntity te, double radius) {
 		make().sendToAllNear(te, radius);
 	}
 
 	@Override
-	public void sendToAllTracking(Entity entity) {
+	public final void sendToAllTracking(Entity entity) {
 		make().sendToAllTracking(entity);
 	}
 
 	@Override
-	public void sendToAllTracking(TileEntity te) {
+	public final void sendToAllTracking(TileEntity te) {
 		make().sendToAllTracking(te);
 	}
 
 	@Override
-	public void sendToAllAssociated(Entity e) {
+	public final void sendToAllAssociated(Entity e) {
 		make().sendToAllAssociated(e);
 	}
 
 	@Override
-	public void sendToViewing(Container c) {
+	public final void sendToViewing(Container c) {
 		make().sendToViewing(c);
 	}
 }

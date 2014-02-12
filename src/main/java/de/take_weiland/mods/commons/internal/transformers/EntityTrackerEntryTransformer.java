@@ -33,7 +33,7 @@ public class EntityTrackerEntryTransformer extends SingleMethodTransformer {
 		insns.add(new FieldInsnNode(GETFIELD, clazz.name, name, desc));
 		
 		desc = getMethodDescriptor(VOID_TYPE, entityPlayer, entity);
-		insns.add(new MethodInsnNode(INVOKESTATIC, "de/take_weiland/mods/commons/asm/ASMHooks", "onStartTracking", desc));
+		insns.add(new MethodInsnNode(INVOKESTATIC, "de/take_weiland/mods/commons/internal/ASMHooks", "onStartTracking", desc));
 		
 		return insns;
 	}

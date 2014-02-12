@@ -1,8 +1,7 @@
-package de.take_weiland.mods.commons.net;
+package de.take_weiland.mods.commons.internal;
 
-import de.take_weiland.mods.commons.Internal;
+import de.take_weiland.mods.commons.net.PacketFactory;
 
-@Internal
 public interface PacketWithFactory<TYPE extends Enum<TYPE>> {
 
 	PacketFactory<TYPE> _sc_getFactory();
