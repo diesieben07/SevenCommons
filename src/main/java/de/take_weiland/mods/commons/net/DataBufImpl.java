@@ -68,6 +68,7 @@ class DataBufImpl implements DataBuf {
 		checkRemaining(2);
 		int pos = this.pos;
 		byte[] buf = this.buf;
+		this.pos += 2;
 		return Shorts.fromBytes(buf[pos], buf[pos + 1]);
 	}
 
@@ -76,6 +77,7 @@ class DataBufImpl implements DataBuf {
 		checkRemaining(4);
 		int pos = this.pos;
 		byte[] buf = this.buf;
+		this.pos += 4;
 		return Ints.fromBytes(buf[pos], buf[pos + 1], buf[pos + 2], buf[pos + 3]);
 	}
 

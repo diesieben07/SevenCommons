@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
 import net.minecraftforge.common.IExtendedEntityProperties;
@@ -16,13 +17,18 @@ public class EntityTransformer extends SelectiveTransformer {
 	@Override
 	protected boolean transform(ClassNode clazz, String className) {
 		FieldNode syncedProps = addSyncedPropsField(clazz);
-		transformRegisterProps(clazz, syncedProps);
-		transformOnUpdate(clazz, syncedProps);
-		
+
+		for (MethodNode method : clazz.methods) {
+			if (method.name.equals("registerExtendedProperties")) {
+				transformRegisterProps(clazz, method, syncedProps);
+			} else if (method.name.equals(ASMConstants.M_ON_UPDATE_MCP) || ASMUtils.deobfuscate(clazz.name, method).equals(ASMConstants.M_ON_UPDATE_SRG)) {
+				transformOnUpdate(clazz, method, syncedProps);
+			}
+		}
 		addPropertyGetter(clazz, syncedProps);
 		addPropertySetter(clazz, syncedProps);
 		
-		clazz.interfaces.add("de/take_weiland/mods/commons/internal/EntityProxy");
+		clazz.interfaces.add("de/take_weiland/mods/commons/sync/EntityProxy");
 		
 		return true;
 	}
@@ -54,63 +60,44 @@ public class EntityTransformer extends SelectiveTransformer {
 		return field;
 	}
 	
-	private void transformRegisterProps(ClassNode clazz, FieldNode syncedProps) {
-		MethodNode method = null;
-		for (MethodNode m : clazz.methods) {
-			if (m.name.equals("registerExtendedProperties")) {
-				method = m;
-			}
-		}
-		
-		if (method != null) {
-			InsnList insns = new InsnList();
-			
-			Type listType = getType(List.class);
-			
-			insns.add(new VarInsnNode(ALOAD, 0)); // for PUTFIELD
-			insns.add(new InsnNode(DUP)); // for GETFIELD
-			insns.add(new InsnNode(DUP)); // method parameter
-			insns.add(new FieldInsnNode(GETFIELD, clazz.name, syncedProps.name, syncedProps.desc));
-			insns.add(new VarInsnNode(ALOAD, 1));
-			insns.add(new VarInsnNode(ALOAD, 2));
-			
-			String owner = "de/take_weiland/mods/commons/asm/SyncASMHooks";
-			String name = "onNewEntityProperty";
-			String desc = getMethodDescriptor(listType, getObjectType(clazz.name), listType, getType(String.class), getType(IExtendedEntityProperties.class));
-			insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
-			insns.add(new FieldInsnNode(PUTFIELD, clazz.name, syncedProps.name, syncedProps.desc));
-			
-			AbstractInsnNode methodEnd = ASMUtils.findLastReturn(method).getPrevious(); // get the ALOAD
-			method.instructions.insertBefore(methodEnd, insns);
-		}
+	private void transformRegisterProps(ClassNode clazz, MethodNode method, FieldNode syncedProps) {
+		InsnList insns = new InsnList();
+
+		Type listType = getType(List.class);
+
+		insns.add(new VarInsnNode(ALOAD, 0)); // for PUTFIELD
+		insns.add(new InsnNode(DUP)); // for GETFIELD
+		insns.add(new InsnNode(DUP)); // method parameter
+		insns.add(new FieldInsnNode(GETFIELD, clazz.name, syncedProps.name, syncedProps.desc));
+		insns.add(new VarInsnNode(ALOAD, 1));
+		insns.add(new VarInsnNode(ALOAD, 2));
+
+		String owner = "de/take_weiland/mods/commons/sync/SyncASMHooks";
+		String name = "onNewEntityProperty";
+		String desc = getMethodDescriptor(listType, getObjectType(clazz.name), listType, getType(String.class), getType(IExtendedEntityProperties.class));
+		insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
+		insns.add(new FieldInsnNode(PUTFIELD, clazz.name, syncedProps.name, syncedProps.desc));
+
+		AbstractInsnNode methodEnd = ASMUtils.findLastReturn(method).getPrevious(); // get the ALOAD
+		method.instructions.insertBefore(methodEnd, insns);
 	}
 	
-	private void transformOnUpdate(ClassNode clazz, FieldNode syncedProps) {
-		MethodNode method = null;
-		for (MethodNode m : clazz.methods) {
-			if (m.name.equals("onUpdate") || ASMUtils.deobfuscate(clazz.name, m).equals("func_70071_h_")) {
-				method = m;
-			}
-		}
-		
-		if (method != null) {
-			InsnList insns = new InsnList();
-			insns.add(new VarInsnNode(ALOAD, 0));
-			insns.add(new InsnNode(DUP));
-			insns.add(new FieldInsnNode(GETFIELD, clazz.name, syncedProps.name, syncedProps.desc));
-			
-			String owner = "de/take_weiland/mods/commons/asm/SyncASMHooks";
-			String name = "tickSyncedProperties";
-			String desc = getMethodDescriptor(VOID_TYPE, getObjectType(clazz.name), getType(List.class));
-			insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
-			
-			method.instructions.insert(insns);
-		}
+	private void transformOnUpdate(ClassNode clazz, MethodNode method, FieldNode syncedProps) {
+		InsnList insns = new InsnList();
+		insns.add(new VarInsnNode(ALOAD, 0));
+		insns.add(new InsnNode(DUP));
+		insns.add(new FieldInsnNode(GETFIELD, clazz.name, syncedProps.name, syncedProps.desc));
+
+		String owner = "de/take_weiland/mods/commons/sync/SyncASMHooks";
+		String name = "tickSyncedProperties";
+		String desc = getMethodDescriptor(VOID_TYPE, getObjectType(clazz.name), getType(List.class));
+		insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
+
+		method.instructions.insert(insns);
 	}
 	
 	@Override
 	protected boolean transforms(String className) {
-		if (true) return false;
 		return "net.minecraft.entity.Entity".equals(className);
 	}
 

@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.reflect.ClassPath;
 import cpw.mods.fml.client.FMLFileResourcePack;
 import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.common.DummyModContainer;
@@ -21,9 +22,13 @@ import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketFactory;
 import de.take_weiland.mods.commons.network.PacketTransport;
 import de.take_weiland.mods.commons.network.PacketTransports;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraftforge.common.Configuration;
+import scala.tools.ant.ClassloadVerify;
 
 import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 public final class CommonsModContainer extends DummyModContainer {
 
@@ -57,7 +62,6 @@ public final class CommonsModContainer extends DummyModContainer {
 	@Override
 	public boolean registerBus(EventBus bus, LoadController controller) {
 		bus.register(this);
-		
 		return true;
 	}
 	

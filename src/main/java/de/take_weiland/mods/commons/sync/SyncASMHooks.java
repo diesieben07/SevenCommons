@@ -1,12 +1,11 @@
 package de.take_weiland.mods.commons.sync;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
-import de.take_weiland.mods.commons.internal.EntityProxy;
 import de.take_weiland.mods.commons.internal.SCPacket;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.PacketBuilder;
+import de.take_weiland.mods.commons.net.PacketTarget;
 import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.Entity;
@@ -14,26 +13,14 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
 import java.util.List;
-import java.util.Map;
 
 @SuppressWarnings("unused") // stuff in here gets called from ASM generated code
 public final class SyncASMHooks {
 
 	private SyncASMHooks() { }
 
-	private static final Map<Class<?>, TypeSyncer<?>> syncers = Maps.newHashMap();
-
-	public static <T> void registerSyncer(Class<T> toSync, TypeSyncer<T> syncer) {
-		syncers.put(toSync, syncer);
-	}
-
-	@SuppressWarnings("unchecked") // cast is safe because map is guarded by registerSyncer
-	public static <T> TypeSyncer<T> getSyncerFor(Class<T> toSync) {
-		TypeSyncer<T> syncer;
-		if ((syncer = (TypeSyncer<T>)syncers.get(toSync)) == null) {
-			throw new IllegalArgumentException(String.format("Don't know how to sync %s", toSync.getName()));
-		}
-		return syncer;
+	public static <T> TypeSyncer<? super T> getSyncerFor(Class<T> toSync) {
+		return Syncing.getSyncerFor(toSync);
 	}
 
 	private static PacketBuilder init(Object obj, PacketBuilder out, SyncType type) {
@@ -88,6 +75,13 @@ public final class SyncASMHooks {
 			throw new RuntimeException("Couldn't determine syncer for " + type.getName());
 		}
 		return syncer;
+	}
+
+	public static void endSync(PacketBuilder out, PacketTarget target) {
+		if (out != null) {
+			out.putByte(0x80); // 1000 0000
+			out.toPacket().sendTo(target);
+		}
 	}
 
 	public static void endSync(PacketBuilder out, Object syncedObj, SyncType type) {

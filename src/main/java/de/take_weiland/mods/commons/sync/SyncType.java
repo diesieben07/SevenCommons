@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.internal.EntityProxy;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.SimplePacket;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
@@ -16,7 +15,7 @@ import java.util.List;
 
 public enum SyncType {
 
-	ENTITY("net/minecraft/entity/Entity", ASMConstants.F_WORLD_OBJ_ENTITY_MCP, ASMConstants.F_WORLD_OBJ_ENTITY_SRG) {
+	ENTITY("net/minecraft/entity/Entity", ASMConstants.F_WORLD_OBJ_ENTITY_MCP, ASMConstants.F_WORLD_OBJ_ENTITY_SRG, ASMConstants.M_ON_UPDATE_MCP, ASMConstants.M_ON_UPDATE_SRG) {
 		
 		@Override
 		public void sendPacket(Object entity, SimplePacket p) {
@@ -35,7 +34,7 @@ public enum SyncType {
 		
 	},
 	
-	TILE_ENTITY("net/minecraft/tileentity/TileEntity", ASMConstants.F_WORLD_OBJ_TILEENTITY_MCP, ASMConstants.F_WORLD_OBJ_TILEENTITY_SRG) {
+	TILE_ENTITY("net/minecraft/tileentity/TileEntity", ASMConstants.F_WORLD_OBJ_TILEENTITY_MCP, ASMConstants.F_WORLD_OBJ_TILEENTITY_SRG, ASMConstants.M_UPDATE_ENTITY_MCP, ASMConstants.M_UPDATE_ENTITY_SRG) {
 		
 		@Override
 		public void sendPacket(Object te, SimplePacket p) {
@@ -60,7 +59,7 @@ public enum SyncType {
 		
 	},
 	
-	CONTAINER(null, null, null) {
+	CONTAINER(null, null, null, ASMConstants.M_DETECT_AND_SEND_CHANGES_MCP, ASMConstants.M_DETECT_AND_SEND_CHANGES_SRG) {
 		
 		@Override
 		public void sendPacket(Object container, SimplePacket p) {
@@ -78,7 +77,7 @@ public enum SyncType {
 		}
 		
 	},
-	ENTITY_PROPS(null, null, null) {
+	ENTITY_PROPS(null, null, null, "_sc_sync_tick", "_sc_sync_tick") {
 		
 		@Override
 		public void sendPacket(Object props, SimplePacket p) {
@@ -109,11 +108,15 @@ public enum SyncType {
 	private final String rootClass;
 	private final String worldField;
 	private final String worldFieldSrg;
+	private final String tickMcp;
+	private final String tickSrg;
 	
-	private SyncType(String rootClass, String worldField, String worldFieldSrg) {
+	private SyncType(String rootClass, String worldField, String worldFieldSrg, String tickMcp, String tickSrg) {
 		this.rootClass = rootClass;
 		this.worldField = worldField;
 		this.worldFieldSrg = worldFieldSrg;
+		this.tickMcp = tickMcp;
+		this.tickSrg = tickSrg;
 	}
 
 	public String getRootClass() {
@@ -122,6 +125,10 @@ public enum SyncType {
 	
 	public String getWorldFieldName() {
 		return ASMUtils.useMcpNames() ? worldField : worldFieldSrg;
+	}
+
+	public String getTickMethod() {
+		return ASMUtils.useMcpNames() ? tickMcp : tickSrg;
 	}
 
 	public abstract void sendPacket(Object obj, SimplePacket p);

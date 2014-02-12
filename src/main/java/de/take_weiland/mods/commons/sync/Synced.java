@@ -21,24 +21,43 @@ import java.lang.annotation.Target;
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD, ElementType.TYPE })
+@Target({ ElementType.FIELD, ElementType.TYPE, ElementType.METHOD })
 public @interface Synced {
 
 	/**
 	 * define the {@link TypeSyncer} to use with for this field<br>
 	 * Only supported for non-primitive fields.<br>
+	 * The class should either define a default (no-arg) constructor or a one-argument constructor that takes an Object<br />
+	 * If the latter is present, it will be picked instead and passed the object being synced (Container, TileEntity, etc.)
 	 */
 	Class<? extends TypeSyncer<?>> syncer() default NULL.class;
 
     /**
      * override where the Packets to sync this class should be sent to<br />
-     * The class may declare a one-argument constructor which will then be passed the appropriate instance
+     * The same constructor rules as for {@link de.take_weiland.mods.commons.sync.Synced#syncer() syncer()} apply
      */
     Class<? extends PacketTarget> target() default NULL.class;
+
+	/**
+	 * When applied to a Method, define the corresponding setter method (must be in this class and marked with {@link de.take_weiland.mods.commons.sync.Synced.Setter @Setter})
+	 * @return
+	 */
+	String setter() default "NULL";
 
     /**
      * Dummy interface, used as default value for target() and syncer()
      */
     static interface NULL extends TypeSyncer<Object>, PacketTarget { }
-	
+
+	/**
+	 * mark a method as a setter, needs a corresponding {@link de.take_weiland.mods.commons.sync.Synced @Synced} method with the same ID
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	static @interface Setter {
+
+		String value();
+
+	}
+
 }

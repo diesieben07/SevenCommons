@@ -19,7 +19,7 @@ public final class SCEventHandler implements IPlayerTracker {
 
 	@Override
 	public void onPlayerLogin(EntityPlayer player) {
-		//SyncASMHooks.syncEntityPropertyIds(player, player);
+		SyncASMHooks.syncEntityPropertyIds(player, player);
 	}
 	
 	@Override

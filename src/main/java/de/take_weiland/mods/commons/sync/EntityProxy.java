@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal;
+package de.take_weiland.mods.commons.sync;
 
 import java.util.List;
 
