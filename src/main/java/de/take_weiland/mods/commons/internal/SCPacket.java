@@ -2,12 +2,21 @@ package de.take_weiland.mods.commons.internal;
 
 import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.net.SimplePacketType;
+import de.take_weiland.mods.commons.sync.PacketEntityPropsIds;
 import de.take_weiland.mods.commons.sync.PacketSync;
 
 public abstract class SCPacket extends ModPacket<SCPacket.Type> {
 
 	public static enum Type implements SimplePacketType<SCPacket.Type> {
 
+		VIEW_UPDATES(PacketViewUpdates.class),
+		UPDATE_ACTION(PacketUpdateAction.class),
+		MOD_STATE(PacketModState.class),
+		DOWNLOAD_PROGRESS(PacketDownloadProgress.class),
+		CLIENT_ACTION(PacketClientAction.class),
+		SYNC_CONTAINER(PacketContainerSync.class),
+		INV_NAME(PacketInventoryName.class),
+		SYNC_ENTITY_PROPS_IDS(PacketEntityPropsIds.class),
 		SYNC(PacketSync.class);
 
 		private final Class<? extends ModPacket<SCPacket.Type>> packet;

@@ -20,7 +20,7 @@ public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>
 	}
 	
 	private SimplePacket delegate;
-	SimplePacket make() {
+	private SimplePacket make() {
 		SimplePacket delegate;
 		if ((delegate = this.delegate) == null) {
 			delegate = this.delegate = make0();

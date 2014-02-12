@@ -5,6 +5,8 @@ import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.PlayerUpdateInformation;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.util.JavaUtils;
@@ -19,7 +21,7 @@ import java.io.IOException;
 import static de.take_weiland.mods.commons.net.Packets.readEnum;
 import static de.take_weiland.mods.commons.net.Packets.writeEnum;
 
-public class PacketUpdateAction extends DataPacket {
+public class PacketUpdateAction extends SCPacket {
 
 	private Action action;
 	private String modId;
@@ -52,31 +54,28 @@ public class PacketUpdateAction extends DataPacket {
 	private static void wrongArgs(Action action) {
 		throw new IllegalArgumentException("Wrong argument count for action " + action);
 	}
-	
-	@Override
-	protected void read(EntityPlayer player, Side side, DataInputStream in) throws IOException {
-		action = readEnum(in, Action.class);
-		if (action.hasModId) {
-			modId = in.readUTF();
-		}
-		if (action.hasVersionIndex) {
-			versionIndex = in.readUnsignedShort();
-		}
-	}
 
 	@Override
-	protected void write(DataOutputStream out) throws IOException {
+	protected void write(WritableDataBuf out) {
 		writeEnum(out, action);
 		if (action.hasModId) {
-			out.writeUTF(modId);
+			out.putString(modId);
 		}
 		if (action.hasVersionIndex) {
-			out.writeShort(versionIndex);
+			out.putUnsignedShort(versionIndex);
 		}
 	}
-
+	
 	@Override
-	public void execute(EntityPlayer player, Side side) {
+	protected void handle(DataBuf in, EntityPlayer player, Side side) {
+		action = readEnum(in, Action.class);
+		if (action.hasModId) {
+			modId = in.getString();
+		}
+		if (action.hasVersionIndex) {
+			versionIndex = in.getUnsignedShort();
+		}
+
 		if (!player.canCommandSenderUseCommand(4, CommonsModContainer.updateCommand)) {
 			player.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("sevencommons.updates.noop").setColor(EnumChatFormatting.RED));
 		} else if (!CommonsModContainer.updaterEnabled) {
@@ -85,37 +84,32 @@ public class PacketUpdateAction extends DataPacket {
 			UpdateController localUpdater = CommonsModContainer.updateController;
 			UpdatableMod mod = modId == null ? null : localUpdater.getMod(modId);
 			switch (action) {
-			case SEARCH:
-				localUpdater.searchForUpdates(mod);
-				break;
-			case SEARCH_ALL:
-				localUpdater.searchForUpdates();
-				break;
-			case UPDATE:
-				ModVersion version = JavaUtils.get(mod.getVersions().getAvailableVersions(), versionIndex);
-				if (version != null) {
-					localUpdater.update(mod, version);
-				}
-				break;
-			case CLOSE_SCREEN:
-				localUpdater.unregisterListener((PlayerUpdateInformation)player.getExtendedProperties(PlayerUpdateInformation.IDENTIFIER));
-				break;
-			case RESTART_MINECRAFT:
-				if (!localUpdater.restartMinecraft()) {
-					new PacketClientAction(PacketClientAction.Action.RESTART_FAILURE).sendTo(player);
-				}
+				case SEARCH:
+					localUpdater.searchForUpdates(mod);
+					break;
+				case SEARCH_ALL:
+					localUpdater.searchForUpdates();
+					break;
+				case UPDATE:
+					ModVersion version = JavaUtils.get(mod.getVersions().getAvailableVersions(), versionIndex);
+					if (version != null) {
+						localUpdater.update(mod, version);
+					}
+					break;
+				case CLOSE_SCREEN:
+					localUpdater.unregisterListener((PlayerUpdateInformation)player.getExtendedProperties(PlayerUpdateInformation.IDENTIFIER));
+					break;
+				case RESTART_MINECRAFT:
+					if (!localUpdater.restartMinecraft()) {
+						new PacketClientAction(PacketClientAction.Action.RESTART_FAILURE).sendTo(player);
+					}
 			}
 		}
 	}
-	
-	@Override
-	public boolean isValidForSide(Side side) {
-		return side.isServer();
-	}
 
 	@Override
-	public PacketType type() {
-		return CommonsPackets.UPDATE_ACTION;
+	public boolean validOn(Side side) {
+		return side.isServer();
 	}
 
 	public static enum Action {

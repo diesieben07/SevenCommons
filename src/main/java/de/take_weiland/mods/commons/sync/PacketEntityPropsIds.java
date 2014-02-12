@@ -3,6 +3,9 @@ package de.take_weiland.mods.commons.sync;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.internal.CommonsPackets;
+import de.take_weiland.mods.commons.internal.SCPacket;
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
@@ -16,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Internal
-public final class PacketEntityPropsIds extends DataPacket {
+public final class PacketEntityPropsIds extends SCPacket {
 
 	private Entity entity;
 	private List<SyncedEntityProperties> props;
@@ -27,26 +30,24 @@ public final class PacketEntityPropsIds extends DataPacket {
 	}
 
 	@Override
-	protected void write(DataOutputStream out) throws IOException {
-		out.writeInt(entity.entityId);
+	protected void write(WritableDataBuf out) {
+		out.putInt(entity.entityId);
 		int len = props.size();
-		out.writeShort(UnsignedShorts.checkedCast(len));
+		out.putVarInt(len);
 		for (int i = 0; i < len; ++i) {
-			out.writeUTF(props.get(i)._sc_sync_getIdentifier());
+			out.putString(props.get(i)._sc_sync_getIdentifier());
 		}
 	}
 
-	static final Integer MAX = Integer.valueOf(Integer.MAX_VALUE);
-	
 	@Override
-	protected void read(EntityPlayer player, Side side, DataInputStream in) throws IOException {
-		int entityId = in.readInt();
+	protected void handle(DataBuf in, EntityPlayer player, Side side) {
+		int entityId = in.getInt();
 		Entity e = player.worldObj.getEntityByID(entityId);
 		if (e != null) {
-			int len = in.readUnsignedShort();
+			int len = in.getVarInt();
 			SyncedEntityProperties[] props = new SyncedEntityProperties[len];
 			for (int i = 0; i < len; ++i) {
-				props[i] = (SyncedEntityProperties) e.getExtendedProperties(in.readUTF());
+				props[i] = (SyncedEntityProperties) e.getExtendedProperties(in.getString());
 			}
 			((EntityProxy)e)._sc_sync_setSyncedProperties(Arrays.asList(props));
 			System.out.println("received properties: " + ((EntityProxy)e)._sc_sync_getSyncedProperties());
@@ -54,17 +55,8 @@ public final class PacketEntityPropsIds extends DataPacket {
 	}
 	
 	@Override
-	public void execute(EntityPlayer player, Side side) { }
-
-	@Override
-	public boolean isValidForSide(Side side) {
+	public boolean validOn(Side side) {
 		return side.isClient();
-	}
-
-	
-	@Override
-	public PacketType type() {
-		return CommonsPackets.SYNC_ENTITY_PROPS_IDS;
 	}
 
 }

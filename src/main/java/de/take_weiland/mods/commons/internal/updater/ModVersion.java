@@ -5,6 +5,8 @@ import com.google.common.collect.Ordering;
 import cpw.mods.fml.common.versioning.ArtifactVersion;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -35,16 +37,16 @@ public final class ModVersion {
 		return modVersion.compareTo(mod.getVersions().getCurrentVersion().modVersion) != 0 && minecraftVersion.equals(SevenCommons.MINECRAFT_VERSION);
 	}
 	
-	public void write(DataOutputStream out) throws IOException {
-		out.writeUTF(modVersion.getVersionString());
-		out.writeUTF(Strings.nullToEmpty(minecraftVersion));
-		out.writeUTF(Strings.nullToEmpty(patchNotes));
+	public void write(WritableDataBuf out) {
+		out.putString(modVersion.getVersionString());
+		out.putString(Strings.nullToEmpty(minecraftVersion));
+		out.putString(Strings.nullToEmpty(patchNotes));
 	}
 	
-	public static ModVersion read(UpdatableMod mod, DataInputStream in) throws IOException {
-		ArtifactVersion version = new DefaultArtifactVersion(in.readUTF());
-		String minecraftVersion = in.readUTF();
-		String patchNotes = in.readUTF();
+	public static ModVersion read(UpdatableMod mod, DataBuf in) {
+		ArtifactVersion version = new DefaultArtifactVersion(in.getString());
+		String minecraftVersion = in.getString();
+		String patchNotes = in.getString();
 		return new ModVersion(mod, version, minecraftVersion, null, patchNotes);
 	}
 

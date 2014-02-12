@@ -2,6 +2,8 @@ package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 import net.minecraft.entity.player.EntityPlayer;
@@ -10,7 +12,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class PacketDownloadProgress extends DataPacket {
+public class PacketDownloadProgress extends SCPacket {
 
 	private String modId;
 	private int downloadProgress;
@@ -26,30 +28,22 @@ public class PacketDownloadProgress extends DataPacket {
 	}
 
 	@Override
-	protected void read(EntityPlayer player, Side side, DataInputStream in) throws IOException {
-		modId = in.readUTF();
-		downloadProgress = in.readByte();
+	protected void write(WritableDataBuf out) {
+		out.putString(modId);
+		out.putByte(downloadProgress);
 	}
 
 	@Override
-	protected void write(DataOutputStream out) throws IOException {
-		out.writeUTF(modId);
-		out.writeByte(downloadProgress);
-	}
+	protected void handle(DataBuf in, EntityPlayer player, Side side) {
+		modId = in.getString();
+		downloadProgress = in.getByte();
 
-	@Override
-	public void execute(EntityPlayer player, Side side) {
 		CommonsModContainer.proxy.handleDownloadProgress(this);
 	}
 
 	@Override
-	public boolean isValidForSide(Side side) {
+	public boolean validOn(Side side) {
 		return side.isClient();
-	}
-
-	@Override
-	public PacketType type() {
-		return CommonsPackets.DOWNLOAD_PROGRESS;
 	}
 
 	public String getModId() {
