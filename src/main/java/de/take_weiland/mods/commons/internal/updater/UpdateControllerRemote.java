@@ -6,8 +6,6 @@ import de.take_weiland.mods.commons.internal.PacketUpdateAction.Action;
 
 import java.util.Collection;
 
-import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToServer;
-
 public class UpdateControllerRemote extends AbstractUpdateController {
 
 	public UpdateControllerRemote(Collection<ClientDummyUpdatableMod> mods) {
@@ -19,22 +17,22 @@ public class UpdateControllerRemote extends AbstractUpdateController {
 	
 	@Override
 	public void searchForUpdates() {
-		sendPacketToServer(new PacketUpdateAction(Action.SEARCH_ALL).make());
+		new PacketUpdateAction(Action.SEARCH_ALL).sendToServer();
 	}
 
 	@Override
 	public void searchForUpdates(UpdatableMod mod) {
-		sendPacketToServer(new PacketUpdateAction(Action.SEARCH, mod.getModId()).make());
+		new PacketUpdateAction(Action.SEARCH, mod.getModId()).sendToServer();
 	}
 
 	@Override
 	public void update(UpdatableMod mod, ModVersion version) {
-		sendPacketToServer(new PacketUpdateAction(Action.UPDATE, mod.getModId(), mod.getVersions().getAvailableVersions().indexOf(version)).make());
+		new PacketUpdateAction(Action.UPDATE, mod.getModId(), mod.getVersions().getAvailableVersions().indexOf(version)).sendToServer();
 	}
 
 	@Override
 	public boolean restartMinecraft() {
-		sendPacketToServer(new PacketUpdateAction(Action.RESTART_MINECRAFT).make());
+		new PacketUpdateAction(Action.RESTART_MINECRAFT).sendToServer();
 		return true;
 	}
 

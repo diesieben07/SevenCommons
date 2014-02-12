@@ -30,7 +30,6 @@ public final class CommonsModContainer extends DummyModContainer {
 	public static SevenCommonsProxy proxy;
 	public static CommonsModContainer instance;
 	public static UpdateController updateController;
-	public static PacketTransport packetTransport;
     public static PacketFactory<SCPacket.Type> packetFactory;
 	
 	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
@@ -77,8 +76,7 @@ public final class CommonsModContainer extends DummyModContainer {
 		ConfigInjector.inject(config, getClass());
 
 		packetFactory = Network.simplePacketHandler("SevenCommons", SCPacket.Type.class);
-		packetTransport = PacketTransports.withPacket250("SevenCommons_OLD", CommonsPackets.class);
-		
+
 		proxy.preInit(event);
 		
 		GameRegistry.registerPlayerTracker(new SCEventHandler());
