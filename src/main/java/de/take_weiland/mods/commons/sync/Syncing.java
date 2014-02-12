@@ -21,6 +21,7 @@ public final class Syncing {
 	}
 	
 	static {
+		// default built-in syncers
 		registerSyncer(String.class, new StringSyncer());
 		registerSyncer(FluidStack.class, new FluidStackSyncer());
 		registerSyncer(ItemStack.class, new ItemStackSyncer());

@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm.transformers;
 
+import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingTransformer;
@@ -11,6 +12,7 @@ import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+@Internal
 public final class EntityPlayerTransformer extends AppendingTransformer {
 
 	@Override

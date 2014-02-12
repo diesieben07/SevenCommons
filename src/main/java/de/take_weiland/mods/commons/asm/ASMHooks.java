@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.asm;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.event.LivingBreedEvent;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
@@ -26,6 +27,7 @@ import java.util.List;
  *
  */
 @SuppressWarnings("unused") // called from ASM generated code only
+@Internal
 public final class ASMHooks {
 
 	private ASMHooks() { }

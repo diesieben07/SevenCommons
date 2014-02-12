@@ -1,7 +1,9 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.Internal;
 import net.minecraft.entity.Entity;
 
+@Internal
 public interface SyncedEntityProperties {
 
 	void _sc_sync_injectData(Entity owner, String identifier, int idx);

@@ -30,7 +30,7 @@ public interface WritableDataBuf extends DataBuf {
 	 * repeated calls to this method do not accumulate, e.g.:
 	 * <pre>{@code
 	 * buf.grow(5);
-	 *buf.grow(7); }</pre>will only grow the buffer to hold 7 additional bytes, not 12.
+	 * buf.grow(7); }</pre>will only grow the buffer to hold 7 additional bytes, not 12.
 	 * @param n
 	 */
 	WritableDataBuf grow(int n);

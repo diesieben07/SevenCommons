@@ -1,13 +1,15 @@
 package de.take_weiland.mods.commons.sync;
 
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.internal.SCPacket;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import net.minecraft.entity.player.EntityPlayer;
 
-public class PacketSync extends SCPacket {
+@Internal
+public final class PacketSync extends SCPacket {
 
 	@Override
 	protected void write(WritableDataBuf out) {

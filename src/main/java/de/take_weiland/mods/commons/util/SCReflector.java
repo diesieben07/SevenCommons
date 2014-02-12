@@ -22,8 +22,17 @@ import java.util.Map;
 
 import static de.take_weiland.mods.commons.asm.ASMConstants.*;
 
+/**
+ * Accessor interface for various private fields and methods around the Minecraft code.<br />
+ * If the field/method to access is static, the instance parameter is ignored, null can be passed.<br />
+ * Obtain an Implementation of this interface with {@link MiscUtil#getReflector()}
+ */
 public interface SCReflector {
 
+	/**
+	 * For cleaner code use {@link de.take_weiland.mods.commons.util.NBT#asList(net.minecraft.nbt.NBTTagList)}
+	 */
+	@Unsafe
 	@Getter(field = { F_TAG_LIST_MCP, F_TAG_LIST_OBF })
 	<T extends NBTBase> List<T> getWrappedList(NBTTagList list);
 	

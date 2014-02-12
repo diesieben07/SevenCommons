@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
@@ -12,7 +13,8 @@ import java.util.List;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
-public class EntityTransformer extends SelectiveTransformer {
+@Internal
+public final class EntityTransformer extends SelectiveTransformer {
 
 	@Override
 	protected boolean transform(ClassNode clazz, String className) {

@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm.transformers;
 
+import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -9,6 +10,7 @@ import org.objectweb.asm.tree.*;
 
 import static de.take_weiland.mods.commons.asm.ASMConstants.*;
 
+@Internal
 public final class EntityAIMateTransformer extends AppendingTransformer {
 
 	@Override

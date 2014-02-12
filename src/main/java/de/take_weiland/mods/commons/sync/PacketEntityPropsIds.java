@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.internal.CommonsPackets;
 import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
@@ -14,7 +15,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class PacketEntityPropsIds extends DataPacket {
+@Internal
+public final class PacketEntityPropsIds extends DataPacket {
 
 	private Entity entity;
 	private List<SyncedEntityProperties> props;

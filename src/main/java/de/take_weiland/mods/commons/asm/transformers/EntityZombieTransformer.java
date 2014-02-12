@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm.transformers;
 
+import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.PrependingTransformer;
@@ -8,6 +9,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+@Internal
 public final class EntityZombieTransformer extends PrependingTransformer {
 
 	@Override

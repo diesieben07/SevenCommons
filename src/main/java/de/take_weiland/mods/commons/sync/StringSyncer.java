@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.sync;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 
-public final class StringSyncer implements TypeSyncer<String> {
+final class StringSyncer implements TypeSyncer<String> {
 
 	@Override
 	public boolean equal(String a, String b) {

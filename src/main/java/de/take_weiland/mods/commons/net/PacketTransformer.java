@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
@@ -8,6 +9,7 @@ import org.objectweb.asm.tree.*;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
+@Internal
 public final class PacketTransformer extends SelectiveTransformer {
 
 	private final ClassInfo modPacketCI = ASMUtils.getClassInfo(ModPacket.class);

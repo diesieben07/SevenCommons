@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
 import com.google.common.collect.Lists;
+import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.internal.CommonsModContainer;
 import de.take_weiland.mods.commons.internal.SCPacket;
 import de.take_weiland.mods.commons.net.DataBuf;
@@ -15,6 +16,7 @@ import net.minecraftforge.common.IExtendedEntityProperties;
 import java.util.List;
 
 @SuppressWarnings("unused") // stuff in here gets called from ASM generated code
+@Internal
 public final class SyncASMHooks {
 
 	private SyncASMHooks() { }

@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.sync;
 
 import com.google.common.collect.*;
 import cpw.mods.fml.common.FMLLog;
+import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
@@ -25,7 +26,8 @@ import java.util.logging.Logger;
 /**
  * contains black bytecode magic. Do not touch.
  */
-public class SyncingTransformer extends SelectiveTransformer {
+@Internal
+public final class SyncingTransformer extends SelectiveTransformer {
 
 	private static final Logger LOGGER;
 

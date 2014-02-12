@@ -7,10 +7,10 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.*;
 
 /**
- * Elements marked with this annotation are internal to an implementation and should not be used by client code, even if visible
+ * Elements marked with this annotation are internal to an implementation and should not be used by client code even though they are visible
  */
 @Retention(RetentionPolicy.SOURCE)
-@Target({ TYPE, METHOD, CONSTRUCTOR, FIELD } )
+@Target({ TYPE, METHOD, CONSTRUCTOR, FIELD, PACKAGE } )
 public @interface Internal {
 
 }
