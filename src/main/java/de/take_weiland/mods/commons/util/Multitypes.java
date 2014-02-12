@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.util;
 
-import net.minecraft.item.ItemStack;
 import de.take_weiland.mods.commons.templates.HasMetadata;
 import de.take_weiland.mods.commons.templates.Metadata;
 import de.take_weiland.mods.commons.templates.Metadata.BlockMeta;
 import de.take_weiland.mods.commons.templates.Metadata.ItemMeta;
+import net.minecraft.item.ItemStack;
 
 public final class Multitypes {
 

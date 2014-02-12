@@ -2,8 +2,6 @@ package de.take_weiland.mods.commons.sync;
 
 import java.util.List;
 
-import de.take_weiland.mods.commons.sync.SyncedEntityProperties;
-
 public interface EntityProxy {
 
 	List<SyncedEntityProperties> _sc_sync_getSyncedProperties();

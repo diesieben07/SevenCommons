@@ -1,12 +1,12 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import de.take_weiland.mods.commons.internal.CommonsModContainer;
+import de.take_weiland.mods.commons.internal.PacketViewUpdates;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
-import de.take_weiland.mods.commons.internal.PacketViewUpdates;
 
 public class CommandUpdates extends CommandBase {
 

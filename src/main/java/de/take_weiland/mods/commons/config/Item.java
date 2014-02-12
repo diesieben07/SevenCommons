@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.config;
 
+import net.minecraftforge.common.Configuration;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import net.minecraftforge.common.Configuration;
 
 /**
  * Mark that this Field, also annotated with {@link GetProperty @GetProperty}, represents an Item ID<br>

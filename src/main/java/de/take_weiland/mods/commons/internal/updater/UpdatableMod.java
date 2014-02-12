@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import com.google.common.collect.Ordering;
+
 import java.io.File;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Comparator;
-
-import com.google.common.collect.Ordering;
 
 public interface UpdatableMod {
 

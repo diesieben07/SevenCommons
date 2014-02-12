@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.network;
 
+import cpw.mods.fml.relauncher.Side;
+import net.minecraft.entity.player.EntityPlayer;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import net.minecraft.entity.player.EntityPlayer;
-import cpw.mods.fml.relauncher.Side;
 
 public interface ModPacket extends SendablePacket {
 

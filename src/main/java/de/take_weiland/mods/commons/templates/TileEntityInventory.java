@@ -1,12 +1,12 @@
 package de.take_weiland.mods.commons.templates;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import de.take_weiland.mods.commons.util.Inventories;
 import de.take_weiland.mods.commons.util.Listenable;
 import de.take_weiland.mods.commons.util.ListenerArrayList;
 import de.take_weiland.mods.commons.util.ListenerList;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 public abstract class TileEntityInventory<T extends TileEntityInventory<T>> extends AbstractTileEntity implements SCInventory<T> {
 

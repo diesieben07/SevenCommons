@@ -1,21 +1,11 @@
 package de.take_weiland.mods.commons.net;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.BufferUnderflowException;
-
 import com.google.common.base.Preconditions;
-import com.google.common.primitives.Chars;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
-import com.google.common.primitives.Shorts;
-import com.google.common.primitives.UnsignedBytes;
-
+import com.google.common.primitives.*;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
+
+import java.io.*;
+import java.nio.BufferUnderflowException;
 
 class DataBufImpl implements DataBuf {
 

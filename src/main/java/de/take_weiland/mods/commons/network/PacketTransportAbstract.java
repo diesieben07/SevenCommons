@@ -1,5 +1,20 @@
 package de.take_weiland.mods.commons.network;
 
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import com.google.common.collect.MapMaker;
+import com.google.common.io.OutputSupplier;
+import com.google.common.primitives.UnsignedBytes;
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.util.Consumer;
+import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.Sides;
+import de.take_weiland.mods.commons.util.SplittingOutputStream;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.INetworkManager;
+import net.minecraft.util.MathHelper;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -7,24 +22,6 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.network.INetworkManager;
-import net.minecraft.util.MathHelper;
-
-import org.apache.commons.io.output.ByteArrayOutputStream;
-
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.MapMaker;
-import com.google.common.io.OutputSupplier;
-import com.google.common.primitives.UnsignedBytes;
-
-import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.util.Consumer;
-import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.Sides;
-import de.take_weiland.mods.commons.util.SplittingOutputStream;
 
 abstract class PacketTransportAbstract implements PacketTransport {
 	

@@ -1,17 +1,6 @@
 package de.take_weiland.mods.commons.client;
 
-import static de.take_weiland.mods.commons.client.Guis.isPointInRegion;
-import static org.lwjgl.opengl.GL11.GL_SCISSOR_TEST;
-import static org.lwjgl.opengl.GL11.glColor3f;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glPopMatrix;
-import static org.lwjgl.opengl.GL11.glPushMatrix;
-import static org.lwjgl.opengl.GL11.glScissor;
-import static org.lwjgl.opengl.GL11.glTranslatef;
-
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
@@ -19,7 +8,10 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.SCGuiAccessor;
 import net.minecraft.util.MathHelper;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
+import static de.take_weiland.mods.commons.client.Guis.isPointInRegion;
+import static org.lwjgl.opengl.GL11.*;
 
 public abstract class ScrollPane extends Gui {
 

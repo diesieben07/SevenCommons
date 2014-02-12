@@ -6,13 +6,11 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.PacketTarget;
 import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
-import de.take_weiland.mods.commons.sync.StringSyncer;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -23,8 +21,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
-
-import java.lang.annotation.ElementType;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()

@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
-
 import org.lwjgl.opengl.GL11;
 
 public abstract class SliderButton extends GuiButton {

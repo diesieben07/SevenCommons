@@ -1,12 +1,12 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Sets;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Sets;
 
 public abstract class AbstractUpdateController implements UpdateController {
 

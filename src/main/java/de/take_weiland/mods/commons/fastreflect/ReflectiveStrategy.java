@@ -1,12 +1,12 @@
 package de.take_weiland.mods.commons.fastreflect;
 
+import com.google.common.reflect.Reflection;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-
-import com.google.common.reflect.Reflection;
 
 final class ReflectiveStrategy extends AbstractStrategy {
 

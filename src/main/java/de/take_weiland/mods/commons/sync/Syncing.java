@@ -1,12 +1,11 @@
 package de.take_weiland.mods.commons.sync;
 
-import java.util.Map;
-
+import com.google.common.collect.Maps;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 
-import com.google.common.collect.Maps;
+import java.util.Map;
 
 public final class Syncing {
 

@@ -1,18 +1,18 @@
 package de.take_weiland.mods.commons.sync;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.CommonsPackets;
 import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class PacketEntityPropsIds extends DataPacket {
 

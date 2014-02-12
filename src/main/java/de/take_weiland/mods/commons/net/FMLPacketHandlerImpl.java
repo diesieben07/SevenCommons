@@ -24,7 +24,6 @@ import net.minecraft.world.World;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 

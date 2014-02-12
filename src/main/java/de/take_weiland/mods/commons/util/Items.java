@@ -1,12 +1,12 @@
 package de.take_weiland.mods.commons.util;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SCItemAccessor;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.templates.HasMetadata;
 import de.take_weiland.mods.commons.templates.Metadata.ItemMeta;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.SCItemAccessor;
 
 public final class Items {
 

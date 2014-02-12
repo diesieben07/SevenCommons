@@ -1,5 +1,9 @@
 package de.take_weiland.mods.commons.internal.updater.tasks;
 
+import com.google.common.io.ByteStreams;
+import de.take_weiland.mods.commons.internal.updater.*;
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,17 +13,6 @@ import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-
-import org.apache.commons.io.IOUtils;
-
-import com.google.common.io.ByteStreams;
-
-import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
-import de.take_weiland.mods.commons.internal.updater.ModVersion;
-import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
-import de.take_weiland.mods.commons.internal.updater.MonitoringByteChannel;
-import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
-import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 
 public class InstallUpdate implements Runnable {
 

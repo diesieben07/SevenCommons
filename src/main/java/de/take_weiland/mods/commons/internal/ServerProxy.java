@@ -1,5 +1,9 @@
 package de.take_weiland.mods.commons.internal;
 
+import cpw.mods.fml.common.IPlayerTracker;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.internal.updater.PlayerUpdateInformation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.NetHandler;
@@ -7,10 +11,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
-import cpw.mods.fml.common.IPlayerTracker;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.internal.updater.PlayerUpdateInformation;
 
 public class ServerProxy implements SevenCommonsProxy, IPlayerTracker {
 

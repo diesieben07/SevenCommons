@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.network;
 
-import java.io.DataOutput;
-
 import net.minecraft.network.packet.Packet;
+
+import java.io.DataOutput;
 
 public interface PacketTransport {
 

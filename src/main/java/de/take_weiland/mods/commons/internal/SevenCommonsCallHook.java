@@ -1,15 +1,15 @@
 package de.take_weiland.mods.commons.internal;
 
+import cpw.mods.fml.relauncher.IFMLCallHook;
+import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
+import net.minecraft.launchwrapper.LaunchClassLoader;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
-
-import net.minecraft.launchwrapper.LaunchClassLoader;
-import cpw.mods.fml.relauncher.IFMLCallHook;
-import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 
 public class SevenCommonsCallHook implements IFMLCallHook {
 

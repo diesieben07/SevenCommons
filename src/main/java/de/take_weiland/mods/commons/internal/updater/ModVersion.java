@@ -1,16 +1,15 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Ordering;
+import cpw.mods.fml.common.versioning.ArtifactVersion;
+import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
+import de.take_weiland.mods.commons.internal.SevenCommons;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Comparator;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.Ordering;
-
-import cpw.mods.fml.common.versioning.ArtifactVersion;
-import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
-import de.take_weiland.mods.commons.internal.SevenCommons;
 
 public final class ModVersion {
 	

@@ -1,20 +1,19 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
+import com.google.common.primitives.Longs;
+import cpw.mods.fml.common.ITickHandler;
+import cpw.mods.fml.common.TickType;
+import cpw.mods.fml.common.registry.TickRegistry;
+import cpw.mods.fml.relauncher.Side;
+
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Queues;
-import com.google.common.primitives.Longs;
-
-import cpw.mods.fml.common.ITickHandler;
-import cpw.mods.fml.common.TickType;
-import cpw.mods.fml.common.registry.TickRegistry;
-import cpw.mods.fml.relauncher.Side;
 
 public final class Scheduler implements ITickHandler, Executor {
 

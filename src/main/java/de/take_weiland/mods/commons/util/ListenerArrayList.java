@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.util;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.collect.Lists;
 
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ListenerArrayList<E> implements ListenerList<E> {
 

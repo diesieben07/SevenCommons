@@ -1,12 +1,8 @@
 package de.take_weiland.mods.commons.templates;
 
+import de.take_weiland.mods.commons.util.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import de.take_weiland.mods.commons.util.Inventories;
-import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.Listenable;
-import de.take_weiland.mods.commons.util.ListenerArrayList;
-import de.take_weiland.mods.commons.util.ListenerList;
 
 public abstract class AbstractInventory<T extends AbstractInventory<T>> implements SCInventory<T> {
 

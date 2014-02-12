@@ -1,15 +1,5 @@
 package de.take_weiland.mods.commons.internal;
 
-import static de.take_weiland.mods.commons.net.Packets.readEnum;
-import static de.take_weiland.mods.commons.net.Packets.writeEnum;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChatMessageComponent;
-import net.minecraft.util.EnumChatFormatting;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.ModVersion;
 import de.take_weiland.mods.commons.internal.updater.PlayerUpdateInformation;
@@ -18,6 +8,16 @@ import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.network.DataPacket;
 import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.util.JavaUtils;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ChatMessageComponent;
+import net.minecraft.util.EnumChatFormatting;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+import static de.take_weiland.mods.commons.net.Packets.readEnum;
+import static de.take_weiland.mods.commons.net.Packets.writeEnum;
 
 public class PacketUpdateAction extends DataPacket {
 

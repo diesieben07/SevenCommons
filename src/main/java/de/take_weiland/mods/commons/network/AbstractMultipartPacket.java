@@ -1,9 +1,7 @@
 package de.take_weiland.mods.commons.network;
 
-import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToAllInDimension;
-import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToAllPlayers;
-import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToServer;
-import static de.take_weiland.mods.commons.net.Packets.sendPacketToPlayer;
+import cpw.mods.fml.common.network.PacketDispatcher;
+import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,8 +9,9 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import cpw.mods.fml.common.network.PacketDispatcher;
-import de.take_weiland.mods.commons.util.Sides;
+
+import static cpw.mods.fml.common.network.PacketDispatcher.*;
+import static de.take_weiland.mods.commons.net.Packets.sendPacketToPlayer;
 
 public abstract class AbstractMultipartPacket implements MultipartPacket {
 

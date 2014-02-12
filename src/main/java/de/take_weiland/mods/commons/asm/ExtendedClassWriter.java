@@ -1,11 +1,10 @@
 package de.take_weiland.mods.commons.asm;
 
-import static de.take_weiland.mods.commons.asm.ASMUtils.getClassInfo;
-import static de.take_weiland.mods.commons.asm.ASMUtils.isAssignableFrom;
-
+import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
 import org.objectweb.asm.ClassWriter;
 
-import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
+import static de.take_weiland.mods.commons.asm.ASMUtils.getClassInfo;
+import static de.take_weiland.mods.commons.asm.ASMUtils.isAssignableFrom;
 
 
 public class ExtendedClassWriter extends ClassWriter {

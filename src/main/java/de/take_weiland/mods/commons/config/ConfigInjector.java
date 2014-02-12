@@ -1,22 +1,19 @@
 package de.take_weiland.mods.commons.config;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
+import de.take_weiland.mods.commons.internal.SevenCommons;
+import net.minecraftforge.common.Configuration;
+import net.minecraftforge.common.Property;
+import org.apache.commons.lang3.StringUtils;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Set;
-
-import net.minecraftforge.common.Configuration;
-import net.minecraftforge.common.Property;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Optional;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableSet;
-
-import de.take_weiland.mods.commons.internal.SevenCommons;
 
 public final class ConfigInjector {
 

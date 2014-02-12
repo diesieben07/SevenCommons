@@ -1,5 +1,9 @@
 package de.take_weiland.mods.commons.internal.client;
 
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import de.take_weiland.mods.commons.event.client.GuiInitEvent;
+import de.take_weiland.mods.commons.internal.*;
+import de.take_weiland.mods.commons.internal.updater.UpdateControllerRemote;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.multiplayer.NetClientHandler;
@@ -7,14 +11,6 @@ import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.NetHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import de.take_weiland.mods.commons.event.client.GuiInitEvent;
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
-import de.take_weiland.mods.commons.internal.PacketDownloadProgress;
-import de.take_weiland.mods.commons.internal.PacketModState;
-import de.take_weiland.mods.commons.internal.PacketViewUpdates;
-import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
-import de.take_weiland.mods.commons.internal.updater.UpdateControllerRemote;
 
 public class ClientProxy implements SevenCommonsProxy {
 

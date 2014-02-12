@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.util;
 
+import de.take_weiland.mods.commons.util.JavaUtils.EnumValueGetter;
 import sun.misc.JavaLangAccess;
 import sun.misc.SharedSecrets;
-import de.take_weiland.mods.commons.util.JavaUtils.EnumValueGetter;
 
 @SuppressWarnings("restriction")
 class EnumGetterShared implements EnumValueGetter {

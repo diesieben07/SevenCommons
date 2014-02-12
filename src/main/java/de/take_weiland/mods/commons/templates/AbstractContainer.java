@@ -1,5 +1,11 @@
 package de.take_weiland.mods.commons.templates;
 
+import com.google.common.primitives.UnsignedBytes;
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.PacketInventoryName;
+import de.take_weiland.mods.commons.util.Containers;
+import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
@@ -7,14 +13,6 @@ import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-
-import com.google.common.primitives.UnsignedBytes;
-
-import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.PacketInventoryName;
-import de.take_weiland.mods.commons.util.Containers;
-import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.Sides;
 
 public abstract class AbstractContainer<T extends IInventory> extends Container implements SCContainer<T> {
 

@@ -1,21 +1,20 @@
 package de.take_weiland.mods.commons.client;
 
-import static net.minecraft.block.SCBlockAccessor.getIconName;
-import static net.minecraft.item.SCItemAccessor.getIconName;
-import net.minecraft.block.Block;
-import net.minecraft.client.renderer.texture.IconRegister;
-import net.minecraft.item.Item;
-import net.minecraft.util.Icon;
-
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.templates.Metadata;
 import de.take_weiland.mods.commons.templates.Metadata.BlockMeta;
 import de.take_weiland.mods.commons.templates.Metadata.ItemMeta;
 import de.take_weiland.mods.commons.util.JavaUtils;
+import net.minecraft.block.Block;
+import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.item.Item;
+import net.minecraft.util.Icon;
+
+import static net.minecraft.block.SCBlockAccessor.getIconName;
+import static net.minecraft.item.SCItemAccessor.getIconName;
 
 @SideOnly(Side.CLIENT)
 public final class Icons {

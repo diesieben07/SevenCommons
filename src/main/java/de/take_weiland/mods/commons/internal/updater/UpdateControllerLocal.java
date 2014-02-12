@@ -1,5 +1,15 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import com.google.common.base.*;
+import com.google.common.collect.*;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.ModContainer;
+import de.take_weiland.mods.commons.internal.CommonsModContainer;
+import de.take_weiland.mods.commons.internal.updater.tasks.InstallUpdate;
+import de.take_weiland.mods.commons.internal.updater.tasks.SearchUpdates;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -9,25 +19,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
-
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-import cpw.mods.fml.common.FMLLog;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.ModContainer;
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
-import de.take_weiland.mods.commons.internal.updater.tasks.InstallUpdate;
-import de.take_weiland.mods.commons.internal.updater.tasks.SearchUpdates;
 
 public class UpdateControllerLocal extends AbstractUpdateController {
 

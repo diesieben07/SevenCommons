@@ -1,18 +1,18 @@
 package de.take_weiland.mods.commons.internal;
 
-import static de.take_weiland.mods.commons.net.Packets.sendPacketToPlayer;
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.network.DataPacket;
+import de.take_weiland.mods.commons.network.PacketType;
+import de.take_weiland.mods.commons.templates.SyncedContainer;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.Container;
+import net.minecraft.network.packet.Packet;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Container;
-import net.minecraft.network.packet.Packet;
-import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.network.DataPacket;
-import de.take_weiland.mods.commons.network.PacketType;
-import de.take_weiland.mods.commons.templates.SyncedContainer;
+import static de.take_weiland.mods.commons.net.Packets.sendPacketToPlayer;
 
 public class PacketContainerSync extends DataPacket {
 

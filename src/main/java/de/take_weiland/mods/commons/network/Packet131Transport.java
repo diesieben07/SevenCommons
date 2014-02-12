@@ -1,18 +1,6 @@
 package de.take_weiland.mods.commons.network;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataOutput;
-import java.util.List;
-
-import net.minecraft.network.packet.NetHandler;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.Packet131MapData;
-
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.commons.lang3.ArrayUtils;
-
 import com.google.common.primitives.UnsignedBytes;
-
 import cpw.mods.fml.common.network.FMLNetworkHandler;
 import cpw.mods.fml.common.network.ITinyPacketHandler;
 import cpw.mods.fml.common.network.NetworkModHandler;
@@ -20,6 +8,15 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
+import net.minecraft.network.packet.NetHandler;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.Packet131MapData;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.io.ByteArrayInputStream;
+import java.io.DataOutput;
+import java.util.List;
 
 class Packet131Transport extends PacketTransportAbstract implements ITinyPacketHandler {
 

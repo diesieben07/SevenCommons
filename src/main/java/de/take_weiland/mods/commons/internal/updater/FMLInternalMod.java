@@ -1,9 +1,9 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import cpw.mods.fml.common.ModContainer;
+
 import java.io.File;
 import java.net.URL;
-
-import cpw.mods.fml.common.ModContainer;
 
 public class FMLInternalMod extends ModContainerMod {
 

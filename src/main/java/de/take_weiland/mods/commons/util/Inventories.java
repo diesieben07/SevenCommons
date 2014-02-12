@@ -1,8 +1,9 @@
 package de.take_weiland.mods.commons.util;
 
-import java.util.Iterator;
-import java.util.Random;
-
+import com.google.common.base.Predicates;
+import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.Iterators;
+import de.take_weiland.mods.commons.templates.SCInventory;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.IInventory;
@@ -12,11 +13,8 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-import com.google.common.base.Predicates;
-import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.Iterators;
-
-import de.take_weiland.mods.commons.templates.SCInventory;
+import java.util.Iterator;
+import java.util.Random;
 
 /**
  * A collection of static utility methods regarding implementors of {@link IInventory}

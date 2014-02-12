@@ -1,12 +1,12 @@
 package de.take_weiland.mods.commons.util;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.io.OutputSupplier;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-import com.google.common.io.OutputSupplier;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SplittingOutputStream<T extends OutputStream> extends OutputStream {
 

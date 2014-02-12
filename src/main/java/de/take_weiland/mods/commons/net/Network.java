@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
-import java.lang.reflect.Field;
-
 import de.take_weiland.mods.commons.util.JavaUtils;
+
+import java.lang.reflect.Field;
 
 public final class Network {
 

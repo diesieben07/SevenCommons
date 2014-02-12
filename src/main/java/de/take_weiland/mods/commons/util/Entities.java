@@ -1,8 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
-import java.util.Collections;
-import java.util.Set;
-
+import de.take_weiland.mods.commons.net.Packets;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,7 +10,9 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.ForgeDirection;
-import de.take_weiland.mods.commons.net.Packets;
+
+import java.util.Collections;
+import java.util.Set;
 
 public final class Entities {
 

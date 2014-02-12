@@ -1,23 +1,20 @@
 package de.take_weiland.mods.commons.network;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.List;
-
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.network.INetworkManager;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.Packet250CustomPayload;
-
-import org.apache.commons.io.output.ByteArrayOutputStream;
-
 import com.google.common.primitives.UnsignedBytes;
-
 import cpw.mods.fml.common.network.IPacketHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.INetworkManager;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.Packet250CustomPayload;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+
+import java.io.ByteArrayInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.List;
 
 final class Packet250Transport extends PacketTransportAbstract implements IPacketHandler {
 

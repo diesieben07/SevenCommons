@@ -1,28 +1,20 @@
 package de.take_weiland.mods.commons.internal.updater.tasks;
 
+import argo.jdom.JdomParser;
+import argo.jdom.JsonNode;
+import argo.jdom.JsonRootNode;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
+import de.take_weiland.mods.commons.internal.updater.*;
+import org.apache.commons.io.IOUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.util.List;
-
-import org.apache.commons.io.IOUtils;
-
-import argo.jdom.JdomParser;
-import argo.jdom.JsonNode;
-import argo.jdom.JsonRootNode;
-
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-
-import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
-import de.take_weiland.mods.commons.internal.updater.InvalidModVersionException;
-import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
-import de.take_weiland.mods.commons.internal.updater.ModVersion;
-import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
-import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
-import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 
 public class SearchUpdates implements Runnable {
 

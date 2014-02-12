@@ -1,14 +1,13 @@
 package de.take_weiland.mods.commons.fastreflect;
 
+import com.google.common.collect.Maps;
+import cpw.mods.fml.relauncher.ReflectionHelper;
+import cpw.mods.fml.relauncher.ReflectionHelper.UnableToFindMethodException;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
-
-import com.google.common.collect.Maps;
-
-import cpw.mods.fml.relauncher.ReflectionHelper;
-import cpw.mods.fml.relauncher.ReflectionHelper.UnableToFindMethodException;
 
 abstract class AbstractStrategy implements FastreflectStrategy {
 

@@ -1,9 +1,9 @@
 package de.take_weiland.mods.commons.templates;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.ItemStack;
 import de.take_weiland.mods.commons.templates.Metadata.BlockMeta;
 import de.take_weiland.mods.commons.util.Multitypes;
+import net.minecraft.block.Block;
+import net.minecraft.item.ItemStack;
 
 public class TypedItemBlock<BLOCK extends Block & HasMetadata<TYPE>, TYPE extends BlockMeta> extends SCItemBlock<BLOCK> {
 

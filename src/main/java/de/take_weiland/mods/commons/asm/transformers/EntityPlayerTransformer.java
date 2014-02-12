@@ -1,16 +1,15 @@
 package de.take_weiland.mods.commons.asm.transformers;
 
+import de.take_weiland.mods.commons.asm.ASMConstants;
+import de.take_weiland.mods.commons.asm.ASMUtils;
+import de.take_weiland.mods.commons.asm.AppendingTransformer;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
-
-import de.take_weiland.mods.commons.asm.ASMConstants;
-import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.AppendingTransformer;
-import de.take_weiland.mods.commons.internal.SevenCommons;
 
 public final class EntityPlayerTransformer extends AppendingTransformer {
 

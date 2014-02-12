@@ -1,27 +1,19 @@
 package de.take_weiland.mods.commons.internal.client;
 
-import java.util.Collections;
-import java.util.List;
-
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import de.take_weiland.mods.commons.internal.PacketUpdateAction;
+import de.take_weiland.mods.commons.internal.PacketUpdateAction.Action;
+import de.take_weiland.mods.commons.internal.updater.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.EnumChatFormatting;
-
 import org.lwjgl.input.Keyboard;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-
-import de.take_weiland.mods.commons.internal.PacketUpdateAction;
-import de.take_weiland.mods.commons.internal.PacketUpdateAction.Action;
-import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
-import de.take_weiland.mods.commons.internal.updater.ModVersion;
-import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
-import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
-import de.take_weiland.mods.commons.internal.updater.UpdateController;
-import de.take_weiland.mods.commons.internal.updater.UpdateStateListener;
+import java.util.Collections;
+import java.util.List;
 
 public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 

@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.event.client;
 
-import java.util.List;
-
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.event.Event;
+
+import java.util.List;
 
 /**
  * called whenever {@link GuiScreen#initGui} gets called<br>

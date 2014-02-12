@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.net;
 
+import cpw.mods.fml.relauncher.Side;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
-import cpw.mods.fml.relauncher.Side;
 
 public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> implements SimplePacket {
 

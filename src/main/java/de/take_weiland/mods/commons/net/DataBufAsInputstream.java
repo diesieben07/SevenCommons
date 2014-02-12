@@ -1,9 +1,9 @@
 package de.take_weiland.mods.commons.net;
 
+import com.google.common.primitives.Ints;
+
 import java.io.IOException;
 import java.io.InputStream;
-
-import com.google.common.primitives.Ints;
 
 final class DataBufAsInputstream extends InputStream {
 

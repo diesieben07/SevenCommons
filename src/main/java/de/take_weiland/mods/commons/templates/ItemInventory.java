@@ -1,11 +1,12 @@
 package de.take_weiland.mods.commons.templates;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import de.take_weiland.mods.commons.util.ItemStacks;
+import de.take_weiland.mods.commons.util.NBT;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import de.take_weiland.mods.commons.util.ItemStacks;
-import de.take_weiland.mods.commons.util.NBT;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class ItemInventory<T extends ItemInventory<T>> extends AbstractInventory<T> {
 

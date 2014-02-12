@@ -1,12 +1,11 @@
 package de.take_weiland.mods.commons.fastreflect;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
-
 import com.google.common.base.Preconditions;
-
 import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.util.JavaUtils;
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 public final class Fastreflect {
 

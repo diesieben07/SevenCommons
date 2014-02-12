@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.client;
 
 import net.minecraft.client.gui.GuiScreen;
-
 import org.lwjgl.input.Keyboard;
 
 public abstract class GuiScreenWithParent extends GuiScreen {

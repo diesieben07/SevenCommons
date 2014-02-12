@@ -1,8 +1,8 @@
 package net.minecraft.inventory;
 
-import java.util.List;
-
 import net.minecraft.item.ItemStack;
+
+import java.util.List;
 
 public final class SCContainerAccessor {
 

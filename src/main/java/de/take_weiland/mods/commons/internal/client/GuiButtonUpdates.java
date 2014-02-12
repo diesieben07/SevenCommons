@@ -1,12 +1,10 @@
 package de.take_weiland.mods.commons.internal.client;
 
+import de.take_weiland.mods.commons.internal.CommonsModContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.ResourceLocation;
-
 import org.lwjgl.opengl.GL11;
-
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
 
 
 public class GuiButtonUpdates extends GuiButton {

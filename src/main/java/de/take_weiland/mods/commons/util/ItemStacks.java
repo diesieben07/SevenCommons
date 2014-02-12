@@ -1,21 +1,19 @@
 package de.take_weiland.mods.commons.util;
 
-import java.util.Arrays;
-import java.util.List;
-
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.templates.HasMetadata;
 import de.take_weiland.mods.commons.templates.Metadata;
 import de.take_weiland.mods.commons.templates.Metadata.BlockMeta;
 import de.take_weiland.mods.commons.templates.Metadata.ItemMeta;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+
+import java.util.Arrays;
+import java.util.List;
 
 public final class ItemStacks {
 

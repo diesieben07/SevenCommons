@@ -1,23 +1,13 @@
 package de.take_weiland.mods.commons.asm.transformers;
 
-import static de.take_weiland.mods.commons.asm.ASMConstants.F_TARGET_MATE_MCP;
-import static de.take_weiland.mods.commons.asm.ASMConstants.F_TARGET_MATE_OBF;
-import static de.take_weiland.mods.commons.asm.ASMConstants.F_THE_ANIMAL_MCP;
-import static de.take_weiland.mods.commons.asm.ASMConstants.F_THE_ANIMAL_OBF;
-import static de.take_weiland.mods.commons.asm.ASMConstants.M_SPAWN_BABY_MCP;
-import static de.take_weiland.mods.commons.asm.ASMConstants.M_SPAWN_BABY_SRG;
-
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.VarInsnNode;
-
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.*;
+
+import static de.take_weiland.mods.commons.asm.ASMConstants.*;
 
 public final class EntityAIMateTransformer extends AppendingTransformer {
 

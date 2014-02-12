@@ -1,13 +1,12 @@
 package de.take_weiland.mods.commons.internal.updater;
 
-import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToServer;
+import com.google.common.collect.Maps;
+import de.take_weiland.mods.commons.internal.PacketUpdateAction;
+import de.take_weiland.mods.commons.internal.PacketUpdateAction.Action;
 
 import java.util.Collection;
 
-import com.google.common.collect.Maps;
-
-import de.take_weiland.mods.commons.internal.PacketUpdateAction;
-import de.take_weiland.mods.commons.internal.PacketUpdateAction.Action;
+import static cpw.mods.fml.common.network.PacketDispatcher.sendPacketToServer;
 
 public class UpdateControllerRemote extends AbstractUpdateController {
 

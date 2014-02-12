@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.client;
 
-import net.minecraft.client.renderer.Tessellator;
 import cpw.mods.fml.client.GuiScrollingList;
+import net.minecraft.client.renderer.Tessellator;
 
 public class GuiSlotUpdateList extends GuiScrollingList {
 

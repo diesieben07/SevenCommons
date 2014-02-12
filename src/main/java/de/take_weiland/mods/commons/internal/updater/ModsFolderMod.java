@@ -1,15 +1,14 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import com.google.common.base.Strings;
+import cpw.mods.fml.common.ModContainer;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-
-import com.google.common.base.Strings;
-
-import cpw.mods.fml.common.ModContainer;
 
 public class ModsFolderMod extends ModContainerMod {
 

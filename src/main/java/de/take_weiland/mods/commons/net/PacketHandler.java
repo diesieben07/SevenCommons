@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
-import net.minecraft.entity.player.EntityPlayer;
 import cpw.mods.fml.relauncher.Side;
+import net.minecraft.entity.player.EntityPlayer;
 
 public interface PacketHandler<TYPE extends Enum<TYPE>> {
 

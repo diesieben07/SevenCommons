@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.net;
 
-import java.util.logging.Logger;
-
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.relauncher.Side;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+
+import java.util.logging.Logger;
 
 class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> implements PacketHandler<TYPE> {
 

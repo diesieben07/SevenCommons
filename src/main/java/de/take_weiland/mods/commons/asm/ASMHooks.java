@@ -1,7 +1,12 @@
 package de.take_weiland.mods.commons.asm;
 
-import java.util.List;
-
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import de.take_weiland.mods.commons.event.LivingBreedEvent;
+import de.take_weiland.mods.commons.event.PlayerCloneEvent;
+import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
+import de.take_weiland.mods.commons.event.ZombieConvertEvent;
+import de.take_weiland.mods.commons.event.client.GuiInitEvent;
 import de.take_weiland.mods.commons.sync.SyncASMHooks;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -11,13 +16,8 @@ import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.event.LivingBreedEvent;
-import de.take_weiland.mods.commons.event.PlayerCloneEvent;
-import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
-import de.take_weiland.mods.commons.event.ZombieConvertEvent;
-import de.take_weiland.mods.commons.event.client.GuiInitEvent;
+
+import java.util.List;
 
 /**
  * A class containing methods called from ASM generated code.<br>

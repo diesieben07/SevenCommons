@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
 
 public final class ASMUtils {
 

@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.network;
 
-import net.minecraft.network.packet.Packet;
 import cpw.mods.fml.common.network.PacketDispatcher;
+import net.minecraft.network.packet.Packet;
 
 public interface PacketTarget {
 

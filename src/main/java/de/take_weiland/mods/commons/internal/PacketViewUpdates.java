@@ -1,7 +1,11 @@
 package de.take_weiland.mods.commons.internal;
 
-import static de.take_weiland.mods.commons.net.Packets.readEnum;
-import static de.take_weiland.mods.commons.net.Packets.writeEnum;
+import com.google.common.collect.Lists;
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.updater.*;
+import de.take_weiland.mods.commons.network.DataPacket;
+import de.take_weiland.mods.commons.network.PacketType;
+import net.minecraft.entity.player.EntityPlayer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -9,19 +13,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-import net.minecraft.entity.player.EntityPlayer;
-
-import com.google.common.collect.Lists;
-
-import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.updater.ClientDummyUpdatableMod;
-import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
-import de.take_weiland.mods.commons.internal.updater.ModVersion;
-import de.take_weiland.mods.commons.internal.updater.ModVersionCollection;
-import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
-import de.take_weiland.mods.commons.internal.updater.UpdateController;
-import de.take_weiland.mods.commons.network.DataPacket;
-import de.take_weiland.mods.commons.network.PacketType;
+import static de.take_weiland.mods.commons.net.Packets.readEnum;
+import static de.take_weiland.mods.commons.net.Packets.writeEnum;
 
 public class PacketViewUpdates extends DataPacket {
 

@@ -1,19 +1,18 @@
 package de.take_weiland.mods.commons.util;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import com.google.common.base.Function;
+import com.google.common.base.Supplier;
+import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.Iterables;
+import de.take_weiland.mods.commons.Unsafe;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.base.Function;
-import com.google.common.base.Supplier;
-import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.Iterables;
-
-import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.internal.SevenCommons;
+import static com.google.common.base.Preconditions.checkArgument;
 
 public final class JavaUtils {
 

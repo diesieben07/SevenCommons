@@ -1,16 +1,16 @@
 package de.take_weiland.mods.commons.internal;
 
-import static de.take_weiland.mods.commons.net.Packets.readEnum;
-import static de.take_weiland.mods.commons.net.Packets.writeEnum;
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.network.DataPacket;
+import de.take_weiland.mods.commons.network.PacketType;
+import net.minecraft.entity.player.EntityPlayer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import net.minecraft.entity.player.EntityPlayer;
-import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.network.DataPacket;
-import de.take_weiland.mods.commons.network.PacketType;
+import static de.take_weiland.mods.commons.net.Packets.readEnum;
+import static de.take_weiland.mods.commons.net.Packets.writeEnum;
 
 public class PacketClientAction extends DataPacket {
 

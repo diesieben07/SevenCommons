@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
 import de.take_weiland.mods.commons.net.ModPacket;
-import de.take_weiland.mods.commons.net.SimplePacket;
 import de.take_weiland.mods.commons.net.SimplePacketType;
 import de.take_weiland.mods.commons.sync.PacketSync;
 

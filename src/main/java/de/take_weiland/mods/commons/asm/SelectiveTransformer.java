@@ -1,14 +1,11 @@
 package de.take_weiland.mods.commons.asm;
 
 
+import com.google.common.base.Throwables;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import net.minecraft.launchwrapper.IClassTransformer;
-
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
-
-import com.google.common.base.Throwables;
-
-import de.take_weiland.mods.commons.internal.SevenCommons;
 
 
 /**

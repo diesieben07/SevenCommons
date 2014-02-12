@@ -1,14 +1,12 @@
 package de.take_weiland.mods.commons.net;
 
+import com.google.common.primitives.UnsignedBytes;
+import de.take_weiland.mods.commons.util.UnsignedShorts;
+import org.bouncycastle.util.Arrays;
+
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
-
-import org.bouncycastle.util.Arrays;
-
-import com.google.common.primitives.UnsignedBytes;
-
-import de.take_weiland.mods.commons.util.UnsignedShorts;
 
 class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implements PacketBuilder {
 
