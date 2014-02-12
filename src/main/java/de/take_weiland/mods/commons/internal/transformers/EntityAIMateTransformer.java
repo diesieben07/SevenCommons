@@ -1,6 +1,5 @@
-package de.take_weiland.mods.commons.asm.transformers;
+package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -10,7 +9,6 @@ import org.objectweb.asm.tree.*;
 
 import static de.take_weiland.mods.commons.asm.ASMConstants.*;
 
-@Internal
 public final class EntityAIMateTransformer extends AppendingTransformer {
 
 	@Override
@@ -34,8 +32,10 @@ public final class EntityAIMateTransformer extends AppendingTransformer {
 		Type entityAgeable = Type.getObjectType(ASMUtils.makeNameInternal("net.minecraft.entity.EntityAgeable"));
 		
 		// call our hook
-		insns.add(ASMUtils.generateStaticMethodCall(SevenCommons.ASM_HOOK_CLASS, "onLivingBreed", Type.VOID_TYPE, entityAnimal, entityAnimal, entityAgeable));
-		
+		String name = "onLivingBreed";
+		String desc = Type.getMethodDescriptor(Type.VOID_TYPE, entityAnimal, entityAnimal, entityAgeable);
+		insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "de/take_weiland/mods/commons/internal/ASMHooks", name, desc));
+
 		return insns;
 	}
 

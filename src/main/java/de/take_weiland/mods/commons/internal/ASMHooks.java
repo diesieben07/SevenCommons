@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.asm;
+package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -8,7 +8,6 @@ import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.event.ZombieConvertEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
-import de.take_weiland.mods.commons.sync.SyncASMHooks;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;

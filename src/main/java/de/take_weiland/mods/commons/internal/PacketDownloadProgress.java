@@ -4,13 +4,7 @@ import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
-import de.take_weiland.mods.commons.network.DataPacket;
-import de.take_weiland.mods.commons.network.PacketType;
 import net.minecraft.entity.player.EntityPlayer;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 public class PacketDownloadProgress extends SCPacket {
 
@@ -38,7 +32,7 @@ public class PacketDownloadProgress extends SCPacket {
 		modId = in.getString();
 		downloadProgress = in.getByte();
 
-		CommonsModContainer.proxy.handleDownloadProgress(this);
+		SCModContainer.proxy.handleDownloadProgress(this);
 	}
 
 	@Override

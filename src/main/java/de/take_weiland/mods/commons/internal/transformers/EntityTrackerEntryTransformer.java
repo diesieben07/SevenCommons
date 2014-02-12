@@ -1,6 +1,5 @@
-package de.take_weiland.mods.commons.asm.transformers;
+package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SingleMethodTransformer;
@@ -10,7 +9,6 @@ import org.objectweb.asm.tree.*;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
-@Internal
 public class EntityTrackerEntryTransformer extends SingleMethodTransformer {
 
 	@Override

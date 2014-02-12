@@ -1,6 +1,5 @@
-package de.take_weiland.mods.commons.asm.transformers;
+package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.PrependingTransformer;
@@ -9,7 +8,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-@Internal
 public final class EntityZombieTransformer extends PrependingTransformer {
 
 	@Override
@@ -20,7 +18,9 @@ public final class EntityZombieTransformer extends PrependingTransformer {
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
 		
 		// call our hook. returns true if canceled
-		insns.add(ASMUtils.generateStaticMethodCall(SevenCommons.ASM_HOOK_CLASS, "onZombieConvert", Type.BOOLEAN_TYPE, Type.getObjectType(clazz.name)));
+		String name = "onZombieConvert";
+		String desc = Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getObjectType(clazz.name));
+		insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "de/take_weiland/mods/commons/internal/ASMHooks", name, desc));
 
 		LabelNode skipReturn = new LabelNode();
 //		

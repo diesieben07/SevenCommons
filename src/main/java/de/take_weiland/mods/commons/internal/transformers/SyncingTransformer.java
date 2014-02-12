@@ -1,14 +1,16 @@
-package de.take_weiland.mods.commons.sync;
+package de.take_weiland.mods.commons.internal.transformers;
 
 import com.google.common.collect.*;
 import cpw.mods.fml.common.FMLLog;
-import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
+import de.take_weiland.mods.commons.internal.SyncType;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.PacketBuilder;
 import de.take_weiland.mods.commons.net.PacketTarget;
+import de.take_weiland.mods.commons.sync.Synced;
+import de.take_weiland.mods.commons.sync.TypeSyncer;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
@@ -26,10 +28,10 @@ import java.util.logging.Logger;
 /**
  * contains black bytecode magic. Do not touch.
  */
-@Internal
 public final class SyncingTransformer extends SelectiveTransformer {
 
 	private static final Logger LOGGER;
+	private static final String syncAsmHooks = "de/take_weiland/mods/commons/internal/SyncASMHooks";
 
 	static {
 		FMLLog.makeLog("SevenCommonsSync");
@@ -207,10 +209,9 @@ public final class SyncingTransformer extends SelectiveTransformer {
 
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 1));
 		insns.add(new InsnNode(Opcodes.DUP));
-		String owner = "de/take_weiland/mods/commons/sync/SyncASMHooks";
 		name = "nextIdx";
 		desc = Type.getMethodDescriptor(Type.INT_TYPE, Type.getType(DataBuf.class));
-		insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, owner, name, desc));
+		insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, syncAsmHooks, name, desc));
 		insns.add(new InsnNode(Opcodes.DUP));
 
 		int len = elements.size();
@@ -242,19 +243,19 @@ public final class SyncingTransformer extends SelectiveTransformer {
 				}
 				insns.add(new FieldInsnNode(element.syncerStatic ? Opcodes.GETSTATIC : Opcodes.GETFIELD, clazz.name, element.syncerField.name, element.syncerField.desc));
 				desc = Type.getMethodDescriptor(Type.getType(Object.class), Type.getType(DataBuf.class), Type.INT_TYPE, Type.getType(Object.class), Type.getType(TypeSyncer.class));
-				insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, owner, name, desc));
+				insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, syncAsmHooks, name, desc));
 				insns.add(new TypeInsnNode(Opcodes.CHECKCAST, typeToSync.getInternalName()));
 			} else {
 				insns.add(new InsnNode(Opcodes.POP));
 				if (element.isPrimitive) {
 					name += "_" + typeToSync.getClassName();
 					desc = Type.getMethodDescriptor(typeToSync, Type.getType(DataBuf.class));
-					insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, owner, name, desc));
+					insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, syncAsmHooks, name, desc));
 				} else {
 					name += "_Enum";
 					desc = Type.getMethodDescriptor(Type.getType(Enum.class), Type.getType(DataBuf.class), Type.getType(Class.class));
 					insns.add(new LdcInsnNode(typeToSync));
-					insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, owner, name, desc));
+					insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, syncAsmHooks, name, desc));
 					insns.add(new TypeInsnNode(Opcodes.CHECKCAST, typeToSync.getInternalName()));
 				}
 			}
@@ -466,7 +467,6 @@ public final class SyncingTransformer extends SelectiveTransformer {
 		return false;
 	}
 
-	private static final String syncAsmHooks = "de/take_weiland/mods/commons/sync/SyncASMHooks";
 	private MethodNode makeNonStaticInitMethod(ClassNode clazz, Collection<SyncedElement> fields, Map<Type, FieldNode> targets) {
 		String name = "_sc_sync_init";
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);

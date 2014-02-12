@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
-public class SevenCommonsCallHook implements IFMLCallHook {
+public class SCCallHook implements IFMLCallHook {
 
 	public static final String UPDATE_POSTFIX = ".7update";
 	public static final String BACKUP_POSTFIX = ".backup";

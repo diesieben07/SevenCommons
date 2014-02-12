@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 		})
 public final class SevenCommons implements IFMLLoadingPlugin {
 
-	public static final String ASM_HOOK_CLASS = "de.take_weiland.mods.commons.asm.ASMHooks";
+	public static final String ASM_HOOK_CLASS = "de.take_weiland.mods.commons.internal.ASMHooks";
 	public static boolean MCP_ENVIRONMENT;
 	
 	public static final Logger LOGGER;
@@ -43,26 +43,25 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	@Override
 	public String[] getASMTransformerClass() {
 		return new String[] {
-			"de.take_weiland.mods.commons.asm.transformers.EntityAIMateTransformer",
-			"de.take_weiland.mods.commons.asm.transformers.EntityPlayerTransformer",
-			"de.take_weiland.mods.commons.asm.transformers.EntityZombieTransformer",
-			"de.take_weiland.mods.commons.asm.transformers.GuiScreenTransformer",
-			"de.take_weiland.mods.commons.asm.transformers.PacketTransformer",
-			"de.take_weiland.mods.commons.sync.SyncingTransformer",
-			"de.take_weiland.mods.commons.asm.transformers.EntityTrackerEntryTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.EntityAIMateTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.EntityPlayerTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.EntityZombieTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.GuiScreenTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.SyncingTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.EntityTrackerEntryTransformer",
 			"de.take_weiland.mods.commons.sync.EntityTransformer",
-			"de.take_weiland.mods.commons.net.PacketTransformer"
+			"de.take_weiland.mods.commons.internal.transformers.PacketTransformer"
 		};
 	}
 
 	@Override
 	public String getModContainerClass() {
-		return "de.take_weiland.mods.commons.internal.CommonsModContainer";
+		return "de.take_weiland.mods.commons.internal.SCModContainer";
 	}
 
 	@Override
 	public String getSetupClass() {
-		return "de.take_weiland.mods.commons.internal.SevenCommonsCallHook";
+		return "de.take_weiland.mods.commons.internal.SCCallHook";
 	}
 
 	@Override

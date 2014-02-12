@@ -14,8 +14,6 @@ import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -75,19 +73,6 @@ public final class ASMUtils {
 		return name.replace('/', '.');
 	}
 	
-	public static final MethodInsnNode generateMethodCall(String targetClass, String methodName, Type returnType, Type... params) {
-		return new MethodInsnNode(Opcodes.INVOKEVIRTUAL, makeNameInternal(targetClass), methodName, Type.getMethodDescriptor(returnType, params));
-	}
-	
-	public static final MethodInsnNode generateStaticMethodCall(String targetClass, String methodName, Type returnType, Type... params) {
-		return new MethodInsnNode(Opcodes.INVOKESTATIC, makeNameInternal(targetClass), methodName, Type.getMethodDescriptor(returnType, params));
-	}
-	
-	public static final MethodInsnNode generateMethodCall(Method method) {
-		int opcode = Modifier.isStatic(method.getModifiers()) ? Opcodes.INVOKESTATIC : Opcodes.INVOKEVIRTUAL;
-		return new MethodInsnNode(opcode, Type.getInternalName(method.getDeclaringClass()), method.getName(), Type.getMethodDescriptor(method));
-	}
-
 	public static ClassNode getClassNode(byte[] bytes) {
 		ClassReader reader = new ClassReader(bytes);
 		ClassNode clazz = new ClassNode();

@@ -6,7 +6,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
+import de.take_weiland.mods.commons.internal.SCModContainer;
 import de.take_weiland.mods.commons.internal.updater.tasks.InstallUpdate;
 import de.take_weiland.mods.commons.internal.updater.tasks.SearchUpdates;
 
@@ -199,7 +199,7 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 //			return false;
 //		}
         		
-		CommonsModContainer.proxy.shutdownMinecraft();
+		SCModContainer.proxy.shutdownMinecraft();
 		return true;
 	}
 	

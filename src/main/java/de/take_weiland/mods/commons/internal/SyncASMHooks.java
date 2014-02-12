@@ -1,13 +1,12 @@
-package de.take_weiland.mods.commons.sync;
+package de.take_weiland.mods.commons.internal;
 
 import com.google.common.collect.Lists;
 import de.take_weiland.mods.commons.Internal;
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
-import de.take_weiland.mods.commons.internal.SCPacket;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.PacketBuilder;
 import de.take_weiland.mods.commons.net.PacketTarget;
 import de.take_weiland.mods.commons.net.Packets;
+import de.take_weiland.mods.commons.sync.*;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -29,7 +28,7 @@ public final class SyncASMHooks {
 		if (out != null) {
 			return out;
 		}
-		out = CommonsModContainer.packetFactory.builder(SCPacket.Type.SYNC);
+		out = SCModContainer.packetFactory.builder(SCPacket.Type.SYNC);
 		Packets.writeEnum(out, type);
 		type.injectInfo(obj, out);
 		return out;

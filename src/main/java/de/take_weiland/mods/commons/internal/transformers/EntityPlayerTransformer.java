@@ -1,18 +1,13 @@
-package de.take_weiland.mods.commons.asm.transformers;
+package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingTransformer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.VarInsnNode;
+import org.objectweb.asm.tree.*;
 
-@Internal
 public final class EntityPlayerTransformer extends AppendingTransformer {
 
 	@Override
@@ -23,8 +18,10 @@ public final class EntityPlayerTransformer extends AppendingTransformer {
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0)); // load the first parameter = the old player
 		
 		Type entityPlayer = Type.getObjectType(clazz.name);
-		
-		insns.add(ASMUtils.generateStaticMethodCall(SevenCommons.ASM_HOOK_CLASS, "onPlayerClone", Type.VOID_TYPE, entityPlayer, entityPlayer));
+
+		String name = "onPlayerClone";
+		String desc = Type.getMethodDescriptor(Type.VOID_TYPE, entityPlayer, entityPlayer);
+		insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "de/take_weiland/mods/commons/internal/ASMHooks", name, desc));
 		
 		return insns;
 	}

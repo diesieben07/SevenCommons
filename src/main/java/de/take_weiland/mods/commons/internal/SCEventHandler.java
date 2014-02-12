@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.common.IPlayerTracker;
-import de.take_weiland.mods.commons.sync.SyncASMHooks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.event.EventPriority;

@@ -1,9 +1,11 @@
-package de.take_weiland.mods.commons.net;
+package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
 import de.take_weiland.mods.commons.asm.SelectiveTransformer;
+import de.take_weiland.mods.commons.net.ModPacket;
+import de.take_weiland.mods.commons.net.PacketFactory;
 import org.objectweb.asm.tree.*;
 
 import static org.objectweb.asm.Opcodes.*;

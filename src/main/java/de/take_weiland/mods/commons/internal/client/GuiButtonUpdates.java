@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.internal.client;
 
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
+import de.take_weiland.mods.commons.internal.SCModContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.ResourceLocation;
@@ -13,10 +13,10 @@ public class GuiButtonUpdates extends GuiButton {
 	
 	public GuiButtonUpdates(int id, int x, int y) {
 		super(id, x, y, 20, 20, "");
-		if (CommonsModContainer.updateController == null) {
+		if (SCModContainer.updateController == null) {
 			throw new IllegalStateException("Update Button should not exist when updateController is null!");
 		}
-		if (!CommonsModContainer.updaterEnabled) {
+		if (!SCModContainer.updaterEnabled) {
 			throw new IllegalStateException("Update Button should not exist when updates are disabled!");
 		}
 	}
@@ -24,7 +24,7 @@ public class GuiButtonUpdates extends GuiButton {
 	@Override
 	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
 		if (super.mousePressed(mc, mouseX, mouseY)) {
-			mc.displayGuiScreen(new GuiUpdates(mc.currentScreen, CommonsModContainer.updateController));
+			mc.displayGuiScreen(new GuiUpdates(mc.currentScreen, SCModContainer.updateController));
 			return true;
 		} else {
 			return false;

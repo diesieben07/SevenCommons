@@ -19,16 +19,15 @@ import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketFactory;
-import de.take_weiland.mods.commons.network.PacketTransport;
-import de.take_weiland.mods.commons.network.PacketTransports;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraftforge.common.Configuration;
 
 import java.io.File;
 
-public final class CommonsModContainer extends DummyModContainer {
+public final class SCModContainer extends DummyModContainer {
 
 	public static SevenCommonsProxy proxy;
-	public static CommonsModContainer instance;
+	public static SCModContainer instance;
 	public static UpdateController updateController;
     public static PacketFactory<SCPacket.Type> packetFactory;
 	
@@ -38,7 +37,7 @@ public final class CommonsModContainer extends DummyModContainer {
 	@GetProperty(comment = "The name of the command used to access the update feature on a server")
 	public static String updateCommand = "modupdates";
 	
-	public CommonsModContainer() {
+	public SCModContainer() {
 		super(new ModMetadata());
 		ModMetadata meta = getMetadata();
 		meta.name = "SevenCommons";
@@ -63,13 +62,13 @@ public final class CommonsModContainer extends DummyModContainer {
 	public void preInit(FMLPreInitializationEvent event) {
 		try { // my version of @SidedProxy
 			if (event.getSide().isServer()) {
-				proxy = (SevenCommonsProxy) Class.forName("de.take_weiland.mods.commons.internal.ServerProxy").newInstance();
+				proxy = Class.forName("de.take_weiland.mods.commons.internal.ServerProxy").asSubclass(SevenCommonsProxy.class).newInstance();
 			} else {
-				proxy = (SevenCommonsProxy) Class.forName("de.take_weiland.mods.commons.internal.client.ClientProxy").newInstance();
+				proxy = Class.forName("de.take_weiland.mods.commons.internal.client.ClientProxy").asSubclass(SevenCommonsProxy.class).newInstance();
 			}
 		} catch (Throwable t) {
-			// nope
-			t.printStackTrace();
+			// if this fails, we can't do anything but crash
+			throw JavaUtils.throwUnchecked(t);
 		}
 		
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());

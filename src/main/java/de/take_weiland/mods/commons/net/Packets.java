@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.net;
 import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
-import de.take_weiland.mods.commons.internal.CommonsModContainer;
+import de.take_weiland.mods.commons.internal.SCModContainer;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.Entity;
@@ -97,7 +97,7 @@ public final class Packets {
 	
 	public static INetworkManager getNetworkManager(NetHandler netHandler) {
 		if (!netHandler.isServerHandler()) {
-			return CommonsModContainer.proxy.getNetworkManagerFromClient(netHandler);
+			return SCModContainer.proxy.getNetworkManagerFromClient(netHandler);
 		} else if (netHandler instanceof NetServerHandler) {
 			return ((NetServerHandler)netHandler).netManager;
 		} else {

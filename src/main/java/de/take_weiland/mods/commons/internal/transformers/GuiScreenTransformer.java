@@ -1,6 +1,5 @@
-package de.take_weiland.mods.commons.asm.transformers;
+package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AppendingTransformer;
@@ -11,7 +10,6 @@ import org.objectweb.asm.tree.*;
 
 import java.util.List;
 
-@Internal
 public final class GuiScreenTransformer extends AppendingTransformer {
 
 	@Override
@@ -23,9 +21,11 @@ public final class GuiScreenTransformer extends AppendingTransformer {
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
 		insns.add(new InsnNode(Opcodes.DUP));
 		insns.add(new FieldInsnNode(Opcodes.GETFIELD, clazz.name, buttonListField, ASMUtils.getFieldDescriptor(clazz, buttonListField)));
-		
-		insns.add(ASMUtils.generateStaticMethodCall(SevenCommons.ASM_HOOK_CLASS, "onGuiInit", Type.VOID_TYPE, Type.getObjectType(clazz.name), Type.getType(List.class)));
-		
+
+		String name = "onGuiInit";
+		String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getObjectType(clazz.name), Type.getType(List.class));
+		insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "de/take_weiland/mods/commons/internal/ASMHooks", name, desc));
+
 		return insns;
 	}
 	

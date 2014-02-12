@@ -7,16 +7,10 @@ import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
-import de.take_weiland.mods.commons.network.DataPacket;
-import de.take_weiland.mods.commons.network.PacketType;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatMessageComponent;
 import net.minecraft.util.EnumChatFormatting;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 import static de.take_weiland.mods.commons.net.Packets.readEnum;
 import static de.take_weiland.mods.commons.net.Packets.writeEnum;
@@ -76,12 +70,12 @@ public class PacketUpdateAction extends SCPacket {
 			versionIndex = in.getUnsignedShort();
 		}
 
-		if (!player.canCommandSenderUseCommand(4, CommonsModContainer.updateCommand)) {
+		if (!player.canCommandSenderUseCommand(4, SCModContainer.updateCommand)) {
 			player.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("sevencommons.updates.noop").setColor(EnumChatFormatting.RED));
-		} else if (!CommonsModContainer.updaterEnabled) {
+		} else if (!SCModContainer.updaterEnabled) {
 			player.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("sevencommons.updates.disabled"));
 		} else {
-			UpdateController localUpdater = CommonsModContainer.updateController;
+			UpdateController localUpdater = SCModContainer.updateController;
 			UpdatableMod mod = modId == null ? null : localUpdater.getMod(modId);
 			switch (action) {
 				case SEARCH:

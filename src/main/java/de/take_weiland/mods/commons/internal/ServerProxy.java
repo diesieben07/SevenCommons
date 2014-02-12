@@ -29,7 +29,7 @@ public class ServerProxy implements SevenCommonsProxy, IPlayerTracker {
 	
 	@Override
 	public void onPlayerLogout(EntityPlayer player) {
-		CommonsModContainer.updateController.unregisterListener((PlayerUpdateInformation)player.getExtendedProperties(PlayerUpdateInformation.IDENTIFIER));
+		SCModContainer.updateController.unregisterListener((PlayerUpdateInformation)player.getExtendedProperties(PlayerUpdateInformation.IDENTIFIER));
 	}
 	
 	@Override

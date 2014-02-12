@@ -23,7 +23,7 @@ public class ClientProxy implements SevenCommonsProxy {
 	
 	@ForgeSubscribe
 	public void onGuiInit(GuiInitEvent event) {
-		if (CommonsModContainer.updaterEnabled && event.gui instanceof GuiMainMenu) {
+		if (SCModContainer.updaterEnabled && event.gui instanceof GuiMainMenu) {
 			event.buttons.add(new GuiButtonUpdates(-1, event.gui.width / 2 + 104, event.gui.height / 4 + 48 + 72 + 12));
 		}
 	}

@@ -4,15 +4,9 @@ import com.google.common.collect.Lists;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.updater.*;
 import de.take_weiland.mods.commons.net.DataBuf;
-import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
-import de.take_weiland.mods.commons.network.DataPacket;
-import de.take_weiland.mods.commons.network.PacketType;
 import net.minecraft.entity.player.EntityPlayer;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -75,7 +69,7 @@ public class PacketViewUpdates extends SCPacket {
 			clientMods.add(mod);
 		}
 
-		CommonsModContainer.proxy.handleViewUpdates(this);
+		SCModContainer.proxy.handleViewUpdates(this);
 	}
 
 	@Override
