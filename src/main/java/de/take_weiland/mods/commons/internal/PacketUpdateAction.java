@@ -92,7 +92,7 @@ public class PacketUpdateAction extends DataPacket {
 				localUpdater.searchForUpdates();
 				break;
 			case UPDATE:
-				ModVersion version = JavaUtils.safeListAccess(mod.getVersions().getAvailableVersions(), versionIndex);
+				ModVersion version = JavaUtils.get(mod.getVersions().getAvailableVersions(), versionIndex);
 				if (version != null) {
 					localUpdater.update(mod, version);
 				}

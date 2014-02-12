@@ -26,7 +26,7 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 
 	@Override
 	public ItemStack getStackInSlot(int slot) {
-		return JavaUtils.safeArrayAccess(storage, slot);
+		return JavaUtils.get(storage, slot);
 	}
 
 	@Override

@@ -47,7 +47,7 @@ public final class ModVersionCollection {
 	}
 	
 	public ModVersion getSelectedVersion() {
-		return JavaUtils.safeListAccess(versions, selectedVersion);
+		return JavaUtils.get(versions, selectedVersion);
 	}
 	
 	public void selectNextVersion() {
@@ -72,10 +72,10 @@ public final class ModVersionCollection {
 	}
 	
 	public ModVersion getNewestInstallableVersion() {
-		return JavaUtils.safeListAccess(installableVersions, 0);
+		return JavaUtils.get(installableVersions, 0);
 	}
 	
 	public ModVersion getNewestVersion() {
-		return JavaUtils.safeListAccess(versions, 0);
+		return JavaUtils.get(versions, 0);
 	}
 }

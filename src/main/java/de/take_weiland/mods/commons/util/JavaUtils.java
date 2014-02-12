@@ -1,8 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Function;
-import com.google.common.base.Supplier;
-import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -17,102 +15,163 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class JavaUtils {
 
 	private JavaUtils() { }
-	
-	public static <T> T safeArrayAccess(T[] array, int index) {
-		return arrayIndexExists(array, index) ? array[index] : null;
+
+	/**
+	 * returns the value at the given index in the array, or null if the index is out of bounds
+	 */
+	public static <T> T get(T[] array, int index) {
+		return indexExists(array, index) ? array[index] : null;
 	}
-	
-	public static boolean arrayIndexExists(Object[] array, int index) {
+
+	/**
+	 * returns true if the given index exists in the array
+	 */
+	public static boolean indexExists(Object[] array, int index) {
 		return index >= 0 && index < array.length;
 	}
-	
-	public static <T> T defaultedArrayAccess(T[] array, int index, T defaultValue) {
-		return arrayIndexExists(array, index) ? array[index] : defaultValue;
+
+	/**
+	 * returns the value at the given index in the array, or the defaultValue if the index is out of bounds
+	 */
+	public static <T> T get(T[] array, int index, T defaultValue) {
+		return indexExists(array, index) ? array[index] : defaultValue;
 	}
-	
-	public static boolean listIndexExists(List<?> list, int index) {
+
+	/**
+	 * returns the value at the given index in the list, or null if the index is out of bounds
+	 */
+	public static <T> T get(List<T> list, int index) {
+		return indexExists(list, index) ? list.get(index) : null;
+	}
+
+	/**
+	 * returns true if the given index exists in the list
+	 */
+	public static boolean indexExists(List<?> list, int index) {
 		return index >= 0 && index < list.size();
 	}
-	
+
+	/**
+	 * returns the value at the given index in the list, or the defaultValue if the index is out of bounds
+	 */
+	public static <T> T get(List<T> list, int index, T defaultValue) {
+		return indexExists(list, index) ? list.get(index) : defaultValue;
+	}
+
+	@Deprecated
+	public static <T> T safeArrayAccess(T[] array, int index) {
+		return get(array, index);
+	}
+
+	@Deprecated
+	public static boolean arrayIndexExists(Object[] array, int index) {
+		return indexExists(array, index);
+	}
+
+	@Deprecated
+	public static <T> T defaultedArrayAccess(T[] array, int index, T defaultValue) {
+		return get(array, index, defaultValue);
+	}
+
+	@Deprecated
+	public static boolean listIndexExists(List<?> list, int index) {
+		return indexExists(list, index);
+	}
+
+	@Deprecated
 	public static <T> T safeListAccess(List<T> list, int index) {
 		return listIndexExists(list, index) ? list.get(index) : null;
 	}
-	
-	public static <T> Iterator<T> nCallsIterator(final Supplier<T> supplier, final int n) {
-		return new AbstractIterator<T>() {
 
-			private int counter = 0;
-			
-			@Override
-			protected T computeNext() {
-				return ++counter <= n ? supplier.get() : endOfData(); 
-			}
-			
-		};
-	}
-	
-	public static <T> Iterable<T> nCalls(final Supplier<T> supplier, final int n) {
-		return new Iterable<T>() {
-
-			@Override
-			public Iterator<T> iterator() {
-				return nCallsIterator(supplier, n);
-			}
-			
-		};
-	}
-	
+	/**
+	 * returns the given list or {@link java.util.Collections#emptyList()} if the list is null
+	 */
 	public static <T> List<T> nullToEmpty(List<T> nullable) {
 		return nullable == null ? Collections.<T>emptyList() : nullable;
 	}
-	
+
+	/**
+	 * concatenate the given iterables, null will be treated as an empty iterable
+	 */
 	public static <T> Iterable<T> concatNullable(Iterable<T> a, Iterable<T> b) {
 		return a == null ? (b == null ? Collections.<T>emptyList() : b) : (b == null ? a : Iterables.<T>concat(a, b));
 	}
-	
+
+	/**
+	 * applies every element in the Iterable to the Consumer
+	 */
 	public static <T> void foreach(Iterable<T> it, Consumer<T> c) {
 		foreach(it.iterator(), c);
 	}
-	
+
+	/**
+	 * applies every element in the Iterator to the Consumer
+	 */
 	public static <T> void foreach(Iterator<T> it, Consumer<T> c) {
 		while (it.hasNext()) {
 			c.apply(it.next());
 		}
 	}
-	
+
+	/**
+	 * applies every element in the Array to the Consumer
+	 */
 	public static <T> void foreach(T[] arr, Consumer<T> c) {
 		for (T t : arr) {
 			c.apply(t);
 		}
 	}
-	
+
+	/**
+	 * Applies the function to every element in the {@code in} array and stores the result in the {@code out} array
+	 * @throws java.lang.IllegalArgumentException if {@code in.length > out.length}
+	 */
 	public static <T, R> R[] transform(T[] in, R[] out, Function<T, R> func) {
 		int l = in.length;
-		checkArgument(l == out.length);
+		checkArgument(l <= out.length);
 		for (int i = 0; i < l; ++i) {
 			out[i] = func.apply(in[i]);
 		}
 		return out;
 	}
-	
+
+	/**
+	 * Throws the given Throwable as if it was an unchecked exception<br />
+	 * This method always throws, the return type is just there to allow constructs like this:<br />
+	 * {@code
+	 * throw JavaUtils.throwUnchecked(new Throwable());
+	 * }<br />
+	 * in case a return type is expected
+	 */
+	@Unsafe
 	public static RuntimeException throwUnchecked(Throwable t) {
 		JavaUtils.<RuntimeException>throwUnchecked0(t);
 		throw new AssertionError("unreachable");
 	}
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked") // dirty hack. the cast doesn't exist in bytecode, so it always succeeds
 	private static <T extends Throwable> void throwUnchecked0(Throwable t) throws T {
 		throw (T)t;
 	}
 
+	/**
+	 * encode two integers into a single long value<br />
+	 * The long can be decoded with {@link #decodeIntA(long)} and {@link #decodeIntB(long)} respectively
+	 */
 	public static long encodeInts(int a, int b) {
 		return (((long)a) << 32) | (b & 0xffffffffL);
 	}
-	
+
+	/**
+	 * decode the first int encoded into the given long with {@link #encodeInts(int, int)}
+	 */
 	public static int decodeIntA(long l) {
 		return (int)(l >> 32);
 	}
-	
+
+	/**
+	 * decode the second int encoded into the given long with {@link #encodeInts(int, int)}
+	 */
 	public static int decodeIntB(long l) {
 		return (int)l;
 	}
@@ -122,12 +181,23 @@ public final class JavaUtils {
 	public static <T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
 		return getEnumConstantsShared(clazz);
 	}
-	
+
+	/**
+	 * Gets all values defined in the given Enum class. The returned array is shared across the entire codebase and should never be modified!
+	 */
 	@Unsafe
 	public static <T extends Enum<T>> T[] getEnumConstantsShared(Class<T> clazz) {
 		return ENUM_GETTER.getEnumValues(clazz);
 	}
-	
+
+	/**
+	 * gets the Enum constant with the given ordinal for the given Enum class<br />
+	 * This method is preferable to<br />
+	 * {@code
+	 * SomeEnum v = SomeEnum.values()[ordinal];
+	 * }<br />
+	 * because it doesn't need to copy the value array, like values() does
+	 */
 	public static <T extends Enum<T>> T byOrdinal(Class<T> clazz, int ordinal) {
 		return safeArrayAccess(getEnumConstantsShared(clazz), ordinal);
 	}
@@ -157,6 +227,7 @@ public final class JavaUtils {
 		if (unsafeChecked) {
 			return;
 		}
+		unsafeChecked = true;
 		try {
 			Field field = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe");
 			field.setAccessible(true);
@@ -166,12 +237,19 @@ public final class JavaUtils {
 		}
 	}
 
+	/**
+	 * checks if sun.misc.Unsafe is available on this JVM
+	 * @return true if sun.misc.Unsafe was found
+	 */
 	@Unsafe
 	public static boolean hasUnsafe() {
 		initUnsafe();
 		return unsafe != null;
 	}
-	
+
+	/**
+	 * returns the sun.misc.Unsafe instance, if available, otherwise null
+	 */
 	@Unsafe
 	public static Object getUnsafe() {
 		initUnsafe();

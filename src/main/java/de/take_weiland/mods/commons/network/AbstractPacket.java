@@ -8,7 +8,6 @@ import net.minecraft.world.World;
 
 import static cpw.mods.fml.common.network.PacketDispatcher.*;
 import static de.take_weiland.mods.commons.net.Packets.*;
-import static de.take_weiland.mods.commons.net.Packets.sendPacketToPlayer;
 
 public abstract class AbstractPacket implements SinglePacket {
 

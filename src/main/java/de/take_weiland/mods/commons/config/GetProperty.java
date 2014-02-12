@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.config;
 
-import net.minecraftforge.common.Configuration;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -14,7 +12,7 @@ import java.lang.annotation.Target;
  * 
  * The field's initial value will be used as the default
  * 
- * @see Configuration
+ * @see net.minecraftforge.common.Configuration
  * @author diesieben07
  *
  */
