@@ -6,16 +6,25 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.PacketTarget;
+import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.StringSyncer;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.world.World;
+import net.minecraftforge.common.IExtendedEntityProperties;
+
+import java.lang.annotation.ElementType;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()
@@ -50,8 +59,31 @@ public class testmod_sc {
 			@Override
 			public void onPlayerRespawn(EntityPlayer player) { }
 		});
+
+		new TestExtendedProperties();
 	}
 
+	@Synced
+	private static class TestExtendedProperties implements IExtendedEntityProperties {
+
+		@Synced
+		private int foo;
+
+		@Override
+		public void saveNBTData(NBTTagCompound compound) {
+
+		}
+
+		@Override
+		public void loadNBTData(NBTTagCompound compound) {
+
+		}
+
+		@Override
+		public void init(Entity entity, World world) {
+
+		}
+	}
 
 	private static class TestGuiContainer extends GuiContainer {
 
@@ -61,6 +93,7 @@ public class testmod_sc {
 
 		@Override
 		protected void drawGuiContainerBackgroundLayer(float f, int i, int j) {
+			System.out.println(((TestContainer) inventorySlots).sync);
 			drawBackground(0);
 		}
 	}
@@ -68,18 +101,56 @@ public class testmod_sc {
 	@Synced
 	private static class TestContainer extends Container {
 
-		@Synced(syncer = StringSyncer.class)
-		private Object sync;
+		public TestContainer(String test) {
+			this();
+		}
 
-		@Synced
-		private String foobar;
+		public TestContainer() {
 
-		@Synced(syncer = TestSyncer.class)
-		private Object foobarusMaximus;
+		}
+
+
+		private int sync = 9;
+
+		@Synced(target = TestPacketTarget.class, setter = "setter")
+		private int getter() {
+			return sync;
+		}
+
+		@Synced.Setter("setter")
+		private void setter(int sync) {
+			this.sync = sync;
+		}
+
+		@Override
+		public void detectAndSendChanges() {
+			super.detectAndSendChanges();
+			sync++;
+		}
+		//
+//		@Synced(target = TestPacketTarget.class)
+//		private String foobar;
+//
+//		@Synced
+//		private Object foobarusMaximus;
 
 		@Override
 		public boolean canInteractWith(EntityPlayer entityplayer) {
 			return true;
+		}
+	}
+
+	public static class TestPacketTarget implements PacketTarget {
+
+		private TestContainer c;
+
+		public TestPacketTarget(Object o) {
+			c =(TestContainer) o;
+		}
+
+		@Override
+		public void send(Packet packet) {
+			Packets.sendPacketToViewing(packet, c);
 		}
 	}
 
