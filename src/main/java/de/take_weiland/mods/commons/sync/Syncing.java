@@ -25,7 +25,6 @@ public final class Syncing {
 		registerSyncer(String.class, new StringSyncer());
 		registerSyncer(FluidStack.class, new FluidStackSyncer());
 		registerSyncer(ItemStack.class, new ItemStackSyncer());
-		registerSyncer(FluidTank.class, new FluidTankSyncer());
 	}
 	
 }
