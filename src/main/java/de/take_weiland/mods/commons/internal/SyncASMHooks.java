@@ -114,7 +114,7 @@ public final class SyncASMHooks {
 		}
 	}
 
-	public static Object read(PacketBuilder in, int idx, Object old, TypeSyncer<Object> syncer) {
+	public static Object read(DataBuf in, int idx, Object old, TypeSyncer<Object> syncer) {
 		if ((idx & 0x40) == 0x40) { // 0100 0000
 			return null;
 		} else {
