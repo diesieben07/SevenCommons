@@ -11,7 +11,7 @@ final class FluidTankSyncer implements TypeSyncer<FluidTank> {
 
 	@Override
 	public boolean equal(FluidTank now, FluidTank prev) {
-		return Fluids.identical(now.getFluid(), prev.getFluid());
+		return Fluids.identical(now.getFluid(), prev == null ? null : prev.getFluid());
 	}
 
 	@Override
