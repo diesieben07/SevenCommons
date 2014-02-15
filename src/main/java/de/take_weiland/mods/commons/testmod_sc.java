@@ -13,6 +13,9 @@ import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
+import de.take_weiland.mods.commons.traits.Factory;
+import de.take_weiland.mods.commons.traits.Trait;
+import de.take_weiland.mods.commons.traits.HasTraits;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,9 +25,47 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
-@Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
+//@Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()
 public class testmod_sc {
+
+	private static interface Root {
+
+		Object getString();
+
+	}
+
+	@Trait(impl = TestMixinImpl.class)
+	private static interface TestMixin extends Root {
+
+		String getString();
+
+	}
+
+	public static class TestMixinImpl implements TestMixin {
+
+		@Override
+		public String getString() {
+			return "Hello World!";
+		}
+	}
+
+	@HasTraits
+	public static abstract class UsesMixin implements TestMixin {
+
+		@Factory
+		public static UsesMixin create() {
+			return null;
+		}
+
+		public void print() {
+			System.out.println(getString());
+		}
+	}
+
+	static {
+		UsesMixin.create().print();
+	}
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {

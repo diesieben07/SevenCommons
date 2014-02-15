@@ -83,7 +83,7 @@ public final class SyncingTransformer extends SelectiveTransformer {
 			checkIsSetter(setters, method);
 		}
 
-		addToConstructors(clazz, findRootConstructors(clazz), makeNonStaticInitMethod(clazz, elements.values(), targets), makeStaticInitMethod(clazz, elements.values(), targets, createHasInitField(clazz)));
+		addToConstructors(clazz, ASMUtils.findRootConstructors(clazz), makeNonStaticInitMethod(clazz, elements.values(), targets), makeStaticInitMethod(clazz, elements.values(), targets, createHasInitField(clazz)));
 
 		List<MethodNode> syncMethods = Lists.newArrayListWithCapacity(elements.keySet().size());
 		for (Type target : elements.keySet()) {
@@ -380,27 +380,6 @@ public final class SyncingTransformer extends SelectiveTransformer {
 		}
 	}
 
-	private List<MethodNode> findRootConstructors(ClassNode clazz) {
-		List<MethodNode> cnstrs = Lists.newArrayList();
-		methods:
-		for (MethodNode method : clazz.methods) {
-			if (method.name.equals("<init>")) {
-				int len = method.instructions.size();
-				for (int i = 0; i < len; ++i) {
-					AbstractInsnNode insn = method.instructions.get(i);
-					if (insn.getOpcode() == Opcodes.INVOKESPECIAL) {
-						MethodInsnNode min = (MethodInsnNode) insn;
-						if (min.owner.equals(clazz.name) && min.name.equals("<init>")) {
-							continue methods;
-						}
-					}
-				}
-				cnstrs.add(method);
-			}
-		}
-		return cnstrs;
-	}
-
 	private FieldNode createHasInitField(ClassNode clazz) {
 		FieldNode isInit = new FieldNode(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE, "_sc_sync_hasInit", Type.BOOLEAN_TYPE.getDescriptor(), null, null);
 		clazz.fields.add(isInit);
@@ -639,7 +618,7 @@ public final class SyncingTransformer extends SelectiveTransformer {
 		}
 		return !className.startsWith("net.minecraft.")
 				&& !className.startsWith("net.minecraftforge.")
-				&& !className.startsWith("cpw.mods.")
+				&& !className.startsWith("cpw.mods.fml.")
 				&& !className.startsWith("de.take_weiland.mods.commons.");
 	}
 }
