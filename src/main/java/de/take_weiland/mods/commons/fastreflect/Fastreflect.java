@@ -20,31 +20,11 @@ public final class Fastreflect {
 	public static Class<?> defineDynamicClass(byte[] clazz, Class<?> context) {
 		return strategy.defineDynClass(clazz, context);
 	}
-
-	public static Class<?> defineClass(byte[] clazz) {
-		return classLoader.define(clazz);
-	}
 	
 	public static String nextDynamicClassName() {
 		return "de/take_weiland/mods/commons/fastreflect/dyn/Dyn" + nextId.getAndIncrement();
 	}
-
-	private static final CustomClassLoader classLoader = new CustomClassLoader();
-
-	static class CustomClassLoader extends ClassLoader {
-
-		CustomClassLoader(ClassLoader parent) {
-			super(parent);
-		}
-
-		CustomClassLoader() { }
-
-		Class<?> define(byte[] clazz) {
-			return defineClass(null, clazz, 0, clazz.length);
-		}
-
-	}
-
+	
 	private static final FastreflectStrategy strategy;
 	private static final Logger logger;
 	

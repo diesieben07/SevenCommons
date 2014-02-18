@@ -18,8 +18,6 @@ import java.util.logging.Logger;
 @TransformerExclusions({
 		"de.take_weiland.mods.commons.asm.",
 		"de.take_weiland.mods.commons.network.",
-		"de.take_weiland.mods.commons.internal.transformers",
-		"de.take_weiland.mods.commons.fastreflect.dyn."
 		})
 public final class SevenCommons implements IFMLLoadingPlugin {
 
@@ -52,8 +50,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 			"de.take_weiland.mods.commons.internal.transformers.SyncingTransformer",
 			"de.take_weiland.mods.commons.internal.transformers.EntityTrackerEntryTransformer",
 			"de.take_weiland.mods.commons.sync.EntityTransformer",
-			"de.take_weiland.mods.commons.internal.transformers.PacketTransformer",
-			"de.take_weiland.mods.commons.internal.transformers.TraitAddingTransformer"
+			"de.take_weiland.mods.commons.internal.transformers.PacketTransformer"
 		};
 	}
 

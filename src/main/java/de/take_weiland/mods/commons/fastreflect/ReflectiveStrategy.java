@@ -44,7 +44,19 @@ final class ReflectiveStrategy extends AbstractStrategy {
 
 	@Override
 	public Class<?> defineDynClass(byte[] clazz, Class<?> context) {
-		return new Fastreflect.CustomClassLoader(context.getClassLoader()).define(clazz);
+		return new AnonClassLoader(context.getClassLoader()).define(clazz);
 	}
 	
+	private static class AnonClassLoader extends ClassLoader {
+		
+		AnonClassLoader(ClassLoader parent) {
+			super(parent);
+		}
+
+		Class<?> define(byte[] clazz) {
+			return defineClass(null, clazz, 0, clazz.length);
+		}
+		
+	}
+
 }

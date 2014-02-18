@@ -8,7 +8,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
 
-class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implements WritableDataBuf, PacketBuilder {
+class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implements PacketBuilder {
 
 	WritableDataBufImpl(byte[] wrap) {
 		super(wrap, 0, wrap.length);
