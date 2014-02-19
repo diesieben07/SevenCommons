@@ -21,6 +21,7 @@ import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketFactory;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraftforge.common.Configuration;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.io.File;
 
@@ -77,8 +78,10 @@ public final class SCModContainer extends DummyModContainer {
 		packetFactory = Network.simplePacketHandler("SevenCommons", SCPacket.Type.class);
 
 		proxy.preInit(event);
-		
-		GameRegistry.registerPlayerTracker(new SCEventHandler());
+
+		SCEventHandler eh = new SCEventHandler();
+		MinecraftForge.EVENT_BUS.register(eh);
+		GameRegistry.registerPlayerTracker(eh);
 	}	
 
 	@Subscribe

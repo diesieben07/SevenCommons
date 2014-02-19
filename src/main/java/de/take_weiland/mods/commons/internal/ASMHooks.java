@@ -14,19 +14,18 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.util.List;
 
 /**
- * A class containing methods called from ASM generated code.<br>
- * Do not use in mod code.
+ * A class containing methods called from ASM generated code.
  * @author diesieben07
  *
  */
 @SuppressWarnings("unused") // called from ASM generated code only
-@Internal
 public final class ASMHooks {
 
 	private ASMHooks() { }
@@ -42,13 +41,13 @@ public final class ASMHooks {
 		MinecraftForge.EVENT_BUS.post(new LivingBreedEvent(animal, mate, child));
 	}
 	
-	public static boolean onZombieConvert(EntityZombie zombie) {
-		// TODO: handle the villager!
-		if (MinecraftForge.EVENT_BUS.post(new ZombieConvertEvent(zombie, null))) {
+	public static EntityVillager onZombieConvert(EntityZombie zombie, EntityVillager villager) {
+		ZombieConvertEvent event = new ZombieConvertEvent(zombie, villager);
+		if (MinecraftForge.EVENT_BUS.post(event)) {
 			zombie.getDataWatcher().updateObject(ZOMBIE_IS_CONVERTING_FLAG, Byte.valueOf((byte)0)); // reset the isConverting flag if the event was canceled
-			return true;
+			return null;
 		} else {
-			return false;
+			return event.villager;
 		}
 	}
 	
