@@ -179,6 +179,8 @@ public final class ASMUtils {
 		String internalName();
 		
 		boolean isInterface();
+
+		boolean hasAnnotation(Class<? extends Annotation> annotation);
 		
 	}
 	
@@ -212,7 +214,11 @@ public final class ASMUtils {
 		public boolean isInterface() {
 			return clazz.isInterface();
 		}
-		
+
+		@Override
+		public boolean hasAnnotation(Class<? extends Annotation> annotation) {
+			return clazz.isAnnotationPresent(annotation);
+		}
 	}
 	
 	private static final class ClassInfoFromNode implements ClassInfo {
@@ -242,7 +248,11 @@ public final class ASMUtils {
 		public boolean isInterface() {
 			return (clazz.access & ACC_INTERFACE) == ACC_INTERFACE;
 		}
-		
+
+		@Override
+		public boolean hasAnnotation(Class<? extends Annotation> annotation) {
+			return ASMUtils.hasAnnotation(clazz, annotation);
+		}
 	}
 	
 	private static enum ClassToNameFunc implements Function<Class<?>, String> {

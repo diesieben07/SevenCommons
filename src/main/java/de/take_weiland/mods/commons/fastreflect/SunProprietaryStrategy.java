@@ -45,7 +45,7 @@ class SunProprietaryStrategy extends AbstractStrategy {
 		try {
 			return clazz.asSubclass(iface).newInstance();
 		} catch (Exception e) {
-			throw JavaUtils.throwUnchecked(e);
+			throw new IllegalStateException("Internal error in Fastreflect!", e);
 		}
 	}
 	
