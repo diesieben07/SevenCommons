@@ -17,7 +17,8 @@ public final class Players {
 	private Players() { }
 
 	/**
-	 * gets an Iterable for iterating over all the Operators in this server<br>
+	 * gets an Iterable for iterating over all the Operators in this server<br />
+	 * If you only need the usernames, you should use {@link #getOpsRaw()}.
 	 * If you need a Collection use {@link ImmutableSet#copyOf(Iterable) ImmutableSet.copyOf(Players.getOps())}
 	 * @return
 	 */

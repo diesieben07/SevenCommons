@@ -18,6 +18,8 @@ import java.util.logging.Logger;
 @TransformerExclusions({
 		"de.take_weiland.mods.commons.asm.",
 		"de.take_weiland.mods.commons.network.",
+		"de.take_weiland.mods.commons.net",
+		"de.take_weiland.mods.commons.internal.transformers"
 		})
 public final class SevenCommons implements IFMLLoadingPlugin {
 

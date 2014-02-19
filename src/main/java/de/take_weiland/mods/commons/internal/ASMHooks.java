@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.event.LivingBreedEvent;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
@@ -50,7 +49,7 @@ public final class ASMHooks {
 			return event.villager;
 		}
 	}
-	
+
 	@SideOnly(Side.CLIENT)
 	public static void onGuiInit(GuiScreen gui, List<GuiButton> buttons) {
 		MinecraftForge.EVENT_BUS.post(new GuiInitEvent(gui, buttons));

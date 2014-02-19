@@ -37,7 +37,7 @@ public final class SCModContainer extends DummyModContainer {
 	
 	@GetProperty(comment = "The name of the command used to access the update feature on a server")
 	public static String updateCommand = "modupdates";
-	
+
 	public SCModContainer() {
 		super(new ModMetadata());
 		ModMetadata meta = getMetadata();
@@ -82,7 +82,7 @@ public final class SCModContainer extends DummyModContainer {
 		SCEventHandler eh = new SCEventHandler();
 		MinecraftForge.EVENT_BUS.register(eh);
 		GameRegistry.registerPlayerTracker(eh);
-	}	
+	}
 
 	@Subscribe
 	public void postInit(FMLPostInitializationEvent event) {

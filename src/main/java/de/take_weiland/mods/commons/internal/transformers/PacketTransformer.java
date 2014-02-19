@@ -87,8 +87,7 @@ public final class PacketTransformer extends SelectiveTransformer {
 	protected boolean transforms(String className) {
 		return !className.startsWith("net.minecraft.")
 				&& !className.startsWith("net.minecraftforge.")
-				&& !className.startsWith("cpw.mods.fml.")
-				&& !className.startsWith("de.take_weiland.mods.commons.netx.");
+				&& !className.startsWith("cpw.mods.fml.");
 	}
 
 }
