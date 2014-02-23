@@ -87,14 +87,14 @@ public final class ASMUtils {
 	
 	public static final AbstractInsnNode findLastReturn(MethodNode method) {
 		int searchFor = Type.getReturnType(method.desc).getOpcode(Opcodes.IRETURN);
-		AbstractInsnNode found = null;
-		for (int i = 0; i < method.instructions.size(); i++) {
-			AbstractInsnNode insn = method.instructions.get(i);
-			if (insn.getOpcode() == searchFor) {
-				found = insn;
+		AbstractInsnNode node = method.instructions.getLast();
+		do {
+			if (node.getOpcode() == searchFor) {
+				return node;
 			}
-		}
-		return found;
+			node = node.getPrevious();
+		} while (node != null);
+		throw new IllegalArgumentException("Illegal method: Has no or wrong return opcode!");
 	}
 	
 	public static final String makeNameInternal(String name) {
@@ -119,6 +119,7 @@ public final class ASMUtils {
 		if (!nameTransChecked) {
 			Iterable<IClassNameTransformer> nameTransformers = Iterables.filter(SevenCommons.CLASSLOADER.getTransformers(), IClassNameTransformer.class);
 			nameTransformer = Iterables.getOnlyElement(nameTransformers, null);
+			nameTransChecked = true;
 		}
 		return nameTransformer;
 	}
