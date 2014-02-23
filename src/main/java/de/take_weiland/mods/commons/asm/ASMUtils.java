@@ -1,8 +1,10 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.JavaUtils;
@@ -16,9 +18,11 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
 import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 
 public final class ASMUtils {
 
@@ -47,6 +51,34 @@ public final class ASMUtils {
 			}
 		}
 		return null;
+	}
+
+	private static final Predicate<MethodNode> isConstructor = new Predicate<MethodNode>() {
+		@Override
+		public boolean apply(MethodNode method) {
+			return method.name.equals("<init>");
+		}
+	};
+
+	public static Collection<MethodNode> getConstructors(ClassNode clazz) {
+		return Collections2.filter(clazz.methods, isConstructor);
+	}
+
+	public static List<MethodNode> findRootConstructors(ClassNode clazz) {
+		List<MethodNode> roots = Lists.newArrayList();
+
+		cstrs:
+		for (MethodNode method : getConstructors(clazz)) {
+			AbstractInsnNode insn = method.instructions.getFirst();
+			do {
+				if (insn.getOpcode() == INVOKESPECIAL && ((MethodInsnNode) insn).owner.equals(clazz.name)) {
+					continue cstrs;
+				}
+				insn = insn.getNext();
+			} while (insn != null);
+			roots.add(method);
+		}
+		return roots;
 	}
 	
 	public static final boolean useMcpNames() {

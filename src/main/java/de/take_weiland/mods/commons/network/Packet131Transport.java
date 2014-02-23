@@ -6,7 +6,7 @@ import cpw.mods.fml.common.network.ITinyPacketHandler;
 import cpw.mods.fml.common.network.NetworkModHandler;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.ReflectionHelper;
-import de.take_weiland.mods.commons.net.Packets;
+import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 import net.minecraft.network.packet.NetHandler;
 import net.minecraft.network.packet.Packet;
@@ -72,7 +72,7 @@ class Packet131Transport extends PacketTransportAbstract implements ITinyPacketH
 	@Override
 	public void handle(NetHandler handler, Packet131MapData mapData) {
 		ByteArrayInputStream in = new ByteArrayInputStream(mapData.itemData);
-		finishPacketRecv(Packets.getNetworkManager(handler), UnsignedShorts.toInt(mapData.uniqueID), handler.getPlayer(), in);
+		finishPacketRecv(Network.getNetworkManager(handler), UnsignedShorts.toInt(mapData.uniqueID), handler.getPlayer(), in);
 	}
 
 	@Override

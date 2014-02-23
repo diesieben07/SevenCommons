@@ -15,11 +15,14 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 @MCVersion(SevenCommons.MINECRAFT_VERSION)
+@IFMLLoadingPlugin.SortingIndex(1001) // get after deobfuscation
 @TransformerExclusions({
 		"de.take_weiland.mods.commons.asm.",
 		"de.take_weiland.mods.commons.network.",
-		"de.take_weiland.mods.commons.net",
-		"de.take_weiland.mods.commons.internal.transformers"
+		"de.take_weiland.mods.commons.net.",
+		"de.take_weiland.mods.commons.internal.transformers.",
+		"de.take_weiland.mods.commons.subtypes.",
+		"de.take_weiland.mods.commons.util."
 		})
 public final class SevenCommons implements IFMLLoadingPlugin {
 
@@ -51,8 +54,8 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 			"de.take_weiland.mods.commons.internal.transformers.GuiScreenTransformer",
 			"de.take_weiland.mods.commons.internal.transformers.SyncingTransformer",
 			"de.take_weiland.mods.commons.internal.transformers.EntityTrackerEntryTransformer",
-			"de.take_weiland.mods.commons.sync.EntityTransformer",
-			"de.take_weiland.mods.commons.internal.transformers.PacketTransformer"
+			"de.take_weiland.mods.commons.internal.transformers.EntityTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.PacketTransformer",
 		};
 	}
 
@@ -70,7 +73,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	public void injectData(Map<String, Object> data) {
 		MCP_ENVIRONMENT = !((Boolean)data.get("runtimeDeobfuscationEnabled")).booleanValue();
 		source = (File)data.get("coremodLocation");
-		if (source == null) {
+		if (source == null) { // this is usually in a dev env
 			try {
 				source = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
 			} catch (URISyntaxException e) {

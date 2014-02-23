@@ -18,7 +18,7 @@ class DataBufImpl implements DataBuf {
 	static final int notFirst21Bits = ~first21Bits;
 	static final int notFirst14Bits = ~first14Bits;
 	static final int notFirst7Bits = ~first7Bits;
-	
+
 	/**
 	 * backing buffer
 	 */

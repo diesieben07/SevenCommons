@@ -6,6 +6,7 @@ import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.fastreflect.Getter;
 import de.take_weiland.mods.commons.fastreflect.Setter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureObject;
@@ -64,7 +65,23 @@ public interface SCReflector {
 	Map<ResourceLocation, TextureObject> getTexturesMap(TextureManager manager);
 	
 	@Unsafe
-	@Getter(field = "packetClassToIdMap")
+	@Getter(field = { F_PACKET_CLASS_TO_ID_MAP_MCP, F_PACKET_CLASS_TO_ID_MAP_SRG })
 	Map<Class<? extends Packet>, Integer> getClassToIdMap(Packet dummy);
+
+	@SideOnly(Side.CLIENT)
+	@Getter(field = { F_IS_ENABLED_MCP, F_IS_ENABLED_SRG })
+	boolean isEnabled(GuiTextField textField);
+
+	@SideOnly(Side.CLIENT)
+	@Getter(field = { F_DISABLED_COLOR_MCP, F_DISABLED_COLOR_SRG })
+	int getDisabledColor(GuiTextField textField);
+
+	@SideOnly(Side.CLIENT)
+	@Getter(field = { F_ENABLED_COLOR_MCP, F_ENABLED_COLOR_SRG })
+	int getEnabledColor(GuiTextField textField);
+
+	@SideOnly(Side.CLIENT)
+	@Getter(field = { F_CAN_LOOSE_FOCUS_MCP, F_CAN_LOOSE_FOCUS_SRG })
+	boolean canLooseFocus(GuiTextField textField);
 	
 }

@@ -20,6 +20,7 @@ import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketFactory;
 import de.take_weiland.mods.commons.util.JavaUtils;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.MinecraftForge;
 

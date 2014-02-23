@@ -8,14 +8,42 @@ import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+/**
+ * <p>An abstract base class for simpler Packet handling. Make a subclass of this for every PacketType.
+ * Register your Types with {@link de.take_weiland.mods.commons.net.Network#simplePacketHandler(String, Class)}</p>
+ * <p>To send this packet, use the Methods implemented from {@link de.take_weiland.mods.commons.net.SimplePacket}. Example:
+ * <pre>{@code
+ *new ExamplePacket(someData, "moreData").sendToServer();
+ *new DifferentPacket(evenMoreData).sendToPlayer(somePlayer);
+ * }</pre></p>
+ */
 public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> implements SimplePacket {
 
+	/**
+	 * whether the given (logical) side can receive this packet
+	 * @param side the receiving side to check
+	 * @return true whether Packet is valid to be received on the given side
+	 */
 	protected abstract boolean validOn(Side side);
-	
+
+	/**
+	 * Writes this packet's data to the given buffer
+	 * @param buffer a buffer for this packet's data
+	 */
 	protected abstract void write(WritableDataBuf buffer);
-	
+
+	/**
+	 * Reads this packet's data from the given buffer (as written by {@link #write(WritableDataBuf)} and then performs this packet's action.
+	 * @param buffer the buffer containing the packet data
+	 * @param player the player handling this packet, on the client side it's the client-player, on the server side it's the player sending the packet
+	 * @param side the (logical) side receiving the packet
+	 */
 	protected abstract void handle(DataBuf buffer, EntityPlayer player, Side side);
-	
+
+	/**
+	 * Determine an expected size for this packet to accurately size the {@link de.take_weiland.mods.commons.net.WritableDataBuf} passed to {@link #write(WritableDataBuf)}
+	 * @return
+	 */
 	protected int expectedSize() {
 		return 32;
 	}
@@ -30,12 +58,12 @@ public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>
 	}
 	
 	private SimplePacket make0() {
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings("unchecked") // safe, ASM generated
 		PacketWithFactory<TYPE> pwf = (PacketWithFactory<TYPE>) this;
 		
 		PacketBuilder builder = pwf._sc_getFactory().builder(pwf._sc_getType(), expectedSize());
 		write(builder);
-		return builder.toPacket();
+		return builder.build();
 	}
 
 	@SuppressWarnings("unchecked")

@@ -6,6 +6,9 @@ import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+/**
+ * A Packet which can be send around. The methods correspond to the methods in the {@link net.minecraft.network.packet.Packet} class
+ */
 public interface SimplePacket {
 
 	void sendTo(PacketTarget target);
@@ -37,7 +40,10 @@ public interface SimplePacket {
 	void sendToAllAssociated(Entity e);
 
 	void sendToViewing(Container c);
-	
+
+	/**
+	 * A dummy packet which doesn't do anything
+	 */
 	public static final SimplePacket DUMMY = new SimplePacket() {
 
 		@Override

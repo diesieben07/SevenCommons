@@ -168,15 +168,22 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 			avail -= sizeOfPart;
 			int offset = i * MAX_PART_SIZE;
 			// only the first packet should execute on a MemoryConnection
-			packets[i] = new MultiPacket250Fake<TYPE>(channel, buf, offset, sizeOfPart, type, i, numParts, this, i == 0);
+			if (i == 0) {
+				packets[i] = new MultiPacket250FakeFirst<TYPE>(packets, channel, buf, offset, sizeOfPart, type, i, numParts, this);
+			} else {
+				packets[i] = new MultiPacket250Fake<TYPE>(channel, buf, offset, sizeOfPart, type, i, numParts, this);
+			}
 		}
-		return new MultiPacketWrapper(packets);
+		return (SimplePacket) packets[0]; // first packet is special
 	}
 	
 	static {
+		// we need to inject our fake packet classes into the map so that getPacketId still works
 		Map<Class<? extends Packet>, Integer> classToIdMap = MiscUtil.getReflector().getClassToIdMap(null);
-		classToIdMap.put(MultiPacket250Fake.class, Integer.valueOf(250));
-		classToIdMap.put(SinglePacket250Fake.class, Integer.valueOf(250));
+		Integer id = Integer.valueOf(250);
+		classToIdMap.put(MultiPacket250Fake.class, id);
+		classToIdMap.put(SinglePacket250Fake.class, id);
+		classToIdMap.put(MultiPacket250FakeFirst.class, id);
 	}
 	
 	static enum IdSize {
@@ -239,14 +246,13 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 	
 	static class MultiPacket250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload {
 
-		private int off;
-		private int partIndex, totalParts;
-		private TYPE type;
-		private FMLPacketHandlerImpl<TYPE> ph;
-		private WritableDataBufImpl<TYPE> buffer;
-		private boolean isFirst;
+		int off;
+		int partIndex, totalParts;
+		TYPE type;
+		FMLPacketHandlerImpl<TYPE> ph;
+		WritableDataBufImpl<TYPE> buffer;
 
-		MultiPacket250Fake(String channel, WritableDataBufImpl<TYPE> buffer, int off, int len, TYPE type, int partIndex, int totalParts, FMLPacketHandlerImpl<TYPE> ph, boolean isFirst) {
+		MultiPacket250Fake(String channel, WritableDataBufImpl<TYPE> buffer, int off, int len, TYPE type, int partIndex, int totalParts, FMLPacketHandlerImpl<TYPE> ph) {
 			this.channel = channel;
 			this.off = off;
 			this.length = len;
@@ -255,7 +261,6 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 			this.type = type;
 			this.partIndex = partIndex;
 			this.totalParts = totalParts;
-			this.isFirst = isFirst;
 		}
 
 		@Override
@@ -271,18 +276,16 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 				ph.idSize.write(out, type.ordinal(), true);
 				out.writeByte(UnsignedBytes.checkedCast(partIndex));
 				out.writeByte(UnsignedBytes.checkedCast(totalParts));
+				// must use the array directly here because the pos in the buffer can be modified if this packet gets processed on a MemoryConnection
 				out.write(buffer.buf, off, length);
-			} catch (IOException e) {
+			} catch (IOException e) { // either I am blind or stupid but to me the overridden method DOES throw IOException, yet somehow a throws clause makes a compile error
 				JavaUtils.throwUnchecked(e);
 			}
 		}
 
 		@Override
 		public void processPacket(NetHandler handler) {
-			if (isFirst) {
-				buffer.seek(0);
-				ph.handle0(buffer, type, handler.getPlayer());
-			}
+			// do nothing if not first
 		}
 
 		@Override
@@ -293,6 +296,130 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 					+ length; // actual data
 		}
 		
+	}
+
+	static class MultiPacket250FakeFirst<TYPE extends Enum<TYPE>> extends MultiPacket250Fake<TYPE> implements SimplePacket {
+
+		private final Packet[] parts;
+
+		MultiPacket250FakeFirst(Packet[] parts, String channel, WritableDataBufImpl<TYPE> buffer, int off, int len, TYPE type, int partIndex, int totalParts, FMLPacketHandlerImpl<TYPE> ph) {
+			super(channel, buffer, off, len, type, partIndex, totalParts, ph);
+			this.parts = parts;
+		}
+
+		// only called when in a memory connection, so there is only one thread accessing the buffer, so it can be shared
+		@Override
+		public void processPacket(NetHandler handler) {
+			buffer.seek(0);
+			ph.handle0(buffer, type, handler.getPlayer());
+		}
+
+		// this also serves as the wrapper for the packet array to implement SimplePacket
+		// to save on Objects
+		@Override
+		public void sendTo(PacketTarget target) {
+			for (Packet p : parts) {
+				target.send(p);
+			}
+		}
+
+		@Override
+		public void sendToServer() {
+			for (Packet p : parts) {
+				PacketDispatcher.sendPacketToServer(p);
+			}
+		}
+
+		@Override
+		public void sendTo(EntityPlayer player) {
+			for (Packet p : parts) {
+				Packets.sendPacketToPlayer(p, player);
+			}
+		}
+
+		@Override
+		public void sendTo(Iterable<? extends EntityPlayer> players) {
+			for (Packet p : parts) {
+				Packets.sendPacketToPlayers(p, players);
+			}
+		}
+
+		@Override
+		public void sendToAll() {
+			for (Packet p : parts) {
+				PacketDispatcher.sendPacketToAllPlayers(p);
+			}
+		}
+
+		@Override
+		public void sendToAllInDimension(int dimension) {
+			for (Packet p : parts) {
+				PacketDispatcher.sendPacketToAllInDimension(p, dimension);
+			}
+		}
+
+		@Override
+		public void sendToAllInDimension(World world) {
+			for (Packet p : parts) {
+				PacketDispatcher.sendPacketToAllInDimension(p, world.provider.dimensionId);
+			}
+		}
+
+		@Override
+		public void sendToAllNear(World world, double x, double y, double z, double radius) {
+			for (Packet p : parts) {
+				PacketDispatcher.sendPacketToAllAround(x, y, z, radius, world.provider.dimensionId, p);
+			}
+		}
+
+		@Override
+		public void sendToAllNear(int dimension, double x, double y, double z, double radius) {
+			for (Packet p : parts) {
+				PacketDispatcher.sendPacketToAllAround(x, y, z, radius, dimension, p);
+			}
+		}
+
+		@Override
+		public void sendToAllNear(Entity entity, double radius) {
+			for (Packet p : parts) {
+				PacketDispatcher.sendPacketToAllAround(entity.posX, entity.posY, entity.posZ, radius, entity.worldObj.provider.dimensionId, p);
+			}
+		}
+
+		@Override
+		public void sendToAllNear(TileEntity te, double radius) {
+			for (Packet p : parts) {
+				PacketDispatcher.sendPacketToAllAround(te.xCoord, te.yCoord, te.zCoord, radius, te.worldObj.provider.dimensionId, p);
+			}
+		}
+
+		@Override
+		public void sendToAllTracking(Entity entity) {
+			for (Packet p : parts) {
+				Packets.sendPacketToAllTracking(p, entity);
+			}
+		}
+
+		@Override
+		public void sendToAllTracking(TileEntity te) {
+			for (Packet p : parts) {
+				Packets.sendPacketToAllTracking(p, te);
+			}
+		}
+
+		@Override
+		public void sendToAllAssociated(Entity e) {
+			for (Packet p : parts) {
+				Packets.sendPacketToAllAssociated(p, e);
+			}
+		}
+
+		@Override
+		public void sendToViewing(Container c) {
+			for (Packet p : parts) {
+				Packets.sendPacketToViewing(p, c);
+			}
+		}
 	}
 	
 	static class SinglePacket250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload implements SimplePacket {
@@ -405,120 +532,6 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		@Override
 		public void sendToViewing(Container c) {
 			Packets.sendPacketToViewing(this, c);
-		}
-	}
-	
-	static class MultiPacketWrapper implements SimplePacket {
-
-		private final Packet[] parts;
-		
-		MultiPacketWrapper(Packet[] parts) {
-			this.parts = parts;
-		}
-
-		@Override
-		public void sendTo(PacketTarget target) {
-			for (Packet p : parts) {
-				target.send(p);
-			}
-		}
-
-		@Override
-		public void sendToServer() {
-			for (Packet p : parts) {
-				PacketDispatcher.sendPacketToServer(p);
-			}
-		}
-
-		@Override
-		public void sendTo(EntityPlayer player) {
-			for (Packet p : parts) {
-				Packets.sendPacketToPlayer(p, player);
-			}
-		}
-
-		@Override
-		public void sendTo(Iterable<? extends EntityPlayer> players) {
-			for (Packet p : parts) {
-				Packets.sendPacketToPlayers(p, players);
-			}
-		}
-
-		@Override
-		public void sendToAll() {
-			for (Packet p : parts) {
-				PacketDispatcher.sendPacketToAllPlayers(p);
-			}
-		}
-
-		@Override
-		public void sendToAllInDimension(int dimension) {
-			for (Packet p : parts) {
-				PacketDispatcher.sendPacketToAllInDimension(p, dimension);
-			}
-		}
-
-		@Override
-		public void sendToAllInDimension(World world) {
-			for (Packet p : parts) {
-				PacketDispatcher.sendPacketToAllInDimension(p, world.provider.dimensionId);
-			}
-		}
-
-		@Override
-		public void sendToAllNear(World world, double x, double y, double z, double radius) {
-			for (Packet p : parts) {
-				PacketDispatcher.sendPacketToAllAround(x, y, z, radius, world.provider.dimensionId, p);
-			}
-		}
-
-		@Override
-		public void sendToAllNear(int dimension, double x, double y, double z, double radius) {
-			for (Packet p : parts) {
-				PacketDispatcher.sendPacketToAllAround(x, y, z, radius, dimension, p);
-			}
-		}
-
-		@Override
-		public void sendToAllNear(Entity entity, double radius) {
-			for (Packet p : parts) {
-				PacketDispatcher.sendPacketToAllAround(entity.posX, entity.posY, entity.posZ, radius, entity.worldObj.provider.dimensionId, p);
-			}
-		}
-
-		@Override
-		public void sendToAllNear(TileEntity te, double radius) {
-			for (Packet p : parts) {
-				PacketDispatcher.sendPacketToAllAround(te.xCoord, te.yCoord, te.zCoord, radius, te.worldObj.provider.dimensionId, p);
-			}
-		}
-
-		@Override
-		public void sendToAllTracking(Entity entity) {
-			for (Packet p : parts) {
-				Packets.sendPacketToAllTracking(p, entity);
-			}
-		}
-
-		@Override
-		public void sendToAllTracking(TileEntity te) {
-			for (Packet p : parts) {
-				Packets.sendPacketToAllTracking(p, te);
-			}
-		}
-
-		@Override
-		public void sendToAllAssociated(Entity e) {
-			for (Packet p : parts) {
-				Packets.sendPacketToAllAssociated(p, e);
-			}
-		}
-
-		@Override
-		public void sendToViewing(Container c) {
-			for (Packet p : parts) {
-				Packets.sendPacketToViewing(p, c);
-			}
 		}
 	}
 	

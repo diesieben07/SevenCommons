@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.sync;
+package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;

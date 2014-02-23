@@ -10,6 +10,8 @@ import java.io.OutputStream;
 
 class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implements PacketBuilder {
 
+	private boolean locked = false;
+
 	WritableDataBufImpl(byte[] wrap) {
 		super(wrap, 0, wrap.length);
 		actualLen = 0;
@@ -143,9 +145,13 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 
 	@Override
 	public PacketBuilder putBytes(byte[] bytes) {
-		putVarInt(bytes.length);
-		putRaw(bytes);
-		return null;
+		if (bytes == null) {
+			putVarInt(-1);
+		} else {
+			putVarInt(bytes.length);
+			putRaw(bytes);
+		}
+		return this;
 	}
 
 	@Override
@@ -184,12 +190,23 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 	
 	TYPE type;
 	PacketFactoryInternal<TYPE> packetFactory;
+
 	@Override
-	public SimplePacket toPacket() {
+	public SimplePacket build() {
+		locked = true;
 		return packetFactory.make(this);
+	}
+
+	@Override
+	@Deprecated
+	public SimplePacket toPacket() {
+		return build();
 	}
 	
 	private void grow0(int i) {
+		if (locked) {
+			throw new IllegalStateException("PacketBuffers cannot be reused!");
+		}
 		if (len - pos >= i) {
 			actualLen += i;
 			return;

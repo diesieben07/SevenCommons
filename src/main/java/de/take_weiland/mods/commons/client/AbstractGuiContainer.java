@@ -12,7 +12,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & SCContainer<I>> extends GuiContainer implements ContainerGui<C> {
+public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & SCContainer<I>> extends GuiContainer {
 
 	protected final ResourceLocation texture;
 	protected final C container;
@@ -23,16 +23,6 @@ public abstract class AbstractGuiContainer<I extends IInventory, C extends Conta
 		texture = provideTexture();
 	}
 
-	@Override
-	public final Minecraft getMinecraft() {
-		return mc;
-	}
-
-	@Override
-	public final ResourceLocation getTexture() {
-		return texture;
-	}
-	
 	public final void bindTexture() {
 		GL11.glColor3f(1, 1, 1);
 		mc.renderEngine.bindTexture(texture);

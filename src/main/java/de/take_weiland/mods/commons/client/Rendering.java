@@ -169,7 +169,6 @@ public final class Rendering {
 			glDeleteTextures(tex.getGlTextureId());
 		}
 	}
-	
 
 	private static float getZLevel() {
 		return SCGuiAccessor.getZLevel(Minecraft.getMinecraft().currentScreen);

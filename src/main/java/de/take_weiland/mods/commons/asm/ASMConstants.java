@@ -64,6 +64,21 @@ public final class ASMConstants {
 	
 	public static final String F_TIMER_MCP = "timer";
 	public static final String F_TIMER_SRG = "field_71428_T";
+
+	public static final String F_PACKET_CLASS_TO_ID_MAP_MCP = "packetClassToIdMap";
+	public static final String F_PACKET_CLASS_TO_ID_MAP_SRG = "field_73291_a";
+
+	public static final String F_IS_ENABLED_MCP = "isEnabled";
+	public static final String F_IS_ENABLED_SRG = "field_73819_m";
+
+	public static final String F_DISABLED_COLOR_MCP = "disabledColor";
+	public static final String F_DISABLED_COLOR_SRG = "field_73824_r";
+
+	public static final String F_ENABLED_COLOR_MCP = "enabledColor";
+	public static final String F_ENABLED_COLOR_SRG = "field_73825_q";
+
+	public static final String F_CAN_LOOSE_FOCUS_MCP = "canLoseFocus";
+	public static final String F_CAN_LOOSE_FOCUS_SRG = "field_73821_k";
 	
 	private ASMConstants() { }
 	
