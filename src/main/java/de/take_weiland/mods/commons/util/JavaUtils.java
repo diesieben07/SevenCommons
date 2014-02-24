@@ -199,7 +199,7 @@ public final class JavaUtils {
 	 * because it doesn't need to copy the value array, like values() does
 	 */
 	public static <T extends Enum<T>> T byOrdinal(Class<T> clazz, int ordinal) {
-		return safeArrayAccess(getEnumConstantsShared(clazz), ordinal);
+		return get(getEnumConstantsShared(clazz), ordinal);
 	}
 	
 	interface EnumValueGetter {

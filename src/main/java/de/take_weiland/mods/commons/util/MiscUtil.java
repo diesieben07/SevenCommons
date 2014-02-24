@@ -1,6 +1,9 @@
 package de.take_weiland.mods.commons.util;
 
+import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.fastreflect.Fastreflect;
+
+import java.util.logging.Logger;
 
 public final class MiscUtil {
 
@@ -13,6 +16,11 @@ public final class MiscUtil {
 	 */
 	public static SCReflector getReflector() {
 		return reflector == null ? (reflector = Fastreflect.createAccessor(SCReflector.class)) : reflector;
+	}
+
+	public static Logger getLogger(String channel) {
+		FMLLog.makeLog(channel);
+		return Logger.getLogger(channel);
 	}
 	
 }

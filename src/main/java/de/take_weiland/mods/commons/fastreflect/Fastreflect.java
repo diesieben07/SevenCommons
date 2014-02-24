@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.fastreflect;
 
 import com.google.common.base.Preconditions;
-import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.MiscUtil;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
@@ -17,10 +17,10 @@ import java.util.logging.Logger;
 public final class Fastreflect {
 
 	/**
-	 * create an Instance of the given Accessor Interface
-	 * @param iface
-	 * @param <T>
-	 * @return
+	 * <p>create an Instance of the given Accessor Interface. The result of this method should be permanently cached, because
+	 * this method defines a new class every time it is invoked.</p>
+	 * @param iface the Accessor Interface
+	 * @return a newly created object, implementing the given interface
 	 */
 	public static <T> T createAccessor(Class<T> iface) {
 		return strategy.createAccessor(Preconditions.checkNotNull(iface));
@@ -28,8 +28,8 @@ public final class Fastreflect {
 
 	/**
 	 * define a temporary class from the bytes which can be garbage collected if no longer in use.
-	 * @param clazz
-	 * @return
+	 * @param clazz the bytes describing the class
+	 * @return the defined class
 	 */
 	public static Class<?> defineDynamicClass(byte[] clazz) {
 		return defineDynamicClass(clazz, Fastreflect.class);
@@ -37,9 +37,6 @@ public final class Fastreflect {
 
 	/**
 	 * Same as {@link #defineDynamicClass(byte[])} but defines the class in the given context
-	 * @param clazz
-	 * @param context
-	 * @return
 	 */
 	public static Class<?> defineDynamicClass(byte[] clazz, Class<?> context) {
 		return strategy.defineDynClass(clazz, context);
@@ -47,7 +44,7 @@ public final class Fastreflect {
 
 	/**
 	 * get a unique name for a dynamic class
-	 * @return
+	 * @return a unique name
 	 */
 	public static String nextDynamicClassName() {
 		return "de/take_weiland/mods/commons/fastreflect/dyn/Dyn" + nextId.getAndIncrement();
@@ -58,8 +55,7 @@ public final class Fastreflect {
 	
 	static {
 		strategy = selectStrategy();
-		FMLLog.makeLog("SC|Fastreflect");
-		logger = Logger.getLogger("SC|Fastreflect");
+		logger = MiscUtil.getLogger("SC|Fastreflect");
 	}
 
 	private static FastreflectStrategy selectStrategy() {
