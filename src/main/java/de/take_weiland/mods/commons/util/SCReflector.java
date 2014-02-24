@@ -6,6 +6,8 @@ import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.fastreflect.Getter;
 import de.take_weiland.mods.commons.fastreflect.Setter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -83,5 +85,9 @@ public interface SCReflector {
 	@SideOnly(Side.CLIENT)
 	@Getter(field = { F_CAN_LOOSE_FOCUS_MCP, F_CAN_LOOSE_FOCUS_SRG })
 	boolean canLooseFocus(GuiTextField textField);
+
+	@SideOnly(Side.CLIENT)
+	@Getter(field = { F_BUTTON_LIST_MCP, F_BUTTON_LIST_SRG})
+	List<GuiButton> getButtonList(GuiScreen screen);
 	
 }

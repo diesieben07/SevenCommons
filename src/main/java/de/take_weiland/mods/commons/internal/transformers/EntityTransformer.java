@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.SelectiveTransformer;
+import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -14,10 +14,10 @@ import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
 @Internal
-public final class EntityTransformer extends SelectiveTransformer {
+public final class EntityTransformer extends AbstractASMTransformer {
 
 	@Override
-	protected boolean transform(ClassNode clazz, String className) {
+	public void transform(ClassNode clazz) {
 		FieldNode syncedProps = addSyncedPropsField(clazz);
 
 		for (MethodNode method : clazz.methods) {
@@ -31,8 +31,6 @@ public final class EntityTransformer extends SelectiveTransformer {
 		addPropertySetter(clazz, syncedProps);
 		
 		clazz.interfaces.add("de/take_weiland/mods/commons/sync/EntityProxy");
-		
-		return true;
 	}
 
 	private void addPropertySetter(ClassNode clazz, FieldNode syncedProps) {
@@ -99,8 +97,8 @@ public final class EntityTransformer extends SelectiveTransformer {
 	}
 	
 	@Override
-	protected boolean transforms(String className) {
-		return "net.minecraft.entity.Entity".equals(className);
+	public boolean transforms(String className) {
+		return "net/minecraft/entity/Entity".equals(className);
 	}
 
 }

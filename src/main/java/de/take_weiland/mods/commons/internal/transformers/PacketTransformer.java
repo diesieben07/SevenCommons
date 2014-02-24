@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
-import de.take_weiland.mods.commons.asm.SelectiveTransformer;
+import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.net.PacketFactory;
 import org.objectweb.asm.tree.*;
@@ -12,14 +12,14 @@ import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
 @Internal
-public final class PacketTransformer extends SelectiveTransformer {
+public final class PacketTransformer extends AbstractASMTransformer {
 
 	private final ClassInfo modPacketCI = ASMUtils.getClassInfo(ModPacket.class);
 	
 	@Override
-	protected boolean transform(ClassNode clazz, String className) {
+	public void transform(ClassNode clazz) {
 		if (!ASMUtils.isAssignableFrom(modPacketCI, ASMUtils.getClassInfo(clazz))) {
-			return false;
+			return;
 		}
 		
 		if (!hasDefaultConstructor(clazz)) {
@@ -33,8 +33,6 @@ public final class PacketTransformer extends SelectiveTransformer {
 		createGetter(clazz, type, "_sc_getType");
 		
 		clazz.interfaces.add("de/take_weiland/mods/commons/internal/PacketWithFactory");
-		
-		return true;
 	}
 	
 	private void createGetter(ClassNode clazz, FieldNode field, String name) {
@@ -84,10 +82,10 @@ public final class PacketTransformer extends SelectiveTransformer {
 	}
 
 	@Override
-	protected boolean transforms(String className) {
-		return !className.startsWith("net.minecraft.")
-				&& !className.startsWith("net.minecraftforge.")
-				&& !className.startsWith("cpw.mods.fml.");
+	public boolean transforms(String className) {
+		return !className.startsWith("net/minecraft/")
+				&& !className.startsWith("net/minecraftforge/")
+				&& !className.startsWith("cpw/mods/fml/");
 	}
 
 }

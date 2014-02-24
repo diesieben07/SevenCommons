@@ -5,9 +5,7 @@ import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
-import de.take_weiland.mods.commons.asm.ASMUtils;
 import net.minecraft.launchwrapper.LaunchClassLoader;
-import org.objectweb.asm.Type;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -42,20 +40,10 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 		LOGGER = Logger.getLogger("SevenCommons");
 	}
 	
-	public static final Type ENTITY_PLAYER = Type.getObjectType(ASMUtils.makeNameInternal("net.minecraft.entity.player.EntityPlayer"));
-	public static final Type ENTITY_LIVING_BASE = Type.getObjectType(ASMUtils.makeNameInternal("net.minecraft.entity.EntityLivingBase"));
-	
 	@Override
 	public String[] getASMTransformerClass() {
 		return new String[] {
-			"de.take_weiland.mods.commons.internal.transformers.EntityAIMateTransformer",
-			"de.take_weiland.mods.commons.internal.transformers.EntityPlayerTransformer",
-			"de.take_weiland.mods.commons.internal.transformers.EntityZombieTransformer",
-			"de.take_weiland.mods.commons.internal.transformers.GuiScreenTransformer",
-			"de.take_weiland.mods.commons.internal.transformers.SyncingTransformer",
-			"de.take_weiland.mods.commons.internal.transformers.EntityTrackerEntryTransformer",
-			"de.take_weiland.mods.commons.internal.transformers.EntityTransformer",
-			"de.take_weiland.mods.commons.internal.transformers.PacketTransformer",
+			"de.take_weiland.mods.commons.internal.transformers.SCTransformerWrapper"
 		};
 	}
 

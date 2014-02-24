@@ -1,27 +1,23 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import com.sun.org.apache.bcel.internal.generic.ALOAD;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.PrependingTransformer;
-import de.take_weiland.mods.commons.asm.SelectiveTransformer;
-import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-public final class EntityZombieTransformer extends SelectiveTransformer {
+public final class EntityZombieTransformer extends AbstractASMTransformer {
 
 	@Override
-	protected boolean transform(ClassNode clazz, String className) {
+	public void transform(ClassNode clazz) {
+		String mName = ASMUtils.useMcpNames() ? ASMConstants.M_CONVERT_TO_VILLAGER_MCP : ASMConstants.M_CONVERT_TO_VILLAGER_SRG;
 		for (MethodNode method : clazz.methods) {
-			if (method.name.equals(ASMConstants.M_CONVERT_TO_VILLAGER_MCP) || method.name.equals(ASMConstants.M_CONVERT_TO_VILLAGER_SRG)) {
+			if (method.name.equals(mName)) {
 				transformConvertToVillager(clazz, method);
 				break;
 			}
 		}
-
-		return true;
 	}
 
 	private void transformConvertToVillager(ClassNode clazz, MethodNode method) {
@@ -73,8 +69,8 @@ public final class EntityZombieTransformer extends SelectiveTransformer {
 	}
 
 	@Override
-	protected boolean transforms(String className) {
-		return className.equals("net.minecraft.entity.monster.EntityZombie");
+	public boolean transforms(String className) {
+		return className.equals("net/minecraft/entity/monster/EntityZombie");
 	}
 
 }

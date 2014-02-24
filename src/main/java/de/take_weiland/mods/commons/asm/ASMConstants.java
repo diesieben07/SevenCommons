@@ -5,10 +5,10 @@ public final class ASMConstants {
 	public static final String M_SPAWN_BABY_SRG = "func_75388_i";
 	public static final String M_SPAWN_BABY_MCP = "spawnBaby";
 	
-	public static final String F_TARGET_MATE_OBF = "e";
+	public static final String F_TARGET_MATE_SRG = "field_75391_e";
 	public static final String F_TARGET_MATE_MCP = "targetMate";
 	
-	public static final String F_THE_ANIMAL_OBF = "d";
+	public static final String F_THE_ANIMAL_SRG = "field_75390_d";
 	public static final String F_THE_ANIMAL_MCP = "theAnimal";
 	
 	public static final String M_CLONE_PLAYER_SRG = "func_71049_a";
@@ -20,7 +20,7 @@ public final class ASMConstants {
 	public static final String M_SET_WORLD_AND_RESOLUTION_SRG = "func_73872_a";
 	public static final String M_SET_WORLD_AND_RESOLUTION_MCP = "setWorldAndResolution";
 	
-	public static final String F_BUTTON_LIST_OBF = "i";
+	public static final String F_BUTTON_LIST_SRG = "field_73887_h";
 	public static final String F_BUTTON_LIST_MCP = "buttonList";
 	
 	public static final String F_TAG_LIST_OBF = "a";
@@ -79,6 +79,10 @@ public final class ASMConstants {
 
 	public static final String F_CAN_LOOSE_FOCUS_MCP = "canLoseFocus";
 	public static final String F_CAN_LOOSE_FOCUS_SRG = "field_73821_k";
+
+	public static final String M_SEND_PACKET_TO_PLAYER_MCP = "sendPacketToPlayer";
+	public static final String M_SEND_PACKET_TO_PLAYER_SRG = "func_72567_b";
+
 	
 	private ASMConstants() { }
 	

@@ -4,7 +4,7 @@ import com.google.common.collect.*;
 import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.SelectiveTransformer;
+import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import de.take_weiland.mods.commons.internal.SyncType;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.PacketBuilder;
@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 /**
  * contains black bytecode magic. Do not touch.
  */
-public final class SyncingTransformer extends SelectiveTransformer {
+public final class SyncingTransformer extends AbstractASMTransformer {
 
 	private static final Logger LOGGER;
 	private static final String syncAsmHooks = "de/take_weiland/mods/commons/internal/SyncASMHooks";
@@ -39,16 +39,16 @@ public final class SyncingTransformer extends SelectiveTransformer {
 	}
 
 	@Override
-	protected boolean transform(ClassNode clazz, String className) {
+	public void transform(ClassNode clazz) {
 		if (!ASMUtils.hasAnnotation(clazz, Synced.class)) {
-			return false;
+			return;
 		}
 
 		Class<?> superClass;
 		try {
 			superClass = getClass().getClassLoader().loadClass(ASMUtils.undoInternalName(clazz.superName));
 		} catch (ClassNotFoundException e) {
-			return false;
+			return;
 		}
 
 		SyncType type;
@@ -61,8 +61,8 @@ public final class SyncingTransformer extends SelectiveTransformer {
 		} else if (ASMUtils.isAssignableFrom(ASMUtils.getClassInfo(IExtendedEntityProperties.class), ASMUtils.getClassInfo(clazz))) {
 			type = SyncType.ENTITY_PROPS;
 		} else {
-			LOGGER.warning(String.format("Can't sync class %s, it will be ignored.", className));
-			return false;
+			LOGGER.warning(String.format("Can't sync class %s, it will be ignored.", clazz.name));
+			return;
 		}
 
 		LinkedListMultimap<Type, SyncedElement> elements = LinkedListMultimap.create(); // need LinkedList to preserve iteration order
@@ -107,8 +107,6 @@ public final class SyncingTransformer extends SelectiveTransformer {
 
 			clazz.interfaces.add("de/take_weiland/mods/commons/sync/SyncedEntityProperties");
 		}
-
-		return true;
 	}
 
 	private void createGetter(ClassNode clazz, String name, FieldNode field) {
@@ -633,13 +631,13 @@ public final class SyncingTransformer extends SelectiveTransformer {
 	}
 
 	@Override
-	protected boolean transforms(String className) {
-		if (className.startsWith("de.take_weiland.mods.commons.testmod_sc")) {
+	public boolean transforms(String className) {
+		if (className.startsWith("de/take_weiland/mods/commons/testmod_sc")) {
 			return true;
 		}
-		return !className.startsWith("net.minecraft.")
-				&& !className.startsWith("net.minecraftforge.")
-				&& !className.startsWith("cpw.mods.")
-				&& !className.startsWith("de.take_weiland.mods.commons.");
+		return !className.startsWith("net/minecraft/")
+				&& !className.startsWith("net/minecraftforge/")
+				&& !className.startsWith("cpw/mods/")
+				&& !className.startsWith("de/take_weiland/mods/commons/");
 	}
 }
