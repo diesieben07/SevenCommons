@@ -28,7 +28,7 @@ public final class ConfigInjector {
 	 * @param config
 	 * @param clazz
 	 */
-	public static final void inject(Configuration config, Class<?> clazz) {
+	public static void inject(Configuration config, Class<?> clazz) {
 		inject(config, clazz, true, true);
 	}
 	
@@ -39,7 +39,7 @@ public final class ConfigInjector {
 	 * @param load if the configuration should be loaded prior to parsing
 	 * @param save if the configuration should be saved after parsing
 	 */
-	public static final void inject(Configuration config, Class<?> clazz, boolean load, boolean save) {
+	public static void inject(Configuration config, Class<?> clazz, boolean load, boolean save) {
 		if (load) {
 			config.load();
 		}

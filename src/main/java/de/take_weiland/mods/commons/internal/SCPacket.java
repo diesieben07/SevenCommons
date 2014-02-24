@@ -2,8 +2,6 @@ package de.take_weiland.mods.commons.internal;
 
 import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.net.SimplePacketType;
-import de.take_weiland.mods.commons.sync.PacketEntityPropsIds;
-import de.take_weiland.mods.commons.sync.PacketSync;
 
 public abstract class SCPacket extends ModPacket<SCPacket.Type> {
 

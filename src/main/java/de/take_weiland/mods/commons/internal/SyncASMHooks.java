@@ -1,12 +1,9 @@
 package de.take_weiland.mods.commons.internal;
 
 import com.google.common.collect.Lists;
-import de.take_weiland.mods.commons.Internal;
-import de.take_weiland.mods.commons.net.DataBuf;
-import de.take_weiland.mods.commons.net.PacketBuilder;
-import de.take_weiland.mods.commons.net.PacketTarget;
-import de.take_weiland.mods.commons.net.Packets;
-import de.take_weiland.mods.commons.sync.*;
+import de.take_weiland.mods.commons.net.*;
+import de.take_weiland.mods.commons.sync.Syncing;
+import de.take_weiland.mods.commons.sync.TypeSyncer;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,7 +12,6 @@ import net.minecraftforge.common.IExtendedEntityProperties;
 import java.util.List;
 
 @SuppressWarnings("unused") // stuff in here gets called from ASM generated code
-@Internal
 public final class SyncASMHooks {
 
 	private SyncASMHooks() { }
@@ -29,7 +25,7 @@ public final class SyncASMHooks {
 			return out;
 		}
 		out = SCModContainer.packetFactory.builder(SCPacket.Type.SYNC);
-		Packets.writeEnum(out, type);
+		DataBuffers.writeEnum(out, type);
 		type.injectInfo(obj, out);
 		return out;
 	}
@@ -81,7 +77,7 @@ public final class SyncASMHooks {
 	public static void endSync(PacketBuilder out, PacketTarget target) {
 		if (out != null) {
 			out.putByte(0x80); // 1000 0000
-			out.toPacket().sendTo(target);
+			out.build().sendTo(target);
 		}
 	}
 
@@ -89,7 +85,7 @@ public final class SyncASMHooks {
 		if (out != null) {
 			out.putByte(0x80); // 1000 0000
 
-			type.sendPacket(syncedObj, out.toPacket());
+			type.sendPacket(syncedObj, out.build());
 		}
 	}
 
@@ -127,7 +123,7 @@ public final class SyncASMHooks {
 	public static PacketBuilder sync(PacketBuilder out, Object obj, SyncType type, int idx, Enum<?> now, Enum<?> prev) {
 		if (now != prev) {
 			out = idx(obj, out, idx, type);
-			Packets.writeEnum(out, now);
+			DataBuffers.writeEnum(out, now);
 		}
 		return out;
 	}
@@ -197,7 +193,7 @@ public final class SyncASMHooks {
 	}
 
 	public static <E extends Enum<E>> Enum<?> read_Enum(DataBuf in, Class<E> clazz) {
-		return Packets.readEnum(in, clazz);
+		return DataBuffers.readEnum(in, clazz);
 	}
 
 	public static boolean read_boolean(DataBuf in) {

@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
@@ -13,7 +12,6 @@ import java.util.List;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
-@Internal
 public final class EntityTransformer extends AbstractASMTransformer {
 
 	@Override
@@ -30,7 +28,7 @@ public final class EntityTransformer extends AbstractASMTransformer {
 		addPropertyGetter(clazz, syncedProps);
 		addPropertySetter(clazz, syncedProps);
 		
-		clazz.interfaces.add("de/take_weiland/mods/commons/sync/EntityProxy");
+		clazz.interfaces.add("de/take_weiland/mods/commons/internal/EntityProxy");
 	}
 
 	private void addPropertySetter(ClassNode clazz, FieldNode syncedProps) {

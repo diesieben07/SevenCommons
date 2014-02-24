@@ -5,8 +5,6 @@ import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.SimplePacket;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
-import de.take_weiland.mods.commons.sync.EntityProxy;
-import de.take_weiland.mods.commons.sync.SyncedEntityProperties;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -99,7 +97,7 @@ public enum SyncType {
 			if (entity != null) {
 				List<SyncedEntityProperties> props = ((EntityProxy)entity)._sc_sync_getSyncedProperties();
 				if (props != null) {
-					return JavaUtils.safeListAccess(props, in.getVarInt());
+					return JavaUtils.get(props, in.getVarInt());
 				}
 			}
 			return null;

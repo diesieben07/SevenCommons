@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.Internal;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
@@ -11,7 +10,6 @@ import org.objectweb.asm.tree.*;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
-@Internal
 public final class PacketTransformer extends AbstractASMTransformer {
 
 	private final ClassInfo modPacketCI = ASMUtils.getClassInfo(ModPacket.class);

@@ -92,7 +92,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 
 		createReadMethod(clazz, elements.values(), setters);
 
-		clazz.interfaces.add("de/take_weiland/mods/commons/sync/SyncedObject");
+		clazz.interfaces.add("de/take_weiland/mods/commons/internal/SyncedObject");
 
 		injectSyncCalls(clazz, type, syncMethods);
 
@@ -105,7 +105,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 			createGetter(clazz, "_sc_sync_getIndex", index);
 			createGetter(clazz, "_sc_sync_getIdentifier", ident);
 
-			clazz.interfaces.add("de/take_weiland/mods/commons/sync/SyncedEntityProperties");
+			clazz.interfaces.add("de/take_weiland/mods/commons/internal/SyncedEntityProperties");
 		}
 	}
 

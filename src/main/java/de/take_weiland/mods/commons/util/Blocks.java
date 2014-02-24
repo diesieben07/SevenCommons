@@ -32,7 +32,7 @@ public final class Blocks {
 		}
 	}
 	
-	public static final void genericBreak(Block block, World world, int x, int y, int z, int meta) {
+	public static void genericBreak(Block block, World world, int x, int y, int z, int meta) {
 		if (block.hasTileEntity(meta)) {
 			Inventories.spillIfInventory(world.getBlockTileEntity(x, y, z));
 		}
