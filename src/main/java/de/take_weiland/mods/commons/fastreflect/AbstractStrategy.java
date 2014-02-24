@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.fastreflect;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableMap;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.ReflectionHelper.UnableToFindMethodException;
 
@@ -19,10 +19,10 @@ abstract class AbstractStrategy implements FastreflectStrategy {
 	
 	InterfaceInfo analyze(Class<?> iface) {
 		validateInterface(iface);
-		
-		Map<Method, Field> getters = Maps.newHashMap();
-		Map<Method, Field> setters = Maps.newHashMap();
-		Map<Method, Method> invokers = Maps.newHashMap();
+
+		ImmutableMap.Builder<Method, Field> getters = ImmutableMap.builder();
+		ImmutableMap.Builder<Method, Field> setters = ImmutableMap.builder();
+		ImmutableMap.Builder<Method, Method> invokers = ImmutableMap.builder();
 		
 		for (Method method : iface.getMethods()) {
 			if (method.isAnnotationPresent(Getter.class)) {
@@ -35,7 +35,7 @@ abstract class AbstractStrategy implements FastreflectStrategy {
 				throw new IllegalArgumentException("Don't know what to do with method %s in interface %s");
 			}
 		}
-		return new InterfaceInfo(getters, setters, invokers);
+		return new InterfaceInfo(getters.build(), setters.build(), invokers.build());
 	}
 	
 	Field findGetterTarget(Class<?> iface, Method getter) {
