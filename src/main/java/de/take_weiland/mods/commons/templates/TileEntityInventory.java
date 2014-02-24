@@ -1,18 +1,12 @@
 package de.take_weiland.mods.commons.templates;
 
 import de.take_weiland.mods.commons.util.Inventories;
-import de.take_weiland.mods.commons.util.Listenable;
-import de.take_weiland.mods.commons.util.ListenerArrayList;
-import de.take_weiland.mods.commons.util.ListenerList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
 public abstract class TileEntityInventory<T extends TileEntityInventory<T>> extends AbstractTileEntity implements SCInventory<T> {
 
-	@SuppressWarnings("unchecked")
-	private final ListenerList<T> listeners = ListenerArrayList.create((T)this);
-	
 	protected final ItemStack[] storage;
 	
 	public TileEntityInventory() {
@@ -95,18 +89,9 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 	public void closeChest() { }
 
 	@Override
-	public void addListener(Listenable.Listener<? super T> listener) {
-		listeners.add(listener);
-	}
-
-	@Override
-	public void removeListener(Listenable.Listener<? super T> listener) {
-		listeners.remove(listener);
-	}
-
-	@Override
+	@OnChange
 	public void onChange() {
-		listeners.onChange();
+
 	}
 
 }

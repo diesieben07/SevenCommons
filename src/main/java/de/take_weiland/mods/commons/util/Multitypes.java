@@ -11,7 +11,7 @@ public final class Multitypes {
 	private Multitypes() { }
 	
 	public static <TYPE extends Metadata> TYPE getType(HasMetadata<TYPE> typed, int meta) {
-		return JavaUtils.defaultedArrayAccess(typed.getTypes(), meta, typed.getDefault());
+		return JavaUtils.get(typed.getTypes(), meta, typed.getDefault());
 	}
 	
 	public static <TYPE extends Metadata> TYPE getType(HasMetadata<TYPE> typed, ItemStack stack) {

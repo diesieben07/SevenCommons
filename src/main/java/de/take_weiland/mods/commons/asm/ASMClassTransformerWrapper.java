@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -12,7 +13,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.objectweb.asm.ClassReader.*;
+import static org.objectweb.asm.ClassReader.EXPAND_FRAMES;
 
 /**
  * <p>Implementation of {@link net.minecraft.launchwrapper.IClassTransformer} which uses a number of {@link de.take_weiland.mods.commons.asm.ASMClassTransformer ASMClassTransformers}
@@ -58,7 +59,13 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 					reader.accept(node, readerFlags);
 				}
 				wasExpandFrames = wantsExpandFrames;
-				transformer.transform(node);
+				try {
+					transformer.transform(node);
+				} catch (Throwable e) {
+					System.err.println("Exception during transformation of: " + transformedName);
+					e.printStackTrace();
+					throw Throwables.propagate(e);
+				}
 			}
 		}
 		if (node != null) {

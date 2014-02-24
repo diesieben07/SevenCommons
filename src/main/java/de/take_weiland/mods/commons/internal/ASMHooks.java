@@ -23,7 +23,7 @@ import net.minecraftforge.common.MinecraftForge;
 public final class ASMHooks {
 
 	private ASMHooks() { }
-	
+
 	private static final int ZOMBIE_IS_CONVERTING_FLAG = 14;
 	
 	public static void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {

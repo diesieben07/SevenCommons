@@ -13,6 +13,9 @@ import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
+import de.take_weiland.mods.commons.templates.AbstractInventory;
+import de.take_weiland.mods.commons.util.Listenable;
+import de.take_weiland.mods.commons.util.Listenables;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,12 +25,14 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
+import java.lang.reflect.Field;
+
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()
 public class testmod_sc {
 
 	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent event) {
+	public void preInit(FMLPreInitializationEvent event) throws Exception {
 		NetworkRegistry.instance().registerGuiHandler(this, new IGuiHandler() {
 			@Override
 			public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
@@ -57,6 +62,51 @@ public class testmod_sc {
 		});
 
 		new TestExtendedProperties();
+
+		Field field = AbstractInventory.class.getDeclaredField("_sc_listeners");
+		field.setAccessible(true);
+		Inv i = new Inv();
+		Listenable.Listener<Inv> l = new Listenable.Listener<Inv>() {
+			@Override
+			public void onChange(Inv obj) {
+
+			}
+		};
+		System.out.println(field.get(i));
+		Listenables.add(i, l);
+		Listenables.add(i, new Listenable.Listener<Inv>() {
+			@Override
+			public void onChange(Inv obj) {
+
+			}
+		});
+
+		System.out.println(field.get(i));
+		Listenables.remove(i, l);
+		System.out.println(field.get(i));
+	}
+
+	private static class Inv extends AbstractInventory<Inv> {
+
+		@Override
+		public int getSizeInventory() {
+			return 0;
+		}
+
+		@Override
+		public String getInvName() {
+			return null;
+		}
+
+		@Override
+		public boolean isInvNameLocalized() {
+			return false;
+		}
+
+		@Override
+		public boolean isUseableByPlayer(EntityPlayer entityplayer) {
+			return false;
+		}
 	}
 
 	@Synced

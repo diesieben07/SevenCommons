@@ -6,9 +6,6 @@ import net.minecraft.nbt.NBTTagCompound;
 
 public abstract class AbstractInventory<T extends AbstractInventory<T>> implements SCInventory<T> {
 
-	@SuppressWarnings("unchecked")
-	private final ListenerList<T> listeners = ListenerArrayList.create((T)this);
-	
 	protected final ItemStack[] storage;
 	
 	protected AbstractInventory(int size) {
@@ -76,16 +73,6 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 	
 	@Override
 	public void onChange() {
-		listeners.onChange();
 	}
 
-	@Override
-	public void addListener(Listenable.Listener<? super T> listener) {
-		listeners.add(listener);
-	}
-
-	@Override
-	public void removeListener(Listenable.Listener<? super T> listener) {
-		listeners.remove(listener);
-	}
 }

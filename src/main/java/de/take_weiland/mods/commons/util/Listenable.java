@@ -1,15 +1,20 @@
 package de.take_weiland.mods.commons.util;
 
-public interface Listenable<E extends Listenable<E>> {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+public interface Listenable<SELF extends Listenable<SELF>> {
 
 	public static interface Listener<E> {
 		
 		void onChange(E obj);
 		
 	}
-	
-	void addListener(Listener<? super E> l);
-	
-	void removeListener(Listener<? super E> l);
 
+	@Retention(RetentionPolicy.CLASS)
+	@Target(ElementType.METHOD)
+	public static @interface OnChange { }
+	
 }
