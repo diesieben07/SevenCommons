@@ -13,9 +13,10 @@ import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
-import de.take_weiland.mods.commons.templates.AbstractInventory;
-import de.take_weiland.mods.commons.util.Listenable;
-import de.take_weiland.mods.commons.util.Listenables;
+import de.take_weiland.mods.commons.trait.HasTrait;
+import de.take_weiland.mods.commons.trait.Trait;
+import de.take_weiland.mods.commons.trait.TraitImpl;
+import de.take_weiland.mods.commons.trait.TraitMethod;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -24,8 +25,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
-
-import java.lang.reflect.Field;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()
@@ -63,50 +62,70 @@ public class testmod_sc {
 
 		new TestExtendedProperties();
 
-		Field field = AbstractInventory.class.getDeclaredField("_sc_listeners");
-		field.setAccessible(true);
-		Inv i = new Inv();
-		Listenable.Listener<Inv> l = new Listenable.Listener<Inv>() {
-			@Override
-			public void onChange(Inv obj) {
+		new Use().foo();
+		new UseSub().foo();
 
-			}
-		};
-		System.out.println(field.get(i));
-		Listenables.add(i, l);
-		Listenables.add(i, new Listenable.Listener<Inv>() {
-			@Override
-			public void onChange(Inv obj) {
 
-			}
-		});
-
-		System.out.println(field.get(i));
-		Listenables.remove(i, l);
-		System.out.println(field.get(i));
 	}
 
-	private static class Inv extends AbstractInventory<Inv> {
+	@Trait(impl = testmod_sc.Impl.class)
+	private static interface ATrait {
+
+		void foo();
+
+	}
+
+	@Trait(impl = testmod_sc.ImplB.class)
+	static interface BTrait {
+
+		void foo();
+
+	}
+
+	static class Impl implements TraitImpl, ATrait {
 
 		@Override
-		public int getSizeInventory() {
-			return 0;
+		public void foo() {
+			test(getString());
+		}
+
+		private String getString() {
+			return "foo";
+		}
+
+		private void test(String bar) {
+			System.out.println(bar);
+		}
+	}
+
+	static class ImplB implements TraitImpl, BTrait {
+
+		private String gaga = "foobarus";
+
+		public ImplB() {
+			System.out.println("ImplB Constructor called!");
 		}
 
 		@Override
-		public String getInvName() {
-			return null;
+		public void foo() {
+			System.out.println("Hello from traitB! field: " + gaga);
 		}
+	}
+
+	@HasTrait
+	static class Use implements BTrait {
 
 		@Override
-		public boolean isInvNameLocalized() {
-			return false;
-		}
+		@TraitMethod
+		public void foo() { }
+	}
+
+	@HasTrait()
+	static class UseSub extends Use implements BTrait {
 
 		@Override
-		public boolean isUseableByPlayer(EntityPlayer entityplayer) {
-			return false;
-		}
+		@TraitMethod
+		public void foo() { }
 	}
 
 	@Synced

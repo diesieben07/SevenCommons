@@ -105,13 +105,6 @@ public final class ASMUtils {
 		return name.replace('/', '.');
 	}
 	
-	public static ClassNode getClassNode(byte[] bytes) {
-		ClassReader reader = new ClassReader(bytes);
-		ClassNode clazz = new ClassNode();
-		reader.accept(clazz, 0);
-		return clazz;
-	}
-	
 	private static IClassNameTransformer nameTransformer;
 	private static boolean nameTransChecked = false;
 	
@@ -135,12 +128,31 @@ public final class ASMUtils {
 	}
 
 	public static ClassNode getClassNode(String name) {
+		return getClassNode(name, 0);
+	}
+
+	public static ClassNode getThinClassNode(String name) {
+		return getClassNode(name, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+	}
+
+	public static ClassNode getClassNode(String name, int readerFlags) {
 		try {
-			return getClassNode(SevenCommons.CLASSLOADER.getClassBytes(obfuscateClass(name)));
+			return getClassNode(SevenCommons.CLASSLOADER.getClassBytes(obfuscateClass(name)), readerFlags);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public static ClassNode getClassNode(byte[] bytes) {
+		return getClassNode(bytes, 0);
+	}
+
+	public static ClassNode getClassNode(byte[] bytes, int readerFlags) {
+		ClassReader reader = new ClassReader(bytes);
+		ClassNode clazz = new ClassNode();
+		reader.accept(clazz, readerFlags);
+		return clazz;
 	}
 
 	public static AnnotationNode getAnnotation(FieldNode field, Class<? extends Annotation> ann) {
@@ -194,7 +206,7 @@ public final class ASMUtils {
 		try {
 			byte[] bytes = CLASSLOADER.getClassBytes(className);
 			if (bytes != null) {
-				return new ClassInfoFromNode(ASMUtils.getClassNode(bytes));
+				return new ClassInfoFromNode(ASMUtils.getClassNode(bytes, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES));
 			} else {
 				return new ClassInfoFromClazz(Class.forName(ASMUtils.undoInternalName(className)));
 			}
