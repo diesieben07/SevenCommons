@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
+import de.take_weiland.mods.commons.trait.Instance;
 import de.take_weiland.mods.commons.trait.Trait;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -24,7 +25,7 @@ public class TraitTransformer extends AbstractASMTransformer {
 
 		ClassNode impl = ASMUtils.getThinClassNode(((Type) ann.values.get(1)).getInternalName());
 		for (FieldNode field : impl.fields) {
-			if ((field.access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC) {
+			if ((field.access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC || ASMUtils.hasAnnotation(field, Instance.class)) {
 				continue;
 			}
 

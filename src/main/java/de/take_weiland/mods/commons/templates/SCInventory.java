@@ -8,6 +8,4 @@ public interface SCInventory<T extends SCInventory<T>> extends IInventory, Liste
 
 	ItemStack[] getItemStorage();
 	
-	void onChange();
-	
 }

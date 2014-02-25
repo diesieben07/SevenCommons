@@ -17,6 +17,7 @@ import de.take_weiland.mods.commons.trait.HasTrait;
 import de.take_weiland.mods.commons.trait.Trait;
 import de.take_weiland.mods.commons.trait.TraitImpl;
 import de.take_weiland.mods.commons.trait.TraitMethod;
+import de.take_weiland.mods.commons.util.Listenable;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -63,9 +64,6 @@ public class testmod_sc {
 		new TestExtendedProperties();
 
 		new Use().foo();
-		new UseSub().foo();
-
-
 	}
 
 	@Trait(impl = testmod_sc.Impl.class)
@@ -121,11 +119,20 @@ public class testmod_sc {
 	}
 
 	@HasTrait()
-	static class UseSub extends Use implements BTrait {
+	static class UseSub implements Listenable<UseSub> {
 
 		@Override
 		@TraitMethod
-		public void foo() { }
+		public void registerListener(Listener<? super UseSub> listener) { }
+
+		@Override
+		@TraitMethod
+		public void removeListener(Listener<? super UseSub> listener) { }
+
+		@Override
+		@TraitMethod
+		public void onChange() { }
+
 	}
 
 	@Synced

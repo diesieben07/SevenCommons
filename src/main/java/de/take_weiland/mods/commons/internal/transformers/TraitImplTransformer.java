@@ -1,14 +1,17 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
 import com.google.common.collect.ObjectArrays;
+import com.google.common.collect.Sets;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
+import de.take_weiland.mods.commons.trait.Instance;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * @author diesieben07
@@ -32,6 +35,25 @@ public class TraitImplTransformer extends AbstractASMTransformer {
 		}
 
 		ClassNode traitIface = ASMUtils.getClassNode(clazz.interfaces.get(traitImplIdx == 0 ? 1 : 0), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+
+		Set<String> instanceFields = Sets.newHashSet();
+
+		for (Iterator<FieldNode> it = clazz.fields.iterator(); it.hasNext();) {
+			FieldNode field = it.next();
+			if (ASMUtils.hasAnnotation(field, Instance.class)) {
+				if ((field.access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC) {
+					throw new IllegalArgumentException(String.format("@Instance field %s in class %s must be non-static!", field.name, clazz.name));
+				}
+				if (ASMUtils.isPrimitive(Type.getType(field.desc))) {
+					throw new IllegalArgumentException(String.format("@Instance field %s in class %s must not be a primitive type!", field.name, clazz.name));
+				}
+				instanceFields.add(field.name);
+				it.remove();
+			} else if ((field.access & Opcodes.ACC_STATIC) != Opcodes.ACC_STATIC) {
+				it.remove();
+			}
+		}
+
 		String cstrDesc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		for (MethodNode method : clazz.methods) {
 			if ((method.access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC) {
@@ -62,7 +84,7 @@ public class TraitImplTransformer extends AbstractASMTransformer {
 				changeAccess(method, true);
 			}
 			method.desc = transformDescriptor(traitIface, method.desc);
-			transformInstructions(clazz, traitIface, method);
+			transformInstructions(clazz, traitIface, instanceFields, method);
 		}
 
 		String name = "<init>";
@@ -75,16 +97,10 @@ public class TraitImplTransformer extends AbstractASMTransformer {
 
 		clazz.methods.add(dfltCstr);
 
-		for (Iterator<FieldNode> it = clazz.fields.iterator(); it.hasNext();) {
-			if ((it.next().access & Opcodes.ACC_STATIC) != Opcodes.ACC_STATIC) {
-				it.remove();
-			}
-		}
-
 		clazz.interfaces.clear();
 	}
 
-	private void transformInstructions(ClassNode implClass, ClassNode trait, MethodNode method) {
+	private void transformInstructions(ClassNode implClass, ClassNode trait, Set<String> instanceFields, MethodNode method) {
 		if (method.localVariables != null) {
 			for (LocalVariableNode lv : method.localVariables) {
 				if (lv.index == 0) {
@@ -102,28 +118,38 @@ public class TraitImplTransformer extends AbstractASMTransformer {
 			} else if (op == Opcodes.INVOKESPECIAL) {
 				transformSpecialCall(implClass, trait, (MethodInsnNode) insn);
 			} else if (op == Opcodes.GETFIELD) {
-				insn = transformGetfield(implClass, trait, insns, (FieldInsnNode) insn);
+				insn = transformGetfield(implClass, trait, insns, (FieldInsnNode) insn, instanceFields);
 			} else if (op == Opcodes.PUTFIELD) {
-				insn = transformSetfield(implClass, trait, insns, (FieldInsnNode) insn);
+				insn = transformSetfield(implClass, trait, insns, (FieldInsnNode) insn, instanceFields);
 			}
 
 			insn = insn.getNext();
 		} while (insn != null);
 	}
 
-	private AbstractInsnNode transformGetfield(ClassNode implClass, ClassNode trait, InsnList insns, FieldInsnNode insn) {
+	private AbstractInsnNode transformGetfield(ClassNode implClass, ClassNode trait, InsnList insns, FieldInsnNode insn, Set<String> instanceFields) {
 		if (insn.owner.equals(implClass.name)) {
-			String name = TraitUtil.getGetterName(trait.name, insn.name);
-			String desc = Type.getMethodDescriptor(Type.getType(insn.desc));
-			MethodInsnNode min = new MethodInsnNode(Opcodes.INVOKEINTERFACE, trait.name, name, desc);
-			insns.set(insn, min);
-			return min;
+			if (instanceFields.contains(insn.name)) {
+				String target = Type.getType(insn.desc).getInternalName();
+				AbstractInsnNode node;
+				insns.set(insn, (node = new TypeInsnNode(Opcodes.CHECKCAST, target)));
+				return node;
+			} else {
+				String name = TraitUtil.getGetterName(trait.name, insn.name);
+				String desc = Type.getMethodDescriptor(Type.getType(insn.desc));
+				MethodInsnNode min = new MethodInsnNode(Opcodes.INVOKEINTERFACE, trait.name, name, desc);
+				insns.set(insn, min);
+				return min;
+			}
 		}
 		return insn;
 	}
 
-	private AbstractInsnNode transformSetfield(ClassNode implClass, ClassNode trait, InsnList insns, FieldInsnNode insn) {
+	private AbstractInsnNode transformSetfield(ClassNode implClass, ClassNode trait, InsnList insns, FieldInsnNode insn, Set<String> instanceFields) {
 		if (insn.owner.equals(implClass.name)) {
+			if (instanceFields.contains(insn.name)) {
+				throw new IllegalArgumentException(String.format("@Instance field %s in class %s may not be set!", insn.name, implClass.name));
+			}
 			String name = TraitUtil.getSetterName(trait.name, insn.name);
 			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(insn.desc));
 			MethodInsnNode min = new MethodInsnNode(Opcodes.INVOKEINTERFACE, trait.name, name, desc);
@@ -155,7 +181,8 @@ public class TraitImplTransformer extends AbstractASMTransformer {
 	}
 
 	private void changeAccess(MethodNode method, boolean makePrivate) {
-		method.access = (method.access | Opcodes.ACC_STATIC | (makePrivate ? Opcodes.ACC_PRIVATE : Opcodes.ACC_PUBLIC)) & ~(Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED);
+		method.access &= ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED | Opcodes.ACC_PUBLIC);
+		method.access |= (method.access | Opcodes.ACC_STATIC | (makePrivate ? Opcodes.ACC_PRIVATE : Opcodes.ACC_PUBLIC));
 	}
 
 	private boolean isOverriden(MethodNode method, ClassNode trait) {

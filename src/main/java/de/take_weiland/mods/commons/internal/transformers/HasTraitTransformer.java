@@ -5,6 +5,7 @@ import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import de.take_weiland.mods.commons.trait.HasTrait;
+import de.take_weiland.mods.commons.trait.Instance;
 import de.take_weiland.mods.commons.trait.Trait;
 import de.take_weiland.mods.commons.trait.TraitMethod;
 import org.objectweb.asm.Opcodes;
@@ -65,7 +66,7 @@ public class HasTraitTransformer extends AbstractASMTransformer {
 			}
 
 			for (FieldNode field : traitInfo.impl.fields) {
-				if ((field.access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC) {
+				if ((field.access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC || ASMUtils.hasAnnotation(field, Instance.class)) {
 					continue;
 				}
 
@@ -105,9 +106,14 @@ public class HasTraitTransformer extends AbstractASMTransformer {
 		InsnList insns = method.instructions;
 		insns.clear();
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
+		Type[] args = Type.getArgumentTypes(method.desc);
+		int len = args.length;
+		for (int i = 0; i < len; ++i) {
+			insns.add(new VarInsnNode(args[i].getOpcode(Opcodes.ILOAD), i + 1));
+		}
 
 		Type returnType = Type.getReturnType(method.desc);
-		String desc = Type.getMethodDescriptor(returnType, ObjectArrays.concat(Type.getObjectType(trait.clazz.name), Type.getArgumentTypes(method.desc)));
+		String desc = Type.getMethodDescriptor(returnType, ObjectArrays.concat(Type.getObjectType(trait.clazz.name), args));
 		insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, trait.impl.name, method.name, desc));
 		insns.add(new InsnNode(returnType.getOpcode(Opcodes.IRETURN)));
 	}

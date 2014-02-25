@@ -9,11 +9,6 @@ import java.lang.annotation.Target;
  * @author diesieben07
  */
 @Retention(RetentionPolicy.CLASS)
-@Target(ElementType.TYPE)
-public @interface Trait {
-
-	Class<? extends TraitImpl> impl();
-
-	Class<?>[] requires() default void.class;
-
+@Target(ElementType.FIELD)
+public @interface Instance {
 }

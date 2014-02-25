@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 		"de.take_weiland.mods.commons.net.",
 		"de.take_weiland.mods.commons.internal.transformers.",
 		"de.take_weiland.mods.commons.subtypes.",
-		"de.take_weiland.mods.commons.util.",
+		"de.take_weiland.mods.commons.util.JavaUtils",
 		"de.take_weiland.mods.commons.trait.",
 		})
 public final class SevenCommons implements IFMLLoadingPlugin {

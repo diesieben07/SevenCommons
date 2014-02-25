@@ -1,10 +1,13 @@
 package de.take_weiland.mods.commons.templates;
 
+import de.take_weiland.mods.commons.trait.HasTrait;
+import de.take_weiland.mods.commons.trait.TraitMethod;
 import de.take_weiland.mods.commons.util.Inventories;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+@HasTrait
 public abstract class TileEntityInventory<T extends TileEntityInventory<T>> extends AbstractTileEntity implements SCInventory<T> {
 
 	protected final ItemStack[] storage;
@@ -89,9 +92,14 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 	public void closeChest() { }
 
 	@Override
-	@OnChange
-	public void onChange() {
+	@TraitMethod
+	public void onChange() { }
 
-	}
+	@Override
+	@TraitMethod
+	public void registerListener(Listener<? super T> listener) { }
 
+	@Override
+	@TraitMethod
+	public void removeListener(Listener<? super T> listener) { }
 }

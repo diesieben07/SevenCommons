@@ -1,9 +1,12 @@
 package de.take_weiland.mods.commons.templates;
 
+import de.take_weiland.mods.commons.trait.HasTrait;
+import de.take_weiland.mods.commons.trait.TraitMethod;
 import de.take_weiland.mods.commons.util.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+@HasTrait
 public abstract class AbstractInventory<T extends AbstractInventory<T>> implements SCInventory<T> {
 
 	protected final ItemStack[] storage;
@@ -72,7 +75,14 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 	}
 	
 	@Override
-	public void onChange() {
-	}
+	@TraitMethod
+	public void onChange() { }
 
+	@Override
+	@TraitMethod
+	public void registerListener(Listener<? super T> listener) { }
+
+	@Override
+	@TraitMethod
+	public void removeListener(Listener<? super T> listener) { }
 }
