@@ -13,10 +13,7 @@ import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
-import de.take_weiland.mods.commons.trait.HasTrait;
-import de.take_weiland.mods.commons.trait.Trait;
-import de.take_weiland.mods.commons.trait.TraitImpl;
-import de.take_weiland.mods.commons.trait.TraitMethod;
+import de.take_weiland.mods.commons.trait.*;
 import de.take_weiland.mods.commons.util.Listenable;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
@@ -26,6 +23,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
+
+import java.io.Serializable;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()
@@ -73,14 +72,10 @@ public class testmod_sc {
 
 	}
 
-	@Trait(impl = testmod_sc.ImplB.class)
-	static interface BTrait {
-
-		void foo();
-
-	}
-
 	static class Impl implements TraitImpl, ATrait {
+
+		@Instance
+		private Serializable self;
 
 		@Override
 		public void foo() {
@@ -96,22 +91,8 @@ public class testmod_sc {
 		}
 	}
 
-	static class ImplB implements TraitImpl, BTrait {
-
-		private String gaga = "foobarus";
-
-		public ImplB() {
-			System.out.println("ImplB Constructor called!");
-		}
-
-		@Override
-		public void foo() {
-			System.out.println("Hello from traitB! field: " + gaga);
-		}
-	}
-
 	@HasTrait
-	static class Use implements BTrait {
+	static class Use implements ATrait {
 
 		@Override
 		@TraitMethod

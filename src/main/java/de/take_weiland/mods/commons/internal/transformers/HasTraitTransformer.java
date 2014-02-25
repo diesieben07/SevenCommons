@@ -13,6 +13,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,9 +47,20 @@ public class HasTraitTransformer extends AbstractASMTransformer {
 			implementMethod(method, trait);
 		}
 
+		ASMUtils.ClassInfo me = ASMUtils.getClassInfo(clazz);
+
 		Collection<MethodNode> myCstrs = ASMUtils.findRootConstructors(clazz);
 		int fieldIdx = 0;
 		for (TraitInfo traitInfo : allTraits.values()) {
+			for (FieldNode field : traitInfo.impl.fields) {
+				if (ASMUtils.hasAnnotation(field, Instance.class)) {
+					Type req = Type.getType(field.desc);
+					if (!ASMUtils.isAssignableFrom(ASMUtils.getClassInfo(req.getInternalName()), me)) {
+						throw new IllegalArgumentException(String.format("@HasTrait class %s doesn't meet requirement %s for trait %s", clazz.name, req.getInternalName(), traitInfo.clazz.name));
+					}
+				}
+			}
+
 			if (!traitInfo.isDirect) {
 				continue;
 			}

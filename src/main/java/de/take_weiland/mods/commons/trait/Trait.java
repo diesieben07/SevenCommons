@@ -14,6 +14,4 @@ public @interface Trait {
 
 	Class<? extends TraitImpl> impl();
 
-	Class<?>[] requires() default void.class;
-
 }
