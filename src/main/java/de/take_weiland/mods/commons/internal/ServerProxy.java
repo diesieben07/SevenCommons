@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal;
 import cpw.mods.fml.common.IPlayerTracker;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.updater.PlayerUpdateInformation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.INetworkManager;

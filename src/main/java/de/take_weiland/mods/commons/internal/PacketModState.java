@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.net.DataBuf;

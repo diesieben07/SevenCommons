@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.internal.updater;
 
-import de.take_weiland.mods.commons.internal.SCModContainer;
+import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.PacketViewUpdates;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;

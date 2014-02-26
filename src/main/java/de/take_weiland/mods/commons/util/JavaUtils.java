@@ -4,6 +4,8 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import sun.misc.JavaLangAccess;
+import sun.misc.SharedSecrets;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -202,22 +204,42 @@ public final class JavaUtils {
 		return get(getEnumConstantsShared(clazz), ordinal);
 	}
 	
-	interface EnumValueGetter {
-		
-		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz);
-		
-	}
-	
 	private static EnumValueGetter ENUM_GETTER;
 	
 	static {
 		try {
 			Class.forName("sun.misc.SharedSecrets");
-			ENUM_GETTER = Class.forName("de.take_weiland.mods.commons.util.EnumGetterShared").asSubclass(EnumValueGetter.class).newInstance();
+			ENUM_GETTER = Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").asSubclass(EnumValueGetter.class).newInstance();
 		} catch (Exception e) {
 			SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
 			ENUM_GETTER = new EnumGetterCloned();
 		}
+	}
+
+	interface EnumValueGetter {
+
+		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz);
+
+	}
+
+	static class EnumGetterCloned implements EnumValueGetter {
+
+		@Override
+		public <T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
+			return clazz.getEnumConstants();
+		}
+
+	}
+
+	static class EnumGetterShared implements EnumValueGetter {
+
+		private JavaLangAccess langAcc = SharedSecrets.getJavaLangAccess();
+
+		@Override
+		public <T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
+			return langAcc.getEnumConstantsShared(clazz);
+		}
+
 	}
 	
 	private static Object unsafe;
@@ -255,5 +277,5 @@ public final class JavaUtils {
 		initUnsafe();
 		return unsafe;
 	}
-	
+
 }

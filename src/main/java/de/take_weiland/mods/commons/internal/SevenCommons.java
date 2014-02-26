@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 		"de.take_weiland.mods.commons.network.",
 		"de.take_weiland.mods.commons.net.",
 		"de.take_weiland.mods.commons.internal.transformers.",
+		"de.take_weiland.mods.commons.internal.exclude.",
 		"de.take_weiland.mods.commons.subtypes.",
 		"de.take_weiland.mods.commons.util.JavaUtils",
 		"de.take_weiland.mods.commons.trait.",
@@ -34,7 +35,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	
 	public static LaunchClassLoader CLASSLOADER;
 	
-	static File source;
+	public static File source;
 	
 	static {
 		FMLLog.makeLog("SevenCommons");
@@ -50,12 +51,12 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 
 	@Override
 	public String getModContainerClass() {
-		return "de.take_weiland.mods.commons.internal.SCModContainer";
+		return "de.take_weiland.mods.commons.internal.exclude.SCModContainer";
 	}
 
 	@Override
 	public String getSetupClass() {
-		return "de.take_weiland.mods.commons.internal.SCCallHook";
+		return "de.take_weiland.mods.commons.internal.exclude.SCCallHook";
 	}
 
 	@Override

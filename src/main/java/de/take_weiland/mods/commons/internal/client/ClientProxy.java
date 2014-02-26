@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.client;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
 import de.take_weiland.mods.commons.internal.*;
+import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerRemote;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;

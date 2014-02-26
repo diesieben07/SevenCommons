@@ -13,6 +13,7 @@ import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
+import de.take_weiland.mods.commons.templates.AbstractInventory;
 import de.take_weiland.mods.commons.trait.*;
 import de.take_weiland.mods.commons.util.Listenable;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -62,58 +63,30 @@ public class testmod_sc {
 
 		new TestExtendedProperties();
 
-		new Use().foo();
+		new Inv();
 	}
 
-	@Trait(impl = testmod_sc.Impl.class)
-	private static interface ATrait {
-
-		void foo();
-
-	}
-
-	static class Impl implements TraitImpl, ATrait {
-
-		@Instance
-		private Serializable self;
+	private static class Inv extends AbstractInventory<Inv> {
 
 		@Override
-		public void foo() {
-			test(getString());
+		public int getSizeInventory() {
+			return 0;
 		}
 
-		private String getString() {
-			return "foo";
+		@Override
+		public String getInvName() {
+			return null;
 		}
 
-		private void test(String bar) {
-			System.out.println(bar);
+		@Override
+		public boolean isInvNameLocalized() {
+			return false;
 		}
-	}
-
-	@HasTrait
-	static class Use implements ATrait {
 
 		@Override
-		@TraitMethod
-		public void foo() { }
-	}
-
-	@HasTrait()
-	static class UseSub implements Listenable<UseSub> {
-
-		@Override
-		@TraitMethod
-		public void registerListener(Listener<? super UseSub> listener) { }
-
-		@Override
-		@TraitMethod
-		public void removeListener(Listener<? super UseSub> listener) { }
-
-		@Override
-		@TraitMethod
-		public void onChange() { }
-
+		public boolean isUseableByPlayer(EntityPlayer entityplayer) {
+			return false;
+		}
 	}
 
 	@Synced

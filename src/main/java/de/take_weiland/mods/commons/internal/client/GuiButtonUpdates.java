@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.internal.client;
 
-import de.take_weiland.mods.commons.internal.SCModContainer;
+import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.ResourceLocation;

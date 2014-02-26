@@ -2,16 +2,16 @@ package de.take_weiland.mods.commons.internal;
 
 import com.google.common.collect.Lists;
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.updater.*;
 import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.DataBuffers;
+import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.Collection;
 import java.util.List;
-
-import static de.take_weiland.mods.commons.net.Packets.readEnum;
-import static de.take_weiland.mods.commons.net.Packets.writeEnum;
 
 public class PacketViewUpdates extends SCPacket {
 
@@ -28,7 +28,7 @@ public class PacketViewUpdates extends SCPacket {
 		for (UpdatableMod mod : mods) {
 			out.putString(mod.getModId());
 			out.putString(mod.getName());
-			writeEnum(out, mod.getState());
+			DataBuffers.writeEnum(out, mod.getState());
 
 			mod.getVersions().getCurrentVersion().write(out);
 
@@ -49,7 +49,7 @@ public class PacketViewUpdates extends SCPacket {
 			String modId = in.getString();
 			String name = in.getString();
 			
-			ModUpdateState state = readEnum(in, ModUpdateState.class);
+			ModUpdateState state = DataBuffers.readEnum(in, ModUpdateState.class);
 			
 			ModVersion current = ModVersion.read(mod, in);
 			int versionCount = in.getVarInt();

@@ -1,6 +1,7 @@
-package de.take_weiland.mods.commons.internal;
+package de.take_weiland.mods.commons.internal.exclude;
 
 import cpw.mods.fml.relauncher.IFMLCallHook;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;

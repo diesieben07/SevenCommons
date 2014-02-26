@@ -310,12 +310,23 @@ public final class ASMUtils {
 	}
 	
 	public static boolean isAssignableFrom(ClassInfo parent, ClassInfo child) {
-		if (parent.internalName().equals(child.internalName()) || parent.internalName().equals(child.superName()) || child.interfaces().contains(parent.internalName())) {
-			return true;
-		} else if (child.superName() != null && !child.superName().equals("java/lang/Object")) {
-			return isAssignableFrom(parent, getClassInfo(child.superName()));
-		} else {
-			return false;
+		if (parent.internalName().equals("java/lang/Object") || parent.internalName().equals(child.internalName()) || parent.internalName().equals(child.superName()) || child.interfaces().contains(parent.internalName())) {
+			return true; // easy
 		}
+		// now we need to loop through every superclass and every superinterface
+		for (String iface : child.interfaces()) {
+			ClassInfo ifaceInfo = getClassInfo(iface);
+			if (isAssignableFrom(parent, ifaceInfo)) {
+				return true;
+			}
+		}
+		ClassInfo current = child;
+		while (!current.superName().equals("java/lang/Object")) {
+			current = getClassInfo(current.superName());
+			if (isAssignableFrom(parent, current)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
