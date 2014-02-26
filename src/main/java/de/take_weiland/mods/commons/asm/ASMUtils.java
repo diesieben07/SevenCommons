@@ -206,7 +206,7 @@ public final class ASMUtils {
 		try {
 			byte[] bytes = CLASSLOADER.getClassBytes(className);
 			if (bytes != null) {
-				return new ClassInfoFromNode(ASMUtils.getClassNode(bytes, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES));
+				return new ClassInfoFromNode(ASMUtils.getThinClassNode(className));
 			} else {
 				return new ClassInfoFromClazz(Class.forName(ASMUtils.undoInternalName(className)));
 			}

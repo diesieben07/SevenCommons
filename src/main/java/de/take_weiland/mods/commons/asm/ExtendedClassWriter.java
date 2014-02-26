@@ -6,7 +6,9 @@ import org.objectweb.asm.ClassWriter;
 import static de.take_weiland.mods.commons.asm.ASMUtils.getClassInfo;
 import static de.take_weiland.mods.commons.asm.ASMUtils.isAssignableFrom;
 
-
+/**
+ * A class writer that does not load classes do compute frames but instead uses bytecode-analysis
+ */
 public class ExtendedClassWriter extends ClassWriter {
 
 	public ExtendedClassWriter(int flags) {

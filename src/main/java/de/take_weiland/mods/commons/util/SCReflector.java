@@ -23,7 +23,7 @@ import net.minecraft.util.Timer;
 import java.util.List;
 import java.util.Map;
 
-import static de.take_weiland.mods.commons.asm.ASMConstants.*;
+import static de.take_weiland.mods.commons.internal.ASMConstants.*;
 
 /**
  * Accessor interface for various private fields and methods around the Minecraft code.<br />

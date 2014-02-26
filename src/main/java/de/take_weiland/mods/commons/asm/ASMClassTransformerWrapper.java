@@ -45,7 +45,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 				int writerFlags = transformer.getClassWriterFlags();
 
 				if (lastWriterFlags >= 0 && writerFlags != lastWriterFlags && node != null) { // last one needs to be saved first
-					ClassWriter writer = new ClassWriter(writerFlags);
+					ClassWriter writer = new ExtendedClassWriter(writerFlags);
 					node.accept(writer);
 					bytes = writer.toByteArray();
 					reader = new ClassReader(bytes);
@@ -69,7 +69,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 			}
 		}
 		if (node != null) {
-			ClassWriter writer = new ClassWriter(lastWriterFlags);
+			ClassWriter writer = new ExtendedClassWriter(lastWriterFlags);
 			node.accept(writer);
 			bytes = writer.toByteArray();
 		}
