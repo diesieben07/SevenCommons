@@ -25,7 +25,7 @@ public final class Rendering {
 	
 	private static final Gui gui = new Gui();
 	
-	public static final void fillAreaWithIcon(Icon icon, int x, int y, int width, int height) {
+	public static void fillAreaWithIcon(Icon icon, int x, int y, int width, int height) {
 		int scale = Guis.computeGuiScale();
 
 		glScissor(0, Minecraft.getMinecraft().displayHeight - (y + height) * scale, (width + x) * scale, height * scale);
@@ -42,7 +42,7 @@ public final class Rendering {
 		glDisable(GL_SCISSOR_TEST);
 	}
 	
-	public static final void drawFluidStack(IFluidTank tank, int x, int y, int width, int fullHeight) {
+	public static void drawFluidStack(IFluidTank tank, int x, int y, int width, int fullHeight) {
 		TextureManager renderEngine = Minecraft.getMinecraft().renderEngine;
 		
 		FluidStack fluidStack = tank.getFluid();
