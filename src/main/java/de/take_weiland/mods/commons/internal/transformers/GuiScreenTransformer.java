@@ -1,25 +1,19 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.internal.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import static de.take_weiland.mods.commons.internal.ASMConstants.M_SET_WORLD_AND_RESOLUTION_MCP;
+import static de.take_weiland.mods.commons.internal.ASMConstants.M_SET_WORLD_AND_RESOLUTION_SRG;
+
 public final class GuiScreenTransformer extends AbstractASMTransformer {
 
 	@Override
 	public void transform(ClassNode clazz) {
-		String mName = ASMUtils.useMcpNames() ? ASMConstants.M_SET_WORLD_AND_RESOLUTION_MCP : ASMConstants.M_SET_WORLD_AND_RESOLUTION_SRG;
-		for (MethodNode method : clazz.methods) {
-			if (method.name.equals(mName)) {
-				transformSetWorldAndResolution(clazz, method);
-			}
-		}
-	}
-
-	private void transformSetWorldAndResolution(ClassNode clazz, MethodNode method) {
+		MethodNode method = ASMUtils.findMinecraftMethod(clazz, M_SET_WORLD_AND_RESOLUTION_MCP, M_SET_WORLD_AND_RESOLUTION_SRG);
 		InsnList insns = new InsnList();
 
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
@@ -30,7 +24,6 @@ public final class GuiScreenTransformer extends AbstractASMTransformer {
 
 		AbstractInsnNode lastReturn = ASMUtils.findLastReturn(method);
 		method.instructions.insertBefore(lastReturn, insns);
-
 	}
 
 	@Override

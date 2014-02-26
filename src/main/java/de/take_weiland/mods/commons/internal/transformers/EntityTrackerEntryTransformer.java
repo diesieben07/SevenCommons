@@ -6,6 +6,8 @@ import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import static de.take_weiland.mods.commons.internal.ASMConstants.M_TRY_START_WATCHING_THIS_MCP;
+import static de.take_weiland.mods.commons.internal.ASMConstants.M_TRY_START_WATCHING_THIS_SRG;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Opcodes.INSTANCEOF;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
@@ -15,14 +17,8 @@ public class EntityTrackerEntryTransformer extends AbstractASMTransformer {
 
 	@Override
 	public void transform(ClassNode clazz) {
-		String mName = ASMUtils.useMcpNames() ? ASMConstants.M_TRY_START_WATCHING_THIS_MCP : ASMConstants.M_TRY_START_WATCHING_THIS_SRG;
-		for (MethodNode method : clazz.methods) {
-			if (method.name.equals(mName)) {
-				System.out.println("hey tehre!");
-				method.instructions.insertBefore(findInsertionHook(method), generateEventCall(clazz));
-				return;
-			}
-		}
+		MethodNode method = ASMUtils.findMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS_MCP, M_TRY_START_WATCHING_THIS_SRG);
+		method.instructions.insertBefore(findInsertionHook(method), generateEventCall(clazz));
 	}
 
 	private InsnList generateEventCall(ClassNode clazz) {

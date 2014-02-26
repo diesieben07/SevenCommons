@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.internal.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import net.minecraftforge.common.IExtendedEntityProperties;
@@ -9,6 +8,8 @@ import org.objectweb.asm.tree.*;
 
 import java.util.List;
 
+import static de.take_weiland.mods.commons.internal.ASMConstants.M_ON_UPDATE_MCP;
+import static de.take_weiland.mods.commons.internal.ASMConstants.M_ON_UPDATE_SRG;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
@@ -18,10 +19,12 @@ public final class EntityTransformer extends AbstractASMTransformer {
 	public void transform(ClassNode clazz) {
 		FieldNode syncedProps = addSyncedPropsField(clazz);
 
+		String onUpdate = ASMUtils.useMcpNames() ? M_ON_UPDATE_MCP : M_ON_UPDATE_SRG;
+
 		for (MethodNode method : clazz.methods) {
 			if (method.name.equals("registerExtendedProperties")) {
 				transformRegisterProps(clazz, method, syncedProps);
-			} else if (method.name.equals(ASMConstants.M_ON_UPDATE_MCP) || ASMUtils.deobfuscate(clazz.name, method).equals(ASMConstants.M_ON_UPDATE_SRG)) {
+			} else if (method.name.equals(onUpdate)) {
 				transformOnUpdate(clazz, method, syncedProps);
 			}
 		}

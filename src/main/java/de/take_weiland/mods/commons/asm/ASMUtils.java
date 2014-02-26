@@ -80,12 +80,38 @@ public final class ASMUtils {
 		}
 		return roots;
 	}
-	
-	public static final boolean useMcpNames() {
+
+	public static MethodNode findMethod(ClassNode clazz, String name) {
+		for (MethodNode method : clazz.methods) {
+			if (method.name.equals(name)) {
+				return method;
+			}
+		}
+		return null;
+	}
+
+	public static MethodNode findMethod(ClassNode clazz, String name, String desc) {
+		for (MethodNode method : clazz.methods) {
+			if (method.name.equals(name) && method.desc.equals(desc)) {
+				return method;
+			}
+		}
+		return null;
+	}
+
+	public static MethodNode findMinecraftMethod(ClassNode clazz, String mcpName, String srgName) {
+		return findMethod(clazz, useMcpNames() ? mcpName : srgName);
+	}
+
+	public static MethodNode findMinecraftMethod(ClassNode clazz, String mcpName, String srgName, String desc) {
+		return findMethod(clazz, useMcpNames() ? mcpName : srgName, desc);
+	}
+
+	public static boolean useMcpNames() {
 		return SevenCommons.MCP_ENVIRONMENT;
 	}
 	
-	public static final AbstractInsnNode findLastReturn(MethodNode method) {
+	public static AbstractInsnNode findLastReturn(MethodNode method) {
 		int searchFor = Type.getReturnType(method.desc).getOpcode(Opcodes.IRETURN);
 		AbstractInsnNode node = method.instructions.getLast();
 		do {
@@ -97,11 +123,11 @@ public final class ASMUtils {
 		throw new IllegalArgumentException("Illegal method: Has no or wrong return opcode!");
 	}
 	
-	public static final String makeNameInternal(String name) {
+	public static String makeNameInternal(String name) {
 		return name.replace('.', '/');
 	}
 	
-	public static final String undoInternalName(String name) {
+	public static String undoInternalName(String name) {
 		return name.replace('/', '.');
 	}
 	

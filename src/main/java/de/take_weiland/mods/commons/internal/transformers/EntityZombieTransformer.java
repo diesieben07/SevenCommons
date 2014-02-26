@@ -1,26 +1,23 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.internal.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import static de.take_weiland.mods.commons.internal.ASMConstants.M_CONVERT_TO_VILLAGER_MCP;
+import static de.take_weiland.mods.commons.internal.ASMConstants.M_CONVERT_TO_VILLAGER_SRG;
+
 public final class EntityZombieTransformer extends AbstractASMTransformer {
 
 	@Override
 	public void transform(ClassNode clazz) {
-		String mName = ASMUtils.useMcpNames() ? ASMConstants.M_CONVERT_TO_VILLAGER_MCP : ASMConstants.M_CONVERT_TO_VILLAGER_SRG;
-		for (MethodNode method : clazz.methods) {
-			if (method.name.equals(mName)) {
-				transformConvertToVillager(clazz, method);
-				break;
-			}
-		}
+		MethodNode method = ASMUtils.findMinecraftMethod(clazz, M_CONVERT_TO_VILLAGER_MCP, M_CONVERT_TO_VILLAGER_SRG);
+		method.instructions.insert(findTarget(method), makeHook(clazz));
 	}
 
-	private void transformConvertToVillager(ClassNode clazz, MethodNode method) {
+	private AbstractInsnNode findTarget(MethodNode method) {
 		AbstractInsnNode insn = method.instructions.getFirst();
 		do {
 			AbstractInsnNode next = next(insn);
@@ -29,8 +26,7 @@ public final class EntityZombieTransformer extends AbstractASMTransformer {
 					&& ((IntInsnNode) insn).operand == -24000 // the SIPUSH from setGrowingAge(-24000)
 					&& next != null && next.getOpcode() == Opcodes.INVOKEVIRTUAL // the call to setGrowingAge
 					&& nextNext instanceof LabelNode) { // the label at the end of the if
-				method.instructions.insert(nextNext, makeHook(clazz));
-				return;
+				return nextNext;
 			}
 			insn = next;
 		} while (insn != null);
