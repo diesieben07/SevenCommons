@@ -347,7 +347,7 @@ public final class ASMUtils {
 			}
 		}
 		ClassInfo current = child;
-		while (!current.superName().equals("java/lang/Object")) {
+		while (!current.internalName().equals("java/lang/Object") && !current.superName().equals("java/lang/Object")) {
 			current = getClassInfo(current.superName());
 			if (isAssignableFrom(parent, current)) {
 				return true;
