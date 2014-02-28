@@ -15,10 +15,9 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		register(new EntityTransformer());
 		register(new PacketTransformer());
 		register(new EntityTrackerEntryTransformer());
-		register(new SyncingTransformer());
 		register(new TraitImplTransformer());
-		register(new HasTraitTransformer());
 		register(new TraitTransformer());
+		register(new AnalyzingTransformer());
 	}
 
 }

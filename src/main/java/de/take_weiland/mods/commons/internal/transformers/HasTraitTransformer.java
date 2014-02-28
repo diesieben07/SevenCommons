@@ -3,8 +3,6 @@ package de.take_weiland.mods.commons.internal.transformers;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
-import de.take_weiland.mods.commons.trait.HasTrait;
 import de.take_weiland.mods.commons.trait.Instance;
 import de.take_weiland.mods.commons.trait.Trait;
 import de.take_weiland.mods.commons.trait.TraitMethod;
@@ -13,20 +11,14 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
  * @author diesieben07
  */
-public class HasTraitTransformer extends AbstractASMTransformer {
+public class HasTraitTransformer {
 
-	@Override
-	public void transform(ClassNode clazz) {
-		if (!ASMUtils.hasAnnotation(clazz, HasTrait.class)) {
-			return;
-		}
-
+	static void transform(ClassNode clazz) {
 		Map<String, TraitInfo> allTraits = findTraits(clazz);
 
 		for (MethodNode method : clazz.methods) {
@@ -114,7 +106,7 @@ public class HasTraitTransformer extends AbstractASMTransformer {
 		}
 	}
 
-	private void implementMethod(MethodNode method, TraitInfo trait) {
+	private static void implementMethod(MethodNode method, TraitInfo trait) {
 		InsnList insns = method.instructions;
 		insns.clear();
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
@@ -130,7 +122,7 @@ public class HasTraitTransformer extends AbstractASMTransformer {
 		insns.add(new InsnNode(returnType.getOpcode(Opcodes.IRETURN)));
 	}
 
-	private TraitInfo findTraitDeclarator(ClassNode clazz, MethodNode method, Collection<TraitInfo> allInterfaces) {
+	private static TraitInfo findTraitDeclarator(ClassNode clazz, MethodNode method, Collection<TraitInfo> allInterfaces) {
 		TraitInfo candidate = null;
 		for (TraitInfo trait : allInterfaces) {
 			for (MethodNode traitMethod : trait.clazz.methods) {
@@ -149,7 +141,7 @@ public class HasTraitTransformer extends AbstractASMTransformer {
 		return candidate;
 	}
 
-	private Map<String, TraitInfo> findTraits(ClassNode clazz) {
+	private static Map<String, TraitInfo> findTraits(ClassNode clazz) {
 		Map<String, TraitInfo> traits = Maps.newHashMap();
 		boolean isDirect = true;
 		do {
@@ -165,7 +157,7 @@ public class HasTraitTransformer extends AbstractASMTransformer {
 		return traits;
 	}
 
-	private void collectTraits(Collection<String> ifaces, Map<String, TraitInfo> all, boolean isDirect) {
+	private static void collectTraits(Collection<String> ifaces, Map<String, TraitInfo> all, boolean isDirect) {
 		for (String iface : ifaces) {
 			TraitInfo prev;
 			if ((prev = all.get(iface)) != null) {
@@ -195,10 +187,4 @@ public class HasTraitTransformer extends AbstractASMTransformer {
 		}
 	}
 
-	@Override
-	public boolean transforms(String internalName) {
-		return !internalName.startsWith("net/minecraft/")
-				&& !internalName.startsWith("net/minecraftforge/")
-				&& !internalName.startsWith("cpw/mods/");
-	}
 }

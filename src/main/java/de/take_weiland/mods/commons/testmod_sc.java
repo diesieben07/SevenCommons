@@ -14,8 +14,6 @@ import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 import de.take_weiland.mods.commons.templates.AbstractInventory;
-import de.take_weiland.mods.commons.trait.*;
-import de.take_weiland.mods.commons.util.Listenable;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -24,8 +22,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
-
-import java.io.Serializable;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()
@@ -60,10 +56,6 @@ public class testmod_sc {
 			@Override
 			public void onPlayerRespawn(EntityPlayer player) { }
 		});
-
-		new TestExtendedProperties();
-
-		new Inv();
 	}
 
 	private static class Inv extends AbstractInventory<Inv> {
@@ -89,7 +81,6 @@ public class testmod_sc {
 		}
 	}
 
-	@Synced
 	private static class TestExtendedProperties implements IExtendedEntityProperties {
 
 		@Synced
@@ -124,7 +115,6 @@ public class testmod_sc {
 		}
 	}
 
-	@Synced
 	private static class TestContainer extends Container {
 
 		public TestContainer(String test) {

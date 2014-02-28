@@ -1,13 +1,11 @@
 package de.take_weiland.mods.commons.templates;
 
-import de.take_weiland.mods.commons.trait.HasTrait;
 import de.take_weiland.mods.commons.trait.TraitMethod;
 import de.take_weiland.mods.commons.util.Inventories;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-@HasTrait
 public abstract class TileEntityInventory<T extends TileEntityInventory<T>> extends AbstractTileEntity implements SCInventory<T> {
 
 	protected final ItemStack[] storage;

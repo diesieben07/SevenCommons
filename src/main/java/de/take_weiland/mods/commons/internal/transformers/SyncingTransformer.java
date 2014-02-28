@@ -2,9 +2,8 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import com.google.common.collect.*;
 import cpw.mods.fml.common.FMLLog;
-import de.take_weiland.mods.commons.internal.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
+import de.take_weiland.mods.commons.internal.ASMConstants;
 import de.take_weiland.mods.commons.internal.SyncType;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.PacketBuilder;
@@ -28,7 +27,7 @@ import java.util.logging.Logger;
 /**
  * contains black bytecode magic. Do not touch.
  */
-public final class SyncingTransformer extends AbstractASMTransformer {
+public final class SyncingTransformer {
 
 	private static final Logger LOGGER;
 	private static final String syncAsmHooks = "de/take_weiland/mods/commons/internal/SyncASMHooks";
@@ -38,15 +37,10 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		LOGGER = Logger.getLogger("SevenCommonsSync");
 	}
 
-	@Override
-	public void transform(ClassNode clazz) {
-		if (!ASMUtils.hasAnnotation(clazz, Synced.class)) {
-			return;
-		}
-
+	public static void transform(ClassNode clazz) {
 		Class<?> superClass;
 		try {
-			superClass = getClass().getClassLoader().loadClass(ASMUtils.undoInternalName(clazz.superName));
+			superClass = SyncingTransformer.class.getClassLoader().loadClass(ASMUtils.undoInternalName(clazz.superName));
 		} catch (ClassNotFoundException e) {
 			return;
 		}
@@ -109,7 +103,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		}
 	}
 
-	private void createGetter(ClassNode clazz, String name, FieldNode field) {
+	private static void createGetter(ClassNode clazz, String name, FieldNode field) {
 		Type fieldType = Type.getType(field.desc);
 		MethodNode method = new MethodNode(Opcodes.ACC_PUBLIC, name, Type.getMethodDescriptor(fieldType), null, null);
 		InsnList insns = method.instructions;
@@ -119,7 +113,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		clazz.methods.add(method);
 	}
 
-	private void addInjectDataMethod(ClassNode clazz, FieldNode owner, FieldNode index, FieldNode identifier) {
+	private static void addInjectDataMethod(ClassNode clazz, FieldNode owner, FieldNode index, FieldNode identifier) {
 		String name = "_sc_sync_injectData";
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Entity.class), Type.getType(String.class), Type.INT_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PUBLIC, name, desc, null, null);
@@ -142,13 +136,13 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		clazz.methods.add(method);
 	}
 
-	private FieldNode createPrivateField(ClassNode clazz, String name, Type type) {
+	private static FieldNode createPrivateField(ClassNode clazz, String name, Type type) {
 		FieldNode field = new FieldNode(Opcodes.ACC_PRIVATE, name, type.getDescriptor(), null, null);
 		clazz.fields.add(field);
 		return field;
 	}
 
-	private void injectSyncCalls(ClassNode clazz, SyncType type, List<MethodNode> syncMethods) {
+	private static void injectSyncCalls(ClassNode clazz, SyncType type, List<MethodNode> syncMethods) {
 		String methodName = type.getTickMethod();
 		boolean isIfaceMethod = type == SyncType.ENTITY_PROPS;
 		String worldField = type.getWorldFieldName();
@@ -194,7 +188,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		found.instructions.insert(call);
 	}
 
-	private void createReadMethod(ClassNode clazz, List<SyncedElement> elements, Map<String, MethodNode> setters) {
+	private static void createReadMethod(ClassNode clazz, List<SyncedElement> elements, Map<String, MethodNode> setters) {
 		String name = "_sc_sync_read";
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(DataBuf.class));
 		MethodNode method = new MethodNode(Opcodes.ACC_PUBLIC, name, desc, null, null);
@@ -280,7 +274,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		clazz.methods.add(method);
 	}
 
-	private MethodNode createSyncMethod(ClassNode clazz, SyncType type, Type target, FieldNode targetField, List<SyncedElement> elements) {
+	private static MethodNode createSyncMethod(ClassNode clazz, SyncType type, Type target, FieldNode targetField, List<SyncedElement> elements) {
 		String name = "_sc_sync_doSync_" + (target == null ? "default" : target.getInternalName().replace('/', '_'));
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PRIVATE, name, desc, null, null);
@@ -353,14 +347,14 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		return method;
 	}
 
-	private void checkIsSetter(Map<String, MethodNode> setters, MethodNode method) {
+	private static void checkIsSetter(Map<String, MethodNode> setters, MethodNode method) {
 		AnnotationNode ann = ASMUtils.getAnnotation(method, Synced.Setter.class);
 		if (ann != null) {
 			setters.put((String) ann.values.get(1), method);
 		}
 	}
 
-	private void addToConstructors(ClassNode clazz, List<MethodNode> cnstrs, MethodNode init, MethodNode staticInit) {
+	private static void addToConstructors(ClassNode clazz, List<MethodNode> cnstrs, MethodNode init, MethodNode staticInit) {
 		for (MethodNode cnstr : cnstrs) {
 			int len = cnstr.instructions.size();
 			for (int i = 0; i < len; ++i) {
@@ -378,7 +372,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		}
 	}
 
-	private List<MethodNode> findRootConstructors(ClassNode clazz) {
+	private static List<MethodNode> findRootConstructors(ClassNode clazz) {
 		List<MethodNode> cnstrs = Lists.newArrayList();
 		methods:
 		for (MethodNode method : clazz.methods) {
@@ -399,13 +393,13 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		return cnstrs;
 	}
 
-	private FieldNode createHasInitField(ClassNode clazz) {
+	private static FieldNode createHasInitField(ClassNode clazz) {
 		FieldNode isInit = new FieldNode(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE, "_sc_sync_hasInit", Type.BOOLEAN_TYPE.getDescriptor(), null, null);
 		clazz.fields.add(isInit);
 		return isInit;
 	}
 
-	private boolean makeSyncedElement(ClassNode clazz, Map<Type, FieldNode> targets, ListMultimap<Type, SyncedElement> list, int index, boolean isMethod, Object fieldOrMethod, Type typeToSync, AnnotationNode syncedAnnotation) {
+	private static boolean makeSyncedElement(ClassNode clazz, Map<Type, FieldNode> targets, ListMultimap<Type, SyncedElement> list, int index, boolean isMethod, Object fieldOrMethod, Type typeToSync, AnnotationNode syncedAnnotation) {
 		if (syncedAnnotation == null) {
 			return false;
 		}
@@ -454,7 +448,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		return true;
 	}
 
-	private boolean hasNoArgConstructor(ClassNode clazz) {
+	private static boolean hasNoArgConstructor(ClassNode clazz) {
 		String name = "<init>";
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		for (MethodNode method : clazz.methods) {
@@ -465,7 +459,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		return false;
 	}
 
-	private MethodNode makeNonStaticInitMethod(ClassNode clazz, Collection<SyncedElement> fields, Map<Type, FieldNode> targets) {
+	private static MethodNode makeNonStaticInitMethod(ClassNode clazz, Collection<SyncedElement> fields, Map<Type, FieldNode> targets) {
 		String name = "_sc_sync_init";
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PRIVATE, name, desc, null, null);
@@ -502,7 +496,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		return method;
 	}
 
-	private MethodNode makeStaticInitMethod(ClassNode clazz, Collection<SyncedElement> elements, Map<Type, FieldNode> targets, FieldNode isInit) {
+	private static MethodNode makeStaticInitMethod(ClassNode clazz, Collection<SyncedElement> elements, Map<Type, FieldNode> targets, FieldNode isInit) {
 		String name = "_sc_sync_init_static";
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC, name, desc, null, null);
@@ -547,7 +541,7 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		return method;
 	}
 
-	private void initTarget(ClassNode clazz, InsnList insns, Type targetType, FieldNode targetField, boolean staticPass) {
+	private static void initTarget(ClassNode clazz, InsnList insns, Type targetType, FieldNode targetField, boolean staticPass) {
 		boolean targetStatic = (targetField.access & Opcodes.ACC_STATIC) != 0;
 		if (targetStatic != staticPass) {
 			return;
@@ -630,14 +624,4 @@ public final class SyncingTransformer extends AbstractASMTransformer {
 		}
 	}
 
-	@Override
-	public boolean transforms(String className) {
-		if (className.startsWith("de/take_weiland/mods/commons/testmod_sc")) {
-			return true;
-		}
-		return !className.startsWith("net/minecraft/")
-				&& !className.startsWith("net/minecraftforge/")
-				&& !className.startsWith("cpw/mods/")
-				&& !className.startsWith("de/take_weiland/mods/commons/");
-	}
 }

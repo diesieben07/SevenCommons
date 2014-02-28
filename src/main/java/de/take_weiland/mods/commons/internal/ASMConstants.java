@@ -83,7 +83,18 @@ public final class ASMConstants {
 	public static final String M_SEND_PACKET_TO_PLAYER_MCP = "sendPacketToPlayer";
 	public static final String M_SEND_PACKET_TO_PLAYER_SRG = "func_72567_b";
 
-	
+	public static final String M_WRITE_ENTITY_TO_NBT_MCP = "writeEntityToNBT";
+	public static final String M_WRITE_ENTITY_TO_NBT_SRG = "func_70014_b";
+
+	public static final String M_READ_ENTITY_FROM_NBT_MCP = "readEntityFromNBT";
+	public static final String M_READ_ENTITY_FROM_NBT_SRG = "func_70037_a";
+
+	public static final String M_WRITE_TO_NBT_TILEENTITY_MCP = "writeToNBT";
+	public static final String M_WRITE_TO_NBT_TILEENTITY_SRG = "func_70310_b";
+
+	public static final String M_READ_FROM_NBT_TILEENTITY_MCP = "readFromNBT";
+	public static final String M_READ_FROM_NBT_TILEENTITY_SRG = "func_70307_a";
+
 	private ASMConstants() { }
 	
 }

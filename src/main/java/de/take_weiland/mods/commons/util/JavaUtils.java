@@ -96,7 +96,7 @@ public final class JavaUtils {
 	 * concatenate the given iterables, null will be treated as an empty iterable
 	 */
 	public static <T> Iterable<T> concatNullable(Iterable<T> a, Iterable<T> b) {
-		return a == null ? (b == null ? Collections.<T>emptyList() : b) : (b == null ? a : Iterables.<T>concat(a, b));
+		return a == null ? (b == null ? Collections.<T>emptyList() : b) : (b == null ? a : Iterables.concat(a, b));
 	}
 
 	/**
