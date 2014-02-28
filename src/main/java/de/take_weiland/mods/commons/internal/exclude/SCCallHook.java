@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.exclude;
 import cpw.mods.fml.relauncher.IFMLCallHook;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
-import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import java.io.File;
@@ -15,7 +14,7 @@ import java.util.Map;
 
 public class SCCallHook implements IFMLCallHook {
 
-	public static final String UPDATE_POSTFIX = ".7update";
+	public static final String UPDATE_MARKER_POSTFIX = "._sc_updated";
 	public static final String BACKUP_POSTFIX = ".backup";
 	
 	private static final FileFilter UPATED_MODS_FILTER = new FileFilter() {
@@ -25,8 +24,9 @@ public class SCCallHook implements IFMLCallHook {
 			if (!pathname.getPath().endsWith(".jar") && !pathname.getPath().endsWith(".zip")) {
 				return false;
 			}
-			File update = new File(pathname.getPath() + UPDATE_POSTFIX);
-			return update.exists() && update.isFile() && update.canRead();
+			File marker = new File(pathname.getPath() + UPDATE_MARKER_POSTFIX);
+			return marker.exists() && marker.isFile() && marker.canRead();
+
 		}
 	};
 	
@@ -41,10 +41,12 @@ public class SCCallHook implements IFMLCallHook {
 			}
 			for (File mod : updatableMods) {
 				try {
-					File update = new File(mod.getPath() + UPDATE_POSTFIX);
 					File backup = new File(mod.getPath() + BACKUP_POSTFIX);
 					Files.move(mod.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					Files.move(update.toPath(), mod.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+					File marker = new File(mod.getPath() + UPDATE_MARKER_POSTFIX);
+					Files.delete(marker.toPath());
+
 				} catch (IOException e) {
 					e.printStackTrace();
 					UpdateControllerLocal.LOGGER.warning(String.format("IOException during final update for mod %s", mod.getName()));

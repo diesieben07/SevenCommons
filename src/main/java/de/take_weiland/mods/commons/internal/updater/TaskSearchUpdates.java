@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.updater.tasks;
+package de.take_weiland.mods.commons.internal.updater;
 
 import argo.jdom.JdomParser;
 import argo.jdom.JsonNode;
@@ -6,7 +6,6 @@ import argo.jdom.JsonRootNode;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
-import de.take_weiland.mods.commons.internal.updater.*;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
@@ -16,11 +15,11 @@ import java.io.Reader;
 import java.net.URL;
 import java.util.List;
 
-public class SearchUpdates implements Runnable {
+public class TaskSearchUpdates implements Runnable {
 
 	private UpdatableMod mod;
 	
-	public SearchUpdates(UpdatableMod mod) {
+	public TaskSearchUpdates(UpdatableMod mod) {
 		this.mod = mod;
 	}
 
@@ -70,7 +69,7 @@ public class SearchUpdates implements Runnable {
 	
 	private static final JdomParser JSON_PARSER = new JdomParser();
 
-	private  static final List<ModVersion> parseVersionFile(UpdatableMod mod, Reader reader) throws InvalidModVersionException {
+	private  static List<ModVersion> parseVersionFile(UpdatableMod mod, Reader reader) throws InvalidModVersionException {
 		try {
 			ImmutableList.Builder<ModVersion> versions = ImmutableList.builder();
 			JsonRootNode json = JSON_PARSER.parse(reader);
@@ -100,11 +99,11 @@ public class SearchUpdates implements Runnable {
 		}
 	}
 	
-	private static final void invalid() throws InvalidModVersionException {
+	private static void invalid() throws InvalidModVersionException {
 		throw new InvalidModVersionException("Failed to parse ModVersionInfo");
 	}
 	
-	private static final List<ModVersion> invalid(Throwable t) throws InvalidModVersionException {
+	private static List<ModVersion> invalid(Throwable t) throws InvalidModVersionException {
 		throw new InvalidModVersionException("Failed to parse ModVersionInfo", t);
 	}
 }

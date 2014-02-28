@@ -74,7 +74,7 @@ public final class Scheduler implements ITickHandler, Executor {
 
 		@Override
 		public String toString() {
-			return "Task [r=" + r + ", when=" + when + ", tickEnd=" + tickEnd + "]";
+			return "TaskInstallUpdate [r=" + r + ", when=" + when + ", tickEnd=" + tickEnd + "]";
 		}
 		
 	}

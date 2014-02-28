@@ -7,8 +7,6 @@ import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
-import de.take_weiland.mods.commons.internal.updater.tasks.InstallUpdate;
-import de.take_weiland.mods.commons.internal.updater.tasks.SearchUpdates;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +60,7 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 	public void searchForUpdates(UpdatableMod mod) {
 		validate(mod);
 		if (mod.transition(ModUpdateState.CHECKING)) {
-			executor.execute(new SearchUpdates(mod));
+			executor.execute(new TaskSearchUpdates(mod));
 		}
 	}
 	
@@ -70,7 +68,7 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 	public void update(UpdatableMod mod, ModVersion version) {
 		validate(mod);
 		if (mod.transition(ModUpdateState.DOWNLOADING)) {
-			executor.execute(new InstallUpdate(mod, version));
+			executor.execute(new TaskInstallUpdate(mod, version));
 		}
 	}
 	
@@ -152,53 +150,6 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 			return false;
 		}
 		
-//		RuntimeMXBean mxBean = ManagementFactory.getRuntimeMXBean();
-//		String jvm = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
-//		
-//		if (System.getProperty("os.name").toLowerCase().contains("win")) {
-//			jvm += ".exe";
-//		}
-//		
-//		if (!new File(jvm).canExecute()) {
-//			return false;
-//		}
-//		
-//		ArrayList<String> cmd = Lists.newArrayList();
-//		
-//		cmd.add(jvm);
-//		
-//		cmd.add("-cp");
-//		cmd.add(mxBean.getClassPath());
-//		
-//        cmd.addAll(Lists.transform(mxBean.getInputArguments(), new Function<String, String>() {
-//
-//			@Override
-//			public String apply(String input) {
-//				input = input.trim();
-//				if (!input.startsWith("-")) {
-//					input = "-" + input;
-//				}
-//				return input;
-//			}
-//		}));
-//        
-//        String sunCommand = System.getProperty("sun.java.command");
-//        
-//        if (sunCommand == null) {
-//        	return false;
-//        }
-//        
-//        Iterables.addAll(cmd, Splitter.on(' ').omitEmptyStrings().trimResults().split(sunCommand));
-//        
-//        System.out.println(Joiner.on(' ').join(cmd));
-//        try {
-//			ProcessBuilder builder = new ProcessBuilder(cmd);
-//        	builder.inheritIO();
-//			builder.start();
-//		} catch (IOException e) {
-//			return false;
-//		}
-        		
 		SCModContainer.proxy.shutdownMinecraft();
 		return true;
 	}
