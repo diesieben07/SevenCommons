@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import com.sun.xml.internal.ws.org.objectweb.asm.Type;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.trait.TraitMethod;
 import de.take_weiland.mods.commons.util.JavaUtils;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
