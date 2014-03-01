@@ -14,50 +14,42 @@ public final class Sides {
 	
 	/**
 	 * gets the logical side (ServerThread/ClientThread) based on the given world
-	 * @param world
+	 * @param world the world to check
 	 * @return the logical side
 	 */
-	public static final Side logical(World world) {
+	public static Side logical(World world) {
 		return world.isRemote ? Side.CLIENT : Side.SERVER;
 	}
 	
 	/**
 	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(entity.worldObj)} 
-	 * @param entity
-	 * @return
 	 */
-	public static final Side logical(Entity entity) {
+	public static Side logical(Entity entity) {
 		return logical(entity.worldObj);
 	}
 	
 	/**
 	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(tileEntity.worldObj)} 
-	 * @param tileEntity
-	 * @return
 	 */
-	public static final Side logical(TileEntity tileEntity) {
+	public static Side logical(TileEntity tileEntity) {
 		return logical(tileEntity.worldObj);
 	}
 	
 	/**
 	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(event.entity.worldObj)} 
-	 * @param event
-	 * @return
 	 */
-	public static final Side logical(EntityEvent event) {
+	public final Side logical(EntityEvent event) {
 		return logical(event.entity.worldObj);
 	}
 	
 	/**
 	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(event.world)} 
-	 * @param event
-	 * @return
 	 */
-	public static final Side logical(WorldEvent event) {
+	public static Side logical(WorldEvent event) {
 		return logical(event.world);
 	}
 	
-	public static final Side environment() {
+	public static Side environment() {
 		return FMLCommonHandler.instance().getSide();
 	}
 }

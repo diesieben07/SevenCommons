@@ -11,7 +11,7 @@ import java.util.logging.Logger;
  * <p>Faster alternative to traditional reflection. Works with so called "Accessor Interfaces" which define getters, setters or delegate methods, which just invoke the target method.
  * See {@link de.take_weiland.mods.commons.fastreflect.Getter @Getter}, {@link de.take_weiland.mods.commons.fastreflect.Setter @Setter} and {@link de.take_weiland.mods.commons.fastreflect.Invoke @Inovoke}
  * for further explanation.</p>
- * <p>This class uses proprietary APIs when possible to achieve no-cost reflection (except the call to the accessor interface). If these APIs are not present,
+ * <p>This class uses proprietary APIs when possible to achieve no-cost reflection (except the method call to the accessor interface). If these APIs are not present,
  * traditional Reflection with a {@link java.lang.reflect.Proxy} is used.</p>
  */
 public final class Fastreflect {

@@ -29,6 +29,7 @@ import static de.take_weiland.mods.commons.internal.ASMConstants.*;
  * Accessor interface for various private fields and methods around the Minecraft code.<br />
  * If the field/method to access is static, the instance parameter is ignored, null can be passed.<br />
  * Obtain an Implementation of this interface with {@link MiscUtil#getReflector()}
+ * @see de.take_weiland.mods.commons.fastreflect.Fastreflect
  */
 public interface SCReflector {
 

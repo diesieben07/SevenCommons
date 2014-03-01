@@ -72,7 +72,7 @@ public final class Inventories {
 	}
 	
 	/**
-	 * calls {@link #spill} only if the given TileEntity implements {@link IInventory}
+	 * calls {@link #spill(net.minecraft.tileentity.TileEntity)} only if the given TileEntity implements {@link IInventory}
 	 * @param te the TileEntity
 	 */
 	public static void spillIfInventory(TileEntity te) {
@@ -92,11 +92,11 @@ public final class Inventories {
 	
 	/**
 	 * spill the contents of the given Inventory at the given coordinates
-	 * @param world
-	 * @param x
-	 * @param y
-	 * @param z
-	 * @param inventory
+	 * @param world the world to spill in
+	 * @param x x coordinate
+	 * @param y y coordinate
+	 * @param z z coordinate
+	 * @param inventory the inventory to spill
 	 */
 	public static void spill(World world, int x, int y, int z, IInventory inventory) {
 		if (Sides.logical(world).isServer()) {
@@ -165,8 +165,6 @@ public final class Inventories {
 	
 	/**
 	 * Utility method, equal to {@link Inventories#iterator(IInventory, boolean) Inventories.iterator(inventory, true)}
-	 * @param inventory
-	 * @return
 	 */
 	public static Iterator<ItemStack> iterator(final IInventory inventory) {
 		return iterator(inventory, true);
@@ -174,9 +172,9 @@ public final class Inventories {
 	
 	/**
 	 * Generate an Iterator for the given {@link IInventory}
-	 * @param inventory
+	 * @param inventory the inventory to iterate
 	 * @param includeNulls if empty ItemStacks should be included in the iterator
-	 * @return
+	 * @return an Iterator
 	 */
 	public static Iterator<ItemStack> iterator(final IInventory inventory, boolean includeNulls) {
 		Iterator<ItemStack> it =  new AbstractIterator<ItemStack>() {
@@ -194,8 +192,6 @@ public final class Inventories {
 	
 	/**
 	 * Utility method, equal to {@link Inventories#iterate(IInventory, boolean) Inventories.iterate(inventory, true)}
-	 * @param inventory
-	 * @return
 	 */
 	public static Iterable<ItemStack> iterate(IInventory inventory) {
 		return iterate(inventory, true);
