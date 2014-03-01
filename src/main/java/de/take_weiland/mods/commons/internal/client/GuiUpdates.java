@@ -40,7 +40,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 	private int rightButtonsWidth;
 	private GuiButton buttonCheckUpdates;
 	private GuiButton buttonDownloadUpdate;
-	private GuiButton buttonVersionSelect;
+	private GuiButtonNewVersion buttonVersionSelect;
 	private GuiButton buttonRestartMinecraft;
 	
 	int selectedIndex = -1;
@@ -75,7 +75,7 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 		
 		buttonList.add((buttonCheckUpdates = new GuiButton(BUTTON_SEARCH, width - rightButtonsWidth - 20, height - 40, rightButtonsWidth, 20, "")));
 		buttonList.add((buttonDownloadUpdate = new GuiButton(BUTTON_UPDATE, width - rightButtonsWidth - 20, height - 65, rightButtonsWidth, 20, textUpdate)));
-		buttonList.add((buttonVersionSelect = new GuiButton(BUTTON_VERSION, width - rightButtonsWidth - 20, height - 90, rightButtonsWidth, 20, "")));
+		buttonList.add((buttonVersionSelect = new GuiButtonNewVersion(BUTTON_VERSION, width - rightButtonsWidth - 20, height - 90, rightButtonsWidth, 20, "")));
 		
 		buttonList.add((buttonRestartMinecraft = new GuiButton(BUTTON_RESTART, width - rightButtonsWidth - 20, height - 140, rightButtonsWidth, 20, textRestart)));
 		
@@ -205,7 +205,8 @@ public class GuiUpdates extends GuiScreen implements UpdateStateListener {
 				color = EnumChatFormatting.RED;
 				format = I18n.getString("sevencommons.ui.updates.wrongmc");
 			}
-			buttonVersionSelect.displayString = String.format(color + format, EnumChatFormatting.RESET + selectedVersion.modVersion.getVersionString() + color, selectedVersion.minecraftVersion);
+			buttonVersionSelect.displayString = color + selectedVersion.modVersion.getVersionString();
+			buttonVersionSelect.versionInfo = String.format(color + format, selectedVersion.minecraftVersion);
 		}
 			
 		ModUpdateState state = selectedMod.getState();
