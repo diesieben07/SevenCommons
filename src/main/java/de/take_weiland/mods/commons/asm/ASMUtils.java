@@ -5,7 +5,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.launchwrapper.IClassNameTransformer;
@@ -27,31 +26,6 @@ import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 public final class ASMUtils {
 
 	private ASMUtils() { }
-	
-	public static final String deobfuscate(String className, FieldNode field) {
-		return deobfuscateField(className, field.name, field.desc);
-	}
-	
-	public static final String deobfuscateField(String className, String fieldName, String desc) {
-		return FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(className, fieldName, desc);
-	}
-	
-	public static final String deobfuscate(String className, MethodNode method) {
-		return deobfuscateMethod(className, method.name, method.desc);
-	}
-	
-	public static final String deobfuscateMethod(String className, String methodName, String desc) {
-		return FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(className, methodName, desc);
-	}
-	
-	public static final String getFieldDescriptor(ClassNode clazz, String fieldName) {
-		for (FieldNode field : clazz.fields) {
-			if (field.name.equals(fieldName)) {
-				return field.desc;
-			}
-		}
-		return null;
-	}
 
 	private static final Predicate<MethodNode> isConstructor = new Predicate<MethodNode>() {
 		@Override
