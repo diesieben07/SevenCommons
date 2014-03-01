@@ -15,12 +15,12 @@ public class ModsFolderMod extends ModContainerMod {
 	private URL updateURL;
 	private File source;
 	
-	public ModsFolderMod(ModContainer mod, UpdateController controller) {
+	public ModsFolderMod(ModContainer mod, String updateUrl, UpdateController controller) {
 		super(mod, controller);
 		
-		if ((updateURL = getUpdateURL(mod)) == null) {
+		if ((updateURL = getUpdateURL(updateUrl)) == null) {
 			transition(ModUpdateState.UNAVAILABLE);
-			UpdateControllerLocal.LOGGER.info(String.format("Skipping mod %s with invalid or missing update URL", mod.getModId()));
+			UpdateControllerLocal.LOGGER.info(String.format("Skipping mod %s with invalid or missing update URL %s", mod.getModId(), updateUrl));
 			return;
 		}
 		
@@ -35,12 +35,10 @@ public class ModsFolderMod extends ModContainerMod {
 				JarURLConnection connection = (JarURLConnection) sourceLoc.openConnection();
 				source = new File(connection.getJarFileURL().toURI());
 			}
-		} catch (IOException e) {
-			exception(e, mod);
-		} catch (URISyntaxException e) {
+		} catch (IOException | URISyntaxException e) {
 			exception(e, mod);
 		}
-		
+
 		if (source == null) {
 			transition(ModUpdateState.UNAVAILABLE);
 			UpdateControllerLocal.LOGGER.warning(String.format("Cannot update mod %s because it's not a valid jar file!", mod.getModId()));
@@ -54,8 +52,7 @@ public class ModsFolderMod extends ModContainerMod {
 		e.printStackTrace();
 	}
 	
-	private static URL getUpdateURL(ModContainer mc) {
-		String url = mc.getMetadata().updateUrl;
+	private static URL getUpdateURL(String url) {
 		if (Strings.isNullOrEmpty(url)) {
 			return null;
 		}

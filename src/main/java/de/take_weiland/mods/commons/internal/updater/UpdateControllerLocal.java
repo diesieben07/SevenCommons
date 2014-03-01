@@ -14,8 +14,10 @@ import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
+import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class UpdateControllerLocal extends AbstractUpdateController {
@@ -30,9 +32,14 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 		LOGGER = Logger.getLogger(LOG_CHANNEL);
 	}
 	
-	private final ExecutorService executor;
+	private ScheduledExecutorService executor;
+	private final Map<String, String> updateUrls = Maps.newHashMap();
 
-	public UpdateControllerLocal() {
+	public void registerUpdateUrl(String modId, String url) {
+		updateUrls.put(modId, url);
+	}
+
+	public void setup() {
 		List<UpdatableMod> mods = Lists.transform(Loader.instance().getActiveModList(), new Function<ModContainer, UpdatableMod>() {
 			@Override
 			public UpdatableMod apply(ModContainer container) {
@@ -40,7 +47,7 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 					if (INTERNAL_MODS.contains(container.getModId().toLowerCase())) {
 						return new FMLInternalMod(container, UpdateControllerLocal.this);
 					} else {
-						return new ModsFolderMod(container, UpdateControllerLocal.this);
+						return new ModsFolderMod(container, updateUrls.get(container.getModId()), UpdateControllerLocal.this);
 					}
 				} catch (Throwable t) {
 					LOGGER.severe("Unexpected exception during UpdateableMod parsing!");
@@ -50,12 +57,20 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 				}
 			}
 		});
-		
+
 		this.mods = Maps.uniqueIndex(Iterables.filter(mods, Predicates.notNull()), ID_RETRIEVER);
-		
-		executor = Executors.newFixedThreadPool(3, new ThreadFactoryBuilder().setNameFormat("Sevens ModUpdater %d").build());
+		executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("Sevens ModUpdater %d").build());
 	}
-	
+
+	public void doPeriodicChecks(int delayMinutes) {
+		executor.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				UpdateControllerLocal.this.searchForUpdates();
+			}
+		}, delayMinutes, delayMinutes, TimeUnit.MINUTES);
+	}
+
 	@Override
 	public void searchForUpdates(UpdatableMod mod) {
 		validate(mod);

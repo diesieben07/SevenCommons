@@ -8,7 +8,7 @@ import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import cpw.mods.fml.common.event.FMLInterModComms;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -19,7 +19,6 @@ import de.take_weiland.mods.commons.internal.SCPacket;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
 import de.take_weiland.mods.commons.internal.updater.CommandUpdates;
-import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketFactory;
@@ -33,7 +32,7 @@ public final class SCModContainer extends DummyModContainer {
 
 	public static SevenCommonsProxy proxy;
 	public static SCModContainer instance;
-	public static UpdateController updateController;
+	public static UpdateControllerLocal updateController;
     public static PacketFactory<SCPacket.Type> packetFactory;
 	
 	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
@@ -41,6 +40,9 @@ public final class SCModContainer extends DummyModContainer {
 	
 	@GetProperty(comment = "The name of the command used to access the update feature on a server")
 	public static String updateCommand = "modupdates";
+
+	@GetProperty(comment = "How often to check for updates for mods in minutes. Set to 0 to disable this feature (default)")
+	public static int updaterRecheckDelay = 0;
 
 	public SCModContainer() {
 		super(new ModMetadata());
@@ -89,13 +91,22 @@ public final class SCModContainer extends DummyModContainer {
 	}
 
 	@Subscribe
-	public void postInit(FMLPostInitializationEvent event) {
+	public void processIMCs(FMLInterModComms.IMCEvent event) {
 		if (updaterEnabled) {
 			updateController = new UpdateControllerLocal();
+			for (FMLInterModComms.IMCMessage msg : event.getMessages()) {
+				if (msg.isStringMessage() && msg.key.equalsIgnoreCase("setUpdateURL")) {
+					updateController.registerUpdateUrl(msg.getSender(), msg.getStringValue());
+				}
+			}
+			updateController.setup();
+			if (updaterRecheckDelay > 0) {
+				updateController.doPeriodicChecks(updaterRecheckDelay);
+			}
 			updateController.searchForUpdates();
 		}
 	}
-	
+
 	@Subscribe
 	public void serverStarting(FMLServerStartingEvent event) {
 		if (event.getSide().isServer()) {
