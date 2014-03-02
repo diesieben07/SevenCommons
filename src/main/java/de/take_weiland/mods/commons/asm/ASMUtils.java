@@ -208,8 +208,9 @@ public final class ASMUtils {
 	}
 
 	public static ClassInfo getClassInfo(String className) {
+		className = className.replace('/', '.');
 		Class<?> clazz;
-		if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, className.replace('/', '.'))) != null) {
+		if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, className)) != null) {
 			return new ClassInfoFromClazz(clazz);
 		} else {
 			try {
@@ -256,7 +257,7 @@ public final class ASMUtils {
 		@Override
 		public String superName() {
 			Class<?> s = clazz.getSuperclass();
-			return s == null ? null : ASMUtils.makeNameInternal(s.getCanonicalName());
+			return s == null ? null : Type.getInternalName(s);
 		}
 
 		@Override
@@ -314,7 +315,7 @@ public final class ASMUtils {
 
 		@Override
 		public String apply(Class<?> input) {
-			return ASMUtils.makeNameInternal(input.getCanonicalName());
+			return Type.getInternalName(input);
 		}
 	}
 	
