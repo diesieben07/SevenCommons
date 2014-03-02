@@ -40,7 +40,7 @@ public final class SyncingTransformer {
 	public static void transform(ClassNode clazz) {
 		Class<?> superClass;
 		try {
-			superClass = SyncingTransformer.class.getClassLoader().loadClass(ASMUtils.undoInternalName(clazz.superName));
+			superClass = SyncingTransformer.class.getClassLoader().loadClass(ASMUtils.binaryName(clazz.superName));
 		} catch (ClassNotFoundException e) {
 			return;
 		}
