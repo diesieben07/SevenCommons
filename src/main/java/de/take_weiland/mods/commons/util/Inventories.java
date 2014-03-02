@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.util;
 import com.google.common.base.Predicates;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
+import de.take_weiland.mods.commons.Listenables;
 import de.take_weiland.mods.commons.templates.SCInventory;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
@@ -48,7 +49,7 @@ public final class Inventories {
                 if (stack.stackSize == 0) {
                 	inventory.setInventorySlotContents(slot, null);
                 } else {
-                	inventory.onChange();
+	                Listenables.onChange(inventory);
                 }
                 
                 return returnStack;

@@ -20,8 +20,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
-import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.*;
 
 public final class ASMUtils {
 
@@ -131,8 +130,14 @@ public final class ASMUtils {
 		return getClassNode(name, 0);
 	}
 
+	private static final int THIN_FLAGS = ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES;
+
 	public static ClassNode getThinClassNode(String name) {
-		return getClassNode(name, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+		return getClassNode(name, THIN_FLAGS);
+	}
+
+	public static ClassNode getThinClassNode(byte[] bytes) {
+		return getClassNode(bytes, THIN_FLAGS);
 	}
 
 	public static ClassNode getClassNode(String name, int readerFlags) {
@@ -201,17 +206,21 @@ public final class ASMUtils {
 	public static ClassInfo getClassInfo(ClassNode clazz) {
 		return new ClassInfoFromNode(clazz);
 	}
-	
+
 	public static ClassInfo getClassInfo(String className) {
-		try {
-			byte[] bytes = CLASSLOADER.getClassBytes(className);
-			if (bytes != null) {
-				return new ClassInfoFromNode(ASMUtils.getThinClassNode(className));
-			} else {
-				return new ClassInfoFromClazz(Class.forName(ASMUtils.undoInternalName(className)));
+		Class<?> clazz;
+		if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, className.replace('/', '.'))) != null) {
+			return new ClassInfoFromClazz(clazz);
+		} else {
+			try {
+				byte[] bytes = CLASSLOADER.getClassBytes(className);
+				if (bytes == null) {
+					throw new ClassNotFoundException(className);
+				}
+				return new ClassInfoFromNode(getThinClassNode(bytes));
+			} catch (Exception e) {
+				throw JavaUtils.throwUnchecked(e);
 			}
-		} catch (Exception e) {
-			throw JavaUtils.throwUnchecked(e);
 		}
 	}
 
@@ -252,7 +261,7 @@ public final class ASMUtils {
 
 		@Override
 		public String internalName() {
-			return ASMUtils.makeNameInternal(clazz.getCanonicalName());
+			return Type.getInternalName(clazz);
 		}
 
 		@Override
@@ -310,17 +319,30 @@ public final class ASMUtils {
 	}
 	
 	public static boolean isAssignableFrom(ClassInfo parent, ClassInfo child) {
-		if (parent.internalName().equals("java/lang/Object") || parent.internalName().equals(child.internalName()) || parent.internalName().equals(child.superName()) || child.interfaces().contains(parent.internalName())) {
-			return true; // easy
+		// cheap tests first
+		if (parent.internalName().equals("java/lang/Object") // everything is assignable to Object
+				|| parent.internalName().equals(child.internalName()) // parent == child => works
+				|| parent.internalName().equals(child.superName()) // parent == child.super => works
+				|| child.interfaces().contains(parent.internalName())) { // child.interfaces contains parent => works
+			return true;
 		}
-		// now we need to loop through every superclass and every superinterface
+		// object doesn't implement anything
+		if (child.internalName().equals("java/lang/Object") && parent.isInterface()) {
+			return false;
+		}
+		// now we need to loop through every superinterface
 		for (String iface : child.interfaces()) {
-			ClassInfo ifaceInfo = getClassInfo(iface);
-			if (isAssignableFrom(parent, ifaceInfo)) {
+			if (isAssignableFrom(parent, getClassInfo(iface))) {
 				return true;
 			}
 		}
+		// interfaces don't have superclasses
+		if (child.isInterface()) {
+			return false;
+		}
+		// loop through every superclass
 		ClassInfo current = child;
+		// don't need to check Object, as that would have been covered by the cheap tests
 		while (!current.internalName().equals("java/lang/Object") && !current.superName().equals("java/lang/Object")) {
 			current = getClassInfo(current.superName());
 			if (isAssignableFrom(parent, current)) {

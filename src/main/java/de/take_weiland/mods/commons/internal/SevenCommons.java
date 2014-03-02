@@ -5,6 +5,7 @@ import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
+import de.take_weiland.mods.commons.fastreflect.Fastreflect;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import java.io.File;
@@ -27,7 +28,7 @@ import java.util.logging.Logger;
 		})
 public final class SevenCommons implements IFMLLoadingPlugin {
 
-	public static final String ASM_HOOK_CLASS = "de.take_weiland.mods.commons.internal.ASMHooks";
+	public static final InternalReflector REFLECTOR = Fastreflect.createAccessor(InternalReflector.class);
 	public static boolean MCP_ENVIRONMENT;
 	
 	public static final Logger LOGGER;

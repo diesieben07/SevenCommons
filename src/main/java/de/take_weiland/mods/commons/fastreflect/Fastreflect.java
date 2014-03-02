@@ -1,9 +1,14 @@
 package de.take_weiland.mods.commons.fastreflect;
 
 import com.google.common.base.Preconditions;
+import com.google.common.io.Files;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.MiscUtil;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
@@ -15,6 +20,8 @@ import java.util.logging.Logger;
  * traditional Reflection with a {@link java.lang.reflect.Proxy} is used.</p>
  */
 public final class Fastreflect {
+
+	private static final boolean DEBUG = true;
 
 	/**
 	 * <p>create an Instance of the given Accessor Interface. The result of this method should be permanently cached, because
@@ -32,7 +39,19 @@ public final class Fastreflect {
 	 * @return the defined class
 	 */
 	public static Class<?> defineDynamicClass(byte[] clazz) {
-		return defineDynamicClass(clazz, Fastreflect.class);
+		Class<?> def = defineDynamicClass(clazz, Fastreflect.class);
+		if (DEBUG) {
+			try {
+				File file = new File("sevencommonsdyn/" + def.getName().replace('.', '/') + ".class");
+				Files.createParentDirs(file);
+				OutputStream out = new FileOutputStream(file);
+				out.write(clazz);
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return def;
 	}
 
 	/**

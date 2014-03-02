@@ -18,6 +18,7 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		register(new TraitImplTransformer());
 		register(new TraitTransformer());
 		register(new AnalyzingTransformer());
+		register(new ListenableTransformer());
 	}
 
 }

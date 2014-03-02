@@ -30,7 +30,7 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 	public boolean isUseableByPlayer(EntityPlayer player) {
 		return false;
 	}
-	
+
 	@Override
 	public void onChange() {
 		super.onChange();

@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.templates;
 
-import de.take_weiland.mods.commons.util.Listenable;
+import de.take_weiland.mods.commons.Listenable;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 

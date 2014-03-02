@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.templates;
 
-import de.take_weiland.mods.commons.trait.TraitMethod;
+import de.take_weiland.mods.commons.Listenables;
 import de.take_weiland.mods.commons.util.Inventories;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -43,7 +43,7 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack item) {
 		storage[slot] = item;
-		onChange();
+		Listenables.onChange(this);
 	}
 
 	@Override
@@ -90,14 +90,6 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 	public void closeChest() { }
 
 	@Override
-	@TraitMethod
 	public void onChange() { }
 
-	@Override
-	@TraitMethod
-	public void registerListener(Listener<? super T> listener) { }
-
-	@Override
-	@TraitMethod
-	public void removeListener(Listener<? super T> listener) { }
 }

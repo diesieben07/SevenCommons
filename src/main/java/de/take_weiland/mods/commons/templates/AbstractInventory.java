@@ -1,7 +1,8 @@
 package de.take_weiland.mods.commons.templates;
 
-import de.take_weiland.mods.commons.trait.TraitMethod;
-import de.take_weiland.mods.commons.util.*;
+import de.take_weiland.mods.commons.Listenables;
+import de.take_weiland.mods.commons.util.Inventories;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -42,7 +43,7 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 		if (slot >= 0 && slot < storage.length) {
 			storage[slot] = item;
 		}
-		onChange();
+		Listenables.onChange(this);
 	}
 
 	@Override
@@ -71,16 +72,7 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 	public void readFromNbt(NBTTagCompound nbt) {
 		Inventories.readInventory(storage, nbt.getTagList("slots"));
 	}
-	
+
 	@Override
-	@TraitMethod
 	public void onChange() { }
-
-	@Override
-	@TraitMethod
-	public void registerListener(Listener<? super T> listener) { }
-
-	@Override
-	@TraitMethod
-	public void removeListener(Listener<? super T> listener) { }
 }

@@ -140,7 +140,7 @@ class SunProprietaryStrategy extends AbstractStrategy {
 		desc = getMethodDescriptor(target);
 		for (int i = isStatic ? 1 : 0; i < len; ++i) {
 			Type paramType = getType(params[i]);
-			mv.visitVarInsn(paramType.getOpcode(ILOAD), i);
+			mv.visitVarInsn(paramType.getOpcode(ILOAD), i + 1); // var 0 is this
 		}
 		mv.visitMethodInsn(isStatic ? INVOKESTATIC : INVOKEVIRTUAL, owner, name, desc);
 		

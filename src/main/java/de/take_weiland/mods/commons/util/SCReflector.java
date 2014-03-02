@@ -90,5 +90,5 @@ public interface SCReflector {
 	@SideOnly(Side.CLIENT)
 	@Getter(field = { F_BUTTON_LIST_MCP, F_BUTTON_LIST_SRG})
 	List<GuiButton> getButtonList(GuiScreen screen);
-	
+
 }
