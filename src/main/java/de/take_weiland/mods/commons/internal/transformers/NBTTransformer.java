@@ -48,8 +48,7 @@ final class NBTTransformer {
 			throw new IllegalArgumentException(String.format("Don't know how to save @ToNbt fields in class %s!", clazz.name));
 		}
 
-		Map<FieldNode, String> fields = Maps.newHashMap();
-		Set<String> names = Sets.newHashSet();
+		Map<String, FieldNode> fields = Maps.newHashMap();
 		Set<FieldNode> enumFields = Sets.newHashSet();
 		for (FieldNode field : clazz.fields) {
 			AnnotationNode nbt = ASMUtils.getAnnotation(field, ToNbt.class);
@@ -65,11 +64,10 @@ final class NBTTransformer {
 				name = field.name;
 			}
 
-			if (names.contains(name)) {
+			if (fields.containsKey(name)) {
 				throw new IllegalArgumentException(String.format("Duplicate Key for @ToNbt field %s in class %s!", field.name, clazz.name));
 			}
-			names.add(name);
-			fields.put(field, name);
+			fields.put(name, field);
 
 			Type fieldType = getType(field.desc);
 			Type actualType;
@@ -100,12 +98,12 @@ final class NBTTransformer {
 		}
 	}
 
-	private static InsnList createWriteHook(ClassNode clazz, Map<FieldNode, String> fields, Set<FieldNode> enumFields) {
+	private static InsnList createWriteHook(ClassNode clazz, Map<String, FieldNode> fields, Set<FieldNode> enumFields) {
 		InsnList insns = new InsnList();
 
-		for (Map.Entry<FieldNode, String> entry : fields.entrySet()) {
-			FieldNode field = entry.getKey();
-			String nbtKey = entry.getValue();
+		for (Map.Entry<String, FieldNode> entry : fields.entrySet()) {
+			FieldNode field = entry.getValue();
+			String nbtKey = entry.getKey();
 			insns.add(new VarInsnNode(ALOAD, 1));
 			insns.add(new LdcInsnNode(nbtKey));
 			insns.add(new VarInsnNode(ALOAD, 0));
@@ -128,12 +126,12 @@ final class NBTTransformer {
 		return insns;
 	}
 
-	private static InsnList createReadHook(ClassNode clazz, Map<FieldNode, String> fields, Set<FieldNode> enumFields) {
+	private static InsnList createReadHook(ClassNode clazz, Map<String, FieldNode> fields, Set<FieldNode> enumFields) {
 		InsnList insns = new InsnList();
 
-		for (Map.Entry<FieldNode, String> entry : fields.entrySet()) {
-			FieldNode field = entry.getKey();
-			String nbtKey = entry.getValue();
+		for (Map.Entry<String, FieldNode> entry : fields.entrySet()) {
+			FieldNode field = entry.getValue();
+			String nbtKey = entry.getKey();
 			Type fieldType = getType(field.desc);
 			boolean isArray = fieldType.getSort() == ARRAY;
 			boolean isEnum = enumFields.contains(field);

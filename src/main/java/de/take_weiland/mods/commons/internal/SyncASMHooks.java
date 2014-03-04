@@ -44,7 +44,7 @@ public final class SyncASMHooks {
 	}
 
 	public static void syncEntityPropertyIds(EntityPlayer player, Entity tracked) {
-		List<SyncedEntityProperties> props = ((EntityProxy) tracked)._sc_sync_getSyncedProperties();
+		List<SyncedEntityProperties> props = ((EntityProxy) tracked)._sc$getSyncedProperties();
 		if (props != null) {
 			new PacketEntityPropsIds(tracked, props).sendTo(player);
 		}
@@ -53,7 +53,7 @@ public final class SyncASMHooks {
 	public static List<IExtendedEntityProperties> onNewEntityProperty(Entity owner, List<IExtendedEntityProperties> syncedList, String identifier, IExtendedEntityProperties props) {
 		if (Sides.logical(owner).isServer() && props instanceof SyncedEntityProperties) {
 			(syncedList == null ? syncedList = Lists.newArrayList() : syncedList).add(props);
-			((SyncedEntityProperties)props)._sc_sync_injectData(owner, identifier, syncedList.size() - 1);
+			((SyncedEntityProperties)props)._sc$injectEntityPropsData(owner, identifier, syncedList.size() - 1);
 		}
 		return syncedList;
 	}
@@ -62,7 +62,7 @@ public final class SyncASMHooks {
 		if (Sides.logical(owner).isServer() && props != null) {
 			int len = props.size();
 			for (int i = 0; i < len; ++i) {
-				props.get(i)._sc_sync_tick();
+				props.get(i)._sc$tickEntityProps();
 			}
 		}
 	}

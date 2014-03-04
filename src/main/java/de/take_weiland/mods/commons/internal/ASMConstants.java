@@ -95,6 +95,8 @@ public final class ASMConstants {
 	public static final String M_READ_FROM_NBT_TILEENTITY_MCP = "readFromNBT";
 	public static final String M_READ_FROM_NBT_TILEENTITY_SRG = "func_70307_a";
 
+	public static final String M_REGISTER_EXT_PROPS = "registerExtendedProperties";
+
 	private ASMConstants() { }
 	
 }

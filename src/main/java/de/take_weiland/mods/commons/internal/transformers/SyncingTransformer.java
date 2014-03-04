@@ -5,6 +5,8 @@ import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.internal.ASMConstants;
 import de.take_weiland.mods.commons.internal.SyncType;
+import de.take_weiland.mods.commons.internal.SyncedEntityProperties;
+import de.take_weiland.mods.commons.internal.SyncedObject;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.PacketBuilder;
 import de.take_weiland.mods.commons.net.PacketTarget;
@@ -91,13 +93,13 @@ public final class SyncingTransformer {
 		injectSyncCalls(clazz, type, syncMethods);
 
 		if (type == SyncType.ENTITY_PROPS) {
-			FieldNode owner = createPrivateField(clazz, "_sc_sync_propsowner", Type.getType(Entity.class));
-			FieldNode index = createPrivateField(clazz, "_sc_sync_propsindex", Type.INT_TYPE);
-			FieldNode ident = createPrivateField(clazz, "_sc_sync_propsident", Type.getType(String.class));
+			FieldNode owner = createPrivateField(clazz, "_sc$syncedPropsOwner", Type.getType(Entity.class));
+			FieldNode index = createPrivateField(clazz, "_sc$syncedPropsIndex", Type.INT_TYPE);
+			FieldNode ident = createPrivateField(clazz, "_sc$syncedPropsIdentifier", Type.getType(String.class));
 			addInjectDataMethod(clazz, owner, index, ident);
-			createGetter(clazz, "_sc_sync_getEntity", owner);
-			createGetter(clazz, "_sc_sync_getIndex", index);
-			createGetter(clazz, "_sc_sync_getIdentifier", ident);
+			createGetter(clazz, SyncedEntityProperties.GET_ENTITY, owner);
+			createGetter(clazz, SyncedEntityProperties.GET_INDEX, index);
+			createGetter(clazz, SyncedEntityProperties.GET_IDENTIFIER, ident);
 
 			clazz.interfaces.add("de/take_weiland/mods/commons/internal/SyncedEntityProperties");
 		}
@@ -114,7 +116,7 @@ public final class SyncingTransformer {
 	}
 
 	private static void addInjectDataMethod(ClassNode clazz, FieldNode owner, FieldNode index, FieldNode identifier) {
-		String name = "_sc_sync_injectData";
+		String name = SyncedEntityProperties.INJECT_DATA;
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Entity.class), Type.getType(String.class), Type.INT_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PUBLIC, name, desc, null, null);
 		InsnList insns = method.instructions;
@@ -189,7 +191,7 @@ public final class SyncingTransformer {
 	}
 
 	private static void createReadMethod(ClassNode clazz, List<SyncedElement> elements, Map<String, MethodNode> setters) {
-		String name = "_sc_sync_read";
+		String name = SyncedObject.READ;
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(DataBuf.class));
 		MethodNode method = new MethodNode(Opcodes.ACC_PUBLIC, name, desc, null, null);
 		InsnList insns = method.instructions;
@@ -275,7 +277,7 @@ public final class SyncingTransformer {
 	}
 
 	private static MethodNode createSyncMethod(ClassNode clazz, SyncType type, Type target, FieldNode targetField, List<SyncedElement> elements) {
-		String name = "_sc_sync_doSync_" + (target == null ? "default" : target.getInternalName().replace('/', '_'));
+		String name = "_sc$doSync_" + (target == null ? "default" : target.getInternalName().replace('/', '_'));
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PRIVATE, name, desc, null, null);
 		InsnList insns = method.instructions;
@@ -394,7 +396,7 @@ public final class SyncingTransformer {
 	}
 
 	private static FieldNode createHasInitField(ClassNode clazz) {
-		FieldNode isInit = new FieldNode(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE, "_sc_sync_hasInit", Type.BOOLEAN_TYPE.getDescriptor(), null, null);
+		FieldNode isInit = new FieldNode(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE, "_sc$syncHasInit", Type.BOOLEAN_TYPE.getDescriptor(), null, null);
 		clazz.fields.add(isInit);
 		return isInit;
 	}
@@ -443,7 +445,7 @@ public final class SyncingTransformer {
 				list.put(target, (element = new SyncedElement((FieldNode) fieldOrMethod, index, syncerStatic, syncer)));
 			}
 		}
-		element.companion = new FieldNode(Opcodes.ACC_PRIVATE, "_sc_sync_companion_" + element.getName(), typeToSync.getDescriptor(), null, null);
+		element.companion = new FieldNode(Opcodes.ACC_PRIVATE, "_sc$syncCompanion_" + element.getName(), typeToSync.getDescriptor(), null, null);
 		clazz.fields.add(element.companion);
 		return true;
 	}
@@ -460,14 +462,14 @@ public final class SyncingTransformer {
 	}
 
 	private static MethodNode makeNonStaticInitMethod(ClassNode clazz, Collection<SyncedElement> fields, Map<Type, FieldNode> targets) {
-		String name = "_sc_sync_init";
+		String name = "_sc$syncInit";
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PRIVATE, name, desc, null, null);
 		InsnList insns = method.instructions;
 
 		for (SyncedElement element : fields) {
 			if (!element.isPrimitive && !element.syncerStatic) {
-				name = "_sc_sync_syncer_" + element.getName();
+				name = "_sc$syncSyncer_" + element.getName();
 				desc = Type.getDescriptor(TypeSyncer.class);
 				element.syncerField = new FieldNode(Opcodes.ACC_PRIVATE, name, desc, null, null);
 				clazz.fields.add(element.syncerField);
@@ -497,7 +499,7 @@ public final class SyncingTransformer {
 	}
 
 	private static MethodNode makeStaticInitMethod(ClassNode clazz, Collection<SyncedElement> elements, Map<Type, FieldNode> targets, FieldNode isInit) {
-		String name = "_sc_sync_init_static";
+		String name = "_sc$syncStaticInit";
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC, name, desc, null, null);
 		InsnList insns = method.instructions;
@@ -513,7 +515,7 @@ public final class SyncingTransformer {
 
 		for (SyncedElement element : elements) {
 			if (!element.isPrimitive && element.syncerStatic) {
-				name = "_sc_sync_syncer_" + element.getName();
+				name = "_sc$syncSyncer_" + element.getName();
 				desc = Type.getDescriptor(TypeSyncer.class);
 				element.syncerField = new FieldNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC, name, desc, null, null);
 				clazz.fields.add(element.syncerField);

@@ -2,14 +2,14 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
+import de.take_weiland.mods.commons.internal.EntityProxy;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.util.List;
 
-import static de.take_weiland.mods.commons.internal.ASMConstants.M_ON_UPDATE_MCP;
-import static de.take_weiland.mods.commons.internal.ASMConstants.M_ON_UPDATE_SRG;
+import static de.take_weiland.mods.commons.internal.ASMConstants.*;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
@@ -22,7 +22,7 @@ public final class EntityTransformer extends AbstractASMTransformer {
 		String onUpdate = ASMUtils.useMcpNames() ? M_ON_UPDATE_MCP : M_ON_UPDATE_SRG;
 
 		for (MethodNode method : clazz.methods) {
-			if (method.name.equals("registerExtendedProperties")) {
+			if (method.name.equals(M_REGISTER_EXT_PROPS)) {
 				transformRegisterProps(clazz, method, syncedProps);
 			} else if (method.name.equals(onUpdate)) {
 				transformOnUpdate(clazz, method, syncedProps);
@@ -35,7 +35,7 @@ public final class EntityTransformer extends AbstractASMTransformer {
 	}
 
 	private void addPropertySetter(ClassNode clazz, FieldNode syncedProps) {
-		String name = "_sc_sync_setSyncedProperties";
+		String name = EntityProxy.SETTER;
 		String desc = getMethodDescriptor(VOID_TYPE, getType(List.class));
 		MethodNode method = new MethodNode(ACC_PUBLIC, name, desc, null, null);
 		method.instructions.add(new VarInsnNode(ALOAD, 0));
@@ -46,7 +46,7 @@ public final class EntityTransformer extends AbstractASMTransformer {
 	}
 
 	private void addPropertyGetter(ClassNode clazz, FieldNode syncedProps) {
-		String name = "_sc_sync_getSyncedProperties";
+		String name = EntityProxy.GETTER;
 		String desc = getMethodDescriptor(getType(List.class));
 		MethodNode method = new MethodNode(ACC_PUBLIC, name, desc, null, null);
 		method.instructions.add(new VarInsnNode(ALOAD, 0));
@@ -56,7 +56,7 @@ public final class EntityTransformer extends AbstractASMTransformer {
 	}
 
 	private FieldNode addSyncedPropsField(ClassNode clazz) {
-		FieldNode field = new FieldNode(ACC_PUBLIC, "_sc_sync_entityprops", getDescriptor(List.class), null, null);
+		FieldNode field = new FieldNode(ACC_PUBLIC, "_sc$syncedEntityprops", getDescriptor(List.class), null, null);
 		clazz.fields.add(field);
 		return field;
 	}

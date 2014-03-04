@@ -13,7 +13,7 @@ public final class EntityZombieTransformer extends AbstractASMTransformer {
 
 	@Override
 	public void transform(ClassNode clazz) {
-		MethodNode method = ASMUtils.findMinecraftMethod(clazz, M_CONVERT_TO_VILLAGER_MCP, M_CONVERT_TO_VILLAGER_SRG);
+		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_CONVERT_TO_VILLAGER_MCP, M_CONVERT_TO_VILLAGER_SRG);
 		method.instructions.insert(findTarget(method), makeHook(clazz));
 	}
 

@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.asm;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -13,7 +14,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collection;
@@ -112,6 +112,54 @@ public final class ASMUtils {
 	}
 
 	/**
+	 * like {@link #findMethod(org.objectweb.asm.tree.ClassNode, String)}, but throws if method not found
+	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingMethodException if method doesn't exist
+	 */
+	public static MethodNode requireMethod(ClassNode clazz, String name) {
+		MethodNode m = findMethod(clazz, name);
+		if (m == null) {
+			throw MissingMethodException.create(name, clazz.name);
+		}
+		return m;
+	}
+
+	/**
+	 * like {@link #findMethod(org.objectweb.asm.tree.ClassNode, String, String)}, but throws if method not found
+	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingMethodException if method doesn't exist
+	 */
+	public static MethodNode requireMethod(ClassNode clazz, String name, String desc) {
+		MethodNode m = findMethod(clazz, name, desc);
+		if (m == null) {
+			throw MissingMethodException.withDesc(name, desc, clazz.name);
+		}
+		return m;
+	}
+
+	/**
+	 * like {@link #findMinecraftMethod(org.objectweb.asm.tree.ClassNode, String, String, String)}, but throws if method not found
+	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingMethodException if method doesn't exist
+	 */
+	public static MethodNode requireMinecraftMethod(ClassNode clazz, String mcpName, String srgName, String desc) {
+		MethodNode m = findMinecraftMethod(clazz, mcpName, srgName, desc);
+		if (m == null) {
+			throw MissingMethodException.withDesc(mcpName, srgName, desc, clazz.name);
+		}
+		return m;
+	}
+
+	/**
+	 * like {@link #findMinecraftMethod(org.objectweb.asm.tree.ClassNode, String, String)}, but throws if method not found
+	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingMethodException if method doesn't exist
+	 */
+	public static MethodNode requireMinecraftMethod(ClassNode clazz, String mcpName, String srgName) {
+		MethodNode m = findMinecraftMethod(clazz, mcpName, srgName);
+		if (m == null) {
+			throw MissingMethodException.create(mcpName, srgName, clazz.name);
+		}
+		return m;
+	}
+
+	/**
 	 * <p>get all constructors of the given ClassNode</p>
 	 * <p>The returned collection is a live-view, so if new constructors get added, they will be present in the returned collection immediately</p>
 	 * @param clazz the class
@@ -186,7 +234,7 @@ public final class ASMUtils {
 	public static String undoInternalName(String name) {
 		return binaryName(name);
 	}
-	
+
 	private static IClassNameTransformer nameTransformer;
 	private static boolean nameTransChecked = false;
 
@@ -246,14 +294,18 @@ public final class ASMUtils {
 	 * @param name the class to load
 	 * @param readerFlags the flags to pass to the {@link org.objectweb.asm.ClassReader}
 	 * @return a ClassNode
-	 * @throws java.lang.ClassNotFoundException if the class couldn't be found or can't be loaded as raw-bytes
+	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingClassException if the class couldn't be found or can't be loaded as raw-bytes
 	 */
-	@SuppressWarnings("JavaDoc") // yes, we DO throw ClassNotFoundException, but sneaky :P
 	public static ClassNode getClassNode(String name, int readerFlags) {
 		try {
-			return getClassNode(SevenCommons.CLASSLOADER.getClassBytes(transformName(name)), readerFlags);
-		} catch (IOException e) {
-			throw JavaUtils.throwUnchecked(new ClassNotFoundException(name));
+			byte[] bytes = CLASSLOADER.getClassBytes(transformName(name));
+			if (bytes == null) {
+				throw new MissingClassException(name);
+			}
+			return getClassNode(bytes, readerFlags);
+		} catch (Exception e) {
+			Throwables.propagateIfInstanceOf(e, MissingClassException.class);
+			throw new MissingClassException(name, e);
 		}
 	}
 
@@ -322,7 +374,7 @@ public final class ASMUtils {
 	public static AnnotationNode getAnnotation(MethodNode method, Class<? extends Annotation> ann) {
 		return getAnnotation(JavaUtils.concatNullable(method.visibleAnnotations, method.invisibleAnnotations), ann);
 	}
-	
+
 	private static AnnotationNode getAnnotation(Iterable<AnnotationNode> annotations, Class<? extends Annotation> ann) {
 		String desc = Type.getDescriptor(ann);
 		for (AnnotationNode node : annotations) {
@@ -395,24 +447,15 @@ public final class ASMUtils {
 	 * <p>This method will not load any classes through the ClassLoader directly, but instead use the ASM library to analyze the raw class bytes.</p>
 	 * @param className the class
 	 * @return a ClassInfo
-	 * @throws java.lang.ClassNotFoundException if the class could not be found
+	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingClassException if the class could not be found
 	 */
-	@SuppressWarnings("JavaDoc") // we DO throw CNFE
 	public static ClassInfo getClassInfo(String className) {
 		className = binaryName(className);
 		Class<?> clazz;
 		if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, className)) != null) {
 			return new ClassInfoFromClazz(clazz);
 		} else {
-			try {
-				byte[] bytes = CLASSLOADER.getClassBytes(className);
-				if (bytes == null) {
-					throw new ClassNotFoundException(className);
-				}
-				return new ClassInfoFromNode(getThinClassNode(bytes));
-			} catch (Exception e) {
-				throw JavaUtils.throwUnchecked(e);
-			}
+			return new ClassInfoFromNode(getThinClassNode(className));
 		}
 	}
 
@@ -490,12 +533,12 @@ public final class ASMUtils {
 		boolean isInterface();
 
 	}
-	
+
 	private static final class ClassInfoFromClazz implements ClassInfo {
 
 		private final Class<?> clazz;
 		private final Collection<String> interfaces;
-		
+
 		ClassInfoFromClazz(Class<?> clazz) {
 			this.clazz = clazz;
 			interfaces = Collections2.transform(Arrays.asList(clazz.getInterfaces()), ClassToNameFunc.INSTANCE);
@@ -527,7 +570,7 @@ public final class ASMUtils {
 	private static final class ClassInfoFromNode implements ClassInfo {
 
 		private final ClassNode clazz;
-		
+
 		ClassInfoFromNode(ClassNode clazz) {
 			this.clazz = clazz;
 		}
@@ -553,7 +596,7 @@ public final class ASMUtils {
 		}
 
 	}
-	
+
 	private static enum ClassToNameFunc implements Function<Class<?>, String> {
 		INSTANCE;
 
@@ -562,5 +605,44 @@ public final class ASMUtils {
 			return Type.getInternalName(input);
 		}
 	}
-	
+
+	public static class MissingClassException extends RuntimeException {
+
+		public MissingClassException(String message) {
+			super(message);
+		}
+
+		public MissingClassException(String message, Throwable cause) {
+			super(message, cause);
+		}
+	}
+
+	public static class MissingMethodException extends RuntimeException {
+
+		private MissingMethodException(String text) {
+			super(text);
+		}
+
+		static MissingMethodException create(String method, String clazz) {
+			return new MissingMethodException(method + " in " + clazz);
+		}
+
+		static MissingMethodException create(String mcpMethod, String srgMethod, String clazz) {
+			return create(formatMcpSrg(mcpMethod, srgMethod), clazz);
+		}
+
+		static MissingMethodException withDesc(String method, String desc, String clazz) {
+			return create(String.format("%s(%s)", method, desc), clazz);
+		}
+
+		static MissingMethodException withDesc(String mcpName, String srgName, String desc, String clazz) {
+			return withDesc(formatMcpSrg(mcpName, srgName), desc, clazz);
+		}
+
+		private static String formatMcpSrg(String mcp, String srg) {
+			return String.format("%s[%s]", mcp, srg);
+		}
+
+	}
+
 }

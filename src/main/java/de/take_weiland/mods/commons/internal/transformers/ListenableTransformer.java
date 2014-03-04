@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 import de.take_weiland.mods.commons.Listenable;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
+import de.take_weiland.mods.commons.internal.ListenableInternal;
 import org.objectweb.asm.tree.*;
 
 import java.util.List;
@@ -17,7 +18,6 @@ import static org.objectweb.asm.Type.*;
  */
 public class ListenableTransformer extends AbstractASMTransformer {
 
-	private static final String listenable = getInternalName(Listenable.class);
 	private static final ASMUtils.ClassInfo listenableCI = getClassInfo(Listenable.class);
 	private static final String listDesc = getDescriptor(List.class);
 	private static final String getterDesc = getMethodDescriptor(getType(List.class));
@@ -32,14 +32,14 @@ public class ListenableTransformer extends AbstractASMTransformer {
 		FieldNode field = new FieldNode(ACC_PRIVATE, "_sc$listeners", listDesc, null, null);
 		clazz.fields.add(field);
 
-		MethodNode method = new MethodNode(ACC_PUBLIC, "_sc$listeners", getterDesc, null, null);
+		MethodNode method = new MethodNode(ACC_PUBLIC, ListenableInternal.GETTER, getterDesc, null, null);
 		InsnList insns = method.instructions;
 		insns.add(new VarInsnNode(ALOAD, 0));
 		insns.add(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
 		insns.add(new InsnNode(ARETURN));
 		clazz.methods.add(method);
 
-		method = new MethodNode(ACC_PUBLIC, "_sc$setListeners", setterDesc, null, null);
+		method = new MethodNode(ACC_PUBLIC, ListenableInternal.SETTER, setterDesc, null, null);
 		insns = method.instructions;
 		insns.add(new VarInsnNode(ALOAD, 0));
 		insns.add(new VarInsnNode(ALOAD, 1));

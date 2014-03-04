@@ -76,25 +76,25 @@ public enum SyncType {
 		}
 		
 	},
-	ENTITY_PROPS(null, null, null, "_sc_sync_tick", "_sc_sync_tick") {
+	ENTITY_PROPS(null, null, null, "_sc$tickEntityProps", "_sc$tickEntityProps") {
 		
 		@Override
 		public void sendPacket(Object props, SimplePacket p) {
-			p.sendToAllAssociated(((SyncedEntityProperties) props)._sc_sync_getEntity());
+			p.sendToAllAssociated(((SyncedEntityProperties) props)._sc$getPropsEntity());
 		}
 
 		@Override
 		public void injectInfo(Object obj, WritableDataBuf out) {
 			SyncedEntityProperties sep = (SyncedEntityProperties) obj;
-			ENTITY.injectInfo(sep._sc_sync_getEntity(), out);
-			out.putVarInt(sep._sc_sync_getIndex());
+			ENTITY.injectInfo(sep._sc$getPropsEntity(), out);
+			out.putVarInt(sep._sc$getPropsIndex());
 		}
 
 		@Override
 		public Object recreate(EntityPlayer player, DataBuf in) {
 			Object entity = ENTITY.recreate(player, in);
 			if (entity != null) {
-				List<SyncedEntityProperties> props = ((EntityProxy)entity)._sc_sync_getSyncedProperties();
+				List<SyncedEntityProperties> props = ((EntityProxy)entity)._sc$getSyncedProperties();
 				if (props != null) {
 					return JavaUtils.get(props, in.getVarInt());
 				}

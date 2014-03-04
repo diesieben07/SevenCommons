@@ -61,14 +61,14 @@ public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>
 		@SuppressWarnings("unchecked") // safe, ASM generated
 		PacketWithFactory<TYPE> pwf = (PacketWithFactory<TYPE>) this;
 		
-		PacketBuilder builder = pwf._sc_getFactory().builder(pwf._sc_getType(), expectedSize());
+		PacketBuilder builder = pwf._sc$getPacketFactory().builder(pwf._sc$getPacketType(), expectedSize());
 		write(builder);
 		return builder.build();
 	}
 
 	@SuppressWarnings("unchecked")
 	public final TYPE type() {
-		return ((PacketWithFactory<TYPE>) this)._sc_getType();
+		return ((PacketWithFactory<TYPE>) this)._sc$getPacketType();
 	}
 
 	@Override

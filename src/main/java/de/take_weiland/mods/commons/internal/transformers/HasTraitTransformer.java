@@ -41,7 +41,7 @@ public class HasTraitTransformer {
 
 		ASMUtils.ClassInfo me = ASMUtils.getClassInfo(clazz);
 
-		Collection<MethodNode> myCstrs = ASMUtils.findRootConstructors(clazz);
+		Collection<MethodNode> myCstrs = ASMUtils.getRootConstructors(clazz);
 		int fieldIdx = 0;
 		for (TraitInfo traitInfo : allTraits.values()) {
 			for (FieldNode field : traitInfo.impl.fields) {

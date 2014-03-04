@@ -13,7 +13,7 @@ public final class GuiScreenTransformer extends AbstractASMTransformer {
 
 	@Override
 	public void transform(ClassNode clazz) {
-		MethodNode method = ASMUtils.findMinecraftMethod(clazz, M_SET_WORLD_AND_RESOLUTION_MCP, M_SET_WORLD_AND_RESOLUTION_SRG);
+		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_SET_WORLD_AND_RESOLUTION_MCP, M_SET_WORLD_AND_RESOLUTION_SRG);
 		InsnList insns = new InsnList();
 
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));

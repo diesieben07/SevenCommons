@@ -25,7 +25,7 @@ public final class PacketEntityPropsIds extends SCPacket {
 		int len = props.size();
 		out.putVarInt(len);
 		for (int i = 0; i < len; ++i) {
-			out.putString(props.get(i)._sc_sync_getIdentifier());
+			out.putString(props.get(i)._sc$getPropsIdentifier());
 		}
 	}
 
@@ -39,8 +39,8 @@ public final class PacketEntityPropsIds extends SCPacket {
 			for (int i = 0; i < len; ++i) {
 				props[i] = (SyncedEntityProperties) e.getExtendedProperties(in.getString());
 			}
-			((EntityProxy)e)._sc_sync_setSyncedProperties(Arrays.asList(props));
-			System.out.println("received properties: " + ((EntityProxy)e)._sc_sync_getSyncedProperties());
+			((EntityProxy)e)._sc$setSyncedProperties(Arrays.asList(props));
+			System.out.println("received properties: " + ((EntityProxy)e)._sc$getSyncedProperties());
 		}
 	}
 	

@@ -4,8 +4,11 @@ import java.util.List;
 
 public interface EntityProxy {
 
-	List<SyncedEntityProperties> _sc_sync_getSyncedProperties();
+	public static final String GETTER = "_sc$getSyncedProperties";
+	public static final String SETTER = "_sc$setSyncedProperties";
+
+	List<SyncedEntityProperties> _sc$getSyncedProperties();
 	
-	void _sc_sync_setSyncedProperties(List<SyncedEntityProperties> props);
+	void _sc$setSyncedProperties(List<SyncedEntityProperties> props);
 	
 }

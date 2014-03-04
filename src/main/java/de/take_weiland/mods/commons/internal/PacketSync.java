@@ -18,7 +18,7 @@ public final class PacketSync extends SCPacket {
 		SyncType type = DataBuffers.readEnum(in, SyncType.class);
 		Object readObj = type.recreate(player, in);
 		if (readObj instanceof SyncedObject) {
-			((SyncedObject) readObj)._sc_sync_read(in);
+			((SyncedObject) readObj)._sc$syncRead(in);
 		}
 	}
 

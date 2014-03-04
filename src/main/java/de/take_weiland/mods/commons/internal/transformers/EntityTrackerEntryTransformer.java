@@ -17,7 +17,7 @@ public class EntityTrackerEntryTransformer extends AbstractASMTransformer {
 
 	@Override
 	public void transform(ClassNode clazz) {
-		MethodNode method = ASMUtils.findMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS_MCP, M_TRY_START_WATCHING_THIS_SRG);
+		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS_MCP, M_TRY_START_WATCHING_THIS_SRG);
 		method.instructions.insertBefore(findInsertionHook(method), generateEventCall(clazz));
 	}
 
