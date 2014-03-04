@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.transformers;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.sync.Synced;
-import de.take_weiland.mods.commons.trait.TraitMethod;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -20,17 +19,14 @@ public class AnalyzingTransformer extends AbstractASMTransformer {
 
 	private static final String toNbtDesc = Type.getDescriptor(ToNbt.class);
 	private static final String syncedDesc = Type.getDescriptor(Synced.class);
-	private static final String traitMethodDesc = Type.getDescriptor(TraitMethod.class);
 
 	@Override
 	public void transform(ClassNode clazz) {
 		boolean synced = false;
 		boolean nbt = false;
-		boolean trait = false;
 		FieldNode[] fields = clazz.fields.toArray(new FieldNode[clazz.fields.size()]);
 		MethodNode[] methods = clazz.methods.toArray(new MethodNode[clazz.methods.size()]);
 
-		fields:
 		for (FieldNode field : fields) {
 			Iterable<AnnotationNode> anns = JavaUtils.concatNullable(field.visibleAnnotations, field.invisibleAnnotations);
 			for (AnnotationNode ann : anns) {
@@ -44,7 +40,7 @@ public class AnalyzingTransformer extends AbstractASMTransformer {
 					synced = true;
 				}
 				if (nbt && synced) {
-					break fields;
+					return; // Warning: if more tests are added for methods, change this to a break!
 				}
 			}
 		}
@@ -53,16 +49,11 @@ public class AnalyzingTransformer extends AbstractASMTransformer {
 		for (MethodNode method : methods) {
 			Iterable<AnnotationNode> anns = JavaUtils.concatNullable(method.visibleAnnotations, method.invisibleAnnotations);
 			for (AnnotationNode ann : anns) {
-				if (!trait && ann.desc.equals(traitMethodDesc)) {
-					HasTraitTransformer.transform(clazz);
-					trait = true;
-					continue;
-				}
 				if (!synced && ann.desc.equals(syncedDesc)) {
 					SyncingTransformer.transform(clazz);
 					synced = true;
 				}
-				if (synced && trait) {
+				if (synced) {
 					break methods;
 				}
 			}
