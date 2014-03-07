@@ -2,9 +2,9 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import de.take_weiland.mods.commons.Listenables;
-import de.take_weiland.mods.commons.templates.SCInventory;
+import de.take_weiland.mods.commons.fastreflect.Fastreflect;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.IInventory;
@@ -16,6 +16,7 @@ import net.minecraft.world.World;
 
 import java.util.Iterator;
 import java.util.Random;
+import java.util.logging.Logger;
 
 /**
  * A collection of static utility methods regarding implementors of {@link IInventory}
@@ -25,6 +26,8 @@ import java.util.Random;
 public final class Inventories {
 
 	private Inventories() { }
+
+	private static final Logger logger = MiscUtil.getLogger("SC|Inventories");
 	
 	/**
 	 * generic implementation for {@link IInventory#decrStackSize}
@@ -33,7 +36,7 @@ public final class Inventories {
 	 * @param count the number of items to be depleted
 	 * @return the stack being depleted from the inventory
 	 */
-	public static ItemStack decreaseStackSize(SCInventory<?> inventory, int slot, int count) {
+	public static ItemStack decreaseStackSize(IInventory inventory, int slot, int count) {
 		ItemStack stack = inventory.getStackInSlot(slot);
 
 		if (stack != null) {
@@ -49,7 +52,7 @@ public final class Inventories {
                 if (stack.stackSize == 0) {
                 	inventory.setInventorySlotContents(slot, null);
                 } else {
-	                Listenables.onChange(inventory);
+	                inventory.onInventoryChanged();
                 }
                 
                 return returnStack;
@@ -57,6 +60,13 @@ public final class Inventories {
         } else {
             return null;
         }
+	}
+
+	/**
+	 * alias for {@link #getAndRemove(net.minecraft.inventory.IInventory, int)} to match the naming in {@code IInventory}
+	 */
+	public static ItemStack getStackInSlotOnClosing(IInventory inventory, int slot) {
+		return getAndRemove(inventory, slot);
 	}
 	
 	/**
@@ -130,6 +140,18 @@ public final class Inventories {
 			}
 		}
 	}
+
+	private static final String INV_KEY = "_sc$inventory";
+
+	/**
+	 * <p>Write an inventory to a (consistent) subkey of the NBTTagCompound.</p>
+	 * <p>The inventory can be read back using {@link #readInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound)}</p>
+	 * @param stacks the ItemStacks to write
+	 * @param nbt the NBTTagCompound to write to
+	 */
+	public static void writeInventory(ItemStack[] stacks, NBTTagCompound nbt) {
+		nbt.setTag(INV_KEY, writeInventory(stacks));
+	}
 	
 	/**
 	 * Serialize an {@link IInventory} to a {@link NBTTagList}<br>
@@ -150,7 +172,16 @@ public final class Inventories {
 		}
 		return nbt;
 	}
-	
+
+	/**
+	 * Read an inventory from an NBTTagCompound. The inventory should be written with {@link #writeInventory(net.minecraft.item.ItemStack[])}
+	 * @param stacks the array to read into
+	 * @param nbt the NBTTagCompound to read from
+	 */
+	public static void readInventory(ItemStack[] stacks, NBTTagCompound nbt) {
+		readInventory0(stacks, nbt.getTagList(INV_KEY));
+	}
+
 	/**
 	 * Unserialize an {@link IInventory} from a {@link NBTTagList}<br>
 	 * The format of the NBT should match that produced by {@link #writeInventory}
@@ -158,9 +189,20 @@ public final class Inventories {
 	 * @param nbtList the NBTTagList containing the serialized contents
 	 */
 	public static void readInventory(ItemStack[] stacks, NBTTagList nbtList) {
+		readInventory0(stacks, nbtList);
+	}
+
+	private static void readInventory0(ItemStack[] stacks, NBTTagList nbtList) {
+		int len = stacks.length;
 		for (NBTTagCompound nbt : NBT.<NBTTagCompound>asList(nbtList)) {
 			ItemStack item = ItemStack.loadItemStackFromNBT(nbt);
-			stacks[UnsignedShorts.toInt(nbt.getShort("slot"))] = item;
+			int idx = UnsignedShorts.toInt(nbt.getShort("slot"));
+			if (idx < len) {
+				stacks[idx] = item;
+			} else {
+				logger.severe(String.format("Inventory slot %d is out of bounds (length %d) while reading inventory %s",
+						idx, len, Fastreflect.getCallerClass(1).getName()));
+			}
 		}
 	}
 	
@@ -178,6 +220,15 @@ public final class Inventories {
 	 * @return an Iterator
 	 */
 	public static Iterator<ItemStack> iterator(final IInventory inventory, boolean includeNulls) {
+		if (inventory instanceof Iterable) {
+			@SuppressWarnings("unchecked")
+			Iterator<ItemStack> it = ((Iterable<ItemStack>) inventory).iterator();
+			return includeNulls ? it : Iterators.filter(it, Predicates.notNull());
+		}
+		return iterator0(inventory, includeNulls);
+	}
+
+	static Iterator<ItemStack> iterator0(final IInventory inventory, boolean includeNulls) {
 		Iterator<ItemStack> it =  new AbstractIterator<ItemStack>() {
 
 			private int next = 0;
@@ -200,13 +251,19 @@ public final class Inventories {
 	
 	/**
 	 * Generate an {@link Iterable} that calls {@link Inventories#iterator(IInventory, boolean) Inventories.iterator}
+	 * or the inventory itself, if it is already an Iterable (possibly filtered for nulls)
 	 */
 	public static Iterable<ItemStack> iterate(final IInventory inventory, final boolean includeNulls) {
+		if (inventory instanceof Iterable) {
+			@SuppressWarnings("unchecked")
+			Iterable<ItemStack> it = (Iterable<ItemStack>) inventory;
+			return includeNulls ? it : Iterables.filter(it, Predicates.notNull());
+		}
 		return new Iterable<ItemStack>() {
 				
 			@Override
 			public Iterator<ItemStack> iterator() {
-				return Inventories.iterator(inventory, includeNulls);
+				return Inventories.iterator0(inventory, includeNulls);
 			}
 		};
 	}

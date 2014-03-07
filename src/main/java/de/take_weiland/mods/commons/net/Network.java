@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
+import de.take_weiland.mods.commons.internal.transformers.PacketTransformer;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.NetLoginHandler;
@@ -41,10 +42,10 @@ public final class Network {
 		try {
 			for (TYPE e : values) {
 				Class<?> packetClass = e.packet();
-				Field field = packetClass.getDeclaredField("_sc_packetfactory");
+				Field field = packetClass.getDeclaredField(PacketTransformer.FACTORY_FIELD);
 				field.setAccessible(true);
 				field.set(null, factory);
-				field = packetClass.getDeclaredField("_sc_packettype");
+				field = packetClass.getDeclaredField(PacketTransformer.TYPE_FIELD);
 				field.setAccessible(true);
 				field.set(null, e);
 			}

@@ -134,8 +134,8 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	@Override
 	public void addCraftingToCrafters(ICrafting player) {
 		super.addCraftingToCrafters(player);
-		if (inventory instanceof NameableTileEntity && ((NameableTileEntity) inventory).hasCustomName() && player instanceof EntityPlayerMP) {
-			new PacketInventoryName(windowId, ((NameableTileEntity) inventory).getCustomName()).sendTo((EntityPlayer) player);
+		if (inventory instanceof NameableInventory && ((NameableInventory) inventory).hasCustomName() && player instanceof EntityPlayerMP) {
+			new PacketInventoryName(windowId, ((NameableInventory) inventory).getCustomName()).sendTo((EntityPlayer) player);
 		}
 	}
 	

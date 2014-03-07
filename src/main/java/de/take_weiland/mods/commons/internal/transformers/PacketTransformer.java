@@ -43,17 +43,21 @@ public final class PacketTransformer extends AbstractASMTransformer {
 		
 		clazz.methods.add(method);
 	}
-	
+
+	public static final String FACTORY_FIELD = "_sc$packetfactory";
+
 	private FieldNode createFactoryField(ClassNode clazz) {
-		String name = "_sc$packetfactory";
+		String name = FACTORY_FIELD;
 		String desc = getDescriptor(PacketFactory.class);
 		FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC, name, desc, null, null);
 		clazz.fields.add(field);
 		return field;
 	}
+
+	public static final String TYPE_FIELD = "_sc$packettype";
 	
 	private FieldNode createTypeField(ClassNode clazz) {
-		String name = "_sc$packettype";
+		String name = TYPE_FIELD;
 		String desc = getDescriptor(Enum.class);
 		FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC, name, desc, null, null);
 		clazz.fields.add(field);

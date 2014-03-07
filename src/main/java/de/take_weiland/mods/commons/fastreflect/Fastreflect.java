@@ -12,6 +12,8 @@ import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * <p>Faster alternative to traditional reflection. Works with so called "Accessor Interfaces" which define getters, setters or delegate methods, which just invoke the target method.
  * See {@link de.take_weiland.mods.commons.fastreflect.Getter @Getter}, {@link de.take_weiland.mods.commons.fastreflect.Setter @Setter} and {@link de.take_weiland.mods.commons.fastreflect.Invoke @Inovoke}
@@ -68,7 +70,22 @@ public final class Fastreflect {
 	public static String nextDynamicClassName() {
 		return "de/take_weiland/mods/commons/fastreflect/dyn/Dyn" + nextId.getAndIncrement();
 	}
-	
+
+	public static Class<?> getCallerClass() {
+		// see comments in getCallerClass(int level)
+		return sm.getClassStack()[3];
+	}
+
+	public static Class<?> getCallerClass(int level) {
+		checkArgument(level >= 0);
+		Class<?>[] stack = sm.getClassStack();
+		// 0 is the security manager
+		// 1 is us (Fastreflect.getCallerClass
+		// 2 is our caller
+		// 3 is the caller of our caller (equivalent to level 0)
+		return JavaUtils.get(stack, level + 3);
+	}
+
 	private static final FastreflectStrategy strategy;
 	private static final Logger logger;
 	
@@ -92,5 +109,14 @@ public final class Fastreflect {
 	}
 
 	static final AtomicInteger nextId = new AtomicInteger(0);
+
+	private static final FastreflectSecurityManager sm = new FastreflectSecurityManager();
+
+	private static class FastreflectSecurityManager extends SecurityManager {
+
+		public Class[] getClassStack() {
+			return getClassContext();
+		}
+	}
 
 }

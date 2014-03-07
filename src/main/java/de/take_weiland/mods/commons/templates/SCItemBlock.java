@@ -23,8 +23,10 @@ public class SCItemBlock<T extends Block> extends ItemBlock {
 		boolean result = super.placeBlockAt(stack, player, world, x, y, z, side, hitX, hitY, hitZ, metadata);
 		if (stack.hasDisplayName() && block.hasTileEntity(metadata)) {
 			TileEntity te = world.getBlockTileEntity(x, y, z);
-			if (te instanceof NameableTileEntity) {
-				((NameableTileEntity)te).setCustomName(stack.getDisplayName());
+			if (te instanceof NameableInventory &&
+					(!(te instanceof NameableInventory.TileAutoName) ||
+							((NameableInventory.TileAutoName) te).shouldAutoname(player, stack, world, x, y, z))) {
+					((NameableInventory)te).setCustomName(stack.getDisplayName());
 			}
 		}
 		return result;
