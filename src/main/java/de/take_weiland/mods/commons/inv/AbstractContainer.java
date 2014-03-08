@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.templates;
+package de.take_weiland.mods.commons.inv;
 
 import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.relauncher.Side;
@@ -105,37 +105,11 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 		inventory.closeChest();
 	}
 	
-	@Deprecated
-	public static abstract class Synced<T extends IInventory> extends AbstractContainer<T> implements SyncedContainer<T> {
-
-		protected Synced(T upper, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
-			super(upper, player, playerInventoryX, playerInventoryY);
-		}
-
-		protected Synced(T upper, EntityPlayer player) {
-			super(upper, player);
-		}
-
-		protected Synced(World world, int x, int y, int z, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
-			super(world, x, y, z, player, playerInventoryX, playerInventoryY);
-		}
-
-		protected Synced(World world, int x, int y, int z, EntityPlayer player) {
-			super(world, x, y, z, player);
-		}
-
-		@Override
-		public void detectAndSendChanges() {
-			super.detectAndSendChanges();
-			Containers.sync(this);
-		}
-	}
-
 	@Override
-	public void addCraftingToCrafters(ICrafting player) {
-		super.addCraftingToCrafters(player);
-		if (inventory instanceof NameableInventory && ((NameableInventory) inventory).hasCustomName() && player instanceof EntityPlayerMP) {
-			new PacketInventoryName(windowId, ((NameableInventory) inventory).getCustomName()).sendTo((EntityPlayer) player);
+	public void addCraftingToCrafters(ICrafting listener) {
+		super.addCraftingToCrafters(listener);
+		if (inventory instanceof NameableInventory && ((NameableInventory) inventory).hasCustomName() && listener instanceof EntityPlayerMP) {
+			new PacketInventoryName(windowId, ((NameableInventory) inventory).getCustomName()).sendTo((EntityPlayer) listener);
 		}
 	}
 	

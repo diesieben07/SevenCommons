@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.templates;
+package de.take_weiland.mods.commons.inv;
 
 import cpw.mods.fml.relauncher.Side;
 import net.minecraft.entity.player.EntityPlayer;

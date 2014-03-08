@@ -1,10 +1,8 @@
 package de.take_weiland.mods.commons.util;
 
-import de.take_weiland.mods.commons.internal.PacketContainerSync;
-import de.take_weiland.mods.commons.templates.ItemInventory;
-import de.take_weiland.mods.commons.templates.SCContainer;
-import de.take_weiland.mods.commons.templates.SlotNoPickup;
-import de.take_weiland.mods.commons.templates.SyncedContainer;
+import de.take_weiland.mods.commons.inv.ItemInventory;
+import de.take_weiland.mods.commons.inv.SCContainer;
+import de.take_weiland.mods.commons.inv.SlotNoPickup;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
@@ -36,7 +34,13 @@ public final class Containers {
 		}
 
 		IInventory inv = container.inventory();
-		int blockedSlot = inv instanceof ItemInventory.WithPlayer ? ((ItemInventory.WithPlayer<?>)inv).getHotbarIndex() : -1;
+		int blockedSlot;
+		if (inv instanceof ItemInventory.WithInventory) {
+			ItemInventory.WithInventory iinv = (ItemInventory.WithInventory) inv;
+			blockedSlot = iinv.inv == inventoryPlayer ? iinv.slot : -1;
+		} else {
+			blockedSlot = -1;
+		}
 		// add the hotbar
 		for (int k = 0; k < 9; k++) {
 			if (k == blockedSlot) {
@@ -104,12 +108,5 @@ public final class Containers {
 		}
 
 		return result;
-	}
-
-	@Deprecated
-	public static void sync(SyncedContainer<?> container) {
-		if (Sides.logical(container.getPlayer()).isServer()) {
-			new PacketContainerSync(container).sendToIfNeeded(container.getPlayer());
-		}
 	}
 }

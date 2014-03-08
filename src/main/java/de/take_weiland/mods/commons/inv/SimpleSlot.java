@@ -1,12 +1,12 @@
-package de.take_weiland.mods.commons.templates;
+package de.take_weiland.mods.commons.inv;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-public class AdvancedSlot extends Slot {
+public class SimpleSlot extends Slot {
 
-	public AdvancedSlot(IInventory inventory, int index, int x, int y) {
+	public SimpleSlot(IInventory inventory, int index, int x, int y) {
 		super(inventory, index, x, y);
 	}
 

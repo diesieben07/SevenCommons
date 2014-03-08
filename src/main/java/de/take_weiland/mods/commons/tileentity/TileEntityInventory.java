@@ -1,7 +1,8 @@
-package de.take_weiland.mods.commons.templates;
+package de.take_weiland.mods.commons.tileentity;
 
 import de.take_weiland.mods.commons.Listenable;
 import de.take_weiland.mods.commons.Listenables;
+import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.util.Blocks;
 import de.take_weiland.mods.commons.util.Inventories;
 import de.take_weiland.mods.commons.util.JavaUtils;
@@ -14,12 +15,12 @@ import net.minecraft.block.Block;
 
 /**
  * <p>Basic implementation of a {@link TileEntity} with an Inventory. Similar to
- * {@link de.take_weiland.mods.commons.templates.AbstractInventory}.</p>
- * <p>Note that this class implements {@link de.take_weiland.mods.commons.templates.NameableInventory}, so if you
+ * {@link de.take_weiland.mods.commons.inv.AbstractInventory}.</p>
+ * <p>Note that this class implements {@link de.take_weiland.mods.commons.inv.NameableInventory}, so if you
  * use {@link Blocks#init(Block, String)} on your block (or
  * use {@link de.take_weiland.mods.commons.templates.SCItemBlock} as your custom ItemBlock class), this TileEntity
  * will automatically take the name of a renamed ItemStack when placed. To control that behavior, implement
- * {@link de.take_weiland.mods.commons.templates.NameableInventory.TileAutoName}</p>
+ * {@link TileAutoName}</p>
  */
 public abstract class TileEntityInventory<T extends TileEntityInventory<T>> extends AbstractTileEntity implements IInventory, Listenable<T>, NameableInventory {
 
@@ -34,7 +35,7 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 
 	/**
 	 * <p>The default constructor calls {@link #getSizeInventory()} to determine the inventory size.</p>
-	 * <p>If that is not desired, use {@link de.take_weiland.mods.commons.templates.TileEntityInventory.WithSize} instead.</p>
+	 * <p>If that is not desired, use {@link TileEntityInventory.WithSize} instead.</p>
 	 */
 	public TileEntityInventory() {
 		storage = new ItemStack[getSizeInventory()];
@@ -138,10 +139,9 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 	}
 
 	@Override
-	public boolean setCustomName(String name) {
+	public void setCustomName(String name) {
 		hasName = true;
 		this.name = name;
-		return true;
 	}
 
 	@Override
@@ -150,7 +150,7 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 	}
 
 	/**
-	 * Like {@link de.take_weiland.mods.commons.templates.AbstractInventory.WithSize} but for TileEntities
+	 * Like {@link de.take_weiland.mods.commons.inv.AbstractInventory.WithSize} but for TileEntities
 	 */
 	public static abstract class WithSize<T extends WithSize<T>> extends TileEntityInventory<T> {
 

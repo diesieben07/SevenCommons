@@ -12,7 +12,6 @@ public abstract class SCPacket extends ModPacket<SCPacket.Type> {
 		MOD_STATE(PacketModState.class),
 		DOWNLOAD_PROGRESS(PacketDownloadProgress.class),
 		CLIENT_ACTION(PacketClientAction.class),
-		SYNC_CONTAINER(PacketContainerSync.class),
 		INV_NAME(PacketInventoryName.class),
 		SYNC_ENTITY_PROPS_IDS(PacketEntityPropsIds.class),
 		SYNC(PacketSync.class);

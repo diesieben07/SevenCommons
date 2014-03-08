@@ -42,7 +42,7 @@ public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>
 
 	/**
 	 * Determine an expected size for this packet to accurately size the {@link de.take_weiland.mods.commons.net.WritableDataBuf} passed to {@link #write(WritableDataBuf)}
-	 * @return
+	 * @return an expected size in bytes
 	 */
 	protected int expectedSize() {
 		return 32;

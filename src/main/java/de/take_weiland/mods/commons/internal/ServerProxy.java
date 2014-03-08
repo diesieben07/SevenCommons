@@ -61,7 +61,7 @@ public class ServerProxy implements SevenCommonsProxy, IPlayerTracker {
 
 	@Override
 	public INetworkManager getNetworkManagerFromClient(NetHandler clientHandler) {
-		return null;
+		throw new IllegalStateException("NetHandler.isServerHandler() should always be true on a dedicated server!");
 	}
 
 }

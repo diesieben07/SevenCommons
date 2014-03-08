@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.templates;
+package de.take_weiland.mods.commons.inv;
 
 import de.take_weiland.mods.commons.Listenable;
 import de.take_weiland.mods.commons.Listenables;
@@ -22,7 +22,7 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 
 	/**
 	 * <p>The default constructor calls {@link #getSizeInventory()} to determine the inventory size.</p>
-	 * <p>If that is not desired, use {@link de.take_weiland.mods.commons.templates.TileEntityInventory.WithSize} instead.</p>
+	 * <p>If that is not desired, use {@link de.take_weiland.mods.commons.tileentity.TileEntityInventory.WithSize} instead.</p>
 	 */
 	protected AbstractInventory() {
 		storage = new ItemStack[getSizeInventory()];

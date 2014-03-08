@@ -10,6 +10,9 @@ import net.minecraft.network.packet.NetHandler;
 
 import java.lang.reflect.Field;
 
+/**
+ * Utilities for Network related stuff.
+ */
 public final class Network {
 
 	private Network() { }

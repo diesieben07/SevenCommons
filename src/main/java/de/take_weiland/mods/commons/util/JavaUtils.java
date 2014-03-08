@@ -19,42 +19,42 @@ public final class JavaUtils {
 	private JavaUtils() { }
 
 	/**
-	 * returns the value at the given index in the array, or null if the index is out of bounds
+	 * returns the value at the given slot in the array, or null if the slot is out of bounds
 	 */
 	public static <T> T get(T[] array, int index) {
 		return indexExists(array, index) ? array[index] : null;
 	}
 
 	/**
-	 * returns true if the given index exists in the array
+	 * returns true if the given slot exists in the array
 	 */
 	public static boolean indexExists(Object[] array, int index) {
 		return index >= 0 && index < array.length;
 	}
 
 	/**
-	 * returns the value at the given index in the array, or the defaultValue if the index is out of bounds
+	 * returns the value at the given slot in the array, or the defaultValue if the slot is out of bounds
 	 */
 	public static <T> T get(T[] array, int index, T defaultValue) {
 		return indexExists(array, index) ? array[index] : defaultValue;
 	}
 
 	/**
-	 * returns the value at the given index in the list, or null if the index is out of bounds
+	 * returns the value at the given slot in the list, or null if the slot is out of bounds
 	 */
 	public static <T> T get(List<T> list, int index) {
 		return indexExists(list, index) ? list.get(index) : null;
 	}
 
 	/**
-	 * returns true if the given index exists in the list
+	 * returns true if the given slot exists in the list
 	 */
 	public static boolean indexExists(List<?> list, int index) {
 		return index >= 0 && index < list.size();
 	}
 
 	/**
-	 * returns the value at the given index in the list, or the defaultValue if the index is out of bounds
+	 * returns the value at the given slot in the list, or the defaultValue if the slot is out of bounds
 	 */
 	public static <T> T get(List<T> list, int index, T defaultValue) {
 		return indexExists(list, index) ? list.get(index) : defaultValue;

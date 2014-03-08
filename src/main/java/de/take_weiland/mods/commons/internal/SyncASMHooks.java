@@ -17,8 +17,12 @@ public final class SyncASMHooks {
 
 	private SyncASMHooks() { }
 
-	public static <T> TypeSyncer<? super T> getSyncerFor(Class<T> toSync) {
-		return Syncing.getSyncerFor(toSync);
+	public static <T> TypeSyncer<T> getSyncerFor(Class<T> toSync) {
+		TypeSyncer<T> syncer = Syncing.getSyncerFor(toSync);
+		if (syncer == null) {
+			throw new RuntimeException("Couldn't determine syncer for " + toSync.getName());
+		}
+		return syncer;
 	}
 
 	private static PacketBuilder init(Object obj, PacketBuilder out, SyncType type) {
@@ -65,14 +69,6 @@ public final class SyncASMHooks {
 				props.get(i)._sc$tickEntityProps();
 			}
 		}
-	}
-
-	public static TypeSyncer<?> obtainSyncer(Class<?> type) {
-		TypeSyncer<?> syncer = Syncing.getSyncerFor(type);
-		if (syncer == null) {
-			throw new RuntimeException("Couldn't determine syncer for " + type.getName());
-		}
-		return syncer;
 	}
 
 	public static void endSync(PacketBuilder out, PacketTarget target) {

@@ -2,8 +2,7 @@ package de.take_weiland.mods.commons.client;
 
 import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.templates.SCContainer;
-import net.minecraft.client.Minecraft;
+import de.take_weiland.mods.commons.inv.SCContainer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.resources.I18n;

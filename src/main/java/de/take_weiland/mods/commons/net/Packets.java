@@ -81,10 +81,6 @@ public final class Packets {
 
 	/**
 	 * Sends the packet to all players tracking the chunk at the given coordinates.
-	 * @param p
-	 * @param w
-	 * @param chunkX
-	 * @param chunkZ
 	 */
 	public static void sendPacketToAllTrackingChunk(Packet p, World w, int chunkX, int chunkZ) {
 		if (Sides.logical(w).isServer()) {

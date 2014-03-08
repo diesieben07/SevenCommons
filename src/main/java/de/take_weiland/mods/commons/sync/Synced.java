@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
  * </ul>
  *
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target({ ElementType.FIELD, ElementType.METHOD })
 public @interface Synced {
 
@@ -40,9 +40,8 @@ public @interface Synced {
 
 	/**
 	 * When applied to a Method, define the corresponding setter method (must be in this class and marked with {@link de.take_weiland.mods.commons.sync.Synced.Setter @Setter})
-	 * @return
 	 */
-	String setter() default "NULL";
+	String setter() default "NULL"; // default value doesn't matter as it's read by ASM and default values are not present in an AnnotationNode
 
     /**
      * Dummy interface, used as default value for target() and syncer()

@@ -3,21 +3,31 @@ package de.take_weiland.mods.commons.sync;
 import com.google.common.collect.Maps;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTank;
 
 import java.util.Map;
 
 public final class Syncing {
 
 	private static Map<Class<?>, TypeSyncer<?>> syncers = Maps.newHashMap();
-	
-	public static <T> void registerSyncer(Class<T> clazz, TypeSyncer<? super T> syncer) {
+
+	/**
+	 * <p>register a global TypeSyncer to make the given type available for syncing with {@link de.take_weiland.mods.commons.sync.Synced @Synced}.</p>
+	 * <p>Overrides may be specified using {@link de.take_weiland.mods.commons.sync.Synced#syncer()}</p>
+	 * @param clazz the class to register a syncer for
+	 * @param syncer the syncer to register
+	 */
+	public static <T> void registerSyncer(Class<T> clazz, TypeSyncer<T> syncer) {
 		syncers.put(clazz, syncer);
 	}
-	
+
+	/**
+	 * get a TypeSyncer for the given type
+	 * @param clazz the class to be synced
+	 * @return a TypeSyncer for the given class or null if none
+	 */
 	@SuppressWarnings("unchecked") // cast is safe as map is guarded by registerSyncer
-	public static <T> TypeSyncer<? super T> getSyncerFor(Class<T> clazz) {
-		return (TypeSyncer<? super T>) syncers.get(clazz);
+	public static <T> TypeSyncer<T> getSyncerFor(Class<T> clazz) {
+		return (TypeSyncer<T>) syncers.get(clazz);
 	}
 	
 	static {

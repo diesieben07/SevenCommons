@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.templates;
+package de.take_weiland.mods.commons.tileentity;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;

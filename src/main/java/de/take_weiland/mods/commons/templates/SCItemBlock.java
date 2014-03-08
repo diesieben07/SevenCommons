@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.templates;
 
+import de.take_weiland.mods.commons.inv.NameableInventory;
+import de.take_weiland.mods.commons.tileentity.TileAutoName;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
@@ -24,8 +26,8 @@ public class SCItemBlock<T extends Block> extends ItemBlock {
 		if (stack.hasDisplayName() && block.hasTileEntity(metadata)) {
 			TileEntity te = world.getBlockTileEntity(x, y, z);
 			if (te instanceof NameableInventory &&
-					(!(te instanceof NameableInventory.TileAutoName) ||
-							((NameableInventory.TileAutoName) te).shouldAutoname(player, stack, world, x, y, z))) {
+					(!(te instanceof TileAutoName) ||
+							((TileAutoName) te).shouldAutoname(player, stack, world, x, y, z))) {
 					((NameableInventory)te).setCustomName(stack.getDisplayName());
 			}
 		}
