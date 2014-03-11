@@ -14,6 +14,7 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		register(new EntityPlayerTransformer());
 		register(new EntityTransformer());
 		register(new PacketTransformer());
+		register(new SimplePacketTypeTransformer());
 		register(new EntityTrackerEntryTransformer());
 		register(new AnalyzingTransformer());
 		register(new ListenableTransformer());

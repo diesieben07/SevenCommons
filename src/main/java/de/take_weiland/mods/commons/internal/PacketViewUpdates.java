@@ -4,16 +4,13 @@ import com.google.common.collect.Lists;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.updater.*;
-import de.take_weiland.mods.commons.net.DataBuf;
-import de.take_weiland.mods.commons.net.DataBuffers;
-import de.take_weiland.mods.commons.net.Packets;
-import de.take_weiland.mods.commons.net.WritableDataBuf;
+import de.take_weiland.mods.commons.net.*;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.Collection;
 import java.util.List;
 
-public class PacketViewUpdates extends SCPacket {
+public class PacketViewUpdates extends ModPacket {
 
 	private Collection<? extends UpdatableMod> mods;
 	private Collection<ClientDummyUpdatableMod> clientMods;

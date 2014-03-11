@@ -1,7 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.PacketWithFactory;
+import de.take_weiland.mods.commons.internal.ModPacketProxy;
+import de.take_weiland.mods.commons.internal.SimplePacketTypeProxy;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -10,14 +11,14 @@ import net.minecraft.world.World;
 
 /**
  * <p>An abstract base class for simpler Packet handling. Make a subclass of this for every PacketType.
- * Register your Types with {@link de.take_weiland.mods.commons.net.Network#simplePacketHandler(String, Class)}</p>
+ * Register your Types with {@link Network#simplePacketHandler(String, Class)}</p>
  * <p>To send this packet, use the Methods implemented from {@link de.take_weiland.mods.commons.net.SimplePacket}. Example:
  * <pre>{@code
  *new ExamplePacket(someData, "moreData").sendToServer();
  *new DifferentPacket(evenMoreData).sendToPlayer(somePlayer);
  * }</pre></p>
  */
-public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> implements SimplePacket {
+public abstract class ModPacket implements SimplePacket {
 
 	/**
 	 * whether the given (logical) side can receive this packet
@@ -56,19 +57,15 @@ public abstract class ModPacket<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>
 		}
 		return delegate;
 	}
-	
-	private SimplePacket make0() {
-		@SuppressWarnings("unchecked") // safe, ASM generated
-		PacketWithFactory<TYPE> pwf = (PacketWithFactory<TYPE>) this;
+
+	@SuppressWarnings("unchecked") // safe, ASM generated code
+	private <TYPE extends Enum<TYPE> & SimplePacketType & SimplePacketTypeProxy> SimplePacket make0() {
+		ModPacketProxy proxy = (ModPacketProxy) this;
+		TYPE type = (TYPE) proxy._sc$getPacketType();
 		
-		PacketBuilder builder = pwf._sc$getPacketFactory().builder(pwf._sc$getPacketType(), expectedSize());
+		PacketBuilder builder = ((PacketFactory<TYPE>)type._sc$getPacketFactory()).builder(type, expectedSize());
 		write(builder);
 		return builder.build();
-	}
-
-	@SuppressWarnings("unchecked")
-	public final TYPE type() {
-		return ((PacketWithFactory<TYPE>) this)._sc$getPacketType();
 	}
 
 	@Override

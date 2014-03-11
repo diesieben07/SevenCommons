@@ -7,7 +7,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 
 import java.util.logging.Logger;
 
-class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> implements PacketHandler<TYPE> {
+class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType> implements PacketHandler<TYPE> {
 
 	private static final SimplePacketHandler<?> INSTANCE;
 	
@@ -15,7 +15,7 @@ class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> impl
 		INSTANCE = init();
 	}
 	
-	private static <TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> SimplePacketHandler<?> init() {
+	private static <TYPE extends Enum<TYPE> & SimplePacketType> SimplePacketHandler<?> init() {
 		return new SimplePacketHandler<TYPE>();
 	}
 	
@@ -30,7 +30,7 @@ class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> impl
 	@Override
 	public void handle(TYPE t, DataBuf buffer, EntityPlayer player, Side side) {
 		try {
-			ModPacket<TYPE> packet = t.packet().newInstance();
+			ModPacket packet = t.packet().newInstance();
 			if (packet.validOn(side)) {
 				packet.handle(buffer, player, side);
 			} else {
@@ -45,7 +45,7 @@ class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> impl
 	}
 	
 	@SuppressWarnings("unchecked") // safe, we only call packet()
-	static <TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> SimplePacketHandler<TYPE> instance() {
+	static <TYPE extends Enum<TYPE> & SimplePacketType> SimplePacketHandler<TYPE> instance() {
 		return (SimplePacketHandler<TYPE>) INSTANCE;
 	}
 

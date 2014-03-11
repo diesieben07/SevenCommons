@@ -4,10 +4,11 @@ import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import net.minecraft.entity.player.EntityPlayer;
 
-public class PacketDownloadProgress extends SCPacket {
+public class PacketDownloadProgress extends ModPacket {
 
 	private String modId;
 	private int downloadProgress;

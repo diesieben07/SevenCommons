@@ -49,5 +49,5 @@ public final class ASMHooks {
 		SyncASMHooks.syncEntityPropertyIds(player, tracked);
 		MinecraftForge.EVENT_BUS.post(new PlayerStartTrackingEvent(player, tracked));
 	}
-	
+
 }

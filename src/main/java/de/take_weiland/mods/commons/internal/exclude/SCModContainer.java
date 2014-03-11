@@ -14,10 +14,7 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.config.ConfigInjector;
 import de.take_weiland.mods.commons.config.GetProperty;
-import de.take_weiland.mods.commons.internal.SCEventHandler;
-import de.take_weiland.mods.commons.internal.SCPacket;
-import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
+import de.take_weiland.mods.commons.internal.*;
 import de.take_weiland.mods.commons.internal.updater.CommandUpdates;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.net.Network;
@@ -33,7 +30,7 @@ public final class SCModContainer extends DummyModContainer {
 	public static SevenCommonsProxy proxy;
 	public static SCModContainer instance;
 	public static UpdateControllerLocal updateController;
-    public static PacketFactory<SCPacket.Type> packetFactory;
+    public static PacketFactory<SCPackets> packetFactory;
 	
 	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
 	public static boolean updaterEnabled = true;
@@ -81,7 +78,7 @@ public final class SCModContainer extends DummyModContainer {
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 		ConfigInjector.inject(config, getClass());
 
-		packetFactory = Network.simplePacketHandler("SevenCommons", SCPacket.Type.class);
+		packetFactory = Network.simplePacketHandler("SevenCommons", SCPackets.class);
 
 		proxy.preInit(event);
 

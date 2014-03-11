@@ -3,9 +3,8 @@ package de.take_weiland.mods.commons.internal.transformers;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
 import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
-import de.take_weiland.mods.commons.internal.PacketWithFactory;
+import de.take_weiland.mods.commons.internal.ModPacketProxy;
 import de.take_weiland.mods.commons.net.ModPacket;
-import de.take_weiland.mods.commons.net.PacketFactory;
 import org.objectweb.asm.tree.*;
 
 import static org.objectweb.asm.Opcodes.*;
@@ -25,13 +24,11 @@ public final class PacketTransformer extends AbstractASMTransformer {
 			addDefaultConstructor(clazz);
 		}
 		
-		FieldNode factory = createFactoryField(clazz);
 		FieldNode type = createTypeField(clazz);
 		
-		createGetter(clazz, factory, PacketWithFactory.GET_FACTORY);
-		createGetter(clazz, type, PacketWithFactory.GET_TYPE);
+		createGetter(clazz, type, ModPacketProxy.GET_TYPE);
 		
-		clazz.interfaces.add("de/take_weiland/mods/commons/internal/PacketWithFactory");
+		clazz.interfaces.add("de/take_weiland/mods/commons/internal/ModPacketProxy");
 	}
 	
 	private void createGetter(ClassNode clazz, FieldNode field, String name) {
@@ -42,16 +39,6 @@ public final class PacketTransformer extends AbstractASMTransformer {
 		method.instructions.add(new InsnNode(ARETURN));
 		
 		clazz.methods.add(method);
-	}
-
-	public static final String FACTORY_FIELD = "_sc$packetfactory";
-
-	private FieldNode createFactoryField(ClassNode clazz) {
-		String name = FACTORY_FIELD;
-		String desc = getDescriptor(PacketFactory.class);
-		FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC, name, desc, null, null);
-		clazz.fields.add(field);
-		return field;
 	}
 
 	public static final String TYPE_FIELD = "_sc$packettype";

@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -9,7 +10,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import java.util.Arrays;
 import java.util.List;
 
-public final class PacketEntityPropsIds extends SCPacket {
+public final class PacketEntityPropsIds extends ModPacket {
 
 	private Entity entity;
 	private List<SyncedEntityProperties> props;

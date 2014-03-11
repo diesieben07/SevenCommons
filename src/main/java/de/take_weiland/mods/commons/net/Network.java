@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.internal.SimplePacketTypeProxy;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.transformers.PacketTransformer;
 import de.take_weiland.mods.commons.util.JavaUtils;
@@ -29,26 +30,25 @@ public final class Network {
 	}
 
 	/**
-	 * <p>create a {@link de.take_weiland.mods.commons.net.PacketFactory} that uses the given Channel to send Packets of type {@code TYPE} and dispatches handling off to the corresponding
-	 * {@link de.take_weiland.mods.commons.net.ModPacket} class of the respective TYPE.</p>
+	 * <p>create a {@link PacketFactory} that uses the given Channel to send Packets of type {@code TYPE} and dispatches handling off to the corresponding
+	 * {@link ModPacket} class of the respective TYPE.</p>
 	 * @param channel the Packet channel to send on
 	 * @param typeClass the Enum class holding the possible Packet types
 	 * @return a new PacketFactory
 	 */
-	public static <TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> PacketFactory<TYPE> simplePacketHandler(String channel, Class<TYPE> typeClass) {
-		PacketFactory<TYPE> factory = new FMLPacketHandlerImpl<TYPE>(channel, SimplePacketHandler.<TYPE>instance(), typeClass);
+	public static <TYPE extends Enum<TYPE> & SimplePacketType> PacketFactory<TYPE> simplePacketHandler(String channel, Class<TYPE> typeClass) {
+		PacketFactory<TYPE> factory = makeFactory(channel, typeClass, SimplePacketHandler.<TYPE>instance());
 		injectTypesAndFactory(JavaUtils.getEnumConstantsShared(typeClass), factory);
 		return factory;
 	}
 
-	private static <TYPE extends Enum<TYPE> & SimplePacketType<TYPE>> void injectTypesAndFactory(TYPE[] values, PacketFactory<TYPE> factory) {
+	private static <TYPE extends Enum<TYPE> & SimplePacketType> void injectTypesAndFactory(TYPE[] values, PacketFactory<TYPE> factory) {
+		((SimplePacketTypeProxy) values[0])._sc$setPacketFactory(factory); // sets a static field, so handles all
+
 		try {
 			for (TYPE e : values) {
 				Class<?> packetClass = e.packet();
-				Field field = packetClass.getDeclaredField(PacketTransformer.FACTORY_FIELD);
-				field.setAccessible(true);
-				field.set(null, factory);
-				field = packetClass.getDeclaredField(PacketTransformer.TYPE_FIELD);
+				Field field = packetClass.getDeclaredField(PacketTransformer.TYPE_FIELD);
 				field.setAccessible(true);
 				field.set(null, e);
 			}
@@ -71,4 +71,5 @@ public final class Network {
 			return ((NetLoginHandler)netHandler).myTCPConnection;
 		}
 	}
+
 }

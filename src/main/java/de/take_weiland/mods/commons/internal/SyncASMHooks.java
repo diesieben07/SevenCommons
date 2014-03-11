@@ -29,7 +29,7 @@ public final class SyncASMHooks {
 		if (out != null) {
 			return out;
 		}
-		out = SCModContainer.packetFactory.builder(SCPacket.Type.SYNC);
+		out = SCModContainer.packetFactory.builder(SCPackets.SYNC);
 		DataBuffers.writeEnum(out, type);
 		type.injectInfo(obj, out);
 		return out;

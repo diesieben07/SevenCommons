@@ -532,9 +532,19 @@ public final class ASMUtils {
 		 */
 		boolean isInterface();
 
+		boolean isAssignableFrom(ClassInfo other);
+
 	}
 
-	private static final class ClassInfoFromClazz implements ClassInfo {
+	private static abstract class AbstractClassInfo implements ClassInfo {
+
+		@Override
+		public boolean isAssignableFrom(ClassInfo other) {
+			return ASMUtils.isAssignableFrom(this, other);
+		}
+	}
+
+	private static final class ClassInfoFromClazz extends AbstractClassInfo {
 
 		private final Class<?> clazz;
 		private final Collection<String> interfaces;
@@ -567,7 +577,7 @@ public final class ASMUtils {
 
 	}
 
-	private static final class ClassInfoFromNode implements ClassInfo {
+	private static final class ClassInfoFromNode extends AbstractClassInfo {
 
 		private final ClassNode clazz;
 

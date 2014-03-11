@@ -5,13 +5,14 @@ import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.updater.ModUpdateState;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import net.minecraft.entity.player.EntityPlayer;
 
 import static de.take_weiland.mods.commons.net.Packets.readEnum;
 import static de.take_weiland.mods.commons.net.Packets.writeEnum;
 
-public class PacketModState extends SCPacket {
+public class PacketModState extends ModPacket {
 
 	private String modId;
 	private ModUpdateState state;

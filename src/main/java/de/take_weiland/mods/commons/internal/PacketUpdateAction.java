@@ -7,6 +7,7 @@ import de.take_weiland.mods.commons.internal.updater.PlayerUpdateInformation;
 import de.take_weiland.mods.commons.internal.updater.UpdatableMod;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.player.EntityPlayer;
@@ -16,7 +17,7 @@ import net.minecraft.util.EnumChatFormatting;
 import static de.take_weiland.mods.commons.net.Packets.readEnum;
 import static de.take_weiland.mods.commons.net.Packets.writeEnum;
 
-public class PacketUpdateAction extends SCPacket {
+public class PacketUpdateAction extends ModPacket {
 
 	private Action action;
 	private String modId;
