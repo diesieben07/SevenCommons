@@ -14,8 +14,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatMessageComponent;
 import net.minecraft.util.EnumChatFormatting;
 
-import static de.take_weiland.mods.commons.net.Packets.readEnum;
-import static de.take_weiland.mods.commons.net.Packets.writeEnum;
+import static de.take_weiland.mods.commons.net.DataBuffers.readEnum;
+import static de.take_weiland.mods.commons.net.DataBuffers.writeEnum;
 
 public class PacketUpdateAction extends ModPacket {
 

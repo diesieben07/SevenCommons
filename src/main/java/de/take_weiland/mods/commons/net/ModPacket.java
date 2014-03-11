@@ -69,77 +69,77 @@ public abstract class ModPacket implements SimplePacket {
 	}
 
 	@Override
-	public final void sendTo(PacketTarget target) {
-		make().sendTo(target);
+	public final SimplePacket sendTo(PacketTarget target) {
+		return make().sendTo(target);
 	}
 
 	@Override
-	public final void sendToServer() {
-		make().sendToServer();
+	public final SimplePacket sendToServer() {
+		return make().sendToServer();
 	}
 
 	@Override
-	public final void sendTo(EntityPlayer player) {
-		make().sendTo(player);
+	public final SimplePacket sendTo(EntityPlayer player) {
+		return make().sendTo(player);
 	}
 
 	@Override
-	public final void sendTo(Iterable<? extends EntityPlayer> players) {
-		make().sendTo(players);
+	public final SimplePacket sendTo(Iterable<? extends EntityPlayer> players) {
+		return make().sendTo(players);
 	}
 
 	@Override
-	public final void sendToAll() {
-		make().sendToAll();
+	public final SimplePacket sendToAll() {
+		return make().sendToAll();
 	}
 
 	@Override
-	public final void sendToAllInDimension(int dimension) {
-		make().sendToAllInDimension(dimension);
+	public final SimplePacket sendToAllInDimension(int dimension) {
+		return make().sendToAllInDimension(dimension);
 	}
 
 	@Override
-	public final void sendToAllInDimension(World world) {
-		make().sendToAllInDimension(world);
+	public final SimplePacket sendToAllInDimension(World world) {
+		return make().sendToAllInDimension(world);
 	}
 
 	@Override
-	public final void sendToAllNear(World world, double x, double y, double z, double radius) {
-		make().sendToAllNear(world, x, y, z, radius);
+	public final SimplePacket sendToAllNear(World world, double x, double y, double z, double radius) {
+		return make().sendToAllNear(world, x, y, z, radius);
 	}
 
 	@Override
-	public final void sendToAllNear(int dimension, double x, double y, double z, double radius) {
-		make().sendToAllNear(dimension, x, y, z, radius);
+	public final SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) {
+		return make().sendToAllNear(dimension, x, y, z, radius);
 	}
 
 	@Override
-	public final void sendToAllNear(Entity entity, double radius) {
-		make().sendToAllNear(entity, radius);
+	public final SimplePacket sendToAllNear(Entity entity, double radius) {
+		return make().sendToAllNear(entity, radius);
 	}
 
 	@Override
-	public final void sendToAllNear(TileEntity te, double radius) {
-		make().sendToAllNear(te, radius);
+	public final SimplePacket sendToAllNear(TileEntity te, double radius) {
+		return make().sendToAllNear(te, radius);
 	}
 
 	@Override
-	public final void sendToAllTracking(Entity entity) {
-		make().sendToAllTracking(entity);
+	public final SimplePacket sendToAllTracking(Entity entity) {
+		return make().sendToAllTracking(entity);
 	}
 
 	@Override
-	public final void sendToAllTracking(TileEntity te) {
-		make().sendToAllTracking(te);
+	public final SimplePacket sendToAllTracking(TileEntity te) {
+		return make().sendToAllTracking(te);
 	}
 
 	@Override
-	public final void sendToAllAssociated(Entity e) {
-		make().sendToAllAssociated(e);
+	public final SimplePacket sendToAllAssociated(Entity e) {
+		return make().sendToAllAssociated(e);
 	}
 
 	@Override
-	public final void sendToViewing(Container c) {
-		make().sendToViewing(c);
+	public final SimplePacket sendToViewing(Container c) {
+		return make().sendToViewing(c);
 	}
 }

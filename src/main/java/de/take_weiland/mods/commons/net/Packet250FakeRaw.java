@@ -106,77 +106,93 @@ class Packet250FakeRaw<TYPE extends Enum<TYPE>> extends Packet250CustomPayload i
 
 	// SimplePacket
 	@Override
-	public void sendTo(PacketTarget target) {
+	public SimplePacket sendTo(PacketTarget target) {
 		target.send(this);
+		return this;
 	}
 
 	@Override
-	public void sendToServer() {
+	public SimplePacket sendToServer() {
 		PacketDispatcher.sendPacketToServer(this);
+		return this;
 	}
 
 	@Override
-	public void sendTo(EntityPlayer player) {
+	public SimplePacket sendTo(EntityPlayer player) {
 		Packets.sendPacketToPlayer(this, player);
+		return this;
 	}
 
 	@Override
-	public void sendTo(Iterable<? extends EntityPlayer> players) {
+	public SimplePacket sendTo(Iterable<? extends EntityPlayer> players) {
 		Packets.sendPacketToPlayers(this, players);
+		return this;
 	}
 
 	@Override
-	public void sendToAll() {
+	public SimplePacket sendToAll() {
 		PacketDispatcher.sendPacketToAllPlayers(this);
+		return this;
 	}
 
 	@Override
-	public void sendToAllInDimension(int dimension) {
+	public SimplePacket sendToAllInDimension(int dimension) {
 		PacketDispatcher.sendPacketToAllInDimension(this, dimension);
+		return this;
 	}
 
 	@Override
-	public void sendToAllInDimension(World world) {
+	public SimplePacket sendToAllInDimension(World world) {
 		PacketDispatcher.sendPacketToAllInDimension(this, world.provider.dimensionId);
+		return this;
 	}
 
 	@Override
-	public void sendToAllNear(World world, double x, double y, double z, double radius) {
+	public SimplePacket sendToAllNear(World world, double x, double y, double z, double radius) {
 		PacketDispatcher.sendPacketToAllAround(x, y, z, radius, world.provider.dimensionId, this);
+		return this;
 	}
 
 	@Override
-	public void sendToAllNear(int dimension, double x, double y, double z, double radius) {
+	public SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) {
 		PacketDispatcher.sendPacketToAllAround(x, y, z, radius, dimension, this);
+		return this;
 	}
 
 	@Override
-	public void sendToAllNear(Entity entity, double radius) {
+	public SimplePacket sendToAllNear(Entity entity, double radius) {
 		PacketDispatcher.sendPacketToAllAround(entity.posX, entity.posY, entity.posZ, radius, entity.worldObj.provider.dimensionId, this);
+
+		return this;
 	}
 
 	@Override
-	public void sendToAllNear(TileEntity te, double radius) {
+	public SimplePacket sendToAllNear(TileEntity te, double radius) {
 		PacketDispatcher.sendPacketToAllAround(te.xCoord, te.yCoord, te.zCoord, radius, te.worldObj.provider.dimensionId, this);
+		return this;
 	}
 
 	@Override
-	public void sendToAllTracking(Entity entity) {
+	public SimplePacket sendToAllTracking(Entity entity) {
 		Packets.sendPacketToAllTracking(this, entity);
+		return this;
 	}
 
 	@Override
-	public void sendToAllTracking(TileEntity te) {
+	public SimplePacket sendToAllTracking(TileEntity te) {
 		Packets.sendPacketToAllTracking(this, te);
+		return this;
 	}
 
 	@Override
-	public void sendToAllAssociated(Entity e) {
+	public SimplePacket sendToAllAssociated(Entity e) {
 		Packets.sendPacketToAllAssociated(this, e);
+		return this;
 	}
 
 	@Override
-	public void sendToViewing(Container c) {
+	public SimplePacket sendToViewing(Container c) {
 		Packets.sendPacketToViewing(this, c);
+		return this;
 	}
 }

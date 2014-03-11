@@ -11,35 +11,35 @@ import net.minecraft.world.World;
  */
 public interface SimplePacket {
 
-	void sendTo(PacketTarget target);
-	
-	void sendToServer();
+	SimplePacket sendTo(PacketTarget target);
 
-	void sendTo(EntityPlayer player);
-	
-	void sendTo(Iterable<? extends EntityPlayer> players);
+	SimplePacket sendToServer();
 
-	void sendToAll();
+	SimplePacket sendTo(EntityPlayer player);
 
-	void sendToAllInDimension(int dimension);
+	SimplePacket sendTo(Iterable<? extends EntityPlayer> players);
 
-	void sendToAllInDimension(World world);
+	SimplePacket sendToAll();
 
-	void sendToAllNear(World world, double x, double y, double z, double radius);
+	SimplePacket sendToAllInDimension(int dimension);
 
-	void sendToAllNear(int dimension, double x, double y, double z, double radius);
+	SimplePacket sendToAllInDimension(World world);
 
-	void sendToAllNear(Entity entity, double radius);
+	SimplePacket sendToAllNear(World world, double x, double y, double z, double radius);
 
-	void sendToAllNear(TileEntity te, double radius);
+	SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius);
 
-	void sendToAllTracking(Entity entity);
-	
-	void sendToAllTracking(TileEntity te);
+	SimplePacket sendToAllNear(Entity entity, double radius);
 
-	void sendToAllAssociated(Entity e);
+	SimplePacket sendToAllNear(TileEntity te, double radius);
 
-	void sendToViewing(Container c);
+	SimplePacket sendToAllTracking(Entity entity);
+
+	SimplePacket sendToAllTracking(TileEntity te);
+
+	SimplePacket sendToAllAssociated(Entity e);
+
+	SimplePacket sendToViewing(Container c);
 
 	/**
 	 * A dummy packet which doesn't do anything
@@ -47,49 +47,49 @@ public interface SimplePacket {
 	public static final SimplePacket DUMMY = new SimplePacket() {
 
 		@Override
-		public void sendToServer() { }
+		public SimplePacket sendToServer() { return this; }
 
 		@Override
-		public void sendToAllTracking(Entity entity) { }
+		public SimplePacket sendToAllTracking(Entity entity) { return this; }
 
 		@Override
-		public void sendToAllNear(TileEntity tileEntity, double radius) { }
+		public SimplePacket sendToAllNear(TileEntity tileEntity, double radius) { return this; }
 
 		@Override
-		public void sendToAllNear(Entity entity, double radius) { }
+		public SimplePacket sendToAllNear(Entity entity, double radius) { return this; }
 
 		@Override
-		public void sendToAllNear(int dimension, double x, double y, double z, double radius) { }
+		public SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) { return this; }
 
 		@Override
-		public void sendToAllNear(World world, double x, double y, double z, double radius) { }
+		public SimplePacket sendToAllNear(World world, double x, double y, double z, double radius) { return this; }
 
 		@Override
-		public void sendToAllInDimension(World world) { }
+		public SimplePacket sendToAllInDimension(World world) { return this; }
 
 		@Override
-		public void sendToAllInDimension(int dimension) { }
+		public SimplePacket sendToAllInDimension(int dimension) { return this; }
 
 		@Override
-		public void sendToAll() { }
+		public SimplePacket sendToAll() { return this; }
 
 		@Override
-		public void sendTo(Iterable<? extends EntityPlayer> players) { }
+		public SimplePacket sendTo(Iterable<? extends EntityPlayer> players) { return this; }
 
 		@Override
-		public void sendTo(EntityPlayer player) { }
+		public SimplePacket sendTo(EntityPlayer player) { return this; }
 
 		@Override
-		public void sendTo(PacketTarget target) { }
+		public SimplePacket sendTo(PacketTarget target) { return this; }
 
 		@Override
-		public void sendToAllTracking(TileEntity te) { }
+		public SimplePacket sendToAllTracking(TileEntity te) { return this; }
 
 		@Override
-		public void sendToAllAssociated(Entity e) { }
+		public SimplePacket sendToAllAssociated(Entity e) { return this; }
 
 		@Override
-		public void sendToViewing(Container c) { }
+		public SimplePacket sendToViewing(Container c) { return this; }
 	};
 	
 }

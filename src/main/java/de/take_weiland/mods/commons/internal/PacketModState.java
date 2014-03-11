@@ -9,8 +9,8 @@ import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import net.minecraft.entity.player.EntityPlayer;
 
-import static de.take_weiland.mods.commons.net.Packets.readEnum;
-import static de.take_weiland.mods.commons.net.Packets.writeEnum;
+import static de.take_weiland.mods.commons.net.DataBuffers.readEnum;
+import static de.take_weiland.mods.commons.net.DataBuffers.writeEnum;
 
 public class PacketModState extends ModPacket {
 
