@@ -22,7 +22,7 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 	/**
 	 * the ItemStack this inventory stores it's data to
 	 */
-	protected final ItemStack originalStack;
+	protected final ItemStack stack;
 	/**
 	 * the NBT key to store data in
 	 */
@@ -34,7 +34,7 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 	 * @param nbtKey the NBT key to use
 	 */
 	protected ItemInventory(ItemStack item, String nbtKey) {
-		originalStack = item;
+		stack = item;
 		this.nbtKey = nbtKey;
 		readFromNbt(getNbt());
 	}
@@ -61,7 +61,7 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 	}
 
 	private NBTTagCompound getNbt() {
-		return NBT.getOrCreateCompound(ItemStacks.getNbt(originalStack), nbtKey);
+		return NBT.getOrCreateCompound(ItemStacks.getNbt(stack), nbtKey);
 	}
 
 	public abstract static class WithInventory<T extends WithInventory<T>> extends ItemInventory<T> {
@@ -83,7 +83,7 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 		@Override
 		public void onChange() {
 			super.onChange();
-			inv.onInventoryChanged();
+			inv.setInventorySlotContents(slot, stack);
 		}
 
 	}
