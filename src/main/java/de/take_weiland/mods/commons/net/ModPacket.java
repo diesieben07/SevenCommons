@@ -60,9 +60,9 @@ public abstract class ModPacket implements SimplePacket {
 
 	@SuppressWarnings("unchecked") // safe, ASM generated code
 	private <TYPE extends Enum<TYPE> & SimplePacketType & SimplePacketTypeProxy> SimplePacket make0() {
-		ModPacketProxy proxy = (ModPacketProxy) this;
-		TYPE type = (TYPE) proxy._sc$getPacketType();
-		
+		ModPacketProxy<TYPE> proxy = (ModPacketProxy<TYPE>) this;
+		TYPE type = proxy._sc$getPacketType();
+
 		PacketBuilder builder = ((PacketFactory<TYPE>)type._sc$getPacketFactory()).builder(type, expectedSize());
 		write(builder);
 		return builder.build();
