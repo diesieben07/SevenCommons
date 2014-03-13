@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import de.take_weiland.mods.commons.asm.ASMUtils;
+import de.take_weiland.mods.commons.asm.ClassInfo;
 import de.take_weiland.mods.commons.nbt.ToNbt;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -27,22 +28,22 @@ final class NBTTransformer {
 	private static final String entityPropsName = "net/minecraftforge/common/IExtendedEntityProperties";
 	private static final String nbtAsmHooks = "de/take_weiland/mods/commons/internal/NBTASMHooks";
 
-	private static final ASMUtils.ClassInfo enumClassInfo = ASMUtils.getClassInfo(Enum.class);
-	private static final ASMUtils.ClassInfo tileEntity = ASMUtils.getClassInfo("net/minecraft/tileentity/TileEntity");
-	private static final ASMUtils.ClassInfo entity = ASMUtils.getClassInfo("net/minecraft/entity/Entity");
-	private static final ASMUtils.ClassInfo entityProps = ASMUtils.getClassInfo(entityPropsName);
+	private static final ClassInfo enumClassInfo = ASMUtils.getClassInfo(Enum.class);
+	private static final ClassInfo tileEntity = ASMUtils.getClassInfo("net/minecraft/tileentity/TileEntity");
+	private static final ClassInfo entity = ASMUtils.getClassInfo("net/minecraft/entity/Entity");
+	private static final ClassInfo entityProps = ASMUtils.getClassInfo(entityPropsName);
 
 	static void transform(ClassNode clazz) {
 		clazz.access &= ~(ACC_PRIVATE | ACC_PROTECTED);
 		clazz.access |= ACC_PUBLIC;
 
 		ClassType type;
-		ASMUtils.ClassInfo me = ASMUtils.getClassInfo(clazz);
-		if (ASMUtils.isAssignableFrom(tileEntity, me)) {
+		ClassInfo me = ASMUtils.getClassInfo(clazz);
+		if (tileEntity.isAssignableFrom(me)) {
 			type = ClassType.TILE_ENTITY;
-		} else if (ASMUtils.isAssignableFrom(entity, me)) {
+		} else if (entity.isAssignableFrom(me)) {
 			type = ClassType.ENTITY;
-		} else if (ASMUtils.isAssignableFrom(entityProps, me)) {
+		} else if (entityProps.isAssignableFrom(me)) {
 			type = ClassType.ENTITY_PROPS;
 		} else {
 			throw new IllegalArgumentException(String.format("Don't know how to save @ToNbt fields in class %s!", clazz.name));
@@ -203,7 +204,7 @@ final class NBTTransformer {
 		return false;
 	}
 
-	private static boolean checkHasProps(ASMUtils.ClassInfo clazz) {
+	private static boolean checkHasProps(ClassInfo clazz) {
 		for (String iface : clazz.interfaces()) {
 			if (iface.equals(entityPropsName) || checkHasProps(ASMUtils.getClassInfo(iface))) {
 				return true;

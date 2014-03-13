@@ -1,25 +1,14 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
-import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import de.take_weiland.mods.commons.internal.ModPacketProxy;
-import de.take_weiland.mods.commons.net.ModPacket;
 import org.objectweb.asm.tree.*;
 
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
-public final class PacketTransformer extends AbstractASMTransformer {
+public final class PacketTransformer {
 
-	private final ClassInfo modPacketCI = ASMUtils.getClassInfo(ModPacket.class);
-	
-	@Override
-	public void transform(ClassNode clazz) {
-		if (!ASMUtils.isAssignableFrom(modPacketCI, ASMUtils.getClassInfo(clazz))) {
-			return;
-		}
-		
+	static void transform(ClassNode clazz) {
 		if (!hasDefaultConstructor(clazz)) {
 			addDefaultConstructor(clazz);
 		}
@@ -31,7 +20,7 @@ public final class PacketTransformer extends AbstractASMTransformer {
 		clazz.interfaces.add("de/take_weiland/mods/commons/internal/ModPacketProxy");
 	}
 	
-	private void createGetter(ClassNode clazz, FieldNode field, String name) {
+	private static void createGetter(ClassNode clazz, FieldNode field, String name) {
 		String desc = getMethodDescriptor(getType(field.desc));
 		MethodNode method = new MethodNode(ACC_PUBLIC, name, desc, null, null);
 		
@@ -43,7 +32,7 @@ public final class PacketTransformer extends AbstractASMTransformer {
 
 	public static final String TYPE_FIELD = "_sc$packettype";
 	
-	private FieldNode createTypeField(ClassNode clazz) {
+	private static FieldNode createTypeField(ClassNode clazz) {
 		String name = TYPE_FIELD;
 		String desc = getDescriptor(Enum.class);
 		FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC, name, desc, null, null);
@@ -51,7 +40,7 @@ public final class PacketTransformer extends AbstractASMTransformer {
 		return field;
 	} 
 	
-	private void addDefaultConstructor(ClassNode clazz) {
+	private static void addDefaultConstructor(ClassNode clazz) {
 		String name = "<init>";
 		String desc = getMethodDescriptor(VOID_TYPE);
 		MethodNode cstr = new MethodNode(ACC_PUBLIC, name, desc, null, null);
@@ -61,7 +50,7 @@ public final class PacketTransformer extends AbstractASMTransformer {
 		clazz.methods.add(cstr);
 	}
 
-	private boolean hasDefaultConstructor(ClassNode clazz) {
+	private static boolean hasDefaultConstructor(ClassNode clazz) {
 		String desc = getMethodDescriptor(VOID_TYPE);
 		for (MethodNode method : clazz.methods) {
 			if (method.name.equals("<init>") && method.desc.equals(desc)) {
@@ -70,12 +59,4 @@ public final class PacketTransformer extends AbstractASMTransformer {
 		}
 		return false;
 	}
-
-	@Override
-	public boolean transforms(String className) {
-		return !className.startsWith("net/minecraft/")
-				&& !className.startsWith("net/minecraftforge/")
-				&& !className.startsWith("cpw/mods/fml/");
-	}
-
 }

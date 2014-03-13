@@ -15,13 +15,13 @@ import org.objectweb.asm.tree.MethodNode;
  * Saves on iterating the fields/methods of each class over and over again
  * @author diesieben07
  */
-public class AnalyzingTransformer extends AbstractASMTransformer {
+public class AnnotationFindingTransformer extends AbstractASMTransformer {
 
 	private static final String toNbtDesc = Type.getDescriptor(ToNbt.class);
 	private static final String syncedDesc = Type.getDescriptor(Synced.class);
 
 	@Override
-	public void transform(ClassNode clazz) {
+	public boolean transform(ClassNode clazz) {
 		boolean synced = false;
 		boolean nbt = false;
 		FieldNode[] fields = clazz.fields.toArray(new FieldNode[clazz.fields.size()]);
@@ -40,7 +40,7 @@ public class AnalyzingTransformer extends AbstractASMTransformer {
 					synced = true;
 				}
 				if (nbt && synced) {
-					return; // Warning: if more tests are added for methods, change this to a break!
+					return true; // Warning: if more tests are added for methods, change this to a break!
 				}
 			}
 		}
@@ -50,14 +50,13 @@ public class AnalyzingTransformer extends AbstractASMTransformer {
 			Iterable<AnnotationNode> anns = JavaUtils.concatNullable(method.visibleAnnotations, method.invisibleAnnotations);
 			for (AnnotationNode ann : anns) {
 				if (!synced && ann.desc.equals(syncedDesc)) {
-					SyncingTransformer.transform(clazz);
-					synced = true;
-				}
-				if (synced) {
-					break methods;
+					if (SyncingTransformer.transform(clazz)) {
+						return true;
+					}
 				}
 			}
 		}
+		return nbt || synced;
 	}
 
 	@Override

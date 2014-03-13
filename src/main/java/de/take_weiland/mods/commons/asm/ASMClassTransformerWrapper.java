@@ -39,16 +39,20 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 		ClassNode node = null;
 		boolean wasExpandFrames = false;
 		int lastWriterFlags = -1;
+		boolean wasTransformed = false;
 		for (ASMClassTransformer transformer : transformers) {
 			if (transformer.transforms(internalName)) {
 				int readerFlags = transformer.getClassReaderFlags();
 				int writerFlags = transformer.getClassWriterFlags();
 
 				if (lastWriterFlags >= 0 && writerFlags != lastWriterFlags && node != null) { // last one needs to be saved first
-					ClassWriter writer = new ExtendedClassWriter(writerFlags);
-					node.accept(writer);
-					bytes = writer.toByteArray();
-					reader = new ClassReader(bytes);
+					if (wasTransformed) {
+						ClassWriter writer = new ExtendedClassWriter(writerFlags);
+						node.accept(writer);
+						bytes = writer.toByteArray();
+						reader = new ClassReader(bytes);
+					}
+					wasTransformed = false;
 					node = null; // clear out the node, it needs to be recreated
 				}
 				lastWriterFlags = writerFlags;
@@ -60,7 +64,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 				}
 				wasExpandFrames = wantsExpandFrames;
 				try {
-					transformer.transform(node);
+					wasTransformed |= transformer.transform(node);
 				} catch (Throwable e) {
 					System.err.println("Exception during transformation of: " + transformedName);
 					e.printStackTrace();
@@ -68,7 +72,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 				}
 			}
 		}
-		if (node != null) {
+		if (node != null && wasTransformed) {
 			ClassWriter writer = new ExtendedClassWriter(lastWriterFlags);
 			node.accept(writer);
 			bytes = writer.toByteArray();

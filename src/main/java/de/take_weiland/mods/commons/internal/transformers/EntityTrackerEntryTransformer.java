@@ -16,9 +16,10 @@ import static org.objectweb.asm.Type.*;
 public class EntityTrackerEntryTransformer extends AbstractASMTransformer {
 
 	@Override
-	public void transform(ClassNode clazz) {
+	public boolean transform(ClassNode clazz) {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS_MCP, M_TRY_START_WATCHING_THIS_SRG);
 		method.instructions.insertBefore(findInsertionHook(method), generateEventCall(clazz));
+		return true;
 	}
 
 	private InsnList generateEventCall(ClassNode clazz) {

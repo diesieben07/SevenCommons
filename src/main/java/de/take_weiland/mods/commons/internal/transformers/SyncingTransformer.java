@@ -39,12 +39,12 @@ public final class SyncingTransformer {
 		LOGGER = Logger.getLogger("SevenCommonsSync");
 	}
 
-	public static void transform(ClassNode clazz) {
+	public static boolean transform(ClassNode clazz) {
 		Class<?> superClass;
 		try {
 			superClass = SyncingTransformer.class.getClassLoader().loadClass(ASMUtils.binaryName(clazz.superName));
 		} catch (ClassNotFoundException e) {
-			return;
+			return false;
 		}
 
 		SyncType type;
@@ -58,7 +58,7 @@ public final class SyncingTransformer {
 			type = SyncType.ENTITY_PROPS;
 		} else {
 			LOGGER.warning(String.format("Can't sync class %s, it will be ignored.", clazz.name));
-			return;
+			return false;
 		}
 
 		LinkedListMultimap<Type, SyncedElement> elements = LinkedListMultimap.create(); // need LinkedList to preserve iteration order
@@ -103,6 +103,7 @@ public final class SyncingTransformer {
 
 			clazz.interfaces.add("de/take_weiland/mods/commons/internal/SyncedEntityProperties");
 		}
+		return true;
 	}
 
 	private static void createGetter(ClassNode clazz, String name, FieldNode field) {

@@ -12,7 +12,7 @@ import static de.take_weiland.mods.commons.internal.ASMConstants.M_SET_WORLD_AND
 public final class GuiScreenTransformer extends AbstractASMTransformer {
 
 	@Override
-	public void transform(ClassNode clazz) {
+	public boolean transform(ClassNode clazz) {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_SET_WORLD_AND_RESOLUTION_MCP, M_SET_WORLD_AND_RESOLUTION_SRG);
 		InsnList insns = new InsnList();
 
@@ -24,6 +24,7 @@ public final class GuiScreenTransformer extends AbstractASMTransformer {
 
 		AbstractInsnNode lastReturn = ASMUtils.findLastReturn(method);
 		method.instructions.insertBefore(lastReturn, insns);
+		return true;
 	}
 
 	@Override

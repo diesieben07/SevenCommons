@@ -12,9 +12,10 @@ import static de.take_weiland.mods.commons.internal.ASMConstants.M_CONVERT_TO_VI
 public final class EntityZombieTransformer extends AbstractASMTransformer {
 
 	@Override
-	public void transform(ClassNode clazz) {
+	public boolean transform(ClassNode clazz) {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_CONVERT_TO_VILLAGER_MCP, M_CONVERT_TO_VILLAGER_SRG);
 		method.instructions.insert(findTarget(method), makeHook(clazz));
+		return true;
 	}
 
 	private AbstractInsnNode findTarget(MethodNode method) {

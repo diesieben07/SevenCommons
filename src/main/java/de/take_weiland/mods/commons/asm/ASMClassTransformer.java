@@ -13,8 +13,9 @@ public interface ASMClassTransformer {
 	/**
 	 * Transform the given ClassNode. Only called whne {@link #transforms(String)} returns true for the Class name
 	 * @param clazz the class to transform
+	 * @return true if the class was transformed
 	 */
-	void transform(ClassNode clazz);
+	boolean transform(ClassNode clazz);
 
 	/**
 	 * return true if the given class name is to be transformed by this ClassTransformer.

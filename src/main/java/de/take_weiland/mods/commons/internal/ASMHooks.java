@@ -6,12 +6,16 @@ import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.event.ZombieConvertEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
+import de.take_weiland.mods.commons.metadata.Metadata;
 import de.take_weiland.mods.commons.util.MiscUtil;
+import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 
 /**
@@ -48,6 +52,10 @@ public final class ASMHooks {
 	public static void onStartTracking(EntityPlayer player, Entity tracked) {
 		SyncASMHooks.syncEntityPropertyIds(player, tracked);
 		MinecraftForge.EVENT_BUS.post(new PlayerStartTrackingEvent(player, tracked));
+	}
+
+	public static Metadata dispatchBlockGetMetadata(ItemBlock item, Object holder, ItemStack stack) {
+		return ((MetadataBlockProxy<?>) Block.blocksList[item.getBlockID()])._sc$getMetadata(holder, stack);
 	}
 
 }

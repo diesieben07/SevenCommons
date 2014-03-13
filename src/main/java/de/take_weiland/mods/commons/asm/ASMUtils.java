@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Collections2;
@@ -15,7 +14,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.lang.annotation.Annotation;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -113,7 +111,7 @@ public final class ASMUtils {
 
 	/**
 	 * like {@link #findMethod(org.objectweb.asm.tree.ClassNode, String)}, but throws if method not found
-	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingMethodException if method doesn't exist
+	 * @throws MissingMethodException if method doesn't exist
 	 */
 	public static MethodNode requireMethod(ClassNode clazz, String name) {
 		MethodNode m = findMethod(clazz, name);
@@ -125,7 +123,7 @@ public final class ASMUtils {
 
 	/**
 	 * like {@link #findMethod(org.objectweb.asm.tree.ClassNode, String, String)}, but throws if method not found
-	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingMethodException if method doesn't exist
+	 * @throws MissingMethodException if method doesn't exist
 	 */
 	public static MethodNode requireMethod(ClassNode clazz, String name, String desc) {
 		MethodNode m = findMethod(clazz, name, desc);
@@ -137,7 +135,7 @@ public final class ASMUtils {
 
 	/**
 	 * like {@link #findMinecraftMethod(org.objectweb.asm.tree.ClassNode, String, String, String)}, but throws if method not found
-	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingMethodException if method doesn't exist
+	 * @throws MissingMethodException if method doesn't exist
 	 */
 	public static MethodNode requireMinecraftMethod(ClassNode clazz, String mcpName, String srgName, String desc) {
 		MethodNode m = findMinecraftMethod(clazz, mcpName, srgName, desc);
@@ -149,7 +147,7 @@ public final class ASMUtils {
 
 	/**
 	 * like {@link #findMinecraftMethod(org.objectweb.asm.tree.ClassNode, String, String)}, but throws if method not found
-	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingMethodException if method doesn't exist
+	 * @throws MissingMethodException if method doesn't exist
 	 */
 	public static MethodNode requireMinecraftMethod(ClassNode clazz, String mcpName, String srgName) {
 		MethodNode m = findMinecraftMethod(clazz, mcpName, srgName);
@@ -294,7 +292,7 @@ public final class ASMUtils {
 	 * @param name the class to load
 	 * @param readerFlags the flags to pass to the {@link org.objectweb.asm.ClassReader}
 	 * @return a ClassNode
-	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingClassException if the class couldn't be found or can't be loaded as raw-bytes
+	 * @throws MissingClassException if the class couldn't be found or can't be loaded as raw-bytes
 	 */
 	public static ClassNode getClassNode(String name, int readerFlags) {
 		try {
@@ -425,7 +423,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * create a {@link de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo} representing the given Class
+	 * create a {@link ClassInfo} representing the given Class
 	 * @param clazz the Class
 	 * @return a ClassInfo
 	 */
@@ -434,7 +432,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * create a {@link de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo} representing the given ClassNode
+	 * create a {@link ClassInfo} representing the given ClassNode
 	 * @param clazz the ClassNode
 	 * @return a ClassInfo
 	 */
@@ -443,11 +441,11 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>create a {@link de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo} representing the given class.</p>
+	 * <p>create a {@link ClassInfo} representing the given class.</p>
 	 * <p>This method will not load any classes through the ClassLoader directly, but instead use the ASM library to analyze the raw class bytes.</p>
 	 * @param className the class
 	 * @return a ClassInfo
-	 * @throws de.take_weiland.mods.commons.asm.ASMUtils.MissingClassException if the class could not be found
+	 * @throws MissingClassException if the class could not be found
 	 */
 	public static ClassInfo getClassInfo(String className) {
 		className = binaryName(className);
@@ -460,199 +458,11 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Checks if {@code parent} is either the same as or a superclass or superinterface of {@code child}.</p>
-	 * <p>Simply put, this method is equivalent to invoking {@code parent.isAssignableFrom(child)},
-	 * if {@code parent} and {@code child} were actual {@link java.lang.Class} objects.</p>
-	 * <p>This method does not load any new classes.</p>
-	 * @param parent the parent ClassInfo
-	 * @param child the child ClassInfo
-	 * @return true if parent is assignable from child
+	 * @deprecated use {@link de.take_weiland.mods.commons.asm.ClassInfo#isAssignableFrom(ClassInfo)}
 	 */
+	@Deprecated
 	public static boolean isAssignableFrom(ClassInfo parent, ClassInfo child) {
-		// cheap tests first
-		if (parent.internalName().equals("java/lang/Object") // everything is assignable to Object
-				|| parent.internalName().equals(child.internalName()) // parent == child => works
-				|| parent.internalName().equals(child.superName()) // parent == child.super => works
-				|| child.interfaces().contains(parent.internalName())) { // child.interfaces contains parent => works
-			return true;
-		}
-		// object doesn't implement anything
-		if (child.internalName().equals("java/lang/Object") && parent.isInterface()) {
-			return false;
-		}
-		// now we need to loop through every superinterface
-		for (String iface : child.interfaces()) {
-			if (isAssignableFrom(parent, getClassInfo(iface))) {
-				return true;
-			}
-		}
-		// interfaces don't have superclasses
-		if (child.isInterface()) {
-			return false;
-		}
-		// loop through every superclass
-		ClassInfo current = child;
-		// don't need to check Object, as that would have been covered by the cheap tests
-		while (!current.internalName().equals("java/lang/Object") && !current.superName().equals("java/lang/Object")) {
-			current = getClassInfo(current.superName());
-			if (isAssignableFrom(parent, current)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * some information about a class, obtain via {@link #getClassInfo(String)}, {@link #getClassInfo(Class)} or {@link #getClassInfo(org.objectweb.asm.tree.ClassNode)}
-	 */
-	public static interface ClassInfo {
-
-		/**
-		 * a collection of internal names, representing the interfaces directly implemented by this class
-		 * @return the interfaces implemented by this class
-		 *
-		 */
-		Collection<String> interfaces();
-
-		/**
-		 * the internal name of the superclass of this class
-		 * @return the superclass, or null if this ClassInfo is an interface or represents java/lang/Object
-		 */
-		String superName();
-
-		/**
-		 * the internal name of this class
-		 * @return
-		 */
-		String internalName();
-
-		/**
-		 * check if this class is an interface
-		 * @return true if this class is an interface
-		 */
-		boolean isInterface();
-
-		boolean isAssignableFrom(ClassInfo other);
-
-	}
-
-	private static abstract class AbstractClassInfo implements ClassInfo {
-
-		@Override
-		public boolean isAssignableFrom(ClassInfo other) {
-			return ASMUtils.isAssignableFrom(this, other);
-		}
-	}
-
-	private static final class ClassInfoFromClazz extends AbstractClassInfo {
-
-		private final Class<?> clazz;
-		private final Collection<String> interfaces;
-
-		ClassInfoFromClazz(Class<?> clazz) {
-			this.clazz = clazz;
-			interfaces = Collections2.transform(Arrays.asList(clazz.getInterfaces()), ClassToNameFunc.INSTANCE);
-		}
-
-		@Override
-		public Collection<String> interfaces() {
-			return interfaces;
-		}
-
-		@Override
-		public String superName() {
-			Class<?> s = clazz.getSuperclass();
-			return s == null ? null : Type.getInternalName(s);
-		}
-
-		@Override
-		public String internalName() {
-			return Type.getInternalName(clazz);
-		}
-
-		@Override
-		public boolean isInterface() {
-			return clazz.isInterface();
-		}
-
-	}
-
-	private static final class ClassInfoFromNode extends AbstractClassInfo {
-
-		private final ClassNode clazz;
-
-		ClassInfoFromNode(ClassNode clazz) {
-			this.clazz = clazz;
-		}
-
-		@Override
-		public Collection<String> interfaces() {
-			return clazz.interfaces;
-		}
-
-		@Override
-		public String superName() {
-			return clazz.superName;
-		}
-
-		@Override
-		public String internalName() {
-			return clazz.name;
-		}
-
-		@Override
-		public boolean isInterface() {
-			return (clazz.access & ACC_INTERFACE) == ACC_INTERFACE;
-		}
-
-	}
-
-	private static enum ClassToNameFunc implements Function<Class<?>, String> {
-		INSTANCE;
-
-		@Override
-		public String apply(Class<?> input) {
-			return Type.getInternalName(input);
-		}
-	}
-
-	public static class MissingClassException extends RuntimeException {
-
-		public MissingClassException(String message) {
-			super(message);
-		}
-
-		public MissingClassException(String message, Throwable cause) {
-			super(message, cause);
-		}
-	}
-
-	public static class MissingMethodException extends RuntimeException {
-
-		private MissingMethodException(String text) {
-			super(text);
-		}
-
-		static MissingMethodException create(String method, String clazz) {
-			return new MissingMethodException(method + " in " + clazz);
-		}
-
-		static MissingMethodException create(String mcpMethod, String srgMethod, String clazz) {
-			return create(formatMcpSrg(mcpMethod, srgMethod), clazz);
-		}
-
-		static MissingMethodException withDesc(String method, String desc, String clazz) {
-			return create(String.format("%s(%s)", method, desc), clazz);
-		}
-
-		static MissingMethodException withDesc(String mcpName, String srgName, String desc, String clazz) {
-			return withDesc(formatMcpSrg(mcpName, srgName), desc, clazz);
-		}
-
-		private static String formatMcpSrg(String mcp, String srg) {
-			return String.format("%s[%s]", mcp, srg);
-		}
-
+		return parent.isAssignableFrom(child);
 	}
 
 }

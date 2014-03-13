@@ -16,7 +16,7 @@ import static org.objectweb.asm.Type.*;
 public final class EntityTransformer extends AbstractASMTransformer {
 
 	@Override
-	public void transform(ClassNode clazz) {
+	public boolean transform(ClassNode clazz) {
 		FieldNode syncedProps = addSyncedPropsField(clazz);
 
 		String onUpdate = ASMUtils.useMcpNames() ? M_ON_UPDATE_MCP : M_ON_UPDATE_SRG;
@@ -32,6 +32,7 @@ public final class EntityTransformer extends AbstractASMTransformer {
 		addPropertySetter(clazz, syncedProps);
 		
 		clazz.interfaces.add("de/take_weiland/mods/commons/internal/EntityProxy");
+		return true;
 	}
 
 	private void addPropertySetter(ClassNode clazz, FieldNode syncedProps) {

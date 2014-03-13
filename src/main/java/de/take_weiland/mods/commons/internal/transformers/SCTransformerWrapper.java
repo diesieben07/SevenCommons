@@ -9,14 +9,24 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 
 	@Override
 	protected void setup() {
+		// vanilla stuff
 		register(new GuiScreenTransformer());
 		register(new EntityZombieTransformer());
 		register(new EntityPlayerTransformer());
 		register(new EntityTransformer());
-		register(new PacketTransformer());
-		register(new SimplePacketTypeTransformer());
+		register(new ItemStackTransformer());
 		register(new EntityTrackerEntryTransformer());
-		register(new AnalyzingTransformer());
+		register(new ItemBlockTransformer());
+
+		// packets
+		register(new SimplePacketTypeTransformer());
+
+		// @Synced & @ToNbt
+		register(new AnnotationFindingTransformer());
+
+		register(new HierarchyAnalyzingTransformer());
+
+		// listenables
 		register(new ListenableTransformer());
 	}
 

@@ -12,7 +12,7 @@ import static de.take_weiland.mods.commons.internal.ASMConstants.M_CLONE_PLAYER_
 public final class EntityPlayerTransformer extends AbstractASMTransformer {
 
 	@Override
-	public void transform(ClassNode clazz) {
+	public boolean transform(ClassNode clazz) {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_CLONE_PLAYER_MCP, M_CLONE_PLAYER_SRG);
 		InsnList insns = new InsnList();
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 1)); // load this = the new player
@@ -26,6 +26,7 @@ public final class EntityPlayerTransformer extends AbstractASMTransformer {
 
 		AbstractInsnNode lastReturn = ASMUtils.findLastReturn(method);
 		method.instructions.insertBefore(lastReturn, insns);
+		return true;
 	}
 
 	@Override

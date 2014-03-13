@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.asm;
 
-import de.take_weiland.mods.commons.asm.ASMUtils.ClassInfo;
 import org.objectweb.asm.ClassWriter;
 
 import static de.take_weiland.mods.commons.asm.ASMUtils.getClassInfo;
