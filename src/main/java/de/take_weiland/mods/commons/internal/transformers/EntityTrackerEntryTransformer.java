@@ -1,8 +1,9 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
+import de.take_weiland.mods.commons.asm.ASMClassTransformer;
+import de.take_weiland.mods.commons.asm.ClassInfo;
 import de.take_weiland.mods.commons.internal.ASMConstants;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -13,10 +14,10 @@ import static org.objectweb.asm.Opcodes.INSTANCEOF;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 import static org.objectweb.asm.Type.*;
 
-public class EntityTrackerEntryTransformer extends AbstractASMTransformer {
+public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 
 	@Override
-	public boolean transform(ClassNode clazz) {
+	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS_MCP, M_TRY_START_WATCHING_THIS_SRG);
 		method.instructions.insertBefore(findInsertionHook(method), generateEventCall(clazz));
 		return true;

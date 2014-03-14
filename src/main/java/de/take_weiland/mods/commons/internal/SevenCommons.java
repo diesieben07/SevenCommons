@@ -35,8 +35,8 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	public static final String MINECRAFT_VERSION = "1.6.4";
 	public static final String VERSION = "@VERSION@";	
 	
-	public static LaunchClassLoader CLASSLOADER;
-	
+	public static LaunchClassLoader CLASSLOADER = (LaunchClassLoader) SevenCommons.class.getClassLoader();
+
 	public static File source;
 	
 	static {
@@ -47,7 +47,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	@Override
 	public String[] getASMTransformerClass() {
 		return new String[] {
-			"de.take_weiland.mods.commons.internal.transformers.SCTransformerWrapper"
+			"de.take_weiland.mods.commons.internal.transformers.SCTransformerWrapper",
 		};
 	}
 

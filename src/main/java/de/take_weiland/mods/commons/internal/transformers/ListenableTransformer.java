@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.Listenable;
-import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
+import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ClassInfo;
 import de.take_weiland.mods.commons.internal.ListenableInternal;
 import org.objectweb.asm.tree.*;
@@ -16,7 +16,7 @@ import static org.objectweb.asm.Type.*;
 /**
  * @author diesieben07
  */
-public class ListenableTransformer extends AbstractASMTransformer {
+public class ListenableTransformer implements ASMClassTransformer {
 
 	private static final ClassInfo listenableCI = getClassInfo(Listenable.class);
 	private static final String listDesc = getDescriptor(List.class);
@@ -24,7 +24,7 @@ public class ListenableTransformer extends AbstractASMTransformer {
 	private static final String setterDesc = getMethodDescriptor(VOID_TYPE, getType(List.class));
 
 	@Override
-	public boolean transform(ClassNode clazz) {
+	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
 		if (!shouldTransform(clazz)) {
 			return false;
 		}

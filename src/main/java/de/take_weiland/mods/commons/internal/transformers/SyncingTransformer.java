@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 import com.google.common.collect.*;
 import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.asm.ASMUtils;
+import de.take_weiland.mods.commons.asm.ClassInfo;
 import de.take_weiland.mods.commons.internal.ASMConstants;
 import de.take_weiland.mods.commons.internal.SyncType;
 import de.take_weiland.mods.commons.internal.SyncedEntityProperties;
@@ -13,18 +14,15 @@ import de.take_weiland.mods.commons.net.PacketTarget;
 import de.take_weiland.mods.commons.sync.Synced;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 import net.minecraft.entity.Entity;
-import net.minecraft.inventory.Container;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
+
+import static de.take_weiland.mods.commons.asm.ASMUtils.getClassInfo;
 
 /**
  * contains black bytecode magic. Do not touch.
@@ -33,28 +31,26 @@ public final class SyncingTransformer {
 
 	private static final Logger LOGGER;
 	private static final String syncAsmHooks = "de/take_weiland/mods/commons/internal/SyncASMHooks";
+	private static final ClassInfo extPropsCI = getClassInfo(IExtendedEntityProperties.class);
+	private static final ClassInfo entityCI = getClassInfo("net/minecraft/entity/Entity");
+	private static final ClassInfo tileEntityCI = getClassInfo("net/minecraft/tileentity/TileEntity");
+	private static final ClassInfo containerCI = getClassInfo("net/minecraft/inventory/Container");
+
 
 	static {
 		FMLLog.makeLog("SevenCommonsSync");
 		LOGGER = Logger.getLogger("SevenCommonsSync");
 	}
 
-	public static boolean transform(ClassNode clazz) {
-		Class<?> superClass;
-		try {
-			superClass = SyncingTransformer.class.getClassLoader().loadClass(ASMUtils.binaryName(clazz.superName));
-		} catch (ClassNotFoundException e) {
-			return false;
-		}
-
+	public static boolean transform(ClassNode clazz, ClassInfo classInfo, ListIterator<FieldNode> fields, ListIterator<MethodNode> methods) {
 		SyncType type;
-		if (Entity.class.isAssignableFrom(superClass)) {
+		if (entityCI.isAssignableFrom(classInfo)) {
 			type = SyncType.ENTITY;
-		} else if (TileEntity.class.isAssignableFrom(superClass)) {
+		} else if (tileEntityCI.isAssignableFrom(classInfo)) {
 			type = SyncType.TILE_ENTITY;
-		} else if (Container.class.isAssignableFrom(superClass)) {
+		} else if (containerCI.isAssignableFrom(classInfo)) {
 			type = SyncType.CONTAINER;
-		} else if (ASMUtils.isAssignableFrom(ASMUtils.getClassInfo(IExtendedEntityProperties.class), ASMUtils.getClassInfo(clazz))) {
+		} else if (extPropsCI.isAssignableFrom(classInfo)) {
 			type = SyncType.ENTITY_PROPS;
 		} else {
 			LOGGER.warning(String.format("Can't sync class %s, it will be ignored.", clazz.name));
@@ -67,53 +63,53 @@ public final class SyncingTransformer {
 
 		int idx = 0;
 		for (FieldNode field : ImmutableList.copyOf(clazz.fields)) {
-			if (makeSyncedElement(clazz, targets, elements, idx, false, field, Type.getType(field.desc), ASMUtils.getAnnotation(field, Synced.class))) {
+			if (makeSyncedElement(clazz, fields, targets, elements, idx, false, field, Type.getType(field.desc), ASMUtils.getAnnotation(field, Synced.class))) {
 				++idx;
 			}
 		}
 
 		for (MethodNode method : ImmutableList.copyOf(clazz.methods)) {
-			if (makeSyncedElement(clazz, targets, elements, idx, true, method, Type.getReturnType(method.desc), ASMUtils.getAnnotation(method, Synced.class))) {
+			if (makeSyncedElement(clazz, fields, targets, elements, idx, true, method, Type.getReturnType(method.desc), ASMUtils.getAnnotation(method, Synced.class))) {
 				++idx;
 			}
 			checkIsSetter(setters, method);
 		}
 
-		addToConstructors(clazz, findRootConstructors(clazz), makeNonStaticInitMethod(clazz, elements.values(), targets), makeStaticInitMethod(clazz, elements.values(), targets, createHasInitField(clazz)));
+		addToConstructors(clazz, findRootConstructors(clazz), makeNonStaticInitMethod(clazz, methods, elements.values(), targets), makeStaticInitMethod(clazz, methods, elements.values(), targets, createHasInitField(clazz, fields)));
 
 		List<MethodNode> syncMethods = Lists.newArrayListWithCapacity(elements.keySet().size());
 		for (Type target : elements.keySet()) {
-			syncMethods.add(createSyncMethod(clazz, type, target, target == null ? null : targets.get(target), elements.get(target)));
+			syncMethods.add(createSyncMethod(clazz, methods, type, target, target == null ? null : targets.get(target), elements.get(target)));
 		}
 
-		createReadMethod(clazz, elements.values(), setters);
+		createReadMethod(clazz, methods, elements.values(), setters);
 
 		clazz.interfaces.add("de/take_weiland/mods/commons/internal/SyncedObject");
 
 		injectSyncCalls(clazz, type, syncMethods);
 
 		if (type == SyncType.ENTITY_PROPS) {
-			FieldNode owner = createPrivateField(clazz, "_sc$syncedPropsOwner", Type.getType(Entity.class));
-			FieldNode index = createPrivateField(clazz, "_sc$syncedPropsIndex", Type.INT_TYPE);
-			FieldNode ident = createPrivateField(clazz, "_sc$syncedPropsIdentifier", Type.getType(String.class));
+			FieldNode owner = createPrivateField(fields, "_sc$syncedPropsOwner", Type.getType(Entity.class));
+			FieldNode index = createPrivateField(fields, "_sc$syncedPropsIndex", Type.INT_TYPE);
+			FieldNode ident = createPrivateField(fields, "_sc$syncedPropsIdentifier", Type.getType(String.class));
 			addInjectDataMethod(clazz, owner, index, ident);
-			createGetter(clazz, SyncedEntityProperties.GET_ENTITY, owner);
-			createGetter(clazz, SyncedEntityProperties.GET_INDEX, index);
-			createGetter(clazz, SyncedEntityProperties.GET_IDENTIFIER, ident);
+			createGetter(clazz, methods, SyncedEntityProperties.GET_ENTITY, owner);
+			createGetter(clazz, methods, SyncedEntityProperties.GET_INDEX, index);
+			createGetter(clazz, methods, SyncedEntityProperties.GET_IDENTIFIER, ident);
 
 			clazz.interfaces.add("de/take_weiland/mods/commons/internal/SyncedEntityProperties");
 		}
 		return true;
 	}
 
-	private static void createGetter(ClassNode clazz, String name, FieldNode field) {
+	private static void createGetter(ClassNode clazz, ListIterator<MethodNode> methods, String name, FieldNode field) {
 		Type fieldType = Type.getType(field.desc);
 		MethodNode method = new MethodNode(Opcodes.ACC_PUBLIC, name, Type.getMethodDescriptor(fieldType), null, null);
 		InsnList insns = method.instructions;
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));
 		insns.add(new FieldInsnNode(Opcodes.GETFIELD, clazz.name, field.name, field.desc));
 		insns.add(new InsnNode(fieldType.getOpcode(Opcodes.IRETURN)));
-		clazz.methods.add(method);
+		methods.add(method);
 	}
 
 	private static void addInjectDataMethod(ClassNode clazz, FieldNode owner, FieldNode index, FieldNode identifier) {
@@ -139,9 +135,9 @@ public final class SyncingTransformer {
 		clazz.methods.add(method);
 	}
 
-	private static FieldNode createPrivateField(ClassNode clazz, String name, Type type) {
+	private static FieldNode createPrivateField(ListIterator<FieldNode> fields, String name, Type type) {
 		FieldNode field = new FieldNode(Opcodes.ACC_PRIVATE, name, type.getDescriptor(), null, null);
-		clazz.fields.add(field);
+		fields.add(field);
 		return field;
 	}
 
@@ -191,7 +187,7 @@ public final class SyncingTransformer {
 		found.instructions.insert(call);
 	}
 
-	private static void createReadMethod(ClassNode clazz, List<SyncedElement> elements, Map<String, MethodNode> setters) {
+	private static void createReadMethod(ClassNode clazz, ListIterator<MethodNode> methods, List<SyncedElement> elements, Map<String, MethodNode> setters) {
 		String name = SyncedObject.READ;
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(DataBuf.class));
 		MethodNode method = new MethodNode(Opcodes.ACC_PUBLIC, name, desc, null, null);
@@ -274,10 +270,10 @@ public final class SyncingTransformer {
 			insns.add(new InsnNode(Opcodes.POP));
 		}
 		insns.add(new InsnNode(Opcodes.RETURN));
-		clazz.methods.add(method);
+		methods.add(method);
 	}
 
-	private static MethodNode createSyncMethod(ClassNode clazz, SyncType type, Type target, FieldNode targetField, List<SyncedElement> elements) {
+	private static MethodNode createSyncMethod(ClassNode clazz, ListIterator<MethodNode> methods, SyncType type, Type target, FieldNode targetField, List<SyncedElement> elements) {
 		String name = "_sc$doSync_" + (target == null ? "default" : target.getInternalName().replace('/', '_'));
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PRIVATE, name, desc, null, null);
@@ -346,7 +342,7 @@ public final class SyncingTransformer {
 
 		insns.add(new InsnNode(Opcodes.RETURN));
 
-		clazz.methods.add(method);
+		methods.add(method);
 		return method;
 	}
 
@@ -396,13 +392,13 @@ public final class SyncingTransformer {
 		return cnstrs;
 	}
 
-	private static FieldNode createHasInitField(ClassNode clazz) {
+	private static FieldNode createHasInitField(ClassNode clazz, ListIterator<FieldNode> fields) {
 		FieldNode isInit = new FieldNode(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE, "_sc$syncHasInit", Type.BOOLEAN_TYPE.getDescriptor(), null, null);
-		clazz.fields.add(isInit);
+		fields.add(isInit);
 		return isInit;
 	}
 
-	private static boolean makeSyncedElement(ClassNode clazz, Map<Type, FieldNode> targets, ListMultimap<Type, SyncedElement> list, int index, boolean isMethod, Object fieldOrMethod, Type typeToSync, AnnotationNode syncedAnnotation) {
+	private static boolean makeSyncedElement(ClassNode clazz, ListIterator<FieldNode> fieldIt, Map<Type, FieldNode> targets, ListMultimap<Type, SyncedElement> list, int index, boolean isMethod, Object fieldOrMethod, Type typeToSync, AnnotationNode syncedAnnotation) {
 		if (syncedAnnotation == null) {
 			return false;
 		}
@@ -430,7 +426,7 @@ public final class SyncingTransformer {
 		if (target != null && !targets.containsKey(target)) {
 			boolean targetStatic = hasNoArgConstructor(ASMUtils.getClassNode(target.getClassName()));
 			FieldNode targetField = new FieldNode(Opcodes.ACC_PRIVATE | (targetStatic ? Opcodes.ACC_STATIC : 0), "_sc_sync_target_" + target.getInternalName().replace('/', '_'), Type.getDescriptor(PacketTarget.class), null, null);
-			clazz.fields.add(targetField);
+			fieldIt.add(targetField);
 			targets.put(target, targetField);
 		}
 
@@ -447,7 +443,7 @@ public final class SyncingTransformer {
 			}
 		}
 		element.companion = new FieldNode(Opcodes.ACC_PRIVATE, "_sc$syncCompanion_" + element.getName(), typeToSync.getDescriptor(), null, null);
-		clazz.fields.add(element.companion);
+		fieldIt.add(element.companion);
 		return true;
 	}
 
@@ -462,7 +458,7 @@ public final class SyncingTransformer {
 		return false;
 	}
 
-	private static MethodNode makeNonStaticInitMethod(ClassNode clazz, Collection<SyncedElement> fields, Map<Type, FieldNode> targets) {
+	private static MethodNode makeNonStaticInitMethod(ClassNode clazz, ListIterator<MethodNode> methods, Collection<SyncedElement> fields, Map<Type, FieldNode> targets) {
 		String name = "_sc$syncInit";
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PRIVATE, name, desc, null, null);
@@ -495,11 +491,11 @@ public final class SyncingTransformer {
 		}
 
 		insns.add(new InsnNode(Opcodes.RETURN));
-		clazz.methods.add(method);
+		methods.add(method);
 		return method;
 	}
 
-	private static MethodNode makeStaticInitMethod(ClassNode clazz, Collection<SyncedElement> elements, Map<Type, FieldNode> targets, FieldNode isInit) {
+	private static MethodNode makeStaticInitMethod(ClassNode clazz, ListIterator<MethodNode> methods, Collection<SyncedElement> elements, Map<Type, FieldNode> targets, FieldNode isInit) {
 		String name = "_sc$syncStaticInit";
 		String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 		MethodNode method = new MethodNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC, name, desc, null, null);
@@ -540,7 +536,7 @@ public final class SyncingTransformer {
 		}
 
 		insns.add(new InsnNode(Opcodes.RETURN));
-		clazz.methods.add(method);
+		methods.add(method);
 		return method;
 	}
 

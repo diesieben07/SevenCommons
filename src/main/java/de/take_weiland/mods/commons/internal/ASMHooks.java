@@ -6,16 +6,17 @@ import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.event.ZombieConvertEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
+import de.take_weiland.mods.commons.metadata.HasMetadata;
 import de.take_weiland.mods.commons.metadata.Metadata;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.MiscUtil;
-import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
 /**
@@ -54,8 +55,20 @@ public final class ASMHooks {
 		MinecraftForge.EVENT_BUS.post(new PlayerStartTrackingEvent(player, tracked));
 	}
 
-	public static Metadata dispatchBlockGetMetadata(ItemBlock item, Object holder, ItemStack stack) {
-		return ((MetadataBlockProxy<?>) Block.blocksList[item.getBlockID()])._sc$getMetadata(holder, stack);
+	public static <T extends Enum<T> & Metadata.Simple> Metadata getSimpleMetadata(HasMetadata.Simple<T> holder, World world, int x, int y, int z) {
+		return JavaUtils.byOrdinal(holder.metaClass(), world.getBlockMetadata(x, y, z));
+	}
+
+	public static <T extends Enum<T> & Metadata.Simple> Metadata getSimpleMetadata(HasMetadata.Simple<T> holder, ItemStack stack) {
+		return JavaUtils.byOrdinal(holder.metaClass(), MiscUtil.getReflector().getRawDamage(stack));
+	}
+
+	public static <T extends Enum<T> & Metadata.Simple> void injectMetadataHolder(HasMetadata.Simple<T> holder) {
+		SimpleMetadataProxy proxy = (SimpleMetadataProxy) JavaUtils.byOrdinal(holder.metaClass(), 0);
+		if (proxy._sc$getMetadataHolder() != null) {
+			throw new IllegalStateException(String.format("Cannot reuse Metadata.Simple class %s!", holder.metaClass().getName()));
+		}
+		((SimpleMetadataProxy) JavaUtils.byOrdinal(holder.metaClass(), 0))._sc$injectMetadataHolder(holder);
 	}
 
 }

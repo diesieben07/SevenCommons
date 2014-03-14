@@ -1,14 +1,23 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
+import de.take_weiland.mods.commons.asm.ASMUtils;
+import de.take_weiland.mods.commons.asm.ClassInfo;
 import de.take_weiland.mods.commons.internal.ModPacketProxy;
+import de.take_weiland.mods.commons.net.ModPacket;
 import org.objectweb.asm.tree.*;
 
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
-public final class PacketTransformer {
+public final class PacketTransformer extends AbstractAnalyzingTransformer {
 
-	static void transform(ClassNode clazz) {
+	private static final ClassInfo modPacketCI = ASMUtils.getClassInfo(ModPacket.class);
+
+	@Override
+	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
+		if (!modPacketCI.isAssignableFrom(classInfo)) {
+			return false;
+		}
 		if (!hasDefaultConstructor(clazz)) {
 			addDefaultConstructor(clazz);
 		}
@@ -18,6 +27,7 @@ public final class PacketTransformer {
 		createGetter(clazz, type, ModPacketProxy.GET_TYPE);
 		
 		clazz.interfaces.add("de/take_weiland/mods/commons/internal/ModPacketProxy");
+		return true;
 	}
 	
 	private static void createGetter(ClassNode clazz, FieldNode field, String name) {

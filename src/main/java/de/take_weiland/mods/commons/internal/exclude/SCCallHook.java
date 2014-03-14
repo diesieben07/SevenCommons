@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.exclude;
 import cpw.mods.fml.relauncher.IFMLCallHook;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
-import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -60,7 +59,6 @@ public class SCCallHook implements IFMLCallHook {
 	@Override
 	public void injectData(Map<String, Object> data) {
 		mcDir = (File) data.get("mcLocation");
-		SevenCommons.CLASSLOADER = (LaunchClassLoader)data.get("classLoader");
 	}
 	
 	private File[] getModFolders() {

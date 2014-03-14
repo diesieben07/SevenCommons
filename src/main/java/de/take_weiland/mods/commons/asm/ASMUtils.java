@@ -40,15 +40,33 @@ public final class ASMUtils {
 	 * @throws java.lang.IllegalArgumentException if the method doesn't have valid return opcode (should never happen with any valid method)
 	 */
 	public static AbstractInsnNode findLastReturn(MethodNode method) {
-		int searchFor = Type.getReturnType(method.desc).getOpcode(Opcodes.IRETURN);
+		AbstractInsnNode node = findLast(method, Type.getReturnType(method.desc).getOpcode(Opcodes.IRETURN));
+		if (node == null) {
+			throw new IllegalArgumentException("Illegal method: Has no or wrong return opcode!");
+		}
+		return node;
+	}
+
+	public static AbstractInsnNode findLast(MethodNode method, int opcode) {
 		AbstractInsnNode node = method.instructions.getLast();
 		do {
-			if (node.getOpcode() == searchFor) {
+			if (node.getOpcode() == opcode) {
 				return node;
 			}
 			node = node.getPrevious();
 		} while (node != null);
-		throw new IllegalArgumentException("Illegal method: Has no or wrong return opcode!");
+		return null;
+	}
+
+	public static AbstractInsnNode findFirst(MethodNode method, int opcode) {
+		AbstractInsnNode node = method.instructions.getFirst();
+		do {
+			if (node.getOpcode() == opcode) {
+				return node;
+			}
+			node = node.getNext();
+		} while (node != null);
+		return null;
 	}
 
 	// *** method finding helpers *** //

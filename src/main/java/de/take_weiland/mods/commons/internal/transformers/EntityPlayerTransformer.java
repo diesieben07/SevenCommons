@@ -1,7 +1,8 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
+import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.AbstractASMTransformer;
+import de.take_weiland.mods.commons.asm.ClassInfo;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -9,10 +10,10 @@ import org.objectweb.asm.tree.*;
 import static de.take_weiland.mods.commons.internal.ASMConstants.M_CLONE_PLAYER_MCP;
 import static de.take_weiland.mods.commons.internal.ASMConstants.M_CLONE_PLAYER_SRG;
 
-public final class EntityPlayerTransformer extends AbstractASMTransformer {
+public final class EntityPlayerTransformer implements ASMClassTransformer {
 
 	@Override
-	public boolean transform(ClassNode clazz) {
+	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_CLONE_PLAYER_MCP, M_CLONE_PLAYER_SRG);
 		InsnList insns = new InsnList();
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 1)); // load this = the new player

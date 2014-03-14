@@ -7,12 +7,14 @@ import net.minecraft.nbt.NBTTagCompound;
  */
 public interface Metadata {
 
-	interface Extended {
+	interface Extended extends Metadata {
 
 		void write(NBTTagCompound nbt);
 
 		void read(NBTTagCompound nbt);
 
 	}
+
+	interface Simple extends Metadata { }
 
 }

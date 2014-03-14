@@ -33,17 +33,16 @@ final class NBTTransformer {
 	private static final ClassInfo entity = ASMUtils.getClassInfo("net/minecraft/entity/Entity");
 	private static final ClassInfo entityProps = ASMUtils.getClassInfo(entityPropsName);
 
-	static void transform(ClassNode clazz) {
+	static void transform(ClassNode clazz, ClassInfo classInfo) {
 		clazz.access &= ~(ACC_PRIVATE | ACC_PROTECTED);
 		clazz.access |= ACC_PUBLIC;
 
 		ClassType type;
-		ClassInfo me = ASMUtils.getClassInfo(clazz);
-		if (tileEntity.isAssignableFrom(me)) {
+		if (tileEntity.isAssignableFrom(classInfo)) {
 			type = ClassType.TILE_ENTITY;
-		} else if (entity.isAssignableFrom(me)) {
+		} else if (entity.isAssignableFrom(classInfo)) {
 			type = ClassType.ENTITY;
-		} else if (entityProps.isAssignableFrom(me)) {
+		} else if (entityProps.isAssignableFrom(classInfo)) {
 			type = ClassType.ENTITY_PROPS;
 		} else {
 			throw new IllegalArgumentException(String.format("Don't know how to save @ToNbt fields in class %s!", clazz.name));
@@ -78,7 +77,7 @@ final class NBTTransformer {
 			} else {
 				actualType = fieldType;
 			}
-			if (!ASMUtils.isPrimitive(actualType) && ASMUtils.isAssignableFrom(enumClassInfo, ASMUtils.getClassInfo(actualType.getInternalName()))) {
+			if (!ASMUtils.isPrimitive(actualType) && enumClassInfo.isAssignableFrom(ASMUtils.getClassInfo(actualType.getInternalName()))) {
 				enumFields.add(field);
 			}
 		}

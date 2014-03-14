@@ -16,17 +16,17 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		register(new EntityTransformer());
 		register(new ItemStackTransformer());
 		register(new EntityTrackerEntryTransformer());
-		register(new ItemBlockTransformer());
 
 		// packets
 		register(new SimplePacketTypeTransformer());
+		register(new PacketTransformer());
 
 		// @Synced & @ToNbt
 		register(new AnnotationFindingTransformer());
 
-		register(new HierarchyAnalyzingTransformer());
+		register(new HasSimpleMetaTransformer());
+		register(new SimpleMetadataTransformer());
 
-		// listenables
 		register(new ListenableTransformer());
 	}
 

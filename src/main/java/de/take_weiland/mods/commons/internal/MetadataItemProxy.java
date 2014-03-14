@@ -10,6 +10,6 @@ public interface MetadataItemProxy<T extends Metadata> {
 
 	public static final String GETTER = "_sc$getMetadata";
 
-	T _sc$getMetadata(Object holder, ItemStack stack);
+	T _sc$getMetadata(ItemStack stack);
 
 }

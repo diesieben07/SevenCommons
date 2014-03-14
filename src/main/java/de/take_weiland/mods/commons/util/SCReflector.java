@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureObject;
 import net.minecraft.entity.EntityTracker;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.packet.Packet;
@@ -90,5 +91,8 @@ public interface SCReflector {
 	@SideOnly(Side.CLIENT)
 	@Getter(field = { F_BUTTON_LIST_MCP, F_BUTTON_LIST_SRG})
 	List<GuiButton> getButtonList(GuiScreen screen);
+
+	@Getter(field = { F_ITEM_DAMAGE_MCP, F_ITEM_DAMAGE_SRG })
+	int getRawDamage(ItemStack stack);
 
 }

@@ -8,6 +8,8 @@ import net.minecraft.world.World;
  */
 public interface MetadataBlockProxy<T extends Metadata> extends MetadataItemProxy<T> {
 
-	T _sc$getMetadata(Object holder, World world, int x, int y, int z);
+	public static final String GETTER =" _sc$getMetadata";
+
+	T _sc$getMetadata(World world, int x, int y, int z);
 
 }

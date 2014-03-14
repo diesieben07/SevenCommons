@@ -65,10 +65,8 @@ abstract class AbstractClassInfo implements ClassInfo {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof ClassInfo)) return false;
+		return this == o || o instanceof ClassInfo && internalName().equals(((ClassInfo) o).internalName());
 
-		return internalName().equals(((ClassInfo) o).internalName());
 	}
 
 	@Override
