@@ -147,12 +147,12 @@ public final class JavaUtils {
 	 */
 	@Unsafe
 	public static RuntimeException throwUnchecked(Throwable t) {
-		JavaUtils.<RuntimeException>throwUnchecked0(t);
-		throw new AssertionError("unreachable");
+		// return is never reached
+		return JavaUtils.<RuntimeException>throwUnchecked0(t);
 	}
 	
 	@SuppressWarnings("unchecked") // dirty hack. the cast doesn't exist in bytecode, so it always succeeds
-	private static <T extends Throwable> void throwUnchecked0(Throwable t) throws T {
+	private static <T extends Throwable> RuntimeException throwUnchecked0(Throwable t) throws T {
 		throw (T)t;
 	}
 
