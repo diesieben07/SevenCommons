@@ -2,6 +2,8 @@ package de.take_weiland.mods.commons.util;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.item.ItemStacks;
+import de.take_weiland.mods.commons.item.Items;
 import de.take_weiland.mods.commons.templates.HasMetadata;
 import de.take_weiland.mods.commons.templates.Metadata.BlockMeta;
 import de.take_weiland.mods.commons.templates.SCItemBlock;
@@ -28,7 +30,7 @@ public final class Blocks {
 		GameRegistry.registerBlock(block, itemClass, baseName);
 		
 		if (block instanceof HasMetadata) {
-			ItemStacks.registerAll(((HasMetadata<? extends BlockMeta>)block).getTypes(), baseName, ItemStacks.BLOCK_GET_STACK);
+			ItemStacks.registerAll(((HasMetadata<? extends BlockMeta>) block).getTypes(), baseName, ItemStacks.BLOCK_GET_STACK);
 		}
 	}
 	

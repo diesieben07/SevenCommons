@@ -54,10 +54,16 @@ public interface ClassInfo {
 	 */
 	Set<String> getSupers();
 
+	int getModifiers();
+
 	/**
 	 * <p>return true if this class represents an Enum class. Equivalent to {@link Class#isEnum()}</p>
 	 * @return true if this ClassInfo represents an Enum class
 	 */
 	boolean isEnum();
+
+	boolean isAbstract();
+
+
 
 }

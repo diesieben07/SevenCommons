@@ -4,6 +4,10 @@ import com.google.common.collect.Sets;
 
 import java.util.Set;
 
+import static org.objectweb.asm.Opcodes.ACC_ABSTRACT;
+import static org.objectweb.asm.Opcodes.ACC_ENUM;
+import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
+
 /**
 * @author diesieben07
 */
@@ -72,5 +76,24 @@ abstract class AbstractClassInfo implements ClassInfo {
 	@Override
 	public int hashCode() {
 		return internalName().hashCode();
+	}
+
+	@Override
+	public boolean isEnum() {
+		return hasModifier(ACC_ENUM);
+	}
+
+	@Override
+	public boolean isAbstract() {
+		return hasModifier(ACC_ABSTRACT);
+	}
+
+	@Override
+	public boolean isInterface() {
+		return hasModifier(ACC_INTERFACE);
+	}
+
+	private boolean hasModifier(int mod) {
+		return (getModifiers() & mod) == mod;
 	}
 }

@@ -36,12 +36,7 @@ final class ClassInfoFromClazz extends AbstractClassInfo {
 	}
 
 	@Override
-	public boolean isInterface() {
-		return clazz.isInterface();
-	}
-
-	@Override
-	public boolean isEnum() {
-		return clazz.isEnum();
+	public int getModifiers() {
+		return clazz.getModifiers();
 	}
 }

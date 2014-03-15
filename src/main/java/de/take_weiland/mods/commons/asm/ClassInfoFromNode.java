@@ -4,9 +4,6 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.util.Collection;
 
-import static org.objectweb.asm.Opcodes.ACC_ENUM;
-import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
-
 /**
 * @author diesieben07
 */
@@ -34,12 +31,7 @@ final class ClassInfoFromNode extends AbstractClassInfo {
 	}
 
 	@Override
-	public boolean isInterface() {
-		return (clazz.access & ACC_INTERFACE) == ACC_INTERFACE;
-	}
-
-	@Override
-	public boolean isEnum() {
-		return (clazz.access & ACC_ENUM) == ACC_ENUM && clazz.superName.equals("java/lang/Enum");
+	public int getModifiers() {
+		return clazz.access;
 	}
 }

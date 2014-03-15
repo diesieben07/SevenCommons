@@ -70,7 +70,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 				source = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
 			} catch (URISyntaxException e) {
 				LOGGER.severe("Failed to acquire source location for SevenCommons!");
-				Throwables.propagate(e);
+				throw Throwables.propagate(e);
 			}
 		}
 	}

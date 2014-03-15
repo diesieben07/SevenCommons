@@ -14,7 +14,6 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		register(new EntityZombieTransformer());
 		register(new EntityPlayerTransformer());
 		register(new EntityTransformer());
-		register(new ItemStackTransformer());
 		register(new EntityTrackerEntryTransformer());
 
 		// packets
@@ -23,9 +22,6 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 
 		// @Synced & @ToNbt
 		register(new AnnotationFindingTransformer());
-
-		register(new HasSimpleMetaTransformer());
-		register(new SimpleMetadataTransformer());
 
 		register(new ListenableTransformer());
 	}

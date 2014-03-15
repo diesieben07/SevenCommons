@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.util;
+package de.take_weiland.mods.commons.item;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -25,8 +25,8 @@ public final class ItemStacks {
 		}
 		
 	};
-	static final Function<BlockMeta, ItemStack> BLOCK_GET_STACK = new Function<BlockMeta, ItemStack>() {
-	
+	public static final Function<BlockMeta, ItemStack> BLOCK_GET_STACK = new Function<BlockMeta, ItemStack>() {
+
 		@Override
 		public ItemStack apply(BlockMeta type) {
 			return of(type);
@@ -35,7 +35,7 @@ public final class ItemStacks {
 	};
 
 	private ItemStacks() { }
-	
+
 	public static boolean canMergeFully(ItemStack from, ItemStack into) {
 		return from == null || into == null || canMergeFullyImpl(from, into);
 	}
@@ -50,13 +50,7 @@ public final class ItemStacks {
 	}
 	
 	public static boolean equal(ItemStack a, ItemStack b) {
-		if (a == b) {
-			return true;
-		}
-		if (a == null ^ b == null) {
-			return false;
-		}
-		return containsSameImpl(a, b);
+		return a == b || !(a == null ^ b == null) && containsSameImpl(a, b);
 	}
 	
 	private static boolean containsSameImpl(ItemStack stack1, ItemStack stack2) {
@@ -90,7 +84,7 @@ public final class ItemStacks {
 		return stack == null || stack.stackSize <= 0 ? null : stack;
 	}
 
-	public static final NBTTagCompound getNbt(ItemStack stack) {
+	public static NBTTagCompound getNbt(ItemStack stack) {
 		if (stack.stackTagCompound == null) {
 			stack.stackTagCompound = new NBTTagCompound();
 		}
@@ -120,7 +114,7 @@ public final class ItemStacks {
 	public static ItemStack of(Block block, int quantity, int meta) {
 		return new ItemStack(block, quantity, meta);
 	}
-	
+
 	public static ItemStack of(ItemMeta meta) {
 		return new ItemStack(meta.getItem(), 1, meta.ordinal());
 	}
@@ -203,7 +197,7 @@ public final class ItemStacks {
 		return false;
 	}
 	
-	static <TYPE extends Metadata> void registerAll(TYPE[] types, String baseName, Function<? super TYPE, ItemStack> stackFunction) {
+	public static <TYPE extends Metadata> void registerAll(TYPE[] types, String baseName, Function<? super TYPE, ItemStack> stackFunction) {
 		for (TYPE type : types) {
 			GameRegistry.registerCustomItemStack(baseName + "." + type.unlocalizedName(), stackFunction.apply(type));
 		}

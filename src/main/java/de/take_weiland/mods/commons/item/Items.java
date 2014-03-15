@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.util;
+package de.take_weiland.mods.commons.item;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -11,6 +11,10 @@ import net.minecraft.item.SCItemAccessor;
 public final class Items {
 
 	private Items() { }
+
+	public static void init(Item item, String baseName) {
+		init(item, baseName,Loader.instance().activeModContainer().getModId());
+	}
 
 	/**
 	 * Performs some generic initialization on the given Item
@@ -28,9 +32,7 @@ public final class Items {
 	 * @param baseName
 	 */
 	@SuppressWarnings("unchecked")
-	public static void init(Item item, String baseName) {
-		String modId = Loader.instance().activeModContainer().getModId();
-		
+	public static void init(Item item, String baseName, String modId) {
 		item.setTextureName(getIconName(modId, baseName));
 		item.setUnlocalizedName(modId + "." + baseName); // full unlocalized key is "item.MODID.NAME.name"		
 		
@@ -45,7 +47,7 @@ public final class Items {
 		GameRegistry.registerItem(item, baseName);
 	}
 	
-	static String getIconName(String modId, String iconName) {
+	public static String getIconName(String modId, String iconName) {
 		return modId + ":" + iconName;
 	}
 	

@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.sync;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
-import de.take_weiland.mods.commons.util.ItemStacks;
+import de.take_weiland.mods.commons.item.ItemStacks;
 import net.minecraft.item.ItemStack;
 
 final class ItemStackSyncer implements TypeSyncer<ItemStack> {
