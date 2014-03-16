@@ -38,34 +38,34 @@ public interface SCReflector {
 	 * For cleaner code use {@link de.take_weiland.mods.commons.util.NBT#asList(net.minecraft.nbt.NBTTagList)}
 	 */
 	@Unsafe
-	@Getter(field = { F_TAG_LIST_MCP, F_TAG_LIST_OBF })
+	@Getter(field = { F_TAG_LIST_MCP, F_TAG_LIST_SRG})
 	<T extends NBTBase> List<T> getWrappedList(NBTTagList list);
 	
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_FOV_MODIFIER_HAND_MCP, F_FOV_MODIFIER_HAND_OBF })
+	@Getter(field = { F_FOV_MODIFIER_HAND_MCP, F_FOV_MODIFIER_HAND_SRG})
 	float getFovHand(EntityRenderer e);
 	
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_FOV_MODIFIER_HAND_PREV_MCP, F_FOV_MODIFIER_HAND_PREV_OBF })
+	@Getter(field = { F_FOV_MODIFIER_HAND_PREV_MCP, F_FOV_MODIFIER_HAND_PREV_SRG})
 	float getFovHandPrev(EntityRenderer e);
 	
 	@SideOnly(Side.CLIENT)
-	@Setter(field = { F_FOV_MODIFIER_HAND_MCP, F_FOV_MODIFIER_HAND_OBF })
+	@Setter(field = { F_FOV_MODIFIER_HAND_MCP, F_FOV_MODIFIER_HAND_SRG})
 	void setFovHand(EntityRenderer e, float fov);
 	
 	@SideOnly(Side.CLIENT)
-	@Setter(field = { F_FOV_MODIFIER_HAND_PREV_MCP, F_FOV_MODIFIER_HAND_PREV_OBF })
+	@Setter(field = { F_FOV_MODIFIER_HAND_PREV_MCP, F_FOV_MODIFIER_HAND_PREV_SRG})
 	void setFovHandPrev(EntityRenderer e, float fovPrev);
 	
 	@SideOnly(Side.CLIENT)
 	@Getter(field = { F_TIMER_MCP, F_TIMER_SRG })
 	Timer getTimer(Minecraft mc);
 	
-	@Getter(field = { F_TRACKED_ENTITY_IDS_MCP, F_TRACKED_ENTITY_IDS_OBF })
+	@Getter(field = { F_TRACKED_ENTITY_IDS_MCP, F_TRACKED_ENTITY_IDS_SRG})
 	IntHashMap getTrackerMap(EntityTracker tracker);
 	
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_MAP_TEXTURE_OBJECTS_MCP, F_MAP_TEXTURE_OBJECTS_OBF })
+	@Getter(field = { F_MAP_TEXTURE_OBJECTS_MCP, F_MAP_TEXTURE_OBJECTS_SRG})
 	Map<ResourceLocation, TextureObject> getTexturesMap(TextureManager manager);
 	
 	@Unsafe

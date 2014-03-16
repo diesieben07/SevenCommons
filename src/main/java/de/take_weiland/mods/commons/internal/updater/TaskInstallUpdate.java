@@ -2,10 +2,12 @@ package de.take_weiland.mods.commons.internal.updater;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import de.take_weiland.mods.commons.internal.exclude.SCCallHook;
+import de.take_weiland.mods.commons.internal.mcrestarter.MinecraftRelauncher;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -50,7 +52,7 @@ public class TaskInstallUpdate implements Runnable {
 
 				ByteStreams.copy(in, out);
 
-				Files.touch(new File(mod.getSource().getPath() + SCCallHook.UPDATE_MARKER_POSTFIX));
+				Files.touch(new File(mod.getSource().getPath() + MinecraftRelauncher.UPDATE_MARKER_POSTFIX));
 
 				mod.transition(ModUpdateState.PENDING_RESTART);
 			} catch (IOException e) {

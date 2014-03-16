@@ -11,9 +11,9 @@ import java.util.concurrent.Future;
 
 import static de.take_weiland.mods.commons.asm.ASMUtils.getClassInfo;
 
-@Mod(modid = "testmod_sc_", name = "testmod_sc_", version = "0.1")
+//@Mod(modid = "testmod_sc____", name = "testmod_sc____", version = "0.1")
 //@NetworkMod()
-public class testmod_sc_ {
+public class testmod_sc____ {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) throws Exception {
@@ -25,7 +25,6 @@ public class testmod_sc_ {
 		print(Serializable.class, ImmutableCollection.class);
 		print(ListenableFuture.class, Future.class);
 		print(Future.class, ListenableFuture.class);
-
 	}
 
 	private void print(Class<?> parent, Class<?> child) {

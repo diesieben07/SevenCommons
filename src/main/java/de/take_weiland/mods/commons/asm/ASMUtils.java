@@ -13,6 +13,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.List;
@@ -238,7 +239,7 @@ public final class ASMUtils {
 	 * @return the binary name
 	 */
 	public static String binaryName(String internalName) {
-		return internalName.replace('.', '/');
+		return internalName.replace('/', '.');
 	}
 
 	@Deprecated
@@ -323,6 +324,19 @@ public final class ASMUtils {
 			Throwables.propagateIfInstanceOf(e, MissingClassException.class);
 			throw new MissingClassException(name, e);
 		}
+	}
+
+	private static ClassNode getClassNode0(String name, int readerFlags) {
+		try {
+			byte[] bytes = CLASSLOADER.getClassBytes(transformName(name));
+			if (bytes == null) {
+				return null;
+			}
+			return getClassNode(bytes, readerFlags);
+		} catch (IOException e) {
+			return null;
+		}
+
 	}
 
 	/**
@@ -471,7 +485,23 @@ public final class ASMUtils {
 		if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, className)) != null) {
 			return new ClassInfoFromClazz(clazz);
 		} else {
+			try {
+				byte[] bytes = SevenCommons.CLASSLOADER.getClassBytes(transformName(className));
+				if (bytes == null) {
+					return tryLoad(className);
+				}
+			} catch (IOException e) {
+				return tryLoad(className);
+			}
 			return new ClassInfoFromNode(getThinClassNode(className));
+		}
+	}
+
+	private static ClassInfo tryLoad(String className) {
+		try {
+			return getClassInfo(Class.forName(className));
+		} catch (ClassNotFoundException e) {
+			throw new MissingClassException(className, e);
 		}
 	}
 

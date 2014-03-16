@@ -23,19 +23,19 @@ public final class ASMConstants {
 	public static final String F_BUTTON_LIST_SRG = "field_73887_h";
 	public static final String F_BUTTON_LIST_MCP = "buttonList";
 	
-	public static final String F_TAG_LIST_OBF = "a";
+	public static final String F_TAG_LIST_SRG = "field_74747_a";
 	public static final String F_TAG_LIST_MCP = "tagList";
 	
-	public static final String F_FOV_MODIFIER_HAND_PREV_OBF = "T";
+	public static final String F_FOV_MODIFIER_HAND_PREV_SRG = "field_78506_S";
 	public static final String F_FOV_MODIFIER_HAND_PREV_MCP = "fovModifierHandPrev";
 	
-	public static final String F_FOV_MODIFIER_HAND_OBF = "S";
+	public static final String F_FOV_MODIFIER_HAND_SRG = "field_78507_R";
 	public static final String F_FOV_MODIFIER_HAND_MCP = "fovModifierHand";
 	
-	public static final String F_TRACKED_ENTITY_IDS_OBF = "c";
+	public static final String F_TRACKED_ENTITY_IDS_SRG = "field_72794_c";
 	public static final String F_TRACKED_ENTITY_IDS_MCP = "trackedEntityIDs";
 	
-	public static final String F_MAP_TEXTURE_OBJECTS_OBF = "a";
+	public static final String F_MAP_TEXTURE_OBJECTS_SRG = "field_110585_a";
 	public static final String F_MAP_TEXTURE_OBJECTS_MCP = "mapTextureObjects";
 	
 	public static final String F_MY_ENTITY_MCP = "myEntity";

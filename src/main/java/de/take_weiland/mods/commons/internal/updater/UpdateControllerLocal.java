@@ -1,24 +1,33 @@
 package de.take_weiland.mods.commons.internal.updater;
 
-import com.google.common.base.*;
-import com.google.common.collect.*;
+import com.google.common.base.Charsets;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
+import de.take_weiland.mods.commons.internal.mcrestarter.MinecraftRelauncher;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class UpdateControllerLocal extends AbstractUpdateController {
 
@@ -93,82 +102,83 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 		}
 	}
 
+	private static final String RELAUNCHER_MANIFEST = "Main-Class: de.take_weiland.mods.commons.internal.mcrestarter.MinecraftRelauncher\n";
+
 	@Override
 	public boolean restartMinecraft() {
-		// inspired from http://java.dzone.com/articles/programmatically-restart-java
-		
-		final List<String> command = Lists.newArrayList();
-
-		String javaBinary = System.getProperty("java.home") + "/bin/java";
-
-		if (System.getProperty("os.name").toLowerCase().contains("win")) {
-			javaBinary += ".exe";
-		}
-		
-		if (!new File(javaBinary).canExecute()) {
-			return false;
-		}
-
-		// java binary
-		command.add("\"" + javaBinary + "\"");
-
-		// vm arguments
-		List<String> vmArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
-
-		// if it's the agent argument : we ignore it otherwise the
-		// address of the old application and the new one will be in conflict
-		command.addAll(Collections2.filter(vmArguments, new Predicate<String>() {
-
-			@Override
-			public boolean apply(String arg) {
-				return !arg.contains("-agentlib");
-			}
-			
-		}));
-		
-		// program main and program arguments
-		String sunJavaCommand = System.getProperty("sun.java.command");
-		if (sunJavaCommand == null) {
-			return false;
-		}
-
-		Iterator<String> mainCommand = Splitter.on(' ').omitEmptyStrings().trimResults().split(sunJavaCommand).iterator();
-
-		if (!mainCommand.hasNext()) {
-			return false;
-		}
-		
-		String mainCommandFirst = mainCommand.next();
-
-		// program main is a jar
-		if (mainCommandFirst.endsWith(".jar")) {
-			// if it's a jar, add -jar mainJar
-			command.add("-jar");
-			command.add("\"" + new File(mainCommandFirst).getPath() + "\"");
-		} else {
-			// else it's a .class, add the classpath and mainClass
-			command.add("-cp");
-			command.add("\"" + System.getProperty("java.class.path") + "\"");
-			command.add(mainCommandFirst);
-		}
-
-		// finally add program arguments
-		Iterators.addAll(command, mainCommand);
-
-		System.out.println(Joiner.on(' ').join(command));
-		
+//		if (MiscUtil.isDevelopmentEnv()) {
+//			LOGGER.warning("Can't restart in development environment!");
+//			return false;
+//		}
+		File modFolder = new File(SevenCommons.MINECRAFT_DIR, "mods");
+		File modFolder2 = new File(modFolder, SevenCommons.MINECRAFT_VERSION);
+		File tempFile = new File(modFolder, MinecraftRelauncher.UPDATE_INFO_FILE);
+		Path tempJar = null;
+		Path tempWatcherFile = null;
 		try {
-			ProcessBuilder builder = new ProcessBuilder(command);
-			builder.inheritIO();
-			builder.start();
+			List<String> command = MinecraftRelauncher.findRelaunchCommand();
+			tempWatcherFile = Files.createTempFile("SevenCommons_MinecraftRunMarker", ".tmp");
+			tempJar = Files.createTempFile("SevenCommons_MinecraftRelauncher", ".jar");
+			try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile)))) {
+				out.writeUTF(tempJar.toAbsolutePath().toString());
+				out.writeUTF(tempWatcherFile.toAbsolutePath().toString());
+				out.writeInt(command.size());
+				for (String c : command) {
+					out.writeUTF(c);
+				}
+
+				out.writeInt(2);
+			}
+			String relauncherClassSource = MinecraftRelauncher.class.getName().replace('.', '/') + ".class";
+			String innerClassSource = MinecraftRelauncher.UpdatedModsFilter.class.getName().replace('.', '/') + ".class";
+			try (InputStream in = MinecraftRelauncher.class.getClassLoader().getResourceAsStream(relauncherClassSource);
+			     InputStream in2 = MinecraftRelauncher.class.getClassLoader().getResourceAsStream(innerClassSource);
+			     ZipOutputStream out = new ZipOutputStream(new FileOutputStream(tempJar.toFile()))) {
+
+				out.putNextEntry(new ZipEntry(relauncherClassSource));
+				ByteStreams.copy(in, out);
+				out.closeEntry();
+
+				out.putNextEntry(new ZipEntry(innerClassSource));
+				ByteStreams.copy(in2, out);
+				out.closeEntry();
+
+				out.putNextEntry(new ZipEntry("META-INF/MANIFEST.MF"));
+				out.write(RELAUNCHER_MANIFEST.getBytes(Charsets.UTF_8));
+				out.closeEntry();
+			}
+			String[] args = new String[2];
+			args[0] = "\"" + modFolder.getAbsolutePath() + "\"";
+			args[1] = "\"" + modFolder2.getAbsolutePath() + "\"";
+
+			System.out.println("Temp file: " + tempFile);
+			System.out.println("Temp jar file:" + tempJar);
+			System.out.println("Temp watcher file: " + tempWatcherFile);
+			System.out.println("args: " + Joiner.on(' ').join(args));
+
+			tempWatcherFile.toFile().deleteOnExit();
+
+			MinecraftRelauncher.launchJarFile(tempJar.toFile(), Arrays.asList(args));
 		} catch (IOException e) {
+			tryDelete(tempFile.toPath());
+			tryDelete(tempJar);
+			tryDelete(tempWatcherFile);
+			LOGGER.warning("Failed to restart Minecraft automatically.");
+			e.printStackTrace();
 			return false;
 		}
-		
+
 		SCModContainer.proxy.shutdownMinecraft();
 		return true;
 	}
 	
-	
+	@SuppressWarnings("EmptyCatchBlock")
+	private static void tryDelete(Path path) {
+		try {
+			if (path != null) {
+				Files.delete(path);
+			}
+		} catch (IOException e) { }
+	}
 	
 }

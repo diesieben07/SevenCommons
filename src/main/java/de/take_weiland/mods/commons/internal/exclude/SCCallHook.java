@@ -1,59 +1,40 @@
 package de.take_weiland.mods.commons.internal.exclude;
 
 import cpw.mods.fml.relauncher.IFMLCallHook;
-import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
+import de.take_weiland.mods.commons.internal.mcrestarter.MinecraftRelauncher;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
 public class SCCallHook implements IFMLCallHook {
 
-	public static final String UPDATE_MARKER_POSTFIX = "._sc_updated";
-	public static final String BACKUP_POSTFIX = ".backup";
-	
-	private static final FileFilter UPATED_MODS_FILTER = new FileFilter() {
-		
-		@Override
-		public boolean accept(File pathname) {
-			if (!pathname.getPath().endsWith(".jar") && !pathname.getPath().endsWith(".zip")) {
-				return false;
-			}
-			File marker = new File(pathname.getPath() + UPDATE_MARKER_POSTFIX);
-			return marker.exists() && marker.isFile() && marker.canRead();
-
-		}
-	};
-	
 	private File mcDir;
-	
+
 	@Override
 	public Void call() {
-		for (File modFolder : getModFolders()) {
-			File[] updatableMods = modFolder.listFiles(UPATED_MODS_FILTER);
-			if (updatableMods == null) {
-				continue;
+		File modsFolder = new File(mcDir, "mods");
+		File tempDataFile = new File(modsFolder, MinecraftRelauncher.UPDATE_INFO_FILE);
+		if (tempDataFile.exists()) {
+			try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(tempDataFile)))) {
+				File jarFile = new File(in.readUTF());
+				Files.delete(jarFile.toPath());
+			} catch (IOException e) {
+				displayError(e);
 			}
-			for (File mod : updatableMods) {
-				try {
-					File backup = new File(mod.getPath() + BACKUP_POSTFIX);
-					Files.move(mod.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-					File marker = new File(mod.getPath() + UPDATE_MARKER_POSTFIX);
-					Files.delete(marker.toPath());
-
-				} catch (IOException e) {
-					e.printStackTrace();
-					UpdateControllerLocal.LOGGER.warning(String.format("IOException during final update for mod %s", mod.getName()));
-				}
+			try {
+				Files.delete(tempDataFile.toPath());
+			} catch (IOException e) {
+				displayError(e);
 			}
 		}
-		
+
 		return null;
+	}
+
+	private void displayError(Exception e) {
+		System.err.println("[SevenCommons] Warning! Couldn't read/delete temporary updater file!");
+		e.printStackTrace();
 	}
 
 	@Override
@@ -61,12 +42,4 @@ public class SCCallHook implements IFMLCallHook {
 		mcDir = (File) data.get("mcLocation");
 	}
 	
-	private File[] getModFolders() {
-		File modsDir = new File(mcDir, "mods");
-		return new File[] {
-			modsDir,
-			new File(modsDir, SevenCommons.MINECRAFT_VERSION)
-		};
-	}
-
 }

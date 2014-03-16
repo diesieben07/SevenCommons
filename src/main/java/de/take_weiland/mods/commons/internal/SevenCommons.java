@@ -33,8 +33,9 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	
 	public static final Logger LOGGER;
 	public static final String MINECRAFT_VERSION = "1.6.4";
-	public static final String VERSION = "@VERSION@";	
-	
+	public static final String VERSION = "@VERSION@";
+	public static File MINECRAFT_DIR;
+
 	public static LaunchClassLoader CLASSLOADER = (LaunchClassLoader) SevenCommons.class.getClassLoader();
 
 	public static File source;
@@ -64,6 +65,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	@Override
 	public void injectData(Map<String, Object> data) {
 		MCP_ENVIRONMENT = !((Boolean)data.get("runtimeDeobfuscationEnabled")).booleanValue();
+		MINECRAFT_DIR = (File) data.get("mcLocation");
 		source = (File)data.get("coremodLocation");
 		if (source == null) { // this is usually in a dev env
 			try {
