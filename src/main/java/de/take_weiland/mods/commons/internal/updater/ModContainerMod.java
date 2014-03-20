@@ -7,7 +7,7 @@ public abstract class ModContainerMod extends AbstractUpdatableMod {
 	protected final ModContainer mod;
 
 	public ModContainerMod(ModContainer mod, UpdateController controller) {
-		super(controller, mod.getProcessedVersion());
+		super(controller, new ModVersionCollection(mod.getProcessedVersion()));
 		this.mod = mod;
 	}
 
@@ -19,6 +19,10 @@ public abstract class ModContainerMod extends AbstractUpdatableMod {
 	@Override
 	public String getName() {
 		return mod.getName();
+	}
+
+	public ModContainer getContainer() {
+		return mod;
 	}
 	
 }

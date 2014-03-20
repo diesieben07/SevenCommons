@@ -11,6 +11,103 @@ import net.minecraft.world.World;
  */
 public interface SimplePacket {
 
+	interface WithResponse<T> extends SimplePacket {
+
+		@Override
+		ResponseSent<T> sendTo(PacketTarget target);
+
+		@Override
+		ResponseSentToServer<T> sendToServer();
+
+		@Override
+		ResponseSent<T> sendTo(EntityPlayer player);
+
+		@Override
+		ResponseSent<T> sendTo(Iterable<? extends EntityPlayer> players);
+
+		@Override
+		ResponseSent<T> sendToAll();
+
+		@Override
+		ResponseSent<T> sendToAllInDimension(int dimension);
+
+		@Override
+		ResponseSent<T> sendToAllInDimension(World world);
+
+		@Override
+		ResponseSent<T> sendToAllNear(World world, double x, double y, double z, double radius);
+
+		@Override
+		ResponseSent<T> sendToAllNear(int dimension, double x, double y, double z, double radius);
+
+		@Override
+		ResponseSent<T> sendToAllNear(Entity entity, double radius);
+
+		@Override
+		ResponseSent<T> sendToAllNear(TileEntity te, double radius);
+
+		@Override
+		ResponseSent<T> sendToAllTracking(Entity entity);
+
+		@Override
+		ResponseSent<T> sendToAllTracking(TileEntity te);
+
+		@Override
+		ResponseSent<T> sendToAllAssociated(Entity e);
+
+		@Override
+		ResponseSent<T> sendToViewing(Container c);
+
+	}
+
+	interface ResponseSent<T> extends SimplePacket {
+
+		WithResponse<T> onResponse(PacketResponseHandler<? super T> handler);
+
+		WithResponse<T> discardResponse();
+
+		@Override ResponseSent<T> sendTo(PacketTarget target);
+
+		@Override ResponseSent<T> sendToServer();
+
+		@Override ResponseSent<T> sendTo(EntityPlayer player);
+
+		@Override ResponseSent<T> sendTo(Iterable<? extends EntityPlayer> players);
+
+		@Override ResponseSent<T> sendToAll();
+
+		@Override ResponseSent<T> sendToAllInDimension(int dimension);
+
+		@Override ResponseSent<T> sendToAllInDimension(World world);
+
+		@Override ResponseSent<T> sendToAllNear(World world, double x, double y, double z, double radius);
+
+		@Override ResponseSent<T> sendToAllNear(int dimension, double x, double y, double z, double radius);
+
+		@Override ResponseSent<T> sendToAllNear(Entity entity, double radius);
+
+		@Override ResponseSent<T> sendToAllNear(TileEntity te, double radius);
+
+		@Override ResponseSent<T> sendToAllTracking(Entity entity);
+
+		@Override ResponseSent<T> sendToAllTracking(TileEntity te);
+
+		@Override ResponseSent<T> sendToAllAssociated(Entity e);
+
+		@Override ResponseSent<T> sendToViewing(Container c);
+
+	}
+
+	interface ResponseSentToServer<T> extends ResponseSent<T> {
+
+		WithResponse<T> onResponse(ClientResponseHandler<? super T> handler);
+
+		// technically don't need to do this because calling sendToServer() twice is kinda useless
+		@Override
+		ResponseSentToServer<T> sendToServer();
+
+	}
+
 	SimplePacket sendTo(PacketTarget target);
 
 	SimplePacket sendToServer();

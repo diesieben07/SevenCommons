@@ -4,7 +4,7 @@ public final class SCGuiAccessor {
 
 	private SCGuiAccessor() { }
 	
-	public static void actionPerfomed(GuiScreen gui, GuiButton btn) {
+	public static void actionPerformed(GuiScreen gui, GuiButton btn) {
 		gui.actionPerformed(btn);
 	}
 	

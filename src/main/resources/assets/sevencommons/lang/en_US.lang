@@ -1,5 +1,14 @@
 sevencommons.ui.ok=OK
 
+sevencommons.updates.header=Mod Updates
+sevencommons.updates.available=Available Mods
+sevencommons.updates.install=Install selected Updates
+sevencommons.updates.optimize=Optimize Selection
+sevencommons.updates.recheck=Refresh
+sevencommons.updates.modInfo=Mod Information: %s
+sevencommons.updates.availableVersions=Available Versions
+sevencommons.updates.optimizeFail=Failed to optimize version selection!
+
 sevencommons.ui.updates.check=Check for Updates
 sevencommons.ui.updates.checking=Checking...
 sevencommons.ui.updates.update=Install Update

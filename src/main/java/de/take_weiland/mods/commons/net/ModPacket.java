@@ -2,7 +2,10 @@ package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.ModPacketProxy;
+import de.take_weiland.mods.commons.internal.ModPacketWithResponseProxy;
+import de.take_weiland.mods.commons.internal.SCPackets;
 import de.take_weiland.mods.commons.internal.SimplePacketTypeProxy;
+import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -48,6 +51,38 @@ public abstract class ModPacket implements SimplePacket {
 	protected int expectedSize() {
 		return 32;
 	}
+
+	public static abstract class WithResponse<T> extends ModPacket {
+
+		protected abstract void handle(DataBuf in, EntityPlayer player, Side side, WritableDataBuf out);
+
+		public abstract T readResponse(DataBuf in, EntityPlayer player, Side side);
+
+		@Override
+		void write0(WritableDataBuf buf) {
+			int transferId = ((ModPacketWithResponseProxy) this)._sc$nextTransferId();
+			buf.putInt(transferId);
+			write(buf);
+		}
+
+		@Override
+		protected final void handle(DataBuf buffer, EntityPlayer player, Side side) {
+			int transferId = buffer.getInt();
+			PacketBuilder response = SCModContainer.packetFactory.builder(SCPackets.RESPONSE);
+			response.putInt(transferId);
+			handle(buffer, player, side, response);
+			if (side.isClient()) {
+				response.build().sendToServer();
+			} else {
+				response.build().sendTo(player);
+			}
+		}
+
+	}
+
+	void write0(WritableDataBuf buf) {
+		write(buf);
+	}
 	
 	private SimplePacket delegate;
 	private SimplePacket make() {
@@ -64,7 +99,7 @@ public abstract class ModPacket implements SimplePacket {
 		TYPE type = proxy._sc$getPacketType();
 
 		PacketBuilder builder = ((PacketFactory<TYPE>)type._sc$getPacketFactory()).builder(type, expectedSize());
-		write(builder);
+		write0(builder);
 		return builder.build();
 	}
 

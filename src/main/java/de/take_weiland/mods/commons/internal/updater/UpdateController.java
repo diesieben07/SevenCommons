@@ -23,21 +23,19 @@ public interface UpdateController {
 	 */
 	public void searchForUpdates(UpdatableMod mod);
 
-	/**
-	 * update the given mod to the given version
-	 * @param mod
-	 * @param version
-	 */
-	public void update(UpdatableMod mod, ModVersion version);
-	
-	public void registerListener(UpdateStateListener listener);
-	
-	public void unregisterListener(UpdateStateListener listener);
-	
-	public void onStateChange(UpdatableMod mod);
-	
-	public void onDownloadProgressChange(UpdatableMod mod);
+	void update(UpdatableMod mod);
+
+	boolean optimizeVersionSelection();
+
+	void performInstall();
+
+	boolean isRefreshing();
+
+	boolean isSelectionValid();
+
+	boolean isSelectionOptimized();
 
 	public boolean restartMinecraft();
-	
+
+	void onStateChange(UpdatableMod mod, ModUpdateState oldState);
 }

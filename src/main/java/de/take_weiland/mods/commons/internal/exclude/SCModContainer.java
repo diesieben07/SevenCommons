@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.internal.exclude;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import cpw.mods.fml.client.FMLFileResourcePack;
@@ -14,7 +16,10 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.config.ConfigInjector;
 import de.take_weiland.mods.commons.config.GetProperty;
-import de.take_weiland.mods.commons.internal.*;
+import de.take_weiland.mods.commons.internal.SCEventHandler;
+import de.take_weiland.mods.commons.internal.SCPackets;
+import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
 import de.take_weiland.mods.commons.internal.updater.CommandUpdates;
 import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.net.Network;
@@ -24,8 +29,20 @@ import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public final class SCModContainer extends DummyModContainer {
+
+	private static final URL UPDATE_URL;
+
+	static {
+		try {
+			UPDATE_URL = new URL("http://www.take-weiland.de/sevencommons.json");
+		} catch (MalformedURLException e) {
+			throw Throwables.propagate(e);
+		}
+	}
 
 	public static SevenCommonsProxy proxy;
 	public static SCModContainer instance;
@@ -90,17 +107,19 @@ public final class SCModContainer extends DummyModContainer {
 	@Subscribe
 	public void processIMCs(FMLInterModComms.IMCEvent event) {
 		if (updaterEnabled) {
-			updateController = new UpdateControllerLocal();
+			ImmutableMap.Builder<String, URL> urls = ImmutableMap.builder();
+			urls.put(getModId(), UPDATE_URL);
+
 			for (FMLInterModComms.IMCMessage msg : event.getMessages()) {
 				if (msg.isStringMessage() && msg.key.equalsIgnoreCase("setUpdateURL")) {
-					updateController.registerUpdateUrl(msg.getSender(), msg.getStringValue());
+					try {
+						urls.put(msg.getSender(), new URL(msg.getStringValue()));
+					} catch (MalformedURLException e) {
+						SevenCommons.LOGGER.warning(String.format("Invalid updateURL \"%s\" from %s", msg.getStringValue(), msg.getSender()));
+					}
 				}
 			}
-			updateController.setup();
-			if (updaterRecheckDelay > 0) {
-				updateController.doPeriodicChecks(updaterRecheckDelay);
-			}
-			updateController.searchForUpdates();
+			updateController = new UpdateControllerLocal(urls.build(), updaterRecheckDelay);
 		}
 	}
 

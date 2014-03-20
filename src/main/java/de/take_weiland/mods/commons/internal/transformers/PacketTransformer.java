@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.transformers;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ClassInfo;
 import de.take_weiland.mods.commons.internal.ModPacketProxy;
-import de.take_weiland.mods.commons.net.ModPacket;
 import org.objectweb.asm.tree.*;
 
 import static org.objectweb.asm.Opcodes.*;
@@ -11,7 +10,7 @@ import static org.objectweb.asm.Type.*;
 
 public final class PacketTransformer extends AbstractAnalyzingTransformer {
 
-	private static final ClassInfo modPacketCI = ASMUtils.getClassInfo(ModPacket.class);
+	private static final ClassInfo modPacketCI = ASMUtils.getClassInfo(ModPacketBase.class);
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {

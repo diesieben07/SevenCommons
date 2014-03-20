@@ -9,7 +9,6 @@ public class FMLInternalMod extends ModContainerMod {
 
 	public FMLInternalMod(ModContainer mod, UpdateController controller) {
 		super(mod, controller);
-		transition(ModUpdateState.UNAVAILABLE);
 	}
 
 	@Override
@@ -21,5 +20,4 @@ public class FMLInternalMod extends ModContainerMod {
 	public File getSource() {
 		return null;
 	}
-
 }

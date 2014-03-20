@@ -3,9 +3,14 @@ package de.take_weiland.mods.commons.internal.updater;
 import argo.jdom.JdomParser;
 import argo.jdom.JsonNode;
 import argo.jdom.JsonRootNode;
+import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import cpw.mods.fml.common.versioning.ArtifactVersion;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
+import cpw.mods.fml.common.versioning.VersionParser;
+import de.take_weiland.mods.commons.util.Scheduler;
+import de.take_weiland.mods.commons.util.Sides;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
@@ -18,6 +23,7 @@ import java.util.List;
 public class TaskSearchUpdates implements Runnable {
 
 	private UpdatableMod mod;
+	ModVersion currentVersionFound;
 	
 	public TaskSearchUpdates(UpdatableMod mod) {
 		this.mod = mod;
@@ -27,49 +33,35 @@ public class TaskSearchUpdates implements Runnable {
 	public void run() {
 		URL url = mod.getUpdateURL();
 		Reader reader = null;
-		
+		List<ModVersion> parsedVersions = null;
 		try {
 			reader = new BufferedReader(new InputStreamReader(url.openStream()));
-			
-			ModVersionCollection versions = mod.getVersions();
-			
-			versions.injectAvailableVersions(parseVersionFile(mod, reader));
-			
-			ModVersion newestInstallable = versions.getNewestInstallableVersion();
-			ModVersion newest = versions.getNewestVersion();
-			
-			if (newestInstallable != null && newestInstallable.modVersion.compareTo(versions.getCurrentVersion().modVersion) > 0) {
-				if (mod.transition(ModUpdateState.UPDATES_AVAILABLE)) {
-					UpdateControllerLocal.LOGGER.info("Updates available for mod " + mod.getModId());
-				}
-			} else if (newest != null && newest.modVersion.compareTo(versions.getCurrentVersion().modVersion) > 0) {
-				if (mod.transition(ModUpdateState.MINECRAFT_OUTDATED)) {
-					UpdateControllerLocal.LOGGER.info("Cannot update mod " + mod.getModId() + " because Minecraft is outdated.");
-				}
-			} else {
-				if (mod.transition(ModUpdateState.UP_TO_DATE)) {
-					UpdateControllerLocal.LOGGER.info("Mod " + mod.getModId() + " is up to date.");
-				}
-			}
-			
+			parsedVersions = parseVersionFile(reader);
 		} catch (IOException e) {
 			UpdateControllerLocal.LOGGER.warning(String.format("IOException during update checking for mod %s", mod.getModId()));
-			mod.transition(ModUpdateState.CHECKING_FAILED);
+			e.printStackTrace();
 		} catch (InvalidModVersionException e) {
 			UpdateControllerLocal.LOGGER.warning(String.format("Version Info-File for mod %s is invalid", mod.getModId()));
-			mod.transition(ModUpdateState.CHECKING_FAILED);
+			e.printStackTrace();
 		} finally {
 			IOUtils.closeQuietly(reader);
+			final List<ModVersion> parsedVersionsFinal = parsedVersions;
+			Scheduler.get(Sides.environment()).execute(new Runnable() {
+				@Override
+				public void run() {
+					if (parsedVersionsFinal != null) {
+						mod.getVersions().injectAvailableVersions(parsedVersionsFinal, currentVersionFound);
+						mod.getController().optimizeVersionSelection();
+					}
+					mod.transition(ModUpdateState.AVAILABLE);
+				}
+			});
 		}
 	}
 	
-	private  static final String[] JSON_KEYS = new String[] {
-		"version",	"minecraftVersion", "url"		
-	};
-	
 	private static final JdomParser JSON_PARSER = new JdomParser();
 
-	private  static List<ModVersion> parseVersionFile(UpdatableMod mod, Reader reader) throws InvalidModVersionException {
+	private List<ModVersion> parseVersionFile(Reader reader) throws InvalidModVersionException {
 		try {
 			ImmutableList.Builder<ModVersion> versions = ImmutableList.builder();
 			JsonRootNode json = JSON_PARSER.parse(reader);
@@ -77,19 +69,30 @@ public class TaskSearchUpdates implements Runnable {
 			if (!json.isArrayNode()) {
 				invalid();
 			}
-			
+
+			boolean foundCurrent = false;
+			String currentVersion = mod.getVersions().getCurrentVersion().getModVersion().getVersionString();
 			for (JsonNode versionNode : json.getElements()) {
-				for (String key : JSON_KEYS) {
-					if (!versionNode.isStringValue(key)) {
-						invalid();
-					}
+				List<Dependency> dependencies;
+				if (versionNode.isStringValue("dependencies")) {
+					dependencies = parseDependencies(mod.getController(), mod.getModId(), versionNode.getStringValue("dependencies"));
+				} else {
+					dependencies = ImmutableList.of();
 				}
-				
-				String modVersion = versionNode.getStringValue("version");
-				String minecraftVersion = versionNode.getStringValue("minecraftVersion");
+
+				String versionString = versionNode.getStringValue("version");
 				String url = versionNode.getStringValue("url");
 				String patchNotes = versionNode.isStringValue("patchNotes") ? versionNode.getStringValue("patchNotes") : null;
-				versions.add(new ModVersion(mod, new DefaultArtifactVersion(modVersion), minecraftVersion, url, patchNotes));
+
+				if (!foundCurrent && versionString.equals(currentVersion)) {
+					foundCurrent = true;
+				}
+				ArtifactVersion artifactVersion = new DefaultArtifactVersion(mod.getModId(), versionString);
+				ModVersion modVersion = new LocalModVersion(mod.getVersions(), artifactVersion, url, patchNotes, dependencies);
+				if (!foundCurrent && versionString.equals(currentVersion)) {
+					this.currentVersionFound = modVersion;
+				}
+				versions.add(modVersion);
 			}
 			return versions.build();
 		} catch (Throwable t) {
@@ -97,6 +100,32 @@ public class TaskSearchUpdates implements Runnable {
 			Throwables.propagateIfPossible(t);
 			return invalid(t);
 		}
+	}
+
+	private static final Splitter DEPS_SPLITTER = Splitter.on(';');
+
+	private static List<Dependency> parseDependencies(UpdateController controller, String modId, String deps) throws InvalidModVersionException {
+		ImmutableList.Builder<Dependency> b = ImmutableList.builder();
+
+		String failure = null;
+		for (String dep : DEPS_SPLITTER.split(deps)) {
+			dep = dep.trim();
+			int atIndex = dep.indexOf('@');
+			if (atIndex < 0) {
+				failure = dep;
+				break;
+			}
+			String mod = dep.substring(0, atIndex).trim();
+			String versionSpec = dep.substring(atIndex + 1).trim();
+			ArtifactVersion versionRange = new DefaultArtifactVersion(mod, VersionParser.parseRange(versionSpec));
+			b.add(new Dependency(controller, mod, versionRange));
+		}
+
+		if (failure != null) {
+			throw new InvalidModVersionException(String.format("Failed to parse dependencies for %s (\"%s\"", modId, deps));
+		}
+
+		return b.build();
 	}
 	
 	private static void invalid() throws InvalidModVersionException {

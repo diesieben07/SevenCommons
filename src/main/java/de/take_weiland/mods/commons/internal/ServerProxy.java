@@ -3,8 +3,8 @@ package de.take_weiland.mods.commons.internal;
 import cpw.mods.fml.common.IPlayerTracker;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.updater.PlayerUpdateInformation;
+import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.NetHandler;
@@ -27,21 +27,17 @@ public class ServerProxy implements SevenCommonsProxy, IPlayerTracker {
 			event.entity.registerExtendedProperties(PlayerUpdateInformation.IDENTIFIER, new PlayerUpdateInformation());
 		}
 	}
-	
+
+	@Override
+	public void refreshUpdatesGui() { }
+
+	@Override
+	public void handleViewUpdates(UpdateController controller) { }
+
 	@Override
 	public void onPlayerLogout(EntityPlayer player) {
-		SCModContainer.updateController.unregisterListener((PlayerUpdateInformation)player.getExtendedProperties(PlayerUpdateInformation.IDENTIFIER));
 	}
 	
-	@Override
-	public void handleViewUpdates(PacketViewUpdates packet) { }
-	
-	@Override
-	public void handleModState(PacketModState packet) { }
-
-	@Override
-	public void handleDownloadProgress(PacketDownloadProgress packet) { }
-
 	@Override
 	public void onPlayerLogin(EntityPlayer player) { }
 

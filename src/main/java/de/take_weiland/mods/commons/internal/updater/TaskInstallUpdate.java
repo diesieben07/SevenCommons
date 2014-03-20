@@ -23,8 +23,8 @@ public class TaskInstallUpdate implements Runnable {
 	public TaskInstallUpdate(UpdatableMod mod, ModVersion version) {
 		this.mod = mod;
 		ModVersionCollection info = mod.getVersions();
-		if (info == null || !info.getInstallableVersions().contains(version)) {
-			throw new IllegalArgumentException(String.format("Version %s is not available for mod %s", version.modVersion, mod.getModId()));
+		if (info == null || !info.isInstallable(version)) {
+			throw new IllegalArgumentException(String.format("Version %s is not available for mod %s", version.getModVersion(), mod.getModId()));
 		}
 		this.version = version;
 	}
@@ -32,11 +32,10 @@ public class TaskInstallUpdate implements Runnable {
 	@Override
 	public void run() {
 		try {
-			URL downloadURL = new URL(version.downloadURL);
+			URL downloadURL = new URL(version.getDownloadURL());
 			String newFileName = downloadURL.getFile();
 			if (!newFileName.endsWith(".zip") && !newFileName.endsWith(".jar")) {
 				UpdateControllerLocal.LOGGER.warning(String.format("Failed to download update for mod %s, the download URL is not a jar or zip file!", mod.getModId()));
-				mod.transition(ModUpdateState.DOWNLOAD_FAILED);
 				return;
 			}
 
@@ -54,18 +53,15 @@ public class TaskInstallUpdate implements Runnable {
 
 				Files.touch(new File(mod.getSource().getPath() + MinecraftRelauncher.UPDATE_MARKER_POSTFIX));
 
-				mod.transition(ModUpdateState.PENDING_RESTART);
 			} catch (IOException e) {
 				UpdateControllerLocal.LOGGER.warning(String.format("IOException during update download for mod %s", mod.getModId()));
 				e.printStackTrace();
-				mod.transition(ModUpdateState.DOWNLOAD_FAILED);
 			} finally {
 				IOUtils.closeQuietly(in);
 				IOUtils.closeQuietly(out);
 			}
 		} catch (MalformedURLException e) {
 			UpdateControllerLocal.LOGGER.warning(String.format("Failed to download update for mod %s, the download URL is invalid", mod.getModId()));
-			mod.transition(ModUpdateState.DOWNLOAD_FAILED);
 		}
 	}
 }

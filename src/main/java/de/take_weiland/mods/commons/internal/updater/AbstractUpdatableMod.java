@@ -1,22 +1,15 @@
 package de.take_weiland.mods.commons.internal.updater;
 
-import cpw.mods.fml.common.versioning.ArtifactVersion;
-
 public abstract class AbstractUpdatableMod implements UpdatableMod {
 
-	private final Object stateLock = new Object();
-	private final Object downloadLock = new Object();
-	
 	protected final UpdateController controller;
 	private final ModVersionCollection versions;
-	
-	private ModUpdateState state = ModUpdateState.LOADING;
-	private int downloadProgress = -1;
-	private int downloadTotal;
 
-	public AbstractUpdatableMod(UpdateController controller, ArtifactVersion currentVersion) {
+	protected ModUpdateState state = ModUpdateState.AVAILABLE;
+
+	public AbstractUpdatableMod(UpdateController controller, ModVersionCollection versions) {
 		this.controller = controller;
-		versions = new ModVersionCollection(this, currentVersion);
+		this.versions = versions;
 	}
 
 	@Override
@@ -25,52 +18,26 @@ public abstract class AbstractUpdatableMod implements UpdatableMod {
 	}
 
 	@Override
-	public boolean transition(ModUpdateState desiredState) {
-		boolean success;
-		synchronized (stateLock) {
-			success = (state = state.transition(desiredState)) == desiredState;
-		}
-		if (success) {
-			controller.onStateChange(this);
-		}
-		return success;
-	}
-
-	@Override
-	public ModUpdateState getState() {
-		synchronized (stateLock) {
-			return state;
-		}
-	}
-
-	@Override
 	public ModVersionCollection getVersions() {
 		return versions;
 	}
 
 	@Override
-	public void setDownloadProgress(int progress, int total) {
-		if (progress == total) {
-			progress = -1;
+	public final boolean transition(ModUpdateState state) {
+		if (this.state.canTransition(state)) {
+			ModUpdateState old = this.state;
+			this.state = state;
+			controller.onStateChange(this, old);
+			return true;
 		}
-		synchronized (downloadLock) {
-			this.downloadProgress = progress;
-			this.downloadTotal = total;
-		}
-		controller.onDownloadProgressChange(this);
+		return false;
 	}
 
 	@Override
-	public int getDowloadProgress(int max) {
-		synchronized (downloadLock) {
-			if (downloadProgress < 0) {
-				return -1;
-			} else {
-				return (int) (max / (float)downloadTotal * downloadProgress);
-			}
-		}
+	public final ModUpdateState getState() {
+		return state;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "AbstractUpdatableMod [" + getModId() + "]";

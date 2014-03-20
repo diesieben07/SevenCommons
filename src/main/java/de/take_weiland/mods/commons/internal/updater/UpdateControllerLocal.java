@@ -5,18 +5,18 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.mcrestarter.MinecraftRelauncher;
+import de.take_weiland.mods.commons.util.MiscUtil;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -34,29 +34,24 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 	static final List<String> INTERNAL_MODS = Arrays.asList("mcp", "forge", "fml", "minecraft");
 	
 	private static final String LOG_CHANNEL = "Sevens ModUpdater";
-	public static final Logger LOGGER;
+	public static final Logger LOGGER = MiscUtil.getLogger(LOG_CHANNEL);
 	
-	static {
-		FMLLog.makeLog(LOG_CHANNEL);
-		LOGGER = Logger.getLogger(LOG_CHANNEL);
-	}
-	
-	private ScheduledExecutorService executor;
-	private final Map<String, String> updateUrls = Maps.newHashMap();
+	private final ScheduledExecutorService executor;
+	private final Map<String, URL> updateUrls;
+	private int refreshCount = 0;
 
-	public void registerUpdateUrl(String modId, String url) {
-		updateUrls.put(modId, url);
-	}
-
-	public void setup() {
-		List<UpdatableMod> mods = Lists.transform(Loader.instance().getActiveModList(), new Function<ModContainer, UpdatableMod>() {
+	public UpdateControllerLocal(Map<String, URL> updateUrls, int periodicChecks) {
+		this.updateUrls = updateUrls;
+		Iterable<? extends ModContainer> mc = Arrays.asList(Loader.instance().getMinecraftModContainer());
+		Iterable<ModContainer> fmlMods = Iterables.concat(Loader.instance().getActiveModList(), mc);
+		Iterable<UpdatableMod> mods = Iterables.transform(fmlMods, new Function<ModContainer, UpdatableMod>() {
 			@Override
 			public UpdatableMod apply(ModContainer container) {
 				try {
 					if (INTERNAL_MODS.contains(container.getModId().toLowerCase())) {
 						return new FMLInternalMod(container, UpdateControllerLocal.this);
 					} else {
-						return new ModsFolderMod(container, updateUrls.get(container.getModId()), UpdateControllerLocal.this);
+						return new ModsFolderMod(container, UpdateControllerLocal.this.updateUrls.get(container.getModId()), UpdateControllerLocal.this);
 					}
 				} catch (Throwable t) {
 					LOGGER.severe("Unexpected exception during UpdateableMod parsing!");
@@ -69,31 +64,74 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 
 		this.mods = Maps.uniqueIndex(Iterables.filter(mods, Predicates.notNull()), ID_RETRIEVER);
 		executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("Sevens ModUpdater %d").build());
+
+		if (periodicChecks > 0) {
+			executor.scheduleAtFixedRate(new Runnable() {
+				@Override
+				public void run() {
+					UpdateControllerLocal.this.searchForUpdates();
+				}
+			}, periodicChecks, periodicChecks, TimeUnit.MINUTES);
+		}
+
+		searchForUpdates();
 	}
 
-	public void doPeriodicChecks(int delayMinutes) {
-		executor.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() {
-				UpdateControllerLocal.this.searchForUpdates();
-			}
-		}, delayMinutes, delayMinutes, TimeUnit.MINUTES);
+	private static final int OPTIMIZE_RETRIES = 10;
+
+	@Override
+	public void performInstall() {
+
 	}
+
+	@Override
+	public boolean isRefreshing() {
+		return refreshCount > 0;
+	}
+
+	@Override
+	public void onStateChange(UpdatableMod mod, ModUpdateState oldState) {
+		if (oldState != ModUpdateState.REFRESHING && mod.getState() == ModUpdateState.REFRESHING) {
+			if (refreshCount++ == 0) {
+				SCModContainer.proxy.refreshUpdatesGui();
+			}
+		} else if (oldState == ModUpdateState.REFRESHING && mod.getState() != ModUpdateState.REFRESHING) {
+			if (--refreshCount == 0) {
+				SCModContainer.proxy.refreshUpdatesGui();
+			}
+		}
+	}
+
+	@Override
+	public boolean optimizeVersionSelection() {
+		boolean changed;
+		int count = 0;
+		do {
+			changed = false;
+			for (UpdatableMod mod : mods.values()) {
+				changed |= mod.getVersions().selectOptimalVersion();
+			}
+			count++;
+		} while (changed || count >= OPTIMIZE_RETRIES);
+		SCModContainer.proxy.refreshUpdatesGui();
+		return !changed; // if nothing changed on the last run, we are successful
+	}
+
+
 
 	@Override
 	public void searchForUpdates(UpdatableMod mod) {
 		validate(mod);
-		if (mod.transition(ModUpdateState.CHECKING)) {
+		if (mod.getUpdateURL() != null && mod.transition(ModUpdateState.REFRESHING)) {
 			executor.execute(new TaskSearchUpdates(mod));
 		}
 	}
 	
 	@Override
-	public void update(UpdatableMod mod, ModVersion version) {
+	public void update(UpdatableMod mod) {
 		validate(mod);
-		if (mod.transition(ModUpdateState.DOWNLOADING)) {
-			executor.execute(new TaskInstallUpdate(mod, version));
-		}
+		// TODO
+//		executor.execute(new TaskInstallUpdate(mod, version));
 	}
 	
 	private void validate(UpdatableMod mod) {

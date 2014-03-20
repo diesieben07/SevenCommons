@@ -116,7 +116,7 @@ public abstract class ScrollPane extends Gui {
 		if (isPointInRegion(0, 0, width, height, mouseX, mouseY)) {
 			for (GuiButton button : buttons) {
 				if (button.mousePressed(mc, mouseX, mouseY)) {
-					SCGuiAccessor.actionPerfomed(screen, button);
+					SCGuiAccessor.actionPerformed(screen, button);
 				}
 			}
 		}

@@ -2,9 +2,9 @@ package de.take_weiland.mods.commons.internal.client;
 
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
-import de.take_weiland.mods.commons.internal.*;
+import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
-import de.take_weiland.mods.commons.internal.updater.UpdateControllerRemote;
+import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.multiplayer.NetClientHandler;
@@ -30,22 +30,8 @@ public class ClientProxy implements SevenCommonsProxy {
 	}
 
 	@Override
-	public void handleViewUpdates(PacketViewUpdates packet) {
-		mc.displayGuiScreen(new GuiUpdates(null, new UpdateControllerRemote(packet.getMods())));
-	}
-
-	@Override
-	public void handleModState(PacketModState packet) {
-		if (mc.currentScreen instanceof GuiUpdates) {
-			((GuiUpdates) mc.currentScreen).controller.getMod(packet.getModId()).transition(packet.getState());
-		}
-	}
-
-	@Override
-	public void handleDownloadProgress(PacketDownloadProgress packet) {
-		if (mc.currentScreen instanceof GuiUpdates) {
-			((GuiUpdates) mc.currentScreen).controller.getMod(packet.getModId()).setDownloadProgress(packet.getDownloadProgress(), 100);
-		}
+	public void handleViewUpdates(UpdateController controller) {
+		mc.displayGuiScreen(new GuiNewUpdates(null, controller));
 	}
 
 	@Override
@@ -55,8 +41,15 @@ public class ClientProxy implements SevenCommonsProxy {
 
 	@Override
 	public void displayRestartFailure() {
-		if (mc.currentScreen instanceof GuiUpdates) {
+		if (mc.currentScreen instanceof GuiNewUpdates) {
 			mc.displayGuiScreen(new GuiRestartFailure(mc.currentScreen));
+		}
+	}
+
+	@Override
+	public void refreshUpdatesGui() {
+		if (mc.currentScreen instanceof GuiNewUpdates) {
+			((GuiNewUpdates) mc.currentScreen).updateButtonState();
 		}
 	}
 

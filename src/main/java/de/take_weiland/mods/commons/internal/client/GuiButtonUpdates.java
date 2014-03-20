@@ -24,7 +24,8 @@ public class GuiButtonUpdates extends GuiButton {
 	@Override
 	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
 		if (super.mousePressed(mc, mouseX, mouseY)) {
-			mc.displayGuiScreen(new GuiUpdates(mc.currentScreen, SCModContainer.updateController));
+//			mc.displayGuiScreen(new GuiUpdates(mc.currentScreen, SCModContainer.updateController));
+			mc.displayGuiScreen(new GuiNewUpdates(mc.currentScreen, SCModContainer.updateController));
 			return true;
 		} else {
 			return false;

@@ -1,12 +1,9 @@
 package de.take_weiland.mods.commons.internal.updater;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
 
 public abstract class AbstractUpdateController implements UpdateController {
 
@@ -19,8 +16,7 @@ public abstract class AbstractUpdateController implements UpdateController {
 		
 	};
 	
-	private final Set<UpdateStateListener> stateListeners = Sets.newHashSet();
-	protected Map<String, ? extends UpdatableMod> mods = Collections.emptyMap();
+	protected ImmutableMap<String, ? extends UpdatableMod> mods = ImmutableMap.of();
 
 	@Override
 	public Collection<? extends UpdatableMod> getMods() {
@@ -38,37 +34,32 @@ public abstract class AbstractUpdateController implements UpdateController {
 			searchForUpdates(mod);
 		}
 	}
-	
+
 	@Override
-	public void registerListener(UpdateStateListener listener) {
-		synchronized (stateListeners) {
-			stateListeners.add(listener);
+	public boolean isSelectionValid() {
+		boolean canInstall = true;
+		boolean oneToInstall = false;
+		for (UpdatableMod mod : mods.values()) {
+			ModVersion selected = mod.getVersions().getSelectedVersion();
+			if (!selected.isUseable()) {
+				canInstall = false;
+				break;
+			}
+			oneToInstall = oneToInstall || selected.canBeInstalled();
 		}
+		return oneToInstall && canInstall;
 	}
 
 	@Override
-	public void unregisterListener(UpdateStateListener listener) {
-		synchronized (stateListeners) {
-			stateListeners.remove(listener);
-		}
-	}
-
-	@Override
-	public void onStateChange(UpdatableMod mod) {
-		synchronized (stateListeners) {
-			for (UpdateStateListener listener : stateListeners) {
-				listener.onStateChange(mod);
+	public boolean isSelectionOptimized() {
+		for (UpdatableMod mod : mods.values()) {
+			if (!mod.getVersions().isOptimalVersionSelected()) {
+				return false;
 			}
 		}
+		return true;
 	}
 
 	@Override
-	public void onDownloadProgressChange(UpdatableMod mod) {
-		synchronized (stateListeners) {
-			for (UpdateStateListener listener : stateListeners) {
-				listener.onDownloadProgress(mod);
-			}
-		}
-	}
-
+	public void onStateChange(UpdatableMod mod, ModUpdateState oldState) { }
 }

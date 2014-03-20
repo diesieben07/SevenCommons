@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal.updater;
 
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
-import de.take_weiland.mods.commons.internal.PacketViewUpdates;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -34,8 +33,7 @@ public class CommandUpdates extends CommandBase {
 			throw new CommandException("sevencommons.updates.disabled");
 		} else {
 			EntityPlayer player = (EntityPlayer) sender;
-			new PacketViewUpdates(SCModContainer.updateController).sendTo(player);
-			SCModContainer.updateController.registerListener((PlayerUpdateInformation) player.getExtendedProperties(PlayerUpdateInformation.IDENTIFIER));
+//			new PacketViewUpdates(SCModContainer.updateController).sendTo(player);
 		}
 	}
 

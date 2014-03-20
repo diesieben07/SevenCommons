@@ -139,9 +139,9 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 	
 	static enum IdSize {
 		
-		BYTE_SUFFICIENT(1),
-		SHORT_SUFFICIENT(2);
-		
+		BYTE(1),
+		SHORT(2);
+
 		final int byteSize;
 		
 		private IdSize(int byteSize) {
@@ -150,24 +150,24 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 
 		static IdSize forCount(int numIds) {
 			if (numIds <= ~BYTE_MSB) {
-				return BYTE_SUFFICIENT;
+				return BYTE;
 			} else if (numIds <= ~SHORT_MSB) {
-				return SHORT_SUFFICIENT;
+				return SHORT;
 			} else {
 				throw new IllegalArgumentException("Too many packets!");
 			}
 		}
-		
+
 		int readId(byte[] buf) {
-			if (this == BYTE_SUFFICIENT) {
+			if (this == BYTE) {
 				return buf[0];
 			} else {
 				return Shorts.fromBytes(buf[0], buf[1]);
 			}
 		}
-		
+
 		void write(DataOutput out, int id, boolean multipart) throws IOException {
-			if (this == BYTE_SUFFICIENT) {
+			if (this == BYTE) {
 				out.writeByte((id & ~BYTE_MSB) | (multipart ? BYTE_MSB : 0));
 			} else {
 				out.writeShort((id & ~BYTE_MSB) | (multipart ? SHORT_MSB : 0));
@@ -178,7 +178,7 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		private static final int SHORT_MSB = -32768;
 		
 		boolean isMultipart(int id) {
-			if (this == BYTE_SUFFICIENT) {
+			if (this == BYTE) {
 				return (id & BYTE_MSB) == BYTE_MSB;
 			} else {
 				return (id & SHORT_MSB) == SHORT_MSB;
@@ -186,7 +186,7 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		}
 		
 		int getActualId(int id) {
-			if (this == BYTE_SUFFICIENT) {
+			if (this == BYTE) {
 				return id & ~BYTE_MSB;
 			} else {
 				return id & ~SHORT_MSB;

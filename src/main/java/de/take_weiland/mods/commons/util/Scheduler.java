@@ -24,6 +24,10 @@ public final class Scheduler implements ITickHandler, Executor {
 	public static Scheduler client() {
 		return client != null ? client : (client = new Scheduler(Side.CLIENT));
 	}
+
+	public static Scheduler get(Side side) {
+		return side.isClient() ? client() : server();
+	}
 	
 	public void schedule(Runnable task, int ticks, boolean tickEnd) {
 		long when = ticks + now.get();

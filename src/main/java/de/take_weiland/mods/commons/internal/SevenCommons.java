@@ -33,7 +33,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	
 	public static final Logger LOGGER;
 	public static final String MINECRAFT_VERSION = "1.6.4";
-	public static final String VERSION = "@VERSION@";
+	public static final String VERSION = "1.0";
 	public static File MINECRAFT_DIR;
 
 	public static LaunchClassLoader CLASSLOADER = (LaunchClassLoader) SevenCommons.class.getClassLoader();

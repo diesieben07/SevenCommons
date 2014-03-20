@@ -1,12 +1,10 @@
 package de.take_weiland.mods.commons.internal.updater;
 
-import com.google.common.base.Strings;
 import cpw.mods.fml.common.ModContainer;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.JarURLConnection;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -15,15 +13,10 @@ public class ModsFolderMod extends ModContainerMod {
 	private URL updateURL;
 	private File source;
 	
-	public ModsFolderMod(ModContainer mod, String updateUrl, UpdateController controller) {
+	public ModsFolderMod(ModContainer mod, URL updateURL, UpdateController controller) {
 		super(mod, controller);
-		
-		if ((updateURL = getUpdateURL(updateUrl)) == null) {
-			transition(ModUpdateState.UNAVAILABLE);
-			UpdateControllerLocal.LOGGER.info(String.format("Skipping mod %s with invalid or missing update URL %s", mod.getModId(), updateUrl));
-			return;
-		}
-		
+		this.updateURL = updateURL;
+
 		Object sourceObj = mod.getMod() == null ? mod : mod.getMod();
 		URL sourceLoc = sourceObj.getClass().getProtectionDomain().getCodeSource().getLocation();
 		
@@ -40,10 +33,7 @@ public class ModsFolderMod extends ModContainerMod {
 		}
 
 		if (source == null) {
-			transition(ModUpdateState.UNAVAILABLE);
 			UpdateControllerLocal.LOGGER.warning(String.format("Cannot update mod %s because it's not a valid jar file!", mod.getModId()));
-		} else {
-			transition(ModUpdateState.AVAILABLE);
 		}
 	}
 	
@@ -51,18 +41,7 @@ public class ModsFolderMod extends ModContainerMod {
 		UpdateControllerLocal.LOGGER.warning(String.format("Exception during parsing Zip-URL for mod %s", mod.getModId()));
 		e.printStackTrace();
 	}
-	
-	private static URL getUpdateURL(String url) {
-		if (Strings.isNullOrEmpty(url)) {
-			return null;
-		}
-		try {
-			return new URL(url);
-		} catch (MalformedURLException e) {
-			return null;
-		}
-	}
-	
+
 	@Override
 	public URL getUpdateURL() {
 		return updateURL;
