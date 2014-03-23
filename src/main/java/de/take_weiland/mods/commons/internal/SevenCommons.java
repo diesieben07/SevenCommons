@@ -17,8 +17,7 @@ import java.util.logging.Logger;
 @IFMLLoadingPlugin.SortingIndex(1001) // get after deobfuscation
 @TransformerExclusions({
 		"de.take_weiland.mods.commons.asm.",
-		"de.take_weiland.mods.commons.network.",
-		"de.take_weiland.mods.commons.net.",
+		//"de.take_weiland.mods.commons.net.",
 		"de.take_weiland.mods.commons.internal.transformers.",
 		"de.take_weiland.mods.commons.internal.exclude.",
 		"de.take_weiland.mods.commons.subtypes.",

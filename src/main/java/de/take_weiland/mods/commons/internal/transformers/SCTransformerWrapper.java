@@ -19,6 +19,8 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		// packets
 		register(new SimplePacketTypeTransformer());
 		register(new PacketTransformer());
+		register(new ModPacketWithResponseTransformer());
+		register(new ClientResponseHandlerTransformer());
 
 		// @Synced & @ToNbt
 		register(new AnnotationFindingTransformer());

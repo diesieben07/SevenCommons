@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.ModPacketProxy;
-import de.take_weiland.mods.commons.internal.ModPacketWithResponseProxy;
+import de.take_weiland.mods.commons.internal.ResponsePacket;
 import de.take_weiland.mods.commons.internal.SCPackets;
 import de.take_weiland.mods.commons.internal.SimplePacketTypeProxy;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
@@ -11,6 +11,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * <p>An abstract base class for simpler Packet handling. Make a subclass of this for every PacketType.
@@ -21,7 +24,7 @@ import net.minecraft.world.World;
  *new DifferentPacket(evenMoreData).sendToPlayer(somePlayer);
  * }</pre></p>
  */
-public abstract class ModPacket implements SimplePacket {
+public abstract class ModPacket {
 
 	/**
 	 * whether the given (logical) side can receive this packet
@@ -52,7 +55,7 @@ public abstract class ModPacket implements SimplePacket {
 		return 32;
 	}
 
-	public static abstract class WithResponse<T> extends ModPacket {
+	public static abstract class WithResponse<T> extends ModPacket implements SimplePacket.WithResponse<T> {
 
 		protected abstract void handle(DataBuf in, EntityPlayer player, Side side, WritableDataBuf out);
 
@@ -60,7 +63,6 @@ public abstract class ModPacket implements SimplePacket {
 
 		@Override
 		void write0(WritableDataBuf buf) {
-			int transferId = ((ModPacketWithResponseProxy) this)._sc$nextTransferId();
 			buf.putInt(transferId);
 			write(buf);
 		}
@@ -74,18 +76,143 @@ public abstract class ModPacket implements SimplePacket {
 			if (side.isClient()) {
 				response.build().sendToServer();
 			} else {
+				System.out.println("Handling and sending to player: " + player);
 				response.build().sendTo(player);
 			}
 		}
 
+		private SimplePacket clearMake() {
+			delegate = null;
+			transferId = ResponsePacket.nextTransferId();
+			inResponseMode = true;
+			return make();
+		}
+
+		private int transferId;
+		private boolean inResponseMode = false;
+
+		@SuppressWarnings("unchecked") // cast is safe, see ModPacketWithResponseTransformer
+		private SimplePacket.ResponseSentToServer<T> castMe() {
+			return (SimplePacket.ResponseSentToServer<T>) this;
+		}
+
+		// interface SimplePacket.ResponseSentToServer is added by ASM
+		@SuppressWarnings("unchecked") // cast is safe, ASM generated code
+		SimplePacket.WithResponse<T> onResponse(ClientResponseHandler<? super T> handler) {
+			return onResponse((PacketResponseHandler<? super T>) handler);
+		}
+
+		SimplePacket.WithResponse<T> onResponse(PacketResponseHandler<? super T> handler) {
+			checkState(inResponseMode, "incorrect usage of SimplePacket.WithResponse fluent interface!");
+			checkNotNull(handler, "handler");
+			// now thats what I call type casting!
+			ResponsePacket.registerHandler(transferId, this, handler);
+			inResponseMode = false;
+			return this;
+		}
+
+		SimplePacket.WithResponse<T> discardResponse() {
+			inResponseMode = false;
+			return this;
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendTo(PacketTarget target) {
+			clearMake().sendTo(target);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSentToServer<T> sendToServer() {
+			clearMake().sendToServer();
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendTo(EntityPlayer player) {
+			clearMake().sendTo(player);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendTo(Iterable<? extends EntityPlayer> players) {
+			clearMake().sendTo(players);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToAll() {
+			clearMake().sendToAll();
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToAllInDimension(int dimension) {
+			clearMake().sendToAllInDimension(dimension);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToAllInDimension(World world) {
+			clearMake().sendToAllInDimension(world);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToAllNear(World world, double x, double y, double z, double radius) {
+			clearMake().sendToAllNear(world, x, y, z, radius);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToAllNear(int dimension, double x, double y, double z, double radius) {
+			clearMake().sendToAllNear(dimension, x, y, z, radius);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToAllNear(Entity entity, double radius) {
+			clearMake().sendToAllNear(entity, radius);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToAllNear(TileEntity te, double radius) {
+			clearMake().sendToAllNear(te, radius);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToAllTracking(Entity entity) {
+			clearMake().sendToAllTracking(entity);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToAllTracking(TileEntity te) {
+			clearMake().sendToAllTracking(te);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToAllAssociated(Entity e) {
+			clearMake().sendToAllAssociated(e);
+			return castMe();
+		}
+
+		@Override
+		public SimplePacket.ResponseSent<T> sendToViewing(Container c) {
+			clearMake().sendToViewing(c);
+			return castMe();
+		}
 	}
 
 	void write0(WritableDataBuf buf) {
 		write(buf);
 	}
-	
-	private SimplePacket delegate;
-	private SimplePacket make() {
+
+	SimplePacket delegate;
+	SimplePacket make() {
 		SimplePacket delegate;
 		if ((delegate = this.delegate) == null) {
 			delegate = this.delegate = make0();
@@ -103,78 +230,63 @@ public abstract class ModPacket implements SimplePacket {
 		return builder.build();
 	}
 
-	@Override
-	public final SimplePacket sendTo(PacketTarget target) {
+	public SimplePacket sendTo(PacketTarget target) {
 		return make().sendTo(target);
 	}
 
-	@Override
-	public final SimplePacket sendToServer() {
+	public SimplePacket sendToServer() {
 		return make().sendToServer();
 	}
 
-	@Override
-	public final SimplePacket sendTo(EntityPlayer player) {
+	public SimplePacket sendTo(EntityPlayer player) {
 		return make().sendTo(player);
 	}
 
-	@Override
-	public final SimplePacket sendTo(Iterable<? extends EntityPlayer> players) {
+	public SimplePacket sendTo(Iterable<? extends EntityPlayer> players) {
 		return make().sendTo(players);
 	}
 
-	@Override
-	public final SimplePacket sendToAll() {
+	public SimplePacket sendToAll() {
 		return make().sendToAll();
 	}
 
-	@Override
-	public final SimplePacket sendToAllInDimension(int dimension) {
+	public SimplePacket sendToAllInDimension(int dimension) {
 		return make().sendToAllInDimension(dimension);
 	}
 
-	@Override
-	public final SimplePacket sendToAllInDimension(World world) {
+	public SimplePacket sendToAllInDimension(World world) {
 		return make().sendToAllInDimension(world);
 	}
 
-	@Override
-	public final SimplePacket sendToAllNear(World world, double x, double y, double z, double radius) {
+	public SimplePacket sendToAllNear(World world, double x, double y, double z, double radius) {
 		return make().sendToAllNear(world, x, y, z, radius);
 	}
 
-	@Override
-	public final SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) {
+	public SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) {
 		return make().sendToAllNear(dimension, x, y, z, radius);
 	}
 
-	@Override
-	public final SimplePacket sendToAllNear(Entity entity, double radius) {
+	public SimplePacket sendToAllNear(Entity entity, double radius) {
 		return make().sendToAllNear(entity, radius);
 	}
 
-	@Override
-	public final SimplePacket sendToAllNear(TileEntity te, double radius) {
+	public SimplePacket sendToAllNear(TileEntity te, double radius) {
 		return make().sendToAllNear(te, radius);
 	}
 
-	@Override
-	public final SimplePacket sendToAllTracking(Entity entity) {
+	public SimplePacket sendToAllTracking(Entity entity) {
 		return make().sendToAllTracking(entity);
 	}
 
-	@Override
-	public final SimplePacket sendToAllTracking(TileEntity te) {
+	public SimplePacket sendToAllTracking(TileEntity te) {
 		return make().sendToAllTracking(te);
 	}
 
-	@Override
-	public final SimplePacket sendToAllAssociated(Entity e) {
+	public SimplePacket sendToAllAssociated(Entity e) {
 		return make().sendToAllAssociated(e);
 	}
 
-	@Override
-	public final SimplePacket sendToViewing(Container c) {
+	public SimplePacket sendToViewing(Container c) {
 		return make().sendToViewing(c);
 	}
 }

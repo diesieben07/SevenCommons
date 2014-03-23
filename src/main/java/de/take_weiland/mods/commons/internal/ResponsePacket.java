@@ -8,7 +8,9 @@ import de.take_weiland.mods.commons.net.PacketResponseHandler;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import net.minecraft.entity.player.EntityPlayer;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author diesieben07
@@ -16,14 +18,27 @@ import java.util.Map;
 public class ResponsePacket extends ModPacket {
 
 	private static final Map<Integer, Object[]> handlers = Maps.newHashMap();
+	private static AtomicInteger nextTransferId = new AtomicInteger();
+
+	public static int nextTransferId() {
+		return nextTransferId.getAndIncrement();
+	}
+
+	public static <T> void registerHandler(int transferId, WithResponse<T> packet, PacketResponseHandler<? super T> handler) {
+		handlers.put(transferId, new Object[] {packet, handler});
+	}
 
 	@Override
 	protected void handle(DataBuf buffer, EntityPlayer player, Side side) {
+		System.out.println("hello!");
 		int transferId = buffer.getInt();
 		Object[] handlerAndPacket = handlers.remove(transferId);
 		if (handlerAndPacket == null) {
 			SevenCommons.LOGGER.warning("Received unknown transferId!");
+			return;
 		}
+
+		System.out.println("worked! " + Arrays.toString(handlerAndPacket));
 
 		// casts are safe, T of handler and packet must match
 		@SuppressWarnings("unchecked")

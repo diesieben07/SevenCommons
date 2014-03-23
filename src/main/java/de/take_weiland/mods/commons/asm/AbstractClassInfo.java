@@ -49,6 +49,10 @@ abstract class AbstractClassInfo implements ClassInfo {
 				|| child.interfaces().contains(internalName())) { // we are an interface that child implements
 			return true;
 		}
+
+		if (!isInterface() && child.isInterface()) {
+			return false;
+		}
 		// need to compute supers now
 		return child.getSupers().contains(internalName());
 	}

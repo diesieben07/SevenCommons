@@ -136,7 +136,7 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		buf.seek(0);
 		return new Packet250FakeRaw<TYPE>(buf, this, buf.type);
 	}
-	
+
 	static enum IdSize {
 		
 		BYTE(1),

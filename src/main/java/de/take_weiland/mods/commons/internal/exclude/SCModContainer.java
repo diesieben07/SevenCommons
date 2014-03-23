@@ -106,6 +106,7 @@ public final class SCModContainer extends DummyModContainer {
 
 	@Subscribe
 	public void processIMCs(FMLInterModComms.IMCEvent event) {
+		updaterEnabled = false;
 		if (updaterEnabled) {
 			ImmutableMap.Builder<String, URL> urls = ImmutableMap.builder();
 			urls.put(getModId(), UPDATE_URL);

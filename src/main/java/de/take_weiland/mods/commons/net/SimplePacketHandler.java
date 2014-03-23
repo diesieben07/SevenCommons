@@ -5,6 +5,7 @@ import cpw.mods.fml.relauncher.Side;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
+import java.lang.reflect.Constructor;
 import java.util.logging.Logger;
 
 class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType> implements PacketHandler<TYPE> {
@@ -30,7 +31,9 @@ class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType> implements
 	@Override
 	public void handle(TYPE t, DataBuf buffer, EntityPlayer player, Side side) {
 		try {
-			ModPacket packet = t.packet().newInstance();
+			Constructor<? extends ModPacket> constructor = t.packet().getDeclaredConstructor();
+			constructor.setAccessible(true);
+			ModPacket packet = constructor.newInstance(); // TODO optimize this
 			if (packet.validOn(side)) {
 				packet.handle(buffer, player, side);
 			} else {

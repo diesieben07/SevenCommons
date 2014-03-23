@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.transformers;
 import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ClassInfo;
 import de.take_weiland.mods.commons.internal.SimplePacketTypeProxy;
-import de.take_weiland.mods.commons.net.SimplePacketType;
 import org.objectweb.asm.tree.*;
 
 import static de.take_weiland.mods.commons.asm.ASMUtils.getClassInfo;
@@ -16,11 +15,11 @@ import static org.objectweb.asm.Type.*;
 public final class SimplePacketTypeTransformer implements ASMClassTransformer {
 
 	public static final String FACTORY_FIELD = "_sc$packetFactory";
-	private static final ClassInfo simplePacketTypeInfo = getClassInfo(SimplePacketType.class);
+	private static final ClassInfo simplePacketTypeInfo = getClassInfo("de/take_weiland/mods/commons/net/SimplePacketType");
 
 	@Override
 	public final boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		if (!simplePacketTypeInfo.isAssignableFrom(classInfo)) {
+		if (classInfo.isAbstract() || classInfo.isInterface() || !simplePacketTypeInfo.isAssignableFrom(classInfo)) {
 			return false;
 		}
 
