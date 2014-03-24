@@ -4,6 +4,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.NetHandler;
+import net.minecraft.network.packet.Packet;
 
 public interface SevenCommonsProxy {
 	
@@ -18,4 +19,6 @@ public interface SevenCommonsProxy {
 	INetworkManager getNetworkManagerFromClient(NetHandler clientHandler);
 
 	void refreshUpdatesGui();
+
+	void sendPacketToServer(Packet p);
 }

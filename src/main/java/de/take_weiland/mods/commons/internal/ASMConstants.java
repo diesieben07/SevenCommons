@@ -100,6 +100,15 @@ public final class ASMConstants {
 
 	public static final String M_REGISTER_EXT_PROPS = "registerExtendedProperties";
 
+	public static final String M_READ_PACKET_DATA_MCP = "readPacketData";
+	public static final String M_READ_PACKET_DATA_SRG = "func_73267_a";
+
+	public static final String M_WRITE_PACKET_DATA_MCP = "writePacketData";
+	public static final String M_WRITE_PACKET_DATA_SRG = "func_73273_a";
+
+	public static final String M_GET_PACKET_SIZE_MCP = "getPacketSize";
+	public static final String M_GET_PACKET_SIZE_SRG = "func_73284_a";
+
 	private ASMConstants() { }
 	
 }

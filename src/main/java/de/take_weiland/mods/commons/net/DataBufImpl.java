@@ -7,7 +7,7 @@ import de.take_weiland.mods.commons.util.UnsignedShorts;
 import java.io.*;
 import java.nio.BufferUnderflowException;
 
-class DataBufImpl implements DataBuf {
+class DataBufImpl implements DataBuf, PacketInput {
 
 	// VarInt constants
 	static final int first28Bits = 268435455;
@@ -35,11 +35,18 @@ class DataBufImpl implements DataBuf {
 	 * non-oversized len, needed because WritableDataBuf oversizes the array on growth and available needs the actual len
 	 */
 	int actualLen;
-	
+
+	PacketFactoryInternal<?> factory;
+
 	DataBufImpl(byte[] wrap, int off, int len) {
 		this.buf = wrap;
 		this.pos = off;
 		this.len = actualLen = len;
+	}
+
+	@Override
+	public PacketBuilder response() {
+		return factory.response();
 	}
 
 	@Override

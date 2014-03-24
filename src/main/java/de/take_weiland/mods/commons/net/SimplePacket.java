@@ -43,49 +43,39 @@ public interface SimplePacket {
 
 	interface WithResponse<T> extends SimplePacket {
 
-		ResponseSent<T> sendTo(PacketTarget target);
-
-		ResponseSentToServer<T> sendToServer();
-
-		ResponseSent<T> sendTo(EntityPlayer player);
-
-		ResponseSent<T> sendTo(Iterable<? extends EntityPlayer> players);
-
-		ResponseSent<T> sendToAll();
-
-		ResponseSent<T> sendToAllInDimension(int dimension);
-
-		ResponseSent<T> sendToAllInDimension(World world);
-
-		ResponseSent<T> sendToAllNear(World world, double x, double y, double z, double radius);
-
-		ResponseSent<T> sendToAllNear(int dimension, double x, double y, double z, double radius);
-
-		ResponseSent<T> sendToAllNear(Entity entity, double radius);
-
-		ResponseSent<T> sendToAllNear(TileEntity te, double radius);
-
-		ResponseSent<T> sendToAllTracking(Entity entity);
-
-		ResponseSent<T> sendToAllTracking(TileEntity te);
-
-		ResponseSent<T> sendToAllAssociated(Entity e);
-
-		ResponseSent<T> sendToViewing(Container c);
-
-	}
-
-	interface ResponseSent<T> extends SimplePacket {
-
 		WithResponse<T> onResponse(PacketResponseHandler<? super T> handler);
 
 		WithResponse<T> discardResponse();
 
-	}
+		WithResponse<T> sendTo(PacketTarget target);
 
-	interface ResponseSentToServer<T> extends ResponseSent<T> {
+		WithResponse<T> sendToServer();
 
-		WithResponse<T> onResponse(ClientResponseHandler<? super T> handler);
+		WithResponse<T> sendTo(EntityPlayer player);
+
+		WithResponse<T> sendTo(Iterable<? extends EntityPlayer> players);
+
+		WithResponse<T> sendToAll();
+
+		WithResponse<T> sendToAllInDimension(int dimension);
+
+		WithResponse<T> sendToAllInDimension(World world);
+
+		WithResponse<T> sendToAllNear(World world, double x, double y, double z, double radius);
+
+		WithResponse<T> sendToAllNear(int dimension, double x, double y, double z, double radius);
+
+		WithResponse<T> sendToAllNear(Entity entity, double radius);
+
+		WithResponse<T> sendToAllNear(TileEntity te, double radius);
+
+		WithResponse<T> sendToAllTracking(Entity entity);
+
+		WithResponse<T> sendToAllTracking(TileEntity te);
+
+		WithResponse<T> sendToAllAssociated(Entity e);
+
+		WithResponse<T> sendToViewing(Container c);
 
 	}
 

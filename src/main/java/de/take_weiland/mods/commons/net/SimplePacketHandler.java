@@ -29,7 +29,7 @@ class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType> implements
 	}
 	
 	@Override
-	public void handle(TYPE t, DataBuf buffer, EntityPlayer player, Side side) {
+	public void handle(TYPE t, PacketInput buffer, EntityPlayer player, Side side) {
 		try {
 			Constructor<? extends ModPacket> constructor = t.packet().getDeclaredConstructor();
 			constructor.setAccessible(true);

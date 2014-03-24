@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal;
 
-import com.google.common.collect.Maps;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.ModPacket;
@@ -10,6 +9,7 @@ import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ResponsePacket extends ModPacket {
 
-	private static final Map<Integer, Object[]> handlers = Maps.newHashMap();
+	private static final Map<Integer, Object[]> handlers = new ConcurrentHashMap<>();
 	private static AtomicInteger nextTransferId = new AtomicInteger();
 
 	public static int nextTransferId() {
@@ -31,8 +31,8 @@ public class ResponsePacket extends ModPacket {
 	@Override
 	protected void handle(DataBuf buffer, EntityPlayer player, Side side) {
 		System.out.println("hello!");
-		int transferId = buffer.getInt();
-		Object[] handlerAndPacket = handlers.remove(transferId);
+		Integer transferId = buffer.getInt();
+		Object[] handlerAndPacket = handlers.get(transferId);
 		if (handlerAndPacket == null) {
 			SevenCommons.LOGGER.warning("Received unknown transferId!");
 			return;
@@ -40,15 +40,16 @@ public class ResponsePacket extends ModPacket {
 
 		System.out.println("worked! " + Arrays.toString(handlerAndPacket));
 
-		// casts are safe, T of handler and packet must match
+		// casts are safe, T of handler and packet must match and ASM generated code
 		@SuppressWarnings("unchecked")
 		ModPacket.WithResponse<Object> packet = (WithResponse<Object>) handlerAndPacket[0];
 		@SuppressWarnings("unchecked")
-		PacketResponseHandler<Object> handler = (PacketResponseHandler<Object>) handlerAndPacket[1];
+		ResponseHandlerProxy<Object> handler = (ResponseHandlerProxy<Object>) handlerAndPacket[1];
 
 		Object response = packet.readResponse(buffer, player, side);
-		handler.onResponse(response, player);
-
+		if (handler._sc$handlePacketResponse(response, player)) {
+			handlers.remove(transferId);
+		}
 	}
 
 	@Override

@@ -15,12 +15,13 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		register(new EntityPlayerTransformer());
 		register(new EntityTransformer());
 		register(new EntityTrackerEntryTransformer());
+		register(new Packet250Transformer());
 
 		// packets
 		register(new SimplePacketTypeTransformer());
 		register(new PacketTransformer());
 		register(new ModPacketWithResponseTransformer());
-		register(new ClientResponseHandlerTransformer());
+		register(new PacketResponseHandlerTransformer());
 
 		// @Synced & @ToNbt
 		register(new AnnotationFindingTransformer());

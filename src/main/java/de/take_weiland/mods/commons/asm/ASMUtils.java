@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
@@ -24,13 +26,6 @@ import static org.objectweb.asm.Opcodes.*;
 public final class ASMUtils {
 
 	private ASMUtils() { }
-
-	private static final Predicate<MethodNode> isConstructor = new Predicate<MethodNode>() {
-		@Override
-		public boolean apply(MethodNode method) {
-			return method.name.equals("<init>");
-		}
-	};
 
 	// *** bytecode analyzing helpers *** //
 
@@ -176,6 +171,13 @@ public final class ASMUtils {
 		return m;
 	}
 
+	private static final Predicate<MethodNode> IS_CONSTRUCTOR = Predicates.compose(Predicates.equalTo("<init>"), new Function<MethodNode, String>() {
+		@Override
+		public String apply(MethodNode input) {
+			return input.name;
+		}
+	});
+
 	/**
 	 * <p>get all constructors of the given ClassNode</p>
 	 * <p>The returned collection is a live-view, so if new constructors get added, they will be present in the returned collection immediately</p>
@@ -183,7 +185,7 @@ public final class ASMUtils {
 	 * @return all constructors
 	 */
 	public static Collection<MethodNode> getConstructors(ClassNode clazz) {
-		return Collections2.filter(clazz.methods, isConstructor);
+		return Collections2.filter(clazz.methods, IS_CONSTRUCTOR);
 	}
 
 	@Deprecated

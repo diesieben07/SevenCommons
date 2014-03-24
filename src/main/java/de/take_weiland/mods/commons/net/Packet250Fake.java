@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.common.network.PacketDispatcher;
+import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.entity.Entity;
@@ -9,7 +10,6 @@ import net.minecraft.inventory.Container;
 import net.minecraft.network.packet.NetHandler;
 import net.minecraft.network.packet.Packet250CustomPayload;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
 import java.io.DataInput;
@@ -19,7 +19,7 @@ import java.io.IOException;
 /**
  * @author diesieben07
  */
-class Packet250FakeRaw<TYPE extends Enum<TYPE>> extends Packet250CustomPayload implements SimplePacket {
+class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload implements SimplePacket {
 
 	private static final int MAX_SINGLE_SIZE = 32766; // bug in Packet250CP doesn't allow 32767
 	private final WritableDataBufImpl<TYPE> buf;
@@ -28,10 +28,10 @@ class Packet250FakeRaw<TYPE extends Enum<TYPE>> extends Packet250CustomPayload i
 
 	static {
 		// we need to inject our fake packet class into the map so that getPacketId still works (can't override it)
-		MiscUtil.getReflector().getClassToIdMap(null).put(Packet250FakeRaw.class, Integer.valueOf(250));
+		MiscUtil.getReflector().getClassToIdMap(null).put(Packet250Fake.class, Integer.valueOf(250));
 	}
 
-	Packet250FakeRaw(WritableDataBufImpl<TYPE> buf, FMLPacketHandlerImpl<TYPE> fmlPh, TYPE type) {
+	Packet250Fake(WritableDataBufImpl<TYPE> buf, FMLPacketHandlerImpl<TYPE> fmlPh, TYPE type) {
 		this.buf = buf;
 		this.fmlPh = fmlPh;
 		this.type = type;
@@ -59,48 +59,14 @@ class Packet250FakeRaw<TYPE extends Enum<TYPE>> extends Packet250CustomPayload i
 	}
 
 	void doWrite(DataOutput out, TYPE type, FMLPacketHandlerImpl<TYPE> fmlPacketHandler, WritableDataBufImpl<TYPE> buf) {
-		int len = buf.available();
 		try {
-			if (len > MAX_SINGLE_SIZE - fmlPacketHandler.idSize.byteSize) {
-				doWriteMulti(buf, out, len, fmlPacketHandler, type);
-			} else {
-				doWriteSingle(buf, out, fmlPacketHandler, type);
-			}
+			writeString(fmlPacketHandler.channel, out);
+			ASMHooks.writeVarShort(out, buf.actualLen + fmlPacketHandler.idSize);
+
+			fmlPacketHandler.write(out, type.ordinal());
+			out.write(buf.buf, 0, buf.actualLen);
 		} catch (IOException e) {
 			throw JavaUtils.throwUnchecked(e); // weird bug, can't declare IOException for some reason
-		}
-	}
-
-	void writeHeader(FMLPacketHandlerImpl<TYPE> fmlPh, DataOutput out, int len) throws IOException {
-		writeString(fmlPh.channel, out);
-		out.writeShort(len + fmlPh.idSize.byteSize);
-	}
-
-	void doWriteSingle(WritableDataBufImpl<TYPE> buf, DataOutput out, FMLPacketHandlerImpl<TYPE> fmlPh, Enum type) throws IOException {
-		writeHeader(fmlPh, out, buf.actualLen);
-
-		fmlPh.idSize.write(out, type.ordinal(), false);
-		out.write(buf.buf, 0, buf.actualLen);
-	}
-
-	void doWriteMulti(WritableDataBufImpl<TYPE> buf, DataOutput out, int len, FMLPacketHandlerImpl<TYPE> fmlPh, Enum type) throws IOException {
-		FMLPacketHandlerImpl.IdSize idSize = fmlPh.idSize;
-		int partSize = MAX_SINGLE_SIZE - idSize.byteSize - 2;
-		int numParts = MathHelper.ceiling_float_int((float) len / (float) partSize);
-		int packetId = type.ordinal();
-		byte[] arr = buf.buf;
-		for (int i = 0; i < numParts; ++i) {
-			if (i != 0) {
-				out.writeByte(250); // start a new Packet250 here
-			}
-			int offset = i * partSize;
-			int thisPartLen = Math.min(partSize, len - offset);
-
-			writeHeader(fmlPh, out, thisPartLen + 2);
-			idSize.write(out, packetId, true);
-			out.writeByte(i);
-			out.writeByte(numParts);
-			out.write(arr, offset, thisPartLen);
 		}
 	}
 

@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.multiplayer.NetClientHandler;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.NetHandler;
+import net.minecraft.network.packet.Packet;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 
@@ -58,4 +59,8 @@ public class ClientProxy implements SevenCommonsProxy {
 		return ((NetClientHandler)clientHandler).getNetManager();
 	}
 
+	@Override
+	public void sendPacketToServer(Packet p) {
+		mc.getNetHandler().addToSendQueue(p);
+	}
 }

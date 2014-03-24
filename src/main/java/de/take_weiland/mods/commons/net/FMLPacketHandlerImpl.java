@@ -1,11 +1,10 @@
 package de.take_weiland.mods.commons.net;
 
-import com.google.common.collect.MapMaker;
-import com.google.common.primitives.Shorts;
-import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.common.network.IPacketHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.Player;
+import de.take_weiland.mods.commons.internal.SCPackets;
+import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,117 +13,85 @@ import net.minecraft.network.packet.Packet250CustomPayload;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.EnumMap;
-import java.util.Map;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHandler, PacketFactory<TYPE>, PacketFactoryInternal<TYPE> {
 
 	final String channel;
 	private final PacketHandler<TYPE> handler;
 	private final Class<TYPE> typeClass;
-	final IdSize idSize;
-	private Map<INetworkManager, EnumMap<TYPE, byte[][]>> partTracker;
+	final int idSize;
+	private final int responseId;
 
 	FMLPacketHandlerImpl(String channel, PacketHandler<TYPE> handler, Class<TYPE> typeClass) {
-		this.channel = channel;
-		this.handler = handler;
-		this.typeClass = typeClass;
-		this.idSize = IdSize.forCount(JavaUtils.getEnumConstantsShared(typeClass).length);
+		this.channel = checkNotNull(channel);
+		this.handler = checkNotNull(handler);
+		this.typeClass = checkNotNull(typeClass);
+		int len = JavaUtils.getEnumConstantsShared(typeClass).length;
+		responseId = len; // use next available ID as the response packet
+		this.idSize = calcByteCount(len + 1);
 		NetworkRegistry.instance().registerChannel(this, channel);
+	}
+
+	/**
+	 * calculate the number of bytes needed to represent the given numer of packet types.
+	 */
+	private static int calcByteCount(int numPackets) {
+		checkArgument(numPackets > 0, "Must have at least one packet type!");
+		int numBytes = Integer.numberOfTrailingZeros(Integer.highestOneBit(numPackets)) / 8;
+		return numBytes;
 	}
 
 	@Override
 	public void onPacketData(INetworkManager manager, Packet250CustomPayload packet, Player fmlPlayer) {
 		byte[] buf = packet.data;
 		EntityPlayer player = (EntityPlayer) fmlPlayer;
-		IdSize idSize = this.idSize;
-		
-		int id = idSize.readId(buf);
-		TYPE t = JavaUtils.byOrdinal(typeClass, idSize.getActualId(id));
-		if (idSize.isMultipart(id)) {
-			handleMultipart(manager, buf, t, player);
-		} else {
-			DataBuf dataBuf = DataBuffers.newBuffer(buf);
-			dataBuf.seek(idSize.byteSize);
-			handle0(dataBuf, t, player);
+
+		int id = readId(buf);
+
+		TYPE t = JavaUtils.byOrdinal(typeClass, id);
+		DataBufImpl dataBuf = DataBuffers.newBuffer0(buf);
+		dataBuf.seek(idSize);
+		handle0(dataBuf, t, player);
+	}
+
+	private int readId(byte[] buf) {
+		int result = 0;
+		for (int i = 0; i < idSize; ++i) {
+			result |= buf[i] << (i << 3);
+		}
+		return result;
+	}
+
+
+	void write(DataOutput out, int id) throws IOException {
+		for (int i = 0; i < idSize; ++i) {
+			int shift = i << 3;
+			out.writeByte((id & (0xFF << shift)) >> shift);
 		}
 	}
 
-	void handle0(DataBuf buf, TYPE t, EntityPlayer player) {
+	void handle0(DataBufImpl buf, TYPE t, EntityPlayer player) {
+		buf.factory = this;
 		handler.handle(t, buf, player, Sides.logical(player));
-	}
-	
-	private void handleMultipart(INetworkManager manager, byte[] buf, TYPE t, EntityPlayer player) {
-		int offset = idSize.byteSize;
-		int partIndex = UnsignedBytes.checkedCast(buf[offset]);
-		int partCount = UnsignedBytes.checkedCast(buf[offset + 1]);
-		byte[][] parts = trackerFor(t, partCount, manager);
-		parts[partIndex] = buf;
-		int totalBytes = 0;
-		for (byte[] part : parts) {
-			if (part == null) {
-				return;
-			}
-			totalBytes += part.length;
-		}
-		// we are complete
-		killTracker(t, manager);
-		byte[] all = new byte[totalBytes];
-		int prefixLen = 2 + idSize.byteSize;
-		int pos = 0;
-		for (byte[] part : parts) {
-			int len = part.length - prefixLen;
-			System.arraycopy(part, prefixLen, all, pos, len);
-			pos += len;
-		}
-		handle0(DataBuffers.newBuffer(all), t, player);
-	}
-	
-	private static final MapMaker trackerMaker = new MapMaker().weakKeys().concurrencyLevel(2); // we have at most Client & Server thread
-
-	private byte[][] trackerFor(TYPE t, int numParts, INetworkManager manager) {
-		Map<INetworkManager, EnumMap<TYPE, byte[][]>> trackers = partTracker;
-		if (trackers == null) {
-			trackers = partTracker = trackerMaker.makeMap();
-		}
-		EnumMap<TYPE, byte[][]> tracker = trackers.get(manager);
-		if (tracker == null) {
-			tracker = new EnumMap<TYPE, byte[][]>(typeClass);
-			trackers.put(manager, tracker);
-		}
-		byte[][] data = tracker.get(t);
-		if (data == null) {
-			data = new byte[numParts][];
-			tracker.put(t, data);
-		}
-		return data;
-	}
-	
-	private void killTracker(TYPE t, INetworkManager manager) {
-		Map<INetworkManager, EnumMap<TYPE, byte[][]>> trackers = partTracker;
-		if (trackers == null) {
-			return;
-		}
-		EnumMap<TYPE, byte[][]> tracker = trackers.get(manager);
-		if (tracker == null) {
-			return;
-		}
-		tracker.remove(t);
 	}
 
 	@Override
 	public PacketBuilder builder(TYPE t) {
-		return builder0(t, -1); // -1 will force newWritable0 to pick the default capacity
+		return builder0(t, -1); // -1 will make newWritable0 pick the default capacity
 	}
 	
 	@Override
 	public PacketBuilder builder(TYPE t, int capacity) {
+		checkArgument(capacity > 0, "capacity must be > 0");
 		return builder0(t, capacity);
 	}
 	
 	private WritableDataBufImpl<TYPE> builder0(TYPE t, int capacity) {
 		WritableDataBufImpl<TYPE> buf = DataBuffers.newWritable0(capacity);
-		buf.packetFactory = this;
+		buf.factory = this;
 		buf.type = t;
 		return buf;
 	}
@@ -134,65 +101,19 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 	@Override
 	public SimplePacket make(WritableDataBufImpl<TYPE> buf) {
 		buf.seek(0);
-		return new Packet250FakeRaw<TYPE>(buf, this, buf.type);
+		return new Packet250Fake<TYPE>(buf, this, buf.type);
 	}
 
-	static enum IdSize {
-		
-		BYTE(1),
-		SHORT(2);
+	@Override
+	public <T> PacketBuilder builderWithResponseHandler(TYPE type, int capacity, ModPacket.WithResponse<T> packet, PacketResponseHandler<? super T> handler) {
+		return null;
+	}
 
-		final int byteSize;
-		
-		private IdSize(int byteSize) {
-			this.byteSize = byteSize;
-		}
-
-		static IdSize forCount(int numIds) {
-			if (numIds <= ~BYTE_MSB) {
-				return BYTE;
-			} else if (numIds <= ~SHORT_MSB) {
-				return SHORT;
-			} else {
-				throw new IllegalArgumentException("Too many packets!");
-			}
-		}
-
-		int readId(byte[] buf) {
-			if (this == BYTE) {
-				return buf[0];
-			} else {
-				return Shorts.fromBytes(buf[0], buf[1]);
-			}
-		}
-
-		void write(DataOutput out, int id, boolean multipart) throws IOException {
-			if (this == BYTE) {
-				out.writeByte((id & ~BYTE_MSB) | (multipart ? BYTE_MSB : 0));
-			} else {
-				out.writeShort((id & ~BYTE_MSB) | (multipart ? SHORT_MSB : 0));
-			}
-		}
-		
-		private static final int BYTE_MSB = -128;
-		private static final int SHORT_MSB = -32768;
-		
-		boolean isMultipart(int id) {
-			if (this == BYTE) {
-				return (id & BYTE_MSB) == BYTE_MSB;
-			} else {
-				return (id & SHORT_MSB) == SHORT_MSB;
-			}
-		}
-		
-		int getActualId(int id) {
-			if (this == BYTE) {
-				return id & ~BYTE_MSB;
-			} else {
-				return id & ~SHORT_MSB;
-			}
-		}
-		
+	@Override
+	public PacketBuilder response() {
+		PacketBuilder builder = SCModContainer.packets.builder(SCPackets.RESPONSE);
+		// TODO
+		return builder;
 	}
 
 }

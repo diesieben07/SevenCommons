@@ -11,6 +11,7 @@ import java.io.OutputStream;
 class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implements PacketBuilder {
 
 	private boolean locked = false;
+	TYPE type;
 
 	WritableDataBufImpl(byte[] wrap) {
 		super(wrap, 0, wrap.length);
@@ -188,13 +189,11 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 		return this;
 	}
 	
-	TYPE type;
-	PacketFactoryInternal<TYPE> packetFactory;
-
 	@Override
+	@SuppressWarnings("unchecked")
 	public SimplePacket build() {
 		locked = true;
-		return packetFactory.make(this);
+		return ((PacketFactoryInternal<TYPE>) factory).make(this);
 	}
 
 	@Override

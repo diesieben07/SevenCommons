@@ -8,6 +8,7 @@ import de.take_weiland.mods.commons.internal.updater.UpdateController;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.NetHandler;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
@@ -60,4 +61,8 @@ public class ServerProxy implements SevenCommonsProxy, IPlayerTracker {
 		throw new IllegalStateException("NetHandler.isServerHandler() should always be true on a dedicated server!");
 	}
 
+	@Override
+	public void sendPacketToServer(Packet p) {
+		throw new IllegalStateException("Server cannot send Packet to itself!");
+	}
 }

@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.ModPacketProxy;
-import de.take_weiland.mods.commons.internal.ResponsePacket;
 import de.take_weiland.mods.commons.internal.SCPackets;
 import de.take_weiland.mods.commons.internal.SimplePacketTypeProxy;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
@@ -13,7 +12,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * <p>An abstract base class for simpler Packet handling. Make a subclass of this for every PacketType.
@@ -70,7 +68,7 @@ public abstract class ModPacket {
 		@Override
 		protected final void handle(DataBuf buffer, EntityPlayer player, Side side) {
 			int transferId = buffer.getInt();
-			PacketBuilder response = SCModContainer.packetFactory.builder(SCPackets.RESPONSE);
+			PacketBuilder response = SCModContainer.packets.builder(SCPackets.RESPONSE);
 			response.putInt(transferId);
 			handle(buffer, player, side, response);
 			if (side.isClient()) {
@@ -81,129 +79,120 @@ public abstract class ModPacket {
 			}
 		}
 
-		private SimplePacket clearMake() {
-			delegate = null;
-			transferId = ResponsePacket.nextTransferId();
-			inResponseMode = true;
-			return make();
+		@Override
+		<TYPE extends Enum<TYPE> & SimplePacketType & SimplePacketTypeProxy> PacketBuilder getPacketBuilder(TYPE type, PacketFactoryInternal<TYPE> factory) {
+			if (currentHandler != null) {
+				return factory.builderWithResponseHandler(type, expectedSize(), this, currentHandler);
+			} else {
+				return factory.builder(type, expectedSize());
+			}
 		}
 
+		private PacketResponseHandler<? super T> currentHandler;
 		private int transferId;
-		private boolean inResponseMode = false;
 
-		@SuppressWarnings("unchecked") // cast is safe, see ModPacketWithResponseTransformer
-		private SimplePacket.ResponseSentToServer<T> castMe() {
-			return (SimplePacket.ResponseSentToServer<T>) this;
-		}
-
-		// interface SimplePacket.ResponseSentToServer is added by ASM
-		@SuppressWarnings("unchecked") // cast is safe, ASM generated code
-		SimplePacket.WithResponse<T> onResponse(ClientResponseHandler<? super T> handler) {
-			return onResponse((PacketResponseHandler<? super T>) handler);
-		}
-
-		SimplePacket.WithResponse<T> onResponse(PacketResponseHandler<? super T> handler) {
-			checkState(inResponseMode, "incorrect usage of SimplePacket.WithResponse fluent interface!");
-			checkNotNull(handler, "handler");
-			// now thats what I call type casting!
-			ResponsePacket.registerHandler(transferId, this, handler);
-			inResponseMode = false;
-			return this;
-		}
-
-		SimplePacket.WithResponse<T> discardResponse() {
-			inResponseMode = false;
+		@Override
+		public SimplePacket.WithResponse<T> onResponse(PacketResponseHandler<? super T> handler) {
+			currentHandler = checkNotNull(handler);
+			delegate = null;
 			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendTo(PacketTarget target) {
-			clearMake().sendTo(target);
-			return castMe();
+		public SimplePacket.WithResponse<T> discardResponse() {
+			currentHandler = null;
+			delegate = null;
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSentToServer<T> sendToServer() {
-			clearMake().sendToServer();
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToViewing(Container c) {
+			super.sendToViewing(c);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendTo(EntityPlayer player) {
-			clearMake().sendTo(player);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendTo(PacketTarget target) {
+			super.sendTo(target);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendTo(Iterable<? extends EntityPlayer> players) {
-			clearMake().sendTo(players);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToServer() {
+			super.sendToServer();
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToAll() {
-			clearMake().sendToAll();
-			return castMe();
+		public SimplePacket.WithResponse<T> sendTo(EntityPlayer player) {
+			super.sendTo(player);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToAllInDimension(int dimension) {
-			clearMake().sendToAllInDimension(dimension);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendTo(Iterable<? extends EntityPlayer> players) {
+			super.sendTo(players);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToAllInDimension(World world) {
-			clearMake().sendToAllInDimension(world);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToAll() {
+			super.sendToAll();
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToAllNear(World world, double x, double y, double z, double radius) {
-			clearMake().sendToAllNear(world, x, y, z, radius);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToAllInDimension(int dimension) {
+			super.sendToAllInDimension(dimension);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToAllNear(int dimension, double x, double y, double z, double radius) {
-			clearMake().sendToAllNear(dimension, x, y, z, radius);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToAllInDimension(World world) {
+			super.sendToAllInDimension(world);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToAllNear(Entity entity, double radius) {
-			clearMake().sendToAllNear(entity, radius);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToAllNear(World world, double x, double y, double z, double radius) {
+			super.sendToAllNear(world, x, y, z, radius);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToAllNear(TileEntity te, double radius) {
-			clearMake().sendToAllNear(te, radius);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToAllNear(int dimension, double x, double y, double z, double radius) {
+			super.sendToAllNear(dimension, x, y, z, radius);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToAllTracking(Entity entity) {
-			clearMake().sendToAllTracking(entity);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToAllNear(Entity entity, double radius) {
+			super.sendToAllNear(entity, radius);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToAllTracking(TileEntity te) {
-			clearMake().sendToAllTracking(te);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToAllNear(TileEntity te, double radius) {
+			super.sendToAllNear(te, radius);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToAllAssociated(Entity e) {
-			clearMake().sendToAllAssociated(e);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToAllTracking(Entity entity) {
+			super.sendToAllTracking(entity);
+			return this;
 		}
 
 		@Override
-		public SimplePacket.ResponseSent<T> sendToViewing(Container c) {
-			clearMake().sendToViewing(c);
-			return castMe();
+		public SimplePacket.WithResponse<T> sendToAllTracking(TileEntity te) {
+			super.sendToAllTracking(te);
+			return this;
+		}
+
+		@Override
+		public SimplePacket.WithResponse<T> sendToAllAssociated(Entity e) {
+			super.sendToAllAssociated(e);
+			return this;
 		}
 	}
 
@@ -212,7 +201,7 @@ public abstract class ModPacket {
 	}
 
 	SimplePacket delegate;
-	SimplePacket make() {
+	final SimplePacket make() {
 		SimplePacket delegate;
 		if ((delegate = this.delegate) == null) {
 			delegate = this.delegate = make0();
@@ -225,9 +214,13 @@ public abstract class ModPacket {
 		ModPacketProxy<TYPE> proxy = (ModPacketProxy<TYPE>) this;
 		TYPE type = proxy._sc$getPacketType();
 
-		PacketBuilder builder = ((PacketFactory<TYPE>)type._sc$getPacketFactory()).builder(type, expectedSize());
+		PacketBuilder builder = getPacketBuilder(type, (PacketFactoryInternal<TYPE>)type._sc$getPacketFactory());
 		write0(builder);
 		return builder.build();
+	}
+
+	<TYPE extends Enum<TYPE> & SimplePacketType & SimplePacketTypeProxy> PacketBuilder getPacketBuilder(TYPE type, PacketFactoryInternal<TYPE> factory) {
+		return factory.builder(type, expectedSize());
 	}
 
 	public SimplePacket sendTo(PacketTarget target) {

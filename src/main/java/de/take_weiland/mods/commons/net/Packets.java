@@ -2,6 +2,8 @@ package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
+import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
+import de.take_weiland.mods.commons.util.Entities;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -34,23 +36,43 @@ public final class Packets {
 
 	private Packets() { }
 
-	public static void sendPacketToPlayer(Packet p, EntityPlayer player) {
-		PacketDispatcher.sendPacketToPlayer(p, (Player)player);
+	public static void sendToServer(Packet p) {
+		SCModContainer.proxy.sendPacketToServer(p);
 	}
-	
+
+	public static void sendPacketToPlayer(Packet p, EntityPlayer player) {
+		try {
+			((EntityPlayerMP) player).playerNetServerHandler.sendPacketToPlayer(p);
+		} catch (ClassCastException e) {
+			throw clientPlayer(e);
+		}
+	}
+
+	private static IllegalArgumentException clientPlayer(ClassCastException e) {
+		return new IllegalArgumentException("Cannot send Packet to a client player!", e);
+	}
+
 	public static void sendPacketToPlayers(Packet p, Iterable<? extends EntityPlayer> players) {
 		sendPacketToPlayers(p, players.iterator());
 	}
 	
 	public static void sendPacketToPlayers(Packet p, Iterator<? extends EntityPlayer> players) {
-		while (players.hasNext()) {
-			sendPacketToPlayer(p, players.next());
+		try {
+			while (players.hasNext()) {
+				((EntityPlayerMP) players.next()).playerNetServerHandler.sendPacketToPlayer(p);
+			}
+		} catch (ClassCastException e) {
+			throw clientPlayer(e);
 		}
 	}
 	
 	public static void sendPacketToPlayers(Packet p, EntityPlayer... players) {
-		for (EntityPlayer player : players) {
-			PacketDispatcher.sendPacketToPlayer(p, (Player)player);
+		try {
+			for (EntityPlayer player : players) {
+				((EntityPlayerMP) player).playerNetServerHandler.sendPacketToPlayer(p);
+			}
+		} catch (ClassCastException e) {
+			throw clientPlayer(e);
 		}
 	}
 
@@ -58,17 +80,16 @@ public final class Packets {
 	 * Sends the packet to all players tracking the entity. If the entity is a player, does not include the player itself.
 	 */
 	public static void sendPacketToAllTracking(Packet p, Entity entity) {
-		if (Sides.logical(entity).isServer()) {
-			((WorldServer)entity.worldObj).getEntityTracker().sendPacketToAllPlayersTrackingEntity(entity, p);
-		}
+		sendPacketToPlayers(p, Entities.getTrackingPlayers(entity));
 	}
 
 	/**
 	 * Same as {@link #sendPacketToAllTracking(net.minecraft.network.packet.Packet, net.minecraft.entity.Entity)}, but includes the player itself if the entity is a player.
 	 */
 	public static void sendPacketToAllAssociated(Packet p, Entity entity) {
-		if (Sides.logical(entity).isServer()) {
-			((WorldServer)entity.worldObj).getEntityTracker().sendPacketToAllAssociatedPlayers(entity, p);
+		sendPacketToAllTracking(p, entity);
+		if (entity instanceof EntityPlayerMP) {
+			sendPacketToPlayer(p, (EntityPlayer) entity);
 		}
 	}
 
