@@ -11,7 +11,7 @@ import java.io.OutputStream;
 class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implements PacketBuilder {
 
 	private boolean locked = false;
-	TYPE type;
+	int id;
 
 	WritableDataBufImpl(byte[] wrap) {
 		super(wrap, 0, wrap.length);

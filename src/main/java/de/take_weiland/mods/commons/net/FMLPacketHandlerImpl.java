@@ -3,8 +3,6 @@ package de.take_weiland.mods.commons.net;
 import cpw.mods.fml.common.network.IPacketHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.Player;
-import de.take_weiland.mods.commons.internal.SCPackets;
-import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
@@ -40,8 +38,10 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 	 */
 	private static int calcByteCount(int numPackets) {
 		checkArgument(numPackets > 0, "Must have at least one packet type!");
-		int numBytes = Integer.numberOfTrailingZeros(Integer.highestOneBit(numPackets)) / 8;
-		return numBytes;
+		// highestOneBit gives the smallest power of two we need to represent the number of packets
+		// numberOfTrailingZeros then gives us the bit count we need minus one (because the highestOneBit also counts)
+		// that divided by 8 gives the number of bytes we need minus one
+		return (Integer.numberOfTrailingZeros(Integer.highestOneBit(numPackets)) >> 3) + 1;
 	}
 
 	@Override
@@ -51,10 +51,9 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 
 		int id = readId(buf);
 
-		TYPE t = JavaUtils.byOrdinal(typeClass, id);
 		DataBufImpl dataBuf = DataBuffers.newBuffer0(buf);
 		dataBuf.seek(idSize);
-		handle0(dataBuf, t, player);
+		handle0(dataBuf, id, player);
 	}
 
 	private int readId(byte[] buf) {
@@ -73,26 +72,26 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		}
 	}
 
-	void handle0(DataBufImpl buf, TYPE t, EntityPlayer player) {
+	void handle0(DataBufImpl buf, int id, EntityPlayer player) {
 		buf.factory = this;
-		handler.handle(t, buf, player, Sides.logical(player));
+		handler.handle(JavaUtils.byOrdinal(typeClass, id), buf, player, Sides.logical(player));
 	}
 
 	@Override
 	public PacketBuilder builder(TYPE t) {
-		return builder0(t, -1); // -1 will make newWritable0 pick the default capacity
+		return builder0(t.ordinal(), -1); // -1 will make newWritable0 pick the default capacity
 	}
 	
 	@Override
 	public PacketBuilder builder(TYPE t, int capacity) {
 		checkArgument(capacity > 0, "capacity must be > 0");
-		return builder0(t, capacity);
+		return builder0(t.ordinal(), capacity);
 	}
 	
-	private WritableDataBufImpl<TYPE> builder0(TYPE t, int capacity) {
+	private WritableDataBufImpl<?> builder0(int id, int capacity) {
 		WritableDataBufImpl<TYPE> buf = DataBuffers.newWritable0(capacity);
 		buf.factory = this;
-		buf.type = t;
+		buf.id = id;
 		return buf;
 	}
 	
@@ -101,19 +100,12 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 	@Override
 	public SimplePacket make(WritableDataBufImpl<TYPE> buf) {
 		buf.seek(0);
-		return new Packet250Fake<TYPE>(buf, this, buf.type);
+		return new Packet250Fake<TYPE>(buf, this, buf.id);
 	}
 
 	@Override
-	public <T> PacketBuilder builderWithResponseHandler(TYPE type, int capacity, ModPacket.WithResponse<T> packet, PacketResponseHandler<? super T> handler) {
-		return null;
-	}
-
-	@Override
-	public PacketBuilder response() {
-		PacketBuilder builder = SCModContainer.packets.builder(SCPackets.RESPONSE);
-		// TODO
-		return builder;
+	public PacketBuilder response(int capacity) {
+		return builder0(responseId, capacity);
 	}
 
 }

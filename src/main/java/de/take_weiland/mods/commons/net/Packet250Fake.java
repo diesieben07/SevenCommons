@@ -24,27 +24,35 @@ class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload impl
 	private static final int MAX_SINGLE_SIZE = 32766; // bug in Packet250CP doesn't allow 32767
 	private final WritableDataBufImpl<TYPE> buf;
 	private final FMLPacketHandlerImpl<TYPE> fmlPh;
-	private final TYPE type;
+	private final int id;
 
 	static {
 		// we need to inject our fake packet class into the map so that getPacketId still works (can't override it)
 		MiscUtil.getReflector().getClassToIdMap(null).put(Packet250Fake.class, Integer.valueOf(250));
 	}
 
-	Packet250Fake(WritableDataBufImpl<TYPE> buf, FMLPacketHandlerImpl<TYPE> fmlPh, TYPE type) {
+	Packet250Fake(WritableDataBufImpl<TYPE> buf, FMLPacketHandlerImpl<TYPE> fmlPh, int id) {
 		this.buf = buf;
 		this.fmlPh = fmlPh;
-		this.type = type;
+		this.id = id;
 	}
 
 	@Override
 	public void writePacketData(DataOutput out) {
-		doWrite(out, type, fmlPh, buf);
+		try {
+			writeString(fmlPh.channel, out);
+			ASMHooks.writeVarShort(out, buf.actualLen + fmlPh.idSize);
+
+			fmlPh.write(out, id);
+			out.write(buf.buf, 0, buf.actualLen);
+		} catch (IOException e) {
+			throw JavaUtils.throwUnchecked(e); // weird bug, can't declare IOException for some reason
+		}
 	}
 
 	@Override
 	public void processPacket(NetHandler netHandler) {
-		fmlPh.handle0(buf, type, netHandler.getPlayer());
+		fmlPh.handle0(buf, id, netHandler.getPlayer());
 	}
 
 	@Override
@@ -56,18 +64,6 @@ class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload impl
 	@Override
 	public int getPacketSize() {
 		return 0; // TODO is this needed?
-	}
-
-	void doWrite(DataOutput out, TYPE type, FMLPacketHandlerImpl<TYPE> fmlPacketHandler, WritableDataBufImpl<TYPE> buf) {
-		try {
-			writeString(fmlPacketHandler.channel, out);
-			ASMHooks.writeVarShort(out, buf.actualLen + fmlPacketHandler.idSize);
-
-			fmlPacketHandler.write(out, type.ordinal());
-			out.write(buf.buf, 0, buf.actualLen);
-		} catch (IOException e) {
-			throw JavaUtils.throwUnchecked(e); // weird bug, can't declare IOException for some reason
-		}
 	}
 
 	// SimplePacket
