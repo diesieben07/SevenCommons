@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.SimplePacketTypeProxy;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.transformers.PacketTransformer;
@@ -10,6 +11,9 @@ import net.minecraft.network.NetServerHandler;
 import net.minecraft.network.packet.NetHandler;
 
 import java.lang.reflect.Field;
+import java.util.logging.Logger;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Utilities for Network related stuff.
@@ -26,7 +30,7 @@ public final class Network {
 	 * @return a new PacketFactory
 	 */
 	public static <TYPE extends Enum<TYPE>> PacketFactory<TYPE> makeFactory(String channel, Class<TYPE> typeClass, PacketHandler<TYPE> handler) {
-		return new FMLPacketHandlerImpl<TYPE>(channel, handler, typeClass);
+		return new FMLPacketHandlerImpl<>(channel, handler, typeClass);
 	}
 
 	/**
@@ -43,17 +47,20 @@ public final class Network {
 	}
 
 	private static <TYPE extends Enum<TYPE> & SimplePacketType> void injectTypesAndFactory(TYPE[] values, PacketFactory<TYPE> factory) {
-		((SimplePacketTypeProxy) values[0])._sc$setPacketFactory(factory); // sets a static field, so handles all
+		@SuppressWarnings("unchecked")
+		SimplePacketTypeProxy proxy = (SimplePacketTypeProxy) values[0];
+		checkArgument(proxy._sc$getPacketFactory() == null, "Cannot re-use SimplePacketType classes!");
+		proxy._sc$setPacketFactory(factory); // sets a static field, so handles all
 
-		try {
-			for (TYPE e : values) {
-				Class<?> packetClass = e.packet();
+		for (TYPE type : values) {
+			try {
+				Class<?> packetClass = type.packet();
 				Field field = packetClass.getDeclaredField(PacketTransformer.TYPE_FIELD);
 				field.setAccessible(true);
-				field.set(null, e);
+				field.set(null, type);
+			} catch (Exception e) {
+				throw new IllegalStateException(String.format("PacketTransformer failed on class %s! SevenCommons was probably installed wrongly!", type.packet().getName()));
 			}
-		} catch (Exception e) {
-			throw new RuntimeException("PacketTransformer failed! SevenCommons was probably installed wrongly!");
 		}
 	}
 
@@ -71,5 +78,7 @@ public final class Network {
 			return ((NetLoginHandler)netHandler).myTCPConnection;
 		}
 	}
+
+	static final Logger logger = SevenCommons.scLogger("Packet System");
 
 }

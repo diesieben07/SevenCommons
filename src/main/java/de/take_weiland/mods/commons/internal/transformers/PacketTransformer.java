@@ -20,6 +20,8 @@ public final class PacketTransformer extends AbstractAnalyzingTransformer {
 		if (!hasDefaultConstructor(clazz)) {
 			addDefaultConstructor(clazz);
 		}
+
+		clazz.access = (clazz.access & ~(ACC_PRIVATE | ACC_PROTECTED)) | ACC_PUBLIC;
 		
 		FieldNode type = createTypeField(clazz);
 		

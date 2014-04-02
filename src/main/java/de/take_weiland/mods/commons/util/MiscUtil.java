@@ -19,6 +19,10 @@ public final class MiscUtil {
 		return reflector == null ? (reflector = Fastreflect.createAccessor(SCReflector.class)) : reflector;
 	}
 
+	public static Logger getLogger() {
+		return getLogger(Fastreflect.getCallerClass().getSimpleName());
+	}
+
 	public static Logger getLogger(String channel) {
 		FMLLog.makeLog(channel);
 		return Logger.getLogger(channel);

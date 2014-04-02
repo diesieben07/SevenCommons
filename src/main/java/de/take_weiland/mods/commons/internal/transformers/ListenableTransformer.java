@@ -9,7 +9,6 @@ import org.objectweb.asm.tree.*;
 import java.util.List;
 
 import static de.take_weiland.mods.commons.asm.ASMUtils.getClassInfo;
-import static de.take_weiland.mods.commons.asm.ASMUtils.isAssignableFrom;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
@@ -25,7 +24,9 @@ public class ListenableTransformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		if (!shouldTransform(clazz)) {
+		if (classInfo.isInterface()
+				|| !listenableCI.isAssignableFrom(classInfo)
+				|| listenableCI.isAssignableFrom(classInfo.superclass())) {
 			return false;
 		}
 
@@ -49,12 +50,6 @@ public class ListenableTransformer implements ASMClassTransformer {
 
 		clazz.interfaces.add("de/take_weiland/mods/commons/internal/ListenableInternal");
 		return true;
-	}
-
-	private boolean shouldTransform(ClassNode clazz) {
-		return (clazz.access & ACC_INTERFACE) != ACC_INTERFACE
-				&& isAssignableFrom(listenableCI, getClassInfo(clazz))
-				&& !isAssignableFrom(listenableCI, getClassInfo(clazz.superName));
 	}
 
 	@Override

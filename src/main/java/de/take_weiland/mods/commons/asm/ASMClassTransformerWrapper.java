@@ -61,7 +61,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 		}
 
 		if (changed) {
-			ClassWriter cw = new ClassWriter(COMPUTE_FRAMES | COMPUTE_MAXS);
+			ClassWriter cw = new ExtendedClassWriter(COMPUTE_FRAMES | COMPUTE_MAXS);
 			clazz.accept(cw);
 			return cw.toByteArray();
 		}

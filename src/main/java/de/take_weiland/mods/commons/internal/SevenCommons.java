@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.internal;
 
 import com.google.common.base.Throwables;
-import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import de.take_weiland.mods.commons.fastreflect.Fastreflect;
+import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import java.io.File;
@@ -40,8 +40,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	public static File source;
 	
 	static {
-		FMLLog.makeLog("SevenCommons");
-		LOGGER = Logger.getLogger("SevenCommons");
+		LOGGER = MiscUtil.getLogger("SevenCommons");
 	}
 	
 	@Override
@@ -75,10 +74,12 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 			}
 		}
 	}
-	
-//	@Override
-//	@Deprecated
-//	public String[] getLibraryRequestClass() {
-//		return null;
-//	}
+
+	public static Logger scLogger() {
+		return scLogger(Fastreflect.getCallerClass().getSimpleName());
+	}
+
+	public static Logger scLogger(String channel) {
+		return MiscUtil.getLogger("SC|" + channel);
+	}
 }

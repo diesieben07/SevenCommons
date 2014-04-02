@@ -4,9 +4,7 @@ import com.google.common.collect.Sets;
 
 import java.util.Set;
 
-import static org.objectweb.asm.Opcodes.ACC_ABSTRACT;
-import static org.objectweb.asm.Opcodes.ACC_ENUM;
-import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
+import static org.objectweb.asm.Opcodes.*;
 
 /**
 * @author diesieben07

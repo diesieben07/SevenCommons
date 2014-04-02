@@ -611,7 +611,7 @@ public final class SyncingTransformer {
 		}
 
 		private void checkEnum() {
-			isEnum = ASMUtils.isAssignableFrom(ASMUtils.getClassInfo(Enum.class), ASMUtils.getClassInfo(getTypeToSync().getClassName()));
+			isEnum = ASMUtils.getClassInfo(Enum.class).isAssignableFrom(ASMUtils.getClassInfo(getTypeToSync().getClassName()));
 		}
 
 		String getName() {

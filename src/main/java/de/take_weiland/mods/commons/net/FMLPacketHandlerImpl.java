@@ -5,7 +5,6 @@ import cpw.mods.fml.common.network.IPacketHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
@@ -16,10 +15,10 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
+import static de.take_weiland.mods.commons.net.Network.logger;
 
 final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHandler, PacketFactory<TYPE>, PacketFactoryInternal<TYPE> {
 
@@ -53,7 +52,9 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		this.idSize = (bitsUsed >> 3) + 1;
 
 		NetworkRegistry.instance().registerChannel(this, channel);
-		System.out.println("setup channel " + channel + "(" + len + " packets) with IdSize " + idSize + ". ExpectsResponse=" + expectsResponseFlag);
+		if (logger.isLoggable(Level.FINE)) {
+			logger.fine(String.format("Setup channel %s with %d packets and IdSize %d.", channel, len, idSize));
+		}
 	}
 
 	ConcurrentMap<Integer, PacketResponseHandler> responseHandlers() {
@@ -86,7 +87,6 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		EntityPlayer player = (EntityPlayer) fmlPlayer;
 
 		int id = readId(buf);
-		System.out.println("read id: " + id);
 
 		PacketBufferImpl<TYPE> dataBuf = new PacketBufferImpl<>(buf, this, id);
 		dataBuf.seek(idSize);
@@ -114,14 +114,12 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 			// ResponseHandler is set when packets are send via MemoryConnection
 			// see explanatory comment on createResponse
 			if (buf.responseHandler != null) {
-				System.out.println("received responseId with handler: " + buf.responseHandler);
 				buf.responseHandler.onResponse(buf, player);
 			} else {
-				System.out.println("on receive: " + responseHandlers);
 				int transferId = buf.getInt();
 				PacketResponseHandler responseHandler;
 				if (responseHandlers == null || ((responseHandler = responseHandlers.remove(transferId))) == null) {
-					SevenCommons.LOGGER.warning(String.format("Received unknown transferId %d from %s", transferId, player.username));
+					logger.warning(String.format("Received unknown transferId %d from %s", transferId, player.username));
 				} else {
 					responseHandler.onResponse(buf, player);
 				}
@@ -133,7 +131,6 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 					buf.transferId = buf.getInt();
 				}
 			}
-			System.out.println("received id " + id + ", expects response: " + expectsResponse);
 			Side side = Sides.logical(player);
 			buf.sender = side.isClient() ? null : player;
 			handler.handle(JavaUtils.byOrdinal(typeClass, (id & ~expectsResponseFlag)), buf, player, side);
@@ -160,7 +157,7 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 	@Override
 	public SimplePacket build(PacketBufferImpl<TYPE> buf) {
 		buf.seek(0);
-		return new Packet250Fake<TYPE>(buf, this, buf.id);
+		return new Packet250Fake<>(buf, this, buf.id);
 	}
 
 	@Override

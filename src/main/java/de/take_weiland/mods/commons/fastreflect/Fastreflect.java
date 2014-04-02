@@ -2,8 +2,8 @@ package de.take_weiland.mods.commons.fastreflect;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.MiscUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -80,18 +80,18 @@ public final class Fastreflect {
 		checkArgument(level >= 0);
 		Class<?>[] stack = sm.getClassStack();
 		// 0 is the security manager
-		// 1 is us (Fastreflect.getCallerClass
+		// 1 is us (Fastreflect.getCallerClass)
 		// 2 is our caller
 		// 3 is the caller of our caller (equivalent to level 0)
 		return JavaUtils.get(stack, level + 3);
 	}
 
-	private static final FastreflectStrategy strategy;
-	private static final Logger logger;
+	private static final AtomicInteger nextId = new AtomicInteger(0);
+	private static final FastreflectSecurityManager sm = new FastreflectSecurityManager();
+	private static final FastreflectStrategy strategy = selectStrategy();
+	private static final Logger logger = SevenCommons.scLogger();
 	
 	static {
-		strategy = selectStrategy();
-		logger = MiscUtil.getLogger("SC|Fastreflect");
 	}
 
 	private static FastreflectStrategy selectStrategy() {
@@ -108,13 +108,9 @@ public final class Fastreflect {
 		return new ReflectiveStrategy();
 	}
 
-	static final AtomicInteger nextId = new AtomicInteger(0);
-
-	private static final FastreflectSecurityManager sm = new FastreflectSecurityManager();
-
 	private static class FastreflectSecurityManager extends SecurityManager {
 
-		public Class[] getClassStack() {
+		Class[] getClassStack() {
 			return getClassContext();
 		}
 	}

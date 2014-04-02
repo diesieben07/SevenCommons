@@ -8,6 +8,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
 
+@SuppressWarnings("unchecked")
 abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> extends DataBufImpl implements WritableDataBuf {
 
 	WritableDataBufImpl(byte[] wrap) {
