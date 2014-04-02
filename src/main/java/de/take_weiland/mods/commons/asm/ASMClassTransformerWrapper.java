@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
@@ -31,6 +32,19 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 
 	@Override
 	public final byte[] transform(String name, String transformedName, byte[] bytes) {
+		try {
+			return transform0(transformedName, bytes);
+		} catch (Throwable t) {
+			System.err.println("Exception during transformation of " + transformedName + " [" + name + "]");
+			t.printStackTrace();
+			throw Throwables.propagate(t);
+		}
+	}
+
+	private byte[] transform0(String transformedName, byte[] bytes) {
+		if (bytes == null) {
+			return bytes;
+		}
 		String internalName = transformedName.replace('.', '/');
 		ClassNode clazz = null;
 		ClassInfo classInfo = null;

@@ -11,8 +11,7 @@ public enum SCPackets implements SimplePacketType {
 	CLIENT_ACTION(PacketClientAction.class),
 	INV_NAME(PacketInventoryName.class),
 	SYNC_ENTITY_PROPS_IDS(PacketEntityPropsIds.class),
-	SYNC(PacketSync.class),
-	RESPONSE(ResponsePacket.class);
+	SYNC(PacketSync.class);
 
 	private final Class<? extends ModPacket> packet;
 

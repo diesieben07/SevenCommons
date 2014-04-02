@@ -43,7 +43,7 @@ public interface SimplePacket {
 
 	interface WithResponse<T> extends SimplePacket {
 
-		WithResponse<T> onResponse(PacketResponseHandler<? super T> handler);
+		WithResponse<T> onResponse(SimplePacketResponseHandler<? super T> handler);
 
 		WithResponse<T> discardResponse();
 

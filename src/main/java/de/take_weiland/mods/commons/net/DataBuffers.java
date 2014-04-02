@@ -58,16 +58,15 @@ public final class DataBuffers {
 		return newWritable0(capacity);
 	}
 
-
-	static DataBufImpl newBuffer0(byte[] data) {
-		return new DataBufImpl(data, 0, data.length);
-	}
-
-	static <TYPE extends Enum<TYPE>> WritableDataBufImpl<TYPE> newWritable0(int capacity) {
+	private static DefaultWritableDataBuf newWritable0(int capacity) {
 		if (capacity <= 0) {
 			capacity = DEFAULT_CAPACTIY;
 		}
-		return new WritableDataBufImpl<TYPE>(new byte[capacity]);
+		return new DefaultWritableDataBuf(new byte[capacity]);
+	}
+
+	static byte[] createBuffer(int capacity) {
+		return new byte[capacity <= 0 ? DEFAULT_CAPACTIY : capacity];
 	}
 
 	static void validateArray(byte[] arr, int off, int len) {
@@ -78,7 +77,7 @@ public final class DataBuffers {
 		}
 	}
 
-	// read-write utils
+	// read-writePacketId utils
 	public static void writeEnum(DataOutput out, Enum<?> e) throws IOException {
 		out.writeByte(UnsignedBytes.checkedCast(e.ordinal()));
 	}

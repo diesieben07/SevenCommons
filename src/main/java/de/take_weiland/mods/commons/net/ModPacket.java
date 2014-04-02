@@ -2,9 +2,8 @@ package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.ModPacketProxy;
-import de.take_weiland.mods.commons.internal.SCPackets;
 import de.take_weiland.mods.commons.internal.SimplePacketTypeProxy;
-import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
+import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -22,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *new DifferentPacket(evenMoreData).sendToPlayer(somePlayer);
  * }</pre></p>
  */
-public abstract class ModPacket {
+public abstract class ModPacket implements SimplePacket {
 
 	/**
 	 * whether the given (logical) side can receive this packet
@@ -43,7 +42,7 @@ public abstract class ModPacket {
 	 * @param player the player handling this packet, on the client side it's the client-player, on the server side it's the player sending the packet
 	 * @param side the (logical) side receiving the packet
 	 */
-	protected abstract void handle(DataBuf buffer, EntityPlayer player, Side side);
+	protected abstract void handle(PacketInput buffer, EntityPlayer player, Side side);
 
 	/**
 	 * Determine an expected size for this packet to accurately size the {@link de.take_weiland.mods.commons.net.WritableDataBuf} passed to {@link #write(WritableDataBuf)}
@@ -55,44 +54,35 @@ public abstract class ModPacket {
 
 	public static abstract class WithResponse<T> extends ModPacket implements SimplePacket.WithResponse<T> {
 
-		protected abstract void handle(DataBuf in, EntityPlayer player, Side side, WritableDataBuf out);
+		protected abstract void handle(DataBuf in, EntityPlayer player, Side side, PacketBuilder.ForResponse response);
 
 		public abstract T readResponse(DataBuf in, EntityPlayer player, Side side);
 
 		@Override
-		void write0(WritableDataBuf buf) {
-			buf.putInt(transferId);
-			write(buf);
-		}
-
-		@Override
-		protected final void handle(DataBuf buffer, EntityPlayer player, Side side) {
-			int transferId = buffer.getInt();
-			PacketBuilder response = SCModContainer.packets.builder(SCPackets.RESPONSE);
-			response.putInt(transferId);
+		protected final void handle(PacketInput buffer, EntityPlayer player, Side side) {
+			PacketBuilder.ForResponse response = buffer.response();
 			handle(buffer, player, side, response);
-			if (side.isClient()) {
-				response.build().sendToServer();
-			} else {
-				System.out.println("Handling and sending to player: " + player);
-				response.build().sendTo(player);
-			}
 		}
 
 		@Override
 		<TYPE extends Enum<TYPE> & SimplePacketType & SimplePacketTypeProxy> PacketBuilder getPacketBuilder(TYPE type, PacketFactoryInternal<TYPE> factory) {
+			PacketBuilder builder = factory.builder(type, expectedSize());
 			if (currentHandler != null) {
-				return factory.builderWithResponseHandler(type, expectedSize(), this, currentHandler);
-			} else {
-				return factory.builder(type, expectedSize());
+				final SimplePacketResponseHandler<? super T> handler = currentHandler;
+				builder.onResponse(new PacketResponseHandler() {
+					@Override
+					public void onResponse(DataBuf in, EntityPlayer responder) {
+						handler.onResponse(readResponse(in, responder, Sides.logical(responder)), responder);
+					}
+				});
 			}
+			return builder;
 		}
 
-		private PacketResponseHandler<? super T> currentHandler;
-		private int transferId;
+		private SimplePacketResponseHandler<? super T> currentHandler;
 
 		@Override
-		public SimplePacket.WithResponse<T> onResponse(PacketResponseHandler<? super T> handler) {
+		public SimplePacket.WithResponse<T> onResponse(SimplePacketResponseHandler<? super T> handler) {
 			currentHandler = checkNotNull(handler);
 			delegate = null;
 			return this;
@@ -100,8 +90,10 @@ public abstract class ModPacket {
 
 		@Override
 		public SimplePacket.WithResponse<T> discardResponse() {
-			currentHandler = null;
-			delegate = null;
+			if (currentHandler != null) {
+				currentHandler = null;
+				delegate = null;
+			}
 			return this;
 		}
 
@@ -196,17 +188,9 @@ public abstract class ModPacket {
 		}
 	}
 
-	void write0(WritableDataBuf buf) {
-		write(buf);
-	}
-
 	SimplePacket delegate;
 	final SimplePacket make() {
-		SimplePacket delegate;
-		if ((delegate = this.delegate) == null) {
-			delegate = this.delegate = make0();
-		}
-		return delegate;
+		return delegate == null ? (delegate = make0()) : delegate;
 	}
 
 	@SuppressWarnings("unchecked") // safe, ASM generated code
@@ -215,7 +199,7 @@ public abstract class ModPacket {
 		TYPE type = proxy._sc$getPacketType();
 
 		PacketBuilder builder = getPacketBuilder(type, (PacketFactoryInternal<TYPE>)type._sc$getPacketFactory());
-		write0(builder);
+		write(builder);
 		return builder.build();
 	}
 

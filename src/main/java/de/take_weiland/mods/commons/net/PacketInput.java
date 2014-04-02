@@ -5,6 +5,8 @@ package de.take_weiland.mods.commons.net;
  */
 public interface PacketInput extends DataBuf {
 
-	PacketBuilder response();
+	PacketBuilder.ForResponse response();
+
+	PacketBuilder.ForResponse response(int capacity);
 
 }

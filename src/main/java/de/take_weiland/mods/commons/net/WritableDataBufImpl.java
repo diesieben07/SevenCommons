@@ -8,10 +8,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
 
-class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implements PacketBuilder {
-
-	private boolean locked = false;
-	int id;
+abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> extends DataBufImpl implements WritableDataBuf {
 
 	WritableDataBufImpl(byte[] wrap) {
 		super(wrap, 0, wrap.length);
@@ -22,30 +19,30 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 	private static final byte BOOL_TRUE = 1;
 
 	@Override
-	public PacketBuilder putBoolean(boolean b) {
+	public SELF putBoolean(boolean b) {
 		return putByte(b ? BOOL_TRUE : BOOL_FALSE);
 	}
 
 	@Override
-	public PacketBuilder putByte(int b) {
+	public SELF putByte(int b) {
 		grow0(1);
 		buf[pos++] = (byte) b;
-		return this;
+		return (SELF) this;
 	}
 
 	@Override
-	public PacketBuilder putShort(int s) {
+	public SELF putShort(int s) {
 		grow0(2);
 		int pos = this.pos;
 		byte[] buf = this.buf;
 		buf[pos] = (byte) ((s >>> 8) & 0xff);
 		buf[pos + 1] = (byte) (s &0xff);
 		this.pos += 2;
-		return this;
+		return (SELF) this;
 	}
 
 	@Override
-	public PacketBuilder putInt(int i) {
+	public SELF putInt(int i) {
 		grow0(4);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -54,11 +51,11 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 		buf[pos + 2] = (byte) ((i >>>  8) & 0xff);
 		buf[pos + 3] = (byte) (i & 0xff);
 		this.pos += 4;
-		return this;
+		return (SELF) this;
 	}
 
 	@Override
-	public PacketBuilder putLong(long l) {
+	public SELF putLong(long l) {
 		grow0(8);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -71,27 +68,27 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 		buf[pos + 6] = (byte)(l >>>  8);
 		buf[pos + 7] = (byte)(l >>>  0);
 		this.pos += 8;
-		return this;
+		return (SELF) this;
 	}
 
 	@Override
-	public PacketBuilder putChar(char c) {
+	public SELF putChar(char c) {
 		grow0(2);
 		int pos = this.pos;
 		byte[] buf = this.buf;
 		buf[pos] = (byte) ((c >>> 8) & 0xff);
 		buf[pos + 1] = (byte) (c & 0xff);
 		this.pos += 2;
-		return this;
+		return (SELF) this;
 	}
 
 	@Override
-	public PacketBuilder putFloat(float f) {
+	public SELF putFloat(float f) {
 		return putInt(Float.floatToIntBits(f));
 	}
 
 	@Override
-	public PacketBuilder putDouble(double d) {
+	public SELF putDouble(double d) {
 		return putLong(Double.doubleToLongBits(d));
 	}
 	
@@ -100,7 +97,7 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 	}
 
 	@Override
-	public PacketBuilder putVarInt(int i) {
+	public SELF putVarInt(int i) {
 		int size = varIntSize(i);
 		grow0(size);
 		int pos = this.pos;
@@ -111,21 +108,21 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 		}
 		buf[pos] = (byte) (i & first7Bits);
 		this.pos += size;
-		return this;
+		return (SELF) this;
 	}
 
 	@Override
-	public PacketBuilder putUnsignedByte(int i) {
+	public SELF putUnsignedByte(int i) {
 		return putByte(UnsignedBytes.checkedCast(i));
 	}
 
 	@Override
-	public PacketBuilder putUnsignedShort(int i) {
+	public SELF putUnsignedShort(int i) {
 		return putShort(UnsignedShorts.checkedCast(i));
 	}
 
 	@Override
-	public PacketBuilder putString(String s) {
+	public SELF putString(String s) {
 		if (s == null) {
 			return putVarInt(-1);
 		}
@@ -141,32 +138,32 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 			buf[p + 1] = (byte) (c & 0xff);
 		}
 		this.pos += len << 1;
-		return this;
+		return (SELF) this;
 	}
 
 	@Override
-	public PacketBuilder putBytes(byte[] bytes) {
+	public SELF putBytes(byte[] bytes) {
 		if (bytes == null) {
 			putVarInt(-1);
 		} else {
 			putVarInt(bytes.length);
 			putRaw(bytes);
 		}
-		return this;
+		return (SELF) this;
 	}
 
 	@Override
-	public PacketBuilder putRaw(byte[] bytes) {
+	public SELF putRaw(byte[] bytes) {
 		return putRaw(bytes, 0, bytes.length);
 	}
 
 	@Override
-	public PacketBuilder putRaw(byte[] arr, int off, int len) {
+	public SELF putRaw(byte[] arr, int off, int len) {
 		DataBuffers.validateArray(arr, off, len);
         grow0(len);
         System.arraycopy(arr, off, buf, pos, len);
         pos += len;
-		return this;
+		return (SELF) this;
 	}
 
 	private OutputStream outStreamView;
@@ -184,28 +181,12 @@ class WritableDataBufImpl<TYPE extends Enum<TYPE>> extends DataBufImpl implement
 	}
 
 	@Override
-	public PacketBuilder grow(int n) {
+	public SELF grow(int n) {
 		grow0(n);
-		return this;
-	}
-	
-	@Override
-	@SuppressWarnings("unchecked")
-	public SimplePacket build() {
-		locked = true;
-		return ((PacketFactoryInternal<TYPE>) factory).make(this);
+		return (SELF) this;
 	}
 
-	@Override
-	@Deprecated
-	public SimplePacket toPacket() {
-		return build();
-	}
-	
-	private void grow0(int i) {
-		if (locked) {
-			throw new IllegalStateException("PacketBuffers cannot be reused!");
-		}
+	void grow0(int i) {
 		if (len - pos >= i) {
 			actualLen += i;
 			return;

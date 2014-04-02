@@ -60,12 +60,6 @@ public final class PacketTransformer extends AbstractAnalyzingTransformer {
 	}
 
 	private static boolean hasDefaultConstructor(ClassNode clazz) {
-		String desc = getMethodDescriptor(VOID_TYPE);
-		for (MethodNode method : clazz.methods) {
-			if (method.name.equals("<init>") && method.desc.equals(desc)) {
-				return true;
-			}
-		}
-		return false;
+		return ASMUtils.findMethod(clazz, "<init>", getMethodDescriptor(VOID_TYPE)) != null;
 	}
 }

@@ -6,8 +6,12 @@ package de.take_weiland.mods.commons;
 public class Test {
 
 	public static void main(String... args) {
-		System.out.println(4 * 8);
-		System.out.println(4 << 3);
+		byte foobar = (byte) 127;
+		System.out.println(foobar);
+		foobar++;
+		System.out.println(foobar);
+		foobar++;
+		System.out.println(foobar);
 	}
 
 }

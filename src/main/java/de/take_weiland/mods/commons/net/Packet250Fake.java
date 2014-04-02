@@ -22,7 +22,7 @@ import java.io.IOException;
 class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload implements SimplePacket {
 
 	private static final int MAX_SINGLE_SIZE = 32766; // bug in Packet250CP doesn't allow 32767
-	private final WritableDataBufImpl<TYPE> buf;
+	private final PacketBufferImpl<TYPE> buf;
 	private final FMLPacketHandlerImpl<TYPE> fmlPh;
 	private final int id;
 
@@ -31,7 +31,7 @@ class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload impl
 		MiscUtil.getReflector().getClassToIdMap(null).put(Packet250Fake.class, Integer.valueOf(250));
 	}
 
-	Packet250Fake(WritableDataBufImpl<TYPE> buf, FMLPacketHandlerImpl<TYPE> fmlPh, int id) {
+	Packet250Fake(PacketBufferImpl<TYPE> buf, FMLPacketHandlerImpl<TYPE> fmlPh, int id) {
 		this.buf = buf;
 		this.fmlPh = fmlPh;
 		this.id = id;
@@ -41,9 +41,23 @@ class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload impl
 	public void writePacketData(DataOutput out) {
 		try {
 			writeString(fmlPh.channel, out);
-			ASMHooks.writeVarShort(out, buf.actualLen + fmlPh.idSize);
+			if ((buf.id & fmlPh.expectsResponseFlag) != 0) {
+				ASMHooks.writeVarShort(out, buf.actualLen + fmlPh.idSize + 4);
+				fmlPh.writePacketId(out, id);
 
-			fmlPh.write(out, id);
+				int transId = fmlPh.nextTransferId();
+				out.writeInt(transId);
+				fmlPh.responseHandlers().put(transId, buf.responseHandler);
+				System.out.println("On send: " + fmlPh.responseHandlers());
+			} else if (buf.id == fmlPh.responseId) {
+				ASMHooks.writeVarShort(out, buf.actualLen + fmlPh.idSize + 4);
+				fmlPh.writePacketId(out, id);
+
+				out.writeInt(buf.transferId);
+			} else {
+				ASMHooks.writeVarShort(out, buf.actualLen + fmlPh.idSize);
+				fmlPh.writePacketId(out, id);
+			}
 			out.write(buf.buf, 0, buf.actualLen);
 		} catch (IOException e) {
 			throw JavaUtils.throwUnchecked(e); // weird bug, can't declare IOException for some reason

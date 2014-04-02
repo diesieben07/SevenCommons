@@ -5,13 +5,8 @@ import net.minecraft.entity.player.EntityPlayer;
 /**
  * @author diesieben07
  */
-public interface PacketResponseHandler<T> {
+public interface PacketResponseHandler {
 
-	/**
-	 * handle a packet response
-	 * @param response the received response
-	 * @param responder the player responding, null if the response comes from the server
-	 */
-	void onResponse(T response, EntityPlayer responder);
+	void onResponse(DataBuf in, EntityPlayer responder);
 
 }

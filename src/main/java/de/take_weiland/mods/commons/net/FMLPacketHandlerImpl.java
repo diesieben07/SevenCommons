@@ -1,8 +1,11 @@
 package de.take_weiland.mods.commons.net;
 
+import com.google.common.collect.Maps;
 import cpw.mods.fml.common.network.IPacketHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.Player;
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,37 +14,70 @@ import net.minecraft.network.packet.Packet250CustomPayload;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHandler, PacketFactory<TYPE>, PacketFactoryInternal<TYPE> {
 
+	private static final int MAX_PACKETS = (Integer.MAX_VALUE >> 1) - 1;
+
 	final String channel;
-	private final PacketHandler<TYPE> handler;
+	final PacketHandler<TYPE> handler;
 	private final Class<TYPE> typeClass;
 	final int idSize;
-	private final int responseId;
+	final int expectsResponseFlag;
+	final int responseId;
+
+	private ConcurrentMap<Integer, PacketResponseHandler> responseHandlers;
+	private AtomicInteger nextTransferId;
 
 	FMLPacketHandlerImpl(String channel, PacketHandler<TYPE> handler, Class<TYPE> typeClass) {
 		this.channel = checkNotNull(channel);
 		this.handler = checkNotNull(handler);
 		this.typeClass = checkNotNull(typeClass);
 		int len = JavaUtils.getEnumConstantsShared(typeClass).length;
-		responseId = len; // use next available ID as the response packet
-		this.idSize = calcByteCount(len + 1);
+		checkArgument(len > 0, "Must have at least one packet type!");
+		checkArgument(len < MAX_PACKETS, "Too many packets, can handle at most %d", MAX_PACKETS);
+
+		this.responseId = len; // use next available ID as the createResponse packet
+		int highestOneBit = Integer.highestOneBit(len); // "len" is a valid id, too
+		this.expectsResponseFlag = highestOneBit << 1;
+
+		// 1st "+1" because the highestOneBit itself counts, too
+		// 2nd "+1" for the expectsResponse-flag
+		int bitsUsed = Integer.numberOfTrailingZeros(highestOneBit) + 1 + 1;
+		this.idSize = (bitsUsed >> 3) + 1;
+
 		NetworkRegistry.instance().registerChannel(this, channel);
+		System.out.println("setup channel " + channel + "(" + len + " packets) with IdSize " + idSize + ". ExpectsResponse=" + expectsResponseFlag);
 	}
 
-	/**
-	 * calculate the number of bytes needed to represent the given numer of packet types.
-	 */
-	private static int calcByteCount(int numPackets) {
-		checkArgument(numPackets > 0, "Must have at least one packet type!");
-		// highestOneBit gives the smallest power of two we need to represent the number of packets
-		// numberOfTrailingZeros then gives us the bit count we need minus one (because the highestOneBit also counts)
-		// that divided by 8 gives the number of bytes we need minus one
-		return (Integer.numberOfTrailingZeros(Integer.highestOneBit(numPackets)) >> 3) + 1;
+	ConcurrentMap<Integer, PacketResponseHandler> responseHandlers() {
+		ConcurrentMap<Integer, PacketResponseHandler> map = responseHandlers;
+		if (map == null) {
+			synchronized (this) {
+				if ((map = responseHandlers) == null) {
+					map = responseHandlers = Maps.newConcurrentMap();
+				}
+			}
+		}
+		return map;
+	}
+
+	int nextTransferId() {
+		AtomicInteger i = nextTransferId;
+		if (i == null) {
+			synchronized (this) {
+				if ((i = nextTransferId) == null) {
+					i = nextTransferId = new AtomicInteger(0);
+				}
+			}
+		}
+		return i.getAndIncrement();
 	}
 
 	@Override
@@ -50,8 +86,9 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		EntityPlayer player = (EntityPlayer) fmlPlayer;
 
 		int id = readId(buf);
+		System.out.println("read id: " + id);
 
-		DataBufImpl dataBuf = DataBuffers.newBuffer0(buf);
+		PacketBufferImpl<TYPE> dataBuf = new PacketBufferImpl<>(buf, this, id);
 		dataBuf.seek(idSize);
 		handle0(dataBuf, id, player);
 	}
@@ -65,21 +102,47 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 	}
 
 
-	void write(DataOutput out, int id) throws IOException {
+	void writePacketId(DataOutput out, int id) throws IOException {
 		for (int i = 0; i < idSize; ++i) {
 			int shift = i << 3;
 			out.writeByte((id & (0xFF << shift)) >> shift);
 		}
 	}
 
-	void handle0(DataBufImpl buf, int id, EntityPlayer player) {
-		buf.factory = this;
-		handler.handle(JavaUtils.byOrdinal(typeClass, id), buf, player, Sides.logical(player));
+	void handle0(PacketBufferImpl<TYPE> buf, int id, EntityPlayer player) {
+		if (id == responseId) {
+			// ResponseHandler is set when packets are send via MemoryConnection
+			// see explanatory comment on createResponse
+			if (buf.responseHandler != null) {
+				System.out.println("received responseId with handler: " + buf.responseHandler);
+				buf.responseHandler.onResponse(buf, player);
+			} else {
+				System.out.println("on receive: " + responseHandlers);
+				int transferId = buf.getInt();
+				PacketResponseHandler responseHandler;
+				if (responseHandlers == null || ((responseHandler = responseHandlers.remove(transferId))) == null) {
+					SevenCommons.LOGGER.warning(String.format("Received unknown transferId %d from %s", transferId, player.username));
+				} else {
+					responseHandler.onResponse(buf, player);
+				}
+			}
+		} else {
+			boolean expectsResponse = (id & expectsResponseFlag) != 0;
+			if (expectsResponse) {
+				if (buf.responseHandler == null) {
+					buf.transferId = buf.getInt();
+				}
+			}
+			System.out.println("received id " + id + ", expects response: " + expectsResponse);
+			Side side = Sides.logical(player);
+			buf.sender = side.isClient() ? null : player;
+			handler.handle(JavaUtils.byOrdinal(typeClass, (id & ~expectsResponseFlag)), buf, player, side);
+		}
 	}
 
 	@Override
 	public PacketBuilder builder(TYPE t) {
-		return builder0(t.ordinal(), -1); // -1 will make newWritable0 pick the default capacity
+		return builder0(t.ordinal(), -1); // -1 will pick the default capacity
 	}
 	
 	@Override
@@ -88,24 +151,36 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 		return builder0(t.ordinal(), capacity);
 	}
 	
-	private WritableDataBufImpl<?> builder0(int id, int capacity) {
-		WritableDataBufImpl<TYPE> buf = DataBuffers.newWritable0(capacity);
-		buf.factory = this;
-		buf.id = id;
-		return buf;
+	private PacketBufferImpl<TYPE> builder0(int id, int capacity) {
+		return new PacketBufferImpl<>(capacity, this, id);
 	}
 	
 	// PacketFactoryInternal
 	
 	@Override
-	public SimplePacket make(WritableDataBufImpl<TYPE> buf) {
+	public SimplePacket build(PacketBufferImpl<TYPE> buf) {
 		buf.seek(0);
 		return new Packet250Fake<TYPE>(buf, this, buf.id);
 	}
 
 	@Override
-	public PacketBuilder response(int capacity) {
-		return builder0(responseId, capacity);
+	public PacketBuilder.ForResponse createResponse(int capacity, PacketBufferImpl<TYPE> input) {
+		checkState((input.id & expectsResponseFlag) != 0, "Packet didn't expect a response!");
+		PacketBufferImpl<TYPE> response = new PacketBufferImpl<>(capacity, this, responseId);
+		// Copy the ResponseHandler over for some optimization on MemoryConnection
+		// Example: Integrated server creates new PacketBuilder, sets ResponseHandler and sends to client
+		// Client receives and reads from same PacketBuffer (which still has ResponseHandler set)
+		// then .response() is called on client which calls this method.
+		// so the input still has the original responseHandler set
+		// handle0 will check for responseHandler on a response packet
+		response.responseHandler = input.responseHandler;
+		response.sender = input.sender;
+		response.transferId = input.transferId;
+		return response;
 	}
 
+	@Override
+	public void onResponseHandlerSet(PacketBufferImpl<TYPE> buffer, PacketResponseHandler handler) {
+		buffer.id |= expectsResponseFlag;
+	}
 }

@@ -2,13 +2,13 @@ package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
-import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.ModPacket;
+import de.take_weiland.mods.commons.net.PacketInput;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import net.minecraft.entity.player.EntityPlayer;
 
-import static de.take_weiland.mods.commons.net.Packets.readEnum;
-import static de.take_weiland.mods.commons.net.Packets.writeEnum;
+import static de.take_weiland.mods.commons.net.DataBuffers.readEnum;
+import static de.take_weiland.mods.commons.net.DataBuffers.writeEnum;
 
 public class PacketClientAction extends ModPacket {
 
@@ -25,7 +25,7 @@ public class PacketClientAction extends ModPacket {
 
 
 	@Override
-	protected void handle(DataBuf in, EntityPlayer player, Side side) {
+	protected void handle(PacketInput in, EntityPlayer player, Side side) {
 		action = readEnum(in, Action.class);
 
 		switch (action) {
