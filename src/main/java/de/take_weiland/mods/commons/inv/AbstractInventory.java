@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.inv;
 
 import de.take_weiland.mods.commons.Listenable;
 import de.take_weiland.mods.commons.Listenables;
-import de.take_weiland.mods.commons.util.Inventories;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -39,7 +38,7 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 
 	/**
 	 * {@inheritDoc}
-	 * <p>This implementation uses {@link de.take_weiland.mods.commons.util.Inventories#decreaseStackSize(net.minecraft.inventory.IInventory, int, int)}</p>
+	 * <p>This implementation uses {@link Inventories#decreaseStackSize(net.minecraft.inventory.IInventory, int, int)}</p>
 	 */
 	@Override
 	public ItemStack decrStackSize(int slot, int count) {
@@ -48,7 +47,7 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 
 	/**
 	 * {@inheritDoc}
-	 * <p>This implementation uses {@link de.take_weiland.mods.commons.util.Inventories#getAndRemove(net.minecraft.inventory.IInventory, int)}</p>
+	 * <p>This implementation uses {@link Inventories#getAndRemove(net.minecraft.inventory.IInventory, int)}</p>
 	 */
 	@Override
 	public ItemStack getStackInSlotOnClosing(int slot) {
@@ -86,7 +85,7 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 
 	/**
 	 * <p>Writes this inventory to an {@link net.minecraft.nbt.NBTTagCompound}.</p>
-	 * <p>By default calls {@link de.take_weiland.mods.commons.util.Inventories#writeInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound)}</p>
+	 * <p>By default calls {@link Inventories#writeInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound)}</p>
 	 * @param nbt the NBTTagCompound to write to
 	 */
 	public void writeToNbt(NBTTagCompound nbt) {
@@ -95,7 +94,7 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 
 	/**
 	 * <p>Reads this inventory from an {@link net.minecraft.nbt.NBTTagCompound}.</p>
-	 * <p>By default calls {@link de.take_weiland.mods.commons.util.Inventories#readInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound)}</p>
+	 * <p>By default calls {@link Inventories#readInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound)}</p>
 	 * @param nbt the NBTTagCompound to read from
 	 */
 	public void readFromNbt(NBTTagCompound nbt) {

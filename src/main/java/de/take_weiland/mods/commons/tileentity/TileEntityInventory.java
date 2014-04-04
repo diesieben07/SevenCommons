@@ -4,7 +4,7 @@ import de.take_weiland.mods.commons.Listenable;
 import de.take_weiland.mods.commons.Listenables;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.util.Blocks;
-import de.take_weiland.mods.commons.util.Inventories;
+import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;

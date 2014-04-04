@@ -1,8 +1,9 @@
-package de.take_weiland.mods.commons.util;
+package de.take_weiland.mods.commons.inv;
 
 import de.take_weiland.mods.commons.inv.ItemInventory;
 import de.take_weiland.mods.commons.inv.SCContainer;
 import de.take_weiland.mods.commons.inv.SlotNoPickup;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;

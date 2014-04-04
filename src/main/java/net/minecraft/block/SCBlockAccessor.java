@@ -8,4 +8,8 @@ public final class SCBlockAccessor {
 		return block.getTextureName();
 	}
 
+	public static String getIconNameRaw(Block block) {
+		return block.textureName;
+	}
+
 }

@@ -32,13 +32,10 @@ public class PacketInventoryName extends ModPacket {
 	
 	@Override
 	protected void handle(PacketInput in, EntityPlayer player, Side side) {
-		windowId = in.getByte();
-		name = in.getString();
-
-		if (player.openContainer.windowId == windowId && player.openContainer instanceof SCContainer) {
+		if (player.openContainer.windowId == in.getByte() && player.openContainer instanceof SCContainer) {
 			IInventory inv = ((SCContainer<?>) player.openContainer).inventory();
 			if (inv instanceof NameableInventory) {
-				((NameableInventory) inv).setCustomName(name);
+				((NameableInventory) inv).setCustomName(in.getString());
 			}
 		}
 	}

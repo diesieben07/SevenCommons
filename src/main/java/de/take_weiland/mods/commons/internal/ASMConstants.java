@@ -109,6 +109,9 @@ public final class ASMConstants {
 	public static final String M_GET_PACKET_SIZE_MCP = "getPacketSize";
 	public static final String M_GET_PACKET_SIZE_SRG = "func_73284_a";
 
+	public static final String F_UNLOCALIZED_NAME_BLOCK_MCP = "unlocalizedName";
+	public static final String F_UNLOCALIZED_NAME_BLOCK_SRG = "field_71968_b";
+
 	private ASMConstants() { }
 	
 }

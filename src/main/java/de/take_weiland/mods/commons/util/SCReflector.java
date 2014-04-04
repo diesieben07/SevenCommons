@@ -5,6 +5,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.fastreflect.Getter;
 import de.take_weiland.mods.commons.fastreflect.Setter;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -94,5 +95,8 @@ public interface SCReflector {
 
 	@Getter(field = { F_ITEM_DAMAGE_MCP, F_ITEM_DAMAGE_SRG })
 	int getRawDamage(ItemStack stack);
+
+	@Getter(field = {F_UNLOCALIZED_NAME_BLOCK_MCP, F_UNLOCALIZED_NAME_BLOCK_SRG})
+	String getRawUnlocalizedName(Block block);
 
 }

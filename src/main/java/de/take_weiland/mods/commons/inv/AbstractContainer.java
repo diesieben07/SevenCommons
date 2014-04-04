@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.inv;
 import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.PacketInventoryName;
-import de.take_weiland.mods.commons.util.Containers;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
