@@ -11,6 +11,9 @@ import de.take_weiland.mods.commons.meta.MetadataProperty;
 public class Test {
 
 	public static void main(String... args) {
+		System.out.println(Thread.currentThread().getId());
+
+
 		BooleanProperty prop0 = MetaProperties.newBooleanProperty(0);
 		IntProperty prop1 = MetaProperties.newIntProperty(1, 8);
 		MetadataProperty<MyEnum> prop2 = MetaProperties.newProperty(9, MyEnum.class);

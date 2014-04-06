@@ -35,6 +35,7 @@ import java.net.URL;
 public final class SCModContainer extends DummyModContainer {
 
 	private static final URL UPDATE_URL;
+	public static long clientMainThreadID;
 
 	static {
 		try {
@@ -81,6 +82,10 @@ public final class SCModContainer extends DummyModContainer {
 	
 	@Subscribe
 	public void preInit(FMLPreInitializationEvent event) {
+		if (event.getSide().isClient()) {
+			clientMainThreadID = Thread.currentThread().getId();
+		}
+
 		try { // my version of @SidedProxy
 			if (event.getSide().isServer()) {
 				proxy = Class.forName("de.take_weiland.mods.commons.internal.ServerProxy").asSubclass(SevenCommonsProxy.class).newInstance();

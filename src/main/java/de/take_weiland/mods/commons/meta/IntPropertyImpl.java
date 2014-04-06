@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.meta;
 /**
  * @author diesieben07
  */
-class IntPropertyImpl implements IntProperty {
+class IntPropertyImpl extends GenericProperty<Integer> implements IntProperty {
 
 	private final int shift;
 	private final int mask;

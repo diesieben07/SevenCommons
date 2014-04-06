@@ -5,7 +5,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * @author diesieben07
  */
-abstract class AbstractProperty<T> implements MetadataProperty<T> {
+abstract class AbstractProperty<T> extends GenericProperty<T> {
 
 	private final int shift;
 	private final int mask;

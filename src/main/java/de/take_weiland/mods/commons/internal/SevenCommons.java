@@ -38,6 +38,8 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	public static LaunchClassLoader CLASSLOADER = (LaunchClassLoader) SevenCommons.class.getClassLoader();
 
 	public static File source;
+
+	public static SCMetaInternalProxy metaProxy;
 	
 	static {
 		LOGGER = MiscUtil.getLogger("SevenCommons");

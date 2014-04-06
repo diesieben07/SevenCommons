@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.templates;
 
-import de.take_weiland.mods.commons.templates.Metadata.BlockMeta;
-import de.take_weiland.mods.commons.util.Multitypes;
+import de.take_weiland.mods.commons.meta.HasSubtypes;
+import de.take_weiland.mods.commons.meta.Subtype;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 
-public class TypedItemBlock<BLOCK extends Block & HasMetadata<TYPE>, TYPE extends BlockMeta> extends SCItemBlock<BLOCK> {
+public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extends Enum<TYPE> & Subtype> extends SCItemBlock<BLOCK> {
 
 	public TypedItemBlock(int itemId, Block block) {
 		super(itemId, block);
@@ -19,7 +19,9 @@ public class TypedItemBlock<BLOCK extends Block & HasMetadata<TYPE>, TYPE extend
 
 	@Override
 	public String getUnlocalizedName(ItemStack stack) {
-		return super.getUnlocalizedName(stack) + "." + Multitypes.getType(block, stack).unlocalizedName();
+		return block.getUnlocalizedName()
+				+ "."
+				+ block.subtypeProperty().value(stack).unlocalizedName();
 	}
 
 }

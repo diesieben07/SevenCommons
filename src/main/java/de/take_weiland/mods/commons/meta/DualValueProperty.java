@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.meta;
 /**
  * @author diesieben07
  */
-class DualValueProperty<T> implements MetadataProperty<T> {
+class DualValueProperty<T> extends GenericProperty<T> {
 
 	private final int mask;
 	private final T a;

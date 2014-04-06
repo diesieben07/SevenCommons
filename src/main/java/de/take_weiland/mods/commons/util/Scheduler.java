@@ -1,21 +1,25 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Queues;
 import com.google.common.primitives.Longs;
+import com.google.common.util.concurrent.AbstractFuture;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.TickType;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
+import net.minecraft.server.ThreadMinecraftServer;
 
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.concurrent.Executor;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-public final class Scheduler implements ITickHandler, Executor {
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public final class Scheduler implements ITickHandler, ListeningScheduledExecutorService {
 
 	public static Scheduler server() {
 		return server != null ? server : (server = new Scheduler(Side.SERVER));
@@ -28,71 +32,211 @@ public final class Scheduler implements ITickHandler, Executor {
 	public static Scheduler get(Side side) {
 		return side.isClient() ? client() : server();
 	}
-	
-	public void schedule(Runnable task, int ticks, boolean tickEnd) {
-		long when = ticks + now.get();
-		synchronized (queue) {
-			queue.offer(new Task(task, when, tickEnd));
-		}
-	}
-	
+
 	@Override
 	public void execute(Runnable task) {
-		schedule(task, 0, false);
+		scheduleTicked(task, 0, true);
 	}
-	
+
+	public void scheduleTicked(Runnable task, int ticks, boolean tickEnd) {
+		long when = ticks + now.get();
+		newTask(new SimpleTask(task, when, tickEnd));
+	}
+
 	public void throwInMainThread(final Throwable t) {
+		//noinspection ThrowableResultOfMethodCallIgnored
+		checkNotNull(t);
 		execute(new Runnable() {
-			
+
 			@Override
 			public void run() {
-				JavaUtils.throwUnchecked(t);
+				throw JavaUtils.throwUnchecked(t);
 			}
-		});	
+		});
+	}
+
+	// ExecutorService methods
+	@Override
+	public <T> ListenableFuture<T> submit(Runnable r, T result) {
+		ScheduledRunnable<T> task = new ScheduledRunnable<>(checkNotNull(r, "Runnable"), result, now.get());
+		newTask(task);
+		return task;
+	}
+
+	@Override
+	public ScheduledListenableFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+		long when = millisToTicks(unit.toMillis(delay)) + now.get();
+		ScheduledRunnable<Void> task = new ScheduledRunnable<>(checkNotNull(command, "Runnable"), null, when);
+		newTask(task);
+		return task;
+	}
+
+	@Override
+	public <V> ScheduledListenableFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+		long when = millisToTicks(unit.toMillis(delay)) + now.get();
+		ScheduledCallable<V> task = new ScheduledCallable<>(checkNotNull(callable, "Callable"), when);
+		newTask(task);
+		return task;
+	}
+
+	@Override
+	public ScheduledFuture<?> scheduleWithFixedDelay(final Runnable command, long initialDelay, long delay, TimeUnit unit) {
+		long initialWhen = millisToTicks(unit.toMillis(initialDelay)) + now.get();
+		long delayTicks = millisToTicks(unit.toMillis(delay));
+		RepeatedRunnable task = new RepeatedRunnable(initialWhen, delayTicks, checkNotNull(command, "Runnable"));
+		newTask(task);
+		return task;
+	}
+
+	@Override
+	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+		if (tasks.size() == 0) {
+			return ImmutableList.of();
+		}
+		long when = now.get();
+		boolean immediate = isOnMainThread(side);
+		boolean failed = false;
+		List<Future<T>>	futures = Lists.newArrayListWithCapacity(tasks.size());
+		for (Callable<T> callable : tasks) {
+			ScheduledCallable<T> task = new ScheduledCallable<>(callable, when);
+			futures.add(task);
+			// if we are the main thread, execute the stuff immediately, otherwise we would wait on ourselves
+			if (!immediate) {
+				newTask(task);
+			} else if (!failed) {
+				failed = !task.run();
+			}
+		}
+
+		// if we are another thread, wait for all futures to complete or throw TimeoutException
+		if (!immediate) {
+			long start = System.nanoTime();
+			for (Future<T> future : futures) {
+				if (future.isDone()) continue;
+
+				try {
+					// timeout < 0 => wait infinitely
+					if (timeout < 0) {
+						future.get();
+					} else {
+						future.get(timeout, unit);
+					}
+				} catch (ExecutionException | TimeoutException e) {
+					failed = true;
+					break;
+				}
+				long after = System.nanoTime();
+				timeout -= (after - start);
+				start = after;
+			}
+		}
+
+		if (failed) {
+			for (Future<T> future : futures) {
+				future.cancel(true);
+			}
+		}
+		return futures;
+	}
+
+	@Override
+	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+		long timeoutNanos = unit.toNanos(timeout);
+		if (isOnMainThread(side)) {
+			Exception lastEx = null;
+			long start = System.nanoTime();
+			for (Callable<T> callable : tasks) {
+				try {
+					return callable.call();
+				} catch (Exception e) {
+					lastEx = e;
+					// ignored, try next callable
+				}
+				long end = System.nanoTime();
+				if (timeout >= 0 && end - start > timeoutNanos) {
+					throw new TimeoutException();
+				}
+			}
+			throw new ExecutionException(lastEx);
+		}
+		long start = System.nanoTime();
+		Exception toThrow = null;
+		for (Callable<T> task : tasks) {
+			Future<T> future = submit(task);
+			try {
+				return timeout >= 0 ? future.get(timeoutNanos, TimeUnit.NANOSECONDS) : future.get();
+			} catch (CancellationException | ExecutionException e) {
+				toThrow = e;
+				// ignored, try next callable
+			}
+			long end = System.nanoTime();
+			timeoutNanos -= (end - start);
+		}
+		throw new ExecutionException(toThrow);
+	}
+
+	// Bouncer methods from ExecutorService
+
+	@Override
+	public <T> ListenableFuture<T> submit(Callable<T> task) {
+		return schedule(task, 0, TimeUnit.MILLISECONDS);
+	}
+
+	@Override
+	public ListenableFuture<?> submit(Runnable r) {
+		return submit(r, null);
+	}
+
+	@Override
+	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+		// our tasks run synchronously, so these do the same
+		return scheduleWithFixedDelay(checkNotNull(command, "Runnable"), initialDelay, period, unit);
+	}
+
+	@Override
+	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+		return invokeAll(tasks, -1, TimeUnit.NANOSECONDS);
+	}
+
+	@Override
+	public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+		try {
+			return invokeAny(tasks, -1, TimeUnit.NANOSECONDS);
+		} catch (TimeoutException e) {
+			// impossible, TOE is only thrown if timeout >= 0
+			throw new AssertionError("Impossibru!", e);
+		}
+	}
+
+	// internal implementation
+
+	void newTask(Task task) {
+		synchronized (queue) {
+			queue.offer(task);
+		}
+	}
+
+	private static boolean isOnMainThread(Side side) {
+		if (side.isServer()) {
+			return Thread.currentThread() instanceof ThreadMinecraftServer;
+		} else {
+			return Thread.currentThread().getId() == SCModContainer.clientMainThreadID;
+		}
 	}
 	
 	private static Scheduler server, client;
 	
-	private static class Task implements Comparable<Task> {
-		
-		final Runnable r;
-		final long when;
-		final boolean tickEnd;
-
-		Task(Runnable r, long when, boolean tickEnd) {
-			this.r = r;
-			this.when = when;
-			this.tickEnd = tickEnd;
-		}
-
-		@Override
-		public int compareTo(Task o) {
-			// tasks which come earlier are first, task which run on tickStart come last
-			int whenRes = Longs.compare(this.when, o.when);
-			if (whenRes != 0) {
-				return whenRes;
-			} else {
-				return this.tickEnd ? -1 : 1;
-			}
-		}
-
-		@Override
-		public String toString() {
-			return "TaskInstallUpdate [r=" + r + ", when=" + when + ", tickEnd=" + tickEnd + "]";
-		}
-		
-	}
-	
-	private final AtomicLong now;
+	final AtomicLong now;
 	private final Side side;
 	private final EnumSet<TickType> ticks;
 	private final PriorityQueue<Task> queue;
 	private final ArrayList<Task> scheduledNow;
+	long firstTickSystemNanos = -1;
 	
 	private Scheduler(Side side) {
 		this.side = side;
 		ticks = EnumSet.of(side.isServer() ? TickType.SERVER : TickType.CLIENT);
-		queue = Queues.newPriorityQueue();
+		queue = new PriorityQueue<>(10, TASK_COMPARATOR);
 		now = new AtomicLong(0);
 		scheduledNow = Lists.newArrayList();
 		
@@ -101,23 +245,26 @@ public final class Scheduler implements ITickHandler, Executor {
 
 	@Override
 	public void tickStart(EnumSet<TickType> type, Object... tickData) {
-		long now = this.now.incrementAndGet();
+		long now = this.now.getAndIncrement();
+		if (now == 0) {
+			firstTickSystemNanos = System.nanoTime();
+		}
 		List<Task> sn = scheduledNow;
 		sn.clear();
 		synchronized (queue) {
 			while (queue.size() > 0) {
 				Task next = queue.peek();
-				if (next.when > now) {
+				if (next.when() > now) {
 					break;
 				}
 				sn.add(queue.poll());
 			}
 		}
 		for (int i = sn.size() - 1; i >= 0; --i) { // traverse backwards so we can fast-remove
-			if (sn.get(i).tickEnd) { // if we encounter the first tickEnd element, all others will be tickEnd, too, so we can stop traversing
+			if (sn.get(i).tickEnd()) { // if we encounter the first tickEnd element, any further elements will be tickEnd, too, so we can stop traversing
 				break;
 			}
-			sn.remove(i).r.run();
+			sn.remove(i).run();
 		}
 	}
 
@@ -125,7 +272,7 @@ public final class Scheduler implements ITickHandler, Executor {
 	public void tickEnd(EnumSet<TickType> type, Object... tickData) {
 		List<Task> sn = scheduledNow;
 		for (int i = sn.size() - 1; i >= 0; --i) {
-			sn.remove(i).r.run();
+			sn.get(i).run();
 		}
 	}
 
@@ -139,4 +286,191 @@ public final class Scheduler implements ITickHandler, Executor {
 		return "SevenCommonsScheduler[" + side + "]";
 	}
 
+	// unsupported methods from ExecutorService
+	@Override
+	public void shutdown() {
+		throw unsupported();
+	}
+
+	@Override
+	public List<Runnable> shutdownNow() {
+		throw unsupported();
+	}
+
+	@Override
+	public boolean isShutdown() {
+		throw unsupported();
+	}
+
+	@Override
+	public boolean isTerminated() {
+		throw unsupported();
+	}
+
+	@Override
+	public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+		throw unsupported();
+	}
+
+	private static RuntimeException unsupported() {
+		throw new UnsupportedOperationException("Cannot shutdown this Scheduler!");
+	}
+
+	private interface Task {
+
+		boolean run();
+
+		long when();
+
+		boolean tickEnd();
+
+	}
+
+	private static class SimpleTask implements Task {
+
+		private final long when;
+		private final boolean tickEnd;
+		private final Runnable command;
+
+		SimpleTask(Runnable command, long when, boolean tickEnd) {
+			this.tickEnd = tickEnd;
+			this.when = when;
+			this.command = command;
+		}
+
+		@Override
+		public boolean run() {
+			command.run();
+			return true;
+		}
+
+		@Override
+		public long when() {
+			return when;
+		}
+
+		@Override
+		public boolean tickEnd() {
+			return tickEnd;
+		}
+	}
+
+	private abstract class TaskWithFuture<T> extends AbstractFuture<T> implements Task, ScheduledListenableFuture<T> {
+
+		long when;
+
+		TaskWithFuture(long when) {
+			this.when = when;
+		}
+
+		public final boolean run() {
+			if (isCancelled()) {
+				return false;
+			}
+			try {
+				run0();
+				return true;
+			} catch (Exception e) {
+				setException(e);
+				return false;
+			}
+		}
+
+		@Override
+		public long when() {
+			return when;
+		}
+
+		@Override
+		public boolean tickEnd() {
+			return true;
+		}
+
+		abstract void run0() throws Exception;
+
+		@Override
+		public long getDelay(TimeUnit unit) {
+			long now = Scheduler.this.now.get();
+			return unit.convert(ticksToMillis(when - now), TimeUnit.MILLISECONDS);
+		}
+
+		@Override
+		public int compareTo(Delayed o) {
+			return Longs.compare(this.getDelay(TimeUnit.NANOSECONDS), o.getDelay(TimeUnit.NANOSECONDS));
+		}
+
+	}
+
+	private class ScheduledRunnable<T> extends TaskWithFuture<T> {
+
+		private final Runnable r;
+		private final T result;
+
+		ScheduledRunnable(Runnable r, T result, long when) {
+			super(when);
+			this.r = r;
+			this.result = result;
+		}
+
+		@Override
+		void run0() throws Exception {
+			r.run();
+			set(result);
+		}
+	}
+
+	private class ScheduledCallable<T> extends TaskWithFuture<T> {
+
+		private final Callable<T> callable;
+
+		ScheduledCallable(Callable<T> callable, long when) {
+			super(when);
+			this.callable = callable;
+		}
+
+		@Override
+		void run0() throws Exception {
+			set(callable.call());
+		}
+	}
+
+	private class RepeatedRunnable extends TaskWithFuture<Void> {
+
+		private final Runnable r;
+		private final long delay;
+
+		private RepeatedRunnable(long when, long delay, Runnable r) {
+			super(when);
+			this.r = r;
+			this.delay = delay;
+		}
+
+		@Override
+		void run0() throws Exception {
+			r.run();
+			when = now.get() + delay;
+			Scheduler.this.newTask(this);
+		}
+	}
+
+	private static final Comparator<Task> TASK_COMPARATOR = new Comparator<Task>() {
+		@Override
+		public int compare(Task o1, Task o2) {
+			// tasks which come earlier are first, task which run on tickStart come last
+			int whenRes = Longs.compare(o1.when(), o2.when());
+			if (whenRes != 0) {
+				return whenRes;
+			} else {
+				return o1.tickEnd() ? -1 : 1;
+			}
+		}
+	};
+
+	static long ticksToMillis(long ticks) {
+		return ticks * 50L;
+	}
+
+	static long millisToTicks(long millis) {
+		return millis / 50L;
+	}
 }

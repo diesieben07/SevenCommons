@@ -1,16 +1,16 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.base.Function;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.inv.Inventories;
-import de.take_weiland.mods.commons.item.ItemStacks;
-import de.take_weiland.mods.commons.templates.HasMetadata;
-import de.take_weiland.mods.commons.templates.Metadata.BlockMeta;
+import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.templates.SCItemBlock;
 import de.take_weiland.mods.commons.templates.TypedItemBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SCBlockAccessor;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 public final class Blocks {
@@ -47,7 +47,7 @@ public final class Blocks {
 	}
 
 	private static Class<? extends SCItemBlock> getItemBlockClass(Block block) {
-		return block instanceof HasMetadata ? TypedItemBlock.class : SCItemBlock.class;
+		return block instanceof HasSubtypes ? TypedItemBlock.class : SCItemBlock.class;
 	}
 
 	/**
@@ -75,10 +75,17 @@ public final class Blocks {
 		
 		GameRegistry.registerBlock(block, itemClass, baseName);
 		
-		if (block instanceof HasMetadata) {
-			ItemStacks.registerAll(((HasMetadata<? extends BlockMeta>) block).getTypes(), baseName, ItemStacks.BLOCK_GET_STACK);
+		if (block instanceof HasSubtypes) {
+			ItemStacks.registerSubstacks(baseName, block, STACK_FUNCTION);
 		}
 	}
+
+	private static final Function<Block, ItemStack> STACK_FUNCTION = new Function<Block, ItemStack>() {
+		@Override
+		public ItemStack apply(Block input) {
+			return new ItemStack(input);
+		}
+	};
 
 	/**
 	 * Generic implementation for {@link net.minecraft.block.Block#breakBlock}. This method drops the contents of any Inventory

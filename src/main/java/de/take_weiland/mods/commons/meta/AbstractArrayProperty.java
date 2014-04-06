@@ -18,4 +18,8 @@ abstract class AbstractArrayProperty<T> extends AbstractProperty<T> {
 	T value0(int metadata) {
 		return JavaUtils.get(values, metadata);
 	}
+
+	final T[] values() {
+		return values;
+	}
 }

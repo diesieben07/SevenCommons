@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.sync;
 
-import de.take_weiland.mods.commons.item.ItemStacks;
+import de.take_weiland.mods.commons.util.ItemStacks;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.DataBuffers;
 import de.take_weiland.mods.commons.net.WritableDataBuf;

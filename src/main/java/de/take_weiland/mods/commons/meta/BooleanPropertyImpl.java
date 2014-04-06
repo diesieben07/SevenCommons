@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.meta;
 /**
  * @author diesieben07
  */
-final class BooleanPropertyImpl implements BooleanProperty {
+final class BooleanPropertyImpl extends GenericProperty<Boolean> implements BooleanProperty {
 
 	private static final BooleanPropertyImpl[] cache = new BooleanPropertyImpl[32];
 

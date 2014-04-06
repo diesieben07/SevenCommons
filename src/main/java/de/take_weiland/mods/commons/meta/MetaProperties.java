@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.meta;
 
 import com.google.common.primitives.Ints;
+import de.take_weiland.mods.commons.internal.SCMetaInternalProxy;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import net.minecraft.world.World;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -51,6 +53,15 @@ public final class MetaProperties {
 		}
 		b.reset();
 		return b;
+	}
+
+	static {
+		SevenCommons.metaProxy = new SCMetaInternalProxy() {
+			@Override
+			public <E> E[] backingValues(MetadataProperty<E> property) {
+				return ((AbstractArrayProperty<E>) property).values();
+			}
+		};
 	}
 
 	public static MetaBuilder builder() {

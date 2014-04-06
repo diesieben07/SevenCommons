@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -9,10 +8,7 @@ import sun.misc.SharedSecrets;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public final class JavaUtils {
 
@@ -97,44 +93,6 @@ public final class JavaUtils {
 	 */
 	public static <T> Iterable<T> concatNullable(Iterable<T> a, Iterable<T> b) {
 		return a == null ? (b == null ? Collections.<T>emptyList() : b) : (b == null ? a : Iterables.concat(a, b));
-	}
-
-	/**
-	 * applies every element in the Iterable to the Consumer
-	 */
-	public static <T> void foreach(Iterable<T> it, Consumer<T> c) {
-		foreach(it.iterator(), c);
-	}
-
-	/**
-	 * applies every element in the Iterator to the Consumer
-	 */
-	public static <T> void foreach(Iterator<T> it, Consumer<T> c) {
-		while (it.hasNext()) {
-			c.apply(it.next());
-		}
-	}
-
-	/**
-	 * applies every element in the Array to the Consumer
-	 */
-	public static <T> void foreach(T[] arr, Consumer<T> c) {
-		for (T t : arr) {
-			c.apply(t);
-		}
-	}
-
-	/**
-	 * Applies the function to every element in the {@code in} array and stores the result in the {@code out} array
-	 * @throws java.lang.IllegalArgumentException if {@code in.length > out.length}
-	 */
-	public static <T, R> R[] transform(T[] in, R[] out, Function<T, R> func) {
-		int l = in.length;
-		checkArgument(l <= out.length);
-		for (int i = 0; i < l; ++i) {
-			out[i] = func.apply(in[i]);
-		}
-		return out;
 	}
 
 	/**

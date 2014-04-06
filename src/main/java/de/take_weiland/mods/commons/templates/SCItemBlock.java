@@ -43,5 +43,5 @@ public class SCItemBlock<T extends Block> extends ItemBlock {
 	public Icon getIconFromDamage(int meta) {
 		return block.getIcon(0, meta);
 	}
-	
+
 }

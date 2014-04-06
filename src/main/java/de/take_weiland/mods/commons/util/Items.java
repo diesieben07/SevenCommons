@@ -1,9 +1,9 @@
-package de.take_weiland.mods.commons.item;
+package de.take_weiland.mods.commons.util;
 
+import com.google.common.base.Function;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.templates.HasMetadata;
-import de.take_weiland.mods.commons.templates.Metadata.ItemMeta;
+import de.take_weiland.mods.commons.meta.HasSubtypes;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SCItemAccessor;
@@ -11,6 +11,13 @@ import net.minecraft.item.SCItemAccessor;
 public final class Items {
 
 	private Items() { }
+
+	private static final Function<Item, ItemStack> STACK_FUNCTION = new Function<Item, ItemStack>() {
+		@Override
+		public ItemStack apply(Item item) {
+			return new ItemStack(item);
+		}
+	};
 
 	public static void init(Item item, String baseName) {
 		init(item, baseName,Loader.instance().activeModContainer().getModId());
@@ -33,22 +40,16 @@ public final class Items {
 	 */
 	@SuppressWarnings("unchecked")
 	public static void init(Item item, String baseName, String modId) {
-		item.setTextureName(getIconName(modId, baseName));
+		item.setTextureName(modId + ":" + baseName);
 		item.setUnlocalizedName(modId + "." + baseName); // full unlocalized key is "item.MODID.NAME.name"		
 		
-		if (item instanceof HasMetadata) {
+		if (item instanceof HasSubtypes) {
 			SCItemAccessor.setHasSubtypes(item);
 			
-			if (item instanceof HasMetadata) {
-				ItemStacks.registerAll(((HasMetadata<? extends ItemMeta>)item).getTypes(), baseName, ItemStacks.ITEM_GET_STACK);
-			}
+			ItemStacks.registerSubstacks(baseName, item, STACK_FUNCTION);
 		}
 		
 		GameRegistry.registerItem(item, baseName);
 	}
-	
-	public static String getIconName(String modId, String iconName) {
-		return modId + ":" + iconName;
-	}
-	
+
 }
