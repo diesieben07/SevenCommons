@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class Scheduler implements ITickHandler, ListeningScheduledExecutorService {
@@ -33,16 +34,32 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 		return side.isClient() ? client() : server();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <p>This Executor executes the Runnable on the next tick.</p>
+	 * @param task the task to run
+	 */
 	@Override
 	public void execute(Runnable task) {
-		scheduleTicked(task, 0, true);
+		schedule(task, 0, true);
 	}
 
-	public void scheduleTicked(Runnable task, int ticks, boolean tickEnd) {
+	/**
+	 * Schedule the execution of the Runnable after {@code ticks} Ticks have occured.
+	 * @param task the task to run
+	 * @param ticks how many ticks to wait before execution
+	 * @param tickEnd whether the task should be executed on tickEnd or not
+	 */
+	public void schedule(Runnable task, int ticks, boolean tickEnd) {
+		checkArgument(ticks >= 0, "Ticks must not be negative");
 		long when = ticks + now.get();
-		newTask(new SimpleTask(task, when, tickEnd));
+		newTask(new SimpleTask(checkNotNull(task), when, tickEnd));
 	}
 
+	/**
+	 * Throws the given Throwable in the main Minecraft thread, to properly trigger CrashReports.
+	 * @param t the Throwable to throw
+	 */
 	public void throwInMainThread(final Throwable t) {
 		//noinspection ThrowableResultOfMethodCallIgnored
 		checkNotNull(t);
@@ -187,10 +204,19 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 		return submit(r, null);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * Because this Executor is synchronous, this method acts exactly the same as {@link #scheduleWithFixedDelay(Runnable, long, long, java.util.concurrent.TimeUnit)}
+	 * @param command
+	 * @param initialDelay
+	 * @param period
+	 * @param unit
+	 * @return
+	 */
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
 		// our tasks run synchronously, so these do the same
-		return scheduleWithFixedDelay(checkNotNull(command, "Runnable"), initialDelay, period, unit);
+		return scheduleWithFixedDelay(command, initialDelay, period, unit);
 	}
 
 	@Override
