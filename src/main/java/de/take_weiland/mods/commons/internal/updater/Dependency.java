@@ -4,8 +4,6 @@ import cpw.mods.fml.common.versioning.ArtifactVersion;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import cpw.mods.fml.common.versioning.Restriction;
 import cpw.mods.fml.common.versioning.VersionParser;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import net.minecraft.util.EnumChatFormatting;
@@ -64,10 +62,14 @@ public class Dependency {
 
 	private String displayCache;
 	private boolean displayHasMod = false;
-	private static final EnumChatFormatting BOUND_INKL = EnumChatFormatting.DARK_GREEN;
+	private static final EnumChatFormatting BOUND_INCL = EnumChatFormatting.DARK_GREEN;
 	private static final EnumChatFormatting BOUND_EXCL = EnumChatFormatting.RED;
 
-	@SideOnly(Side.CLIENT)
+	private static final String BOUND_INKL_LOWER = "(";
+	private static final String BOUND_INCL_UPPER = ")";
+	private static final String BOUND_EXCL_LOWER = "[";
+	private static final String BOUND_EXCL_UPPER = "]";
+
 	public String getDisplay() {
 		if (!displayHasMod) {
 			UpdatableMod mod = controller.getMod(modId);
@@ -81,7 +83,6 @@ public class Dependency {
 		return displayCache;
 	}
 
-	@SideOnly(Side.CLIENT)
 	private String getDisplay0(String modName) {
 		StringBuilder s = new StringBuilder();
 
@@ -95,19 +96,22 @@ public class Dependency {
 			String upper = r.getUpperBound().getVersionString();
 			String lower = r.getLowerBound().getVersionString();
 			if (upper.equals(lower)) {
-				s.append(BOUND_INKL);
+				s.append(BOUND_INCL);
 				s.append(upper);
 				s.append(RESET);
 			} else {
-				s.append(r.isLowerBoundInclusive() ? BOUND_INKL : BOUND_EXCL);
+				boolean incl = r.isLowerBoundInclusive();
+				s.append(incl ? BOUND_INKL_LOWER : BOUND_EXCL_LOWER);
+				s.append(incl ? BOUND_INCL : BOUND_EXCL);
 				s.append(lower);
 				s.append(RESET);
 
 				s.append('-');
-
-				s.append(r.isUpperBoundInclusive() ? BOUND_INKL : BOUND_EXCL);
+				incl = r.isUpperBoundInclusive();
+				s.append(incl ? BOUND_INCL : BOUND_EXCL);
 				s.append(upper);
 				s.append(RESET);
+				s.append(incl ? BOUND_INCL_UPPER : BOUND_EXCL_UPPER);
 			}
 
 			if (i < len - 1) {

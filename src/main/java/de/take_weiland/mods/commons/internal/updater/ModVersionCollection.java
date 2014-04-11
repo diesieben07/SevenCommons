@@ -36,7 +36,7 @@ public final class ModVersionCollection {
 	private List<ModVersion> versions;
 
 	public ModVersionCollection(ArtifactVersion currentVersion) {
-		this.currentVersionDummy = new LocalModVersion(this, currentVersion, null, null, ImmutableList.<Dependency>of());
+		currentVersionActual = this.currentVersionDummy = new LocalModVersion(this, currentVersion, null, null, ImmutableList.<Dependency>of());
 		versions = ImmutableList.of(currentVersionDummy);
 		selectedVersion = 0;
 	}

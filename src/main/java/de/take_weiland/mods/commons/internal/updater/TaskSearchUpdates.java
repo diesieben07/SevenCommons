@@ -67,10 +67,9 @@ public class TaskSearchUpdates implements Runnable {
 			JsonRootNode json = JSON_PARSER.parse(reader);
 			
 			if (!json.isArrayNode()) {
-				invalid();
+				throw invalid();
 			}
 
-			boolean foundCurrent = false;
 			String currentVersion = mod.getVersions().getCurrentVersion().getModVersion().getVersionString();
 			for (JsonNode versionNode : json.getElements()) {
 				List<Dependency> dependencies;
@@ -84,21 +83,19 @@ public class TaskSearchUpdates implements Runnable {
 				String url = versionNode.getStringValue("url");
 				String patchNotes = versionNode.isStringValue("patchNotes") ? versionNode.getStringValue("patchNotes") : null;
 
-				if (!foundCurrent && versionString.equals(currentVersion)) {
-					foundCurrent = true;
-				}
 				ArtifactVersion artifactVersion = new DefaultArtifactVersion(mod.getModId(), versionString);
 				ModVersion modVersion = new LocalModVersion(mod.getVersions(), artifactVersion, url, patchNotes, dependencies);
-				if (!foundCurrent && versionString.equals(currentVersion)) {
+				if (versionString.equals(currentVersion)) {
 					this.currentVersionFound = modVersion;
+				} else {
+					versions.add(modVersion);
 				}
-				versions.add(modVersion);
 			}
 			return versions.build();
 		} catch (Throwable t) {
 			t.printStackTrace();
 			Throwables.propagateIfPossible(t);
-			return invalid(t);
+			throw invalid(t);
 		}
 	}
 
@@ -128,11 +125,11 @@ public class TaskSearchUpdates implements Runnable {
 		return b.build();
 	}
 	
-	private static void invalid() throws InvalidModVersionException {
-		throw new InvalidModVersionException("Failed to parse ModVersionInfo");
+	private static InvalidModVersionException invalid() {
+		return new InvalidModVersionException("Failed to parse ModVersionInfo");
 	}
 	
-	private static List<ModVersion> invalid(Throwable t) throws InvalidModVersionException {
-		throw new InvalidModVersionException("Failed to parse ModVersionInfo", t);
+	private static InvalidModVersionException invalid(Throwable t) {
+		return new InvalidModVersionException("Failed to parse ModVersionInfo", t);
 	}
 }
