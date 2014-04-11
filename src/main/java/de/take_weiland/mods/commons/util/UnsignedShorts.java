@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.Preconditions;
-
 /**
  * Helper class for working with Unsigned shorts. Similar to guava's {@link com.google.common.primitives.UnsignedBytes}
  */
@@ -29,7 +27,9 @@ public final class UnsignedShorts {
 	 * @return the unsigned short
 	 */
 	public static short checkedCast(int value) {
-		Preconditions.checkArgument(value >> Short.SIZE == 0, "out of range: %s", Integer.valueOf(value));
+		if (value >> Short.SIZE != 0) {
+			throw new IllegalArgumentException(String.format("Out of Range: %d", value));
+		}
 		return (short)value;
 	}
 	

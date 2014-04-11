@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * some information about a class, obtain via {@link #getClassInfo(String)}, {@link #getClassInfo(Class)} or {@link #getClassInfo(org.objectweb.asm.tree.ClassNode)}
+ * some information about a class, obtain via {@link de.take_weiland.mods.commons.asm.ASMUtils#getClassInfo(String)}, {@link de.take_weiland.mods.commons.asm.ASMUtils#getClassInfo(Class)} or {@link de.take_weiland.mods.commons.asm.ASMUtils#getClassInfo(org.objectweb.asm.tree.ClassNode)}
  */
 public interface ClassInfo {
 
@@ -16,14 +16,14 @@ public interface ClassInfo {
 	Collection<String> interfaces();
 
 	/**
-	 * the internal name of the superclass of this class
+	 * get the internal name of the superclass of this class
 	 * @return the superclass, or null if this ClassInfo is an interface or represents java/lang/Object
 	 */
 	String superName();
 
 	/**
-	 * the internal name of this class
-	 * @return
+	 * get the internal name of this class
+	 * @return the internal name
 	 */
 	String internalName();
 
@@ -32,12 +32,6 @@ public interface ClassInfo {
 	 * @return the superclass or null if this ClassInfo is an interface or represents java/lang/Object
 	 */
 	ClassInfo superclass();
-
-	/**
-	 * check if this class is an interface
-	 * @return true if this class is an interface
-	 */
-	boolean isInterface();
 
 	/**
 	 * <p>check if this class is either a superclass or superinterface of the passed in class.</p>
@@ -54,16 +48,28 @@ public interface ClassInfo {
 	 */
 	Set<String> getSupers();
 
+	/**
+	 * get all Modifiers present on this class. Equivalent to {@link Class#getModifiers()}
+	 * @return the modifiers
+	 */
 	int getModifiers();
 
 	/**
-	 * <p>return true if this class represents an Enum class. Equivalent to {@link Class#isEnum()}</p>
+	 * <p>returns true if this class represents an Enum class. Equivalent to {@link Class#isEnum()}</p>
 	 * @return true if this ClassInfo represents an Enum class
 	 */
 	boolean isEnum();
 
+	/**
+	 * <p>returns true if this class is abstract.</p>
+	 * @return true if this class is abstract
+	 */
 	boolean isAbstract();
 
-
+	/**
+	 * check if this class is an interface
+	 * @return true if this class is an interface
+	 */
+	boolean isInterface();
 
 }

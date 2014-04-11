@@ -20,7 +20,7 @@ public final class Players {
 	 * gets an Iterable for iterating over all the Operators in this server<br />
 	 * If you only need the usernames, you should use {@link #getOpsRaw()}.
 	 * If you need a Collection use {@link ImmutableSet#copyOf(Iterable) ImmutableSet.copyOf(Players.getOps())}
-	 * @return
+	 * @return all Operators
 	 */
 	public static Iterable<EntityPlayerMP> getOps() {
 		final Set<String> ops = getOpsRaw();

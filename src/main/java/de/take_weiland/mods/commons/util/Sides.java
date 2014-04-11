@@ -48,7 +48,11 @@ public final class Sides {
 	public static Side logical(WorldEvent event) {
 		return logical(event.world);
 	}
-	
+
+	/**
+	 * Determine the Environment, not the logical side (Integrated Server is still on the Minecraft Client)
+	 * @return Side.SERVER for a Dedicated Server, Side.CLIENT for the Minecraft client
+	 */
 	public static Side environment() {
 		return FMLCommonHandler.instance().getSide();
 	}
