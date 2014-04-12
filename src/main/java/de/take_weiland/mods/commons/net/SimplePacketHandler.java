@@ -19,7 +19,7 @@ final class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType> impl
 	@Override
 	public void handle(TYPE t, PacketInput buffer, EntityPlayer player, Side side) {
 		try {
-			ModPacket packet = t.packet().newInstance(); // TODO optimize this (?)
+			ModPacket packet = t.packet().newInstance();
 			if (packet.validOn(side)) {
 				packet.handle(buffer, player, side);
 			} else {

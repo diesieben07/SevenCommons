@@ -15,6 +15,7 @@ import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.mcrestarter.MinecraftRelauncher;
 import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.util.MathHelper;
 
 import java.io.*;
@@ -225,11 +226,10 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 
 	@Override
 	public boolean restartMinecraft() {
-		// TODO
-//		if (MiscUtil.isDevelopmentEnv()) {
-//			LOGGER.warning("Can't restart in development environment!");
-//			return false;
-//		}
+		if (MiscUtil.isDevelopmentEnv()) {
+			LOGGER.warning("Can't restart in development environment!");
+			return false;
+		}
 		File modFolder = new File(SevenCommons.MINECRAFT_DIR, "mods");
 		File modFolder2 = new File(modFolder, SevenCommons.MINECRAFT_VERSION);
 		File tempFile = new File(modFolder, MinecraftRelauncher.UPDATE_INFO_FILE);

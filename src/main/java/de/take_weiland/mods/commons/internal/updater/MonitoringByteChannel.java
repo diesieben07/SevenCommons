@@ -30,7 +30,6 @@ public class MonitoringByteChannel implements ReadableByteChannel {
 		if (read >= 0) {
 			controller.onBytesDownloaded(read);
 		}
-		// TODO
 		return read;
 	}
 

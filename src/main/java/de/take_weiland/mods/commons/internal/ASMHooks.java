@@ -82,4 +82,12 @@ public final class ASMHooks {
 		}
 	}
 
+	public static int additionalPacketSize(int len) {
+		if ((len & 0b0111_1111_1000_0000_0000_0000) != 0) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+
 }

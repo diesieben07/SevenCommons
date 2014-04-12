@@ -92,8 +92,6 @@ public final class Rendering {
 		t.draw();
 	}
 
-	// TODO: factor the alpha out into separate param
-	
 	public static void drawColoredRect(int x, int y, int width, int height, int color) {
 		drawColoredRect(x, y, width, height, color, 0xFF, getZLevel());
 	}

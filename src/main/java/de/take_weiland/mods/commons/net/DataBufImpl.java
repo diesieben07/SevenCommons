@@ -233,7 +233,7 @@ class DataBufImpl implements DataBuf {
 
 	private void checkRemaining(int i) {
 		if (actualLen - pos < i) {
-			throw new BufferUnderflowException(); // TODO a different exception?
+			throw new BufferUnderflowException();
 		}
 	}
 

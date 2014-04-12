@@ -70,14 +70,25 @@ class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload impl
 	}
 
 	@Override
-	public final void readPacketData(DataInput in) {
-		// we are never read!
-		throw new AssertionError("Something went horribly wrong here!");
+	public int getPacketSize() {
+		// channel & first part length
+		int result = 2 + fmlPh.channel.length() * 2 + 2;
+		if ((buf.id & fmlPh.expectsResponseFlag) != 0 || buf.id == fmlPh.responseId) {
+			int len = buf.actualLen + fmlPh.idSize + 4;
+			result += ASMHooks.additionalPacketSize(len);
+			result += 4;
+		} else {
+			int len = buf.actualLen + fmlPh.idSize;
+			result += ASMHooks.additionalPacketSize(len);
+		}
+		result += buf.actualLen;
+		return result;
 	}
 
 	@Override
-	public int getPacketSize() {
-		return 0; // TODO is this needed?
+	public final void readPacketData(DataInput in) {
+		// we are never read!
+		throw new AssertionError("Something went horribly wrong here!");
 	}
 
 	// SimplePacket
