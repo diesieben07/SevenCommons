@@ -17,14 +17,6 @@ public interface UpdateController {
 	
 	public UpdatableMod getMod(String modId);
 	
-	/**
-	 * search for updates on the given mod
-	 * @param mod the mod
-	 */
-	public void searchForUpdates(UpdatableMod mod);
-
-	void update(UpdatableMod mod);
-
 	boolean optimizeVersionSelection();
 
 	void performInstall();
@@ -38,4 +30,16 @@ public interface UpdateController {
 	public boolean restartMinecraft();
 
 	void onStateChange(UpdatableMod mod, ModUpdateState oldState);
+
+	int getDownloadPercent();
+
+	boolean isInstalling();
+
+	boolean isRestartPending();
+
+	boolean hasFailed();
+
+	void resetFailure();
+
+	int modsInState(ModUpdateState state);
 }

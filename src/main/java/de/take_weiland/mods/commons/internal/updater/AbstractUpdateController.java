@@ -29,13 +29,6 @@ public abstract class AbstractUpdateController implements UpdateController {
 	}
 
 	@Override
-	public void searchForUpdates() {
-		for (UpdatableMod mod : mods.values()) {
-			searchForUpdates(mod);
-		}
-	}
-
-	@Override
 	public boolean isSelectionValid() {
 		boolean canInstall = true;
 		boolean oneToInstall = false;

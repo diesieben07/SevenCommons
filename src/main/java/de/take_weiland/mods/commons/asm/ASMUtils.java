@@ -486,6 +486,8 @@ public final class ASMUtils {
 		Class<?> clazz;
 		if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, className)) != null) {
 			return new ClassInfoFromClazz(clazz);
+		} else if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, transformName(className))) != null) {
+			return new ClassInfoFromClazz(clazz);
 		} else {
 			try {
 				byte[] bytes = SevenCommons.CLASSLOADER.getClassBytes(transformName(className));
@@ -502,7 +504,7 @@ public final class ASMUtils {
 	private static ClassInfo tryLoad(String className) {
 		try {
 			return getClassInfo(Class.forName(className));
-		} catch (ClassNotFoundException e) {
+		} catch (Exception e) {
 			throw new MissingClassException(className, e);
 		}
 	}

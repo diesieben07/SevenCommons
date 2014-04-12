@@ -34,6 +34,10 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 		return side.isClient() ? client() : server();
 	}
 
+	public static Scheduler forEnvironment() {
+		return get(Sides.environment());
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * <p>This Executor executes the Runnable on the next tick.</p>

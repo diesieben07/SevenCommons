@@ -88,17 +88,10 @@ public class MinecraftRelauncher {
 		}
 	}
 
-	public static void launchWithJava(List<String> args) throws IOException {
-		List<String> command = new ArrayList<>();
-		command.add(findJavaBinary());
-		command.addAll(args);
-		launch(command);
-	}
+	// inspired from http://java.dzone.com/articles/programmatically-restart-java
 
 	public static void launch(List<String> command) throws IOException {
 		ProcessBuilder builder = new ProcessBuilder(command);
-//		builder.redirectOutput(new File("C:/Users/Take/Desktop/out.txt"));
-//		builder.redirectError(new File("C:/Users/Take/Desktop/err.txt"));
 		builder.inheritIO();
 		builder.start();
 	}
@@ -110,11 +103,6 @@ public class MinecraftRelauncher {
 		command.add("\"" + jarFile.getAbsolutePath() + "\"");
 		command.addAll(args);
 		launch(command);
-	}
-
-	public static void relaunch() throws IOException {
-		// inspired from http://java.dzone.com/articles/programmatically-restart-java
-		launch(findRelaunchCommand());
 	}
 
 	public static String findJavaBinary() {
@@ -131,7 +119,7 @@ public class MinecraftRelauncher {
 	}
 
 	public static List<String> findRelaunchCommand() {
-		// inspired from http://java.dzone.com/articles/programmatically-restart-java
+
 
 		final List<String> command = new ArrayList<>();
 

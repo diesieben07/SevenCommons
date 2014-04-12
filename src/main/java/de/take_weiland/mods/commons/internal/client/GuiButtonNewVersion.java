@@ -26,7 +26,7 @@ public class GuiButtonNewVersion extends GuiButton {
 			if (rightmost * Guis.computeGuiScale() > mc.displayWidth) {
 				pos -= (15 + width);
 			}
-			Rendering.drawColoredRect(pos, mouseY, width + 4, 13, 0xDD000000);
+			Rendering.drawColoredRect(pos, mouseY, width + 4, 13, 0x000000, 0xDD);
 			mc.fontRenderer.drawString(versionInfo, pos + 2, mouseY + 2, 0xffffff);
 		}
 	}

@@ -25,6 +25,7 @@ public abstract class AbstractUpdatableMod implements UpdatableMod {
 	@Override
 	public final boolean transition(ModUpdateState state) {
 		if (this.state.canTransition(state)) {
+			System.out.println(getModId() + ": " + this.state + " => " + state);
 			ModUpdateState old = this.state;
 			this.state = state;
 			controller.onStateChange(this, old);

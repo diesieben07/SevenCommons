@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -13,32 +14,36 @@ import cpw.mods.fml.common.ModContainer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.mcrestarter.MinecraftRelauncher;
-import de.take_weiland.mods.commons.util.MiscUtil;
+import de.take_weiland.mods.commons.util.JavaUtils;
+import net.minecraft.util.MathHelper;
 
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class UpdateControllerLocal extends AbstractUpdateController {
 
-	static final List<String> INTERNAL_MODS = Arrays.asList("mcp", "forge", "fml", "minecraft");
+	static final Set<String> INTERNAL_MODS = ImmutableSet.of("mcp", "forge", "fml", "minecraft");
 	
-	private static final String LOG_CHANNEL = "Sevens ModUpdater";
-	public static final Logger LOGGER = MiscUtil.getLogger(LOG_CHANNEL);
+	public static final Logger LOGGER = SevenCommons.scLogger("Updater");
 	
 	private final ScheduledExecutorService executor;
 	private final Map<String, URL> updateUrls;
-	private int refreshCount = 0;
+	private final  AtomicLong pendingDownloadBytes = new AtomicLong();
+	private final AtomicLong downloadBytesComplete = new AtomicLong();
+	private final int[] stateCount = new int[JavaUtils.getEnumConstantsShared(ModUpdateState.class).length];
+
+	private final Set<Path> cleanupPaths = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
 
 	public UpdateControllerLocal(Map<String, URL> updateUrls, int periodicChecks) {
 		this.updateUrls = updateUrls;
@@ -69,38 +74,81 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 			executor.scheduleAtFixedRate(new Runnable() {
 				@Override
 				public void run() {
-					UpdateControllerLocal.this.searchForUpdates();
+					searchForUpdates();
 				}
 			}, periodicChecks, periodicChecks, TimeUnit.MINUTES);
 		}
 
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			@Override
+			public void run() {
+				cleanupIfFailure();
+			}
+		}));
+
 		searchForUpdates();
 	}
 
-	private static final int OPTIMIZE_RETRIES = 10;
-
 	@Override
 	public void performInstall() {
-
+		if (isRefreshing()) {
+			return;
+		}
+		for (UpdatableMod mod : getMods()) {
+			ModVersion version = mod.getVersions().getSelectedVersion();
+			if (!version.isInstalled() && mod.getState().canTransition(ModUpdateState.INSTALLING)) {
+				ModVersionCollection info = mod.getVersions();
+				if (info == null || !info.isInstallable(version)) {
+					throw new IllegalArgumentException(String.format("Version %s is not available for mod %s", version.getModVersion(), mod.getModId()));
+				}
+				mod.transition(ModUpdateState.INSTALLING);
+				executor.execute(new TaskInstallUpdate(this, mod, version));
+			}
+		}
 	}
 
 	@Override
 	public boolean isRefreshing() {
-		return refreshCount > 0;
+		return stateCount[ModUpdateState.REFRESHING.ordinal()] > 0;
 	}
 
 	@Override
 	public void onStateChange(UpdatableMod mod, ModUpdateState oldState) {
-		if (oldState != ModUpdateState.REFRESHING && mod.getState() == ModUpdateState.REFRESHING) {
-			if (refreshCount++ == 0) {
-				SCModContainer.proxy.refreshUpdatesGui();
-			}
-		} else if (oldState == ModUpdateState.REFRESHING && mod.getState() != ModUpdateState.REFRESHING) {
-			if (--refreshCount == 0) {
-				SCModContainer.proxy.refreshUpdatesGui();
-			}
+		if (--stateCount[oldState.ordinal()] < 0) {
+			stateCount[oldState.ordinal()] = 0;
+		}
+		++stateCount[mod.getState().ordinal()];
+
+
+		if (stateCount[ModUpdateState.INSTALLING.ordinal()] == 0 && oldState == ModUpdateState.INSTALLING) {
+			// cleanup if we finished installing and there was a problem
+			cleanupIfFailure();
+		}
+		SCModContainer.proxy.refreshUpdatesGui();
+	}
+
+	@Override
+	public int modsInState(ModUpdateState state) {
+		return stateCount[state.ordinal()];
+	}
+
+	void cleanupIfFailure() {
+		if (!cleanupPaths.isEmpty() && hasFailed()) {
+			cleanup();
 		}
 	}
+
+	private void cleanup() {
+		for (Iterator<Path> it = cleanupPaths.iterator(); it.hasNext();) {
+			Path path = it.next();
+			if (Files.isRegularFile(path)) {
+				tryDelete(path);
+			}
+			it.remove();
+		}
+	}
+
+	private static final int OPTIMIZE_RETRIES = 10;
 
 	@Override
 	public boolean optimizeVersionSelection() {
@@ -117,33 +165,67 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 		return !changed; // if nothing changed on the last run, we are successful
 	}
 
-
-
 	@Override
-	public void searchForUpdates(UpdatableMod mod) {
-		validate(mod);
-		if (mod.getUpdateURL() != null && mod.transition(ModUpdateState.REFRESHING)) {
-			executor.execute(new TaskSearchUpdates(mod));
+	public void searchForUpdates() {
+		for (UpdatableMod mod : mods.values()) {
+			if (mod.getUpdateURL() != null && mod.transition(ModUpdateState.REFRESHING)) {
+				executor.execute(new TaskSearchUpdates(mod));
+			}
 		}
 	}
-	
+
 	@Override
-	public void update(UpdatableMod mod) {
-		validate(mod);
-		// TODO
-//		executor.execute(new TaskInstallUpdate(mod, version));
+	public int getDownloadPercent() {
+		return MathHelper.floor_float(((float) downloadBytesComplete.get() / (float) pendingDownloadBytes.get()) * 100);
 	}
-	
-	private void validate(UpdatableMod mod) {
-		if (!mods.containsKey(mod.getModId())) { // check key here, its faster
-			throw new IllegalArgumentException(String.format("Mod %s not valid for this UpdateController!", mod.getModId()));
+
+	@Override
+	public boolean isInstalling() {
+		return stateCount[ModUpdateState.INSTALLING.ordinal()] > 0;
+	}
+
+	@Override
+	public boolean hasFailed() {
+		return stateCount[ModUpdateState.INSTALL_FAIL.ordinal()] > 0;
+	}
+
+	@Override
+	public void resetFailure() {
+		if (!isInstalling() && hasFailed()) {
+			cleanup();
+			for (UpdatableMod mod : getMods()) {
+				if (mod.getState() == ModUpdateState.INSTALL_FAIL || mod.getState() == ModUpdateState.INSTALL_OK) {
+					mod.transition(ModUpdateState.AVAILABLE);
+				}
+			}
+			pendingDownloadBytes.set(0);
+			downloadBytesComplete.set(0);
 		}
+	}
+
+	@Override
+	public boolean isRestartPending() {
+		long compl;
+		return !hasFailed() && (compl = downloadBytesComplete.get()) > 0 && compl == pendingDownloadBytes.get();
+	}
+
+	public void modifyPendingBytes(long delta) {
+		pendingDownloadBytes.addAndGet(delta);
+	}
+
+	public void onBytesDownloaded(long bytes) {
+		downloadBytesComplete.addAndGet(bytes);
+	}
+
+	public void registerForFailureDeletion(Path file) {
+		cleanupPaths.add(file);
 	}
 
 	private static final String RELAUNCHER_MANIFEST = "Main-Class: de.take_weiland.mods.commons.internal.mcrestarter.MinecraftRelauncher\n";
 
 	@Override
 	public boolean restartMinecraft() {
+		// TODO
 //		if (MiscUtil.isDevelopmentEnv()) {
 //			LOGGER.warning("Can't restart in development environment!");
 //			return false;
@@ -215,8 +297,9 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 		try {
 			if (path != null) {
 				Files.delete(path);
+				System.out.println("Deleted " + path);
 			}
 		} catch (IOException e) { }
 	}
-	
+
 }

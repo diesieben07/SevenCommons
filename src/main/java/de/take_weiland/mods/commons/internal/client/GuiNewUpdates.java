@@ -26,6 +26,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 	private static final int BUTTON_INSTALL = 0;
 	private static final int BUTTON_OPTIMIZE = 1;
 	private static final int BUTTON_RECHECK = 2;
+	private static final int BUTTON_RESTART = 3;
 
 	private static final EnumChatFormatting INSTALLED = DARK_AQUA;
 	private static final EnumChatFormatting AVAILABLE = DARK_GREEN;
@@ -47,6 +48,9 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 	private GuiButton buttonInstall;
 	private GuiButton buttonRefresh;
 	private GuiButton buttonOptimize;
+	private GuiButton buttonRestart;
+
+	private int installButtonWidth;
 
 	private int modListLastY;
 	private int markedModCheckboxXStart;
@@ -78,14 +82,22 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 	public void initGui() {
 		super.initGui();
 		String txtInstall = translate("install");
-		int widthInstall = fontRenderer.getStringWidth(txtInstall);
+		int widthInstallRestart = fontRenderer.getStringWidth(txtInstall);
+
+		String txtRestart = translate("restart");
+		widthInstallRestart = Math.max(widthInstallRestart, fontRenderer.getStringWidth(txtRestart));
+
+		installButtonWidth = widthInstallRestart + 6;
 		String txtOptimize = translate("optimize");
 		int widthOptimize = fontRenderer.getStringWidth(txtOptimize);
 		String txtRecheck = translate("recheck");
 		int widthRecheck = fontRenderer.getStringWidth(txtRecheck);
-		buttonList.add((buttonInstall = new GuiButton(BUTTON_INSTALL, 10, BUTTON_Y, widthInstall + 6, 20, txtInstall)));
-		buttonList.add((buttonOptimize = new GuiButton(BUTTON_OPTIMIZE, 20 + widthInstall, BUTTON_Y, widthOptimize + 6, 20, txtOptimize)));
-		buttonList.add((buttonRefresh = new GuiButton(BUTTON_RECHECK, 30 + widthInstall + widthOptimize, BUTTON_Y, widthRecheck + 6, 20, txtRecheck)));
+
+		buttonList.add((buttonInstall = new GuiButton(BUTTON_INSTALL, 10, BUTTON_Y, widthInstallRestart + 6, 20, txtInstall)));
+		buttonList.add((buttonRestart = new GuiButton(BUTTON_RESTART, 10, BUTTON_Y, widthInstallRestart + 6, 20, txtRestart)));
+
+		buttonList.add((buttonOptimize = new GuiButton(BUTTON_OPTIMIZE, 20 + widthInstallRestart, BUTTON_Y, widthOptimize + 6, 20, txtOptimize)));
+		buttonList.add((buttonRefresh = new GuiButton(BUTTON_RECHECK, 30 + widthInstallRestart + widthOptimize, BUTTON_Y, widthRecheck + 6, 20, txtRecheck)));
 
 		scroller = new ModScroller(SCROLLER_X, SCROLLER_Y, 150, height - SCROLLER_Y - 10, 0);
 		scroller.setClip(true);
@@ -101,11 +113,24 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 	public void drawScreen(int mouseX, int mouseY, float renderTime) {
 		drawBackground(0);
 
-		if (showOptimizeError) {
+		if (showOptimizeError || controller.hasFailed()) {
 			mouseX = mouseY = -10;
 		}
 
 		super.drawScreen(mouseX, mouseY, renderTime);
+
+//		System.out.println("Pending: " + controller.isRestartPending() + ", installing: " + controller.isInstalling());
+		if (!controller.isRestartPending() && controller.isInstalling()) {
+			int percent = controller.getDownloadPercent();
+			int width = installButtonWidth * percent / 100;
+
+			Rendering.horizontalGradient(10, BUTTON_Y + 2, width, 16, 0x007700, 0x00ff00);
+
+			String s = percent + " %";
+			int sWidth = fontRenderer.getStringWidth(s);
+			fontRenderer.drawString(s, 10 + (installButtonWidth - sWidth) / 2, BUTTON_Y + 6, 0xffffff);
+		}
+
 		drawCenteredString(fontRenderer, translate("header"), width / 2, 10, 0xffffff);
 
 		fontRenderer.drawString(UNDERLINE + headerText, 10, HEADER_Y, 0xffffff);
@@ -147,19 +172,54 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 		if (showOptimizeError) {
 			drawOptimizeError();
 		}
+		if (controller.hasFailed()) {
+			drawFailure();
+		}
 	}
 
-	private EnumChatFormatting getVersionColor(ModVersion version) {
-		return version.isInstalled() ? INSTALLED : (version.canBeInstalled() ? AVAILABLE : UNAVAILABLE);
+	private void drawFailure() {
+		String txt = translate("installFail");
+		String txtReset = translate("failureReset");
+		int txtWidth = fontRenderer.getStringWidth(txt);
+		int txtResetWidth = fontRenderer.getStringWidth(txtReset);
+
+		int boxWidth = Math.max(txtWidth, txtResetWidth) + 40;
+		int boxX = (width - boxWidth) / 2;
+
+		int txtX = (width - txtWidth) / 2;
+		int txtResetX = (width - txtResetWidth) / 2;
+
+		int y = 30;
+
+		int height = 45 + controller.modsInState(ModUpdateState.INSTALL_FAIL) * 10;
+
+		Rendering.drawColoredRect(boxX, y, boxWidth, height, 0x000000, 0xDD);
+
+		y += 10;
+		fontRenderer.drawString(txt, txtX, y, 0xffffff);
+		y += 10;
+
+		for (UpdatableMod mod : controller.getMods()) {
+			if (mod.getState() == ModUpdateState.INSTALL_FAIL) {
+				fontRenderer.drawString("- " + DARK_RED + mod.getName(), txtX + 4, y, 0xffffff);
+				y += 10;
+			}
+		}
+		y += 5;
+		fontRenderer.drawString(txtReset, txtResetX, y, 0xffffff);
 	}
 
 	private void drawOptimizeError() {
 		String txt = translate("optimizeFail");
-		int txtWidth = fontRenderer.getStringWidth(txt);
+		int txtWidth = fontRenderer.getStringWidth(txt) + 40;
 		int x = (width - txtWidth) / 2;
 		int y = 30;
-		Rendering.drawColoredRect(x - 2, y - 2, txtWidth + 4, 13, 0xdd_000000);
-		fontRenderer.drawString(txt, x, y, 0xffffff);
+		Rendering.drawColoredRect(x - 2, y - 2, txtWidth, 20, 0x000000, 0xDD);
+		fontRenderer.drawString(txt, x + 20, y + 10, 0xffffff);
+	}
+
+	private EnumChatFormatting getVersionColor(ModVersion version) {
+		return version.isInstalled() ? INSTALLED : (version.canBeInstalled() ? AVAILABLE : UNAVAILABLE);
 	}
 
 	private List<String> mouseOverBuf = Lists.newArrayList();
@@ -168,11 +228,11 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 	private void drawModVersionMouseover(ModVersion version, int x, int y) {
 		mouseOverBegin();
 		if (version.canBeInstalled()) {
-			mouseOverAdd(DARK_GREEN + "Version can be installed");
+			mouseOverAdd(AVAILABLE + translate("canInstall"));
 		} else if (version.isInstalled()) {
-			mouseOverAdd(DARK_GREEN + "Version is installed");
+			mouseOverAdd(INSTALLED + translate("installed"));
 		} else {
-			mouseOverAdd(RED + "Conflicting dependencies:");
+			mouseOverAdd(UNAVAILABLE + translate("missingDeps"));
 			for (Dependency dep : version.getDependencies()) {
 				if (!dep.isSatisfied()) {
 					mouseOverAdd(dep.getDisplay());
@@ -204,7 +264,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 			y -= (15 + height);
 		}
 
-		Rendering.drawColoredRect(x, y, width + 4, height + 3, 0xff000000);
+		Rendering.drawColoredRect(x, y, width + 4, height + 3, 0x000000);
 
 		y += 1;
 		for (String s : mouseOverBuf) {
@@ -223,18 +283,18 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 
 	private void drawTickbox(int x, int y, CheckboxState state) {
 		// top line
-		Rendering.drawColoredRect(x, y, TICKBOX_SIZE, 1, 0xff_ffffff);
+		Rendering.drawColoredRect(x, y, TICKBOX_SIZE, 1, 0xffffff);
 		// bottom line
-		Rendering.drawColoredRect(x, y + TICKBOX_SIZE - 1, TICKBOX_SIZE, 1, 0xff_ffffff);
+		Rendering.drawColoredRect(x, y + TICKBOX_SIZE - 1, TICKBOX_SIZE, 1, 0xffffff);
 
 		// left line
-		Rendering.drawColoredRect(x, y, 1, TICKBOX_SIZE, 0xff_ffffff);
+		Rendering.drawColoredRect(x, y, 1, TICKBOX_SIZE, 0xffffff);
 
 		// right line
-		Rendering.drawColoredRect(x + TICKBOX_SIZE - 1, y, 1, TICKBOX_SIZE, 0xff_ffffff);
+		Rendering.drawColoredRect(x + TICKBOX_SIZE - 1, y, 1, TICKBOX_SIZE, 0xffffff);
 
 		if (state != CheckboxState.NONE) {
-			int color = state == CheckboxState.INSTALLED ? 0xff_00ff00 : 0xff_7777ff;
+			int color = state == CheckboxState.INSTALLED ? 0x7777ff : 0x00ff00;
 			Rendering.drawColoredRect(x + 2, y + 2, TICKBOX_SIZE - 4, TICKBOX_SIZE - 4, color);
 		}
 	}
@@ -244,15 +304,31 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 			buttonInstall.enabled = buttonRefresh.enabled = buttonOptimize.enabled = false;
 			return;
 		}
-		buttonInstall.enabled = controller.isSelectionValid();
-		buttonRefresh.enabled = true;
+		if (controller.isInstalling()) {
+			buttonInstall.drawButton = false;
+		} else {
+			buttonInstall.drawButton = !controller.hasFailed();
+			buttonInstall.enabled = controller.isSelectionValid();
+		}
+		buttonRestart.drawButton = controller.isRestartPending();
+		buttonRefresh.enabled = !controller.isInstalling() && !controller.hasFailed();
 		buttonOptimize.enabled = !controller.isSelectionOptimized();
 	}
 
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int btn) {
 		if (showOptimizeError) {
-			showOptimizeError = btn != 0;
+			if (!(showOptimizeError = btn != 0)) {
+				playClickSound();
+			}
+			return;
+		}
+
+		if (controller.hasFailed()) {
+			if (btn == 0) {
+				controller.resetFailure();
+				playClickSound();
+			}
 			return;
 		}
 
@@ -330,6 +406,9 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 			case BUTTON_RECHECK:
 				controller.searchForUpdates();
 				break;
+			case BUTTON_RESTART:
+				controller.restartMinecraft();
+				break;
 		}
 	}
 
@@ -359,7 +438,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 				int width = fontRenderer.getStringWidth(display);
 				maxWidth = Math.max(maxWidth, width);
 				if (mod == markedMod) {
-					Rendering.drawColoredRect(MODS_START_X + checkingMarkerWidth, y - 1, width, MOD_HEIGHT, 0x33_ffffff);
+					Rendering.drawColoredRect(MODS_START_X + checkingMarkerWidth, y - 1, width, MOD_HEIGHT, 0xffffff, 0x33);
 				}
 
 				if (mod.getState() == ModUpdateState.REFRESHING) {
@@ -373,7 +452,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 				boolean mouseOverName = mouseOverY && mouseX >= TICKBOX_SIZE && mouseX <= width;
 
 				if (mouseOverName) {
-					Rendering.drawColoredRect(MODS_START_X + checkingMarkerWidth, y + MOD_HEIGHT - 2, width, 1, 0xff_ffffff);
+					Rendering.drawColoredRect(MODS_START_X + checkingMarkerWidth, y + MOD_HEIGHT - 2, width, 1, 0xffffff);
 				}
 
 				y += MOD_HEIGHT;

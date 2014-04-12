@@ -7,14 +7,11 @@ import java.nio.channels.ReadableByteChannel;
 public class MonitoringByteChannel implements ReadableByteChannel {
 
 	private final ReadableByteChannel parent;
-	private final UpdatableMod mod;
-	private final int total;
-	private int progress = 0;
-	
-	public MonitoringByteChannel(ReadableByteChannel parent, UpdatableMod mod, int total) {
+	private final UpdateControllerLocal controller;
+
+	public MonitoringByteChannel(ReadableByteChannel parent, UpdateControllerLocal controller) {
 		this.parent = parent;
-		this.mod = mod;
-		this.total = total;
+		this.controller = controller;
 	}
 
 	@Override
@@ -31,7 +28,7 @@ public class MonitoringByteChannel implements ReadableByteChannel {
 	public int read(ByteBuffer dst) throws IOException {
 		int read = parent.read(dst);
 		if (read >= 0) {
-			progress += read;
+			controller.onBytesDownloaded(read);
 		}
 		// TODO
 		return read;

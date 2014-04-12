@@ -91,21 +91,26 @@ public final class Rendering {
 		renderer.renderFaceYPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, UP.ordinal(), meta));
 		t.draw();
 	}
+
+	// TODO: factor the alpha out into separate param
 	
 	public static void drawColoredRect(int x, int y, int width, int height, int color) {
-		drawColoredRect(x, y, width, height, color, getZLevel());
+		drawColoredRect(x, y, width, height, color, 0xFF, getZLevel());
+	}
+
+	public static void drawColoredRect(int x, int y, int width, int height, int color, int alpha) {
+		drawColoredRect(x, y, width, height, color, alpha, getZLevel());
 	}
 	
-	public static void drawColoredRect(int x, int y, int width, int height, int color, float zLevel) {
-		float a = (float) (color >> 24 & 255) / 255.0F;
-		float r = (float) (color >> 16 & 255) / 255.0F;
-		float g = (float) (color >> 8 & 255) / 255.0F;
-		float b = (float) (color & 255) / 255.0F;
+	public static void drawColoredRect(int x, int y, int width, int height, int color, int alpha, float zLevel) {
+		float r = (float) (color >> 16 & 0xFF) / 255.0F;
+		float g = (float) (color >> 8 & 0xFF) / 255.0F;
+		float b = (float) (color & 0xFF) / 255.0F;
 		
 		glEnable(GL_BLEND);
 		glDisable(GL_TEXTURE_2D);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColor4f(r, g, b, a);
+		glColor4f(r, g, b, alpha / 255F);
 		
 		Tessellator t = Tessellator.instance;
 		t.startDrawingQuads();
@@ -120,7 +125,98 @@ public final class Rendering {
 		glEnable(GL_TEXTURE_2D);
 		glDisable(GL_BLEND);
 	}
-	
+
+	public static void verticalGradient(int x, int y, int width, int height, int fromColor, int toColor) {
+		drawGradient(false, x, y, width, height, fromColor, toColor);
+	}
+
+	public static void verticalGradient(int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha) {
+		drawGradient(false, x, y, width, height, fromColor, fromAlpha, toColor, toAlpha);
+	}
+
+	public static void verticalGradient(int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha, float zLevel) {
+		drawGradient(false, x, y, width, height, fromColor, fromAlpha, toColor, toAlpha, zLevel);
+	}
+
+	public static void horizontalGradient(int x, int y, int width, int height, int fromColor, int toColor) {
+		drawGradient(true, x, y, width, height, fromColor, toColor);
+	}
+
+	public static void horizontalGradient(int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha) {
+		drawGradient(true, x, y, width, height, fromColor, fromAlpha, toColor, toAlpha);
+	}
+
+	public static void horizontalGradient(int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha, float zLevel) {
+		drawGradient(true, x, y, width, height, fromColor, fromAlpha, toColor, toAlpha, zLevel);
+	}
+
+	public static void drawGradient(boolean horizontal, int x, int y, int width, int height, int fromColor, int toColor) {
+		drawGradient(horizontal, x, y, width, height, fromColor, 0xFF, toColor, 0xFF, getZLevel());
+	}
+
+	public static void drawGradient(boolean horizontal, int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha) {
+		drawGradient(horizontal, x, y, width, height, fromColor, fromAlpha, toColor, toAlpha, getZLevel());
+	}
+
+	public static void drawGradient(boolean horizontal, int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha, float zLevel) {
+		float r1 = (float) (fromColor >> 16 & 0xFF) / 255.0F;
+		float g1 = (float) (fromColor >> 8 & 0xFF) / 255.0F;
+		float b1 = (float) (fromColor & 0xFF) / 255.0F;
+
+		float r2 = (float) (toColor >> 16 & 0xFF) / 255.0F;
+		float g2 = (float) (toColor >> 8 & 0xFF) / 255.0F;
+		float b2 = (float) (toColor & 0xFF) / 255.0F;
+
+		glEnable(GL_BLEND);
+		glDisable(GL_TEXTURE_2D);
+		glDisable(GL_ALPHA_TEST);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glShadeModel(GL_SMOOTH);
+
+		Tessellator t = Tessellator.instance;
+		t.startDrawingQuads();
+
+		if (horizontal) {
+			horizontalGradient0(x, y, width, height, fromAlpha, toAlpha, zLevel, r1, g1, b1, r2, g2, b2);
+		} else {
+			verticalGradient0(x, y, width, height, fromAlpha, toAlpha, zLevel, r1, g1, b1, r2, g2, b2);
+		}
+
+		t.draw();
+
+		glShadeModel(GL_FLAT);
+		glEnable(GL_TEXTURE_2D);
+		glDisable(GL_BLEND);
+		glEnable(GL_ALPHA_TEST);
+	}
+
+	private static void verticalGradient0(int x, int y, int width, int height, int fromAlpha, int toAlpha, float zLevel, float r1, float g1, float b1, float r2, float g2, float b2) {
+		Tessellator t = Tessellator.instance;
+		t.setColorRGBA_F(r1, g1, b1, fromAlpha / 255F);
+		t.addVertex(x, y + height, zLevel);
+		t.addVertex(x + width, y + height, zLevel);
+
+		t.setColorRGBA_F(r2, g2, b2, toAlpha / 255F);
+		t.addVertex(x + width, y, zLevel);
+		t.addVertex(x, y, zLevel);
+	}
+
+	private static void horizontalGradient0(int x, int y, int width, int height, int fromAlpha, int toAlpha, float zLevel, float r1, float g1, float b1, float r2, float g2, float b2) {
+		Tessellator t = Tessellator.instance;
+		t.setColorRGBA_F(r1, g1, b1, fromAlpha / 255F);
+		t.addVertex(x, y + height, zLevel);
+
+		t.setColorRGBA_F(r2, g2, b2, toAlpha / 255F);
+		t.addVertex(x + width, y + height, zLevel);
+
+		t.setColorRGBA_F(r2, g2, b2, toAlpha / 255F);
+		t.addVertex(x + width, y, zLevel);
+
+		t.setColorRGBA_F(r1, g1, b1, fromAlpha / 255F);
+		t.addVertex(x, y, zLevel);
+	}
+
+
 	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uSize, int vSize, int texSize, float zLevel) {
 		drawTexturedQuad(x, y, width, height, u, v, uSize, vSize, texSize, texSize, zLevel);
 	}

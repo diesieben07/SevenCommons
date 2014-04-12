@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import cpw.mods.fml.common.InjectedModContainer;
 import cpw.mods.fml.common.ModContainer;
 
 import java.io.File;
@@ -17,6 +18,10 @@ public class ModsFolderMod extends ModContainerMod {
 		super(mod, controller);
 		this.updateURL = updateURL;
 
+		if (mod instanceof InjectedModContainer) {
+			mod = ((InjectedModContainer) mod).wrappedContainer;
+		}
+
 		Object sourceObj = mod.getMod() == null ? mod : mod.getMod();
 		URL sourceLoc = sourceObj.getClass().getProtectionDomain().getCodeSource().getLocation();
 		
@@ -27,6 +32,8 @@ public class ModsFolderMod extends ModContainerMod {
 			if (sourceLoc.getProtocol().equals("jar")) {
 				JarURLConnection connection = (JarURLConnection) sourceLoc.openConnection();
 				source = new File(connection.getJarFileURL().toURI());
+			} else if (sourceLoc.getProtocol().equals("file")) {
+				source = new File(sourceLoc.toURI());
 			}
 		} catch (IOException | URISyntaxException e) {
 			exception(e, mod);

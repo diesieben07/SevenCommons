@@ -18,7 +18,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-@Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
+//@Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 //@NetworkMod()
 public class testmod_sc {
 
