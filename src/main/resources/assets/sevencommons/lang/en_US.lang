@@ -14,6 +14,10 @@ sevencommons.updates.restart=Restart Minecraft
 sevencommons.updates.missingDeps=Missing Dependencies:
 sevencommons.updates.canInstall=You can install this Version
 sevencommons.updates.installed=This Version is installed
+sevencommons.updates.dependency=%1$s at %2$s
+sevencommons.updates.dependency.combine=%s, %s
+sevencommons.updates.dependency.combineLast=%s or %s
+
 
 sevencommons.updates.noplayer=You need to be a player to do this!
 sevencommons.updates.noop=You need to be an operator to do this!

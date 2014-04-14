@@ -1,8 +1,11 @@
 package de.take_weiland.mods.commons.internal.updater;
 
+import de.take_weiland.mods.commons.internal.PacketDisplayUpdates;
+import de.take_weiland.mods.commons.internal.ServerProxy;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -31,9 +34,10 @@ public class CommandUpdates extends CommandBase {
 			throw new CommandException("sevencommons.updates.noplayer");
 		} else if (!SCModContainer.updaterEnabled) {
 			throw new CommandException("sevencommons.updates.disabled");
-		} else {
+		} else if (ServerProxy.currentUpdateViewer == null) {
 			EntityPlayer player = (EntityPlayer) sender;
-//			new PacketViewUpdates(SCModContainer.updateController).sendTo(player);
+			ServerProxy.currentUpdateViewer = player;
+			new PacketDisplayUpdates().sendTo(player);
 		}
 	}
 
@@ -44,7 +48,7 @@ public class CommandUpdates extends CommandBase {
 
     @Override
     public int compareTo(Object iCommand) {
-        return 0;
+	   return getCommandName().compareTo(((ICommand) iCommand).getCommandName());
     }
 
 }

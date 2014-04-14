@@ -17,7 +17,7 @@ public interface UpdateController {
 	
 	public UpdatableMod getMod(String modId);
 	
-	boolean optimizeVersionSelection();
+	void optimizeVersionSelection();
 
 	void performInstall();
 
@@ -27,7 +27,7 @@ public interface UpdateController {
 
 	boolean isSelectionOptimized();
 
-	public boolean restartMinecraft();
+	public void restartMinecraft();
 
 	void onStateChange(UpdatableMod mod, ModUpdateState oldState);
 
@@ -42,4 +42,6 @@ public interface UpdateController {
 	void resetFailure();
 
 	int modsInState(ModUpdateState state);
+
+	void onVersionSelect(UpdatableMod mod, int index);
 }

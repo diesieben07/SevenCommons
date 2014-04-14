@@ -5,6 +5,7 @@ import de.take_weiland.mods.commons.client.GuiScreenWithParent;
 import de.take_weiland.mods.commons.client.Guis;
 import de.take_weiland.mods.commons.client.Rendering;
 import de.take_weiland.mods.commons.client.ScrollPane;
+import de.take_weiland.mods.commons.internal.PacketUpdaterAction;
 import de.take_weiland.mods.commons.internal.updater.*;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.client.gui.GuiButton;
@@ -43,8 +44,8 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 	private static final int TICKBOX_SIZE = 7;
 	private static final int MODS_START_X = 0;
 
-	final UpdateController controller;
-	private final List<? extends UpdatableMod> mods;
+	UpdateController controller;
+	private List<? extends UpdatableMod> mods;
 	private GuiButton buttonInstall;
 	private GuiButton buttonRefresh;
 	private GuiButton buttonOptimize;
@@ -55,7 +56,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 	private int modListLastY;
 	private int markedModCheckboxXStart;
 	private UpdatableMod markedMod;
-	private boolean showOptimizeError = false;
+	boolean showOptimizeError = false;
 	private String headerText;
 	private int headerWidth;
 	private int scrollerWidth;
@@ -65,8 +66,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 
 	public GuiNewUpdates(GuiScreen parent, UpdateController controller) {
 		super(parent);
-		this.controller = controller;
-		mods = ModSorter.INSTANCE.immutableSortedCopy(controller.getMods());
+		injectNewController(controller);
 	}
 
 	private static String translate(String s) {
@@ -75,6 +75,11 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 
 	private static String translate(String s, Object... args) {
 		return I18n.getStringParams("sevencommons.updates." + s, args);
+	}
+
+	void injectNewController(UpdateController controller) {
+		this.controller = controller;
+		mods = ModSorter.INSTANCE.immutableSortedCopy(controller.getMods());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -154,7 +159,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 			for (ModVersion version : mod.getVersions().getAvailableVersions()) {
 				CheckboxState state = version == selected ? CheckboxState.SELECTED : (version.isInstalled() ? CheckboxState.INSTALLED : CheckboxState.NONE);
 				drawTickbox(x, y, state);
-				String versionDisplay = getVersionColor(version) + version.getModVersion().getVersionString();
+				String versionDisplay = getVersionColor(version) + version.getVersionString();
 				width = fontRenderer.getStringWidth(versionDisplay);
 				fontRenderer.drawString(versionDisplay, x + TICKBOX_SIZE + 2, y, 0xffffff);
 				if (mouseX >= x && mouseX <= x + width + TICKBOX_SIZE + 2 && mouseY >= y && mouseY < y + 10) {
@@ -278,7 +283,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 		return mod.getName()
 				+ ' '
 				+ getVersionColor(version)
-				+ version.getModVersion().getVersionString();
+				+ version.getVersionString();
 	}
 
 	private void drawTickbox(int x, int y, CheckboxState state) {
@@ -311,7 +316,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 			buttonInstall.enabled = controller.isSelectionValid();
 		}
 		buttonRestart.drawButton = controller.isRestartPending();
-		buttonRefresh.enabled = !controller.isInstalling() && !controller.hasFailed();
+		buttonRefresh.enabled = !controller.isInstalling() && !controller.hasFailed() && !controller.isRestartPending();
 		buttonOptimize.enabled = !controller.isSelectionOptimized();
 	}
 
@@ -347,7 +352,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 			}
 		}
 
-		if (markedMod != null) {
+		if (markedMod != null && !controller.isInstalling() && !controller.isRestartPending()) {
 			mod = markedMod;
 			int numVersions = mod.getVersions().getAvailableVersions().size();
 			if (mouseX >= markedModCheckboxXStart
@@ -399,9 +404,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 				controller.performInstall();
 				break;
 			case BUTTON_OPTIMIZE:
-				if (!controller.optimizeVersionSelection()) {
-					showOptimizeError = true;
-				}
+				controller.optimizeVersionSelection();
 				break;
 			case BUTTON_RECHECK:
 				controller.searchForUpdates();
@@ -469,6 +472,12 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 
 		@Override
 		protected void drawImpl() { }
+	}
+
+	@Override
+	protected void close() {
+		super.close();
+		new PacketUpdaterAction(PacketUpdaterAction.Action.CLOSE).sendToServer();
 	}
 
 	private static enum CheckboxState {

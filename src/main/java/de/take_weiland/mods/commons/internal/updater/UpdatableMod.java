@@ -20,5 +20,7 @@ public interface UpdatableMod {
 	ModUpdateState getState();
 
 	boolean transition(ModUpdateState state);
+
+	boolean isInternal();
 	
 }

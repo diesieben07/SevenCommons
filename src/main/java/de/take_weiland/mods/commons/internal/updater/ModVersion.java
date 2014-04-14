@@ -3,7 +3,9 @@ package de.take_weiland.mods.commons.internal.updater;
 import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
 import cpw.mods.fml.common.versioning.ArtifactVersion;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -25,9 +27,15 @@ public interface ModVersion {
 
 	ArtifactVersion getModVersion();
 
+	String getVersionString();
+
 	String getDownloadURL();
 
 	String getPatchNotes();
 
 	List<Dependency> getDependencies();
+
+	Collection<String> getDependencyDisplay();
+
+	void write(WritableDataBuf buf);
 }

@@ -32,6 +32,8 @@ public class PacketClientAction extends ModPacket {
 			case RESTART_FAILURE:
 				SCModContainer.proxy.displayRestartFailure();
 				break;
+			case OPTIMIZE_FAILURE:
+				SCModContainer.proxy.displayOptimizeFailure();
 		}
 	}
 
@@ -42,7 +44,8 @@ public class PacketClientAction extends ModPacket {
 
 	public static enum Action {
 		
-		RESTART_FAILURE
+		RESTART_FAILURE,
+		OPTIMIZE_FAILURE
 		
 	}
 

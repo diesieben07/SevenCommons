@@ -114,8 +114,19 @@ public class TaskSearchUpdates implements Runnable {
 			}
 			String mod = dep.substring(0, atIndex).trim();
 			String versionSpec = dep.substring(atIndex + 1).trim();
-			ArtifactVersion versionRange = new DefaultArtifactVersion(mod, VersionParser.parseRange(versionSpec));
-			b.add(new Dependency(controller, mod, versionRange));
+			ArtifactVersion versionRange = null;
+//			if (versionSpec.length() > 2) {
+//				String noParens = versionSpec.substring(1, versionSpec.length() - 1);
+//				if (noParens.indexOf(',') < 0) {
+//					versionRange = new DefaultArtifactVersion(mod, noParens);
+//				}
+//			}
+
+
+			versionRange = new DefaultArtifactVersion(mod, VersionParser.parseRange(versionSpec));
+			System.out.println("Paresed for " + modId + ": " + mod + "@" + versionRange.getRangeString());
+			System.out.println("Recomm: " + ((DefaultArtifactVersion) versionRange).getRange().getRecommendedVersion());
+			b.add(new DependencyImpl(controller, mod, versionRange));
 		}
 
 		if (failure != null) {

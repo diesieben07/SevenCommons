@@ -20,7 +20,7 @@ public abstract class GuiScreenWithParent extends GuiScreen {
 	/**
 	 * close this GuiScreen (display the parent screen again)
 	 */
-	protected final void close() {
+	protected void close() {
 		mc.displayGuiScreen(parent);
 	}
 

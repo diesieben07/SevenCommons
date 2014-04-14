@@ -20,7 +20,8 @@ public final class GuiRestartFailure extends GuiScreen {
 		super.drawScreen(mouseX, mouseY, partialTickTime);
 		
 		fontRenderer.drawSplitString("Failed to restart Minecraft automatically.\n"
-				+ "This technique is experimental and may not always work. To increase chances, please use Oracles VM.", 20, 20, width - 40, 0xffffff);
+				+ "This technique is experimental and may not always work. To increase chances, please use Oracles VM.\n\n"
+				+ "Please restart Minecraft manually.", 20, 20, width - 40, 0xffffff);
 	}
 
 	@SuppressWarnings("unchecked")

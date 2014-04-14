@@ -11,10 +11,14 @@ import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
+import cpw.mods.fml.common.versioning.ArtifactVersion;
+import de.take_weiland.mods.commons.internal.PacketDownloadPercent;
+import de.take_weiland.mods.commons.internal.PacketVersionSelect;
+import de.take_weiland.mods.commons.internal.ServerProxy;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.mcrestarter.MinecraftRelauncher;
-import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.util.MathHelper;
 
@@ -42,7 +46,6 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 	private final Map<String, URL> updateUrls;
 	private final  AtomicLong pendingDownloadBytes = new AtomicLong();
 	private final AtomicLong downloadBytesComplete = new AtomicLong();
-	private final int[] stateCount = new int[JavaUtils.getEnumConstantsShared(ModUpdateState.class).length];
 
 	private final Set<Path> cleanupPaths = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
 
@@ -109,28 +112,13 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 	}
 
 	@Override
-	public boolean isRefreshing() {
-		return stateCount[ModUpdateState.REFRESHING.ordinal()] > 0;
-	}
-
-	@Override
 	public void onStateChange(UpdatableMod mod, ModUpdateState oldState) {
-		if (--stateCount[oldState.ordinal()] < 0) {
-			stateCount[oldState.ordinal()] = 0;
-		}
-		++stateCount[mod.getState().ordinal()];
-
-
-		if (stateCount[ModUpdateState.INSTALLING.ordinal()] == 0 && oldState == ModUpdateState.INSTALLING) {
+		super.onStateChange(mod, oldState);
+		if (modsInState(ModUpdateState.INSTALLING) == 0 && oldState == ModUpdateState.INSTALLING) {
 			// cleanup if we finished installing and there was a problem
 			cleanupIfFailure();
 		}
 		SCModContainer.proxy.refreshUpdatesGui();
-	}
-
-	@Override
-	public int modsInState(ModUpdateState state) {
-		return stateCount[state.ordinal()];
 	}
 
 	void cleanupIfFailure() {
@@ -152,7 +140,7 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 	private static final int OPTIMIZE_RETRIES = 10;
 
 	@Override
-	public boolean optimizeVersionSelection() {
+	public void optimizeVersionSelection() {
 		boolean changed;
 		int count = 0;
 		do {
@@ -161,9 +149,11 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 				changed |= mod.getVersions().selectOptimalVersion();
 			}
 			count++;
-		} while (changed || count >= OPTIMIZE_RETRIES);
+		} while (changed && count <= OPTIMIZE_RETRIES);
 		SCModContainer.proxy.refreshUpdatesGui();
-		return !changed; // if nothing changed on the last run, we are successful
+		if (changed) {
+			SCModContainer.proxy.displayOptimizeFailure();
+		}
 	}
 
 	@Override
@@ -181,16 +171,6 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 	}
 
 	@Override
-	public boolean isInstalling() {
-		return stateCount[ModUpdateState.INSTALLING.ordinal()] > 0;
-	}
-
-	@Override
-	public boolean hasFailed() {
-		return stateCount[ModUpdateState.INSTALL_FAIL.ordinal()] > 0;
-	}
-
-	@Override
 	public void resetFailure() {
 		if (!isInstalling() && hasFailed()) {
 			cleanup();
@@ -204,31 +184,91 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 		}
 	}
 
-	@Override
-	public boolean isRestartPending() {
-		long compl;
-		return !hasFailed() && (compl = downloadBytesComplete.get()) > 0 && compl == pendingDownloadBytes.get();
-	}
-
 	public void modifyPendingBytes(long delta) {
 		pendingDownloadBytes.addAndGet(delta);
+		resendRemotePercent();
 	}
 
 	public void onBytesDownloaded(long bytes) {
 		downloadBytesComplete.addAndGet(bytes);
+		resendRemotePercent();
+	}
+
+
+
+	private void resendRemotePercent() {
+		if (ServerProxy.currentUpdateViewer != null) {
+			int percentNow = getDownloadPercent();
+			if (ServerProxy.lastPercent != percentNow) {
+				new PacketDownloadPercent(percentNow).sendTo(ServerProxy.currentUpdateViewer);
+				ServerProxy.lastPercent = percentNow;
+			}
+		}
 	}
 
 	public void registerForFailureDeletion(Path file) {
 		cleanupPaths.add(file);
 	}
 
+	public void writeMods(WritableDataBuf out) {
+		out.putVarInt(getMods().size());
+		for (UpdatableMod mod : getMods()) {
+			out.putString(mod.getModId());
+			out.putString(mod.getName());
+			out.putBoolean(mod.isInternal());
+
+			writeArtifactVersion(out, mod.getVersions().getCurrentVersion().getModVersion());
+			writeVersions(out, mod.getVersions());
+		}
+
+		writeStateCounts(out);
+	}
+
+	private void writeStateCounts(WritableDataBuf out) {
+		for (int count : stateCount) {
+			out.putVarInt(count);
+		}
+	}
+
+	private void writeVersions(WritableDataBuf out, ModVersionCollection versions) {
+		List<ModVersion> allVersions = versions.getAvailableVersions();
+		out.putVarInt(allVersions.size() - 1);
+		for (ModVersion v : allVersions) {
+			if (v == versions.getCurrentVersion()) {
+				continue;
+			}
+			v.write(out);
+		}
+		out.putVarInt(versions.getSelectedVersionIndex());
+	}
+
+	private void writeDependencies(WritableDataBuf out, List<Dependency> dependencies) {
+		out.putVarInt(dependencies.size());
+		for (Dependency dep : dependencies) {
+			dep.write(out);
+		}
+	}
+
+	private void writeArtifactVersion(WritableDataBuf out, ArtifactVersion v) {
+		out.putString(v.getLabel());
+		out.putString(v.getVersionString());
+	}
+
+	@Override
+	public void onVersionSelect(UpdatableMod mod, int index) {
+		if (ServerProxy.currentUpdateViewer != null) {
+			new PacketVersionSelect(mod.getModId(), index).sendTo(ServerProxy.currentUpdateViewer);
+		}
+	}
+
 	private static final String RELAUNCHER_MANIFEST = "Main-Class: de.take_weiland.mods.commons.internal.mcrestarter.MinecraftRelauncher\n";
 
 	@Override
-	public boolean restartMinecraft() {
+	public void restartMinecraft() {
 		if (MiscUtil.isDevelopmentEnv()) {
 			LOGGER.warning("Can't restart in development environment!");
-			return false;
+			SCModContainer.proxy.displayRestartFailure();
+			return;
 		}
 		File modFolder = new File(SevenCommons.MINECRAFT_DIR, "mods");
 		File modFolder2 = new File(modFolder, SevenCommons.MINECRAFT_VERSION);
@@ -285,11 +325,11 @@ public class UpdateControllerLocal extends AbstractUpdateController {
 			tryDelete(tempWatcherFile);
 			LOGGER.warning("Failed to restart Minecraft automatically.");
 			e.printStackTrace();
-			return false;
+			SCModContainer.proxy.displayRestartFailure();
+			return;
 		}
 
 		SCModContainer.proxy.shutdownMinecraft();
-		return true;
 	}
 	
 	@SuppressWarnings("EmptyCatchBlock")

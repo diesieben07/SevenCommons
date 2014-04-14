@@ -25,7 +25,6 @@ import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketFactory;
 import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -112,7 +111,8 @@ public final class SCModContainer extends DummyModContainer {
 
 	@Subscribe
 	public void processIMCs(FMLInterModComms.IMCEvent event) {
-		if (updaterEnabled && !MiscUtil.isDevelopmentEnv()) {
+//		updaterEnabled &= (true || !MiscUtil.isDevelopmentEnv());
+		if (updaterEnabled) {
 			ImmutableMap.Builder<String, URL> urls = ImmutableMap.builder();
 			urls.put(getModId(), UPDATE_URL);
 
@@ -131,7 +131,7 @@ public final class SCModContainer extends DummyModContainer {
 
 	@Subscribe
 	public void serverStarting(FMLServerStartingEvent event) {
-		if (event.getSide().isServer()) {
+		if (true || event.getSide().isServer()) {
 			event.registerServerCommand(new CommandUpdates(updateCommand));
 		}
 	}

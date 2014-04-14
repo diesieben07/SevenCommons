@@ -6,6 +6,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.event.EventPriority;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 
 public final class SCEventHandler implements IPlayerTracker {
 
@@ -14,6 +15,11 @@ public final class SCEventHandler implements IPlayerTracker {
 		if (event.entity instanceof EntityPlayerMP) {
 			SyncASMHooks.syncEntityPropertyIds((EntityPlayer) event.entity, event.entity);
 		}
+	}
+
+	@ForgeSubscribe
+	public void onEntityDeath(LivingDeathEvent event) {
+		ServerProxy.resetUpdateViewer(event.entity);
 	}
 
 	@Override
@@ -27,9 +33,13 @@ public final class SCEventHandler implements IPlayerTracker {
 	}
 
 	@Override
-	public void onPlayerLogout(EntityPlayer player) { }
+	public void onPlayerLogout(EntityPlayer player) {
+		ServerProxy.resetUpdateViewer(player);
+	}
 
 	@Override
-	public void onPlayerChangedDimension(EntityPlayer player) { }
+	public void onPlayerChangedDimension(EntityPlayer player) {
+		ServerProxy.resetUpdateViewer(player);
+	}
 
 }

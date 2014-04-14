@@ -20,4 +20,9 @@ public class FMLInternalMod extends ModContainerMod {
 	public File getSource() {
 		return null;
 	}
+
+	@Override
+	public boolean isInternal() {
+		return true;
+	}
 }

@@ -10,6 +10,7 @@ public abstract class AbstractUpdatableMod implements UpdatableMod {
 	public AbstractUpdatableMod(UpdateController controller, ModVersionCollection versions) {
 		this.controller = controller;
 		this.versions = versions;
+		versions.setMod(this);
 	}
 
 	@Override
@@ -25,7 +26,6 @@ public abstract class AbstractUpdatableMod implements UpdatableMod {
 	@Override
 	public final boolean transition(ModUpdateState state) {
 		if (this.state.canTransition(state)) {
-			System.out.println(getModId() + ": " + this.state + " => " + state);
 			ModUpdateState old = this.state;
 			this.state = state;
 			controller.onStateChange(this, old);
@@ -37,6 +37,11 @@ public abstract class AbstractUpdatableMod implements UpdatableMod {
 	@Override
 	public final ModUpdateState getState() {
 		return state;
+	}
+
+	@Override
+	public boolean isInternal() {
+		return false;
 	}
 
 	@Override

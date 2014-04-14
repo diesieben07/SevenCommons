@@ -38,7 +38,7 @@ public final class Sides {
 	/**
 	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(event.entity.worldObj)} 
 	 */
-	public final Side logical(EntityEvent event) {
+	public static Side logical(EntityEvent event) {
 		return logical(event.entity.worldObj);
 	}
 	

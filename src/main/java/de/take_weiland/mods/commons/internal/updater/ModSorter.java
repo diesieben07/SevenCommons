@@ -16,8 +16,8 @@ public final class ModSorter {
 		INSTANCE = Ordering.from(new Comparator<UpdatableMod>() {
 			@Override
 			public int compare(UpdatableMod o1, UpdatableMod o2) {
-				boolean isInternal1 = o1 instanceof FMLInternalMod;
-				boolean isInternal2 = o2 instanceof FMLInternalMod;
+				boolean isInternal1 = o1.isInternal();
+				boolean isInternal2 = o2.isInternal();
 				if (isInternal1) {
 					return isInternal2 ? 0 : 1;
 				} else {

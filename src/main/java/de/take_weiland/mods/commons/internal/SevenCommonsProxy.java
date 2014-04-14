@@ -21,4 +21,12 @@ public interface SevenCommonsProxy {
 	void refreshUpdatesGui();
 
 	void sendPacketToServer(Packet p);
+
+	void displayUpdateGui(UpdateController controller);
+
+	void displayOptimizeFailure();
+
+	void handleVersionSelect(String modId, int index);
+
+	void handleDownloadPercent(int percent);
 }
