@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -45,7 +46,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	 */
 	@Override
 	public void execute(Runnable task) {
-		schedule(task, 0, true);
+		scheduleSimple(task, 0, true);
 	}
 
 	/**
@@ -54,10 +55,14 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	 * @param ticks how many ticks to wait before execution
 	 * @param tickEnd whether the task should be executed on tickEnd or not
 	 */
-	public void schedule(Runnable task, int ticks, boolean tickEnd) {
+	public void scheduleSimple(Runnable task, int ticks, boolean tickEnd) {
 		checkArgument(ticks >= 0, "Ticks must not be negative");
 		long when = ticks + now.get();
 		newTask(new SimpleTask(checkNotNull(task), when, tickEnd));
+	}
+
+	public void scheduleSimple(Runnable task, long delay, TimeUnit unit) {
+		scheduleSimple(task, Ints.saturatedCast(millisToTicks(unit.toMillis(delay))), true);
 	}
 
 	/**

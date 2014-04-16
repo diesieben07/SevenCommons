@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.primitives.UnsignedBytes;
+import de.take_weiland.mods.commons.util.ByteStreamSerializable;
+import de.take_weiland.mods.commons.util.ByteStreamSerializer;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 import org.bouncycastle.util.Arrays;
 
@@ -123,7 +125,13 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	@Override
+	@Deprecated
 	public SELF putString(String s) {
+		return put(s);
+	}
+
+	@Override
+	public SELF put(String s) {
 		if (s == null) {
 			return putVarInt(-1);
 		}
@@ -143,7 +151,7 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	@Override
-	public SELF putBytes(byte[] bytes) {
+	public SELF put(byte[] bytes) {
 		if (bytes == null) {
 			putVarInt(-1);
 		} else {
@@ -164,6 +172,18 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
         grow0(len);
         System.arraycopy(arr, off, buf, pos, len);
         pos += len;
+		return (SELF) this;
+	}
+
+	@Override
+	public <T> SELF put(T obj, ByteStreamSerializer<T> serializer) {
+		serializer.write(obj, this);
+		return (SELF) this;
+	}
+
+	@Override
+	public SELF put(ByteStreamSerializable o) {
+		o.write(this);
 		return (SELF) this;
 	}
 

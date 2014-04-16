@@ -9,6 +9,6 @@ public interface SimplePacketType {
 	/**
 	 * @return the packet class corresponding to this Packet types
 	 */
-	Class<? extends ModPacket> packet();
+	Class<? extends ModPacketBase> packet();
 	
 }

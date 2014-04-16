@@ -17,11 +17,11 @@ final class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType> impl
 	}
 
 	@Override
-	public void handle(TYPE t, PacketInput buffer, EntityPlayer player, Side side) {
+	public void handle(TYPE t, DataBuf buffer, EntityPlayer player, Side side) {
 		try {
-			ModPacket packet = t.packet().newInstance();
+			ModPacketBase packet = t.packet().newInstance();
 			if (packet.validOn(side)) {
-				packet.handle(buffer, player, side);
+				packet.handle0(buffer, player, side);
 			} else {
 				Network.logger.warning("Received Packet " + t + " for invalid Side " + side + "!");
 				if (side.isServer()) {

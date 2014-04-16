@@ -2,6 +2,8 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.*;
+import de.take_weiland.mods.commons.util.ByteStreamSerializable;
+import de.take_weiland.mods.commons.util.ByteStreamSerializer;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 
 import java.io.*;
@@ -161,7 +163,23 @@ class DataBufImpl implements DataBuf {
 		pos += len;
 		return target;
 	}
-	
+
+	@Override
+	public <T> T get(ByteStreamSerializer<T> serializer) {
+		return serializer.read(this);
+	}
+
+	@Override
+	public <T extends ByteStreamSerializable> T get(Class<T> clazz) {
+		try {
+			T o = clazz.newInstance();
+			o.read(this);
+			return o;
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("Class " + clazz + " must have public no-arg constructor!", e);
+		}
+	}
+
 	private InputStream inStreamView;
 	
 	@Override

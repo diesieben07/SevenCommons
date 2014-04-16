@@ -4,8 +4,6 @@ interface PacketFactoryInternal<TYPE extends Enum<TYPE>> extends PacketFactory<T
 
 	SimplePacket build(PacketBufferImpl<TYPE> buffer);
 
-	PacketBuilder.ForResponse createResponse(int capacity, PacketBufferImpl<TYPE> input);
-
-	void onResponseHandlerSet(PacketBufferImpl<TYPE> buffer, PacketResponseHandler handler);
+	void registerCallback(SimplePacket wrapper, ModPacket.WithResponse<?> packet);
 
 }

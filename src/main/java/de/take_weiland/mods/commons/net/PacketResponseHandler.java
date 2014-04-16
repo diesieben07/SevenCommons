@@ -5,8 +5,8 @@ import net.minecraft.entity.player.EntityPlayer;
 /**
  * @author diesieben07
  */
-public interface PacketResponseHandler {
+public interface PacketResponseHandler<T extends ModPacket.Response> {
 
-	void onResponse(DataBuf in, EntityPlayer responder);
+	void onResponse(T packet, EntityPlayer responder);
 
 }

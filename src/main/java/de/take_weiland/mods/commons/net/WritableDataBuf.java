@@ -1,5 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.util.ByteStreamSerializable;
+import de.take_weiland.mods.commons.util.ByteStreamSerializer;
+
 import java.io.DataOutput;
 import java.io.OutputStream;
 
@@ -66,14 +69,6 @@ public interface WritableDataBuf extends DataBuf {
 	WritableDataBuf putDouble(double d);
 
 	/**
-	 * writes the given String to the buffer. First a {@link #putVarInt VarInt} is written containing the length of the string, or -1 if s is null.
-	 * Then each character is written to the buffer.
-	 * @param s the String to writePacketId
-	 * @return this
-	 */
-	WritableDataBuf putString(String s);
-
-	/**
 	 * <p>Writes only as many bytes as needed to represent the given integer to the buffer. This can save network bandwidth,
 	 * if the integer being written is usually in the lower range.</p>
 	 * @param i the integer to writePacketId
@@ -95,12 +90,28 @@ public interface WritableDataBuf extends DataBuf {
 	 */
 	WritableDataBuf putUnsignedShort(int i);
 
+	@Deprecated
+	/**
+	 * @deprecated use {@link #put(String)}
+	 */
+	WritableDataBuf putString(String s);
+
+
+	/**
+	 * writes the given String to the buffer. First a {@link #putVarInt VarInt} is written containing the length of the string, or -1 if s is null.
+	 * Then each character is written to the buffer.
+	 * @param s the String to writePacketId
+	 * @return this
+	 */
+	WritableDataBuf put(String s);
+
+
 	/**
 	 * writes the given byte array to the buffer. First, the length (or -1 if null) is written as a {@link #putVarInt VarInt}, then every byte in the array is written.
 	 * @param bytes the byte array to writePacketId
 	 * @return this
 	 */
-	WritableDataBuf putBytes(byte[] bytes);
+	WritableDataBuf put(byte[] bytes);
 
 	/**
 	 * writes all the bytes in the given byte array to the buffer, without writing the length
@@ -115,6 +126,10 @@ public interface WritableDataBuf extends DataBuf {
 	 * @return this
 	 */
 	WritableDataBuf putRaw(byte[] bytes, int off, int len);
+
+	<T> WritableDataBuf put(T obj, ByteStreamSerializer<T> serializer);
+
+	WritableDataBuf put(ByteStreamSerializable o);
 
 	/**
 	 * grows the internal buffer so that it can hold at least n additional bytes<br>

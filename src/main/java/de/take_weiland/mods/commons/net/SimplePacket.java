@@ -41,44 +41,6 @@ public interface SimplePacket {
 
 	SimplePacket sendToViewing(Container c);
 
-	interface WithResponse<T> extends SimplePacket {
-
-		WithResponse<T> onResponse(SimplePacketResponseHandler<? super T> handler);
-
-		WithResponse<T> discardResponse();
-
-		WithResponse<T> sendTo(PacketTarget target);
-
-		WithResponse<T> sendToServer();
-
-		WithResponse<T> sendTo(EntityPlayer player);
-
-		WithResponse<T> sendTo(Iterable<? extends EntityPlayer> players);
-
-		WithResponse<T> sendToAll();
-
-		WithResponse<T> sendToAllInDimension(int dimension);
-
-		WithResponse<T> sendToAllInDimension(World world);
-
-		WithResponse<T> sendToAllNear(World world, double x, double y, double z, double radius);
-
-		WithResponse<T> sendToAllNear(int dimension, double x, double y, double z, double radius);
-
-		WithResponse<T> sendToAllNear(Entity entity, double radius);
-
-		WithResponse<T> sendToAllNear(TileEntity te, double radius);
-
-		WithResponse<T> sendToAllTracking(Entity entity);
-
-		WithResponse<T> sendToAllTracking(TileEntity te);
-
-		WithResponse<T> sendToAllAssociated(Entity e);
-
-		WithResponse<T> sendToViewing(Container c);
-
-	}
-
 	/**
 	 * A dummy packet which doesn't do anything
 	 */

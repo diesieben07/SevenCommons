@@ -3,9 +3,9 @@ package de.take_weiland.mods.commons.internal;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.updater.UpdateController;
+import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.DataBuffers;
 import de.take_weiland.mods.commons.net.ModPacket;
-import de.take_weiland.mods.commons.net.PacketInput;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import net.minecraft.entity.player.EntityPlayer;
 
@@ -31,7 +31,7 @@ public class PacketUpdaterAction extends ModPacket {
 	}
 
 	@Override
-	protected void handle(PacketInput buffer, EntityPlayer player, Side side) {
+	protected void handle(DataBuf buffer, EntityPlayer player, Side side) {
 		action = DataBuffers.readEnum(buffer, Action.class);
 		if (SCModContainer.updaterEnabled && player == ServerProxy.currentUpdateViewer) {
 			UpdateController uc = SCModContainer.updateController;

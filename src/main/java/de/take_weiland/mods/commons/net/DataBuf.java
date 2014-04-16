@@ -1,5 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.util.ByteStreamSerializable;
+import de.take_weiland.mods.commons.util.ByteStreamSerializer;
+
 import java.io.*;
 
 /**
@@ -93,6 +96,10 @@ public interface DataBuf {
 	 * @return the byte array read, doesn't need to be the same as {@code buf}
 	 */
 	byte[] getByteArray(byte[] buf);
+
+	<T> T get(ByteStreamSerializer<T> serializer);
+
+	<T extends ByteStreamSerializable> T get(Class<T> clazz);
 
 	/**
 	 * how many bytes can still be read from this buffer, starting at the current position

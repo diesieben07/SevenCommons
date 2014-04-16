@@ -16,6 +16,6 @@ public interface PacketHandler<TYPE extends Enum<TYPE>> {
 	 * @param player the player handling this packet, on the client side it's the client-player, on the server side it's the player sending the packet
 	 * @param side the (logical) side receiving the packet
 	 */
-	void handle(TYPE t, PacketInput in, EntityPlayer player, Side side);
+	void handle(TYPE t, DataBuf in, EntityPlayer player, Side side);
 	
 }

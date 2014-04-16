@@ -6,112 +6,6 @@ package de.take_weiland.mods.commons.net;
  */
 public interface PacketBuilder extends PacketBuilderBase {
 
-	PacketBuilder.WithResponse onResponse(PacketResponseHandler handler);
-
-	interface WithResponse extends PacketBuilderBase {
-
-		@Override
-		WithResponse putBoolean(boolean b);
-
-		@Override
-		WithResponse putByte(int b);
-
-		@Override
-		WithResponse putShort(int s);
-
-		@Override
-		WithResponse putInt(int i);
-
-		@Override
-		WithResponse putLong(long l);
-
-		@Override
-		WithResponse putChar(char c);
-
-		@Override
-		WithResponse putFloat(float f);
-
-		@Override
-		WithResponse putDouble(double d);
-
-		@Override
-		WithResponse putString(String s);
-
-		@Override
-		WithResponse putVarInt(int i);
-
-		@Override
-		WithResponse putUnsignedByte(int i);
-
-		@Override
-		WithResponse putUnsignedShort(int i);
-
-		@Override
-		WithResponse putBytes(byte[] bytes);
-
-		@Override
-		WithResponse putRaw(byte[] bytes);
-
-		@Override
-		WithResponse putRaw(byte[] bytes, int off, int len);
-
-		@Override
-		WithResponse grow(int n);
-	}
-
-	interface ForResponse extends WritableDataBuf {
-
-		void send();
-
-		@Override
-		ForResponse putBoolean(boolean b);
-
-		@Override
-		ForResponse putByte(int b);
-
-		@Override
-		ForResponse putShort(int s);
-
-		@Override
-		ForResponse putInt(int i);
-
-		@Override
-		ForResponse putLong(long l);
-
-		@Override
-		ForResponse putChar(char c);
-
-		@Override
-		ForResponse putFloat(float f);
-
-		@Override
-		ForResponse putDouble(double d);
-
-		@Override
-		ForResponse putString(String s);
-
-		@Override
-		ForResponse putVarInt(int i);
-
-		@Override
-		ForResponse putUnsignedByte(int i);
-
-		@Override
-		ForResponse putUnsignedShort(int i);
-
-		@Override
-		ForResponse putBytes(byte[] bytes);
-
-		@Override
-		ForResponse putRaw(byte[] bytes);
-
-		@Override
-		ForResponse putRaw(byte[] bytes, int off, int len);
-
-		@Override
-		ForResponse grow(int n);
-	}
-
 	@Override
 	PacketBuilder putBoolean(boolean b);
 
@@ -149,7 +43,7 @@ public interface PacketBuilder extends PacketBuilderBase {
 	PacketBuilder putUnsignedShort(int i);
 
 	@Override
-	PacketBuilder putBytes(byte[] bytes);
+	PacketBuilder put(byte[] bytes);
 
 	@Override
 	PacketBuilder putRaw(byte[] bytes);

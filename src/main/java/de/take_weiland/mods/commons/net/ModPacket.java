@@ -1,16 +1,16 @@
 package de.take_weiland.mods.commons.net;
 
+import com.google.common.collect.MapMaker;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.ModPacketProxy;
-import de.take_weiland.mods.commons.internal.SimplePacketTypeProxy;
-import de.take_weiland.mods.commons.util.Sides;
-import net.minecraft.entity.Entity;
+import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Container;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * <p>An abstract base class for simpler Packet handling. Make a subclass of this for every PacketType.
@@ -21,20 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *new DifferentPacket(evenMoreData).sendToPlayer(somePlayer);
  * }</pre></p>
  */
-public abstract class ModPacket implements SimplePacket {
-
-	/**
-	 * whether the given (logical) side can receive this packet
-	 * @param side the receiving side to check
-	 * @return true whether Packet is valid to be received on the given side
-	 */
-	protected abstract boolean validOn(Side side);
-
-	/**
-	 * Writes this packet's data to the given buffer
-	 * @param buffer a buffer for this packet's data
-	 */
-	protected abstract void write(WritableDataBuf buffer);
+public abstract class ModPacket extends ModPacketBase {
 
 	/**
 	 * Reads this packet's data from the given buffer (as written by {@link #write(WritableDataBuf)} and then performs this packet's action.
@@ -42,228 +29,136 @@ public abstract class ModPacket implements SimplePacket {
 	 * @param player the player handling this packet, on the client side it's the client-player, on the server side it's the player sending the packet
 	 * @param side the (logical) side receiving the packet
 	 */
-	protected abstract void handle(PacketInput buffer, EntityPlayer player, Side side);
+	protected abstract void handle(DataBuf buffer, EntityPlayer player, Side side);
 
-	/**
-	 * Determine an expected size for this packet to accurately size the {@link de.take_weiland.mods.commons.net.WritableDataBuf} passed to {@link #write(WritableDataBuf)}
-	 * @return an expected size in bytes
-	 */
-	protected int expectedSize() {
-		return 32;
+	@Override
+	void write0(WritableDataBuf buf) {
+		write(buf);
 	}
 
-	public static abstract class WithResponse<T> extends ModPacket implements SimplePacket.WithResponse<T> {
+	@Override
+	void handle0(DataBuf buffer, EntityPlayer player, Side side) {
+		handle(buffer, player, side);
+	}
 
-		protected abstract void handle(DataBuf in, EntityPlayer player, Side side, PacketBuilder.ForResponse response);
+	public static abstract class WithResponse<T extends Response> extends ModPacketBase {
 
-		public abstract T readResponse(DataBuf in, EntityPlayer player, Side side);
+		public final ModPacket.WithResponse<T> waitAtMost(long delay, TimeUnit unit) {
+			maxWaitMillis = Math.max(maxWaitMillis, unit.toMillis(delay));
+			return this;
+		}
 
-		@Override
-		protected final void handle(PacketInput buffer, EntityPlayer player, Side side) {
-			PacketBuilder.ForResponse response = buffer.response();
-			handle(buffer, player, side, response);
+		public final WithResponse<T> onResponse(PacketResponseHandler<? super T> handler) {
+			checkState(this.handler == null, "Cannot register multiple handlers!");
+			this.handler = checkNotNull(handler, "handler");
+			return this;
+		}
+
+		protected abstract T handle(DataBuf in, EntityPlayer player, Side side);
+
+		protected abstract Class<T> responseClass();
+
+		protected WithResponse() {
+			checkNotNull(responseClass(), "ResponseClass must not be null!");
+		}
+
+		private static final AtomicInteger nextTransferId = new AtomicInteger();
+		private final AtomicInteger pendingResponses = new AtomicInteger();
+		private int transferId;
+
+		void preSend() {
+			pendingResponses.incrementAndGet();
 		}
 
 		@Override
-		<TYPE extends Enum<TYPE> & SimplePacketType & SimplePacketTypeProxy> PacketBuilder getPacketBuilder(TYPE type, PacketFactoryInternal<TYPE> factory) {
-			PacketBuilder builder = factory.builder(type, expectedSize());
-			if (currentHandler != null) {
-				final SimplePacketResponseHandler<? super T> handler = currentHandler;
-				builder.onResponse(new PacketResponseHandler() {
-					@Override
-					public void onResponse(DataBuf in, EntityPlayer responder) {
-						handler.onResponse(readResponse(in, responder, Sides.logical(responder)), responder);
-					}
-				});
+		SimplePacket postWrite(SimplePacket packet, PacketFactoryInternal<?> factory) {
+			factory.registerCallback(packet, this);
+			return packet;
+		}
+
+		private static int nextTransferId() {
+			int id;
+			do {
+				id = nextTransferId.getAndIncrement();
+			} while (id == -1);
+			return id;
+		}
+
+		@Override
+		void write0(WritableDataBuf buf) {
+			transferId = nextTransferId();
+			register(transferId, maxWaitMillis < 0 ? DEFAULT_WAIT_MILLIS : maxWaitMillis, this);
+
+			buf.putInt(transferId);
+			write(buf);
+		}
+
+		@Override
+		void handle0(DataBuf buffer, EntityPlayer player, Side side) {
+			int transferId = buffer.getInt();
+			if (side.isClient()) {
+				handle(buffer, player, side).setResponseTransferId(transferId).sendToServer();
+			} else {
+				handle(buffer, player, side).setResponseTransferId(transferId).sendTo(player);
 			}
-			return builder;
 		}
 
-		private SimplePacketResponseHandler<? super T> currentHandler;
+		private static final ConcurrentMap<Integer, WithResponse<?>> waiters = new MapMaker().concurrencyLevel(2).makeMap();
 
-		@Override
-		public SimplePacket.WithResponse<T> onResponse(SimplePacketResponseHandler<? super T> handler) {
-			currentHandler = checkNotNull(handler);
-			delegate = null;
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> discardResponse() {
-			if (currentHandler != null) {
-				currentHandler = null;
-				delegate = null;
+		static void register(final int transferId, long maxWaitMillis, WithResponse<?> packet) {
+			if (waiters.put(transferId, packet) != null) {
+				throw new IllegalStateException("Duplicate TransferID!");
 			}
+			Scheduler.forEnvironment().scheduleSimple(new Runnable() {
+				@Override
+				public void run() {
+					waiters.remove(transferId);
+				}
+			}, maxWaitMillis, TimeUnit.MILLISECONDS);
+		}
+
+		static <T extends Response> void onResponse(Integer transferId, T response, EntityPlayer player) {
+			@SuppressWarnings("unchecked")
+			WithResponse<? super T> waiter = (WithResponse<? super T>) waiters.get(transferId);
+			if (waiter != null && waiter.fireResponse(response, player)) {
+				waiters.remove(transferId);
+			}
+		}
+
+		private static final long DEFAULT_WAIT_MILLIS = TimeUnit.SECONDS.toMillis(30);
+		private PacketResponseHandler<? super T> handler;
+		private long maxWaitMillis = -1;
+
+		boolean fireResponse(T packet, EntityPlayer responder) {
+			PacketResponseHandler<? super T> handler;
+			if ((handler = this.handler) != null) {
+				handler.onResponse(packet, responder);
+			}
+			return pendingResponses.decrementAndGet() <= 0;
+		}
+	}
+
+	public static abstract class Response extends ModPacket {
+
+		private int responseTransferId = -1;
+
+		Response setResponseTransferId(int id) {
+			responseTransferId = id;
 			return this;
 		}
 
 		@Override
-		public SimplePacket.WithResponse<T> sendToViewing(Container c) {
-			super.sendToViewing(c);
-			return this;
+		void write0(WritableDataBuf buf) {
+			buf.putInt(responseTransferId);
+			super.write0(buf);
 		}
 
 		@Override
-		public SimplePacket.WithResponse<T> sendTo(PacketTarget target) {
-			super.sendTo(target);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToServer() {
-			super.sendToServer();
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendTo(EntityPlayer player) {
-			super.sendTo(player);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendTo(Iterable<? extends EntityPlayer> players) {
-			super.sendTo(players);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToAll() {
-			super.sendToAll();
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToAllInDimension(int dimension) {
-			super.sendToAllInDimension(dimension);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToAllInDimension(World world) {
-			super.sendToAllInDimension(world);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToAllNear(World world, double x, double y, double z, double radius) {
-			super.sendToAllNear(world, x, y, z, radius);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToAllNear(int dimension, double x, double y, double z, double radius) {
-			super.sendToAllNear(dimension, x, y, z, radius);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToAllNear(Entity entity, double radius) {
-			super.sendToAllNear(entity, radius);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToAllNear(TileEntity te, double radius) {
-			super.sendToAllNear(te, radius);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToAllTracking(Entity entity) {
-			super.sendToAllTracking(entity);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToAllTracking(TileEntity te) {
-			super.sendToAllTracking(te);
-			return this;
-		}
-
-		@Override
-		public SimplePacket.WithResponse<T> sendToAllAssociated(Entity e) {
-			super.sendToAllAssociated(e);
-			return this;
+		void handle0(DataBuf buffer, EntityPlayer player, Side side) {
+			int transId = buffer.getInt();
+			super.handle0(buffer, player, side);
+			WithResponse.onResponse(transId, this, player);
 		}
 	}
 
-	SimplePacket delegate;
-	final SimplePacket make() {
-		return delegate == null ? (delegate = make0()) : delegate;
-	}
-
-	@SuppressWarnings("unchecked") // safe, ASM generated code
-	private <TYPE extends Enum<TYPE> & SimplePacketType & SimplePacketTypeProxy> SimplePacket make0() {
-		ModPacketProxy<TYPE> proxy = (ModPacketProxy<TYPE>) this;
-		TYPE type = proxy._sc$getPacketType();
-
-		PacketBuilder builder = getPacketBuilder(type, (PacketFactoryInternal<TYPE>)type._sc$getPacketFactory());
-		write(builder);
-		return builder.build();
-	}
-
-	<TYPE extends Enum<TYPE> & SimplePacketType & SimplePacketTypeProxy> PacketBuilder getPacketBuilder(TYPE type, PacketFactoryInternal<TYPE> factory) {
-		return factory.builder(type, expectedSize());
-	}
-
-	public SimplePacket sendTo(PacketTarget target) {
-		return make().sendTo(target);
-	}
-
-	public SimplePacket sendToServer() {
-		return make().sendToServer();
-	}
-
-	public SimplePacket sendTo(EntityPlayer player) {
-		return make().sendTo(player);
-	}
-
-	public SimplePacket sendTo(Iterable<? extends EntityPlayer> players) {
-		return make().sendTo(players);
-	}
-
-	public SimplePacket sendToAll() {
-		return make().sendToAll();
-	}
-
-	public SimplePacket sendToAllInDimension(int dimension) {
-		return make().sendToAllInDimension(dimension);
-	}
-
-	public SimplePacket sendToAllInDimension(World world) {
-		return make().sendToAllInDimension(world);
-	}
-
-	public SimplePacket sendToAllNear(World world, double x, double y, double z, double radius) {
-		return make().sendToAllNear(world, x, y, z, radius);
-	}
-
-	public SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) {
-		return make().sendToAllNear(dimension, x, y, z, radius);
-	}
-
-	public SimplePacket sendToAllNear(Entity entity, double radius) {
-		return make().sendToAllNear(entity, radius);
-	}
-
-	public SimplePacket sendToAllNear(TileEntity te, double radius) {
-		return make().sendToAllNear(te, radius);
-	}
-
-	public SimplePacket sendToAllTracking(Entity entity) {
-		return make().sendToAllTracking(entity);
-	}
-
-	public SimplePacket sendToAllTracking(TileEntity te) {
-		return make().sendToAllTracking(te);
-	}
-
-	public SimplePacket sendToAllAssociated(Entity e) {
-		return make().sendToAllAssociated(e);
-	}
-
-	public SimplePacket sendToViewing(Container c) {
-		return make().sendToViewing(c);
-	}
 }

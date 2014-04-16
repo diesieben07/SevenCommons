@@ -25,6 +25,7 @@ class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload impl
 	private final PacketBufferImpl<TYPE> buf;
 	private final FMLPacketHandlerImpl<TYPE> fmlPh;
 	private final int id;
+	ModPacket.WithResponse<?> writeCallback;
 
 	static {
 		// we need to inject our fake packet class into the map so that getPacketId still works (can't override it)
@@ -39,25 +40,11 @@ class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload impl
 
 	@Override
 	public void writePacketData(DataOutput out) {
+		if (writeCallback != null) writeCallback.preSend();
 		try {
 			writeString(fmlPh.channel, out);
-			if ((buf.id & fmlPh.expectsResponseFlag) != 0) {
-				ASMHooks.writeVarShort(out, buf.actualLen + fmlPh.idSize + 4);
-				fmlPh.writePacketId(out, id);
-
-				int transId = fmlPh.nextTransferId();
-				out.writeInt(transId);
-				fmlPh.responseHandlers().put(transId, buf.responseHandler);
-				System.out.println("On send: " + fmlPh.responseHandlers());
-			} else if (buf.id == fmlPh.responseId) {
-				ASMHooks.writeVarShort(out, buf.actualLen + fmlPh.idSize + 4);
-				fmlPh.writePacketId(out, id);
-
-				out.writeInt(buf.transferId);
-			} else {
-				ASMHooks.writeVarShort(out, buf.actualLen + fmlPh.idSize);
-				fmlPh.writePacketId(out, id);
-			}
+			ASMHooks.writeVarShort(out, buf.actualLen + fmlPh.idSize);
+			fmlPh.writePacketId(out, id);
 			out.write(buf.buf, 0, buf.actualLen);
 		} catch (IOException e) {
 			throw JavaUtils.throwUnchecked(e); // weird bug, can't declare IOException for some reason
@@ -66,23 +53,18 @@ class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload impl
 
 	@Override
 	public void processPacket(NetHandler netHandler) {
+		if (writeCallback != null) writeCallback.preSend();
 		fmlPh.handle0(buf, id, netHandler.getPlayer());
 	}
 
 	@Override
 	public int getPacketSize() {
-		// channel & first part length
-		int result = 2 + fmlPh.channel.length() * 2 + 2;
-		if ((buf.id & fmlPh.expectsResponseFlag) != 0 || buf.id == fmlPh.responseId) {
-			int len = buf.actualLen + fmlPh.idSize + 4;
-			result += ASMHooks.additionalPacketSize(len);
-			result += 4;
-		} else {
-			int len = buf.actualLen + fmlPh.idSize;
-			result += ASMHooks.additionalPacketSize(len);
-		}
-		result += buf.actualLen;
-		return result;
+		return 2 // channel length
+				+ fmlPh.channel.length() * 2 // channel
+				+ 2 // first part of length
+				+ buf.actualLen // payload
+				+ fmlPh.idSize // payload
+				+ ASMHooks.additionalPacketSize(buf.actualLen + fmlPh.idSize); // additional size based on payload length
 	}
 
 	@Override
