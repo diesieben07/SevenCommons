@@ -3,9 +3,10 @@ package de.take_weiland.mods.commons.internal;
 import com.google.common.base.Throwables;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
+import de.take_weiland.mods.commons.SevenCommonsWrapper;
 import de.take_weiland.mods.commons.fastreflect.Fastreflect;
 import de.take_weiland.mods.commons.util.MiscUtil;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import java.io.File;
@@ -15,16 +16,6 @@ import java.util.logging.Logger;
 
 @MCVersion(SevenCommons.MINECRAFT_VERSION)
 @IFMLLoadingPlugin.SortingIndex(1001) // get after deobfuscation
-@TransformerExclusions({
-		"de.take_weiland.mods.commons.asm.",
-		//"de.take_weiland.mods.commons.net.",
-		"de.take_weiland.mods.commons.internal.transformers.",
-		"de.take_weiland.mods.commons.internal.exclude.",
-		"de.take_weiland.mods.commons.subtypes.",
-		"de.take_weiland.mods.commons.util.JavaUtils",
-		"de.take_weiland.mods.commons.trait.",
-		"de.take_weiland.mods.commons.sync."
-		})
 public final class SevenCommons implements IFMLLoadingPlugin {
 
 	public static final InternalReflector REFLECTOR = Fastreflect.createAccessor(InternalReflector.class);
@@ -35,7 +26,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	public static final String VERSION = "1.0";
 	public static File MINECRAFT_DIR;
 
-	public static LaunchClassLoader CLASSLOADER = (LaunchClassLoader) SevenCommons.class.getClassLoader();
+	public static LaunchClassLoader CLASSLOADER = Launch.classLoader;
 
 	public static File source;
 
@@ -43,6 +34,25 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	
 	static {
 		LOGGER = MiscUtil.getLogger("SevenCommons");
+	}
+
+	public SevenCommons() {
+		if (System.getProperties().put(SevenCommonsWrapper.SYS_PROP_INSTANCE, this) != null) {
+			throw new IllegalStateException("More than one instance of SevenCommons!");
+		}
+
+		String[] excl = { "de.take_weiland.mods.commons.asm.",
+				//"de.take_weiland.mods.commons.net.",
+				"de.take_weiland.mods.commons.internal.transformers.",
+				"de.take_weiland.mods.commons.internal.exclude.",
+				"de.take_weiland.mods.commons.subtypes.",
+				"de.take_weiland.mods.commons.util.JavaUtils",
+				"de.take_weiland.mods.commons.trait.",
+				"de.take_weiland.mods.commons.sync." };
+
+		for (String e : excl) {
+			Launch.classLoader.addTransformerExclusion(e);
+		}
 	}
 	
 	@Override
