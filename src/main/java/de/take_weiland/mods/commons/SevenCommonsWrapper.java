@@ -138,7 +138,7 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		                                        });
 
 		if (targetURL.toLowerCase().startsWith("error: ")) {
-			throw new IOException("Failed to get Download URL!");
+			throw new IOException("Failed to get Download URL (" + targetURL + ") !");
 		}
 
 		URL parsedTarget = new URL(targetURL.trim());
