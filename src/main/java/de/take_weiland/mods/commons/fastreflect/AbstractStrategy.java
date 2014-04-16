@@ -32,7 +32,7 @@ abstract class AbstractStrategy implements FastreflectStrategy {
 			} else if (method.isAnnotationPresent(Invoke.class)) {
 				invokers.put(method, findInvokerTarget(iface, method));
 			} else {
-				throw new IllegalArgumentException("Don't know what to do with method %s in interface %s");
+				throw new IllegalArgumentException(String.format("Don't know what to do with method %s in interface %s", method.getName(), iface.getName()));
 			}
 		}
 		return new InterfaceInfo(getters.build(), setters.build(), invokers.build());
