@@ -12,18 +12,20 @@ import net.minecraft.launchwrapper.LaunchClassLoader;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 @MCVersion(SevenCommons.MINECRAFT_VERSION)
 @IFMLLoadingPlugin.SortingIndex(1001) // get after deobfuscation
 public final class SevenCommons implements IFMLLoadingPlugin {
 
+	public static final String MINECRAFT_VERSION = "1.6.4";
+	public static final String VERSION = "1.0";
+
 	public static final InternalReflector REFLECTOR = Fastreflect.createAccessor(InternalReflector.class);
 	public static boolean MCP_ENVIRONMENT;
 	
 	public static final Logger LOGGER;
-	public static final String MINECRAFT_VERSION = "1.6.4";
-	public static final String VERSION = "1.0";
 	public static File MINECRAFT_DIR;
 
 	public static LaunchClassLoader CLASSLOADER = Launch.classLoader;
@@ -37,18 +39,19 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	}
 
 	public SevenCommons() {
-		if (System.getProperties().put(SevenCommonsWrapper.SYS_PROP_INSTANCE, this) != null) {
+		Properties props = System.getProperties();
+		if (props.put(SevenCommonsWrapper.SYS_PROP_INSTANCE, this) != null) {
 			throw new IllegalStateException("More than one instance of SevenCommons!");
 		}
+		props.put(SevenCommonsWrapper.SYS_PROP_VERSION, VERSION);
 
-		String[] excl = { "de.take_weiland.mods.commons.asm.",
-				//"de.take_weiland.mods.commons.net.",
+		String[] excl = {
+				"de.take_weiland.mods.commons.asm.",
 				"de.take_weiland.mods.commons.internal.transformers.",
 				"de.take_weiland.mods.commons.internal.exclude.",
-				"de.take_weiland.mods.commons.subtypes.",
 				"de.take_weiland.mods.commons.util.JavaUtils",
-				"de.take_weiland.mods.commons.trait.",
-				"de.take_weiland.mods.commons.sync." };
+				"de.take_weiland.mods.commons.sync."
+		};
 
 		for (String e : excl) {
 			Launch.classLoader.addTransformerExclusion(e);

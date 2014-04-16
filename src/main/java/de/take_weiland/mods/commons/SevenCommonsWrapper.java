@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
+import com.google.common.io.InputSupplier;
 import cpw.mods.fml.common.launcher.FMLTweaker;
 import cpw.mods.fml.relauncher.CoreModManager;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
@@ -9,12 +11,11 @@ import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraft.util.MathHelper;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -24,6 +25,13 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
+ * <p>An automatic downloader for SevenCommons for you to ship with your mod.</p>
+ * <p>You should copy this entire File and change the package name to your package.
+ * The only thing to be changed is the {@link #DESIRED_VERSION} constant.</p>
+ * <p>If your Mod is a Coremod (IFMLLoadingPlugin), call {@link #setup()} from the constructor of your IFMLLoadingPlugin.</p>
+ * <p>If your Mod is a normal mod, add the following lines to the Jar-Manifest of your jar file:
+ * <pre>FMLCorePlugin: com.example.yourmod.SevenCommonsWrapper<br />FMLCorePluginContainsFMLMod: true</pre></p>
+ *
  * @author diesieben07
  */
 public class SevenCommonsWrapper implements IFMLLoadingPlugin {
@@ -32,7 +40,7 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 
 	public static void setup() {
 		if ((Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment")) {
-			System.out.println("Development environment detected! You should not call setupSevenCommons there!");
+			throw new RuntimeException("Development environment detected! You should not use the SevenCommonsWrapper there!");
 		}
 		Properties props = System.getProperties();
 		boolean loaded = props.get(SYS_PROP_INSTANCE) != null;
@@ -112,22 +120,28 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 	}
 
 	private static File download(File mcDir, String version) throws Exception {
-		Properties props = System.getProperties();
-		String prevVersion = props.getProperty(SYS_PROP_VERSION);
-		if (prevVersion != null) {
-			if (!version.equals(prevVersion)) {
-				System.out.println("Conflicting SevenCommons Version Requests: " + version + " and " + prevVersion);
-				System.out.println("Exiting...");
-				System.exit(1);
-			}
-		} else {
-			props.setProperty(SYS_PROP_VERSION, version);
-		}
-
 		File modFolder = new File(mcDir + "/mods");
 		if (!modFolder.mkdirs() && !modFolder.isDirectory()) {
 			throw new IOException("Couldn't create mods folder " + modFolder.getAbsolutePath());
 		}
+
+		System.out.println("Finding Download URL for SevenCommons Version " + version + "...");
+
+		String encVersion = URLEncoder.encode(version, "UTF-8");
+		final URL infoUrl = new URL("http://sc-versions.take-weiland.de/?action=request&version=" + encVersion);
+
+		String targetURL = CharStreams.toString(new InputSupplier<Reader>() {
+			                                        @Override
+			                                        public Reader getInput() throws IOException {
+				                                        return new InputStreamReader(infoUrl.openStream());
+			                                        }
+		                                        });
+
+		if (targetURL.toLowerCase().startsWith("error: ")) {
+			throw new IOException("Failed to get Download URL!");
+		}
+
+		URL parsedTarget = new URL(targetURL.trim());
 
 		System.out.println("Downloading SevenCommons Version " + version + "...");
 		System.out.println();
@@ -139,8 +153,7 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 
 		File target = new File(modFolder, "SevenCommons-" + version + ".jar");
 		WritableByteChannel out = new FileOutputStream(target).getChannel();
-		URL url = new URL("http://www.take-weiland.de/Sprachmemo002.mp3");
-		URLConnection conn = url.openConnection();
+		URLConnection conn = parsedTarget.openConnection();
 		long total = conn.getContentLengthLong();
 
 		ReadableByteChannel in = Channels.newChannel(conn.getInputStream());
