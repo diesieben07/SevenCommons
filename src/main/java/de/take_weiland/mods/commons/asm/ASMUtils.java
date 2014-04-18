@@ -484,20 +484,28 @@ public final class ASMUtils {
 	public static ClassInfo getClassInfo(String className) {
 		className = binaryName(className);
 		Class<?> clazz;
+		// first, try to get the class if it's already loaded
 		if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, className)) != null) {
 			return new ClassInfoFromClazz(clazz);
+		// didn't find it. Try with the transformed name now
 		} else if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, transformName(className))) != null) {
 			return new ClassInfoFromClazz(clazz);
 		} else {
 			try {
+				// the class is definitely not loaded, get it's bytes
 				byte[] bytes = SevenCommons.CLASSLOADER.getClassBytes(transformName(className));
+				// somehow we can't access the class bytes.
+				// we try and load the class now
 				if (bytes == null) {
 					return tryLoad(className);
+				} else {
+					// we found the bytes, lets use them
+					return new ClassInfoFromNode(getThinClassNode(bytes));
 				}
 			} catch (IOException e) {
+				// something went wrong getting the class bytes. try and load it
 				return tryLoad(className);
 			}
-			return new ClassInfoFromNode(getThinClassNode(className));
 		}
 	}
 
@@ -505,6 +513,7 @@ public final class ASMUtils {
 		try {
 			return getClassInfo(Class.forName(className));
 		} catch (Exception e) {
+			// we've tried everything. This class doesn't fucking exist.
 			throw new MissingClassException(className, e);
 		}
 	}
