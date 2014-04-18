@@ -128,7 +128,18 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		System.out.println("Finding Download URL for SevenCommons Version " + version + "...");
 
 		String encVersion = URLEncoder.encode(version, "UTF-8");
-		final URL infoUrl = new URL("http://sc-versions.take-weiland.de/?action=request&version=" + encVersion);
+		String repo = URLEncoder.encode("http://maven.take-weiland.de", "UTF-8");
+		String group = URLEncoder.encode("de.take_weiland.mods.commons", "UTF-8");
+		String artifact = URLEncoder.encode("SevenCommons", "UTF-8");
+		String addInfoURL = URLEncoder.encode("http://mods.take-weiland.de/info.json", "UTF-8");
+		final URL infoUrl =	new URL("http://sc-versions.take-weiland.de/?action=maven"
+						+ "&repo=" + repo
+						+ "&group=" + group
+						+ "&artifact=" + artifact
+						+ "&version=" + encVersion
+						+ "&additionalInfoURL=" + addInfoURL
+						+ "&param=url");
+
 
 		String targetURL = CharStreams.toString(new InputSupplier<Reader>() {
 			                                        @Override
@@ -142,6 +153,7 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		}
 
 		URL parsedTarget = new URL(targetURL.trim());
+		System.out.println("Found URL: " + parsedTarget);
 
 		System.out.println("Downloading SevenCommons Version " + version + "...");
 		System.out.println();
