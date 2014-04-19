@@ -359,7 +359,7 @@ public class GuiNewUpdates extends GuiScreenWithParent {
 					&& mouseX <= markedModCheckboxXStart + TICKBOX_SIZE
 					&& mouseY >= VERSIONS_Y_START
 					&& mouseY <= VERSIONS_Y_START + MOD_HEIGHT * numVersions) {
-				int versionIndex = MathHelper.floor_float((mouseY - VERSIONS_Y_START) / (float) MOD_HEIGHT);
+				int versionIndex = MathHelper.floor_float((mouseY - VERSIONS_Y_START) / 10f);
 				if (mod.getVersions().selectVersion(versionIndex)) {
 					playClickSound();
 					updateButtonState();
