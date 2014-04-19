@@ -25,13 +25,17 @@ import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketFactory;
 import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.MiscUtil;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 
 public final class SCModContainer extends DummyModContainer {
 
@@ -40,8 +44,14 @@ public final class SCModContainer extends DummyModContainer {
 
 	static {
 		try {
-			UPDATE_URL = new URL("http://www.take-weiland.de/sevencommons.json");
-		} catch (MalformedURLException e) {
+			URL repo = new URL("http://maven.take-weiland.de/");
+			String group = "de.take_weiland.mods.commons";
+			String artifact = "SevenCommons";
+			URL dataURL = new URL("http://mods.take-weiland.de/info.json");
+			URL filterURL = new URL("http://mods.take-weiland.de/versions.json");
+
+			UPDATE_URL = mavenURL(repo, group, artifact, dataURL, filterURL);
+		} catch (Exception e) {
 			throw Throwables.propagate(e);
 		}
 	}
@@ -112,22 +122,95 @@ public final class SCModContainer extends DummyModContainer {
 
 	@Subscribe
 	public void processIMCs(FMLInterModComms.IMCEvent event) {
-		updaterEnabled &= !MiscUtil.isDevelopmentEnv();
+//		updaterEnabled &= !MiscUtil.isDevelopmentEnv();
 		if (updaterEnabled) {
 			ImmutableMap.Builder<String, URL> urls = ImmutableMap.builder();
 			urls.put(getModId(), UPDATE_URL);
 
 			for (FMLInterModComms.IMCMessage msg : event.getMessages()) {
-				if (msg.isStringMessage() && msg.key.equalsIgnoreCase("setUpdateURL")) {
+				if (msg.key.equals("setUpdateURL")) {
 					try {
-						urls.put(msg.getSender(), new URL(msg.getStringValue()));
-					} catch (MalformedURLException e) {
-						SevenCommons.LOGGER.warning(String.format("Invalid updateURL \"%s\" from %s", msg.getStringValue(), msg.getSender()));
+						URL url;
+						if (msg.isStringMessage()) {
+							try {
+								url = new URL(msg.getStringValue());
+							} catch (MalformedURLException e) {
+								throw new InvalidRequestException("URL invalid!");
+							}
+						} else if (msg.isNBTMessage()) {
+							url = parseURL(msg.getNBTValue());
+						} else {
+							throw new InvalidRequestException("Message must be String or NBTTagCompound");
+						}
+						urls.put(msg.getSender(), url);
+					} catch (InvalidRequestException e) {
+						SevenCommons.LOGGER.warning(String.format("Invalid setUpdateURL request from %s (%s)", msg.getSender(), e.getMessage()));
 					}
 				}
 			}
 			updateController = new UpdateControllerLocal(urls.build(), updaterRecheckDelay);
 		}
+	}
+
+	private URL parseURL(NBTTagCompound nbt) throws InvalidRequestException {
+		String method = nbt.getString("method");
+		if (method.equalsIgnoreCase("maven")) {
+			URL repo = requireURL(nbt, "repo");
+			String group = requireKey(nbt, "group");
+			String artifact = requireKey(nbt, "artifact");
+			URL dataURL = requireURL(nbt, "dataURL");
+			URL filter = requireURL(nbt, "filter");
+
+			return mavenURL(repo, group, artifact, dataURL, filter);
+		} else if (method.equalsIgnoreCase("direct")) {
+			return requireURL(nbt, "url");
+		} else {
+			return null;
+		}
+	}
+
+	private static URL mavenURL(URL repo, String group, String artifact, URL dataURL, URL filter) {
+		StringBuilder url = new StringBuilder();
+		url.append("http://sc-versions.take-weiland.de/")
+		   .append("?action=maven")
+		   .append("&indexed=false")
+		   .append("&repo=").append(urlencode(repo.toExternalForm()))
+		   .append("&group=").append(urlencode(group))
+		   .append("&artifact=").append(urlencode(artifact))
+		   .append("&additionalInfoURL=").append(urlencode(dataURL.toExternalForm()))
+		   .append("&versionsURL=").append(urlencode(filter.toExternalForm()));
+
+		try {
+			return new URL(url.toString());
+		} catch (MalformedURLException e) {
+			// should not happen
+			throw Throwables.propagate(e);
+		}
+	}
+
+	private static String urlencode(String data) {
+		try {
+			return URLEncoder.encode(data, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// impossible
+			throw Throwables.propagate(e);
+		}
+	}
+
+	private URL requireURL(NBTTagCompound nbt, String key) throws InvalidRequestException {
+		try {
+			return new URL(requireKey(nbt, key));
+		} catch (MalformedURLException e) {
+			throw new InvalidRequestException(String.format("Invalid URL in %s", key));
+		}
+	}
+
+	private String requireKey(NBTTagCompound nbt, String key) throws InvalidRequestException {
+		NBTBase value;
+		if (!nbt.hasKey(key) || !((value = nbt.getTag(key)) instanceof NBTTagString)) {
+			throw new InvalidRequestException("Missing or invalid key " + key);
+		}
+		return ((NBTTagString) value).data;
 	}
 
 	@Subscribe
@@ -145,6 +228,14 @@ public final class SCModContainer extends DummyModContainer {
 	@Override
 	public Class<?> getCustomResourcePackClass() {
 		return getSource().isDirectory() ? FMLFolderResourcePack.class : FMLFileResourcePack.class;
+	}
+
+	private static class InvalidRequestException extends Exception {
+
+		InvalidRequestException(String message) {
+			super(message);
+		}
+
 	}
 
 }

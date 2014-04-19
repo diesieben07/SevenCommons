@@ -73,7 +73,7 @@ public class TaskSearchUpdates implements Runnable {
 			String currentVersion = mod.getVersions().getCurrentVersion().getModVersion().getVersionString();
 			for (JsonNode versionNode : json.getElements()) {
 				List<Dependency> dependencies;
-				if (versionNode.isStringValue("dependencies")) {
+				if (versionNode.isStringValue("dependencies") && !versionNode.getStringValue("dependencies").trim().isEmpty()) {
 					dependencies = parseDependencies(mod.getController(), mod.getModId(), versionNode.getStringValue("dependencies"));
 				} else {
 					dependencies = ImmutableList.of();
@@ -130,7 +130,7 @@ public class TaskSearchUpdates implements Runnable {
 		}
 
 		if (failure != null) {
-			throw new InvalidModVersionException(String.format("Failed to parse dependencies for %s (\"%s\"", modId, deps));
+			throw new InvalidModVersionException(String.format("Failed to parse dependencies for %s (\"%s\")", modId, deps));
 		}
 
 		return b.build();

@@ -25,7 +25,10 @@ public final class ASMConstants {
 	
 	public static final String F_TAG_LIST_SRG = "field_74747_a";
 	public static final String F_TAG_LIST_MCP = "tagList";
-	
+
+	public static final String F_TAG_MAP_MCP = "tagMap";
+	public static final String F_TAG_MAP_SRG = "field_74784_a";
+
 	public static final String F_FOV_MODIFIER_HAND_PREV_SRG = "field_78506_S";
 	public static final String F_FOV_MODIFIER_HAND_PREV_MCP = "fovModifierHandPrev";
 	

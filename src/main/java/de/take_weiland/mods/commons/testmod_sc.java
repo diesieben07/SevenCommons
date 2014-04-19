@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons;
 
 import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.event.FMLInterModComms;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.net.*;
@@ -19,7 +18,7 @@ public class testmod_sc {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) throws Exception {
-		FMLInterModComms.sendMessage("sevencommons", "setUpdateUrl", "http://www.take-weiland.de/testmod.json");
+//		FMLInterModComms.sendMessage("sevencommons", "setUpdateUrl", "http://www.take-weiland.de/testmod.json");
 
 		MinecraftForge.EVENT_BUS.register(this);
 

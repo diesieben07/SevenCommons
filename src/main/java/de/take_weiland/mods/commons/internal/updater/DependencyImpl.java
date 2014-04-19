@@ -37,7 +37,7 @@ public class DependencyImpl implements Dependency {
 	@Override
 	public void write(WritableDataBuf out) {
 		out.putBoolean(isSatisfied());
-		out.putString(getDisplay());
+		out.put(getDisplay());
 	}
 
 	public static Dependency read(DataBuf buf) {
@@ -81,35 +81,42 @@ public class DependencyImpl implements Dependency {
 		s.append(modName);
 		s.append(" at ");
 
-		List<Restriction> restrictions = ((DefaultArtifactVersion) version).getRange().getRestrictions();
-		int len = restrictions.size();
-		for (int i = 0; i < len; ++i) {
-			Restriction r = restrictions.get(i);
-			String upper = r.getUpperBound().getVersionString();
-			String lower = r.getLowerBound().getVersionString();
-			if (upper.equals(lower)) {
-				s.append(BOUND_INCL);
-				s.append(upper);
-				s.append(RESET);
-			} else {
-				boolean incl = r.isLowerBoundInclusive();
-				s.append(incl ? BOUND_INKL_LOWER : BOUND_EXCL_LOWER);
-				s.append(incl ? BOUND_INCL : BOUND_EXCL);
-				s.append(lower);
-				s.append(RESET);
+		VersionRange range = ((DefaultArtifactVersion) version).getRange();
+		if (range.getRecommendedVersion() != null) {
+			s.append(BOUND_INCL);
+			s.append(range.getRecommendedVersion().getVersionString());
+			s.append(RESET);
+		} else {
+			List<Restriction> restrictions = range.getRestrictions();
+			int len = restrictions.size();
+			for (int i = 0; i < len; ++i) {
+				Restriction r = restrictions.get(i);
+				String upper = r.getUpperBound() != null ? r.getUpperBound().getVersionString() : "";
+				String lower = r.getLowerBound() != null ? r.getLowerBound().getVersionString() : "";
+				if (upper.equals(lower)) {
+					s.append(BOUND_INCL);
+					s.append(upper);
+					s.append(RESET);
+				} else {
+					boolean incl = r.isLowerBoundInclusive();
+					s.append(incl ? BOUND_INKL_LOWER : BOUND_EXCL_LOWER);
+					s.append(incl ? BOUND_INCL : BOUND_EXCL);
+					s.append(lower);
+					s.append(RESET);
 
-				s.append('-');
-				incl = r.isUpperBoundInclusive();
-				s.append(incl ? BOUND_INCL : BOUND_EXCL);
-				s.append(upper);
-				s.append(RESET);
-				s.append(incl ? BOUND_INCL_UPPER : BOUND_EXCL_UPPER);
-			}
+					s.append('-');
+					incl = r.isUpperBoundInclusive();
+					s.append(incl ? BOUND_INCL : BOUND_EXCL);
+					s.append(upper);
+					s.append(RESET);
+					s.append(incl ? BOUND_INCL_UPPER : BOUND_EXCL_UPPER);
+				}
 
-			if (i < len - 2) {
-				s.append(", ");
-			} else if (i == len - 2) {
-				s.append(" or ");
+				if (i < len - 2) {
+					s.append(", ");
+				} else if (i == len - 2) {
+					s.append(" or ");
+				}
 			}
 		}
 		return s.toString();

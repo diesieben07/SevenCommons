@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.texture.TextureObject;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.util.IntHashMap;
@@ -39,8 +40,12 @@ public interface SCReflector {
 	 * For cleaner code use {@link de.take_weiland.mods.commons.util.NBT#asList(net.minecraft.nbt.NBTTagList)}
 	 */
 	@Unsafe
-	@Getter(field = { F_TAG_LIST_MCP, F_TAG_LIST_SRG})
+	@Getter(field = { F_TAG_LIST_MCP, F_TAG_LIST_SRG })
 	<T extends NBTBase> List<T> getWrappedList(NBTTagList list);
+
+	@Unsafe
+	@Getter(field = { F_TAG_MAP_MCP, F_TAG_MAP_SRG })
+	Map<String, NBTBase> getWrappedMap(NBTTagCompound nbt);
 	
 	@SideOnly(Side.CLIENT)
 	@Getter(field = { F_FOV_MODIFIER_HAND_MCP, F_FOV_MODIFIER_HAND_SRG})

@@ -7,6 +7,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 
 import java.util.List;
+import java.util.Map;
 
 public final class NBT {
 
@@ -20,6 +21,10 @@ public final class NBT {
 	 */
 	public static <T extends NBTBase> List<T> asList(NBTTagList nbtList) {
 		return MiscUtil.getReflector().getWrappedList(nbtList);
+	}
+
+	public static Map<String, NBTBase> asMap(NBTTagCompound nbt) {
+		return MiscUtil.getReflector().getWrappedMap(nbt);
 	}
 
 	public static NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {
