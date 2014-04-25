@@ -4,9 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import com.google.common.collect.*;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.launchwrapper.IClassNameTransformer;
@@ -21,7 +19,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 
 public final class ASMUtils {
 
@@ -215,6 +213,54 @@ public final class ASMUtils {
 		}
 		return roots;
 	}
+
+	public static Collection<MethodNode> methodsWith(ClassNode clazz, final Class<? extends Annotation> annotation) {
+		return Collections2.filter(clazz.methods, new Predicate<MethodNode>() {
+			@Override
+			public boolean apply(MethodNode method) {
+				return hasAnnotation(method, annotation);
+			}
+		});
+	}
+
+	public static Collection<FieldNode> fieldsWith(ClassNode clazz, final Class<? extends Annotation> annotation) {
+		return Collections2.filter(clazz.fields, new Predicate<FieldNode>() {
+			@Override
+			public boolean apply(FieldNode field) {
+				return hasAnnotation(field, annotation);
+			}
+		});
+	}
+
+	public static Collection<FieldAccess> fieldsOrGettersWith(final ClassNode clazz, Class<? extends Annotation> annotation) {
+		return ImmutableList.copyOf(Iterators.concat(
+			Iterators.transform(methodsWith(clazz, annotation).iterator(), new Function<MethodNode, FieldAccess>() {
+				@Override
+				public FieldAccess apply(MethodNode method) {
+					return asFieldAccess(clazz, method);
+				}
+			}),
+			Iterators.transform(fieldsWith(clazz, annotation).iterator(), new Function<FieldNode, FieldAccess>() {
+				@Override
+				public FieldAccess apply(FieldNode field) {
+					return asFieldAccess(clazz, field);
+				}
+			})
+		));
+	}
+
+	public static FieldAccess asFieldAccess(ClassNode clazz, MethodNode getter) {
+		return new FieldAccessWrapped(clazz, getter, null);
+	}
+
+	public static FieldAccess asFieldAccess(ClassNode clazz, MethodNode getter, MethodNode setter) {
+		return new FieldAccessWrapped(clazz, getter, setter);
+	}
+
+	public static FieldAccess asFieldAccess(ClassNode clazz, FieldNode field) {
+		return new FieldAccessDirect(clazz, field);
+	}
+
 
 	/**
 	 * Determine whether this is an obfuscated environment or not. True if MCP names should be used (development environment)

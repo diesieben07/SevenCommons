@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.internal.AnnotationNull;
 import de.take_weiland.mods.commons.net.PacketTarget;
 
 import java.lang.annotation.ElementType;
@@ -30,23 +31,18 @@ public @interface Synced {
 	 * The class should either define a default (no-arg) constructor or a one-argument constructor that takes an Object<br />
 	 * If the latter is present, it will be picked instead and passed the object being synced (Container, TileEntity, etc.)
 	 */
-	Class<? extends TypeSyncer<?>> syncer() default NULL.class;
+	Class<? extends TypeSyncer<?>> syncer() default AnnotationNull.class;
 
     /**
      * override where the Packets to sync this class should be sent to<br />
      * The same constructor rules as for {@link de.take_weiland.mods.commons.sync.Synced#syncer() syncer()} apply
      */
-    Class<? extends PacketTarget> target() default NULL.class;
+    Class<? extends PacketTarget> target() default AnnotationNull.class;
 
 	/**
 	 * When applied to a Method, define the corresponding setter method (must be in this class and marked with {@link de.take_weiland.mods.commons.sync.Synced.Setter @Setter})
 	 */
 	String setter() default "NULL"; // default value doesn't matter as it's read by ASM and default values are not present in an AnnotationNode
-
-    /**
-     * Dummy interface, used as default value for target() and syncer()
-     */
-    static interface NULL extends TypeSyncer<Object>, PacketTarget { }
 
 	/**
 	 * mark a method as a setter, needs a corresponding {@link de.take_weiland.mods.commons.sync.Synced @Synced} method with the same ID
