@@ -1,6 +1,7 @@
-package de.take_weiland.mods.commons.util;
+package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.base.Function;
+import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;

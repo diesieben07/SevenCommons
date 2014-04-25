@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
+import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;

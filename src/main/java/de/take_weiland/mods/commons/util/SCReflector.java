@@ -37,7 +37,7 @@ import static de.take_weiland.mods.commons.internal.ASMConstants.*;
 public interface SCReflector {
 
 	/**
-	 * For cleaner code use {@link de.take_weiland.mods.commons.util.NBT#asList(net.minecraft.nbt.NBTTagList)}
+	 * For cleaner code use {@link de.take_weiland.mods.commons.nbt.NBT#asList(net.minecraft.nbt.NBTTagList)}
 	 */
 	@Unsafe
 	@Getter(field = { F_TAG_LIST_MCP, F_TAG_LIST_SRG })

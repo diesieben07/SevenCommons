@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.inv;
 
 import de.take_weiland.mods.commons.util.ItemStacks;
-import de.take_weiland.mods.commons.util.NBT;
+import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;

@@ -6,7 +6,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.fastreflect.Fastreflect;
 import de.take_weiland.mods.commons.util.MiscUtil;
-import de.take_weiland.mods.commons.util.NBT;
+import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.Sides;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 import net.minecraft.block.Block;
