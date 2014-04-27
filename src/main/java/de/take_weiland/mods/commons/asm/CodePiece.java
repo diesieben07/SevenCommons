@@ -18,9 +18,14 @@ public interface CodePiece {
 
 	void insertBefore(InsnList to, AbstractInsnNode location);
 
+	void insertAfter(CodeLocation location);
+
+	void insertBefore(CodeLocation location);
+
 	CodePiece append(CodePiece other);
 
 	CodePiece prepend(CodePiece other);
 
+	int size();
 
 }

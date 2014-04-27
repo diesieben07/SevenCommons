@@ -34,21 +34,16 @@ class FieldAccessWrapped extends AbstractFieldAccess {
 
 	@Override
 	CodePiece makeGet() {
-		return new AbstractCodePiece() {
-			@Override
-			public InsnList build() {
-				InsnList insns = new InsnList();
-				int invokeOp;
-				if ((getter.access & ACC_STATIC) != ACC_STATIC) {
-					insns.add(new VarInsnNode(ALOAD, 0));
-					invokeOp = (setter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
-				} else {
-					invokeOp = INVOKESTATIC;
-				}
-				insns.add(new MethodInsnNode(invokeOp, clazz.name, getter.name, getter.desc));
-				return insns;
-			}
-		};
+		InsnList insns = new InsnList();
+		int invokeOp;
+		if ((getter.access & ACC_STATIC) != ACC_STATIC) {
+			insns.add(new VarInsnNode(ALOAD, 0));
+			invokeOp = (setter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
+		} else {
+			invokeOp = INVOKESTATIC;
+		}
+		insns.add(new MethodInsnNode(invokeOp, clazz.name, getter.name, getter.desc));
+		return ASMUtils.asCodePiece(insns);
 	}
 
 	@Override
@@ -56,31 +51,26 @@ class FieldAccessWrapped extends AbstractFieldAccess {
 		if (!isWritable()) {
 			throw new AssertionError();
 		}
-		return new AbstractCodePiece() {
-			@Override
-			public InsnList build() {
-				InsnList insns = new InsnList();
-				int invokeOp;
-				if ((setter.access & ACC_STATIC) != ACC_STATIC) {
-					// need to push this, then swap arguments on the stack
-					insns.add(new VarInsnNode(ALOAD, 0));
-					Type fieldType = Type.getArgumentTypes(setter.desc)[0];
-					// if we have a double or long, SWAP doesn't work :/
-					if (fieldType.getSort() == DOUBLE || fieldType.getSort() == LONG) {
-						insns.add(new InsnNode(DUP_X2)); // insert the Objectref above the 2 slots of the double/long
-						insns.add(new InsnNode(POP)); // and remove the unneeded one
-					} else {
-						// can simply swap here
-						insns.add(new InsnNode(SWAP));
-					}
-					invokeOp = (setter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
-				} else {
-					invokeOp = PUTSTATIC;
-				}
-				insns.add(new MethodInsnNode(invokeOp, clazz.name, setter.name, setter.desc));
-				return insns;
+		InsnList insns = new InsnList();
+		int invokeOp;
+		if ((setter.access & ACC_STATIC) != ACC_STATIC) {
+			// need to push this, then swap arguments on the stack
+			insns.add(new VarInsnNode(ALOAD, 0));
+			Type fieldType = Type.getArgumentTypes(setter.desc)[0];
+			// if we have a double or long, SWAP doesn't work :/
+			if (fieldType.getSort() == DOUBLE || fieldType.getSort() == LONG) {
+				insns.add(new InsnNode(DUP_X2)); // insert the Objectref above the 2 slots of the double/long
+				insns.add(new InsnNode(POP)); // and remove the unneeded one
+			} else {
+				// can simply swap here
+				insns.add(new InsnNode(SWAP));
 			}
-		};
+			invokeOp = (setter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
+		} else {
+			invokeOp = PUTSTATIC;
+		}
+		insns.add(new MethodInsnNode(invokeOp, clazz.name, setter.name, setter.desc));
+		return ASMUtils.asCodePiece(insns);
 	}
 
 	@Override

@@ -14,6 +14,7 @@ import cpw.mods.fml.common.event.FMLInterModComms;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.asm.ASMNames;
 import de.take_weiland.mods.commons.config.ConfigInjector;
 import de.take_weiland.mods.commons.config.GetProperty;
 import de.take_weiland.mods.commons.internal.SCEventHandler;
@@ -25,8 +26,10 @@ import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketFactory;
 import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.MinecraftForge;
@@ -88,6 +91,9 @@ public final class SCModContainer extends DummyModContainer {
 	@Override
 	public boolean registerBus(EventBus bus, LoadController controller) {
 		bus.register(this);
+		System.out.println(ASMNames.method("func_110139_bj"));
+		System.out.println(MiscUtil.getReflector().getWrappedList(new NBTTagList()));
+		System.exit(0);
 		return true;
 	}
 	

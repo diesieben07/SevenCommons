@@ -17,8 +17,16 @@ import java.lang.annotation.Target;
 public @interface Setter {
 
 	/**
-	 * define which field to set, the names are tried in order (mainly used for fields that are obfuscated outside the development environment)
+	 * The field to set. If it is an obfuscated field, provide the SRG name (e.g. field_123456_a)
+	 * and set {@link #srg()} to true
+	 * @return the field to set
 	 */
-	String[] field();
+	String field();
+
+	/**
+	 * Set this to true if the field name provided by {@link #field()} is an SRG name
+	 * @return true if it's a SRG field
+	 */
+	boolean srg() default true;
 	
 }

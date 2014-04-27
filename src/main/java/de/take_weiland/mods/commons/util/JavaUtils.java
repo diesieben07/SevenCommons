@@ -8,7 +8,9 @@ import sun.misc.SharedSecrets;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 public final class JavaUtils {
 
@@ -79,6 +81,26 @@ public final class JavaUtils {
 	@Deprecated
 	public static <T> T safeListAccess(List<T> list, int index) {
 		return listIndexExists(list, index) ? list.get(index) : null;
+	}
+
+	public static <T> Iterator<T> reverse(final ListIterator<T> it) {
+		return new Iterator<T>() {
+			@Override
+			public boolean hasNext() {
+				return it.hasPrevious();
+			}
+
+			@Override
+			public T next() {
+				return it.previous();
+			}
+
+			@Override
+			public void remove() {
+				it.remove();
+			}
+
+		};
 	}
 
 	/**

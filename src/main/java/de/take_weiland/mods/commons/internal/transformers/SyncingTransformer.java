@@ -2,12 +2,10 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import com.google.common.collect.*;
 import cpw.mods.fml.common.FMLLog;
+import de.take_weiland.mods.commons.asm.ASMNames;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ClassInfo;
-import de.take_weiland.mods.commons.internal.ASMConstants;
-import de.take_weiland.mods.commons.internal.SyncType;
-import de.take_weiland.mods.commons.internal.SyncedEntityProperties;
-import de.take_weiland.mods.commons.internal.SyncedObject;
+import de.take_weiland.mods.commons.internal.*;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.PacketBuilder;
 import de.take_weiland.mods.commons.net.PacketTarget;
@@ -154,7 +152,7 @@ public final class SyncingTransformer {
 			lbl = new LabelNode();
 			call.add(new VarInsnNode(Opcodes.ALOAD, 0));
 			call.add(new FieldInsnNode(Opcodes.GETFIELD, type.getRootClass(), worldField, world.getDescriptor()));
-			call.add(new FieldInsnNode(Opcodes.GETFIELD, world.getInternalName(), ASMUtils.useMcpNames() ? ASMConstants.F_IS_REMOTE_MCP : ASMConstants.F_IS_REMOTE_SRG, Type.BOOLEAN_TYPE.getDescriptor()));
+			call.add(new FieldInsnNode(Opcodes.GETFIELD, world.getInternalName(), ASMUtils.useMcpNames() ? ASMNames.F_IS_REMOTE_MCP : ASMNames.F_IS_REMOTE_SRG, Type.BOOLEAN_TYPE.getDescriptor()));
 			call.add(new JumpInsnNode(Opcodes.IFNE, lbl));
 		}
 
@@ -403,7 +401,7 @@ public final class SyncingTransformer {
 			return false;
 		}
 
-		String nullInternalName = Type.getInternalName(Synced.NULL.class);
+		String nullInternalName = Type.getInternalName(AnnotationNull.class);
 		Type syncer = null;
 		Type target = null;
 		String setter = null;

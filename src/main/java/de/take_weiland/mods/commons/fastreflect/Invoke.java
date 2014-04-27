@@ -16,8 +16,16 @@ import java.lang.annotation.Target;
 public @interface Invoke {
 
 	/**
-	 * define which method to invoke, the names are tried in order (mainly used for methods that are obfuscated outside the development environment)
+	 * The method to invoke. If it is an obfuscated method, provide the SRG name (e.g. func_123456_a)
+	 * and set {@link #srg()} to true
+	 * @return the method to invoke
 	 */
-	String[] method();
+	String method();
+
+	/**
+	 * Set this to true if the field name provided by {@link #field()} is an SRG name
+	 * @return true if it's a SRG field
+	 */
+	boolean srg() default true;
 	
 }

@@ -7,8 +7,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import static de.take_weiland.mods.commons.internal.ASMConstants.M_CLONE_PLAYER_MCP;
-import static de.take_weiland.mods.commons.internal.ASMConstants.M_CLONE_PLAYER_SRG;
+import static de.take_weiland.mods.commons.asm.ASMNames.M_CLONE_PLAYER_MCP;
+import static de.take_weiland.mods.commons.asm.ASMNames.M_CLONE_PLAYER_SRG;
 
 public final class EntityPlayerTransformer implements ASMClassTransformer {
 

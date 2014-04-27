@@ -26,8 +26,6 @@ import net.minecraft.util.Timer;
 import java.util.List;
 import java.util.Map;
 
-import static de.take_weiland.mods.commons.internal.ASMConstants.*;
-
 /**
  * Accessor interface for various private fields and methods around the Minecraft code.<br />
  * If the field/method to access is static, the instance parameter is ignored, null can be passed.<br />
@@ -40,68 +38,68 @@ public interface SCReflector {
 	 * For cleaner code use {@link de.take_weiland.mods.commons.nbt.NBT#asList(net.minecraft.nbt.NBTTagList)}
 	 */
 	@Unsafe
-	@Getter(field = { F_TAG_LIST_MCP, F_TAG_LIST_SRG })
+	@Getter(field = "field_74747_a", srg = true)
 	<T extends NBTBase> List<T> getWrappedList(NBTTagList list);
 
 	@Unsafe
-	@Getter(field = { F_TAG_MAP_MCP, F_TAG_MAP_SRG })
+	@Getter(field = "field_74784_a", srg = true)
 	Map<String, NBTBase> getWrappedMap(NBTTagCompound nbt);
 	
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_FOV_MODIFIER_HAND_MCP, F_FOV_MODIFIER_HAND_SRG})
+	@Getter(field = "field_78507_R", srg = true)
 	float getFovHand(EntityRenderer e);
-	
+
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_FOV_MODIFIER_HAND_PREV_MCP, F_FOV_MODIFIER_HAND_PREV_SRG})
-	float getFovHandPrev(EntityRenderer e);
-	
-	@SideOnly(Side.CLIENT)
-	@Setter(field = { F_FOV_MODIFIER_HAND_MCP, F_FOV_MODIFIER_HAND_SRG})
+	@Setter(field = "field_78507_R", srg = true)
 	void setFovHand(EntityRenderer e, float fov);
 	
 	@SideOnly(Side.CLIENT)
-	@Setter(field = { F_FOV_MODIFIER_HAND_PREV_MCP, F_FOV_MODIFIER_HAND_PREV_SRG})
+	@Getter(field = "field_78506_S", srg = true)
+	float getFovHandPrev(EntityRenderer e);
+	
+	@SideOnly(Side.CLIENT)
+	@Setter(field = "field_78506_S", srg = true)
 	void setFovHandPrev(EntityRenderer e, float fovPrev);
 	
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_TIMER_MCP, F_TIMER_SRG })
+	@Getter(field = "field_71428_T", srg = true)
 	Timer getTimer(Minecraft mc);
 	
-	@Getter(field = { F_TRACKED_ENTITY_IDS_MCP, F_TRACKED_ENTITY_IDS_SRG})
+	@Getter(field = "field_72794_c", srg = true)
 	IntHashMap getTrackerMap(EntityTracker tracker);
 	
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_MAP_TEXTURE_OBJECTS_MCP, F_MAP_TEXTURE_OBJECTS_SRG})
+	@Getter(field = "field_110585_a", srg = true)
 	Map<ResourceLocation, TextureObject> getTexturesMap(TextureManager manager);
 	
 	@Unsafe
-	@Getter(field = { F_PACKET_CLASS_TO_ID_MAP_MCP, F_PACKET_CLASS_TO_ID_MAP_SRG })
+	@Getter(field = "field_73291_a", srg = true)
 	Map<Class<? extends Packet>, Integer> getClassToIdMap(Packet dummy);
 
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_IS_ENABLED_MCP, F_IS_ENABLED_SRG })
+	@Getter(field = "field_73819_m", srg = true)
 	boolean isEnabled(GuiTextField textField);
 
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_DISABLED_COLOR_MCP, F_DISABLED_COLOR_SRG })
+	@Getter(field = "field_73824_r", srg = true)
 	int getDisabledColor(GuiTextField textField);
 
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_ENABLED_COLOR_MCP, F_ENABLED_COLOR_SRG })
+	@Getter(field = "field_73825_q", srg = true)
 	int getEnabledColor(GuiTextField textField);
 
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_CAN_LOOSE_FOCUS_MCP, F_CAN_LOOSE_FOCUS_SRG })
+	@Getter(field = "field_73821_k", srg = true)
 	boolean canLooseFocus(GuiTextField textField);
 
 	@SideOnly(Side.CLIENT)
-	@Getter(field = { F_BUTTON_LIST_MCP, F_BUTTON_LIST_SRG})
+	@Getter(field = "field_73887_h", srg = true)
 	List<GuiButton> getButtonList(GuiScreen screen);
 
-	@Getter(field = { F_ITEM_DAMAGE_MCP, F_ITEM_DAMAGE_SRG })
+	@Getter(field = "field_77991_e", srg = true)
 	int getRawDamage(ItemStack stack);
 
-	@Getter(field = {F_UNLOCALIZED_NAME_BLOCK_MCP, F_UNLOCALIZED_NAME_BLOCK_SRG})
+	@Getter(field = "field_71968_b", srg = true)
 	String getRawUnlocalizedName(Block block);
 
 }

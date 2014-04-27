@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
+import de.take_weiland.mods.commons.asm.ASMNames;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.SimplePacket;
@@ -14,7 +15,7 @@ import java.util.List;
 
 public enum SyncType {
 
-	ENTITY("net/minecraft/entity/Entity", ASMConstants.F_WORLD_OBJ_ENTITY_MCP, ASMConstants.F_WORLD_OBJ_ENTITY_SRG, ASMConstants.M_ON_UPDATE_MCP, ASMConstants.M_ON_UPDATE_SRG) {
+	ENTITY("net/minecraft/entity/Entity", ASMNames.F_WORLD_OBJ_ENTITY_MCP, ASMNames.F_WORLD_OBJ_ENTITY_SRG, ASMNames.M_ON_UPDATE_MCP, ASMNames.M_ON_UPDATE_SRG) {
 		
 		@Override
 		public void sendPacket(Object entity, SimplePacket p) {
@@ -33,7 +34,7 @@ public enum SyncType {
 		
 	},
 	
-	TILE_ENTITY("net/minecraft/tileentity/TileEntity", ASMConstants.F_WORLD_OBJ_TILEENTITY_MCP, ASMConstants.F_WORLD_OBJ_TILEENTITY_SRG, ASMConstants.M_UPDATE_ENTITY_MCP, ASMConstants.M_UPDATE_ENTITY_SRG) {
+	TILE_ENTITY("net/minecraft/tileentity/TileEntity", ASMNames.F_WORLD_OBJ_TILEENTITY_MCP, ASMNames.F_WORLD_OBJ_TILEENTITY_SRG, ASMNames.M_UPDATE_ENTITY_MCP, ASMNames.M_UPDATE_ENTITY_SRG) {
 		
 		@Override
 		public void sendPacket(Object te, SimplePacket p) {
@@ -58,7 +59,7 @@ public enum SyncType {
 		
 	},
 	
-	CONTAINER(null, null, null, ASMConstants.M_DETECT_AND_SEND_CHANGES_MCP, ASMConstants.M_DETECT_AND_SEND_CHANGES_SRG) {
+	CONTAINER(null, null, null, ASMNames.M_DETECT_AND_SEND_CHANGES_MCP, ASMNames.M_DETECT_AND_SEND_CHANGES_SRG) {
 		
 		@Override
 		public void sendPacket(Object container, SimplePacket p) {

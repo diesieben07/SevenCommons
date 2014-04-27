@@ -5,19 +5,18 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
 /**
+ * <p>Abstract base class for CodePieces.</p>
+ * <p>At least {@link #build()} must be implemented, but
+ * {@link #insertBefore(org.objectweb.asm.tree.InsnList, org.objectweb.asm.tree.AbstractInsnNode)},
+ * {@link #insertAfter(org.objectweb.asm.tree.InsnList, org.objectweb.asm.tree.AbstractInsnNode)},
+ * {@link #appendTo(org.objectweb.asm.tree.InsnList)} and
+ * {@link #prependTo(org.objectweb.asm.tree.InsnList)}
+ * can (and should) be overridden if the creation of a new InsnList for this operation is not the best way
+ * (e.g. CodePieces that contain only a single instruction.</p>
+ *
  * @author diesieben07
  */
 public abstract class AbstractCodePiece implements CodePiece {
-
-	@Override
-	public void appendTo(InsnList to) {
-		to.add(build());
-	}
-
-	@Override
-	public void prependTo(InsnList to) {
-		to.insert(build());
-	}
 
 	@Override
 	public void insertAfter(InsnList into, AbstractInsnNode location) {
@@ -27,6 +26,26 @@ public abstract class AbstractCodePiece implements CodePiece {
 	@Override
 	public void insertBefore(InsnList into, AbstractInsnNode location) {
 		into.insertBefore(location, build());
+	}
+
+	@Override
+	public void appendTo(InsnList to) {
+		to.insert(build());
+	}
+
+	@Override
+	public void prependTo(InsnList to) {
+		to.add(build());
+	}
+
+	@Override
+	public final void insertBefore(CodeLocation location) {
+		insertBefore(location.list(), location.start());
+	}
+
+	@Override
+	public final void insertAfter(CodeLocation location) {
+		insertAfter(location.list(), location.end());
 	}
 
 	@Override

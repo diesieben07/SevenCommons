@@ -15,11 +15,12 @@ import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.tree.AbstractInsnNode.*;
 
 public final class ASMUtils {
 
@@ -41,8 +42,13 @@ public final class ASMUtils {
 		return node;
 	}
 
+	@Deprecated
 	public static AbstractInsnNode findLast(MethodNode method, int opcode) {
-		AbstractInsnNode node = method.instructions.getLast();
+		return findLast(method.instructions, opcode);
+	}
+
+	public static AbstractInsnNode findLast(InsnList insns, int opcode) {
+		AbstractInsnNode node = insns.getLast();
 		do {
 			if (node.getOpcode() == opcode) {
 				return node;
@@ -52,8 +58,8 @@ public final class ASMUtils {
 		return null;
 	}
 
-	public static AbstractInsnNode findFirst(MethodNode method, int opcode) {
-		AbstractInsnNode node = method.instructions.getFirst();
+	public static AbstractInsnNode findFirst(InsnList insns, int opcode) {
+		AbstractInsnNode node = insns.getFirst();
 		do {
 			if (node.getOpcode() == opcode) {
 				return node;
@@ -61,6 +67,11 @@ public final class ASMUtils {
 			node = node.getNext();
 		} while (node != null);
 		return null;
+	}
+
+	@Deprecated
+	public static AbstractInsnNode findFirst(MethodNode method, int opcode) {
+		return findFirst(method.instructions, opcode);
 	}
 
 	// *** method finding helpers *** //
@@ -186,11 +197,6 @@ public final class ASMUtils {
 		return Collections2.filter(clazz.methods, IS_CONSTRUCTOR);
 	}
 
-	@Deprecated
-	public static List<MethodNode> findRootConstructors(ClassNode clazz) {
-		return getRootConstructors(clazz);
-	}
-
 	/**
 	 * <p>Get all constructors, which don't call another constructor of the same class.</p>
 	 * <p>Useful if you need to add code that is called, whenever a new instance of the class is created, no matter through which constructor.</p>
@@ -214,6 +220,12 @@ public final class ASMUtils {
 		return roots;
 	}
 
+	/**
+	 * <p>Get all methods in the given class which have the given Annotation</p>
+	 * @param clazz the ClassNode
+	 * @param annotation the annotation to search for
+	 * @return a Collection containing all methods in the class which have the given Annotation
+	 */
 	public static Collection<MethodNode> methodsWith(ClassNode clazz, final Class<? extends Annotation> annotation) {
 		return Collections2.filter(clazz.methods, new Predicate<MethodNode>() {
 			@Override
@@ -223,6 +235,12 @@ public final class ASMUtils {
 		});
 	}
 
+	/**
+	 * <p>Get all fields in the given class which have the given Annotation</p>
+	 * @param clazz the ClassNode
+	 * @param annotation the annotation to search for
+	 * @return a Collection containing all fields in the class which have the given Annotation
+	 */
 	public static Collection<FieldNode> fieldsWith(ClassNode clazz, final Class<? extends Annotation> annotation) {
 		return Collections2.filter(clazz.fields, new Predicate<FieldNode>() {
 			@Override
@@ -232,35 +250,304 @@ public final class ASMUtils {
 		});
 	}
 
+	/**
+	 * <p>Finds all Fields and Methods in the given class which have the given Annotation
+	 * and transforms them into {@link de.take_weiland.mods.commons.asm.FieldAccess FieldAccesses}</p>
+	 * @param clazz the ClassNode
+	 * @param annotation
+	 * @return
+	 */
 	public static Collection<FieldAccess> fieldsOrGettersWith(final ClassNode clazz, Class<? extends Annotation> annotation) {
 		return ImmutableList.copyOf(Iterators.concat(
-			Iterators.transform(methodsWith(clazz, annotation).iterator(), new Function<MethodNode, FieldAccess>() {
-				@Override
-				public FieldAccess apply(MethodNode method) {
-					return asFieldAccess(clazz, method);
-				}
-			}),
-			Iterators.transform(fieldsWith(clazz, annotation).iterator(), new Function<FieldNode, FieldAccess>() {
-				@Override
-				public FieldAccess apply(FieldNode field) {
-					return asFieldAccess(clazz, field);
-				}
-			})
+			Iterators.transform(
+					methodsWith(clazz, annotation).iterator(),
+					asFieldAccessFuncM(clazz)),
+			Iterators.transform(
+					fieldsWith(clazz, annotation).iterator(),
+					asFieldAccessFuncF(clazz))
 		));
 	}
 
-	public static FieldAccess asFieldAccess(ClassNode clazz, MethodNode getter) {
-		return new FieldAccessWrapped(clazz, getter, null);
+	private static Function<FieldNode, FieldAccess> asFieldAccessFuncF(final ClassNode clazz) {
+		return new Function<FieldNode, FieldAccess>() {
+			@Override
+			public FieldAccess apply(FieldNode field) {
+				return asFieldAccess(clazz, field);
+			}
+		};
 	}
 
-	public static FieldAccess asFieldAccess(ClassNode clazz, MethodNode getter, MethodNode setter) {
-		return new FieldAccessWrapped(clazz, getter, setter);
+	private static Function<MethodNode, FieldAccess> asFieldAccessFuncM(final ClassNode clazz) {
+		return new Function<MethodNode, FieldAccess>() {
+			@Override
+			public FieldAccess apply(MethodNode method) {
+				return asFieldAccess(clazz, method);
+			}
+		};
 	}
 
+	/**
+	 * Creates a {@link de.take_weiland.mods.commons.asm.FieldAccess} that represents the given FieldNode.
+	 * @param clazz the ClassNode
+	 * @param field the FieldNode
+	 * @return a FieldAccess
+	 */
 	public static FieldAccess asFieldAccess(ClassNode clazz, FieldNode field) {
 		return new FieldAccessDirect(clazz, field);
 	}
 
+	/**
+	 * Creates a {@link de.take_weiland.mods.commons.asm.FieldAccess} that represents the given getter method.
+	 * @param clazz the ClassNode
+	 * @param getter the MethodNode representing the getter
+	 * @return a FieldAccess
+	 */
+	public static FieldAccess asFieldAccess(ClassNode clazz, MethodNode getter) {
+		return new FieldAccessWrapped(clazz, getter, null);
+	}
+
+	/**
+	 * Creates a {@link de.take_weiland.mods.commons.asm.FieldAccess} that represents the given getter and setter method.
+	 * @param clazz the ClassNode
+	 * @param getter the MethodNode representing the getter
+	 * @param setter the MethodNode representing the setter
+	 * @return a FieldAccess
+	 */
+	public static FieldAccess asFieldAccess(ClassNode clazz, MethodNode getter, MethodNode setter) {
+		return new FieldAccessWrapped(clazz, getter, setter);
+	}
+
+	/**
+	 * <p>Converts the given InsnList to a {@link de.take_weiland.mods.commons.asm.CodePiece}</p>
+	 * <p>The InsnList must not be modified externally after it was converted, if you need to do so,
+	 * {@link #clone(org.objectweb.asm.tree.InsnList)} first.</p>
+	 * <p>The InsnList must not be newly created, if it is not, call {@link #clone(org.objectweb.asm.tree.InsnList)}
+	 * first, and pass the result to this method.</p>
+	 * @param insns the InsnList
+	 * @return a CodePiece representing all instructions in the InsnList
+	 */
+	public static CodePiece asCodePiece(InsnList insns) {
+		switch (insns.size()) {
+			case 0:
+				return EmptyCodePiece.INSTANCE;
+			case 1:
+				return asCodePiece(insns.getFirst());
+			default:
+				return new InsnListCodePiece(insns);
+		}
+	}
+
+	/**
+	 * <p>Converts the given instruction to a {@link de.take_weiland.mods.commons.asm.CodePiece}</p>
+	 * <p>The AbstractInsnNode must not be modified externally after it was converted, if you need to do so,
+	 * {@link #clone(org.objectweb.asm.tree.AbstractInsnNode)} first.</p>
+	 * <p>The AbstractInsnNode must not be part of an InsnList that is in use. If it is, call
+	 * {@link #clone(org.objectweb.asm.tree.AbstractInsnNode)} first and pass the result to this method.</p>
+	 * @param insn the instruction to represent as a CodePiece
+	 * @return a CodePiece representing the single instruction
+	 */
+	public static CodePiece asCodePiece(AbstractInsnNode insn) {
+		return new SingleInsnCodePiece(insn);
+	}
+
+	public static CodeMatcher matcher(AbstractInsnNode insn) {
+		return new SingleInsnMatcher(insn);
+	}
+
+	public static CodeMatcher matcher(InsnList insns) {
+		checkArgument(insns.size() > 0, "list must not be empty");
+		if (insns.size() == 1) {
+			return matcher(insns.getFirst());
+		} else {
+			return new InsnListMatcher(insns);
+		}
+	}
+
+	public static boolean matches(AbstractInsnNode a, AbstractInsnNode b) {
+		if (a.getType() != b.getType() || a.getOpcode() != b.getOpcode()) {
+			return false;
+		}
+		switch (a.getType()) {
+			case INSN:
+			case JUMP_INSN:
+			case LABEL:
+			case FRAME:
+			case LINE:
+				return true;
+			case INT_INSN:
+				return intInsnEq((IntInsnNode) a, (IntInsnNode) b);
+			case VAR_INSN:
+				return varInsnEq((VarInsnNode) a, (VarInsnNode) b);
+			case TYPE_INSN:
+				return typeInsnEq((TypeInsnNode) a, (TypeInsnNode) b);
+			case FIELD_INSN:
+				return fieldInsnEq((FieldInsnNode) a, (FieldInsnNode) b);
+			case METHOD_INSN:
+				return methodInsnEq((MethodInsnNode) a, (MethodInsnNode) b);
+			case LDC_INSN:
+				return ldcInsnEq((LdcInsnNode) a, (LdcInsnNode) b);
+			case IINC_INSN:
+				return iincInsnEq((IincInsnNode) a, (IincInsnNode) b);
+			case TABLESWITCH_INSN:
+				return tableSwitchEq((TableSwitchInsnNode) a, (TableSwitchInsnNode) b);
+			case LOOKUPSWITCH_INSN:
+				return lookupSwitchEq((LookupSwitchInsnNode) a, (LookupSwitchInsnNode) b);
+			case MULTIANEWARRAY_INSN:
+				return multiANewArrayEq((MultiANewArrayInsnNode) a, (MultiANewArrayInsnNode) b);
+			case INVOKE_DYNAMIC_INSN:
+				return invokeDynamicEq((InvokeDynamicInsnNode) a, (InvokeDynamicInsnNode) b);
+			default:
+				throw new AssertionError();
+		}
+	}
+
+	private static boolean intInsnEq(IntInsnNode a, IntInsnNode b) {
+		return a.operand == b.operand;
+	}
+
+	private static boolean varInsnEq(VarInsnNode a, VarInsnNode b) {
+		return a.var == b.var;
+	}
+
+	private static boolean typeInsnEq(TypeInsnNode a, TypeInsnNode b) {
+		return a.desc.equals(b.desc);
+	}
+
+	private static boolean fieldInsnEq(FieldInsnNode a, FieldInsnNode b) {
+		return a.name.equals(b.name) && a.owner.equals(b.owner) && a.desc.equals(b.desc);
+	}
+
+	private static boolean methodInsnEq(MethodInsnNode a, MethodInsnNode b) {
+		return a.name.equals(b.name) && a.owner.equals(b.owner) && a.desc.equals(b.desc);
+	}
+
+	private static boolean ldcInsnEq(LdcInsnNode a, LdcInsnNode b) {
+		return a.cst.equals(b.cst);
+	}
+
+	private static boolean iincInsnEq(IincInsnNode a, IincInsnNode b) {
+		return a.var == b.var && a.incr == b.incr;
+	}
+
+	private static boolean tableSwitchEq(TableSwitchInsnNode a, TableSwitchInsnNode b) {
+		return a.min == b.min && a.max == b.max;
+	}
+
+	private static boolean lookupSwitchEq(LookupSwitchInsnNode a, LookupSwitchInsnNode b) {
+		return a.keys.equals(b.keys);
+	}
+
+	private static boolean multiANewArrayEq(MultiANewArrayInsnNode a, MultiANewArrayInsnNode b) {
+		return a.dims == b.dims && a.desc.equals(b.desc);
+	}
+
+	private static boolean invokeDynamicEq(InvokeDynamicInsnNode a, InvokeDynamicInsnNode b) {
+		return a.name.equals(b.name)
+				&& a.desc.equals(b.desc)
+				&& a.bsm.equals(b.bsm)
+				&& Arrays.equals(a.bsmArgs, b.bsmArgs);
+	}
+
+	/**
+	 * Walks {@code n} steps forwards in the InsnList of the given instruction.
+	 * @param insn the starting point
+	 * @param n how many steps to move forwards
+	 * @return the instruction {@code n} steps forwards
+	 * @throws java.util.NoSuchElementException if the list ends before n steps have been walked
+	 */
+	public static AbstractInsnNode getNext(AbstractInsnNode insn, int n) {
+		for (int i = 0; i < n; ++i) {
+			insn = insn.getNext();
+			if (insn == null) {
+				throw new NoSuchElementException();
+			}
+		}
+		return insn;
+	}
+
+	/**
+	 * Alias for {@link #getNext(org.objectweb.asm.tree.AbstractInsnNode, int)}
+	 */
+	public static AbstractInsnNode advance(AbstractInsnNode insn, int n) {
+		return getNext(insn, n);
+	}
+
+	/**
+	 * Walks {@code n} steps backwards in the InsnList of the given instruction.
+	 * @param insn the starting point
+	 * @param n how many steps to move backwards
+	 * @return the instruction {@code n} steps backwards
+	 * @throws java.util.NoSuchElementException if the list ends before n steps have been walked
+	 */
+	public static AbstractInsnNode getPrevious(AbstractInsnNode insn, int n) {
+		for (int i = 0; i < n; ++i) {
+			insn = insn.getPrevious();
+			if (insn == null) {
+				throw new NoSuchElementException();
+			}
+		}
+		return insn;
+	}
+
+	/**
+	 * Creates a new InsnList that contains clones of the instructions going from {@code from} to {@code to}.
+	 * @param insns the InsnList
+	 * @param from the first node to clone, must be in the InsnList (inclusive)
+	 * @param to the last node to clone, must be in the InsnList (inclusive)
+	 * @return the cloned list
+	 */
+	public static InsnList clone(InsnList insns, AbstractInsnNode from, AbstractInsnNode to) {
+		InsnList clone = new InsnList();
+		Map<LabelNode, LabelNode> labels = labelCloneMap(insns.getFirst());
+
+		AbstractInsnNode current = from;
+		do {
+			if (current == to) {
+				break;
+			}
+			clone.add(current.clone(labels));
+			current = current.getNext();
+		} while (true);
+		return clone;
+	}
+
+	/**
+	 * Clones the given
+	 * @param insns
+	 * @param from
+	 * @return
+	 */
+	public static InsnList clone(InsnList insns, AbstractInsnNode from) {
+		return clone(insns, from, insns.getLast());
+	}
+
+	public static InsnList clone(InsnList insns) {
+		return clone(insns, insns.getFirst(), insns.getLast());
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends AbstractInsnNode> T clone(T insn) {
+		return (T) insn.clone(labelCloneMap(findFirstInList(insn)));
+	}
+
+	private static AbstractInsnNode findFirstInList(AbstractInsnNode insn) {
+		while (insn.getPrevious() != null) {
+			insn = insn.getPrevious();
+		}
+		return insn;
+	}
+
+	private static Map<LabelNode, LabelNode> labelCloneMap(AbstractInsnNode first) {
+		ImmutableMap.Builder<LabelNode, LabelNode> b = ImmutableMap.builder();
+		AbstractInsnNode current = first;
+		do {
+			if (current instanceof LabelNode) {
+				b.put((LabelNode) current, new LabelNode());
+			}
+			current = current.getNext();
+		} while (current != null);
+		return b.build();
+	}
 
 	/**
 	 * Determine whether this is an obfuscated environment or not. True if MCP names should be used (development environment)
