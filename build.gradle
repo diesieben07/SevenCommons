@@ -41,6 +41,10 @@ jar {
     }
 }
 
+task wrapper(type: Wrapper) {
+  gradleVersion = '1.11'
+}
+
 task deobfJar(type: Jar) {
     from sourceSets.main.output
     classifier = 'deobf'
@@ -53,8 +57,7 @@ task sourceJar(type: Jar) {
 
 tasks.build.dependsOn('sourceJar', 'deobfJar')
 
-processResources
-{
+processResources {
     from (sourceSets.main.resources.srcDirs)
 }
 
