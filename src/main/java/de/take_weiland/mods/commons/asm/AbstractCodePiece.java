@@ -40,12 +40,12 @@ public abstract class AbstractCodePiece implements CodePiece {
 
 	@Override
 	public final void insertBefore(CodeLocation location) {
-		insertBefore(location.list(), location.start());
+		insertBefore(location.list(), location.first());
 	}
 
 	@Override
 	public final void insertAfter(CodeLocation location) {
-		insertAfter(location.list(), location.end());
+		insertAfter(location.list(), location.last());
 	}
 
 	@Override

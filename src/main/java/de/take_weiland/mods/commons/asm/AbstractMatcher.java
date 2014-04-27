@@ -27,7 +27,7 @@ public abstract class AbstractMatcher implements CodeMatcher {
 			AbstractInsnNode insn = it.next();
 			AbstractInsnNode endPoint = matchEndPoint(insn);
 			if (endPoint != null) {
-				return new CodeLocation(target, insn, endPoint);
+				CodeLocation.create(target, insn, endPoint);
 			}
 			// if remaining size is smaller than our size we can't match anymore
 			checkSize(--sizeRemaining);
@@ -45,7 +45,7 @@ public abstract class AbstractMatcher implements CodeMatcher {
 			AbstractInsnNode insn = it.previous();
 			AbstractInsnNode endPoint = matchEndPoint(insn);
 			if (endPoint != null) {
-				return new CodeLocation(target, insn, endPoint);
+				CodeLocation.create(target, insn, endPoint);
 			}
 		}
 		throw new NoMatchException();
@@ -66,7 +66,7 @@ public abstract class AbstractMatcher implements CodeMatcher {
 				if (found != null) {
 					throw new IllegalArgumentException("More than one occurrence found!");
 				}
-				found = new CodeLocation(target, insn, endPoint);
+				found = CodeLocation.create(target, insn, endPoint);
 			}
 			// if remaining size is smaller than our size we can't match anymore
 			checkSize(--sizeRemaining);
@@ -87,7 +87,7 @@ public abstract class AbstractMatcher implements CodeMatcher {
 			AbstractInsnNode insn = it.next();
 			AbstractInsnNode endPoint = matchEndPoint(insn);
 			if (endPoint != null) {
-				b.add(new CodeLocation(target, insn, endPoint));
+				b.add(CodeLocation.create(target, insn, endPoint));
 			}
 
 			// if we have less elements left than our size we've found all matches
