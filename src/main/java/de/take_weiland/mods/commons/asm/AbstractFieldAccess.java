@@ -6,7 +6,6 @@ package de.take_weiland.mods.commons.asm;
 abstract class AbstractFieldAccess implements FieldAccess {
 
 	private CodePiece get;
-	private CodePiece set;
 
 	@Override
 	public final CodePiece getValue() {
@@ -14,14 +13,10 @@ abstract class AbstractFieldAccess implements FieldAccess {
 	}
 
 	@Override
-	public final CodePiece setValue() {
-		if (!isWritable()) {
-			throw new UnsupportedOperationException();
-		}
-		return (set == null) ? (set = makeSet()) : set;
+	public CodePiece setValue(CodePiece loadValue) {
+		throw new UnsupportedOperationException();
 	}
 
 	abstract CodePiece makeGet();
-	CodePiece makeSet() { throw new AssertionError(); }
 
 }

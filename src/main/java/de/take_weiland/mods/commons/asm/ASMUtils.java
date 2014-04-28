@@ -18,6 +18,8 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.tree.AbstractInsnNode.*;
@@ -350,22 +352,95 @@ public final class ASMUtils {
 		return new SingleInsnCodePiece(insn);
 	}
 
-	public static CodeMatcher matcher(AbstractInsnNode insn) {
-		return new SingleInsnMatcher(insn);
+	public static <T extends AbstractInsnNode> CodeMatcher asMatcher(final Predicate<T> predicate, final Class<T> clazz) {
+		return new SingleInsnMatcher(new Predicate<AbstractInsnNode>() {
+			@SuppressWarnings("unchecked") // cast is safe, we check the class before
+			@Override
+			public boolean apply(AbstractInsnNode input) {
+				return clazz.isAssignableFrom(input.getClass()) && predicate.apply((T) input);
+			}
+
+			@Override
+			public String toString() {
+				return "asMatcher(" + predicate + ", " + clazz.getName() + ')';
+			}
+		});
 	}
 
-	public static CodeMatcher matcher(InsnList insns) {
+	public static CodeMatcher asMatcher(Predicate<AbstractInsnNode> predicate) {
+		return new SingleInsnMatcher(checkNotNull(predicate, "predicate"));
+	}
+
+	public static CodeMatcher matchOpcode(final int opcode) {
+		return new SingleInsnMatcher(new Predicate<AbstractInsnNode>() {
+			@Override
+			public boolean apply(AbstractInsnNode input) {
+				return input.getOpcode() == opcode;
+			}
+
+			@Override
+			public String toString() {
+				return "matchOpcode(" + opcode + ')';
+			}
+		});
+	}
+
+	public static CodeMatcher matcher(final AbstractInsnNode insn, final boolean lenient) {
+		checkNotNull(insn, "instruction");
+		return new SingleInsnMatcher(new Predicate<AbstractInsnNode>() {
+			@Override
+			public boolean apply(AbstractInsnNode input) {
+				return ASMUtils.matches(insn, input, lenient);
+			}
+
+			@Override
+			public String toString() {
+				return "matcher("
+						+ insn.getClass().getSimpleName()
+						+ '[' + insn.getOpcode() + ']'
+						+ ", lenient=" + lenient + ')';
+			}
+		});
+	}
+
+	public static CodeMatcher matcher(AbstractInsnNode insn) {
+		return matcher(insn, false);
+	}
+
+	public static CodeMatcher matcher(InsnList insns, boolean lenient, Predicate<AbstractInsnNode> allowSkip) {
 		checkArgument(insns.size() > 0, "list must not be empty");
 		if (insns.size() == 1) {
 			return matcher(insns.getFirst());
 		} else {
-			return new InsnListMatcher(insns);
+			return new InsnListMatcher(insns, lenient, allowSkip);
 		}
 	}
 
+	/**
+	 * Create a {@link de.take_weiland.mods.commons.asm.CodeMatcher} that matches the given InsnList.
+	 * @param insns
+	 * @param lenient
+	 * @param allowSkip
+	 * @return
+	 */
+	public static CodeMatcher matcher(InsnList insns, boolean lenient, boolean allowSkip) {
+		return matcher(insns, lenient, allowSkip ? Predicates.<AbstractInsnNode>alwaysTrue() : Predicates.<AbstractInsnNode>alwaysFalse());
+	}
+
+	public static CodeMatcher matcher(InsnList insns) {
+		return matcher(insns, false, Predicates.<AbstractInsnNode>alwaysFalse());
+	}
+
 	public static boolean matches(AbstractInsnNode a, AbstractInsnNode b) {
-		if (a.getType() != b.getType() || a.getOpcode() != b.getOpcode()) {
+		return matches(a, b, false);
+	}
+
+	public static boolean matches(AbstractInsnNode a, AbstractInsnNode b, boolean lenient) {
+		if (a.getOpcode() != b.getOpcode()) {
 			return false;
+		}
+		if (lenient) {
+			return true;
 		}
 		switch (a.getType()) {
 			case INSN:
@@ -410,6 +485,10 @@ public final class ASMUtils {
 	}
 
 	private static boolean typeInsnEq(TypeInsnNode a, TypeInsnNode b) {
+		System.out.println("Comparing "
+				+ a.desc + '[' + SCASMAccessHook.getIndex(a) + ']'
+				+ ", "
+				+ b.desc + '[' + SCASMAccessHook.getIndex(b) + ']');
 		return a.desc.equals(b.desc);
 	}
 
@@ -448,28 +527,54 @@ public final class ASMUtils {
 				&& Arrays.equals(a.bsmArgs, b.bsmArgs);
 	}
 
+	private static final Function<MethodInsnNode, String> GET_METHOD_NAME = new Function<MethodInsnNode, String>() {
+		@Override
+		public String apply(MethodInsnNode input) {
+			return input.name;
+		}
+	};
+
+	public static Function<MethodInsnNode, String> methodInsnName() {
+		return GET_METHOD_NAME;
+	}
+
 	/**
 	 * Walks {@code n} steps forwards in the InsnList of the given instruction.
 	 * @param insn the starting point
 	 * @param n how many steps to move forwards
 	 * @return the instruction {@code n} steps forwards
-	 * @throws java.util.NoSuchElementException if the list ends before n steps have been walked
+	 * @throws java.lang.IndexOutOfBoundsException if the list ends before n steps have been walked
 	 */
 	public static AbstractInsnNode getNext(AbstractInsnNode insn, int n) {
 		for (int i = 0; i < n; ++i) {
 			insn = insn.getNext();
 			if (insn == null) {
-				throw new NoSuchElementException();
+				throw new IndexOutOfBoundsException();
 			}
 		}
 		return insn;
 	}
 
 	/**
-	 * Alias for {@link #getNext(org.objectweb.asm.tree.AbstractInsnNode, int)}
+	 * <p>Provides identical functionality to {@link #getNext(org.objectweb.asm.tree.AbstractInsnNode, int)},
+	 * but can provide constant-time performance in certain situations, as opposed to the linear-time performance of
+	 * {@link #getNext(org.objectweb.asm.tree.AbstractInsnNode, int)}.</p>
+	 * <p>The constant-time implementation is used if the cache of the InsnList is already created. To force that to happen,
+	 * call {@link org.objectweb.asm.tree.InsnList#get(int)} once before calling this method.</p>
+	 * @param list the InsnList of the instruction
+	 * @param insn the instruction
+	 * @param n how many steps to move forwards
+	 * @return the instruction {@code n} steps forwards
+	 * @throws java.lang.IndexOutOfBoundsException if the list ends before n steps have been walked
 	 */
-	public static AbstractInsnNode advance(AbstractInsnNode insn, int n) {
-		return getNext(insn, n);
+	public static AbstractInsnNode getNext(InsnList list, AbstractInsnNode insn, int n) {
+		if (SCASMAccessHook.getCache(list) != null) {
+			int idx;
+			checkArgument((idx = SCASMAccessHook.getIndex(insn)) >= 0, "instruction doesn't belong to list!");
+			return list.get(idx + n);
+		} else {
+			return getNext(insn, n);
+		}
 	}
 
 	/**
@@ -477,16 +582,141 @@ public final class ASMUtils {
 	 * @param insn the starting point
 	 * @param n how many steps to move backwards
 	 * @return the instruction {@code n} steps backwards
-	 * @throws java.util.NoSuchElementException if the list ends before n steps have been walked
+	 * @throws java.lang.IndexOutOfBoundsException if the list ends before n steps have been walked
 	 */
 	public static AbstractInsnNode getPrevious(AbstractInsnNode insn, int n) {
 		for (int i = 0; i < n; ++i) {
 			insn = insn.getPrevious();
 			if (insn == null) {
-				throw new NoSuchElementException();
+				throw new IndexOutOfBoundsException();
 			}
 		}
 		return insn;
+	}
+
+	/**
+	 * <p>Provides identical functionality to {@link #getPrevious(org.objectweb.asm.tree.AbstractInsnNode, int)},
+	 * but can provide constant-time performance in certain situations, as opposed to the linear-time performance of
+	 * {@link #getPrevious(org.objectweb.asm.tree.AbstractInsnNode, int)}.</p>
+	 * <p>The constant-time implementation is used if the cache of the InsnList is already created. To force that to happen,
+	 * call {@link org.objectweb.asm.tree.InsnList#get(int)} once before calling this method.</p>
+	 * @param list the InsnList of the instruction
+	 * @param insn the instruction
+	 * @param n how many steps to move backwards
+	 * @return the instruction {@code n} steps backwards
+	 * @throws java.lang.IndexOutOfBoundsException if the list ends before n steps have been walked
+	 */
+	public static AbstractInsnNode getPrevious(InsnList list, AbstractInsnNode insn, int n) {
+		if (SCASMAccessHook.getCache(list) != null) {
+			int idx;
+			checkArgument((idx = SCASMAccessHook.getIndex(insn)) >= 0, "instruction doesn't belong to list!");
+			return list.get(idx - n);
+		} else {
+			return getPrevious(insn, n);
+		}
+	}
+
+	public static Iterator<AbstractInsnNode> fastIterator(InsnList list) {
+		if (list.size() == 0) {
+			return Iterators.emptyIterator();
+		}
+		return fastIterator(list, list.getFirst());
+	}
+
+	public static Iterator<AbstractInsnNode> fastIterator(InsnList list, AbstractInsnNode start) {
+		return new FastInsnListItr(list, checkNotNull(start));
+	}
+
+	private static class FastInsnListItr implements ListIterator<AbstractInsnNode> {
+
+		private final InsnList list;
+		private AbstractInsnNode next;
+		private AbstractInsnNode previous;
+		private AbstractInsnNode lastReturned;
+
+		private FastInsnListItr(InsnList list, AbstractInsnNode next) {
+			this.list = list;
+			this.next = next;
+			this.previous = next.getPrevious();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return next != null;
+		}
+
+		@Override
+		public AbstractInsnNode next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			lastReturned = previous = next;
+			next = next.getNext();
+//			System.out.println("FastItr returning " + list.indexOf(lastReturned));
+			return lastReturned;
+		}
+
+		@Override
+		public boolean hasPrevious() {
+			return previous != null;
+		}
+
+		@Override
+		public AbstractInsnNode previous() {
+			if (!hasPrevious()) {
+				throw new NoSuchElementException();
+			}
+			lastReturned = next = previous;
+			previous = previous.getPrevious();
+			return lastReturned;
+		}
+
+		@Override
+		public void remove() {
+			checkState(lastReturned != null);
+			list.remove(lastReturned);
+			lastReturned = null;
+		}
+
+		@Override
+		public void set(AbstractInsnNode insn) {
+			checkState(lastReturned != null);
+			list.set(lastReturned, insn);
+			lastReturned = insn;
+		}
+
+		@Override
+		public void add(AbstractInsnNode insn) {
+			// if we have no next we are either at the end of the list
+			// or the list is empty
+			if (!hasNext()) {
+				list.add(insn);
+			} else {
+				list.insertBefore(next, insn);
+			}
+			previous = insn;
+			lastReturned = null;
+		}
+
+		@Override
+		public int nextIndex() {
+			return hasNext() ? fastIdx(list, next) : list.size();
+		}
+
+		@Override
+		public int previousIndex() {
+			return hasPrevious() ? fastIdx(list, previous) : -1;
+		}
+	}
+
+	public static int fastIdx(InsnList list, AbstractInsnNode insn) {
+		if (insn == list.getFirst()) {
+			return 0;
+		} else if (insn == list.getLast()) {
+			return list.size() - 1;
+		} else {
+			return list.indexOf(insn);
+		}
 	}
 
 	/**

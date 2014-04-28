@@ -1,9 +1,7 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.asm.ASMClassTransformer;
-import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.ClassInfo;
-import de.take_weiland.mods.commons.asm.ASMNames;
+import com.google.common.base.Predicates;
+import de.take_weiland.mods.commons.asm.*;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -17,11 +15,14 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS_MCP, M_TRY_START_WATCHING_THIS_SRG);
-		method.instructions.insertBefore(findInsertionHook(method), generateEventCall(clazz));
+
+		generateEventCall(clazz)
+				.insertAfter(findInsertionHook(method));
+
 		return true;
 	}
 
-	private InsnList generateEventCall(ClassNode clazz) {
+	private CodePiece generateEventCall(ClassNode clazz) {
 		InsnList insns = new InsnList();
 		Type entityPlayer = getObjectType("net/minecraft/entity/player/EntityPlayer");
 		Type entity = getObjectType("net/minecraft/entity/Entity");
@@ -36,22 +37,28 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 		desc = getMethodDescriptor(VOID_TYPE, entityPlayer, entity);
 		insns.add(new MethodInsnNode(INVOKESTATIC, "de/take_weiland/mods/commons/internal/ASMHooks", "onStartTracking", desc));
 		
-		return insns;
+		return ASMUtils.asCodePiece(insns);
 	}
 
-
-	private AbstractInsnNode findInsertionHook(MethodNode method) {
+	private CodeLocation findInsertionHook(MethodNode method) {
 		String entityLivingBase = "net/minecraft/entity/EntityLivingBase";
+		String netServerHandler = "net/minecraft/network/NetServerHandler";
+		String sendPacketToPlayer = ASMNames.method("func_72567_b");
 
-		AbstractInsnNode insn = method.instructions.getLast();
-		do {
-			if (insn.getOpcode() == INSTANCEOF && ((TypeInsnNode) insn).desc.equals(entityLivingBase)) {
-				AbstractInsnNode invokePacketToPlayer = findInvokePacketToPlayer(insn);
-				return findGoto(invokePacketToPlayer);
-			}
-			insn = insn.getPrevious();
-		} while (insn != null);
-		throw illegalStruct();
+		CodeMatcher invokeSendPacketToPlayer = ASMUtils.asMatcher(
+				Predicates.compose(
+						Predicates.equalTo(sendPacketToPlayer),
+						ASMUtils.methodInsnName()
+				), MethodInsnNode.class).onFailure(CodeMatcher.FailureAction.RETURN_NULL);
+
+//		System.out.println(invokeSendPacketToPlayer.findLast(method.instructions));
+
+		CodeMatcher matcher = ASMUtils.matcher(new TypeInsnNode(INSTANCEOF, entityLivingBase))
+				.andThen(invokeSendPacketToPlayer)
+				.andThen(ASMUtils.matchOpcode(GOTO))
+				.allowSkipping();
+
+		return matcher.findOnly(method.instructions);
 	}
 
 	private AbstractInsnNode findInvokePacketToPlayer(AbstractInsnNode theInstanceof) {

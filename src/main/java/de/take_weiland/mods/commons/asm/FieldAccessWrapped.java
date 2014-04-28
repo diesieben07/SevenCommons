@@ -5,7 +5,6 @@ import org.objectweb.asm.tree.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.DOUBLE;
 import static org.objectweb.asm.Type.VOID;
 
 /**
@@ -47,28 +46,19 @@ class FieldAccessWrapped extends AbstractFieldAccess {
 	}
 
 	@Override
-	CodePiece makeSet() {
+	public CodePiece setValue(CodePiece loadValue) {
 		if (!isWritable()) {
-			throw new AssertionError();
+			throw new UnsupportedOperationException();
 		}
 		InsnList insns = new InsnList();
 		int invokeOp;
 		if ((setter.access & ACC_STATIC) != ACC_STATIC) {
-			// need to push this, then swap arguments on the stack
 			insns.add(new VarInsnNode(ALOAD, 0));
-			Type fieldType = Type.getArgumentTypes(setter.desc)[0];
-			// if we have a double or long, SWAP doesn't work :/
-			if (fieldType.getSort() == DOUBLE || fieldType.getSort() == LONG) {
-				insns.add(new InsnNode(DUP_X2)); // insert the Objectref above the 2 slots of the double/long
-				insns.add(new InsnNode(POP)); // and remove the unneeded one
-			} else {
-				// can simply swap here
-				insns.add(new InsnNode(SWAP));
-			}
 			invokeOp = (setter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
 		} else {
 			invokeOp = PUTSTATIC;
 		}
+		loadValue.appendTo(insns);
 		insns.add(new MethodInsnNode(invokeOp, clazz.name, setter.name, setter.desc));
 		return ASMUtils.asCodePiece(insns);
 	}

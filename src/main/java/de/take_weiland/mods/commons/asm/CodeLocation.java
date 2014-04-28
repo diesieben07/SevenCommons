@@ -38,22 +38,30 @@ public final class CodeLocation implements Cloneable {
 		return allTo(list, requirePrev(afterLast));
 	}
 
-	private static AbstractInsnNode requireNext(AbstractInsnNode insn) {
-		AbstractInsnNode next = insn.getNext();
-		checkArgument(next != null, "instruction must have next");
-		return next;
+	public static CodeLocation firstOf(InsnList list) {
+		return new CodeLocation(list, list.getFirst(), list.getLast());
 	}
 
-	private static AbstractInsnNode requirePrev(AbstractInsnNode insn) {
-		AbstractInsnNode next = insn.getPrevious();
-		checkArgument(next != null, "instruction must have previous");
-		return next;
+	public static CodeLocation lastOf(InsnList list) {
+		return new CodeLocation(list, list.getLast(), list.getLast());
 	}
 
-	private CodeLocation(InsnList list, AbstractInsnNode first, AbstractInsnNode last) {
-		this.list = list;
-		this.first = first;
-		this.last = last;
+	public static CodeLocation nFrom(InsnList list, AbstractInsnNode first, int n) {
+		checkArgument(n >= 0, "n must not be negative");
+		return new CodeLocation(list, first, ASMUtils.getNext(list, first, n));
+	}
+
+	public static CodeLocation firstNOf(InsnList list, int n) {
+		return nFrom(list, list.getFirst(), n);
+	}
+
+	public static CodeLocation nBefore(InsnList list, AbstractInsnNode last, int n) {
+		checkArgument(n >= 0, "n must not be negative");
+		return new CodeLocation(list, ASMUtils.getPrevious(list, last, n), last);
+	}
+
+	public static CodeLocation lastNOf(InsnList list, int n) {
+		return nBefore(list, list.getLast(), n);
 	}
 
 	public AbstractInsnNode first() {
@@ -93,8 +101,7 @@ public final class CodeLocation implements Cloneable {
 		if (!(o instanceof CodeLocation)) return false;
 
 		CodeLocation that = (CodeLocation) o;
-
-		return last.equals(that.last) && first.equals(that.first) && list.equals(that.list);
+		return this.last.equals(that.last) && this.first.equals(that.first) && this.list.equals(that.list);
 	}
 
 	@Override
@@ -103,5 +110,23 @@ public final class CodeLocation implements Cloneable {
 		result = 31 * result + first.hashCode();
 		result = 31 * result + last.hashCode();
 		return result;
+	}
+
+	private static AbstractInsnNode requireNext(AbstractInsnNode insn) {
+		AbstractInsnNode next = insn.getNext();
+		checkArgument(next != null, "instruction must have next");
+		return next;
+	}
+
+	private static AbstractInsnNode requirePrev(AbstractInsnNode insn) {
+		AbstractInsnNode next = insn.getPrevious();
+		checkArgument(next != null, "instruction must have previous");
+		return next;
+	}
+
+	private CodeLocation(InsnList list, AbstractInsnNode first, AbstractInsnNode last) {
+		this.list = list;
+		this.first = first;
+		this.last = last;
 	}
 }

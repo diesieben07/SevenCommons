@@ -13,11 +13,12 @@ public interface FieldAccess {
 	CodePiece getValue();
 
 	/**
-	 * generate a new CodePiece that will pop from the stack and save as the value
+	 * generate a new CodePiece that will save a value to the field
+	 * @param loadValue a CodePiece that loads the desired value onto the stack
 	 * @return the CodePiece
 	 * @throws java.lang.UnsupportedOperationException if {@link #isWritable()} is false
 	 */
-	CodePiece setValue();
+	CodePiece setValue(CodePiece loadValue);
 
 	/**
 	 * If this <tt>FieldAccess</tt> allows value-writes.

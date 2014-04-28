@@ -26,6 +26,6 @@ public @interface Invoke {
 	 * Set this to true if the field name provided by {@link #field()} is an SRG name
 	 * @return true if it's a SRG field
 	 */
-	boolean srg() default true;
+	boolean srg() default false;
 	
 }

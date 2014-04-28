@@ -29,7 +29,7 @@ class CombinedCodePiece extends AbstractCodePiece {
 	public void insertAfter(InsnList into, AbstractInsnNode location) {
 		for (CodePiece piece : pieces) {
 			piece.insertAfter(into, location);
-			location = ASMUtils.advance(location, piece.size());
+			location = ASMUtils.getNext(location, piece.size());
 		}
 	}
 

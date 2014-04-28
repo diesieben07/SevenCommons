@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.base.Predicate;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
@@ -12,13 +13,17 @@ import static org.objectweb.asm.tree.AbstractInsnNode.LINE;
 class InsnListMatcher extends AbstractMatcher {
 
 	private final InsnList insns;
+	private final boolean lenient;
+	private final Predicate<AbstractInsnNode> allowSkip;
 
-	InsnListMatcher(InsnList insns) {
+	InsnListMatcher(InsnList insns, boolean lenient, Predicate<AbstractInsnNode> allowSkip) {
 		this.insns = insns;
+		this.lenient = lenient;
+		this.allowSkip = allowSkip;
 	}
 
 	@Override
-	protected AbstractInsnNode matchEndPoint(AbstractInsnNode start) {
+	protected AbstractInsnNode matchEndPoint(InsnList list, AbstractInsnNode start) {
 		AbstractInsnNode model = insns.getFirst();
 		AbstractInsnNode target = start;
 		while (true) {
@@ -50,13 +55,13 @@ class InsnListMatcher extends AbstractMatcher {
 		}
 	}
 
-	private static boolean canSkip(AbstractInsnNode insn) {
+	private boolean canSkip(AbstractInsnNode insn) {
 		int type = insn.getType();
-		return type == LINE || type == FRAME;
+		return type == LINE || type == FRAME || allowSkip.apply(insn);
 	}
 
 	@Override
-	protected int size() {
+	public int size() {
 		return insns.size();
 	}
 }
