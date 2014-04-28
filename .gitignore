@@ -4,3 +4,6 @@
 !.gitignore
 !gradlew*
 !/gradle/
+!/LICENSE.txt
+!/README.md
+!/COPYING.lesser
