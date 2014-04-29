@@ -17,6 +17,8 @@ public interface CodeSearcher {
 
 	CodeSearcher find(Predicate<? super AbstractInsnNode> predicate);
 
+	CodeSearcher find(Class<? extends AbstractInsnNode> type);
+
 	<T extends AbstractInsnNode> CodeSearcher find(Class<T> type, Predicate<? super T> predicate);
 
 	<S> CodeSearcher find(Function<? super AbstractInsnNode, ? extends S> function, Predicate<? super S> predicate);

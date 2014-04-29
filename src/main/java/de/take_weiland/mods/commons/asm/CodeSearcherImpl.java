@@ -79,6 +79,11 @@ class CodeSearcherImpl implements CodeSearcher {
 	}
 
 	@Override
+	public CodeSearcher find(Class<? extends AbstractInsnNode> type) {
+		return find(Predicates.instanceOf(type));
+	}
+
+	@Override
 	public CodeSearcher jumpToStart() {
 		pos = backwards ? insns.getFirst().getNext() : null;
 		return this;

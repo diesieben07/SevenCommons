@@ -1,49 +1,36 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.asm.ASMClassTransformer;
-import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.ClassInfo;
+import de.take_weiland.mods.commons.asm.*;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import static de.take_weiland.mods.commons.asm.ASMNames.M_CONVERT_TO_VILLAGER_MCP;
 import static de.take_weiland.mods.commons.asm.ASMNames.M_CONVERT_TO_VILLAGER_SRG;
+import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
+import static org.objectweb.asm.Opcodes.SIPUSH;
 
 public final class EntityZombieTransformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_CONVERT_TO_VILLAGER_MCP, M_CONVERT_TO_VILLAGER_SRG);
-		method.instructions.insert(findTarget(method), makeHook(clazz));
+
+		makeHook(clazz).insertAfter(findTarget(method));
+
 		return true;
 	}
 
-	private AbstractInsnNode findTarget(MethodNode method) {
-		AbstractInsnNode insn = method.instructions.getFirst();
-		do {
-			AbstractInsnNode next = next(insn);
-			AbstractInsnNode nextNext = next == null ? null : next(next);
-			if (insn.getOpcode() == Opcodes.SIPUSH
-					&& ((IntInsnNode) insn).operand == -24000 // the SIPUSH from setGrowingAge(-24000)
-					&& next != null && next.getOpcode() == Opcodes.INVOKEVIRTUAL // the call to setGrowingAge
-					&& nextNext instanceof LabelNode) { // the label at the end of the if
-				return nextNext;
-			}
-			insn = next;
-		} while (insn != null);
-		throw new IllegalStateException("Couldn't find hook target in EntityZombie#convertToVillager!");
+	private CodeLocation findTarget(MethodNode method) {
+		return ASMUtils.searchIn(method.instructions)
+				.find(new IntInsnNode(SIPUSH, -24000))
+				.find(INVOKEVIRTUAL)
+				.find(LabelNode.class)
+				.startHere()
+				.endHere();
 	}
 
-	private AbstractInsnNode next(AbstractInsnNode node) {
-		AbstractInsnNode next = node.getNext();
-		while (next != null && next.getOpcode() == -1 && !(next instanceof LabelNode)) {
-			next = next.getNext();
-		}
-		return next;
-	}
-
-	private InsnList makeHook(ClassNode clazz) {
+	private CodePiece makeHook(ClassNode clazz) {
 		InsnList insns = new InsnList();
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0)); // this, the zombie
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 1)); // the villager
@@ -63,7 +50,7 @@ public final class EntityZombieTransformer implements ASMClassTransformer {
 		insns.add(new InsnNode(Opcodes.RETURN)); // it is null, so just return
 		insns.add(nonNull);
 
-		return insns;
+		return ASMUtils.asCodePiece(insns);
 	}
 
 	@Override

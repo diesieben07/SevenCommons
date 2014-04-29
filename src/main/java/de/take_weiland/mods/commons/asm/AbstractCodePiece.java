@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.collect.ObjectArrays;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
@@ -46,6 +47,17 @@ public abstract class AbstractCodePiece implements CodePiece {
 	@Override
 	public final void insertAfter(CodeLocation location) {
 		insertAfter(location.list(), location.last());
+	}
+
+	@Override
+	public void replace(CodeLocation location) {
+		AbstractInsnNode firstBefore = location.first().getPrevious();
+		JavaUtils.clear(location);
+		if (firstBefore == null) {
+			prependTo(location.list());
+		} else {
+			insertAfter(location.list(), firstBefore);
+		}
 	}
 
 	@Override

@@ -103,6 +103,16 @@ public final class JavaUtils {
 		};
 	}
 
+	public static void clear(Iterable<?> i) {
+		clear(i.iterator());
+	}
+
+	public static void clear(Iterator<?> it) {
+		while (it.hasNext()) {
+			it.remove();
+		}
+	}
+
 	/**
 	 * returns the given list or {@link java.util.Collections#emptyList()} if the list is null
 	 */

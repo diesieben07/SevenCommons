@@ -15,13 +15,14 @@ import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 import static org.objectweb.asm.tree.AbstractInsnNode.*;
 
 public final class ASMUtils {
@@ -535,99 +536,6 @@ public final class ASMUtils {
 
 	public static CodeSearcher searchIn(InsnList insns) {
 		return new CodeSearcherImpl(insns);
-	}
-
-	public static ListIterator<AbstractInsnNode> fastIterator(InsnList list) {
-		if (list.size() == 0) {
-			return ImmutableList.<AbstractInsnNode>of().listIterator();
-		}
-		return fastIterator(list, list.getFirst());
-	}
-
-	public static ListIterator<AbstractInsnNode> fastIterator(InsnList list, AbstractInsnNode start) {
-		return new FastInsnListItr(checkNotNull(list, "list"), checkNotNull(start, "start"));
-	}
-
-	private static class FastInsnListItr implements ListIterator<AbstractInsnNode> {
-
-		private final InsnList list;
-		private AbstractInsnNode next;
-		private AbstractInsnNode previous;
-		private AbstractInsnNode lastReturned;
-
-		private FastInsnListItr(InsnList list, AbstractInsnNode next) {
-			this.list = list;
-			this.next = next;
-			this.previous = next.getPrevious();
-		}
-
-		@Override
-		public boolean hasNext() {
-			return next != null;
-		}
-
-		@Override
-		public AbstractInsnNode next() {
-			if (!hasNext()) {
-				throw new NoSuchElementException();
-			}
-			lastReturned = previous = next;
-			next = next.getNext();
-//			System.out.println("FastItr returning " + list.indexOf(lastReturned));
-			return lastReturned;
-		}
-
-		@Override
-		public boolean hasPrevious() {
-			return previous != null;
-		}
-
-		@Override
-		public AbstractInsnNode previous() {
-			if (!hasPrevious()) {
-				throw new NoSuchElementException();
-			}
-			lastReturned = next = previous;
-			previous = previous.getPrevious();
-			return lastReturned;
-		}
-
-		@Override
-		public void remove() {
-			checkState(lastReturned != null);
-			list.remove(lastReturned);
-			lastReturned = null;
-		}
-
-		@Override
-		public void set(AbstractInsnNode insn) {
-			checkState(lastReturned != null);
-			list.set(lastReturned, insn);
-			lastReturned = insn;
-		}
-
-		@Override
-		public void add(AbstractInsnNode insn) {
-			// if we have no next we are either at the end of the list
-			// or the list is empty
-			if (!hasNext()) {
-				list.add(insn);
-			} else {
-				list.insertBefore(next, insn);
-			}
-			previous = insn;
-			lastReturned = null;
-		}
-
-		@Override
-		public int nextIndex() {
-			return hasNext() ? fastIdx(list, next) : list.size();
-		}
-
-		@Override
-		public int previousIndex() {
-			return hasPrevious() ? fastIdx(list, previous) : -1;
-		}
 	}
 
 	public static int fastIdx(InsnList list, AbstractInsnNode insn) {

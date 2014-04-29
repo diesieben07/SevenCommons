@@ -1,14 +1,17 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.collect.Iterators;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+
+import java.util.Iterator;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * @author diesieben07
  */
-public final class CodeLocation implements Cloneable {
+public final class CodeLocation implements Cloneable, Iterable<AbstractInsnNode> {
 
 	private final InsnList list;
 	private AbstractInsnNode first;
@@ -74,6 +77,16 @@ public final class CodeLocation implements Cloneable {
 
 	public InsnList list() {
 		return list;
+	}
+
+	@Override
+	public Iterator<AbstractInsnNode> iterator() {
+		Iterator<AbstractInsnNode> it = list.iterator(list.indexOf(first));
+		if (last == list.getLast()) {
+			return it;
+		} else {
+			return Iterators.limit(it, list.size() - list.indexOf(last) + 1);
+		}
 	}
 
 	public CodeLocation moveForward(int steps) {

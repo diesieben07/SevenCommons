@@ -22,6 +22,8 @@ public interface CodePiece {
 
 	void insertBefore(CodeLocation location);
 
+	void replace(CodeLocation location);
+
 	CodePiece append(CodePiece other);
 
 	CodePiece prepend(CodePiece other);

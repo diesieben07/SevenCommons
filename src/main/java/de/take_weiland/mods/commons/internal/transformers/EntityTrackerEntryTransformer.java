@@ -16,8 +16,7 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS_MCP, M_TRY_START_WATCHING_THIS_SRG);
 
-		generateEventCall(clazz)
-				.insertBefore(findInsertionHook(method));
+		generateEventCall(clazz).insertBefore(findInsertionHook(method));
 
 		return true;
 	}
