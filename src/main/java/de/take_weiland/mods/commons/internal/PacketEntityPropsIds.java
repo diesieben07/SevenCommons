@@ -41,7 +41,6 @@ public final class PacketEntityPropsIds extends ModPacket {
 				props[i] = (SyncedEntityProperties) e.getExtendedProperties(in.getString());
 			}
 			((EntityProxy)e)._sc$setSyncedProperties(Arrays.asList(props));
-			System.out.println("received properties: " + ((EntityProxy)e)._sc$getSyncedProperties());
 		}
 	}
 	

@@ -352,85 +352,6 @@ public final class ASMUtils {
 		return new SingleInsnCodePiece(insn);
 	}
 
-	public static <T extends AbstractInsnNode> CodeMatcher asMatcher(final Predicate<T> predicate, final Class<T> clazz) {
-		return new SingleInsnMatcher(new Predicate<AbstractInsnNode>() {
-			@SuppressWarnings("unchecked") // cast is safe, we check the class before
-			@Override
-			public boolean apply(AbstractInsnNode input) {
-				return clazz.isAssignableFrom(input.getClass()) && predicate.apply((T) input);
-			}
-
-			@Override
-			public String toString() {
-				return "asMatcher(" + predicate + ", " + clazz.getName() + ')';
-			}
-		});
-	}
-
-	public static CodeMatcher asMatcher(Predicate<AbstractInsnNode> predicate) {
-		return new SingleInsnMatcher(checkNotNull(predicate, "predicate"));
-	}
-
-	public static CodeMatcher matchOpcode(final int opcode) {
-		return new SingleInsnMatcher(new Predicate<AbstractInsnNode>() {
-			@Override
-			public boolean apply(AbstractInsnNode input) {
-				return input.getOpcode() == opcode;
-			}
-
-			@Override
-			public String toString() {
-				return "matchOpcode(" + opcode + ')';
-			}
-		});
-	}
-
-	public static CodeMatcher matcher(final AbstractInsnNode insn, final boolean lenient) {
-		checkNotNull(insn, "instruction");
-		return new SingleInsnMatcher(new Predicate<AbstractInsnNode>() {
-			@Override
-			public boolean apply(AbstractInsnNode input) {
-				return ASMUtils.matches(insn, input, lenient);
-			}
-
-			@Override
-			public String toString() {
-				return "matcher("
-						+ insn.getClass().getSimpleName()
-						+ '[' + insn.getOpcode() + ']'
-						+ ", lenient=" + lenient + ')';
-			}
-		});
-	}
-
-	public static CodeMatcher matcher(AbstractInsnNode insn) {
-		return matcher(insn, false);
-	}
-
-	public static CodeMatcher matcher(InsnList insns, boolean lenient, Predicate<AbstractInsnNode> allowSkip) {
-		checkArgument(insns.size() > 0, "list must not be empty");
-		if (insns.size() == 1) {
-			return matcher(insns.getFirst());
-		} else {
-			return new InsnListMatcher(insns, lenient, allowSkip);
-		}
-	}
-
-	/**
-	 * Create a {@link de.take_weiland.mods.commons.asm.CodeMatcher} that matches the given InsnList.
-	 * @param insns
-	 * @param lenient
-	 * @param allowSkip
-	 * @return
-	 */
-	public static CodeMatcher matcher(InsnList insns, boolean lenient, boolean allowSkip) {
-		return matcher(insns, lenient, allowSkip ? Predicates.<AbstractInsnNode>alwaysTrue() : Predicates.<AbstractInsnNode>alwaysFalse());
-	}
-
-	public static CodeMatcher matcher(InsnList insns) {
-		return matcher(insns, false, Predicates.<AbstractInsnNode>alwaysFalse());
-	}
-
 	public static boolean matches(AbstractInsnNode a, AbstractInsnNode b) {
 		return matches(a, b, false);
 	}
@@ -485,10 +406,6 @@ public final class ASMUtils {
 	}
 
 	private static boolean typeInsnEq(TypeInsnNode a, TypeInsnNode b) {
-		System.out.println("Comparing "
-				+ a.desc + '[' + SCASMAccessHook.getIndex(a) + ']'
-				+ ", "
-				+ b.desc + '[' + SCASMAccessHook.getIndex(b) + ']');
 		return a.desc.equals(b.desc);
 	}
 
@@ -616,15 +533,19 @@ public final class ASMUtils {
 		}
 	}
 
-	public static Iterator<AbstractInsnNode> fastIterator(InsnList list) {
+	public static CodeSearcher searchIn(InsnList insns) {
+		return new CodeSearcherImpl(insns);
+	}
+
+	public static ListIterator<AbstractInsnNode> fastIterator(InsnList list) {
 		if (list.size() == 0) {
-			return Iterators.emptyIterator();
+			return ImmutableList.<AbstractInsnNode>of().listIterator();
 		}
 		return fastIterator(list, list.getFirst());
 	}
 
-	public static Iterator<AbstractInsnNode> fastIterator(InsnList list, AbstractInsnNode start) {
-		return new FastInsnListItr(list, checkNotNull(start));
+	public static ListIterator<AbstractInsnNode> fastIterator(InsnList list, AbstractInsnNode start) {
+		return new FastInsnListItr(checkNotNull(list, "list"), checkNotNull(start, "start"));
 	}
 
 	private static class FastInsnListItr implements ListIterator<AbstractInsnNode> {
@@ -767,7 +688,7 @@ public final class ASMUtils {
 		return insn;
 	}
 
-	private static Map<LabelNode, LabelNode> labelCloneMap(AbstractInsnNode first) {
+	private static Map<LabelNode, LabelNode> labelCloneMap(final AbstractInsnNode first) {
 		ImmutableMap.Builder<LabelNode, LabelNode> b = ImmutableMap.builder();
 		AbstractInsnNode current = first;
 		do {

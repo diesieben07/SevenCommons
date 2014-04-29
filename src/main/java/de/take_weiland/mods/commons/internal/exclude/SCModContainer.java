@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.reflect.Reflection;
 import cpw.mods.fml.client.FMLFileResourcePack;
 import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.common.DummyModContainer;
@@ -26,7 +25,6 @@ import de.take_weiland.mods.commons.internal.updater.UpdateControllerLocal;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketFactory;
 import de.take_weiland.mods.commons.util.JavaUtils;
-import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagString;
@@ -90,13 +88,6 @@ public final class SCModContainer extends DummyModContainer {
 	@Override
 	public boolean registerBus(EventBus bus, LoadController controller) {
 		bus.register(this);
-		System.out.println("initilazing!");
-		Reflection.initialize(EntityTrackerEntry.class);
-		System.out.println("initted!");
-		System.exit(0);
-//		System.out.println(ASMNames.method("func_110139_bj"));
-//		System.out.println(MiscUtil.getReflector().getWrappedList(new NBTTagList()));
-//		System.exit(0);
 		return true;
 	}
 	

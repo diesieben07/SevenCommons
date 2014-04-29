@@ -17,9 +17,7 @@ abstract class AbstractArrayProperty<T> extends GenericProperty<T> {
 		checkArgument(values.length >= 2, "Must have at least 2 elements!");
 		this.shift = shift;
 		int bitCount = Integer.numberOfTrailingZeros(Integer.highestOneBit(values.length - 1)) + 1;
-		System.out.println("bitCount: " + bitCount);
 		this.mask = (1 << bitCount) - 1;
-		System.out.println(this + " has mask " + Integer.toBinaryString(mask));
 		this.values = values;
 	}
 

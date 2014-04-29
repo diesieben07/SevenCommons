@@ -10,7 +10,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class InsnListCodePiece extends AbstractCodePiece {
 
 	private final InsnList insns;
-	private boolean used = false;
 
 	InsnListCodePiece(InsnList insns) {
 		this.insns = checkNotNull(insns, "InsnList");
@@ -18,12 +17,8 @@ class InsnListCodePiece extends AbstractCodePiece {
 
 	@Override
 	public InsnList build() {
-		if (used) {
-			return ASMUtils.clone(insns);
-		} else {
-			used = true;
-			return insns;
-		}
+		if (true) return insns;
+		return ASMUtils.clone(insns);
 	}
 
 	@Override
