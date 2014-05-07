@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.nbt;
 
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 
 /**
@@ -7,7 +8,7 @@ import net.minecraft.nbt.NBTTagCompound;
  */
 public interface NBTSerializable {
 
-	void serialize(NBTTagCompound nbt);
+	NBTBase serialize();
 
 	void deserialize(NBTTagCompound nbt);
 

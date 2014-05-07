@@ -39,4 +39,13 @@ final class ClassInfoFromClazz extends AbstractClassInfo {
 	public int getModifiers() {
 		return clazz.getModifiers();
 	}
+
+	@Override
+	public boolean isAssignableFrom(ClassInfo child) {
+		if (child instanceof ClassInfoFromClazz) {
+			return this.clazz.isAssignableFrom(((ClassInfoFromClazz) child).clazz);
+		} else {
+			return super.isAssignableFrom(child);
+		}
+	}
 }

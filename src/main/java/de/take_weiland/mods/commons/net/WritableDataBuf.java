@@ -154,4 +154,6 @@ public interface WritableDataBuf extends DataBuf {
 	 */
 	DataOutput asDataOutput();
 
+	byte[] toByteArray();
+
 }

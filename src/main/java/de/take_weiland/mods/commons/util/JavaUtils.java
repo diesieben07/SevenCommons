@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -125,6 +127,20 @@ public final class JavaUtils {
 	 */
 	public static <T> Iterable<T> concatNullable(Iterable<T> a, Iterable<T> b) {
 		return a == null ? (b == null ? Collections.<T>emptyList() : b) : (b == null ? a : Iterables.concat(a, b));
+	}
+
+	/**
+	 * Creates a new {@link com.google.common.base.Predicate} that returns true if the input is an instance
+	 * of the given class and the given predicate also applies to true.
+	 * @param predicate the Predicate
+	 * @param <T> the Type of the resulting predicate, for convenience, it can always handle any input
+	 * @param <F> the Class to check for first
+	 * @return a new Predicate
+	 */
+	public static <T, F> Predicate<T> instanceOfAnd(Class<F> clazz, Predicate<? super F> predicate) {
+		//cast is safe because Predicates.and does short-circuiting
+		//noinspection unchecked
+		return Predicates.and(Predicates.instanceOf(clazz), (Predicate<Object>) predicate);
 	}
 
 	/**

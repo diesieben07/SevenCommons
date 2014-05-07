@@ -7,7 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
  */
 public interface NBTSerializer<T> {
 
-	void serialize(T instance, NBTTagCompound nbt);
+	NBTTagCompound serialize(T instance);
 
 	T deserialize(NBTTagCompound nbt);
 

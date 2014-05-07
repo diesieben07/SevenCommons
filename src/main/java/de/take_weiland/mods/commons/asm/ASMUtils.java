@@ -1,20 +1,18 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
+import com.google.common.base.*;
 import com.google.common.collect.*;
+import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.launchwrapper.IClassNameTransformer;
+import org.apache.commons.lang3.ArrayUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
+import java.lang.annotation.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -22,7 +20,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.tree.AbstractInsnNode.*;
 
 public final class ASMUtils {
@@ -253,71 +251,118 @@ public final class ASMUtils {
 		});
 	}
 
+	public static Function<MethodNode, MethodNode> findSetterFunction(final ClassNode clazz) {
+		return new Function<MethodNode, MethodNode>() {
+			@Override
+			public MethodNode apply(MethodNode input) {
+				return findSetter(clazz, input);
+			}
+		};
+	}
+
+	private static Type getterType(MethodNode getter) {
+		Type returnType = Type.getReturnType(getter.desc);
+		return returnType != Type.VOID_TYPE && Type.getArgumentTypes(getter.desc).length == 0 ? returnType : null;
+	}
+
+	public static MethodNode findSetter(ClassNode clazz, MethodNode getter) {
+		Type type = getterType(getter);
+		if (type == null) {
+			return null;
+		}
+
+		AnnotationNode overrideSetter = getAnnotation(getter, OverrideSetter.class);
+		String setterName;
+		if (overrideSetter != null) {
+			setterName = (String) overrideSetter.values.get(1);
+		} else if (getter.name.startsWith("get")) {
+			setterName = "set" + getter.name.substring(3);
+		} else if (getter.name.startsWith("is")) {
+			setterName = "set" + getter.name.substring(2);
+		} else {
+			setterName = getter.name;
+		}
+		String setterDesc = Type.getMethodDescriptor(Type.VOID_TYPE, type);
+		return findMethod(clazz, setterName, setterDesc);
+	}
+
+	/**
+	 * <p>Finds all Properties (which can be either a Field or a getter/setter pair) of a class</p>
+	 * <p>This method uses {@link #findSetter(org.objectweb.asm.tree.ClassNode, org.objectweb.asm.tree.MethodNode)}
+	 * to find the setter.</p>
+	 * @param clazz the ClassNode to search in
+	 * @param annotation the annotation to search for
+	 * @return all Properties found
+	 */
+	public static Collection<ClassProperty> propertiesWith(final ClassNode clazz, Class<? extends Annotation> annotation) {
+		return propertiesWith(clazz, annotation, findSetterFunction(clazz));
+	}
+
 	/**
 	 * <p>Finds all Fields and Methods in the given class which have the given Annotation
-	 * and transforms them into {@link de.take_weiland.mods.commons.asm.FieldAccess FieldAccesses}</p>
+	 * and transforms them into {@link ClassProperty FieldAccesses}</p>
 	 * @param clazz the ClassNode
 	 * @param annotation
 	 * @return
 	 */
-	public static Collection<FieldAccess> fieldsOrGettersWith(final ClassNode clazz, Class<? extends Annotation> annotation) {
+	public static Collection<ClassProperty> propertiesWith(final ClassNode clazz, Class<? extends Annotation> annotation, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
 		return ImmutableList.copyOf(Iterators.concat(
 			Iterators.transform(
 					methodsWith(clazz, annotation).iterator(),
-					asFieldAccessFuncM(clazz)),
+					asFieldAccessFuncM(clazz, setterProvider)),
 			Iterators.transform(
 					fieldsWith(clazz, annotation).iterator(),
 					asFieldAccessFuncF(clazz))
 		));
 	}
 
-	private static Function<FieldNode, FieldAccess> asFieldAccessFuncF(final ClassNode clazz) {
-		return new Function<FieldNode, FieldAccess>() {
+	private static Function<FieldNode, ClassProperty> asFieldAccessFuncF(final ClassNode clazz) {
+		return new Function<FieldNode, ClassProperty>() {
 			@Override
-			public FieldAccess apply(FieldNode field) {
+			public ClassProperty apply(FieldNode field) {
 				return asFieldAccess(clazz, field);
 			}
 		};
 	}
 
-	private static Function<MethodNode, FieldAccess> asFieldAccessFuncM(final ClassNode clazz) {
-		return new Function<MethodNode, FieldAccess>() {
+	private static Function<MethodNode, ClassProperty> asFieldAccessFuncM(final ClassNode clazz, final Function<? super MethodNode, ? extends MethodNode> setterProvider) {
+		return new Function<MethodNode, ClassProperty>() {
 			@Override
-			public FieldAccess apply(MethodNode method) {
-				return asFieldAccess(clazz, method);
+			public ClassProperty apply(MethodNode method) {
+				return asFieldAccess(clazz, method, setterProvider.apply(method));
 			}
 		};
 	}
 
 	/**
-	 * Creates a {@link de.take_weiland.mods.commons.asm.FieldAccess} that represents the given FieldNode.
+	 * Creates a {@link ClassProperty} that represents the given FieldNode.
 	 * @param clazz the ClassNode
 	 * @param field the FieldNode
 	 * @return a FieldAccess
 	 */
-	public static FieldAccess asFieldAccess(ClassNode clazz, FieldNode field) {
-		return new FieldAccessDirect(clazz, field);
+	public static ClassProperty asFieldAccess(ClassNode clazz, FieldNode field) {
+		return new ClassPropertyDirect(clazz, field);
 	}
 
 	/**
-	 * Creates a {@link de.take_weiland.mods.commons.asm.FieldAccess} that represents the given getter method.
+	 * Creates a {@link ClassProperty} that represents the given getter method.
 	 * @param clazz the ClassNode
 	 * @param getter the MethodNode representing the getter
 	 * @return a FieldAccess
 	 */
-	public static FieldAccess asFieldAccess(ClassNode clazz, MethodNode getter) {
-		return new FieldAccessWrapped(clazz, getter, null);
+	public static ClassProperty asFieldAccess(ClassNode clazz, MethodNode getter) {
+		return new ClassPropertyWrapped(clazz, getter, null);
 	}
 
 	/**
-	 * Creates a {@link de.take_weiland.mods.commons.asm.FieldAccess} that represents the given getter and setter method.
+	 * Creates a {@link ClassProperty} that represents the given getter and setter method.
 	 * @param clazz the ClassNode
 	 * @param getter the MethodNode representing the getter
 	 * @param setter the MethodNode representing the setter
 	 * @return a FieldAccess
 	 */
-	public static FieldAccess asFieldAccess(ClassNode clazz, MethodNode getter, MethodNode setter) {
-		return new FieldAccessWrapped(clazz, getter, setter);
+	public static ClassProperty asFieldAccess(ClassNode clazz, MethodNode getter, MethodNode setter) {
+		return new ClassPropertyWrapped(clazz, getter, setter);
 	}
 
 	/**
@@ -443,17 +488,6 @@ public final class ASMUtils {
 				&& a.desc.equals(b.desc)
 				&& a.bsm.equals(b.bsm)
 				&& Arrays.equals(a.bsmArgs, b.bsmArgs);
-	}
-
-	private static final Function<MethodInsnNode, String> GET_METHOD_NAME = new Function<MethodInsnNode, String>() {
-		@Override
-		public String apply(MethodInsnNode input) {
-			return input.name;
-		}
-	};
-
-	public static Function<MethodInsnNode, String> methodInsnName() {
-		return GET_METHOD_NAME;
 	}
 
 	/**
@@ -616,7 +650,19 @@ public final class ASMUtils {
 		return SevenCommons.MCP_ENVIRONMENT;
 	}
 
-	// *** Class name Utilities *** //
+	// *** name utilities *** //
+
+	public static String getMethodDescriptor(Class<?> returnType, Class<?>... args) {
+		StringBuilder b = new StringBuilder();
+		b.append('(');
+		for (Class<?> arg : args) {
+			b.append(Type.getDescriptor(arg));
+		}
+		b.append(')');
+		b.append(Type.getDescriptor(returnType));
+
+		return b.toString();
+	}
 
 	/**
 	 * convert the given binary name (e.g. {@code java.lang.Object$Subclass}) to an internal name (e.g. {@code java/lang/Object$Subclass})
@@ -776,7 +822,7 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
 	public static AnnotationNode getAnnotation(FieldNode field, Class<? extends Annotation> ann) {
-		return getAnnotation(JavaUtils.concatNullable(field.visibleAnnotations, field.invisibleAnnotations), ann);
+		return getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, ElementType.FIELD, ann);
 	}
 
 	/**
@@ -786,7 +832,7 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
 	public static AnnotationNode getAnnotation(ClassNode clazz, Class<? extends Annotation> ann) {
-		return getAnnotation(JavaUtils.concatNullable(clazz.visibleAnnotations, clazz.invisibleAnnotations), ann);
+		return getAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, ElementType.TYPE, ann);
 	}
 
 	/**
@@ -796,17 +842,44 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
 	public static AnnotationNode getAnnotation(MethodNode method, Class<? extends Annotation> ann) {
-		return getAnnotation(JavaUtils.concatNullable(method.visibleAnnotations, method.invisibleAnnotations), ann);
+		return getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, ElementType.METHOD, ann);
 	}
 
-	private static AnnotationNode getAnnotation(Iterable<AnnotationNode> annotations, Class<? extends Annotation> ann) {
+	static AnnotationNode getAnnotation(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, ElementType reqType, Class<? extends Annotation> ann) {
+		Target annTarget = ann.getAnnotation(Target.class);
+		if (annTarget != null && !ArrayUtils.contains(annTarget.value(), reqType)) {
+			return null;
+		}
+
+		Retention ret = ann.getAnnotation(Retention.class);
+		RetentionPolicy retention = ret == null ? RetentionPolicy.CLASS : ret.value();
+		checkArgument(retention != RetentionPolicy.SOURCE, "Cannot check SOURCE annotations from class files!");
+
+		List<AnnotationNode> anns = retention == RetentionPolicy.CLASS ? invisAnn : visAnn;
 		String desc = Type.getDescriptor(ann);
-		for (AnnotationNode node : annotations) {
-			if (node.desc.equals(desc)) {
+		// avoid generating Iterator garbage
+		//noinspection ForLoopReplaceableByForEach
+		for (int i = 0, len = anns.size(); i < len; ++i) {
+			AnnotationNode node;
+			if ((node = anns.get(i)).desc.equals(desc)) {
 				return node;
 			}
 		}
 		return null;
+	}
+
+	public static Object getAnnotationProperty(AnnotationNode ann, String key, String defaultValue) {
+		List<Object> data = ann.values;
+		int len;
+		if (data == null || (len = data.size()) == 0) {
+			return defaultValue;
+		}
+		for (int i = 0; i < len; i += 2) {
+			if (data.get(i).equals(key)) {
+				return data.get(i + 1);
+			}
+		}
+		return defaultValue;
 	}
 
 	/**

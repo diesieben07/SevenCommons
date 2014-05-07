@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import java.util.Set;
@@ -13,25 +14,24 @@ abstract class AbstractClassInfo implements ClassInfo {
 
 	private Set<String> supers;
 
-	private void buildSupers(Set<String> collector) {
+	private Set<String> buildSupers() {
+		Set<String> set = Sets.newHashSet();
 		if (superName() != null) {
-			collector.add(superName());
-			collector.addAll(superclass().getSupers());
+			set.add(superName());
+			set.addAll(superclass().getSupers());
 		}
 		for (String iface : interfaces()) {
-			if (!collector.add(iface)) {
-				collector.addAll(ASMUtils.getClassInfo(iface).getSupers());
+			if (set.add(iface)) {
+				set.addAll(ASMUtils.getClassInfo(iface).getSupers());
 			}
 		}
+		// use immutable set to reduce memory footprint and potentially increase performance
+		return ImmutableSet.copyOf(set);
 	}
 
 	@Override
 	public Set<String> getSupers() {
-		if (supers == null) {
-			supers = Sets.newHashSet();
-			buildSupers(supers);
-		}
-		return supers;
+		return supers == null ? (supers = buildSupers()) : supers;
 	}
 
 	@Override
@@ -48,6 +48,7 @@ abstract class AbstractClassInfo implements ClassInfo {
 			return true;
 		}
 
+		// if we are a class no interface can be cast to us
 		if (!isInterface() && child.isInterface()) {
 			return false;
 		}
@@ -82,7 +83,7 @@ abstract class AbstractClassInfo implements ClassInfo {
 
 	@Override
 	public boolean isEnum() {
-		return hasModifier(ACC_ENUM);
+		return hasModifier(ACC_ENUM) && superName().equals("java/lang/Enum");
 	}
 
 	@Override

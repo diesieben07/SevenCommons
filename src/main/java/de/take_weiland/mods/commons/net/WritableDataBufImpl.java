@@ -207,6 +207,11 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 		return (SELF) this;
 	}
 
+	@Override
+	public byte[] toByteArray() {
+		return Arrays.copyOf(buf, actualLen);
+	}
+
 	void grow0(int i) {
 		if (len - pos >= i) {
 			actualLen += i;

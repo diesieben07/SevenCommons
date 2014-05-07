@@ -1,24 +1,28 @@
 package de.take_weiland.mods.commons.asm;
 
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
+
+import java.lang.annotation.ElementType;
+import java.util.List;
 
 import static org.objectweb.asm.Opcodes.*;
 
 /**
  * @author diesieben07
  */
-class FieldAccessDirect extends AbstractFieldAccess {
+class ClassPropertyDirect extends AbstractClassProperty {
 
 	private final ClassNode clazz;
 	private final FieldNode field;
 
-	FieldAccessDirect(ClassNode clazz, FieldNode field) {
+	ClassPropertyDirect(ClassNode clazz, FieldNode field) {
 		this.clazz = clazz;
 		this.field = field;
 	}
 
 	@Override
-	public CodePiece setValue(CodePiece loadValue) {
+	CodePiece makeSet(CodePiece loadValue) {
 		InsnList insns = new InsnList();
 		int setOp;
 		if ((field.access & ACC_STATIC) != ACC_STATIC) {
@@ -47,6 +51,46 @@ class FieldAccessDirect extends AbstractFieldAccess {
 
 	@Override
 	public boolean isWritable() {
-		return true;
+		return (field.access & ACC_FINAL) != ACC_FINAL;
+	}
+
+	@Override
+	Type makeType() {
+		return Type.getType(field.desc);
+	}
+
+	@Override
+	ElementType annotationType() {
+		return ElementType.FIELD;
+	}
+
+	@Override
+	List<AnnotationNode> getterAnns(boolean visible) {
+		return visible ? field.visibleAnnotations : field.invisibleAnnotations;
+	}
+
+	@Override
+	List<AnnotationNode> setterAnns(boolean visible) {
+		return getterAnns(visible);
+	}
+
+	@Override
+	int setterModifiers() {
+		return getterModifiers();
+	}
+
+	@Override
+	int getterModifiers() {
+		return field.access;
+	}
+
+	@Override
+	public String propertyName() {
+		return field.name;
+	}
+
+	@Override
+	public String toString() {
+		return "Field \"" + field.name + "\"";
 	}
 }

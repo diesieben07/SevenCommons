@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Maps;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -41,7 +43,52 @@ public final class NBT {
 		}
 		return parent.getTagList(key);
 	}
-	
+
+
+	public static Function<NBTTagString, String> getStringFunction() {
+		return NbtStringDataFunction.INSTANCE;
+	}
+
+	private static final Map<Class<?>, NBTSerializer<?>> serializers = Maps.newHashMap();
+
+	public static <T> void registerSerializer(Class<T> toSerialize, NBTSerializer<? super T> serializer) {
+		serializers.put(toSerialize, serializer);
+	}
+
+	public static <T> NBTSerializer<? super T> getSerializer(T toSerialize) {
+		return getSerializer(toSerialize.getClass());
+	}
+
+	public static <T> NBTSerializer<? super T> getSerializer(Class<T> toSerialize) {
+		@SuppressWarnings("unchecked")
+		NBTSerializer<? super T> instance = (NBTSerializer<? super T>) serializers.get(toSerialize);
+		if (instance == null) {
+			return DefaultSerializer.INSTANCE;
+		}
+		return instance;
+	}
+
+	public static <T> NBTTagCompound serialize(T toSerialize) {
+		return getSerializer(toSerialize).serialize(toSerialize);
+	}
+
+	private static enum DefaultSerializer implements NBTSerializer<Object> {
+		INSTANCE;
+
+		@Override
+		public NBTTagCompound serialize(Object instance) {
+			NBTTagCompound nbt = new NBTTagCompound();
+
+
+			return nbt;
+		}
+
+		@Override
+		public Object deserialize(NBTTagCompound nbt) {
+			return null;
+		}
+	}
+
 	private static enum NbtStringDataFunction implements Function<NBTTagString, String> {
 		
 		INSTANCE;
@@ -53,8 +100,26 @@ public final class NBT {
 		
 	}
 
-	public static Function<NBTTagString, String> getStringFunction() {
-		return NbtStringDataFunction.INSTANCE;
+	static {
+		registerSerializer(Class.class, new NBTSerializer<Class>() {
+			@Override
+			public NBTTagCompound serialize(Class instance) {
+				NBTTagCompound nbt = new NBTTagCompound();
+				nbt.setString("class", instance.getName());
+				return nbt;
+			}
+
+			@Override
+			public Class deserialize(NBTTagCompound nbt) {
+				String name = nbt.getString("class");
+				try {
+					return name.isEmpty() ? null : Class.forName(name);
+				} catch (ClassNotFoundException e) {
+					throw JavaUtils.throwUnchecked(e);
+				}
+			}
+		});
+
 	}
-	
+
 }

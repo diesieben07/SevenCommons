@@ -1,10 +1,15 @@
 package de.take_weiland.mods.commons.asm;
 
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AnnotationNode;
+
+import java.lang.annotation.Annotation;
+
 /**
  * Represents an ASM node that provides access to a value, usually a FieldNode or a getter/setter pair
  * @author diesieben07
  */
-public interface FieldAccess {
+public interface ClassProperty {
 
 	/**
 	 * generate a new CodePiece that will load the value represented on the stack
@@ -20,8 +25,22 @@ public interface FieldAccess {
 	 */
 	CodePiece setValue(CodePiece loadValue);
 
+	AnnotationNode getterAnnotation(Class<? extends Annotation> ann);
+
+	AnnotationNode setterAnnotation(Class<? extends Annotation> ann);
+
+	boolean hasSetterModifier(int modifier);
+
+	boolean hasGetterModifier(int modifier);
+
+	Type getType();
+
+	String propertyName();
+
+	boolean isStatic();
+
 	/**
-	 * If this <tt>FieldAccess</tt> allows value-writes.
+	 * If this <tt>ClassProperty</tt> allows value-writes.
 	 * @return true if writing is allowed
 	 */
 	boolean isWritable();

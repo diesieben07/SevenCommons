@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
 public @interface ToNbt {
 
 	/**
-	 * the key to use for this field. Empty String (default) uses the field name
+	 * the key to use for this field. Empty String (default) uses the field/method name
 	 */
 	String value() default "";
 

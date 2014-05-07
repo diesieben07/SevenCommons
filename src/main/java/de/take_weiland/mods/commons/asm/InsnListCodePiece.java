@@ -17,7 +17,6 @@ class InsnListCodePiece extends AbstractCodePiece {
 
 	@Override
 	public InsnList build() {
-		if (true) return insns;
 		return ASMUtils.clone(insns);
 	}
 

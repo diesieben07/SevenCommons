@@ -1,7 +1,10 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import de.take_weiland.mods.commons.asm.*;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -42,10 +45,32 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 	private CodeLocation findInsertionHook(MethodNode method) {
 		String sendPacketToPlayer = ASMNames.method("func_72567_b");
 
+		// oh how i wish for Java8...
+
+		// extracts the name of a MethodInsnNode
+		Function<MethodInsnNode, String> methodInsnName = new Function<MethodInsnNode, String>() {
+			@Override
+			public String apply(MethodInsnNode input) {
+				return input.name;
+			}
+		};
+
+		// checks if the MethodInsnNode invokes the sendPacketToPlayer method
+		Predicate<MethodInsnNode> isPacketToPlayer = Predicates.compose(
+				Predicates.equalTo(sendPacketToPlayer),
+				methodInsnName
+		);
+
+		// checks if the instruction is a MethodInsnNode and invokes the sendPacketToPlayer method
+		Predicate<AbstractInsnNode> invokePacketToPlayer =
+				JavaUtils.instanceOfAnd(
+						MethodInsnNode.class,
+						isPacketToPlayer);
+
 		return ASMUtils.searchIn(method.instructions)
 				.backwards()
 				.jumpToEnd()
-				.find(MethodInsnNode.class, ASMUtils.methodInsnName(), Predicates.equalTo(sendPacketToPlayer))
+				.find(invokePacketToPlayer)
 				.forwards()
 				.find(GOTO)
 				.find(GOTO)
