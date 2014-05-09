@@ -1,235 +1,239 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.ClassInfo;
+import de.take_weiland.mods.commons.asm.*;
+import de.take_weiland.mods.commons.internal.NBTASMHooks;
+import de.take_weiland.mods.commons.nbt.NBTSerializable;
+import de.take_weiland.mods.commons.nbt.NBTSerializer;
 import de.take_weiland.mods.commons.nbt.ToNbt;
+import net.minecraft.entity.Entity;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.Collection;
+import java.util.ListIterator;
 
-import static de.take_weiland.mods.commons.asm.ASMNames.*;
+import static de.take_weiland.mods.commons.asm.ASMUtils.isPrimitive;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
 /**
  * @author diesieben07
  */
-final class NBTTransformer {
+public class NBTTransformer {
 
-	private static final Type classType = getType(Class.class);
-	private static final Type string = getType(String.class);
-	private static final Type enumType = getType(Enum.class);
-	private static final Type enumArr = getType(Enum[].class);
-	private static final Type nbtTagCompound = getObjectType("net/minecraft/nbt/NBTTagCompound");
-	private static final String entityPropsName = "net/minecraftforge/common/IExtendedEntityProperties";
-	private static final String nbtAsmHooks = "de/take_weiland/mods/commons/internal/NBTASMHooks";
+	private static final int READ = 0;
+	private static final int WRITE = 1;
 
-	private static final ClassInfo enumClassInfo = ASMUtils.getClassInfo(Enum.class);
-	private static final ClassInfo tileEntity = ASMUtils.getClassInfo("net/minecraft/tileentity/TileEntity");
-	private static final ClassInfo entity = ASMUtils.getClassInfo("net/minecraft/entity/Entity");
-	private static final ClassInfo entityProps = ASMUtils.getClassInfo(entityPropsName);
+	private static final ClassInfo nbtASMHooks = ClassInfo.of(NBTASMHooks.class);
 
-	static void transform(ClassNode clazz, ClassInfo classInfo) {
-		clazz.access &= ~(ACC_PRIVATE | ACC_PROTECTED);
-		clazz.access |= ACC_PUBLIC;
+	private static final Type nbtBaseType = getType(NBTBase.class);
+	private static final Type nbtTagCompoundType = getType(NBTTagCompound.class);
+	private static final Type stringType = getType(String.class);
 
-		ClassType type;
-		if (tileEntity.isAssignableFrom(classInfo)) {
-			type = ClassType.TILE_ENTITY;
-		} else if (entity.isAssignableFrom(classInfo)) {
-			type = ClassType.ENTITY;
-		} else if (entityProps.isAssignableFrom(classInfo)) {
-			type = ClassType.ENTITY_PROPS;
+	private static final ClassInfo tileEntityClassInfo = ClassInfo.of(TileEntity.class);
+	private static final ClassInfo entityClassInfo = ClassInfo.of(Entity.class);
+	private static final ClassInfo entityPropsClassInfo = ClassInfo.of(IExtendedEntityProperties.class);
+	private static final ClassInfo nbtSerializableClassInfo = ClassInfo.of(NBTSerializable.class);
+	private static final ClassInfo nbtSerializerClassInfo = ClassInfo.of(NBTSerializer.class);
+
+	static void transform(ClassNode clazz, ClassInfo classInfo, ListIterator<MethodNode> methods) {
+		ClassType type = findType(classInfo);
+		Collection<ClassProperty> properties = ASMUtils.propertiesWith(clazz, ToNbt.class);
+
+		MethodNode readMethod = new MethodNode(ACC_PUBLIC, type.getNbtRead(), getMethodDescriptor(VOID_TYPE, nbtTagCompoundType), null, null);
+		MethodNode writeMethod = new MethodNode(ACC_PUBLIC, type.getNbtWrite(), getMethodDescriptor(VOID_TYPE, nbtTagCompoundType), null, null);
+
+		InsnList read = readMethod.instructions;
+		InsnList write = writeMethod.instructions;
+
+		// find any present NBT read/write method and rename them
+		// this is needed because it is basically impossible to find all the possible exitpoints
+		// (return, throw, etc.) of the method, which we would need to make sure our code always get's executed
+		// instead we rename the present method and call it instead
+		MethodInfo presentReadMethod = classInfo.getMethod(type.getNbtRead());
+		if (presentReadMethod != null) {
+			MethodNode methodNode = presentReadMethod.asmNode();
+			methodNode.name = "_sc$renamedNbtRead";
+			methodNode.access = (methodNode.access & ~(ACC_PUBLIC | ACC_PROTECTED)) | ACC_PRIVATE;
+
+			presentReadMethod.callOnThisWith(new VarInsnNode(ALOAD, 1)).appendTo(read);
+		}
+
+		MethodInfo presentWriteMethod = classInfo.getMethod(type.getNbtWrite());
+		if (presentWriteMethod != null) {
+			MethodNode methodNode = presentWriteMethod.asmNode();
+			methodNode.name = "_sc$renamedNbtWrite";
+			methodNode.access = (methodNode.access & ~(ACC_PUBLIC | ACC_PROTECTED)) | ACC_PRIVATE;
+
+			presentWriteMethod.callOnThisWith(new VarInsnNode(ALOAD, 1)).appendTo(write);
+		}
+
+		// determine if our method needs to call the super method
+		// this is the case if
+		// a) there wasn't already a read/write method in the class
+		// b) the super method actually exists and is not abstract
+		boolean[] callSuper = type.shouldCallSuper(classInfo, presentReadMethod != null, presentWriteMethod != null);
+
+		if (callSuper[READ]) {
+			insertSuperCall(clazz, read, type.getNbtRead());
+		}
+
+		if (callSuper[WRITE]) {
+			insertSuperCall(clazz, write, type.getNbtWrite());
+		}
+
+		for (ClassProperty property : properties) {
+			AnnotationNode ann = property.getterAnnotation(ToNbt.class);
+			String propName = ASMUtils.getAnnotationProperty(ann, "value", property.propertyName());
+
+			Type propType = property.getType();
+			Type rawType;
+			Type callType;
+			String mName = "convert";
+			if (propType.getSort() == ARRAY) {
+				rawType = propType.getElementType();
+				if (propType.getDimensions() == 1) {
+					callType = ASMUtils.asArray(findBaseType(rawType), propType.getDimensions());
+				} else {
+					Type baseType = findBaseType(rawType);
+					mName = "convert_deep_" + baseType.getClassName().replace('.', '_');
+					callType = getType(Object[].class);
+				}
+			} else {
+				rawType = propType;
+				callType = findBaseType(propType);
+			}
+
+			boolean passClass = !ASMUtils.isPrimitive(rawType) && rawType.getInternalName().equals("java/lang/Enum");
+
+			// call the convert method to convert the value to a NBTBase
+			String desc = getMethodDescriptor(nbtBaseType, callType);
+			CodePiece converted = nbtASMHooks.getMethod(mName, desc).callWith(property);
+
+			nbtASMHooks
+					.getMethod("putInto")
+					.callWith(new VarInsnNode(ALOAD, type.nbtIdxWrite),
+							propName,
+							converted)
+					.appendTo(write);
+		}
+
+		read.add(new InsnNode(RETURN));
+
+		write.add(new InsnNode(RETURN));
+
+		// add this at the end to not interfer with the findMethod calls above
+		methods.add(readMethod);
+		methods.add(writeMethod);
+	}
+
+	private static void insertSuperCall(ClassInfo clazz, InsnList insns, String methodName) {
+		clazz.getMethod(methodName).callSuperWith(new VarInsnNode(ALOAD, 1)).appendTo(insns);
+	}
+
+	private static Type findBaseType(Type type) {
+		if (isPrimitive(type)) {
+			return type;
+		}
+		if (type.equals(stringType)) {
+			return stringType;
+		}
+		ClassInfo ci = ClassInfo.of(type);
+		if (ci.isEnum()) {
+			return getType(Enum.class);
+		}
+		if (ci.isAssignableFrom(nbtSerializableClassInfo)) {
+			return getType(NBTSerializable.class);
+		}
+		throw new IllegalArgumentException(String.format("Cannot auto-save objects of class %s to NBT!", type.getInternalName()));
+	}
+
+	private static ClassType findType(ClassInfo classInfo) {
+		if (tileEntityClassInfo.isAssignableFrom(classInfo)) {
+			return ClassType.TILE_ENTITY;
+		} else if (entityClassInfo.isAssignableFrom(classInfo)) {
+			return ClassType.ENTITY;
+		} else if (entityPropsClassInfo.isAssignableFrom(classInfo)) {
+			return ClassType.ENTITY_PROPS;
 		} else {
-			throw new IllegalArgumentException(String.format("Don't know how to save @ToNbt fields in class %s!", clazz.name));
+			throw new IllegalStateException("Cannot save to NBT automatically in " + classInfo.internalName());
 		}
-
-		Map<String, FieldNode> fields = Maps.newHashMap();
-		Set<FieldNode> enumFields = Sets.newHashSet();
-		for (FieldNode field : clazz.fields) {
-			AnnotationNode nbt = ASMUtils.getAnnotation(field, ToNbt.class);
-			if (nbt == null) {
-				continue;
-			}
-
-			if ((field.access & ACC_STATIC) == ACC_STATIC || (field.access & ACC_FINAL) == ACC_FINAL) {
-				throw new IllegalArgumentException(String.format("@ToNbt field %s in class %s may not be static or final!", field.name, clazz.name));
-			}
-			String name = nbt.values == null ? "" : ((String) nbt.values.get(1)).trim();
-			if (name.isEmpty()) {
-				name = field.name;
-			}
-
-			if (fields.containsKey(name)) {
-				throw new IllegalArgumentException(String.format("Duplicate Key for @ToNbt field %s in class %s!", field.name, clazz.name));
-			}
-			fields.put(name, field);
-
-			Type fieldType = getType(field.desc);
-			Type actualType;
-			boolean isArray = fieldType.getSort() == ARRAY;
-			if (isArray) {
-				actualType = fieldType.getElementType();
-			} else {
-				actualType = fieldType;
-			}
-			if (!ASMUtils.isPrimitive(actualType) && enumClassInfo.isAssignableFrom(ASMUtils.getClassInfo(actualType.getInternalName()))) {
-				enumFields.add(field);
-			}
-		}
-
-		boolean callSuper = type != ClassType.ENTITY_PROPS || !isEntityPropsDirect(clazz);
-
-		InsnList readHook = createReadHook(clazz, fields, enumFields);
-		InsnList writeHook = createWriteHook(clazz, fields, enumFields);
-
-		makeHandlerCall(clazz, callSuper, type.writeMethod, writeHook);
-		makeHandlerCall(clazz, callSuper, type.readMethod, readHook);
-
-		for (FieldNode field : clazz.fields) {
-			if (ASMUtils.hasAnnotation(field, ToNbt.class)) {
-				field.access &= ~(ACC_PRIVATE | ACC_PROTECTED);
-				field.access |= ACC_PUBLIC;
-			}
-		}
-	}
-
-	private static InsnList createWriteHook(ClassNode clazz, Map<String, FieldNode> fields, Set<FieldNode> enumFields) {
-		InsnList insns = new InsnList();
-
-		for (Map.Entry<String, FieldNode> entry : fields.entrySet()) {
-			FieldNode field = entry.getValue();
-			String nbtKey = entry.getKey();
-			insns.add(new VarInsnNode(ALOAD, 1));
-			insns.add(new LdcInsnNode(nbtKey));
-			insns.add(new VarInsnNode(ALOAD, 0));
-			insns.add(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
-
-			Type fieldType = getType(field.desc);
-			boolean isArray = fieldType.getSort() == ARRAY;
-			boolean isEnum = enumFields.contains(field);
-			Type typeToUse;
-			if (isEnum) {
-				typeToUse = isArray ? enumArr : enumType;
-			} else {
-				typeToUse = fieldType;
-			}
-
-			String desc = getMethodDescriptor(VOID_TYPE, nbtTagCompound, string, typeToUse);
-			insns.add(new MethodInsnNode(INVOKESTATIC, nbtAsmHooks, "set", desc));
-		}
-
-		return insns;
-	}
-
-	private static InsnList createReadHook(ClassNode clazz, Map<String, FieldNode> fields, Set<FieldNode> enumFields) {
-		InsnList insns = new InsnList();
-
-		for (Map.Entry<String, FieldNode> entry : fields.entrySet()) {
-			FieldNode field = entry.getValue();
-			String nbtKey = entry.getKey();
-			Type fieldType = getType(field.desc);
-			boolean isArray = fieldType.getSort() == ARRAY;
-			boolean isEnum = enumFields.contains(field);
-
-			Type typeToUse;
-			if (isEnum) {
-				typeToUse = isArray ? enumArr : enumType;
-			} else {
-				typeToUse = fieldType;
-			}
-
-			insns.add(new VarInsnNode(ALOAD, 0));
-			insns.add(new VarInsnNode(ALOAD, 1));
-			insns.add(new LdcInsnNode(nbtKey));
-			String desc;
-			if (isEnum) {
-				insns.add(new LdcInsnNode(isArray ? fieldType.getElementType() : fieldType));
-				desc = getMethodDescriptor(typeToUse, nbtTagCompound, string, classType);
-			} else {
-				desc = getMethodDescriptor(typeToUse, nbtTagCompound, string);
-			}
-			String name;
-			if (isArray) {
-				name = "get_" + typeToUse.getElementType().getClassName().replace('.', '_') + "_arr";
-			} else {
-				name = "get_" + typeToUse.getClassName().replace('.', '_');
-			}
-			insns.add(new MethodInsnNode(INVOKESTATIC, nbtAsmHooks, name, desc));
-			if (isEnum) {
-				// need to cast for Enums because the return type is just Enum / Enum[]
-				// but the actual type matches
-				insns.add(new TypeInsnNode(CHECKCAST, fieldType.getInternalName()));
-			}
-			insns.add(new FieldInsnNode(PUTFIELD, clazz.name, field.name, field.desc));
-		}
-
-		return insns;
-	}
-
-	private static void makeHandlerCall(ClassNode clazz, boolean callSuper, String methodName, InsnList hook) {
-		MethodNode method = ASMUtils.findMethod(clazz, methodName);
-		String desc;
-		if (method == null) {
-			desc = getMethodDescriptor(VOID_TYPE, nbtTagCompound);
-			method = new MethodNode(ACC_PUBLIC, methodName, desc, null, null);
-			InsnList insns = method.instructions;
-			if (callSuper) {
-				insns.add(new VarInsnNode(ALOAD, 0));
-				insns.add(new VarInsnNode(ALOAD, 1));
-				insns.add(new MethodInsnNode(INVOKESPECIAL, clazz.superName, methodName, desc));
-			}
-
-			insns.add(new InsnNode(RETURN));
-			clazz.methods.add(method);
-		}
-
-		method.instructions.insert(hook);
-	}
-
-	private static boolean isEntityPropsDirect(ClassNode clazz) {
-		if (clazz.interfaces.contains(entityPropsName)) {
-			return true;
-		}
-		for (String iface : clazz.interfaces) {
-			if (checkHasProps(ASMUtils.getClassInfo(iface))) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static boolean checkHasProps(ClassInfo clazz) {
-		for (String iface : clazz.interfaces()) {
-			if (iface.equals(entityPropsName) || checkHasProps(ASMUtils.getClassInfo(iface))) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private static enum ClassType {
 
-		TILE_ENTITY(M_WRITE_TO_NBT_TILEENTITY_MCP, M_WRITE_TO_NBT_TILEENTITY_SRG, M_READ_FROM_NBT_TILEENTITY_MCP, M_READ_FROM_NBT_TILEENTITY_SRG),
-		ENTITY(M_WRITE_ENTITY_TO_NBT_MCP, M_WRITE_ENTITY_TO_NBT_SRG, M_READ_ENTITY_FROM_NBT_MCP, M_READ_ENTITY_FROM_NBT_SRG),
-		ENTITY_PROPS("saveNBTData", "loadNBTData");
+		TILE_ENTITY(1, 1, "func_70307_a", "func_70310_b"), // readFromNBT, writeToNBT
+		ENTITY(1, 1, "func_70037_a", "func_70014_b"), // readEntityFromNBT, writeEntityToNBT
+		ENTITY_PROPS(1, 1, "loadNBTData", "saveNBTData");
 
-		final String writeMethod;
-		final String readMethod;
+		final int nbtIdxWrite;
+		final int nbtIdxRead;
+		private final String nbtReadSrg;
+		private final String nbtWriteSrg;
 
-		private ClassType(String writeMethod, String readMethod) {
-			this.writeMethod = writeMethod;
-			this.readMethod = readMethod;
+		private ClassType(int nbtIdxWrite, int nbtIdxRead, String nbtReadSrg, String nbtWriteSrg) {
+			this.nbtIdxWrite = nbtIdxWrite;
+			this.nbtIdxRead = nbtIdxRead;
+			this.nbtReadSrg = nbtReadSrg;
+			this.nbtWriteSrg = nbtWriteSrg;
 		}
 
-		private ClassType(String writeMcp, String writeSrg, String readMcp, String readSrg) {
-			this(ASMUtils.useMcpNames() ? writeMcp : writeSrg, ASMUtils.useMcpNames() ? readMcp : readSrg);
+		public String getNbtRead() {
+			return this != ENTITY_PROPS ? MCPNames.method(nbtReadSrg) : nbtReadSrg;
 		}
 
+		public String getNbtWrite() {
+			return this != ENTITY_PROPS ? MCPNames.method(nbtWriteSrg) : nbtWriteSrg;
+		}
+
+		public boolean[] shouldCallSuper(ClassInfo me, boolean readPresent, boolean writePresent) {
+			String read = getNbtRead();
+			String write = getNbtWrite();
+			boolean readFound = readPresent;
+			boolean writeFound = writePresent;
+			// only need to compute if we have neither a read nor a write method present in the class
+			if (!readFound || !writeFound) {
+				switch (this) {
+					case ENTITY:
+						ClassInfo clazz = me;
+						do {
+							clazz = clazz.superclass();
+							if (!readFound && clazz.hasMethod(read)) {
+								readFound = true;
+							}
+							if (!writeFound && clazz.hasMethod(write)) {
+								writeFound = true;
+							}
+						} while ((!readFound || !writeFound) && !clazz.superName().equals("java/lang/Object"));
+						break;
+					case ENTITY_PROPS:
+						if (me.superName().equals("java/lang/Object")) {
+							readFound = writeFound = false;
+						} else {
+							clazz = me;
+							do {
+								clazz = clazz.superclass();
+								if (!readFound && clazz.hasMethod(read)) {
+									readFound = true;
+								}
+								if (!writeFound && clazz.hasMethod(write)) {
+									writeFound = true;
+								}
+							} while ((!readFound || !writeFound) && !clazz.superName().equals("java/lang/Object"));
+						}
+						break;
+					case TILE_ENTITY:
+						readFound = writeFound = false;
+						break;
+				}
+			}
+			// only call super if the method is not present in the current class
+			return new boolean[] { !readPresent && !readFound, !writePresent && !writeFound };
+		}
 	}
 
 }

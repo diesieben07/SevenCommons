@@ -31,12 +31,12 @@ public abstract class AbstractCodePiece implements CodePiece {
 
 	@Override
 	public void appendTo(InsnList to) {
-		to.insert(build());
+		to.add(build());
 	}
 
 	@Override
 	public void prependTo(InsnList to) {
-		to.add(build());
+		to.insert(build());
 	}
 
 	@Override

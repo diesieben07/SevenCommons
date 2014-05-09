@@ -10,7 +10,7 @@ import org.objectweb.asm.tree.*;
 
 import java.util.List;
 
-import static de.take_weiland.mods.commons.asm.ASMNames.*;
+import static de.take_weiland.mods.commons.asm.MCPNames.*;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 

@@ -56,7 +56,7 @@ public final class NBT {
 	}
 
 	public static <T> NBTSerializer<? super T> getSerializer(T toSerialize) {
-		return getSerializer(toSerialize.getClass());
+		return (NBTSerializer<? super T>) getSerializer(toSerialize.getClass());
 	}
 
 	public static <T> NBTSerializer<? super T> getSerializer(Class<T> toSerialize) {

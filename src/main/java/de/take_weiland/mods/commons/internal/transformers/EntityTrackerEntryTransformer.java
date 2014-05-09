@@ -8,8 +8,8 @@ import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import static de.take_weiland.mods.commons.asm.ASMNames.M_TRY_START_WATCHING_THIS_MCP;
-import static de.take_weiland.mods.commons.asm.ASMNames.M_TRY_START_WATCHING_THIS_SRG;
+import static de.take_weiland.mods.commons.asm.MCPNames.M_TRY_START_WATCHING_THIS_MCP;
+import static de.take_weiland.mods.commons.asm.MCPNames.M_TRY_START_WATCHING_THIS_SRG;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
@@ -32,7 +32,7 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 		
 		insns.add(new VarInsnNode(ALOAD, 1)); // the player
 		insns.add(new VarInsnNode(ALOAD, 0));
-		String name = ASMNames.field(ASMNames.F_MY_ENTITY_SRG);
+		String name = MCPNames.field(MCPNames.F_MY_ENTITY_SRG);
 		String desc = entity.getDescriptor();
 		insns.add(new FieldInsnNode(GETFIELD, clazz.name, name, desc));
 		
@@ -43,7 +43,7 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 	}
 
 	private CodeLocation findInsertionHook(MethodNode method) {
-		String sendPacketToPlayer = ASMNames.method("func_72567_b");
+		String sendPacketToPlayer = MCPNames.method("func_72567_b");
 
 		// oh how i wish for Java8...
 

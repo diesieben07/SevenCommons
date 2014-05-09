@@ -1,9 +1,11 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.*;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.base.Throwables;
 import com.google.common.collect.*;
 import de.take_weiland.mods.commons.OverrideSetter;
-import de.take_weiland.mods.commons.internal.SevenCommons;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import org.apache.commons.lang3.ArrayUtils;
 import org.objectweb.asm.ClassReader;
@@ -11,7 +13,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import java.io.IOException;
 import java.lang.annotation.*;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,7 +21,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 import static org.objectweb.asm.tree.AbstractInsnNode.*;
 
 public final class ASMUtils {
@@ -36,7 +37,7 @@ public final class ASMUtils {
 	 * @throws java.lang.IllegalArgumentException if the method doesn't have valid return opcode (should never happen with any valid method)
 	 */
 	public static AbstractInsnNode findLastReturn(MethodNode method) {
-		AbstractInsnNode node = findLast(method, Type.getReturnType(method.desc).getOpcode(Opcodes.IRETURN));
+		AbstractInsnNode node = findLast(method.instructions, Type.getReturnType(method.desc).getOpcode(Opcodes.IRETURN));
 		if (node == null) {
 			throw new IllegalArgumentException("Illegal method: Has no or wrong return opcode!");
 		}
@@ -398,6 +399,10 @@ public final class ASMUtils {
 		return new SingleInsnCodePiece(insn);
 	}
 
+	public static CodePiece emptyCodePiece() {
+		return EmptyCodePiece.INSTANCE;
+	}
+
 	public static boolean matches(AbstractInsnNode a, AbstractInsnNode b) {
 		return matches(a, b, false);
 	}
@@ -593,13 +598,14 @@ public final class ASMUtils {
 		InsnList clone = new InsnList();
 		Map<LabelNode, LabelNode> labels = labelCloneMap(insns.getFirst());
 
+		AbstractInsnNode fence = to.getNext();
 		AbstractInsnNode current = from;
 		do {
-			if (current == to) {
-				break;
-			}
 			clone.add(current.clone(labels));
 			current = current.getNext();
+			if (current == fence) {
+				break;
+			}
 		} while (true);
 		return clone;
 	}
@@ -643,11 +649,11 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * Determine whether this is an obfuscated environment or not. True if MCP names should be used (development environment)
-	 * @return true if this is a development environment and MCP names should be used.
+	 * @deprecated use {@link MCPNames#use()}
 	 */
+	@Deprecated
 	public static boolean useMcpNames() {
-		return SevenCommons.MCP_ENVIRONMENT;
+		return MCPNames.use();
 	}
 
 	// *** name utilities *** //
@@ -766,19 +772,6 @@ public final class ASMUtils {
 		}
 	}
 
-	private static ClassNode getClassNode0(String name, int readerFlags) {
-		try {
-			byte[] bytes = CLASSLOADER.getClassBytes(transformName(name));
-			if (bytes == null) {
-				return null;
-			}
-			return getClassNode(bytes, readerFlags);
-		} catch (IOException e) {
-			return null;
-		}
-
-	}
-
 	/**
 	 * equivalent to {@link #getClassNode(byte[], int)} with no ClassReader flags
 	 */
@@ -856,6 +849,9 @@ public final class ASMUtils {
 		checkArgument(retention != RetentionPolicy.SOURCE, "Cannot check SOURCE annotations from class files!");
 
 		List<AnnotationNode> anns = retention == RetentionPolicy.CLASS ? invisAnn : visAnn;
+		if (anns == null) {
+			return null;
+		}
 		String desc = Type.getDescriptor(ann);
 		// avoid generating Iterator garbage
 		//noinspection ForLoopReplaceableByForEach
@@ -868,7 +864,7 @@ public final class ASMUtils {
 		return null;
 	}
 
-	public static Object getAnnotationProperty(AnnotationNode ann, String key, String defaultValue) {
+	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, T defaultValue) {
 		List<Object> data = ann.values;
 		int len;
 		if (data == null || (len = data.size()) == 0) {
@@ -876,7 +872,8 @@ public final class ASMUtils {
 		}
 		for (int i = 0; i < len; i += 2) {
 			if (data.get(i).equals(key)) {
-				return data.get(i + 1);
+				//noinspection unchecked
+				return (T) data.get(i + 1);
 			}
 		}
 		return defaultValue;
@@ -921,66 +918,28 @@ public final class ASMUtils {
 		return type.getSort() != Type.ARRAY && type.getSort() != Type.OBJECT && type.getSort() != Type.METHOD;
 	}
 
-	/**
-	 * create a {@link ClassInfo} representing the given Class
-	 * @param clazz the Class
-	 * @return a ClassInfo
-	 */
-	public static ClassInfo getClassInfo(Class<?> clazz) {
-		return new ClassInfoFromClazz(clazz);
-	}
+	public static Type asArray(Type elementType, int dimensions) {
+		int sort = elementType.getSort();
+		checkArgument(sort != Type.METHOD, "Invalid type!");
 
-	/**
-	 * create a {@link ClassInfo} representing the given ClassNode
-	 * @param clazz the ClassNode
-	 * @return a ClassInfo
-	 */
-	public static ClassInfo getClassInfo(ClassNode clazz) {
-		return new ClassInfoFromNode(clazz);
-	}
+		if (sort == Type.ARRAY) {
+			dimensions += elementType.getDimensions();
+			elementType = elementType.getElementType();
+		}
 
-	/**
-	 * <p>create a {@link ClassInfo} representing the given class.</p>
-	 * <p>This method will not load any classes through the ClassLoader directly, but instead use the ASM library to analyze the raw class bytes.</p>
-	 * @param className the class
-	 * @return a ClassInfo
-	 * @throws MissingClassException if the class could not be found
-	 */
-	public static ClassInfo getClassInfo(String className) {
-		className = binaryName(className);
-		Class<?> clazz;
-		// first, try to get the class if it's already loaded
-		if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, className)) != null) {
-			return new ClassInfoFromClazz(clazz);
-		// didn't find it. Try with the transformed name now
-		} else if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, transformName(className))) != null) {
-			return new ClassInfoFromClazz(clazz);
+		StringBuilder b = new StringBuilder();
+		for (int i = 0; i < dimensions; ++i) {
+			b.append('[');
+		}
+		boolean primitive = isPrimitive(elementType);
+		if (!primitive) {
+			b.append('L');
+			b.append(elementType.getInternalName());
+			b.append(';');
 		} else {
-			try {
-				// the class is definitely not loaded, get it's bytes
-				byte[] bytes = SevenCommons.CLASSLOADER.getClassBytes(transformName(className));
-				// somehow we can't access the class bytes.
-				// we try and load the class now
-				if (bytes == null) {
-					return tryLoad(className);
-				} else {
-					// we found the bytes, lets use them
-					return new ClassInfoFromNode(getThinClassNode(bytes));
-				}
-			} catch (IOException e) {
-				// something went wrong getting the class bytes. try and load it
-				return tryLoad(className);
-			}
+			b.append(elementType.getClassName());
 		}
-	}
-
-	private static ClassInfo tryLoad(String className) {
-		try {
-			return getClassInfo(Class.forName(className));
-		} catch (Exception e) {
-			// we've tried everything. This class doesn't fucking exist.
-			throw new MissingClassException(className, e);
-		}
+		return Type.getObjectType(b.toString());
 	}
 
 	/**

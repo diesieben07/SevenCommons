@@ -5,8 +5,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import static de.take_weiland.mods.commons.asm.ASMNames.M_CONVERT_TO_VILLAGER_MCP;
-import static de.take_weiland.mods.commons.asm.ASMNames.M_CONVERT_TO_VILLAGER_SRG;
+import static de.take_weiland.mods.commons.asm.MCPNames.M_CONVERT_TO_VILLAGER_MCP;
+import static de.take_weiland.mods.commons.asm.MCPNames.M_CONVERT_TO_VILLAGER_SRG;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 import static org.objectweb.asm.Opcodes.SIPUSH;
 

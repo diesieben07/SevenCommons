@@ -12,6 +12,10 @@ import net.minecraft.util.MathHelper;
  */
 public final class NBTASMHooks {
 
+	public static void putInto(NBTTagCompound into, String key, NBTBase value) {
+		into.setTag(key, value);
+	}
+
 	public static NBTBase convert(NBTSerializable value) {
 		return value.serialize();
 	}
@@ -234,7 +238,7 @@ public final class NBTASMHooks {
 		return nbt;
 	}
 
-	public static NBTBase convert_deep_Enum(Object[] arr, int dimensions) {
+	public static NBTBase convert_deep_java_lang_Enum(Object[] arr, int dimensions) {
 		assert(dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
@@ -243,13 +247,13 @@ public final class NBTASMHooks {
 			}
 		} else {
 			for (Object[] subArr : (Object[][]) arr) {
-				nbt.appendTag(convert_deep_Enum(subArr, dimensions - 1));
+				nbt.appendTag(convert_deep_java_lang_Enum(subArr, dimensions - 1));
 			}
 		}
 		return nbt;
 	}
 
-	public static NBTBase convert_deep_String(Object[] arr, int dimensions) {
+	public static NBTBase convert_deep_java_lang_String(Object[] arr, int dimensions) {
 		assert(dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
@@ -258,7 +262,7 @@ public final class NBTASMHooks {
 			}
 		} else {
 			for (Object[] subArr : (Object[][]) arr) {
-				nbt.appendTag(convert_deep_String(subArr, dimensions - 1));
+				nbt.appendTag(convert_deep_java_lang_String(subArr, dimensions - 1));
 			}
 		}
 		return nbt;

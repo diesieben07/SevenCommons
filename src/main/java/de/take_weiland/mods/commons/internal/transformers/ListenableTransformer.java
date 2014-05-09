@@ -8,7 +8,6 @@ import org.objectweb.asm.tree.*;
 
 import java.util.List;
 
-import static de.take_weiland.mods.commons.asm.ASMUtils.getClassInfo;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
@@ -17,7 +16,7 @@ import static org.objectweb.asm.Type.*;
  */
 public class ListenableTransformer implements ASMClassTransformer {
 
-	private static final ClassInfo listenableCI = getClassInfo(Listenable.class);
+	private static final ClassInfo listenableCI = ClassInfo.of(Listenable.class);
 	private static final String listDesc = getDescriptor(List.class);
 	private static final String getterDesc = getMethodDescriptor(getType(List.class));
 	private static final String setterDesc = getMethodDescriptor(VOID_TYPE, getType(List.class));

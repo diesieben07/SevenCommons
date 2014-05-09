@@ -10,7 +10,7 @@ import static org.objectweb.asm.Type.*;
 
 public final class PacketTransformer extends AbstractAnalyzingTransformer {
 
-	private static final ClassInfo modPacketCI = ASMUtils.getClassInfo("de/take_weiland/mods/commons/net/ModPacketBase");
+	private static final ClassInfo modPacketCI = ClassInfo.of("de/take_weiland/mods/commons/net/ModPacketBase");
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {

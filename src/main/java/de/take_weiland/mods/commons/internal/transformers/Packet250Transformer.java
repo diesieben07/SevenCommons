@@ -9,7 +9,7 @@ import org.objectweb.asm.tree.*;
 import java.io.DataInput;
 import java.io.DataOutput;
 
-import static de.take_weiland.mods.commons.asm.ASMNames.*;
+import static de.take_weiland.mods.commons.asm.MCPNames.*;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 

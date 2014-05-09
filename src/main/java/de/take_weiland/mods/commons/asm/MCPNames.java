@@ -14,7 +14,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public final class ASMNames {
+public final class MCPNames {
 
 	private static final Map<String, String> fields;
 	private static final Map<String, String> methods;
@@ -22,9 +22,7 @@ public final class ASMNames {
 	private static final String SYS_PROP = "sevencommons.mappingsFile";
 
 	static {
-		if (!ASMUtils.useMcpNames()) {
-			methods = fields = null;
-		} else {
+		if (use()) {
 			String mappingsDir;
 			String prop = System.getProperty(SYS_PROP);
 			if (prop == null) {
@@ -35,22 +33,28 @@ public final class ASMNames {
 
 			fields = readMappings(new File(mappingsDir + "fields.csv"));
 			methods = readMappings(new File(mappingsDir + "methods.csv"));
+		} else {
+			methods = fields = null;
 		}
 	}
 
+	public static boolean use() {
+		return SevenCommons.MCP_ENVIRONMENT;
+	}
+
 	public static String field(String srg) {
-		if (!ASMUtils.useMcpNames()) {
-			return srg;
-		} else {
+		if (use()) {
 			return fields.get(srg);
+		} else {
+			return srg;
 		}
 	}
 
 	public static String method(String srg) {
-		if (!ASMUtils.useMcpNames()) {
-			return srg;
-		} else {
+		if (use()) {
 			return methods.get(srg);
+		} else {
+			return srg;
 		}
 	}
 
@@ -198,6 +202,6 @@ public final class ASMNames {
 
 	public static final String F_UNLOCALIZED_NAME_BLOCK_MCP = "unlocalizedName";
 
-	private ASMNames() { }
+	private MCPNames() { }
 	
 }

@@ -54,7 +54,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 				if (clazz == null) {
 					ClassReader cr = new ClassReader(bytes);
 					cr.accept((clazz = new ClassNode()), 0);
-					classInfo = ASMUtils.getClassInfo(clazz);
+					classInfo = ClassInfo.of(clazz);
 				}
 				changed |= transformer.transform(clazz, classInfo);
 			}

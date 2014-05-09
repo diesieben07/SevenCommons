@@ -33,7 +33,7 @@ public class AnnotationFindingTransformer extends AbstractAnalyzingTransformer {
 			Iterable<AnnotationNode> anns = JavaUtils.concatNullable(field.visibleAnnotations, field.invisibleAnnotations);
 			for (AnnotationNode ann : anns) {
 				if (!nbt && ann.desc.equals(toNbtDesc)) {
-					NBTTransformer.transform(clazz, classInfo);
+					NBTTransformer.transform(clazz, classInfo, methodsIt);
 					nbt = true;
 					continue;
 				}

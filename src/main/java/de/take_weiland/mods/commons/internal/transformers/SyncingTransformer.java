@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import com.google.common.collect.*;
 import cpw.mods.fml.common.FMLLog;
-import de.take_weiland.mods.commons.asm.ASMNames;
+import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ClassInfo;
 import de.take_weiland.mods.commons.internal.*;
@@ -20,8 +20,6 @@ import org.objectweb.asm.tree.*;
 import java.util.*;
 import java.util.logging.Logger;
 
-import static de.take_weiland.mods.commons.asm.ASMUtils.getClassInfo;
-
 /**
  * contains black bytecode magic. Do not touch.
  */
@@ -29,10 +27,10 @@ public final class SyncingTransformer {
 
 	private static final Logger LOGGER;
 	private static final String syncAsmHooks = "de/take_weiland/mods/commons/internal/SyncASMHooks";
-	private static final ClassInfo extPropsCI = getClassInfo(IExtendedEntityProperties.class);
-	private static final ClassInfo entityCI = getClassInfo("net/minecraft/entity/Entity");
-	private static final ClassInfo tileEntityCI = getClassInfo("net/minecraft/tileentity/TileEntity");
-	private static final ClassInfo containerCI = getClassInfo("net/minecraft/inventory/Container");
+	private static final ClassInfo extPropsCI = ClassInfo.of(IExtendedEntityProperties.class);
+	private static final ClassInfo entityCI = ClassInfo.of("net/minecraft/entity/Entity");
+	private static final ClassInfo tileEntityCI = ClassInfo.of("net/minecraft/tileentity/TileEntity");
+	private static final ClassInfo containerCI = ClassInfo.of("net/minecraft/inventory/Container");
 
 
 	static {
@@ -152,7 +150,7 @@ public final class SyncingTransformer {
 			lbl = new LabelNode();
 			call.add(new VarInsnNode(Opcodes.ALOAD, 0));
 			call.add(new FieldInsnNode(Opcodes.GETFIELD, type.getRootClass(), worldField, world.getDescriptor()));
-			call.add(new FieldInsnNode(Opcodes.GETFIELD, world.getInternalName(), ASMUtils.useMcpNames() ? ASMNames.F_IS_REMOTE_MCP : ASMNames.F_IS_REMOTE_SRG, Type.BOOLEAN_TYPE.getDescriptor()));
+			call.add(new FieldInsnNode(Opcodes.GETFIELD, world.getInternalName(), ASMUtils.useMcpNames() ? MCPNames.F_IS_REMOTE_MCP : MCPNames.F_IS_REMOTE_SRG, Type.BOOLEAN_TYPE.getDescriptor()));
 			call.add(new JumpInsnNode(Opcodes.IFNE, lbl));
 		}
 
@@ -609,7 +607,7 @@ public final class SyncingTransformer {
 		}
 
 		private void checkEnum() {
-			isEnum = ASMUtils.getClassInfo(Enum.class).isAssignableFrom(ASMUtils.getClassInfo(getTypeToSync().getClassName()));
+			isEnum = ClassInfo.of(Enum.class).isAssignableFrom(ClassInfo.of(getTypeToSync().getClassName()));
 		}
 
 		String getName() {
