@@ -32,4 +32,12 @@ public final class CodePieces {
 		return asCodePiece(insns);
 	}
 
+	public static CodePiece castTo(Type type) {
+		return castTo(type.getInternalName());
+	}
+
+	public static CodePiece castTo(String internalName) {
+		return ASMUtils.asCodePiece(new TypeInsnNode(CHECKCAST, internalName));
+	}
+
 }

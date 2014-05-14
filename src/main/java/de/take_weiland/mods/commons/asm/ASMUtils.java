@@ -931,14 +931,7 @@ public final class ASMUtils {
 		for (int i = 0; i < dimensions; ++i) {
 			b.append('[');
 		}
-		boolean primitive = isPrimitive(elementType);
-		if (!primitive) {
-			b.append('L');
-			b.append(elementType.getInternalName());
-			b.append(';');
-		} else {
-			b.append(elementType.getClassName());
-		}
+		b.append(elementType.getDescriptor());
 		return Type.getObjectType(b.toString());
 	}
 

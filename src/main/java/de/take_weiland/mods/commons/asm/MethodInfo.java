@@ -200,6 +200,7 @@ public abstract class MethodInfo {
 	}
 
 	private static CodePiece toCodePiece(Object o) {
+		AbstractInsnNode possibleIntInsn;
 		if (o instanceof CodePiece) {
 			return (CodePiece) o;
 		} else if (o instanceof AbstractInsnNode) {
@@ -208,6 +209,8 @@ public abstract class MethodInfo {
 			return ASMUtils.asCodePiece((InsnList) o);
 		} else if (o instanceof ClassProperty) {
 			return ((ClassProperty) o).getValue();
+		} else if ((possibleIntInsn = tryAsIntInsn(o)) != null) {
+			return ASMUtils.asCodePiece(possibleIntInsn);
 		} else if (isValidLdc(o)) {
 			return ASMUtils.asCodePiece(new LdcInsnNode(o));
 		} else {
@@ -215,8 +218,22 @@ public abstract class MethodInfo {
 		}
 	}
 
+	private static AbstractInsnNode tryAsIntInsn(Object o) {
+		if (o instanceof Integer || o instanceof Byte || o instanceof Short) {
+			int i = ((Number) o).intValue();
+			if (i <= Byte.MAX_VALUE && i >= Byte.MIN_VALUE) {
+				return new IntInsnNode(BIPUSH, i);
+			} else if (i <= Short.MAX_VALUE && i >= Short.MIN_VALUE) {
+				return new IntInsnNode(SIPUSH, i);
+			} else {
+				return new LdcInsnNode(i);
+			}
+		}
+		return null;
+	}
+
 	private static boolean isValidLdc(Object o) {
-		return o instanceof String || o instanceof Integer || o instanceof Float || o instanceof Double || o instanceof Type;
+		return o instanceof String || o instanceof Integer || o instanceof Long ||  o instanceof Float || o instanceof Double || o instanceof Type;
 	}
 
 	private CodePiece callWith0(Object[] parameters, int opcode, String className, CodePiece instanceLoader) {

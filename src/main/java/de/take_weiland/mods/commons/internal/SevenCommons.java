@@ -77,7 +77,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 
 	@Override
 	public void injectData(Map<String, Object> data) {
-		MCP_ENVIRONMENT = !((Boolean)data.get("runtimeDeobfuscationEnabled")).booleanValue();
+		MCP_ENVIRONMENT = !(Boolean) data.get("runtimeDeobfuscationEnabled");
 		MINECRAFT_DIR = (File) data.get("mcLocation");
 		source = (File)data.get("coremodLocation");
 		if (source == null) { // this is usually in a dev env

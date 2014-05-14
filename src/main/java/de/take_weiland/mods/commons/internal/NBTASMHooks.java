@@ -7,6 +7,8 @@ import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import net.minecraft.nbt.*;
 import net.minecraft.util.MathHelper;
 
+import java.lang.reflect.Array;
+
 /**
  * @author diesieben07
  */
@@ -14,6 +16,10 @@ public final class NBTASMHooks {
 
 	public static void putInto(NBTTagCompound into, String key, NBTBase value) {
 		into.setTag(key, value);
+	}
+
+	public static NBTBase getFrom(NBTTagCompound from, String key) {
+		return from.getTag(key);
 	}
 
 	public static NBTBase convert(NBTSerializable value) {
@@ -269,68 +275,324 @@ public final class NBTASMHooks {
 	}
 
 	public static boolean get_boolean(NBTBase nbt) {
-		return ((NBTTagByte) nbt).data != 0;
+		return nbt != null && ((NBTTagByte) nbt).data != 0;
 	}
 
 	public static byte get_byte(NBTBase nbt) {
-		return ((NBTTagByte) nbt).data;
+		return nbt == null ? 0 : ((NBTTagByte) nbt).data;
 	}
 
 	public static short get_short(NBTBase nbt) {
-		return ((NBTTagShort) nbt).data;
+		return nbt == null ? 0 : ((NBTTagShort) nbt).data;
 	}
 
 	public static int get_int(NBTBase nbt) {
-		return ((NBTTagInt) nbt).data;
+		return nbt == null ? 0 :((NBTTagInt) nbt).data;
 	}
 
 	public static long get_long(NBTBase nbt) {
-		return ((NBTTagLong) nbt).data;
+		return nbt == null ? 0 : ((NBTTagLong) nbt).data;
 	}
 
 	public static float get_float(NBTBase nbt) {
-		return ((NBTTagFloat) nbt).data;
+		return nbt == null ? 0 : ((NBTTagFloat) nbt).data;
 	}
 
 	public static double get_double(NBTBase nbt) {
-		return ((NBTTagDouble) nbt).data;
+		return nbt == null ? 0 : ((NBTTagDouble) nbt).data;
 	}
 
 	public static char get_char(NBTBase nbt) {
-		return (char) ((NBTTagShort) nbt).data;
+		return nbt == null ? 0 : (char) ((NBTTagShort) nbt).data;
+	}
+
+	public static String get_java_lang_String(NBTBase nbt) {
+		return nbt == null ? null : ((NBTTagString) nbt).data;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <E extends Enum<E>> Enum<?> get_java_lang_Enum(NBTBase nbt, Class<?> clazz) {
+		return nbt == null ? null : Enum.valueOf((Class<E>) clazz, ((NBTTagString) nbt).data);
 	}
 
 	public static boolean[] get_boolean_arr(NBTBase nbt) {
 		NBTTagCompound comp = (NBTTagCompound) nbt;
-		return byteToBoolean(comp.getByteArray("b"), comp.getInteger("l"));
+		return comp == null ? null : byteToBoolean(comp.getByteArray("b"), comp.getInteger("l"));
 	}
 
 	public static byte[] get_byte_arr(NBTBase nbt) {
-		return ((NBTTagByteArray) nbt).byteArray;
+		return nbt == null ? null : ((NBTTagByteArray) nbt).byteArray;
 	}
 
 	public static short[] get_short_arr(NBTBase nbt) {
-		return byteToShort(((NBTTagByteArray) nbt).byteArray);
+		return nbt == null ? null : byteToShort(((NBTTagByteArray) nbt).byteArray);
 	}
 
 	public static int[] get_int_arr(NBTBase nbt) {
-		return ((NBTTagIntArray) nbt).intArray;
+		return nbt == null ?null : ((NBTTagIntArray) nbt).intArray;
 	}
 
 	public static long[] get_long_arr(NBTBase nbt) {
-		return intToLong(((NBTTagIntArray) nbt).intArray);
+		return nbt == null ? null : intToLong(((NBTTagIntArray) nbt).intArray);
 	}
 
 	public static float[] get_float_arr(NBTBase nbt) {
-		return intToFloat(((NBTTagIntArray) nbt).intArray);
+		return nbt == null ? null : intToFloat(((NBTTagIntArray) nbt).intArray);
 	}
 
 	public static double[] get_double_arr(NBTBase nbt) {
-		return intToDouble(((NBTTagIntArray) nbt).intArray);
+		return nbt == null ? null : intToDouble(((NBTTagIntArray) nbt).intArray);
 	}
 
 	public static char[] get_char_arr(NBTBase nbt) {
-		return byteToChar(((NBTTagByteArray) nbt).byteArray);
+		return nbt == null ? null : byteToChar(((NBTTagByteArray) nbt).byteArray);
+	}
+
+	public static String[] get_java_lang_String_arr(NBTBase nbt) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		String[] result = new String[len];
+		for (int i = 0; i < len; ++i) {
+			result[i] = get_java_lang_String(list.tagAt(i));
+		}
+		return result;
+	}
+
+	public static <E extends Enum<E>> Enum<?>[] get_java_lang_Enum_arr(NBTBase nbt, Class<?> clazz) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		Enum<?>[] result = (Enum<?>[]) Array.newInstance(clazz, len);
+		for (int i = 0; i < len; ++i) {
+			result[i] = get_java_lang_Enum(nbt, clazz);
+		}
+		return result;
+	}
+
+	public static Object[] get_deep_boolean(NBTBase nbt, Class<?> fieldType, int dimensions) {
+		if (nbt == null) {
+			return null;
+		}
+
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		if (dimensions == 2) {
+			boolean[][] result = new boolean[len][];
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_boolean_arr(list.tagAt(i));
+			}
+			return result;
+		} else {
+			Class<?> oneLessDim = fieldType.getComponentType();
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_deep_boolean(list.tagAt(i), oneLessDim, dimensions - 1);
+			}
+			return result;
+		}
+	}
+
+	public static Object[] get_deep_byte(NBTBase nbt, Class<?> fieldType, int dimensions) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		if (dimensions == 2) {
+			byte[][] result = new byte[len][];
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_byte_arr(list.tagAt(i));
+			}
+			return result;
+		} else {
+			Class<?> oneLessDim = fieldType.getComponentType();
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_deep_byte(list.tagAt(i), oneLessDim, dimensions - 1);
+			}
+			return result;
+		}
+	}
+
+	public static Object[] get_deep_short(NBTBase nbt, Class<?> fieldType, int dimensions) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		if (dimensions == 2) {
+			short[][] result = new short[len][];
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_short_arr(list.tagAt(i));
+			}
+			return result;
+		} else {
+			Class<?> oneLessDim = fieldType.getComponentType();
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_deep_short(list.tagAt(i), oneLessDim, dimensions - 1);
+			}
+			return result;
+		}
+	}
+
+	public static Object[] get_deep_int(NBTBase nbt, Class<?> fieldType, int dimensions) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		if (dimensions == 2) {
+			int[][] result = new int[len][];
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_int_arr(list.tagAt(i));
+			}
+			return result;
+		} else {
+			Class<?> oneLessDim = fieldType.getComponentType();
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_deep_int(list.tagAt(i), oneLessDim, dimensions - 1);
+			}
+			return result;
+		}
+	}
+
+	public static Object[] get_deep_long(NBTBase nbt, Class<?> fieldType, int dimensions) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		if (dimensions == 2) {
+			long[][] result = new long[len][];
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_long_arr(list.tagAt(i));
+			}
+			return result;
+		} else {
+			Class<?> oneLessDim = fieldType.getComponentType();
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_deep_long(list.tagAt(i), oneLessDim, dimensions - 1);
+			}
+			return result;
+		}
+	}
+
+	public static Object[] get_deep_float(NBTBase nbt, Class<?> fieldType, int dimensions) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		if (dimensions == 2) {
+			float[][] result = new float[len][];
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_float_arr(list.tagAt(i));
+			}
+			return result;
+		} else {
+			Class<?> oneLessDim = fieldType.getComponentType();
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_deep_float(list.tagAt(i), oneLessDim, dimensions - 1);
+			}
+			return result;
+		}
+	}
+
+	public static Object[] get_deep_double(NBTBase nbt, Class<?> fieldType, int dimensions) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		if (dimensions == 2) {
+			double[][] result = new double[len][];
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_double_arr(list.tagAt(i));
+			}
+			return result;
+		} else {
+			Class<?> oneLessDim = fieldType.getComponentType();
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);;
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_deep_double(list.tagAt(i), oneLessDim, dimensions - 1);
+			}
+			return result;
+		}
+	}
+
+	public static Object[] get_deep_char(NBTBase nbt, Class<?> fieldType, int dimensions) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		if (dimensions == 2) {
+			char[][] result = new char[len][];
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_char_arr(list.tagAt(i));
+			}
+			return result;
+		} else {
+			Class<?> oneLessDim = fieldType.getComponentType();
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_deep_char(list.tagAt(i), oneLessDim, dimensions - 1);
+			}
+			return result;
+		}
+	}
+
+	public static Object[] get_deep_java_lang_String(NBTBase nbt, Class<?> fieldType, int dimensions) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		if (dimensions == 2) {
+			String[][] result = new String[len][];
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_java_lang_String_arr(list.tagAt(i));
+			}
+			return result;
+		} else {
+			Class<?> oneLessDim = fieldType.getComponentType();
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_deep_java_lang_String(list.tagAt(i), oneLessDim, dimensions - 1);
+			}
+			return result;
+		}
+	}
+
+	public static Object[] get_deep_java_lang_Enum(NBTBase nbt, Class<?> fieldType, int dimensions) {
+		if (nbt == null) {
+			return null;
+		}
+		NBTTagList list = (NBTTagList) nbt;
+		int len = list.tagCount();
+		if (dimensions == 2) {
+			Enum<?>[][] result = (Enum<?>[][]) Array.newInstance(fieldType, len);
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_java_lang_Enum_arr(list.tagAt(i), fieldType.getComponentType());
+			}
+			return result;
+		} else {
+			Class<?> oneLessDim = fieldType.getComponentType();
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);
+			for (int i = 0; i < len; ++i) {
+				result[i] = get_deep_java_lang_Enum(list.tagAt(i), oneLessDim, dimensions - 1);
+			}
+			return result;
+		}
 	}
 
 	private static byte[] booleanToByte(boolean[] value) {

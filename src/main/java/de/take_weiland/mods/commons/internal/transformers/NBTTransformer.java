@@ -44,6 +44,9 @@ public class NBTTransformer {
 		ClassType type = findType(classInfo);
 		Collection<ClassProperty> properties = ASMUtils.propertiesWith(clazz, ToNbt.class);
 
+		MethodInfo putIntoMethod = nbtASMHooks.getMethod("putInto");
+		MethodInfo getFromMethod = nbtASMHooks.getMethod("getFrom");
+
 		MethodNode readMethod = new MethodNode(ACC_PUBLIC, type.getNbtRead(), getMethodDescriptor(VOID_TYPE, nbtTagCompoundType), null, null);
 		MethodNode writeMethod = new MethodNode(ACC_PUBLIC, type.getNbtWrite(), getMethodDescriptor(VOID_TYPE, nbtTagCompoundType), null, null);
 
@@ -72,6 +75,9 @@ public class NBTTransformer {
 			presentWriteMethod.callOnThisWith(new VarInsnNode(ALOAD, 1)).appendTo(write);
 		}
 
+		methods.add(readMethod);
+		methods.add(writeMethod);
+
 		// determine if our method needs to call the super method
 		// this is the case if
 		// a) there wasn't already a read/write method in the class
@@ -79,77 +85,39 @@ public class NBTTransformer {
 		boolean[] callSuper = type.shouldCallSuper(classInfo, presentReadMethod != null, presentWriteMethod != null);
 
 		if (callSuper[READ]) {
-			insertSuperCall(clazz, read, type.getNbtRead());
+			insertSuperCall(classInfo, read, type.getNbtRead());
 		}
 
 		if (callSuper[WRITE]) {
-			insertSuperCall(clazz, write, type.getNbtWrite());
+			insertSuperCall(classInfo, write, type.getNbtWrite());
 		}
 
 		for (ClassProperty property : properties) {
 			AnnotationNode ann = property.getterAnnotation(ToNbt.class);
 			String propName = ASMUtils.getAnnotationProperty(ann, "value", property.propertyName());
 
-			Type propType = property.getType();
-			Type rawType;
-			Type callType;
-			String mName = "convert";
-			if (propType.getSort() == ARRAY) {
-				rawType = propType.getElementType();
-				if (propType.getDimensions() == 1) {
-					callType = ASMUtils.asArray(findBaseType(rawType), propType.getDimensions());
-				} else {
-					Type baseType = findBaseType(rawType);
-					mName = "convert_deep_" + baseType.getClassName().replace('.', '_');
-					callType = getType(Object[].class);
-				}
-			} else {
-				rawType = propType;
-				callType = findBaseType(propType);
-			}
+			CodePiece nbtValue = getFromMethod.callWith(
+					new VarInsnNode(ALOAD, 1),
+					propName
+			);
 
-			boolean passClass = !ASMUtils.isPrimitive(rawType) && rawType.getInternalName().equals("java/lang/Enum");
+			ConvertInfo info = ConvertType.get(property).createInfo(property, nbtValue);
+			info.convert().appendTo(write);
 
-			// call the convert method to convert the value to a NBTBase
-			String desc = getMethodDescriptor(nbtBaseType, callType);
-			CodePiece converted = nbtASMHooks.getMethod(mName, desc).callWith(property);
-
-			nbtASMHooks
-					.getMethod("putInto")
-					.callWith(new VarInsnNode(ALOAD, type.nbtIdxWrite),
-							propName,
-							converted)
-					.appendTo(write);
+			putIntoMethod.callWith(
+					new VarInsnNode(ALOAD, 1),
+					propName,
+					)
 		}
 
 		read.add(new InsnNode(RETURN));
-
 		write.add(new InsnNode(RETURN));
 
-		// add this at the end to not interfer with the findMethod calls above
-		methods.add(readMethod);
-		methods.add(writeMethod);
 	}
 
 	private static void insertSuperCall(ClassInfo clazz, InsnList insns, String methodName) {
-		clazz.getMethod(methodName).callSuperWith(new VarInsnNode(ALOAD, 1)).appendTo(insns);
-	}
-
-	private static Type findBaseType(Type type) {
-		if (isPrimitive(type)) {
-			return type;
-		}
-		if (type.equals(stringType)) {
-			return stringType;
-		}
-		ClassInfo ci = ClassInfo.of(type);
-		if (ci.isEnum()) {
-			return getType(Enum.class);
-		}
-		if (ci.isAssignableFrom(nbtSerializableClassInfo)) {
-			return getType(NBTSerializable.class);
-		}
-		throw new IllegalArgumentException(String.format("Cannot auto-save objects of class %s to NBT!", type.getInternalName()));
+		clazz.getMethod(methodName)
+				.callSuperWith(new VarInsnNode(ALOAD, 1)).appendTo(insns);
 	}
 
 	private static ClassType findType(ClassInfo classInfo) {
@@ -233,6 +201,172 @@ public class NBTTransformer {
 			}
 			// only call super if the method is not present in the current class
 			return new boolean[] { !readPresent && !readFound, !writePresent && !writeFound };
+		}
+	}
+
+	private static enum ConvertType {
+
+		DEFAULT {
+			@Override
+			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+				Type type = property.getType();
+				String getMethod = "get_" + type.getClassName().replace('.', '_');
+				String getDesc = getMethodDescriptor(type, nbtBaseType);
+
+				String convertMethod = "convert";
+				String convertDesc = getMethodDescriptor(nbtBaseType, type);
+
+				Object[] getArgs = { nbtValue };
+				Object[] convertArgs = { property.getValue() };
+				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs);
+			}
+		},
+		ENUM {
+			@Override
+			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+				Type type = property.getType();
+				String getMethod = "get_java_lang_Enum";
+				String getDesc = getMethodDescriptor(getType(Enum.class), nbtBaseType, getType(Class.class));
+
+				String convertMethod = "convert";
+				String convertDesc = getMethodDescriptor(nbtBaseType, getType(Enum.class));
+
+				Object[] getArgs = { nbtValue, type };
+				Object[] convertArgs = { property.getValue() };
+				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs, true);
+			}
+		},
+		ONE_DIM_DEFAULT {
+			@Override
+			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+				Type type = property.getType();
+				Type elemType = type.getElementType();
+
+				String getMethod = "get_" + elemType.getClassName().replace('.', '_') + "_arr";
+				String getDesc = getMethodDescriptor(type, nbtBaseType);
+
+				String convertMethod = "convert";
+				String convertDesc = getMethodDescriptor(type, nbtBaseType);
+
+				Object[] getArgs = { nbtValue };
+				Object[] convertArgs = { property.getValue() };
+				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs);
+			}
+		},
+		ONE_DIM_ENUM {
+			@Override
+			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+				Type type = property.getType();
+				Type elemType = type.getElementType();
+
+				String getMethod = "get_java_lang_Enum_arr";
+				String getDesc = getMethodDescriptor(getType(Enum[].class), nbtBaseType, getType(Class.class));
+				Object[] getArgs = { nbtValue, elemType };
+
+				String convertMethod = "convert";
+				String convertDesc = getMethodDescriptor(nbtBaseType, getType(Enum[].class));
+				Object[] convertArgs = { property.getValue() };
+				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs, true);
+			}
+		},
+		MULTI_DIM_DEFAULT {
+			@Override
+			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+				Type type = property.getType();
+				Type elemType = type.getElementType();
+
+				String convClassName = elemType.getClassName().replace('.', '_');
+				String getMethod = "get_deep_" + convClassName;
+				String getDesc = getMethodDescriptor(getType(Object[].class), nbtBaseType, getType(Class.class), INT_TYPE);
+				Object[] getArgs = { nbtValue, type, type.getDimensions() };
+
+				String convertMethod = "convert_deep_" + convClassName;
+				String convertDesc = getMethodDescriptor(nbtBaseType, getType(Object[].class), INT_TYPE);
+				Object[] convertArgs = { property.getValue(), type.getDimensions() };
+				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs, true);
+			}
+		},
+		MULTI_DIM_ENUM {
+			@Override
+			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+				Type type = property.getType();
+
+				String getMethod = "get_deep_java_lang_Enum";
+				String getDesc = getMethodDescriptor(getType(Object[].class), nbtBaseType, getType(Class.class), INT_TYPE);
+				Object[] getArgs = { nbtValue, type, type.getDimensions() };
+
+				String convertMethod = "convert_deep_java_lang_Enum";
+				String convertDesc = getMethodDescriptor(nbtBaseType, getType(Object[].class), INT_TYPE);
+				Object[] convertArgs = { property.getValue(), type.getDimensions() };
+				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs);
+			}
+		};
+
+		abstract ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue);
+
+		static ConvertType get(ClassProperty property) {
+			Type type = property.getType();
+			if (type.getSort() == ARRAY) {
+				Type elemType = type.getElementType();
+				boolean multiDim = type.getDimensions() != 1;
+				if (isBaseType(elemType)) {
+					return multiDim ? MULTI_DIM_DEFAULT : ONE_DIM_DEFAULT;
+				} else if (isEnum(elemType)) {
+					return multiDim ? MULTI_DIM_ENUM : ONE_DIM_ENUM;
+				}
+			} else if (isBaseType(type)) {
+				return DEFAULT;
+			} else if (isEnum(type)) {
+				return ENUM;
+			}
+			throw new IllegalArgumentException("Cannot serialize class " + type.getClassName() + " to NBT!");
+		}
+
+		private static boolean isBaseType(Type t) {
+			return ASMUtils.isPrimitive(t) || t.getInternalName().equals("java/lang/String");
+		}
+
+		private static boolean isEnum(Type t) {
+			return t.getInternalName().equals("java/lang/Enum");
+		}
+
+	}
+
+	private static class ConvertInfo {
+
+		final String getMethod;
+		final String convertMethod;
+		final String getDesc;
+		final String convertDesc;
+		final Object[] getArgs;
+		final Object[] convertArgs;
+		final Type cast;
+
+		ConvertInfo(String getMethod, String convertMethod, String getDesc, String convertDesc, Object[] getArgs, Object[] convertArgs) {
+			this(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs, null);
+		}
+
+		ConvertInfo(String getMethod, String convertMethod, String getDesc, String convertDesc, Object[] getArgs, Object[] convertArgs, Type cast) {
+			this.cast = cast;
+			this.getMethod = getMethod;
+			this.convertMethod = convertMethod;
+			this.getDesc = getDesc;
+			this.convertDesc = convertDesc;
+			this.getArgs = getArgs;
+			this.convertArgs = convertArgs;
+		}
+
+		CodePiece convert() {
+			return nbtASMHooks.getMethod(convertMethod, convertDesc).callWith(convertArgs);
+		}
+
+		CodePiece get() {
+			CodePiece piece = nbtASMHooks.getMethod(getMethod, getDesc).callWith(getArgs);
+			if (cast != null) {
+				return piece.append(CodePieces.castTo(cast));
+			} else {
+				return piece;
+			}
 		}
 	}
 

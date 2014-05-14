@@ -4,8 +4,11 @@ import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import de.take_weiland.mods.commons.nbt.ToNbt;
+import net.minecraft.nbt.NBTTagByteArray;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.player.EntityInteractEvent;
@@ -18,6 +21,18 @@ public class testmod_sc {
 	public void preInit(FMLPreInitializationEvent event) throws Exception {
 //		FMLInterModComms.sendMessage("sevencommons", "setUpdateUrl", "http://www.take-weiland.de/testmod.json");
 		Reflection.initialize(TestTe.class);
+
+		NBTTagCompound nbt = new NBTTagCompound();
+		NBTTagList list = new NBTTagList();
+		for (int i = 0; i < 5; ++i) {
+			list.appendTag(new NBTTagByteArray("", new byte[] { 1, 2, 4, 7 }));
+		}
+		nbt.setTag("moreDims", list);
+
+//		TestTe t = new TestTe();
+//		t.readFromNBT(nbt);
+//		System.out.println(Arrays.deepToString(t.moreDims));
+
 		System.exit(0);
 		MinecraftForge.EVENT_BUS.register(this);
 
@@ -30,12 +45,18 @@ public class testmod_sc {
 	public static class TestTe extends TileEntity {
 
 		@ToNbt
-		private String foobar = "foo";
+		private ForgeDirection[] foobar = { ForgeDirection.DOWN, ForgeDirection.EAST };
 
 		@Override
 		public void writeToNBT(NBTTagCompound nbt) {
 			super.writeToNBT(nbt);
-			nbt.setBoolean("baurzus", true);
+			System.out.println("writeToNBT!");
+		}
+
+		@Override
+		public void readFromNBT(NBTTagCompound par1NBTTagCompound) {
+			super.readFromNBT(par1NBTTagCompound);
+			System.out.println("readFromNBT!");
 		}
 	}
 
