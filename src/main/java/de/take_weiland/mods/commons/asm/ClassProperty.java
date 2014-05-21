@@ -11,19 +11,27 @@ import java.lang.annotation.Annotation;
  */
 public interface ClassProperty {
 
-	/**
-	 * generate a new CodePiece that will load the value represented on the stack
-	 * @return the CodePiece
-	 */
-	CodePiece getValue();
+	CodePiece set(CodePiece loadValue);
+
+	CodePiece set(CodePiece instance, CodePiece loadValue);
+
+	CodePiece get();
+
+	CodePiece get(CodePiece instance);
 
 	/**
-	 * generate a new CodePiece that will save a value to the field
+	 * generate a new CodePiece that will put the value as it is the current "this" instance onto the stack
+	 * @return the CodePiece
+	 */
+	CodePiece getFromThis();
+
+	/**
+	 * generate a new CodePiece that will save a value into the filed in the current "this" instance
 	 * @param loadValue a CodePiece that loads the desired value onto the stack
 	 * @return the CodePiece
 	 * @throws java.lang.UnsupportedOperationException if {@link #isWritable()} is false
 	 */
-	CodePiece setValue(CodePiece loadValue);
+	CodePiece setOnThis(CodePiece loadValue);
 
 	AnnotationNode getterAnnotation(Class<? extends Annotation> ann);
 

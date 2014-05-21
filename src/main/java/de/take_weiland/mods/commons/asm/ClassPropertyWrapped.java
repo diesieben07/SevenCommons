@@ -38,11 +38,11 @@ class ClassPropertyWrapped extends AbstractClassProperty {
 	}
 
 	@Override
-	CodePiece makeGet() {
+	CodePiece makeGet(CodePiece instance) {
 		InsnList insns = new InsnList();
 		int invokeOp;
-		if ((getter.access & ACC_STATIC) != ACC_STATIC) {
-			insns.add(new VarInsnNode(ALOAD, 0));
+		if (!isStatic()) {
+			instance.appendTo(insns);
 			invokeOp = (setter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
 		} else {
 			invokeOp = INVOKESTATIC;
@@ -52,11 +52,11 @@ class ClassPropertyWrapped extends AbstractClassProperty {
 	}
 
 	@Override
-	CodePiece makeSet(CodePiece loadValue) {
+	CodePiece makeSet(CodePiece instance, CodePiece loadValue) {
 		InsnList insns = new InsnList();
 		int invokeOp;
-		if ((setter.access & ACC_STATIC) != ACC_STATIC) {
-			insns.add(new VarInsnNode(ALOAD, 0));
+		if (!isStatic()) {
+			instance.appendTo(insns);
 			invokeOp = (setter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
 		} else {
 			invokeOp = PUTSTATIC;

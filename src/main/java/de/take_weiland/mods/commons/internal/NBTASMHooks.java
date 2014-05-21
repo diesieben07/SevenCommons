@@ -361,7 +361,7 @@ public final class NBTASMHooks {
 		return result;
 	}
 
-	public static <E extends Enum<E>> Enum<?>[] get_java_lang_Enum_arr(NBTBase nbt, Class<?> clazz) {
+	public static Enum<?>[] get_java_lang_Enum_arr(NBTBase nbt, Class<?> clazz) {
 		if (nbt == null) {
 			return null;
 		}

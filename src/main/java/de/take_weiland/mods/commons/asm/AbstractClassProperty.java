@@ -3,28 +3,56 @@ package de.take_weiland.mods.commons.asm;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.util.List;
+
+import static org.objectweb.asm.Opcodes.ALOAD;
 
 /**
  * @author diesieben07
  */
 abstract class AbstractClassProperty implements ClassProperty {
 
-	private CodePiece get;
 	private Type type;
 
 	@Override
-	public final CodePiece getValue() {
-		return (get == null) ? (get = makeGet())  : get;
+	public CodePiece set(CodePiece loadValue) {
+		checkStatic();
+		return makeSet(null, loadValue);
 	}
 
 	@Override
-	public final CodePiece setValue(CodePiece loadValue) {
+	public CodePiece set(CodePiece instance, CodePiece loadValue) {
+		checkNotStatic();
+		return makeSet(instance, loadValue);
+	}
+
+	@Override
+	public CodePiece get() {
+		checkStatic();
+		return makeGet(null);
+	}
+
+	@Override
+	public CodePiece get(CodePiece instance) {
+		checkNotStatic();
+		return makeGet(instance);
+	}
+
+	@Override
+	public final CodePiece getFromThis() {
+		checkNotStatic();
+		return makeGet(ASMUtils.asCodePiece(new VarInsnNode(ALOAD, 0)));
+	}
+
+	@Override
+	public final CodePiece setOnThis(CodePiece loadValue) {
+		checkNotStatic();
 		checkWritable();
-		return makeSet(loadValue);
+		return makeSet(ASMUtils.asCodePiece(new VarInsnNode(ALOAD, 0)), loadValue);
 	}
 
 	@Override
@@ -42,6 +70,18 @@ abstract class AbstractClassProperty implements ClassProperty {
 	public final boolean hasSetterModifier(int modifier) {
 		checkWritable();
 		return (setterModifiers() & modifier) == modifier;
+	}
+
+	final void checkNotStatic() {
+		if (!isStatic()) {
+			throw new UnsupportedOperationException("Expected non-static property.");
+		}
+	}
+
+	final void checkStatic() {
+		if (isStatic()) {
+			throw new UnsupportedOperationException("Expected static property.");
+		}
 	}
 
 	final void checkWritable() {
@@ -77,7 +117,7 @@ abstract class AbstractClassProperty implements ClassProperty {
 
 	abstract ElementType annotationType();
 
-	abstract CodePiece makeGet();
+	abstract CodePiece makeGet(CodePiece instance);
 
-	abstract CodePiece makeSet(CodePiece loadValue);
+	abstract CodePiece makeSet(CodePiece instance, CodePiece loadValue);
 }

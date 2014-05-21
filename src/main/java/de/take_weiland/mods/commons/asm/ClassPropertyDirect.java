@@ -22,11 +22,11 @@ class ClassPropertyDirect extends AbstractClassProperty {
 	}
 
 	@Override
-	CodePiece makeSet(CodePiece loadValue) {
+	CodePiece makeSet(CodePiece instance, CodePiece loadValue) {
 		InsnList insns = new InsnList();
 		int setOp;
-		if ((field.access & ACC_STATIC) != ACC_STATIC) {
-			insns.add(new VarInsnNode(ALOAD, 0));
+		if (!isStatic()) {
+			instance.appendTo(insns);
 			setOp = PUTFIELD;
 		} else {
 			setOp = PUTSTATIC;
@@ -36,11 +36,11 @@ class ClassPropertyDirect extends AbstractClassProperty {
 		return ASMUtils.asCodePiece(insns);
 	}
 
-	CodePiece makeGet() {
+	CodePiece makeGet(CodePiece instance) {
 		InsnList insns = new InsnList();
 		int getOp;
-		if ((field.access & ACC_STATIC) != ACC_STATIC) {
-			insns.add(new VarInsnNode(ALOAD, 0));
+		if (!isStatic()) {
+			instance.appendTo(insns);
 			getOp = GETFIELD;
 		} else {
 			getOp = GETSTATIC;

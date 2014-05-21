@@ -45,7 +45,7 @@ public class testmod_sc {
 	public static class TestTe extends TileEntity {
 
 		@ToNbt
-		private ForgeDirection[] foobar = { ForgeDirection.DOWN, ForgeDirection.EAST };
+		private ForgeDirection[][][] foobar;
 
 		@Override
 		public void writeToNBT(NBTTagCompound nbt) {

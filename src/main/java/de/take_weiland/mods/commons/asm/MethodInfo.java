@@ -170,7 +170,7 @@ public abstract class MethodInfo {
 	public CodePiece callOnWith(ClassProperty instanceLoader, Object... parameters) {
 		checkCall();
 		checkArgument(!isStatic(), "Use callWith for static methods!");
-		return callWith0(parameters, getDefaultOpcode(), containingClass().internalName(), instanceLoader.getValue());
+		return callWith0(parameters, getDefaultOpcode(), containingClass().internalName(), instanceLoader.getFromThis());
 	}
 
 	/**
@@ -208,7 +208,7 @@ public abstract class MethodInfo {
 		} else if (o instanceof InsnList) {
 			return ASMUtils.asCodePiece((InsnList) o);
 		} else if (o instanceof ClassProperty) {
-			return ((ClassProperty) o).getValue();
+			return ((ClassProperty) o).getFromThis();
 		} else if ((possibleIntInsn = tryAsIntInsn(o)) != null) {
 			return ASMUtils.asCodePiece(possibleIntInsn);
 		} else if (isValidLdc(o)) {
