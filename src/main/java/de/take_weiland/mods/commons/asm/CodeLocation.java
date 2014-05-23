@@ -11,7 +11,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * @author diesieben07
  */
-public final class CodeLocation implements Cloneable, Iterable<AbstractInsnNode> {
+public final class CodeLocation implements Iterable<AbstractInsnNode> {
 
 	private final InsnList list;
 	private AbstractInsnNode first;
@@ -87,25 +87,6 @@ public final class CodeLocation implements Cloneable, Iterable<AbstractInsnNode>
 		} else {
 			return Iterators.limit(it, list.size() - list.indexOf(last) + 1);
 		}
-	}
-
-	public CodeLocation moveForward(int steps) {
-		// Do end first, it is more likely to fail
-		last = ASMUtils.getNext(last, steps);
-		first = ASMUtils.getNext(first, steps);
-		return this;
-	}
-
-	public CodeLocation moveBackward(int steps) {
-		first = ASMUtils.getPrevious(first, steps);
-		last = ASMUtils.getPrevious(last, steps);
-		return this;
-	}
-
-	// we're final, this is safe
-	@SuppressWarnings("CloneDoesntCallSuperClone")
-	public CodeLocation clone() {
-		return new CodeLocation(list, first, last);
 	}
 
 	@Override

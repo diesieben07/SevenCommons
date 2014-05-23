@@ -22,7 +22,7 @@ public final class SimplePacketTypeTransformer implements ASMClassTransformer {
 			return false;
 		}
 
-		if ((clazz.access & ACC_ENUM) != ACC_ENUM) {
+		if (!classInfo.isEnum()) {
 			throw new IllegalArgumentException("SimplePacketType only allowed on Enums! Class: " + clazz.name);
 		}
 

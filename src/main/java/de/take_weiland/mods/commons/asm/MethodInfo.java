@@ -85,7 +85,7 @@ public abstract class MethodInfo {
 	 */
 	public CodePiece call() {
 		checkCall();
-		return ASMUtils.asCodePiece(new MethodInsnNode(getDefaultOpcode(), containingClass().internalName(), name(), desc()));
+		return CodePieces.of(new MethodInsnNode(getDefaultOpcode(), containingClass().internalName(), name(), desc()));
 	}
 
 	/**
@@ -96,7 +96,7 @@ public abstract class MethodInfo {
 	 *     <li>a {@link de.take_weiland.mods.commons.asm.CodePiece}</li>
 	 *     <li>an {@link org.objectweb.asm.tree.AbstractInsnNode}</li>
 	 *     <li>an {@link org.objectweb.asm.tree.InsnList}</li>
-	 *     <li>a {@link de.take_weiland.mods.commons.asm.ClassProperty}</li>
+	 *     <li>a {@link ASMVariable}</li>
 	 *     <li>a valid LDC constant (see {@link org.objectweb.asm.tree.LdcInsnNode})</li>
 	 * </ul>
 	 * <p>This method may only be used for static methods.</p>
@@ -106,7 +106,7 @@ public abstract class MethodInfo {
 	public CodePiece callWith(Object... parameters) {
 		checkCall();
 		checkArgument(isStatic(), "Use callOnWith for non-static methods!");
-		return callWith0(parameters, getDefaultOpcode(), containingClass().internalName(), ASMUtils.emptyCodePiece());
+		return callWith0(parameters, getDefaultOpcode(), containingClass().internalName(), CodePieces.of());
 	}
 
 	/**
@@ -144,7 +144,7 @@ public abstract class MethodInfo {
 	public CodePiece callOnWith(AbstractInsnNode instanceLoader, Object... parameters) {
 		checkCall();
 		checkArgument(!isStatic(), "Use callWith for static methods!");
-		return callWith0(parameters, getDefaultOpcode(), containingClass().internalName(), ASMUtils.asCodePiece(instanceLoader));
+		return callWith0(parameters, getDefaultOpcode(), containingClass().internalName(), CodePieces.of(instanceLoader));
 	}
 
 	/**
@@ -157,20 +157,7 @@ public abstract class MethodInfo {
 	public CodePiece callOnWith(InsnList instanceLoader, Object... parameters) {
 		checkCall();
 		checkArgument(!isStatic(), "Use callWith for static methods!");
-		return callWith0(parameters, getDefaultOpcode(), containingClass().internalName(), ASMUtils.asCodePiece(instanceLoader));
-	}
-
-	/**
-	 * <p>calls this method on the instance represented by {@code instanceLoader} with the given parameters.</p>
-	 * <p>This method may only be used for non-static methods.</p>
-	 * @param instanceLoader a ClassProperty that represents the instance to call this method on
-	 * @param parameters the parameters for the method, see {@link #callWith(Object...)} for more information
-	 * @return a code piece that calls this method on the given instance with the given parameters
-	 */
-	public CodePiece callOnWith(ClassProperty instanceLoader, Object... parameters) {
-		checkCall();
-		checkArgument(!isStatic(), "Use callWith for static methods!");
-		return callWith0(parameters, getDefaultOpcode(), containingClass().internalName(), instanceLoader.getFromThis());
+		return callWith0(parameters, getDefaultOpcode(), containingClass().internalName(), CodePieces.of(instanceLoader));
 	}
 
 	/**
@@ -181,7 +168,7 @@ public abstract class MethodInfo {
 	 */
 	public CodePiece callSuper() {
 		checkCallSuper();
-		return ASMUtils.asCodePiece(new MethodInsnNode(INVOKESPECIAL, containingClass().superName(), name(), desc()));
+		return CodePieces.of(new MethodInsnNode(INVOKESPECIAL, containingClass().superName(), name(), desc()));
 	}
 
 	/**
@@ -196,7 +183,7 @@ public abstract class MethodInfo {
 	}
 
 	private static CodePiece thisLoader() {
-		return ASMUtils.asCodePiece(new VarInsnNode(ALOAD, 0));
+		return CodePieces.of(new VarInsnNode(ALOAD, 0));
 	}
 
 	private static CodePiece toCodePiece(Object o) {
@@ -204,15 +191,13 @@ public abstract class MethodInfo {
 		if (o instanceof CodePiece) {
 			return (CodePiece) o;
 		} else if (o instanceof AbstractInsnNode) {
-			return ASMUtils.asCodePiece((AbstractInsnNode) o);
+			return CodePieces.of((AbstractInsnNode) o);
 		} else if (o instanceof InsnList) {
-			return ASMUtils.asCodePiece((InsnList) o);
-		} else if (o instanceof ClassProperty) {
-			return ((ClassProperty) o).getFromThis();
+			return CodePieces.of((InsnList) o);
 		} else if ((possibleIntInsn = tryAsIntInsn(o)) != null) {
-			return ASMUtils.asCodePiece(possibleIntInsn);
+			return CodePieces.of(possibleIntInsn);
 		} else if (isValidLdc(o)) {
-			return ASMUtils.asCodePiece(new LdcInsnNode(o));
+			return CodePieces.of(new LdcInsnNode(o));
 		} else {
 			throw new IllegalArgumentException("Cannot convert type " + o.getClass().getName() + " into a CodePiece");
 		}
@@ -249,7 +234,7 @@ public abstract class MethodInfo {
 			toCodePiece(parameter).appendTo(call);
 		}
 		call.add(new MethodInsnNode(opcode, className, name(), desc));
-		return ASMUtils.asCodePiece(call);
+		return CodePieces.of(call);
 	}
 
 	private int getDefaultOpcode() {

@@ -13,13 +13,13 @@ import static org.objectweb.asm.Type.VOID;
 /**
  * @author diesieben07
  */
-class ClassPropertyWrapped extends AbstractClassProperty {
+class GetterSetterPair extends ClassBoundASMVariable {
 
-	private final ClassNode clazz;
 	private final MethodNode getter;
 	private final MethodNode setter;
 
-	ClassPropertyWrapped(ClassNode clazz, MethodNode getter, MethodNode setter) {
+	GetterSetterPair(ClassNode clazz, MethodNode getter, MethodNode setter, CodePiece instance) {
+		super(clazz, instance);
 		Type valueType = Type.getReturnType(getter.desc);
 		checkArgument(valueType.getSort() != VOID, "getter must not return void!");
 		checkArgument(Type.getArgumentTypes(getter.desc).length == 0, "getter must not take arguments");
@@ -32,13 +32,12 @@ class ClassPropertyWrapped extends AbstractClassProperty {
 			checkArgument(setterArgs[0].equals(valueType), "setter takes wrong argument!");
 		}
 
-		this.clazz = clazz;
 		this.getter = getter;
 		this.setter = setter;
 	}
 
 	@Override
-	CodePiece makeGet(CodePiece instance) {
+	public CodePiece get() {
 		InsnList insns = new InsnList();
 		int invokeOp;
 		if (!isStatic()) {
@@ -48,11 +47,11 @@ class ClassPropertyWrapped extends AbstractClassProperty {
 			invokeOp = INVOKESTATIC;
 		}
 		insns.add(new MethodInsnNode(invokeOp, clazz.name, getter.name, getter.desc));
-		return ASMUtils.asCodePiece(insns);
+		return CodePieces.of(insns);
 	}
 
 	@Override
-	CodePiece makeSet(CodePiece instance, CodePiece loadValue) {
+	public CodePiece set(CodePiece loadValue) {
 		InsnList insns = new InsnList();
 		int invokeOp;
 		if (!isStatic()) {
@@ -63,7 +62,7 @@ class ClassPropertyWrapped extends AbstractClassProperty {
 		}
 		loadValue.appendTo(insns);
 		insns.add(new MethodInsnNode(invokeOp, clazz.name, setter.name, setter.desc));
-		return ASMUtils.asCodePiece(insns);
+		return CodePieces.of(insns);
 	}
 
 	@Override
@@ -72,38 +71,42 @@ class ClassPropertyWrapped extends AbstractClassProperty {
 	}
 
 	@Override
-	Type makeType() {
+	public Type getType() {
 		return Type.getReturnType(getter.desc);
 	}
 
 	@Override
-	List<AnnotationNode> getterAnns(boolean visible) {
+	protected List<AnnotationNode> getterAnns(boolean visible) {
 		return visible ? getter.visibleAnnotations : getter.invisibleAnnotations;
 	}
 
 	@Override
-	List<AnnotationNode> setterAnns(boolean visible) {
+	protected List<AnnotationNode> setterAnns(boolean visible) {
 		return visible ? setter.visibleAnnotations : setter.invisibleAnnotations;
 	}
 
 	@Override
-	ElementType annotationType() {
+	protected ElementType annotationType() {
 		return ElementType.METHOD;
 	}
 
 	@Override
-	int setterModifiers() {
+	protected int setterModifiers() {
 		return setter.access;
 	}
 
 	@Override
-	int getterModifiers() {
+	protected int getterModifiers() {
 		return getter.access;
 	}
 
 	@Override
-	public String propertyName() {
-		return getter.name.startsWith("get") ? getter.name.substring(3) : getter.name;
+	public String name() {
+		if (getter.name.startsWith("get")) {
+			return Character.toLowerCase(getter.name.charAt(0)) + getter.name.substring(4);
+		} else {
+			return getter.name;
+		}
 	}
 
 	@Override

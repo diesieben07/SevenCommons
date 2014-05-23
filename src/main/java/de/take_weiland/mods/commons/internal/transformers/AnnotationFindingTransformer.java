@@ -35,6 +35,7 @@ public class AnnotationFindingTransformer extends AbstractAnalyzingTransformer {
 				if (!nbt && ann.desc.equals(toNbtDesc)) {
 					NBTTransformer.transform(clazz, classInfo, methodsIt);
 					nbt = true;
+					nbt = true;
 					continue;
 				}
 				if (!synced && ann.desc.equals(syncedDesc)) {

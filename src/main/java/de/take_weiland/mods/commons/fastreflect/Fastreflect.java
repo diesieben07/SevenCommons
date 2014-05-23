@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.fastreflect;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
-import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.util.JavaUtils;
 
 import java.io.File;
@@ -68,7 +68,15 @@ public final class Fastreflect {
 	 * @return a unique name
 	 */
 	public static String nextDynamicClassName() {
-		return "de/take_weiland/mods/commons/fastreflect/dyn/Dyn" + nextId.getAndIncrement();
+		return nextDynamicClassName("de/take_weiland/mods/commons/fastreflect/dyn");
+	}
+
+	public static String nextDynamicClassName(Package pkg) {
+		return nextDynamicClassName(pkg.getName());
+	}
+
+	public static String nextDynamicClassName(String pkg) {
+		return ASMUtils.internalName(pkg) + "/_sc_dyn_" + nextId.getAndIncrement();
 	}
 
 	public static Class<?> getCallerClass() {
@@ -89,7 +97,7 @@ public final class Fastreflect {
 	private static final AtomicInteger nextId = new AtomicInteger(0);
 	private static final FastreflectSecurityManager sm = new FastreflectSecurityManager();
 	private static final FastreflectStrategy strategy = selectStrategy();
-	private static final Logger logger = SevenCommons.scLogger();
+	private static final Logger logger = null; //SevenCommons.scLogger();
 	
 	static {
 	}

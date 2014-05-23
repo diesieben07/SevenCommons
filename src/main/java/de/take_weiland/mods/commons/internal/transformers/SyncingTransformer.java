@@ -59,13 +59,13 @@ public final class SyncingTransformer {
 
 		int idx = 0;
 		for (FieldNode field : ImmutableList.copyOf(clazz.fields)) {
-			if (makeSyncedElement(clazz, fields, targets, elements, idx, false, field, Type.getType(field.desc), ASMUtils.getAnnotation(field, Synced.class))) {
+			if (makeSyncedElement(clazz, fields, targets, elements, idx, false, field, Type.getType(field.desc), ASMUtils.getAnnotationRaw(field, Synced.class))) {
 				++idx;
 			}
 		}
 
 		for (MethodNode method : ImmutableList.copyOf(clazz.methods)) {
-			if (makeSyncedElement(clazz, fields, targets, elements, idx, true, method, Type.getReturnType(method.desc), ASMUtils.getAnnotation(method, Synced.class))) {
+			if (makeSyncedElement(clazz, fields, targets, elements, idx, true, method, Type.getReturnType(method.desc), ASMUtils.getAnnotationRaw(method, Synced.class))) {
 				++idx;
 			}
 			checkIsSetter(setters, method);
@@ -343,7 +343,7 @@ public final class SyncingTransformer {
 	}
 
 	private static void checkIsSetter(Map<String, MethodNode> setters, MethodNode method) {
-		AnnotationNode ann = ASMUtils.getAnnotation(method, Synced.Setter.class);
+		AnnotationNode ann = ASMUtils.getAnnotationRaw(method, Synced.Setter.class);
 		if (ann != null) {
 			setters.put((String) ann.values.get(1), method);
 		}

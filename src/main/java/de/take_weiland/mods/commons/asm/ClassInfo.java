@@ -246,14 +246,6 @@ public abstract class ClassInfo {
 		return getDimensions() > 0;
 	}
 
-	public boolean isEditable() {
-		return false;
-	}
-
-	public ClassNode asmNode() {
-		throw new UnsupportedOperationException();
-	}
-
 	public abstract int getDimensions();
 
 	public boolean hasModifier(int mod) {

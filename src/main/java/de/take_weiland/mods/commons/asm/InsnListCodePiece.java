@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.InsnList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -23,5 +24,10 @@ class InsnListCodePiece extends AbstractCodePiece {
 	@Override
 	public int size() {
 		return insns.size();
+	}
+
+	@Override
+	public void appendTo(MethodVisitor mv) {
+		insns.accept(mv);
 	}
 }

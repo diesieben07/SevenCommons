@@ -39,7 +39,7 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 		desc = getMethodDescriptor(VOID_TYPE, entityPlayer, entity);
 		insns.add(new MethodInsnNode(INVOKESTATIC, "de/take_weiland/mods/commons/internal/ASMHooks", "onStartTracking", desc));
 
-		return ASMUtils.asCodePiece(insns);
+		return CodePieces.of(insns);
 	}
 
 	private CodeLocation findInsertionHook(MethodNode method) {

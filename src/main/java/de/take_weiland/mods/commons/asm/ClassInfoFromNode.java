@@ -64,13 +64,4 @@ final class ClassInfoFromNode extends ClassInfo {
 		return m == null ? null : new MethodInfoASM(this, m);
 	}
 
-	@Override
-	public boolean isEditable() {
-		return true;
-	}
-
-	@Override
-	public ClassNode asmNode() {
-		return clazz;
-	}
 }

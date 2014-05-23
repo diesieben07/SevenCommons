@@ -5,15 +5,16 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.*;
+import com.google.common.primitives.Primitives;
 import de.take_weiland.mods.commons.OverrideSetter;
+import de.take_weiland.mods.commons.fastreflect.Fastreflect;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import org.apache.commons.lang3.ArrayUtils;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
 import java.lang.annotation.*;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.tree.AbstractInsnNode.*;
 
 public final class ASMUtils {
@@ -252,15 +253,6 @@ public final class ASMUtils {
 		});
 	}
 
-	public static Function<MethodNode, MethodNode> findSetterFunction(final ClassNode clazz) {
-		return new Function<MethodNode, MethodNode>() {
-			@Override
-			public MethodNode apply(MethodNode input) {
-				return findSetter(clazz, input);
-			}
-		};
-	}
-
 	private static Type getterType(MethodNode getter) {
 		Type returnType = Type.getReturnType(getter.desc);
 		return returnType != Type.VOID_TYPE && Type.getArgumentTypes(getter.desc).length == 0 ? returnType : null;
@@ -272,7 +264,7 @@ public final class ASMUtils {
 			return null;
 		}
 
-		AnnotationNode overrideSetter = getAnnotation(getter, OverrideSetter.class);
+		AnnotationNode overrideSetter = getAnnotationRaw(getter, OverrideSetter.class);
 		String setterName;
 		if (overrideSetter != null) {
 			setterName = (String) overrideSetter.values.get(1);
@@ -295,112 +287,84 @@ public final class ASMUtils {
 	 * @param annotation the annotation to search for
 	 * @return all Properties found
 	 */
-	public static Collection<ClassProperty> propertiesWith(final ClassNode clazz, Class<? extends Annotation> annotation) {
+	public static Collection<ASMVariable> propertiesWith(final ClassNode clazz, Class<? extends Annotation> annotation) {
 		return propertiesWith(clazz, annotation, findSetterFunction(clazz));
+	}
+
+	private static Function<MethodNode, MethodNode> findSetterFunction(final ClassNode clazz) {
+		return new Function<MethodNode, MethodNode>() {
+			@Override
+			public MethodNode apply(MethodNode input) {
+				return findSetter(clazz, input);
+			}
+		};
 	}
 
 	/**
 	 * <p>Finds all Fields and Methods in the given class which have the given Annotation
-	 * and transforms them into {@link ClassProperty FieldAccesses}</p>
+	 * and transforms them into an {@link ASMVariable}</p>
 	 * @param clazz the ClassNode
-	 * @param annotation
+	 * @param annotation the annotation to search for
+	 * @param setterProvider a Function that provides the setter for each found getter
 	 * @return
 	 */
-	public static Collection<ClassProperty> propertiesWith(final ClassNode clazz, Class<? extends Annotation> annotation, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
+	public static Collection<ASMVariable> propertiesWith(final ClassNode clazz, Class<? extends Annotation> annotation, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
 		return ImmutableList.copyOf(Iterators.concat(
 			Iterators.transform(
 					methodsWith(clazz, annotation).iterator(),
-					asFieldAccessFuncM(clazz, setterProvider)),
+					getterAsVariable(clazz, setterProvider)),
 			Iterators.transform(
 					fieldsWith(clazz, annotation).iterator(),
-					asFieldAccessFuncF(clazz))
+					fieldAsVariable(clazz))
 		));
 	}
 
-	private static Function<FieldNode, ClassProperty> asFieldAccessFuncF(final ClassNode clazz) {
-		return new Function<FieldNode, ClassProperty>() {
+	private static Function<FieldNode, ASMVariable> fieldAsVariable(final ClassNode clazz) {
+		return new Function<FieldNode, ASMVariable>() {
 			@Override
-			public ClassProperty apply(FieldNode field) {
-				return asFieldAccess(clazz, field);
+			public ASMVariable apply(FieldNode field) {
+				return ASMVariables.of(clazz, field);
 			}
 		};
 	}
 
-	private static Function<MethodNode, ClassProperty> asFieldAccessFuncM(final ClassNode clazz, final Function<? super MethodNode, ? extends MethodNode> setterProvider) {
-		return new Function<MethodNode, ClassProperty>() {
+	private static Function<MethodNode, ASMVariable> getterAsVariable(final ClassNode clazz, final Function<? super MethodNode, ? extends MethodNode> setterProvider) {
+		return new Function<MethodNode, ASMVariable>() {
 			@Override
-			public ClassProperty apply(MethodNode method) {
-				return asFieldAccess(clazz, method, setterProvider.apply(method));
+			public ASMVariable apply(MethodNode method) {
+				return ASMVariables.of(clazz, method, setterProvider.apply(method));
 			}
 		};
 	}
 
-	/**
-	 * Creates a {@link ClassProperty} that represents the given FieldNode.
-	 * @param clazz the ClassNode
-	 * @param field the FieldNode
-	 * @return a FieldAccess
-	 */
-	public static ClassProperty asFieldAccess(ClassNode clazz, FieldNode field) {
-		return new ClassPropertyDirect(clazz, field);
+	@Deprecated
+	public static ASMVariable asFieldAccess(ClassNode clazz, FieldNode field) {
+		return ASMVariables.of(clazz, field);
 	}
 
-	/**
-	 * Creates a {@link ClassProperty} that represents the given getter method.
-	 * @param clazz the ClassNode
-	 * @param getter the MethodNode representing the getter
-	 * @return a FieldAccess
-	 */
-	public static ClassProperty asFieldAccess(ClassNode clazz, MethodNode getter) {
-		return new ClassPropertyWrapped(clazz, getter, null);
+	@Deprecated
+	public static ASMVariable asFieldAccess(ClassNode clazz, MethodNode getter) {
+		return ASMVariables.of(clazz, getter);
 	}
 
-	/**
-	 * Creates a {@link ClassProperty} that represents the given getter and setter method.
-	 * @param clazz the ClassNode
-	 * @param getter the MethodNode representing the getter
-	 * @param setter the MethodNode representing the setter
-	 * @return a FieldAccess
-	 */
-	public static ClassProperty asFieldAccess(ClassNode clazz, MethodNode getter, MethodNode setter) {
-		return new ClassPropertyWrapped(clazz, getter, setter);
+	@Deprecated
+	public static ASMVariable asFieldAccess(ClassNode clazz, MethodNode getter, MethodNode setter) {
+		return ASMVariables.of(clazz, getter, setter);
 	}
 
-	/**
-	 * <p>Converts the given InsnList to a {@link de.take_weiland.mods.commons.asm.CodePiece}</p>
-	 * <p>The InsnList must not be modified externally after it was converted, if you need to do so,
-	 * {@link #clone(org.objectweb.asm.tree.InsnList)} first.</p>
-	 * <p>The InsnList must not be newly created, if it is not, call {@link #clone(org.objectweb.asm.tree.InsnList)}
-	 * first, and pass the result to this method.</p>
-	 * @param insns the InsnList
-	 * @return a CodePiece representing all instructions in the InsnList
-	 */
+	@Deprecated
 	public static CodePiece asCodePiece(InsnList insns) {
-		switch (insns.size()) {
-			case 0:
-				return EmptyCodePiece.INSTANCE;
-			case 1:
-				return asCodePiece(insns.getFirst());
-			default:
-				return new InsnListCodePiece(insns);
-		}
+		return CodePieces.of(insns);
 	}
 
-	/**
-	 * <p>Converts the given instruction to a {@link de.take_weiland.mods.commons.asm.CodePiece}</p>
-	 * <p>The AbstractInsnNode must not be modified externally after it was converted, if you need to do so,
-	 * {@link #clone(org.objectweb.asm.tree.AbstractInsnNode)} first.</p>
-	 * <p>The AbstractInsnNode must not be part of an InsnList that is in use. If it is, call
-	 * {@link #clone(org.objectweb.asm.tree.AbstractInsnNode)} first and pass the result to this method.</p>
-	 * @param insn the instruction to represent as a CodePiece
-	 * @return a CodePiece representing the single instruction
-	 */
+	@Deprecated
 	public static CodePiece asCodePiece(AbstractInsnNode insn) {
-		return new SingleInsnCodePiece(insn);
+		return CodePieces.of(insn);
 	}
 
+	@Deprecated
 	public static CodePiece emptyCodePiece() {
-		return EmptyCodePiece.INSTANCE;
+		return CodePieces.of();
 	}
 
 	public static boolean matches(AbstractInsnNode a, AbstractInsnNode b) {
@@ -526,8 +490,8 @@ public final class ASMUtils {
 	 */
 	public static AbstractInsnNode getNext(InsnList list, AbstractInsnNode insn, int n) {
 		if (SCASMAccessHook.getCache(list) != null) {
-			int idx;
-			checkArgument((idx = SCASMAccessHook.getIndex(insn)) >= 0, "instruction doesn't belong to list!");
+			int idx = SCASMAccessHook.getIndex(insn);
+			checkArgument(idx >= 0, "instruction doesn't belong to list!");
 			return list.get(idx + n);
 		} else {
 			return getNext(insn, n);
@@ -565,8 +529,8 @@ public final class ASMUtils {
 	 */
 	public static AbstractInsnNode getPrevious(InsnList list, AbstractInsnNode insn, int n) {
 		if (SCASMAccessHook.getCache(list) != null) {
-			int idx;
-			checkArgument((idx = SCASMAccessHook.getIndex(insn)) >= 0, "instruction doesn't belong to list!");
+			int idx = SCASMAccessHook.getIndex(insn);
+			checkArgument(idx >= 0, "instruction doesn't belong to list!");
 			return list.get(idx - n);
 		} else {
 			return getPrevious(insn, n);
@@ -814,8 +778,8 @@ public final class ASMUtils {
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
-	public static AnnotationNode getAnnotation(FieldNode field, Class<? extends Annotation> ann) {
-		return getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, ElementType.FIELD, ann);
+	public static AnnotationNode getAnnotationRaw(FieldNode field, Class<? extends Annotation> ann) {
+		return getAnnotationRaw(field.visibleAnnotations, field.invisibleAnnotations, ElementType.FIELD, ann);
 	}
 
 	/**
@@ -824,8 +788,30 @@ public final class ASMUtils {
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
-	public static AnnotationNode getAnnotation(ClassNode clazz, Class<? extends Annotation> ann) {
-		return getAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, ElementType.TYPE, ann);
+	public static AnnotationNode getAnnotationRaw(ClassNode clazz, Class<? extends Annotation> ann) {
+		AnnotationNode node = getAnnotationRaw(clazz.visibleAnnotations, clazz.invisibleAnnotations, ElementType.TYPE, ann);
+		if (node != null || clazz.superName == null) {
+			return node;
+		}
+
+		boolean inherited = ann.isAnnotationPresent(Inherited.class);
+		ClassInfo info = ClassInfo.of(clazz.superName);
+		do {
+//			AnnotationNode ann = info.get
+		} while (false);
+		if (true) return null;
+		do {
+			node = getAnnotationRaw(clazz.visibleAnnotations, clazz.invisibleAnnotations, ElementType.TYPE, ann);
+			if (node != null) {
+				return node;
+			}
+			if (info == null) {
+				info = ClassInfo.of(clazz.superName);
+			} else {
+				info = info.superclass();
+			}
+		} while (false);
+		return null;
 	}
 
 	/**
@@ -834,11 +820,11 @@ public final class ASMUtils {
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
-	public static AnnotationNode getAnnotation(MethodNode method, Class<? extends Annotation> ann) {
-		return getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, ElementType.METHOD, ann);
+	public static AnnotationNode getAnnotationRaw(MethodNode method, Class<? extends Annotation> ann) {
+		return getAnnotationRaw(method.visibleAnnotations, method.invisibleAnnotations, ElementType.METHOD, ann);
 	}
 
-	static AnnotationNode getAnnotation(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, ElementType reqType, Class<? extends Annotation> ann) {
+	static AnnotationNode getAnnotationRaw(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, ElementType reqType, Class<? extends Annotation> ann) {
 		Target annTarget = ann.getAnnotation(Target.class);
 		if (annTarget != null && !ArrayUtils.contains(annTarget.value(), reqType)) {
 			return null;
@@ -864,6 +850,80 @@ public final class ASMUtils {
 		return null;
 	}
 
+	public static <T extends Annotation> T getAnnotation(ClassNode clazz, Class<T> annotationType) {
+		return compileAnnotation(getAnnotationRaw(clazz, annotationType), annotationType);
+	}
+
+	public static <T extends Annotation> T getAnnotation(FieldNode field, Class<T> annotationType) {
+		return compileAnnotation(getAnnotationRaw(field, annotationType), annotationType);
+	}
+
+	public static <T extends Annotation> T getAnnotation(MethodNode method, Class<T> annotationType) {
+		return compileAnnotation(getAnnotationRaw(method, annotationType), annotationType);
+	}
+
+	private static <T extends Annotation> T compileAnnotation(AnnotationNode node, Class<T> annotationType) {
+		ClassWriter cw = new ClassWriter(0);
+		cw.visitSource(".dynamic", null);
+
+		String className = Fastreflect.nextDynamicClassName(ASMUtils.class.getPackage());
+		String superName = Type.getInternalName(AbstractDynamicAnnotation.class);
+
+		cw.visit(V1_6, ACC_PUBLIC, className, null, superName, new String[]{ Type.getInternalName(annotationType) });
+
+		String cName = "<init>";
+		String cDesc = getMethodDescriptor(void.class, AnnotationNode.class);
+
+		MethodVisitor mv = cw.visitMethod(0, cName, cDesc, null, null);
+		mv.visitCode();
+
+		mv.visitVarInsn(ALOAD, 0);
+		mv.visitVarInsn(ALOAD, 1);
+		mv.visitMethodInsn(INVOKESPECIAL, superName, cName, cDesc);
+		mv.visitInsn(RETURN);
+
+		mv.visitMaxs(2, 2);
+		mv.visitEnd();
+
+		String asmUtils = Type.getInternalName(ASMUtils.class);
+		String getAnnProp = "getAnnotationProperty";
+		String getAnnPropDesc = getMethodDescriptor(Object.class, AnnotationNode.class, String.class, Object.class);
+
+		for (Method m : annotationType.getMethods()) {
+			Class<?> returnType = m.getReturnType();
+			Class<?> wrappedReturnType = Primitives.wrap(returnType);
+
+			mv = cw.visitMethod(ACC_PUBLIC, m.getName(), Type.getMethodDescriptor(m), null, null);
+			mv.visitCode();
+
+			mv.visitVarInsn(ALOAD, 0);
+			mv.visitFieldInsn(GETFIELD, superName, AbstractDynamicAnnotation.FIELD_NAME, Type.getDescriptor(AnnotationNode.class));
+			mv.visitLdcInsn(m.getName());
+
+			CodePieces.constant(m.getDefaultValue()).appendTo(mv);
+
+			mv.visitMethodInsn(INVOKESTATIC, asmUtils, getAnnProp, getAnnPropDesc);
+			mv.visitTypeInsn(CHECKCAST, Type.getInternalName(wrappedReturnType));
+
+			if (returnType.isPrimitive()) {
+				String unwrapMethod = returnType.getName() + "Value";
+				mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(wrappedReturnType), unwrapMethod, getMethodDescriptor(returnType));
+			}
+
+			mv.visitInsn(Type.getType(returnType).getOpcode(IRETURN));
+
+			mv.visitMaxs(3, 1);
+			mv.visitEnd();
+		}
+		cw.visitEnd();
+		try {
+			//noinspection unchecked
+			return (T) Fastreflect.defineDynamicClass(cw.toByteArray()).newInstance();
+		} catch (Exception e) {
+			throw Throwables.propagate(e);
+		}
+	}
+
 	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, T defaultValue) {
 		List<Object> data = ann.values;
 		int len;
@@ -886,7 +946,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(FieldNode field, Class<? extends Annotation> annotation) {
-		return getAnnotation(field, annotation) != null;
+		return getAnnotationRaw(field, annotation) != null;
 	}
 
 	/**
@@ -896,7 +956,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(ClassNode clazz, Class<? extends Annotation> annotation) {
-		return getAnnotation(clazz, annotation) != null;
+		return getAnnotationRaw(clazz, annotation) != null;
 	}
 
 	/**
@@ -906,7 +966,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(MethodNode method, Class<? extends Annotation> annotation) {
-		return getAnnotation(method, annotation) != null;
+		return getAnnotationRaw(method, annotation) != null;
 	}
 
 	/**
@@ -918,9 +978,16 @@ public final class ASMUtils {
 		return type.getSort() != Type.ARRAY && type.getSort() != Type.OBJECT && type.getSort() != Type.METHOD;
 	}
 
+	/**
+	 * <p>Create a new {@link org.objectweb.asm.Type} that represents an array with {@code dimensions} dimensions and the
+	 * Component Type {@code elementType}.</p>
+	 * @param elementType the component type of the array type to create, must not be a Method type.
+	 * @param dimensions the number of dimensions to create
+	 * @return a new Type representing the array type.
+	 */
 	public static Type asArray(Type elementType, int dimensions) {
 		int sort = elementType.getSort();
-		checkArgument(sort != Type.METHOD, "Invalid type!");
+		checkArgument(sort != Type.METHOD, "Type must not be method type");
 
 		if (sort == Type.ARRAY) {
 			dimensions += elementType.getDimensions();

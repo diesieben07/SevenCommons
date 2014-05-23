@@ -11,18 +11,31 @@ import static org.objectweb.asm.Opcodes.*;
 /**
  * @author diesieben07
  */
-class ClassPropertyDirect extends AbstractClassProperty {
+class ASMField extends ClassBoundASMVariable {
 
-	private final ClassNode clazz;
 	private final FieldNode field;
 
-	ClassPropertyDirect(ClassNode clazz, FieldNode field) {
-		this.clazz = clazz;
+	ASMField(ClassNode clazz, FieldNode field, CodePiece instance) {
+		super(clazz, instance);
 		this.field = field;
 	}
 
 	@Override
-	CodePiece makeSet(CodePiece instance, CodePiece loadValue) {
+	public CodePiece get() {
+		InsnList insns = new InsnList();
+		int getOp;
+		if (!isStatic()) {
+			instance.appendTo(insns);
+			getOp = GETFIELD;
+		} else {
+			getOp = GETSTATIC;
+		}
+		insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
+		return CodePieces.of(insns);
+	}
+
+	@Override
+	public CodePiece set(CodePiece loadValue) {
 		InsnList insns = new InsnList();
 		int setOp;
 		if (!isStatic()) {
@@ -33,20 +46,7 @@ class ClassPropertyDirect extends AbstractClassProperty {
 		}
 		loadValue.appendTo(insns);
 		insns.add(new FieldInsnNode(setOp, clazz.name, field.name, field.desc));
-		return ASMUtils.asCodePiece(insns);
-	}
-
-	CodePiece makeGet(CodePiece instance) {
-		InsnList insns = new InsnList();
-		int getOp;
-		if (!isStatic()) {
-			instance.appendTo(insns);
-			getOp = GETFIELD;
-		} else {
-			getOp = GETSTATIC;
-		}
-		insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
-		return ASMUtils.asCodePiece(insns);
+		return CodePieces.of(insns);
 	}
 
 	@Override
@@ -55,37 +55,37 @@ class ClassPropertyDirect extends AbstractClassProperty {
 	}
 
 	@Override
-	Type makeType() {
+	public Type getType() {
 		return Type.getType(field.desc);
 	}
 
 	@Override
-	ElementType annotationType() {
+	protected ElementType annotationType() {
 		return ElementType.FIELD;
 	}
 
 	@Override
-	List<AnnotationNode> getterAnns(boolean visible) {
+	protected List<AnnotationNode> getterAnns(boolean visible) {
 		return visible ? field.visibleAnnotations : field.invisibleAnnotations;
 	}
 
 	@Override
-	List<AnnotationNode> setterAnns(boolean visible) {
+	protected List<AnnotationNode> setterAnns(boolean visible) {
 		return getterAnns(visible);
 	}
 
 	@Override
-	int setterModifiers() {
-		return getterModifiers();
-	}
-
-	@Override
-	int getterModifiers() {
+	protected int setterModifiers() {
 		return field.access;
 	}
 
 	@Override
-	public String propertyName() {
+	protected int getterModifiers() {
+		return field.access;
+	}
+
+	@Override
+	public String name() {
 		return field.name;
 	}
 

@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
@@ -13,6 +14,8 @@ public interface CodePiece {
 	void appendTo(InsnList to);
 
 	void prependTo(InsnList to);
+
+	void appendTo(MethodVisitor mv);
 
 	void insertAfter(InsnList to, AbstractInsnNode location);
 

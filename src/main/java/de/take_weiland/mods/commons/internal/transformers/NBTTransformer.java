@@ -41,7 +41,7 @@ public class NBTTransformer {
 
 	static void transform(ClassNode clazz, ClassInfo classInfo, ListIterator<MethodNode> methods) {
 		ClassType type = findType(classInfo);
-		Collection<ClassProperty> properties = ASMUtils.propertiesWith(clazz, ToNbt.class);
+		Collection<ASMVariable> variables = ASMUtils.propertiesWith(clazz, ToNbt.class);
 
 		MethodInfo putIntoMethod = nbtASMHooks.getMethod("putInto");
 		MethodInfo getFromMethod = nbtASMHooks.getMethod("getFrom");
@@ -91,16 +91,16 @@ public class NBTTransformer {
 			insertSuperCall(classInfo, write, type.getNbtWrite());
 		}
 
-		for (ClassProperty property : properties) {
-			AnnotationNode ann = property.getterAnnotation(ToNbt.class);
-			String propName = ASMUtils.getAnnotationProperty(ann, "value", property.propertyName());
+		for (ASMVariable variable : variables) {
+			AnnotationNode ann = variable.getterAnnotation(ToNbt.class);
+			String propName = ASMUtils.getAnnotationProperty(ann, "value", variable.name());
 
 			CodePiece nbtValue = getFromMethod.callWith(
 					new VarInsnNode(ALOAD, 1),
 					propName
 			);
 
-			ConvertInfo info = ConvertType.get(property).createInfo(property, nbtValue);
+			ConvertInfo info = ConvertType.get(variable).createInfo(variable, nbtValue);
 			info.convert().appendTo(write);
 
 			putIntoMethod.callWith(
@@ -108,7 +108,7 @@ public class NBTTransformer {
 					propName,
 					info.convert()).appendTo(write);
 
-			property.setOnThis(info.get()).appendTo(read);
+			variable.setOnThis(info.get()).appendTo(read);
 		}
 
 		read.add(new InsnNode(RETURN));
@@ -209,7 +209,7 @@ public class NBTTransformer {
 
 		DEFAULT {
 			@Override
-			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+			ConvertInfo createInfo(ASMVariable property, CodePiece nbtValue) {
 				Type type = property.getType();
 				String getMethod = "get_" + type.getClassName().replace('.', '_');
 				String getDesc = getMethodDescriptor(type, nbtBaseType);
@@ -224,7 +224,7 @@ public class NBTTransformer {
 		},
 		ENUM {
 			@Override
-			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+			ConvertInfo createInfo(ASMVariable property, CodePiece nbtValue) {
 				Type type = property.getType();
 				String getMethod = "get_java_lang_Enum";
 				String getDesc = getMethodDescriptor(getType(Enum.class), nbtBaseType, getType(Class.class));
@@ -239,7 +239,7 @@ public class NBTTransformer {
 		},
 		ONE_DIM_DEFAULT {
 			@Override
-			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+			ConvertInfo createInfo(ASMVariable property, CodePiece nbtValue) {
 				Type type = property.getType();
 				Type elemType = type.getElementType();
 
@@ -256,7 +256,7 @@ public class NBTTransformer {
 		},
 		ONE_DIM_ENUM {
 			@Override
-			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+			ConvertInfo createInfo(ASMVariable property, CodePiece nbtValue) {
 				Type type = property.getType();
 				Type elemType = type.getElementType();
 
@@ -272,7 +272,7 @@ public class NBTTransformer {
 		},
 		MULTI_DIM_DEFAULT {
 			@Override
-			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+			ConvertInfo createInfo(ASMVariable property, CodePiece nbtValue) {
 				Type type = property.getType();
 				Type elemType = type.getElementType();
 
@@ -289,7 +289,7 @@ public class NBTTransformer {
 		},
 		MULTI_DIM_ENUM {
 			@Override
-			ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue) {
+			ConvertInfo createInfo(ASMVariable property, CodePiece nbtValue) {
 				Type type = property.getType();
 
 				String getMethod = "get_deep_java_lang_Enum";
@@ -303,9 +303,9 @@ public class NBTTransformer {
 			}
 		};
 
-		abstract ConvertInfo createInfo(ClassProperty property, CodePiece nbtValue);
+		abstract ConvertInfo createInfo(ASMVariable property, CodePiece nbtValue);
 
-		static ConvertType get(ClassProperty property) {
+		static ConvertType get(ASMVariable property) {
 			Type type = property.getType();
 			if (type.getSort() == ARRAY) {
 				Type elemType = type.getElementType();

@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.asm;
 
 import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.util.JavaUtils;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
@@ -37,6 +38,11 @@ public abstract class AbstractCodePiece implements CodePiece {
 	@Override
 	public void prependTo(InsnList to) {
 		to.insert(build());
+	}
+
+	@Override
+	public void appendTo(MethodVisitor mv) {
+		build().accept(mv);
 	}
 
 	@Override

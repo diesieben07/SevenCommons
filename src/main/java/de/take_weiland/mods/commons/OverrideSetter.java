@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * @author diesieben07
  */
 @Retention(RetentionPolicy.CLASS)
-@Target(ElementType.METHOD)
+@Target({ ElementType.METHOD, ElementType.LOCAL_VARIABLE })
 public @interface OverrideSetter {
 
 	String value();

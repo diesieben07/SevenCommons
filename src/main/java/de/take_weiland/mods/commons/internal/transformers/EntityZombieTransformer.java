@@ -50,7 +50,7 @@ public final class EntityZombieTransformer implements ASMClassTransformer {
 		insns.add(new InsnNode(Opcodes.RETURN)); // it is null, so just return
 		insns.add(nonNull);
 
-		return ASMUtils.asCodePiece(insns);
+		return CodePieces.of(insns);
 	}
 
 	@Override

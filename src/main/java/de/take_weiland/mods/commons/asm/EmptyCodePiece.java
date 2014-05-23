@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
 import de.take_weiland.mods.commons.util.JavaUtils;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
@@ -21,6 +22,9 @@ enum EmptyCodePiece implements CodePiece {
 
 	@Override
 	public void prependTo(InsnList to) { }
+
+	@Override
+	public void appendTo(MethodVisitor mv) { }
 
 	@Override
 	public void insertAfter(InsnList to, AbstractInsnNode location) { }

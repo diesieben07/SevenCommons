@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.collect.ObjectArrays;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
@@ -39,6 +40,13 @@ class CombinedCodePiece extends AbstractCodePiece {
 			CodePiece piece = pieces[i];
 			piece.insertBefore(into, location);
 			location = ASMUtils.getPrevious(location, piece.size());
+		}
+	}
+
+	@Override
+	public void appendTo(MethodVisitor mv) {
+		for (CodePiece piece : pieces) {
+			piece.appendTo(mv);
 		}
 	}
 

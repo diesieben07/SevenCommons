@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
@@ -20,31 +21,31 @@ class SingleInsnCodePiece extends AbstractCodePiece {
 	@Override
 	public InsnList build() {
 		InsnList insns = new InsnList();
-		insns.add(get());
+		insns.add(getInsn());
 		return insns;
 	}
 
 	@Override
 	public void insertAfter(InsnList into, AbstractInsnNode location) {
-		into.insert(location, get());
+		into.insert(location, getInsn());
 	}
 
 	@Override
 	public void insertBefore(InsnList into, AbstractInsnNode location) {
-		into.insertBefore(location, get());
+		into.insertBefore(location, getInsn());
 	}
 
 	@Override
 	public void appendTo(InsnList to) {
-		to.add(get());
+		to.add(getInsn());
 	}
 
 	@Override
 	public void prependTo(InsnList to) {
-		to.insert(get());
+		to.insert(getInsn());
 	}
 
-	private AbstractInsnNode get() {
+	private AbstractInsnNode getInsn() {
 		if (used) {
 			return ASMUtils.clone(insn);
 		} else {
@@ -56,5 +57,10 @@ class SingleInsnCodePiece extends AbstractCodePiece {
 	@Override
 	public int size() {
 		return 1;
+	}
+
+	@Override
+	public void appendTo(MethodVisitor mv) {
+		insn.accept(mv);
 	}
 }

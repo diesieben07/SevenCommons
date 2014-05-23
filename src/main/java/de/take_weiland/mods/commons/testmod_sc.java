@@ -22,7 +22,7 @@ public class testmod_sc {
 //		FMLInterModComms.sendMessage("sevencommons", "setUpdateUrl", "http://www.take-weiland.de/testmod.json");
 		Reflection.initialize(TestTe.class);
 
-		NBTTagCompound nbt = new NBTTagCompound();
+		final NBTTagCompound nbt = new NBTTagCompound();
 		NBTTagList list = new NBTTagList();
 		for (int i = 0; i < 5; ++i) {
 			list.appendTag(new NBTTagByteArray("", new byte[] { 1, 2, 4, 7 }));
