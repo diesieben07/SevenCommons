@@ -40,13 +40,13 @@ public final class SyncASMHooks {
 
 	private static PacketBuilder idxNull(Object obj, PacketBuilder out, int idx, SyncType type) {
 		out = init(obj, out, type);
-		out.putByte((idx & 0x3f) | 0x40); // (idx & 0011 1111) | 0100 0000
+		out.writeByte((idx & 0x3f) | 0x40); // (idx & 0011 1111) | 0100 0000
 		return out;
 	}
 
 	private static PacketBuilder idx(Object obj, PacketBuilder out, int idx, SyncType type){
 		out = init(obj, out, type);
-		out.putByte(idx & 0x3f); // 0011 1111
+		out.writeByte(idx & 0x3f); // 0011 1111
 		return out;
 	}
 
@@ -76,14 +76,14 @@ public final class SyncASMHooks {
 
 	public static void endSync(PacketBuilder out, PacketTarget target) {
 		if (out != null) {
-			out.putByte(0x80); // 1000 0000
+			out.writeByte(0x80); // 1000 0000
 			out.build().sendTo(target);
 		}
 	}
 
 	public static void endSync(PacketBuilder out, Object syncedObj, SyncType type) {
 		if (out != null) {
-			out.putByte(0x80); // 1000 0000
+			out.writeByte(0x80); // 1000 0000
 
 			type.sendPacket(syncedObj, out.build());
 		}
@@ -102,7 +102,7 @@ public final class SyncASMHooks {
 	}
 
 	public static int nextIdx(DataBuf in) {
-		int idx = in.getByte();
+		int idx = in.readByte();
 		if ((idx & 0x80) == 0x80) { // 1000 0000
 			return -1;
 		} else {
@@ -131,7 +131,7 @@ public final class SyncASMHooks {
 	public static PacketBuilder sync(PacketBuilder out, Object obj, SyncType type, int idx, boolean now, boolean prev) {
 		if (now != prev) {
 			out = idx(obj, out, idx, type);
-			out.putBoolean(now);
+			out.writeBoolean(now);
 		}
 		return out;
 	}
@@ -139,7 +139,7 @@ public final class SyncASMHooks {
 	public static PacketBuilder sync(PacketBuilder out, Object obj, SyncType type, int idx, byte now, byte prev) {
 		if (now != prev) {
 			out = idx(obj, out, idx, type);
-			out.putByte(now);
+			out.writeByte(now);
 		}
 		return out;
 	}
@@ -147,7 +147,7 @@ public final class SyncASMHooks {
 	public static PacketBuilder sync(PacketBuilder out, Object obj, SyncType type, int idx, short now, short prev) {
 		if (now != prev) {
 			out = idx(obj, out, idx, type);
-			out.putShort(now);
+			out.writeShort(now);
 		}
 		return out;
 	}
@@ -155,7 +155,7 @@ public final class SyncASMHooks {
 	public static PacketBuilder sync(PacketBuilder out, Object obj, SyncType type, int idx, int now, int prev) {
 		if (now != prev) {
 			out = idx(obj, out, idx, type);
-			out.putInt(now);
+			out.writeInt(now);
 		}
 		return out;
 	}
@@ -163,7 +163,7 @@ public final class SyncASMHooks {
 	public static PacketBuilder sync(PacketBuilder out, Object obj, SyncType type, int idx, long now, long prev) {
 		if (now != prev) {
 			out = idx(obj, out, idx, type);
-			out.putLong(now);
+			out.writeLong(now);
 		}
 		return out;
 	}
@@ -171,7 +171,7 @@ public final class SyncASMHooks {
 	public static PacketBuilder sync(PacketBuilder out, Object obj, SyncType type, int idx, char now, char prev) {
 		if (now != prev) {
 			out = idx(obj, out, idx, type);
-			out.putChar(now);
+			out.writeChar(now);
 		}
 		return out;
 	}
@@ -179,7 +179,7 @@ public final class SyncASMHooks {
 	public static PacketBuilder sync(PacketBuilder out, Object obj, SyncType type, int idx, float now, float prev) {
 		if (now != prev) {
 			out = idx(obj, out, idx, type);
-			out.putFloat(now);
+			out.writeFloat(now);
 		}
 		return out;
 	}
@@ -187,7 +187,7 @@ public final class SyncASMHooks {
 	public static PacketBuilder sync(PacketBuilder out, Object obj, SyncType type, int idx, double now, double prev) {
 		if (now != prev) {
 			out = idx(obj, out, idx, type);
-			out.putDouble(now);
+			out.writeDouble(now);
 		}
 		return out;
 	}
@@ -197,34 +197,34 @@ public final class SyncASMHooks {
 	}
 
 	public static boolean read_boolean(DataBuf in) {
-		return in.getBoolean();
+		return in.readBoolean();
 	}
 
 	public static byte read_byte(DataBuf in) {
-		return in.getByte();
+		return in.readByte();
 	}
 
 	public static short read_short(DataBuf in) {
-		return in.getShort();
+		return in.readShort();
 	}
 
 	public static int read_int(DataBuf in) {
-		return in.getInt();
+		return in.readInt();
 	}
 
 	public static long read_long(DataBuf in) {
-		return in.getLong();
+		return in.readLong();
 	}
 
 	public static char read_char(DataBuf in) {
-		return in.getChar();
+		return in.readChar();
 	}
 
 	public static float read_float(DataBuf in) {
-		return in.getFloat();
+		return in.readFloat();
 	}
 
 	public static double read_double(DataBuf in) {
-		return in.getDouble();
+		return in.readDouble();
 	}
 }

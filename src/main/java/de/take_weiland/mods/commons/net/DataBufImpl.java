@@ -5,6 +5,7 @@ import com.google.common.primitives.*;
 import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import de.take_weiland.mods.commons.util.ByteStreamSerializer;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.BufferUnderflowException;
@@ -45,18 +46,18 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public boolean getBoolean() {
-		return getByte() != 0;
+	public boolean readBoolean() {
+		return readByte() != 0;
 	}
 
 	@Override
-	public byte getByte() {
+	public byte readByte() {
 		checkRemaining(1);
 		return buf[pos++];
 	}
 
 	@Override
-	public short getShort() {
+	public short readShort() {
 		checkRemaining(2);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -65,7 +66,7 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public int getInt() {
+	public int readInt() {
 		checkRemaining(4);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -74,7 +75,7 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public long getLong() {
+	public long readLong() {
 		checkRemaining(8);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -83,7 +84,7 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public char getChar() {
+	public char readChar() {
 		checkRemaining(2);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -92,22 +93,22 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public float getFloat() {
-		return Float.intBitsToFloat(getInt());
+	public float readFloat() {
+		return Float.intBitsToFloat(readInt());
 	}
 
 	@Override
-	public double getDouble() {
-		return Double.longBitsToDouble(getLong());
+	public double readDouble() {
+		return Double.longBitsToDouble(readLong());
 	}
 	
 	@Override
-	public int getVarInt() {
+	public int readVarInt() {
 		int result = 0;
 		int pass = 0;
 		byte read;
 		do {
-			read = getByte();
+			read = readByte();
 			result |= (read & first7Bits) << pass++ * 7;
 		} while ((read & 128) == 128);
 
@@ -115,8 +116,8 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public String getString() {
-		int len = getVarInt();
+	public String readString() {
+		int len = readVarInt();
 		if (len < 0) {
 			return null;
 		}
@@ -133,18 +134,18 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public int getUnsignedByte() {
-		return UnsignedBytes.toInt(getByte());
+	public int readUnsignedByte() {
+		return UnsignedBytes.toInt(readByte());
 	}
 
 	@Override
-	public int getUnsignedShort() {
-		return UnsignedShorts.toInt(getShort());
+	public int readUnsignedShort() {
+		return UnsignedShorts.toInt(readShort());
 	}
 
 	@Override
-	public byte[] getByteArray() {
-		int length = getVarInt();
+	public byte[] readByteArray() {
+		int length = readVarInt();
 		checkRemaining(length);
 		byte[] result = new byte[length];
 		System.arraycopy(buf, pos, result, 0, length);
@@ -153,8 +154,8 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public byte[] getByteArray(byte[] target) {
-		int len = getVarInt();
+	public byte[] readByteArray(byte[] target) {
+		int len = readVarInt();
 		checkRemaining(len);
 		if (target.length < len) {
 			target = new byte[len];
@@ -165,12 +166,12 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public <T> T get(ByteStreamSerializer<T> serializer) {
+	public <T> T read(ByteStreamSerializer<T> serializer) {
 		return serializer.read(this);
 	}
 
 	@Override
-	public <T extends ByteStreamSerializable> T get(Class<T> clazz) {
+	public <T extends ByteStreamSerializable> T read(Class<T> clazz) {
 		try {
 			T o = clazz.newInstance();
 			o.read(this);
@@ -182,6 +183,7 @@ class DataBufImpl implements DataBuf {
 
 	private InputStream inStreamView;
 	
+	@NotNull
 	@Override
 	public InputStream asInputStream() {
 		return inStreamView == null ? (inStreamView = new DataBufAsInputstream(this)) : inStreamView;
@@ -189,6 +191,7 @@ class DataBufImpl implements DataBuf {
 
 	private DataInput dataInputView;
 	
+	@NotNull
 	@Override
 	public DataInput asDataInput() {
 		return dataInputView == null ? (dataInputView = new DataInputStream(asInputStream())) : dataInputView;
@@ -211,17 +214,17 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public int copyTo(OutputStream out) throws IOException {
+	public int copyTo(@NotNull OutputStream out) throws IOException {
 		return copyTo(out, -1);
 	}
 
 	@Override
-	public int copyTo(DataOutput out) throws IOException {
+	public int copyTo(@NotNull DataOutput out) throws IOException {
 		return copyTo(out, -1);
 	}
 	
 	@Override
-	public int copyTo(OutputStream out, int amount) throws IOException {
+	public int copyTo(@NotNull OutputStream out, int amount) throws IOException {
 		amount = amount < 0 ? available() : Math.min(amount, available());
 		out.write(buf, pos, amount);
 		pos += amount;
@@ -229,7 +232,7 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public int copyTo(DataOutput out, int amount) throws IOException {
+	public int copyTo(@NotNull DataOutput out, int amount) throws IOException {
 		amount = amount < 0 ? available() : Math.min(amount, available());
 		out.write(buf, pos, amount);
 		pos += amount;
@@ -237,12 +240,12 @@ class DataBufImpl implements DataBuf {
 	}
 
 	@Override
-	public int copyTo(byte[] buf) {
+	public int copyTo(@NotNull byte[] buf) {
 		return copyTo(buf, 0, buf.length);
 	}
 
 	@Override
-	public int copyTo(byte[] buf, int off, int len) {
+	public int copyTo(@NotNull byte[] buf, int off, int len) {
 		len = Math.min(available(), len);
 		System.arraycopy(this.buf, pos, buf, off, len);
 		pos += len;

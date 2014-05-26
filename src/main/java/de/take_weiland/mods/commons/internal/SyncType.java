@@ -23,12 +23,12 @@ public enum SyncType {
 
 		@Override
 		public void injectInfo(Object obj, WritableDataBuf out) {
-			out.putInt(((Entity)obj).entityId);
+			out.writeInt(((Entity) obj).entityId);
 		}
 
 		@Override
 		public Object recreate(EntityPlayer player, DataBuf in) {
-			return player.worldObj.getEntityByID(in.getInt());
+			return player.worldObj.getEntityByID(in.readInt());
 		}
 		
 	},
@@ -43,16 +43,16 @@ public enum SyncType {
 		@Override
 		public void injectInfo(Object obj, WritableDataBuf out) {
 			TileEntity te = (TileEntity) obj;
-			out.putVarInt(te.xCoord);
-			out.putVarInt(te.yCoord);
-			out.putVarInt(te.zCoord);
+			out.writeVarInt(te.xCoord);
+			out.writeVarInt(te.yCoord);
+			out.writeVarInt(te.zCoord);
 		}
 
 		@Override
 		public Object recreate(EntityPlayer player, DataBuf in) {
-			int x = in.getVarInt();
-			int y = in.getVarInt();
-			int z = in.getVarInt();
+			int x = in.readVarInt();
+			int y = in.readVarInt();
+			int z = in.readVarInt();
 			return player.worldObj.getBlockTileEntity(x, y, z);
 		}
 		
@@ -67,12 +67,12 @@ public enum SyncType {
 
 		@Override
 		public void injectInfo(Object obj, WritableDataBuf out) {
-			out.putByte(((Container)obj).windowId);
+			out.writeByte(((Container) obj).windowId);
 		}
 
 		@Override
 		public Object recreate(EntityPlayer player, DataBuf in) {
-			return player.openContainer.windowId == in.getByte() ? player.openContainer : null;
+			return player.openContainer.windowId == in.readByte() ? player.openContainer : null;
 		}
 		
 	},
@@ -87,7 +87,7 @@ public enum SyncType {
 		public void injectInfo(Object obj, WritableDataBuf out) {
 			SyncedEntityProperties sep = (SyncedEntityProperties) obj;
 			ENTITY.injectInfo(sep._sc$getPropsEntity(), out);
-			out.putVarInt(sep._sc$getPropsIndex());
+			out.writeVarInt(sep._sc$getPropsIndex());
 		}
 
 		@Override
@@ -96,7 +96,7 @@ public enum SyncType {
 			if (entity != null) {
 				List<SyncedEntityProperties> props = ((EntityProxy)entity)._sc$getSyncedProperties();
 				if (props != null) {
-					return JavaUtils.get(props, in.getVarInt());
+					return JavaUtils.get(props, in.readVarInt());
 				}
 			}
 			return null;

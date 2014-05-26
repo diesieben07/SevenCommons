@@ -22,25 +22,25 @@ public final class PacketEntityPropsIds extends ModPacket {
 
 	@Override
 	protected void write(WritableDataBuf out) {
-		out.putInt(entity.entityId);
+		out.writeInt(entity.entityId);
 		int len = props.size();
-		out.putVarInt(len);
+		out.writeVarInt(len);
 		// avoid generating iterator garbage
 		//noinspection ForLoopReplaceableByForEach
 		for (int i = 0; i < len; ++i) {
-			out.putString(props.get(i)._sc$getPropsIdentifier());
+			out.writeString(props.get(i)._sc$getPropsIdentifier());
 		}
 	}
 
 	@Override
 	protected void handle(DataBuf in, EntityPlayer player, Side side) {
-		int entityId = in.getInt();
+		int entityId = in.readInt();
 		Entity e = player.worldObj.getEntityByID(entityId);
 		if (e != null) {
-			int len = in.getVarInt();
+			int len = in.readVarInt();
 			SyncedEntityProperties[] props = new SyncedEntityProperties[len];
 			for (int i = 0; i < len; ++i) {
-				props[i] = (SyncedEntityProperties) e.getExtendedProperties(in.getString());
+				props[i] = (SyncedEntityProperties) e.getExtendedProperties(in.readString());
 			}
 			((EntityProxy)e)._sc$setSyncedProperties(Arrays.asList(props));
 		}

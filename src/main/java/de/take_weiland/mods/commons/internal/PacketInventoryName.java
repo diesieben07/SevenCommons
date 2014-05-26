@@ -26,16 +26,16 @@ public class PacketInventoryName extends ModPacket {
 
 	@Override
 	protected void write(WritableDataBuf out) {
-		out.putByte(windowId);
-		out.putString(name);
+		out.writeByte(windowId);
+		out.writeString(name);
 	}
 	
 	@Override
 	protected void handle(DataBuf in, EntityPlayer player, Side side) {
-		if (player.openContainer.windowId == in.getByte() && player.openContainer instanceof SCContainer) {
+		if (player.openContainer.windowId == in.readByte() && player.openContainer instanceof SCContainer) {
 			IInventory inv = ((SCContainer<?>) player.openContainer).inventory();
 			if (inv instanceof NameableInventory) {
-				((NameableInventory) inv).setCustomName(in.getString());
+				((NameableInventory) inv).setCustomName(in.readString());
 			}
 		}
 	}

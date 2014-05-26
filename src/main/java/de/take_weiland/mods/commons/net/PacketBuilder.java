@@ -7,46 +7,46 @@ package de.take_weiland.mods.commons.net;
 public interface PacketBuilder extends WritableDataBuf {
 
 	@Override
-	PacketBuilder putBoolean(boolean b);
+	PacketBuilder writeBoolean(boolean b);
 
 	@Override
-	PacketBuilder putByte(int b);
+	PacketBuilder writeByte(int b);
 
 	@Override
-	PacketBuilder putShort(int s);
+	PacketBuilder writeShort(int s);
 
 	@Override
-	PacketBuilder putInt(int i);
+	PacketBuilder writeInt(int i);
 
 	@Override
-	PacketBuilder putLong(long l);
+	PacketBuilder writeLong(long l);
 
 	@Override
-	PacketBuilder putChar(char c);
+	PacketBuilder writeChar(char c);
 
 	@Override
-	PacketBuilder putFloat(float f);
+	PacketBuilder writeFloat(float f);
 
 	@Override
-	PacketBuilder putDouble(double d);
+	PacketBuilder writeDouble(double d);
 
 	@Override
-	PacketBuilder putString(String s);
+	PacketBuilder writeString(String s);
 
 	@Override
-	PacketBuilder putVarInt(int i);
+	PacketBuilder writeVarInt(int i);
 
 	@Override
-	PacketBuilder putUnsignedByte(int i);
+	PacketBuilder writeUnsignedByte(int i);
 
 	@Override
-	PacketBuilder putUnsignedShort(int i);
+	PacketBuilder writeUnsignedShort(int i);
 
 	@Override
-	PacketBuilder putRaw(byte[] bytes);
+	PacketBuilder writeRaw(byte[] bytes);
 
 	@Override
-	PacketBuilder putRaw(byte[] bytes, int off, int len);
+	PacketBuilder writeRaw(byte[] bytes, int off, int len);
 
 	@Override
 	PacketBuilder grow(int n);

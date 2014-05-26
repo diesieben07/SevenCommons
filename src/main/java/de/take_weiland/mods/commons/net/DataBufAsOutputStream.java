@@ -13,17 +13,17 @@ final class DataBufAsOutputStream extends OutputStream {
 
 	@Override
 	public void write(int b) throws IOException {
-		buf.putByte((byte) b);
+		buf.writeByte((byte) b);
 	}
 
 	@Override
 	public void write(byte[] b) throws IOException {
-		buf.putRaw(b);
+		buf.writeRaw(b);
 	}
 
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException {
-		buf.putRaw(b, off, len);
+		buf.writeRaw(b, off, len);
 	}
 
 }

@@ -89,13 +89,13 @@ public abstract class ModPacket extends ModPacketBase {
 			transferId = nextTransferId();
 			register(transferId, maxWaitMillis < 0 ? DEFAULT_WAIT_MILLIS : maxWaitMillis, this);
 
-			buf.putInt(transferId);
+			buf.writeInt(transferId);
 			write(buf);
 		}
 
 		@Override
 		void handle0(DataBuf buffer, EntityPlayer player, Side side) {
-			int transferId = buffer.getInt();
+			int transferId = buffer.readInt();
 			if (side.isClient()) {
 				handle(buffer, player, side).setResponseTransferId(transferId).sendToServer();
 			} else {
@@ -149,13 +149,13 @@ public abstract class ModPacket extends ModPacketBase {
 
 		@Override
 		void write0(WritableDataBuf buf) {
-			buf.putInt(responseTransferId);
+			buf.writeInt(responseTransferId);
 			super.write0(buf);
 		}
 
 		@Override
 		void handle0(DataBuf buffer, EntityPlayer player, Side side) {
-			int transId = buffer.getInt();
+			int transId = buffer.readInt();
 			super.handle0(buffer, player, side);
 			WithResponse.onResponse(transId, this, player);
 		}

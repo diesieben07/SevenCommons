@@ -126,18 +126,18 @@ public final class DataBuffers {
 	}
 
 	public static void writeEnum(WritableDataBuf out, Enum<?> e) {
-		out.putVarInt(e.ordinal());
+		out.writeVarInt(e.ordinal());
 	}
 
 	public static <E extends Enum<E>> E readEnum(DataBuf in, Class<E> clazz) {
-		return JavaUtils.byOrdinal(clazz, in.getVarInt());
+		return JavaUtils.byOrdinal(clazz, in.readVarInt());
 	}
 
 	public static void writeNbt(WritableDataBuf out, NBTTagCompound nbt) {
 		if (nbt == null) {
-			out.putBoolean(true);
+			out.writeBoolean(true);
 		} else {
-			out.putBoolean(false);
+			out.writeBoolean(false);
 			try {
 				CompressedStreamTools.write(nbt, out.asDataOutput());
 			} catch (IOException e) {
@@ -147,7 +147,7 @@ public final class DataBuffers {
 	}
 
 	public static NBTTagCompound readNbt(DataBuf in) {
-		if (in.getBoolean()) {
+		if (in.readBoolean()) {
 			return null;
 		} else {
 			try {
@@ -160,20 +160,20 @@ public final class DataBuffers {
 
 	public static void writeFluidStack(WritableDataBuf out, FluidStack stack) {
 		if (stack == null) {
-			out.putVarInt(-1);
+			out.writeVarInt(-1);
 		} else {
-			out.putVarInt(stack.fluidID);
-			out.putVarInt(stack.amount);
+			out.writeVarInt(stack.fluidID);
+			out.writeVarInt(stack.amount);
 			writeNbt(out, stack.tag);
 		}
 	}
 
 	public static FluidStack readFluidStack(DataBuf in) {
-		int fluidId = in.getVarInt();
+		int fluidId = in.readVarInt();
 		if (fluidId < 0) {
 			return null;
 		} else {
-			int amount = in.getVarInt();
+			int amount = in.readVarInt();
 			FluidStack stack = new FluidStack(fluidId, amount);
 			stack.tag = readNbt(in);
 			return stack;
@@ -182,22 +182,22 @@ public final class DataBuffers {
 
 	public static void writeItemStack(WritableDataBuf out, ItemStack stack) {
 		if (stack == null) {
-			out.putShort(-1);
+			out.writeShort(-1);
 		} else {
-			out.putShort(stack.itemID);
-			out.putByte(stack.stackSize);
-			out.putShort(stack.getItemDamage());
+			out.writeShort(stack.itemID);
+			out.writeByte(stack.stackSize);
+			out.writeShort(stack.getItemDamage());
 			writeNbt(out, stack.stackTagCompound);
 		}
 	}
 
 	public static ItemStack readItemStack(DataBuf in) {
-		int id = in.getShort();
+		int id = in.readShort();
 		if (id < 0) {
 			return null;
 		} else {
-			int size = in.getByte();
-			int damage = in.getShort();
+			int size = in.readByte();
+			int damage = in.readShort();
 			ItemStack stack = new ItemStack(id, size, damage);
 			stack.stackTagCompound = readNbt(in);
 			return stack;

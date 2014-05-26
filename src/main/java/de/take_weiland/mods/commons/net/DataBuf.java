@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import de.take_weiland.mods.commons.util.ByteStreamSerializer;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 
@@ -16,90 +17,90 @@ public interface DataBuf {
 	 * reads a byte from the buffer and returns true if it is not 0.
 	 * @return true if the read byte is not 0
 	 */
-	boolean getBoolean();
+	boolean readBoolean();
 
 	/**
 	 * reads the next byte from the buffer
 	 * @return the byte read
 	 */
-	byte getByte();
+	byte readByte();
 
 	/**
 	 * reads the next short from the buffer
 	 * @return the short read
 	 */
-	short getShort();
+	short readShort();
 
 	/**
 	 * reads the next int from the buffer
 	 * @return the int read
 	 */
-	int getInt();
+	int readInt();
 
 	/**
 	 * reads the next long from the buffer
 	 * @return the long read
 	 */
-	long getLong();
+	long readLong();
 
 	/**
 	 * reads the next char from the buffer
 	 * @return the char read
 	 */
-	char getChar();
+	char readChar();
 
 	/**
 	 * reads the next float from the buffer
 	 * @return the float read
 	 */
-	float getFloat();
+	float readFloat();
 
 	/**
 	 * reads the next double from the buffer
 	 * @return the double read
 	 */
-	double getDouble();
+	double readDouble();
 
 	/**
 	 * reads the next String from the buffer
 	 * @return the String read
 	 */
-	String getString();
+	String readString();
 
 	/**
 	 * reads the next VarInt from the buffer
 	 * @return the integer read
 	 */
-	int getVarInt();
+	int readVarInt();
 
 	/**
 	 * reads the next Unsigned byte from the buffer
 	 * @return the integer read
 	 */
-	int getUnsignedByte();
+	int readUnsignedByte();
 
 	/**
 	 * reads the next unsigned short from the buffer
 	 * @return the integer read
 	 */
-	int getUnsignedShort();
+	int readUnsignedShort();
 
 	/**
 	 * reads the next byte array from the buffer
 	 * @return the byte array read
 	 */
-	byte[] getByteArray();
+	byte[] readByteArray();
 
 	/**
 	 * reads the next byte array from the buffer, tries to use {@code buf} as a buffer, if big enough
 	 * @param buf a pre-created array to hold the data
 	 * @return the byte array read, doesn't need to be the same as {@code buf}
 	 */
-	byte[] getByteArray(byte[] buf);
+	byte[] readByteArray(byte[] buf);
 
-	<T> T get(ByteStreamSerializer<T> serializer);
+	<T> T read(ByteStreamSerializer<T> serializer);
 
-	<T extends ByteStreamSerializable> T get(Class<T> clazz);
+	<T extends ByteStreamSerializable> T read(Class<T> clazz);
 
 	/**
 	 * how many bytes can still be read from this buffer, starting at the current position
@@ -122,54 +123,58 @@ public interface DataBuf {
 	/**
 	 * identical to {@link #copyTo(OutputStream, int) copyTo(out, -1)}
 	 */
-	int copyTo(OutputStream out) throws IOException;
+	int copyTo(@NotNull OutputStream out) throws IOException;
 	
 	/**
-	 * identical to {@link #copyTo(DataOutput, int) copyTo(out, -1)}
+	 * <p>Copies all bytes starting from the current position into the DataOuput.</p>
 	 */
-	int copyTo(DataOutput out) throws IOException;
+	int copyTo(@NotNull DataOutput out) throws IOException;
 	
 	/**
-	 * copy at most {@code amount} bytes starting from the current position to the OutputStream<br>
-	 * if {@code amount} is negative all available bytes will be written
-	 * @param out
-	 * @param amount
+	 * <p>Copy at most {@code amount} bytes starting from the current position to the OutputStream</p>
+	 * <p>If {@code amount} is negative all available bytes will be written.</p>
+	 * @param out the Stream to copy to
+	 * @param amount the amount of bytes to write
 	 * @return the amount of bytes actually copied
 	 */
-	int copyTo(OutputStream out, int amount) throws IOException;
+	int copyTo(@NotNull OutputStream out, int amount) throws IOException;
 	
 	/**
 	 * Simliar functionality to {@link #copyTo(OutputStream, int)}
 	 */
-	int copyTo(DataOutput out, int amount) throws IOException;
+	int copyTo(@NotNull DataOutput out, int amount) throws IOException;
 	
 	/**
-	 * copies at most {@code buf.length} bytes into {@code buf}
-	 * @param buf
+	 * <p>Copies at most {@code buf.length} bytes into {@code buf}.</p>
+	 * <p>If this buffer ends before {@code len} bytes have been copied, no further data is copied.</p>
+	 * @param buf the buffer to copy into
 	 * @return the amount of bytes actually copied
 	 */
-	int copyTo(byte[] buf);
+	int copyTo(@NotNull byte[] buf);
 	
 	/**
-	 * copies at most {@code len} bytes into {@code buf}, starting at {@code buf[off]}
-	 * @param buf
-	 * @param off
-	 * @param len
+	 * <p>Copies at most {@code len} bytes into {@code buf}, so that the first element is put into {@code buf[off]}.</p>
+	 * <p>If this buffer ends before {@code len} bytes have been copied, no further data is copied.</p>
+	 * @param buf the buffer to copy into
+	 * @param off the offset to start at
+	 * @param len the number of bytes to copy
 	 * @return the amount of bytes actually copied
 	 */
-	int copyTo(byte[] buf, int off, int len);
+	int copyTo(@NotNull byte[] buf, int off, int len);
 
 	/**
-	 * view this buffer as an InputStream. Methods in the returned object read-through to this buffer
-	 * @return an InputStream
+	 * <p>View this buffer as an InputStream. Methods in the returned object read-through to this buffer.</p>
+	 * @return an {@code InputStream} view of this buffer.
 	 */
+	@NotNull
 	InputStream asInputStream();
 
 	/**
-	 * view this buffer as a DataInput. Methods in the returned object read-through to this buffer.
-	 * This method is preferred to {@code new DataInputStream(buf.asInputStream())}, even though they currently do the same.
-	 * @return
+	 * <p>View this buffer as a {@link java.io.DataInput}. Methods in the returned object read-through to this buffer.<GreendDiamond</p>
+	 * <p>This method is preferred to {@code new DataInputStream(buf.asInputStream())}, even though they currently do the same.</p>
+	 * @return a {@code DataInput} view of this buffer.
 	 */
+	@NotNull
 	DataInput asDataInput();
 	
 }

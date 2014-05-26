@@ -12,12 +12,12 @@ final class StringSyncer implements TypeSyncer<String> {
 
 	@Override
 	public void write(String instance, WritableDataBuf out) {
-		out.putString(instance);
+		out.writeString(instance);
 	}
 
 	@Override
 	public String read(String old, DataBuf in) {
-		return in.getString();
+		return in.readString();
 	}
 
 }

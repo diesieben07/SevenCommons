@@ -22,19 +22,19 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	private static final byte BOOL_TRUE = 1;
 
 	@Override
-	public SELF putBoolean(boolean b) {
-		return putByte(b ? BOOL_TRUE : BOOL_FALSE);
+	public SELF writeBoolean(boolean b) {
+		return writeByte(b ? BOOL_TRUE : BOOL_FALSE);
 	}
 
 	@Override
-	public SELF putByte(int b) {
+	public SELF writeByte(int b) {
 		grow0(1);
 		buf[pos++] = (byte) b;
 		return (SELF) this;
 	}
 
 	@Override
-	public SELF putShort(int s) {
+	public SELF writeShort(int s) {
 		grow0(2);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -45,7 +45,7 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	@Override
-	public SELF putInt(int i) {
+	public SELF writeInt(int i) {
 		grow0(4);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -58,7 +58,7 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	@Override
-	public SELF putLong(long l) {
+	public SELF writeLong(long l) {
 		grow0(8);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -75,7 +75,7 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	@Override
-	public SELF putChar(char c) {
+	public SELF writeChar(char c) {
 		grow0(2);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -86,13 +86,13 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	@Override
-	public SELF putFloat(float f) {
-		return putInt(Float.floatToIntBits(f));
+	public SELF writeFloat(float f) {
+		return writeInt(Float.floatToIntBits(f));
 	}
 
 	@Override
-	public SELF putDouble(double d) {
-		return putLong(Double.doubleToLongBits(d));
+	public SELF writeDouble(double d) {
+		return writeLong(Double.doubleToLongBits(d));
 	}
 	
 	private static int varIntSize(int i) {
@@ -100,7 +100,7 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	@Override
-	public SELF putVarInt(int i) {
+	public SELF writeVarInt(int i) {
 		int size = varIntSize(i);
 		grow0(size);
 		int pos = this.pos;
@@ -115,23 +115,23 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	@Override
-	public SELF putUnsignedByte(int i) {
-		return putByte(UnsignedBytes.checkedCast(i));
+	public SELF writeUnsignedByte(int i) {
+		return writeByte(UnsignedBytes.checkedCast(i));
 	}
 
 	@Override
-	public SELF putUnsignedShort(int i) {
-		return putShort(UnsignedShorts.checkedCast(i));
+	public SELF writeUnsignedShort(int i) {
+		return writeShort(UnsignedShorts.checkedCast(i));
 	}
 
 	@Override
 	@Deprecated
-	public SELF putString(String s) {
+	public SELF writeString(String s) {
 		if (s == null) {
-			return putVarInt(-1);
+			return writeVarInt(-1);
 		}
 		int len = s.length();
-		putVarInt(len);
+		writeVarInt(len);
 		grow0(len << 1);
 		int pos = this.pos;
 		byte[] buf = this.buf;
@@ -146,23 +146,23 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	@Override
-	public SELF putBytes(byte[] bytes) {
+	public SELF writeBytes(byte[] bytes) {
 		if (bytes == null) {
-			putVarInt(-1);
+			writeVarInt(-1);
 		} else {
-			putVarInt(bytes.length);
-			putRaw(bytes);
+			writeVarInt(bytes.length);
+			writeRaw(bytes);
 		}
 		return (SELF) this;
 	}
 
 	@Override
-	public SELF putRaw(byte[] bytes) {
-		return putRaw(bytes, 0, bytes.length);
+	public SELF writeRaw(byte[] bytes) {
+		return writeRaw(bytes, 0, bytes.length);
 	}
 
 	@Override
-	public SELF putRaw(byte[] arr, int off, int len) {
+	public SELF writeRaw(byte[] arr, int off, int len) {
 		DataBuffers.validateArray(arr, off, len);
         grow0(len);
         System.arraycopy(arr, off, buf, pos, len);
@@ -171,13 +171,13 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	@Override
-	public <T> SELF put(T obj, ByteStreamSerializer<? super T> serializer) {
+	public <T> SELF write(T obj, ByteStreamSerializer<? super T> serializer) {
 		serializer.write(obj, this);
 		return (SELF) this;
 	}
 
 	@Override
-	public SELF put(ByteStreamSerializable o) {
+	public SELF write(ByteStreamSerializable o) {
 		o.write(this);
 		return (SELF) this;
 	}
