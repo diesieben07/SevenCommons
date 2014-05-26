@@ -21,12 +21,12 @@ import java.nio.channels.WritableByteChannel;
 import java.util.Map;
 
 /**
- * <p>An automatic downloader for SevenCommons for you to ship with your mod.</p>
- * <p>You should copy this entire File and change the package name to your package.
- * The only thing to be changed is the {@link #DESIRED_VERSION} constant.</p>
- * <p>If your Mod is a Coremod (IFMLLoadingPlugin), call {@link #setup()} from the constructor of your IFMLLoadingPlugin.</p>
- * <p>If your Mod is a normal mod, add the following lines to the Jar-Manifest of your jar file:
- * <pre>FMLCorePlugin: com.example.yourmod.SevenCommonsWrapper<br />FMLCorePluginContainsFMLMod: true</pre></p>
+ * An automatic downloader for SevenCommons for you to ship with your mod.<br/>
+ * You should copy this entire File and change the package name to your package.
+ * The only thing to be changed is the {@link #DESIRED_VERSION} constant.<br/>
+ * If your Mod is a Coremod (IFMLLoadingPlugin), call {@link #setup()} from the constructor of your IFMLLoadingPlugin.<br/>
+ * If your Mod is a normal mod, add the following lines to the Jar-Manifest of your jar file:
+ * <pre>FMLCorePlugin: com.example.yourmod.SevenCommonsWrapper<br />FMLCorePluginContainsFMLMod: true</pre><br/>
  *
  * @author diesieben07
  */
