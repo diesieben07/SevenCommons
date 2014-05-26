@@ -148,18 +148,13 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 
 		File target = new File(modFolder, "SevenCommons-" + version + ".jar");
 
-		WritableByteChannel out = null;
-		ReadableByteChannel in = null;
-		try {
-			out = new FileOutputStream(target).getChannel();
-			URLConnection conn = parsedTarget.openConnection();
-			long total = conn.getContentLengthLong();
+		URLConnection conn = parsedTarget.openConnection();
+		long total = conn.getContentLengthLong();
 
-			in = new MonitorChannel(Channels.newChannel(conn.getInputStream()), total);
+		try (WritableByteChannel out = new FileOutputStream(target).getChannel();
+		     ReadableByteChannel in = new MonitorChannel(Channels.newChannel(conn.getInputStream()), total)) {
+
 			ByteStreams.copy(in, out);
-		} finally {
-			if (in != null) in.close();
-			if (out != null) out.close();
 		}
 		return target;
 	}
