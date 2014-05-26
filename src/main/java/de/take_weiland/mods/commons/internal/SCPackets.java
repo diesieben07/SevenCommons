@@ -8,15 +8,9 @@ import de.take_weiland.mods.commons.net.SimplePacketType;
 */
 public enum SCPackets implements SimplePacketType {
 
-	CLIENT_ACTION(PacketClientAction.class),
 	INV_NAME(PacketInventoryName.class),
 	SYNC_ENTITY_PROPS_IDS(PacketEntityPropsIds.class),
-	SYNC(PacketSync.class),
-	DISPLAY_UPDATES(PacketDisplayUpdates.class),
-	UPDATE_ACTION(PacketUpdaterAction.class),
-	VERSION_SELECT(PacketVersionSelect.class),
-	DOWNLOAD_PERCENT(PacketDownloadPercent.class);
-
+	SYNC(PacketSync.class);
 
 	private final Class<? extends ModPacket> packet;
 

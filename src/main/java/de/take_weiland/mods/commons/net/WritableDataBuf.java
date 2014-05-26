@@ -90,28 +90,20 @@ public interface WritableDataBuf extends DataBuf {
 	 */
 	WritableDataBuf putUnsignedShort(int i);
 
-	@Deprecated
-	/**
-	 * @deprecated use {@link #put(String)}
-	 */
-	WritableDataBuf putString(String s);
-
-
 	/**
 	 * writes the given String to the buffer. First a {@link #putVarInt VarInt} is written containing the length of the string, or -1 if s is null.
 	 * Then each character is written to the buffer.
 	 * @param s the String to writePacketId
 	 * @return this
 	 */
-	WritableDataBuf put(String s);
-
+	WritableDataBuf putString(String s);
 
 	/**
 	 * writes the given byte array to the buffer. First, the length (or -1 if null) is written as a {@link #putVarInt VarInt}, then every byte in the array is written.
 	 * @param bytes the byte array to writePacketId
 	 * @return this
 	 */
-	WritableDataBuf put(byte[] bytes);
+	WritableDataBuf putBytes(byte[] bytes);
 
 	/**
 	 * writes all the bytes in the given byte array to the buffer, without writing the length
@@ -127,7 +119,7 @@ public interface WritableDataBuf extends DataBuf {
 	 */
 	WritableDataBuf putRaw(byte[] bytes, int off, int len);
 
-	<T> WritableDataBuf put(T obj, ByteStreamSerializer<T> serializer);
+	<T> WritableDataBuf put(T obj, ByteStreamSerializer<? super T> serializer);
 
 	WritableDataBuf put(ByteStreamSerializable o);
 

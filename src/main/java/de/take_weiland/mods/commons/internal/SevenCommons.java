@@ -72,7 +72,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 
 	@Override
 	public String getSetupClass() {
-		return "de.take_weiland.mods.commons.internal.exclude.SCCallHook";
+		return null;
 	}
 
 	@Override

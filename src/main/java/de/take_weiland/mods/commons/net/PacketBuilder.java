@@ -4,7 +4,7 @@ package de.take_weiland.mods.commons.net;
  * <p>A PacketBuilder is like a {@link de.take_weiland.mods.commons.net.WritableDataBuf}, but it can be used to send a Packet</p>
  * <p>Obtain one with a {@link de.take_weiland.mods.commons.net.PacketFactory}</p>
  */
-public interface PacketBuilder extends PacketBuilderBase {
+public interface PacketBuilder extends WritableDataBuf {
 
 	@Override
 	PacketBuilder putBoolean(boolean b);
@@ -43,9 +43,6 @@ public interface PacketBuilder extends PacketBuilderBase {
 	PacketBuilder putUnsignedShort(int i);
 
 	@Override
-	PacketBuilder put(byte[] bytes);
-
-	@Override
 	PacketBuilder putRaw(byte[] bytes);
 
 	@Override
@@ -53,4 +50,16 @@ public interface PacketBuilder extends PacketBuilderBase {
 
 	@Override
 	PacketBuilder grow(int n);
+
+	/**
+	 * use {@link #build()} instead
+	 */
+	@Deprecated
+	SimplePacket toPacket();
+
+	/**
+	 * <p>Turn the contents of this PacketBuilder into a Packet. After a call to this method a PacketBuilder can no longer be used and should be discarded
+	 * @return the created Packet
+	 */
+	SimplePacket build();
 }

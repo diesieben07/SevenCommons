@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ClassInfo;
+import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.EntityProxy;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
@@ -20,7 +21,7 @@ public final class EntityTransformer implements ASMClassTransformer {
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
 		FieldNode syncedProps = addSyncedPropsField(clazz);
 
-		String onUpdate = ASMUtils.useMcpNames() ? M_ON_UPDATE_MCP : M_ON_UPDATE_SRG;
+		String onUpdate = MCPNames.use() ? M_ON_UPDATE_MCP : M_ON_UPDATE_SRG;
 
 		for (MethodNode method : clazz.methods) {
 			if (method.name.equals(M_REGISTER_EXT_PROPS)) {

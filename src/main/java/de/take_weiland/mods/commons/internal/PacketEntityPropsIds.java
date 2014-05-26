@@ -25,6 +25,8 @@ public final class PacketEntityPropsIds extends ModPacket {
 		out.putInt(entity.entityId);
 		int len = props.size();
 		out.putVarInt(len);
+		// avoid generating iterator garbage
+		//noinspection ForLoopReplaceableByForEach
 		for (int i = 0; i < len; ++i) {
 			out.putString(props.get(i)._sc$getPropsIdentifier());
 		}

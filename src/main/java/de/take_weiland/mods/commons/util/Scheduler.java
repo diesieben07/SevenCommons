@@ -13,6 +13,8 @@ import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import net.minecraft.server.ThreadMinecraftServer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -45,7 +47,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	 * @param task the task to run
 	 */
 	@Override
-	public void execute(Runnable task) {
+	public void execute(@NotNull Runnable task) {
 		scheduleSimple(task, 0, true);
 	}
 
@@ -55,13 +57,13 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	 * @param ticks how many ticks to wait before execution
 	 * @param tickEnd whether the task should be executed on tickEnd or not
 	 */
-	public void scheduleSimple(Runnable task, int ticks, boolean tickEnd) {
+	public void scheduleSimple(@NotNull Runnable task, int ticks, boolean tickEnd) {
 		checkArgument(ticks >= 0, "Ticks must not be negative");
 		long when = ticks + now.get();
 		newTask(new SimpleTask(checkNotNull(task), when, tickEnd));
 	}
 
-	public void scheduleSimple(Runnable task, long delay, TimeUnit unit) {
+	public void scheduleSimple(@NotNull Runnable task, long delay, @NotNull TimeUnit unit) {
 		scheduleSimple(task, Ints.saturatedCast(millisToTicks(unit.toMillis(delay))), true);
 	}
 
@@ -69,7 +71,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	 * Throws the given Throwable in the main Minecraft thread, to properly trigger CrashReports.
 	 * @param t the Throwable to throw
 	 */
-	public void throwInMainThread(final Throwable t) {
+	public void throwInMainThread(@NotNull final Throwable t) {
 		//noinspection ThrowableResultOfMethodCallIgnored
 		checkNotNull(t);
 		execute(new Runnable() {
@@ -82,31 +84,35 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	}
 
 	// ExecutorService methods
+	@NotNull
 	@Override
-	public <T> ListenableFuture<T> submit(Runnable r, T result) {
+	public <T> ListenableFuture<T> submit(@NotNull Runnable r, @Nullable T result) {
 		ScheduledRunnable<T> task = new ScheduledRunnable<>(checkNotNull(r, "Runnable"), result, now.get());
 		newTask(task);
 		return task;
 	}
 
+	@NotNull
 	@Override
-	public ScheduledListenableFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+	public ScheduledListenableFuture<?> schedule(@NotNull Runnable command, long delay, @NotNull TimeUnit unit) {
 		long when = millisToTicks(unit.toMillis(delay)) + now.get();
 		ScheduledRunnable<Void> task = new ScheduledRunnable<>(checkNotNull(command, "Runnable"), null, when);
 		newTask(task);
 		return task;
 	}
 
+	@NotNull
 	@Override
-	public <V> ScheduledListenableFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+	public <V> ScheduledListenableFuture<V> schedule(@NotNull Callable<V> callable, long delay, @NotNull TimeUnit unit) {
 		long when = millisToTicks(unit.toMillis(delay)) + now.get();
 		ScheduledCallable<V> task = new ScheduledCallable<>(checkNotNull(callable, "Callable"), when);
 		newTask(task);
 		return task;
 	}
 
+	@NotNull
 	@Override
-	public ScheduledFuture<?> scheduleWithFixedDelay(final Runnable command, long initialDelay, long delay, TimeUnit unit) {
+	public ScheduledFuture<?> scheduleWithFixedDelay(@NotNull final Runnable command, long initialDelay, long delay, @NotNull TimeUnit unit) {
 		long initialWhen = millisToTicks(unit.toMillis(initialDelay)) + now.get();
 		long delayTicks = millisToTicks(unit.toMillis(delay));
 		RepeatedRunnable task = new RepeatedRunnable(initialWhen, delayTicks, checkNotNull(command, "Runnable"));
@@ -114,8 +120,9 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 		return task;
 	}
 
+	@NotNull
 	@Override
-	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+	public <T> List<Future<T>> invokeAll(@NotNull Collection<? extends Callable<T>> tasks, long timeout, @NotNull TimeUnit unit) throws InterruptedException {
 		if (tasks.size() == 0) {
 			return ImmutableList.of();
 		}
@@ -166,7 +173,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	}
 
 	@Override
-	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+	public <T> T invokeAny(@NotNull Collection<? extends Callable<T>> tasks, long timeout, @NotNull TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 		long timeoutNanos = unit.toNanos(timeout);
 		if (isOnMainThread(side)) {
 			Exception lastEx = null;
@@ -203,13 +210,15 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 
 	// Bouncer methods from ExecutorService
 
+	@NotNull
 	@Override
-	public <T> ListenableFuture<T> submit(Callable<T> task) {
+	public <T> ListenableFuture<T> submit(@NotNull Callable<T> task) {
 		return schedule(task, 0, TimeUnit.MILLISECONDS);
 	}
 
+	@NotNull
 	@Override
-	public ListenableFuture<?> submit(Runnable r) {
+	public ListenableFuture<?> submit(@NotNull Runnable r) {
 		return submit(r, null);
 	}
 
@@ -222,19 +231,22 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	 * @param unit
 	 * @return
 	 */
+	@NotNull
 	@Override
-	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+	public ScheduledFuture<?> scheduleAtFixedRate(@NotNull Runnable command, long initialDelay, long period, @NotNull TimeUnit unit) {
 		// our tasks run synchronously, so these do the same
 		return scheduleWithFixedDelay(command, initialDelay, period, unit);
 	}
 
+	@NotNull
 	@Override
-	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+	public <T> List<Future<T>> invokeAll(@NotNull Collection<? extends Callable<T>> tasks) throws InterruptedException {
 		return invokeAll(tasks, -1, TimeUnit.NANOSECONDS);
 	}
 
+	@NotNull
 	@Override
-	public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+	public <T> T invokeAny(@NotNull Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
 		try {
 			return invokeAny(tasks, -1, TimeUnit.NANOSECONDS);
 		} catch (TimeoutException e) {
@@ -327,6 +339,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 		throw unsupported();
 	}
 
+	@NotNull
 	@Override
 	public List<Runnable> shutdownNow() {
 		throw unsupported();
@@ -343,7 +356,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	}
 
 	@Override
-	public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+	public boolean awaitTermination(long timeout, @NotNull TimeUnit unit) throws InterruptedException {
 		throw unsupported();
 	}
 
@@ -424,13 +437,13 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 		abstract void run0() throws Exception;
 
 		@Override
-		public long getDelay(TimeUnit unit) {
+		public long getDelay(@NotNull TimeUnit unit) {
 			long now = Scheduler.this.now.get();
 			return unit.convert(ticksToMillis(when - now), TimeUnit.MILLISECONDS);
 		}
 
 		@Override
-		public int compareTo(Delayed o) {
+		public int compareTo(@NotNull Delayed o) {
 			return Longs.compare(this.getDelay(TimeUnit.NANOSECONDS), o.getDelay(TimeUnit.NANOSECONDS));
 		}
 

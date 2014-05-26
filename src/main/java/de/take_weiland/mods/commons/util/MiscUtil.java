@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
 import cpw.mods.fml.common.FMLLog;
-import de.take_weiland.mods.commons.asm.ASMUtils;
+import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.fastreflect.Fastreflect;
 
 import java.util.logging.Logger;
@@ -33,6 +33,6 @@ public final class MiscUtil {
 	 * @return true if this is a development environment
 	 */
 	public static boolean isDevelopmentEnv() {
-		return ASMUtils.useMcpNames();
+		return MCPNames.use();
 	}
 }

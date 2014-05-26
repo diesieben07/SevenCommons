@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
 import de.take_weiland.mods.commons.asm.MCPNames;
-import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.SimplePacket;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
@@ -124,11 +123,11 @@ public enum SyncType {
 	}
 	
 	public String getWorldFieldName() {
-		return ASMUtils.useMcpNames() ? worldField : worldFieldSrg;
+		return MCPNames.use() ? worldField : worldFieldSrg;
 	}
 
 	public String getTickMethod() {
-		return ASMUtils.useMcpNames() ? tickMcp : tickSrg;
+		return MCPNames.use() ? tickMcp : tickSrg;
 	}
 
 	public abstract void sendPacket(Object obj, SimplePacket p);

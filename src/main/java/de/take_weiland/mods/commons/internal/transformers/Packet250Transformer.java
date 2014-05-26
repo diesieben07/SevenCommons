@@ -32,9 +32,9 @@ public class Packet250Transformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		String readMethod = ASMUtils.useMcpNames() ? M_READ_PACKET_DATA_MCP : M_READ_PACKET_DATA_SRG;
-		String writeMethod = ASMUtils.useMcpNames() ? M_WRITE_PACKET_DATA_MCP : M_WRITE_PACKET_DATA_SRG;
-		String getPacketSizeMethod = ASMUtils.useMcpNames() ? M_GET_PACKET_SIZE_MCP : M_GET_PACKET_SIZE_SRG;
+		String readMethod = use() ? M_READ_PACKET_DATA_MCP : M_READ_PACKET_DATA_SRG;
+		String writeMethod = use() ? M_WRITE_PACKET_DATA_MCP : M_WRITE_PACKET_DATA_SRG;
+		String getPacketSizeMethod = use() ? M_GET_PACKET_SIZE_MCP : M_GET_PACKET_SIZE_SRG;
 		boolean foundCstr = false, foundRead = false, foundWrite = false, foundSize = false;
 		for (MethodNode method : clazz.methods) {
 			if (method.name.equals("<init>") && method.desc.equals(CSTR_DESC)) {

@@ -116,7 +116,7 @@ public final class ASMUtils {
 	 * @return the first method with the given name or null if no such method is found
 	 */
 	public static MethodNode findMinecraftMethod(ClassNode clazz, String mcpName, String srgName) {
-		return findMethod(clazz, useMcpNames() ? mcpName : srgName);
+		return findMethod(clazz, MCPNames.use() ? mcpName : srgName);
 	}
 
 	/**
@@ -129,7 +129,7 @@ public final class ASMUtils {
 	 * @see org.objectweb.asm.Type#getMethodDescriptor
 	 */
 	public static MethodNode findMinecraftMethod(ClassNode clazz, String mcpName, String srgName, String desc) {
-		return findMethod(clazz, useMcpNames() ? mcpName : srgName, desc);
+		return findMethod(clazz, MCPNames.use() ? mcpName : srgName, desc);
 	}
 
 	/**

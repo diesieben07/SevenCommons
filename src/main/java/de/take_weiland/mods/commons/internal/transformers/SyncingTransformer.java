@@ -150,7 +150,7 @@ public final class SyncingTransformer {
 			lbl = new LabelNode();
 			call.add(new VarInsnNode(Opcodes.ALOAD, 0));
 			call.add(new FieldInsnNode(Opcodes.GETFIELD, type.getRootClass(), worldField, world.getDescriptor()));
-			call.add(new FieldInsnNode(Opcodes.GETFIELD, world.getInternalName(), ASMUtils.useMcpNames() ? MCPNames.F_IS_REMOTE_MCP : MCPNames.F_IS_REMOTE_SRG, Type.BOOLEAN_TYPE.getDescriptor()));
+			call.add(new FieldInsnNode(Opcodes.GETFIELD, world.getInternalName(), MCPNames.use() ? MCPNames.F_IS_REMOTE_MCP : MCPNames.F_IS_REMOTE_SRG, Type.BOOLEAN_TYPE.getDescriptor()));
 			call.add(new JumpInsnNode(Opcodes.IFNE, lbl));
 		}
 
