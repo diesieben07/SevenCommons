@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.fastreflect;
+package de.take_weiland.mods.commons.reflect;
 
 import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.ClassWriter;
@@ -22,7 +22,7 @@ class SunProprietaryStrategy extends AbstractStrategy {
 		InterfaceInfo info = analyze(iface);
 		ClassWriter cw = new ClassWriter(0);
 		
-		cw.visit(V1_6, ACC_PUBLIC, Fastreflect.nextDynamicClassName(), null, "sun/reflect/MagicAccessorImpl", new String[] { getInternalName(iface) });
+		cw.visit(V1_6, ACC_PUBLIC, SCReflection.nextDynamicClassName(), null, "sun/reflect/MagicAccessorImpl", new String[] { getInternalName(iface) });
 		cw.visitSource(".dynamic", null);
 		
 		makeConstructor(cw);
@@ -41,7 +41,7 @@ class SunProprietaryStrategy extends AbstractStrategy {
 		
 		cw.visitEnd();
 		
-		Class<?> clazz = Fastreflect.defineDynamicClass(cw.toByteArray());
+		Class<?> clazz = SCReflection.defineDynamicClass(cw.toByteArray());
 		try {
 			return clazz.asSubclass(iface).newInstance();
 		} catch (Exception e) {

@@ -1,8 +1,5 @@
 package de.take_weiland.mods.commons.inv;
 
-import de.take_weiland.mods.commons.inv.ItemInventory;
-import de.take_weiland.mods.commons.inv.SCContainer;
-import de.take_weiland.mods.commons.inv.SlotNoPickup;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -37,7 +34,7 @@ public final class Containers {
 		IInventory inv = container.inventory();
 		int blockedSlot;
 		if (inv instanceof ItemInventory.WithInventory) {
-			ItemInventory.WithInventory iinv = (ItemInventory.WithInventory) inv;
+			ItemInventory.WithInventory<?> iinv = (ItemInventory.WithInventory<?>) inv;
 			blockedSlot = iinv.inv == inventoryPlayer ? iinv.slot : -1;
 		} else {
 			blockedSlot = -1;

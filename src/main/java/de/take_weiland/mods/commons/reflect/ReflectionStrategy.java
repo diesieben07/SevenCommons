@@ -1,6 +1,6 @@
-package de.take_weiland.mods.commons.fastreflect;
+package de.take_weiland.mods.commons.reflect;
 
-interface FastreflectStrategy {
+interface ReflectionStrategy {
 
 	<T> T createAccessor(Class<T> iface);
 

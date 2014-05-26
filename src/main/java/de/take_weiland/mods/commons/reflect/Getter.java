@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.fastreflect;
+package de.take_weiland.mods.commons.reflect;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

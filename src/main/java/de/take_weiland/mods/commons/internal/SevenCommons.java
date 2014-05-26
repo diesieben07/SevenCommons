@@ -4,7 +4,7 @@ import com.google.common.base.Throwables;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import de.take_weiland.mods.commons.SevenCommonsWrapper;
-import de.take_weiland.mods.commons.fastreflect.Fastreflect;
+import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -88,7 +88,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	}
 
 	public static Logger scLogger() {
-		return scLogger(Fastreflect.getCallerClass().getSimpleName());
+		return scLogger(SCReflection.getCallerClass().getSimpleName());
 	}
 
 	public static Logger scLogger(String channel) {

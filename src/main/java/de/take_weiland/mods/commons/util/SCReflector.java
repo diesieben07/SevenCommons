@@ -2,10 +2,10 @@ package de.take_weiland.mods.commons.util;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.SCReflection;
 import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.fastreflect.Getter;
-import de.take_weiland.mods.commons.fastreflect.Setter;
+import de.take_weiland.mods.commons.reflect.SCReflection;
+import de.take_weiland.mods.commons.reflect.Getter;
+import de.take_weiland.mods.commons.reflect.Setter;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -30,11 +30,11 @@ import java.util.Map;
 /**
  * Accessor interface for various private fields and methods around the Minecraft code.<br />
  * If the field/method to access is static, the instance parameter is ignored, null can be passed.<br />
- * @see de.take_weiland.mods.commons.fastreflect.Fastreflect
+ * @see de.take_weiland.mods.commons.reflect.SCReflection
  */
 public interface SCReflector {
 
-	public static final SCReflector instance = SCReflection.createReflector(SCReflector.class);
+	public static final SCReflector instance = SCReflection.createAccessor(SCReflector.class);
 
 	/**
 	 * For cleaner code use {@link de.take_weiland.mods.commons.nbt.NBT#asList(net.minecraft.nbt.NBTTagList)}

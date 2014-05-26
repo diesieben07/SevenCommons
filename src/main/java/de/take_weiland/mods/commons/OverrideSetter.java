@@ -1,16 +1,22 @@
 package de.take_weiland.mods.commons;
 
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.CLASS;
+
 /**
+ * <p>Used to define an alternate corresponding setter for a getter.</p>
+ * <p>This method is not needed if your Setter follows the following naming conventions:</p>
+ * <ul>
+ *     <li>{@code getFoo} corresponds to {@code setFoo}</li>
+ * </ul>
  *
  * @author diesieben07
  */
-@Retention(RetentionPolicy.CLASS)
-@Target({ ElementType.METHOD, ElementType.LOCAL_VARIABLE })
+@Retention(CLASS)
+@Target(METHOD)
 public @interface OverrideSetter {
 
 	String value();

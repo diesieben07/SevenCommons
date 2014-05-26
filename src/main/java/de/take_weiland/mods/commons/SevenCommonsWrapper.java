@@ -110,24 +110,13 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 
 		System.out.println("Finding Download URL for SevenCommons Version " + version + "...");
 
-		String encVersion = URLEncoder.encode(version, "UTF-8");
-		String repo = URLEncoder.encode("http://maven.take-weiland.de", "UTF-8");
-		String group = URLEncoder.encode("de.take_weiland.mods.commons", "UTF-8");
-		String artifact = URLEncoder.encode("SevenCommons", "UTF-8");
-		String addInfoURL = URLEncoder.encode("http://mods.take-weiland.de/info.json", "UTF-8");
-		final URL infoUrl =	new URL("http://sc-versions.take-weiland.de/?action=maven"
-						+ "&repo=" + repo
-						+ "&group=" + group
-						+ "&artifact=" + artifact
-						+ "&version=" + encVersion
-						+ "&additionalInfoURL=" + addInfoURL
-						+ "&param=url");
-
+		// TODO: actually create this!
+		final URL downloadRequestURL = new URL("http://sc-versions.take-weiland.de/request_download.php?version=" + URLEncoder.encode(version, "utf-8"));
 
 		String targetURL = CharStreams.toString(new InputSupplier<Reader>() {
 			                                        @Override
 			                                        public Reader getInput() throws IOException {
-				                                        return new InputStreamReader(infoUrl.openStream());
+				                                        return new InputStreamReader(downloadRequestURL.openStream());
 			                                        }
 		                                        });
 

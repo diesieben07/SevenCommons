@@ -4,7 +4,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import de.take_weiland.mods.commons.fastreflect.Fastreflect;
+import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.util.MiscUtil;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.Sides;
@@ -205,7 +205,7 @@ public final class Inventories {
 				stacks[idx] = item;
 			} else {
 				logger.severe(String.format("Inventory slot %d is out of bounds (length %d) while reading inventory %s",
-						idx, len, Fastreflect.getCallerClass(1).getName()));
+						idx, len, SCReflection.getCallerClass(1).getName()));
 			}
 		}
 	}

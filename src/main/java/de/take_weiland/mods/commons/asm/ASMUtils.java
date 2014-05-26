@@ -4,7 +4,7 @@ import com.google.common.base.*;
 import com.google.common.collect.*;
 import com.google.common.primitives.Primitives;
 import de.take_weiland.mods.commons.OverrideSetter;
-import de.take_weiland.mods.commons.fastreflect.Fastreflect;
+import de.take_weiland.mods.commons.reflect.SCReflection;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import org.apache.commons.lang3.ArrayUtils;
 import org.objectweb.asm.*;
@@ -780,7 +780,7 @@ public final class ASMUtils {
 		ClassWriter cw = new ClassWriter(0);
 		cw.visitSource(".dynamic", null);
 
-		String className = Fastreflect.nextDynamicClassName(ASMUtils.class.getPackage());
+		String className = SCReflection.nextDynamicClassName(ASMUtils.class.getPackage());
 		String superName = Type.getInternalName(AbstractDynamicAnnotation.class);
 
 		cw.visit(V1_6, ACC_PUBLIC, className, null, superName, new String[]{ Type.getInternalName(annotationType) });
@@ -832,7 +832,7 @@ public final class ASMUtils {
 		cw.visitEnd();
 		try {
 			//noinspection unchecked
-			return (T) Fastreflect.defineDynamicClass(cw.toByteArray()).newInstance();
+			return (T) SCReflection.defineDynamicClass(cw.toByteArray()).newInstance();
 		} catch (Exception e) {
 			throw Throwables.propagate(e);
 		}

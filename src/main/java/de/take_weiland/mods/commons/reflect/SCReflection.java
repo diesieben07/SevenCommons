@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.fastreflect;
+package de.take_weiland.mods.commons.reflect;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
@@ -16,12 +16,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * <p>Faster alternative to traditional reflection. Works with so called "Accessor Interfaces" which define getters, setters or delegate methods, which just invoke the target method.
- * See {@link de.take_weiland.mods.commons.fastreflect.Getter @Getter}, {@link de.take_weiland.mods.commons.fastreflect.Setter @Setter} and {@link de.take_weiland.mods.commons.fastreflect.Invoke @Inovoke}
+ * See {@link de.take_weiland.mods.commons.reflect.Getter @Getter}, {@link de.take_weiland.mods.commons.reflect.Setter @Setter} and {@link de.take_weiland.mods.commons.reflect.Invoke @Inovoke}
  * for further explanation.</p>
  * <p>This class uses proprietary APIs when possible to achieve no-cost reflection (except the method call to the accessor interface). If these APIs are not present,
  * traditional Reflection with a {@link java.lang.reflect.Proxy} is used.</p>
  */
-public final class Fastreflect {
+public final class SCReflection {
 
 	private static final boolean DEBUG = true;
 
@@ -41,7 +41,7 @@ public final class Fastreflect {
 	 * @return the defined class
 	 */
 	public static Class<?> defineDynamicClass(byte[] clazz) {
-		Class<?> def = defineDynamicClass(clazz, Fastreflect.class);
+		Class<?> def = defineDynamicClass(clazz, SCReflection.class);
 		if (DEBUG) {
 			try {
 				File file = new File("sevencommonsdyn/" + def.getName().replace('.', '/') + ".class");
@@ -68,7 +68,7 @@ public final class Fastreflect {
 	 * @return a unique name
 	 */
 	public static String nextDynamicClassName() {
-		return nextDynamicClassName("de/take_weiland/mods/commons/fastreflect/dyn");
+		return nextDynamicClassName("de/take_weiland/mods/commons/reflect/dyn");
 	}
 
 	public static String nextDynamicClassName(Package pkg) {
@@ -96,16 +96,16 @@ public final class Fastreflect {
 
 	private static final AtomicInteger nextId = new AtomicInteger(0);
 	private static final FastreflectSecurityManager sm = new FastreflectSecurityManager();
-	private static final FastreflectStrategy strategy = selectStrategy();
+	private static final ReflectionStrategy strategy = selectStrategy();
 	private static final Logger logger = null; //SevenCommons.scLogger();
 	
 	static {
 	}
 
-	private static FastreflectStrategy selectStrategy() {
+	private static ReflectionStrategy selectStrategy() {
 		if (JavaUtils.hasUnsafe()) {
 			try {
-				return Class.forName("de.take_weiland.mods.commons.fastreflect.SunProprietaryStrategy").asSubclass(FastreflectStrategy.class).newInstance();
+				return Class.forName("de.take_weiland.mods.commons.reflect.SunProprietaryStrategy").asSubclass(ReflectionStrategy.class).newInstance();
 			} catch (Exception e) {
 				// then not
 			}
@@ -113,7 +113,7 @@ public final class Fastreflect {
 		
 		logger.warning("Using slow Strategy! This may lead to performance penalties. Please use Oracle's VM.");
 		
-		return new ReflectiveStrategy();
+		return new NativeJavaStrategy();
 	}
 
 	private static class FastreflectSecurityManager extends SecurityManager {

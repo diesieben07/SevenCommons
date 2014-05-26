@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.fastreflect;
+package de.take_weiland.mods.commons.reflect;
 
 import com.google.common.collect.ImmutableMap;
 import cpw.mods.fml.relauncher.ReflectionHelper;
@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
 
-abstract class AbstractStrategy implements FastreflectStrategy {
+abstract class AbstractStrategy implements ReflectionStrategy {
 
 	void validateInterface(Class<?> iface) {
 		if (!iface.isInterface()) {

@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.fastreflect;
+package de.take_weiland.mods.commons.reflect;
 
 import com.google.common.reflect.Reflection;
 
@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
-final class ReflectiveStrategy extends AbstractStrategy {
+final class NativeJavaStrategy extends AbstractStrategy {
 
 	@Override
 	public <T> T createAccessor(Class<T> iface) {
