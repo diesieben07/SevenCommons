@@ -64,7 +64,6 @@ public final class Blocks {
 	 * @param baseName base name for this block
 	 * @param itemClass the ItemBlock class to use
 	 */
-	@SuppressWarnings("unchecked")
 	public static void init(String modId, Block block, String baseName, Class<? extends ItemBlock> itemClass) {
 		if (SCBlockAccessor.getIconNameRaw(block) == null) {
 			block.setTextureName(modId + ":" + baseName);

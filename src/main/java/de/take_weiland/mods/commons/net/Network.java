@@ -47,7 +47,6 @@ public final class Network {
 	}
 
 	private static <TYPE extends Enum<TYPE> & SimplePacketType> void injectTypesAndFactory(TYPE[] values, PacketFactory<TYPE> factory) {
-		@SuppressWarnings("unchecked")
 		SimplePacketTypeProxy proxy = (SimplePacketTypeProxy) values[0];
 		checkArgument(proxy._sc$getPacketFactory() == null, "Cannot re-use SimplePacketType classes!");
 		proxy._sc$setPacketFactory(factory); // sets a static field, so handles all

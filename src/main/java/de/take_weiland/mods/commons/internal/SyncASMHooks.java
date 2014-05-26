@@ -15,7 +15,6 @@ import net.minecraftforge.common.IExtendedEntityProperties;
 
 import java.util.List;
 
-@SuppressWarnings("unused") // stuff in here gets called from ASM generated code
 public final class SyncASMHooks {
 
 	private SyncASMHooks() { }

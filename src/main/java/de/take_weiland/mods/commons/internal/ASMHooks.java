@@ -24,7 +24,6 @@ import java.io.IOException;
  * @author diesieben07
  *
  */
-@SuppressWarnings("unused") // called from ASM generated code only
 public final class ASMHooks {
 
 	private ASMHooks() { }

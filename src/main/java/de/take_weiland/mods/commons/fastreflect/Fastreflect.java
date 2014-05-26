@@ -118,7 +118,7 @@ public final class Fastreflect {
 
 	private static class FastreflectSecurityManager extends SecurityManager {
 
-		Class[] getClassStack() {
+		Class<?>[] getClassStack() {
 			return getClassContext();
 		}
 	}
