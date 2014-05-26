@@ -3,10 +3,8 @@ package de.take_weiland.mods.commons;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.common.io.InputSupplier;
-import cpw.mods.fml.common.launcher.FMLTweaker;
 import cpw.mods.fml.relauncher.CoreModManager;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
-import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraft.util.MathHelper;
@@ -20,9 +18,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * <p>An automatic downloader for SevenCommons for you to ship with your mod.</p>
@@ -38,33 +34,23 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 
 	private static final String DESIRED_VERSION = "0.1";
 
+	public static final String VERSION_KEY = "de.take_weiland.sevencommons.version";
+	public static final String INSTANCE_KEY = "de.take_weiland.sevencommons.instance";
+
 	public static void setup() {
 		if ((Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment")) {
 			throw new RuntimeException("Development environment detected! You should not use the SevenCommonsWrapper there!");
 		}
-		Properties props = System.getProperties();
-		boolean loaded = props.get(SYS_PROP_INSTANCE) != null;
+
+		boolean loaded = Launch.blackboard.get(INSTANCE_KEY) != null;
 		if (loaded) {
 			System.out.println("SevenCommons already loaded!");
-			String version = (String) props.get(SYS_PROP_VERSION);
-			if (version == null || !DESIRED_VERSION.equals(version)) {
+			String version = (String) Launch.blackboard.get(VERSION_KEY);
+			if (!DESIRED_VERSION.equals(version)) {
 				throw new IllegalStateException("Conflicting SevenCommons Versions: " + version + " and " + DESIRED_VERSION);
 			}
 		} else {
-			// find the FML tweaker and get the MC dir from it
-			File mcDir = null;
-			@SuppressWarnings("unchecked")
-			List<ITweaker> allTweaks = (List<ITweaker>) Launch.blackboard.get("Tweaks");
-			for (ITweaker tweaker : allTweaks) {
-				if (tweaker instanceof FMLTweaker) {
-					mcDir = ((FMLTweaker) tweaker).getGameDir();
-					break;
-				}
-			}
-			if (mcDir == null) {
-				throw new IllegalStateException("Couldn't find FMLTweaker, GameDir is not available!");
-			}
-			tryDownload(mcDir);
+			tryDownload(Launch.minecraftHome);
 		}
 	}
 
@@ -94,16 +80,13 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 
 	// Private implementation
 
-	public static final String SYS_PROP_VERSION = "de.take_weiland.sevencommons.version";
-	public static final String SYS_PROP_INSTANCE = "de.take_weiland.sevencommons.instance";
 	private static final String SC_MAIN_CLASS = "de.take_weiland.mods.commons.internal.SevenCommons";
 
 	private static void tryDownload(File mcDir) {
 		String version = "0.1";
 		try {
 			File downloaded = download(mcDir, version);
-			LaunchClassLoader cl = Launch.classLoader;
-			cl.addURL(downloaded.toURI().toURL());
+			Launch.classLoader.addURL(downloaded.toURI().toURL());
 			CoreModManager.getLoadedCoremods().add(downloaded.getName());
 
 			Method loadCoremod = CoreModManager.class.getDeclaredMethod("loadCoreMod", LaunchClassLoader.class, String.class, File.class);
@@ -164,15 +147,20 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		System.out.print("]");
 
 		File target = new File(modFolder, "SevenCommons-" + version + ".jar");
-		WritableByteChannel out = new FileOutputStream(target).getChannel();
-		URLConnection conn = parsedTarget.openConnection();
-		long total = conn.getContentLengthLong();
 
-		ReadableByteChannel in = Channels.newChannel(conn.getInputStream());
-		in = new MonitorChannel(in, total);
-		ByteStreams.copy(in, out);
-		in.close();
-		out.close();
+		WritableByteChannel out = null;
+		ReadableByteChannel in = null;
+		try {
+			out = new FileOutputStream(target).getChannel();
+			URLConnection conn = parsedTarget.openConnection();
+			long total = conn.getContentLengthLong();
+
+			in = new MonitorChannel(Channels.newChannel(conn.getInputStream()), total);
+			ByteStreams.copy(in, out);
+		} finally {
+			if (in != null) in.close();
+			if (out != null) out.close();
+		}
 		return target;
 	}
 
@@ -200,12 +188,12 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 					lastDisplay = percent;
 					System.out.print("\r[");
 					for (int i = 0; i < percent; ++i) {
-						System.out.print("=");
+						System.out.print('=');
 					}
 					for (int i = 1; i < BARS - percent; ++i) {
-						System.out.print(" ");
+						System.out.print(' ');
 					}
-					System.out.print("]");
+					System.out.print(']');
 				}
 			}
 			return res;

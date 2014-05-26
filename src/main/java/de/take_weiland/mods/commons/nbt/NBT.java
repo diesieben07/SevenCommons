@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.nbt;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.MiscUtil;
+import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -23,11 +23,11 @@ public final class NBT {
 	 * @return a modifiable list view of the NBTTagList
 	 */
 	public static <T extends NBTBase> List<T> asList(NBTTagList nbtList) {
-		return MiscUtil.getReflector().getWrappedList(nbtList);
+		return SCReflector.instance.getWrappedList(nbtList);
 	}
 
 	public static Map<String, NBTBase> asMap(NBTTagCompound nbt) {
-		return MiscUtil.getReflector().getWrappedMap(nbt);
+		return SCReflector.instance.getWrappedMap(nbt);
 	}
 
 	public static NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {

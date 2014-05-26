@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import de.take_weiland.mods.commons.internal.InternalReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -111,10 +112,10 @@ public abstract class ClassInfo {
 	private static ClassInfo ofObject(String className) {
 		Class<?> clazz;
 		// first, try to get the class if it's already loaded
-		if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, className)) != null) {
+		if ((clazz = InternalReflector.instance.findLoadedClass(CLASSLOADER, className)) != null) {
 			return new ClassInfoFromClazz(clazz);
 		// didn't find it. Try with the transformed name now
-		} else if ((clazz = SevenCommons.REFLECTOR.findLoadedClass(CLASSLOADER, ASMUtils.transformName(className))) != null) {
+		} else if ((clazz = InternalReflector.instance.findLoadedClass(CLASSLOADER, ASMUtils.transformName(className))) != null) {
 			return new ClassInfoFromClazz(clazz);
 		} else {
 			try {

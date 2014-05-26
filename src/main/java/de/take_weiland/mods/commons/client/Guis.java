@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.client;
 
-import de.take_weiland.mods.commons.util.MiscUtil;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiTextField;
@@ -18,7 +17,7 @@ public final class Guis {
 	 * @param to the text field to copy to
 	 */
 	public static void copyState(GuiTextField from, GuiTextField to) {
-		SCReflector reflector = MiscUtil.getReflector();
+		SCReflector reflector = SCReflector.instance;
 
 		// i hope i didnt forget any
 		to.setText(from.getText());

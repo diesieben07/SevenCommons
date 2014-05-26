@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.net;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.MiscUtil;
+import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -29,7 +29,7 @@ class Packet250Fake<TYPE extends Enum<TYPE>> extends Packet250CustomPayload impl
 
 	static {
 		// we need to inject our fake packet class into the map so that getPacketId still works (can't override it)
-		MiscUtil.getReflector().getClassToIdMap(null).put(Packet250Fake.class, Integer.valueOf(250));
+		SCReflector.instance.getClassToIdMap(null).put(Packet250Fake.class, Integer.valueOf(250));
 	}
 
 	Packet250Fake(PacketBufferImpl<TYPE> buf, FMLPacketHandlerImpl<TYPE> fmlPh, int id) {

@@ -52,7 +52,7 @@ public final class Entities {
 	@SuppressWarnings("unchecked")
 	public static Set<EntityPlayerMP> getTrackingPlayers(Entity entity) {
 		if (!entity.worldObj.isRemote) {
-			EntityTrackerEntry entry = (EntityTrackerEntry) MiscUtil.getReflector().getTrackerMap(((WorldServer) entity.worldObj).getEntityTracker()).lookup(entity.entityId);
+			EntityTrackerEntry entry = (EntityTrackerEntry) SCReflector.instance.getTrackerMap(((WorldServer) entity.worldObj).getEntityTracker()).lookup(entity.entityId);
 			return entry == null ? Collections.emptySet() : entry.trackingPlayers;
 		} else {
 			return Collections.emptySet();

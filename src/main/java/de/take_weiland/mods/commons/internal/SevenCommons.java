@@ -12,7 +12,6 @@ import net.minecraft.launchwrapper.LaunchClassLoader;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 @MCVersion(SevenCommons.MINECRAFT_VERSION)
@@ -22,7 +21,6 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	public static final String MINECRAFT_VERSION = "1.6.4";
 	public static final String VERSION = "1.0";
 
-	public static final InternalReflector REFLECTOR = Fastreflect.createAccessor(InternalReflector.class);
 	public static boolean MCP_ENVIRONMENT;
 	
 	public static final Logger LOGGER;
@@ -39,11 +37,10 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	}
 
 	public SevenCommons() {
-		Properties props = System.getProperties();
-		if (props.put(SevenCommonsWrapper.SYS_PROP_INSTANCE, this) != null) {
+		if (Launch.blackboard.put(SevenCommonsWrapper.INSTANCE_KEY, this) != null) {
 			throw new IllegalStateException("More than one instance of SevenCommons!");
 		}
-		props.put(SevenCommonsWrapper.SYS_PROP_VERSION, VERSION);
+		Launch.blackboard.put(SevenCommonsWrapper.VERSION_KEY, VERSION);
 
 		String[] excl = {
 				"de.take_weiland.mods.commons.asm.",

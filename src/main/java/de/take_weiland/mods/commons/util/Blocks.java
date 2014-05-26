@@ -68,7 +68,7 @@ public final class Blocks {
 		if (SCBlockAccessor.getIconNameRaw(block) == null) {
 			block.setTextureName(modId + ":" + baseName);
 		}
-		if (MiscUtil.getReflector().getRawUnlocalizedName(block) == null) {
+		if (SCReflector.instance.getRawUnlocalizedName(block) == null) {
 			block.setUnlocalizedName(modId + "." +  baseName);
 		}
 		

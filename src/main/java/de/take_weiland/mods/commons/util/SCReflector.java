@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.util;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import de.take_weiland.mods.commons.SCReflection;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.fastreflect.Getter;
 import de.take_weiland.mods.commons.fastreflect.Setter;
@@ -29,10 +30,11 @@ import java.util.Map;
 /**
  * Accessor interface for various private fields and methods around the Minecraft code.<br />
  * If the field/method to access is static, the instance parameter is ignored, null can be passed.<br />
- * Obtain an Implementation of this interface with {@link MiscUtil#getReflector()}
  * @see de.take_weiland.mods.commons.fastreflect.Fastreflect
  */
 public interface SCReflector {
+
+	public static final SCReflector instance = SCReflection.createReflector(SCReflector.class);
 
 	/**
 	 * For cleaner code use {@link de.take_weiland.mods.commons.nbt.NBT#asList(net.minecraft.nbt.NBTTagList)}

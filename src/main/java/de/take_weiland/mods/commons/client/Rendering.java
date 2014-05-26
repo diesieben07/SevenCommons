@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.client;
 
-import de.take_weiland.mods.commons.util.MiscUtil;
+import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -258,7 +258,7 @@ public final class Rendering {
 	}
 	
 	public static void unloadTexture(ResourceLocation loc) {
-		TextureObject tex = MiscUtil.getReflector().getTexturesMap(Minecraft.getMinecraft().renderEngine).remove(loc);
+		TextureObject tex = SCReflector.instance.getTexturesMap(Minecraft.getMinecraft().renderEngine).remove(loc);
 		if (tex != null) {
 			glDeleteTextures(tex.getGlTextureId());
 		}

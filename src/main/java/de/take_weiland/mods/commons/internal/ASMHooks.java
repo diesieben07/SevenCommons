@@ -6,7 +6,7 @@ import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.event.ZombieConvertEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
-import de.take_weiland.mods.commons.util.MiscUtil;
+import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityZombie;
@@ -46,7 +46,7 @@ public final class ASMHooks {
 
 	@SideOnly(Side.CLIENT)
 	public static void onGuiInit(GuiScreen gui) {
-		MinecraftForge.EVENT_BUS.post(new GuiInitEvent(gui, MiscUtil.getReflector().getButtonList(gui)));
+		MinecraftForge.EVENT_BUS.post(new GuiInitEvent(gui, SCReflector.instance.getButtonList(gui)));
 	}
 	
 	public static void onStartTracking(EntityPlayer player, Entity tracked) {

@@ -43,7 +43,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 
 	private byte[] transform0(String transformedName, byte[] bytes) {
 		if (bytes == null) {
-			return bytes;
+			return null;
 		}
 		String internalName = transformedName.replace('.', '/');
 		ClassNode clazz = null;
