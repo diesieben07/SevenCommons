@@ -1,9 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
+import com.google.common.base.*;
 import com.google.common.collect.*;
 import com.google.common.primitives.Primitives;
 import de.take_weiland.mods.commons.OverrideSetter;
@@ -255,116 +252,33 @@ public final class ASMUtils {
 
 	private static Type getterType(MethodNode getter) {
 		Type returnType = Type.getReturnType(getter.desc);
-		return returnType != Type.VOID_TYPE && Type.getArgumentTypes(getter.desc).length == 0 ? returnType : null;
+		if (returnType == Type.VOID_TYPE || Type.getArgumentTypes(getter.desc).length != 0) {
+			throw new IllegalArgumentException("Invalid Getter!");
+		}
+		return returnType;
 	}
 
 	public static MethodNode findSetter(ClassNode clazz, MethodNode getter) {
 		Type type = getterType(getter);
-		if (type == null) {
-			return null;
-		}
+
+		String setterName;
 
 		AnnotationNode overrideSetter = getAnnotationRaw(getter, OverrideSetter.class);
-		String setterName;
 		if (overrideSetter != null) {
-			setterName = (String) overrideSetter.values.get(1);
-		} else if (getter.name.startsWith("get")) {
-			setterName = "set" + getter.name.substring(3);
-		} else if (getter.name.startsWith("is")) {
-			setterName = "set" + getter.name.substring(2);
+			setterName = getAnnotationProperty(overrideSetter, "value");
 		} else {
-			setterName = getter.name;
+			if (getter.name.startsWith("get")) {
+				setterName = "set" + getter.name.substring(3);
+			} else if (getter.name.startsWith("is")) {
+				setterName = "set" + getter.name.substring(2);
+			} else if (Strings.nullToEmpty(clazz.sourceFile).endsWith(".scala")) {
+				setterName = getter.name + "_$eq";
+			} else {
+				setterName = getter.name;
+			}
 		}
 		String setterDesc = Type.getMethodDescriptor(Type.VOID_TYPE, type);
 		return findMethod(clazz, setterName, setterDesc);
-	}
-
-	/**
-	 * <p>Finds all Properties (which can be either a Field or a getter/setter pair) of a class</p>
-	 * <p>This method uses {@link #findSetter(org.objectweb.asm.tree.ClassNode, org.objectweb.asm.tree.MethodNode)}
-	 * to find the setter.</p>
-	 * @param clazz the ClassNode to search in
-	 * @param annotation the annotation to search for
-	 * @return all Properties found
-	 */
-	public static Collection<ASMVariable> propertiesWith(final ClassNode clazz, Class<? extends Annotation> annotation) {
-		return propertiesWith(clazz, annotation, findSetterFunction(clazz));
-	}
-
-	private static Function<MethodNode, MethodNode> findSetterFunction(final ClassNode clazz) {
-		return new Function<MethodNode, MethodNode>() {
-			@Override
-			public MethodNode apply(MethodNode input) {
-				return findSetter(clazz, input);
-			}
-		};
-	}
-
-	/**
-	 * <p>Finds all Fields and Methods in the given class which have the given Annotation
-	 * and transforms them into an {@link ASMVariable}</p>
-	 * @param clazz the ClassNode
-	 * @param annotation the annotation to search for
-	 * @param setterProvider a Function that provides the setter for each found getter
-	 * @return
-	 */
-	public static Collection<ASMVariable> propertiesWith(final ClassNode clazz, Class<? extends Annotation> annotation, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
-		return ImmutableList.copyOf(Iterators.concat(
-			Iterators.transform(
-					methodsWith(clazz, annotation).iterator(),
-					getterAsVariable(clazz, setterProvider)),
-			Iterators.transform(
-					fieldsWith(clazz, annotation).iterator(),
-					fieldAsVariable(clazz))
-		));
-	}
-
-	private static Function<FieldNode, ASMVariable> fieldAsVariable(final ClassNode clazz) {
-		return new Function<FieldNode, ASMVariable>() {
-			@Override
-			public ASMVariable apply(FieldNode field) {
-				return ASMVariables.of(clazz, field);
-			}
-		};
-	}
-
-	private static Function<MethodNode, ASMVariable> getterAsVariable(final ClassNode clazz, final Function<? super MethodNode, ? extends MethodNode> setterProvider) {
-		return new Function<MethodNode, ASMVariable>() {
-			@Override
-			public ASMVariable apply(MethodNode method) {
-				return ASMVariables.of(clazz, method, setterProvider.apply(method));
-			}
-		};
-	}
-
-	@Deprecated
-	public static ASMVariable asFieldAccess(ClassNode clazz, FieldNode field) {
-		return ASMVariables.of(clazz, field);
-	}
-
-	@Deprecated
-	public static ASMVariable asFieldAccess(ClassNode clazz, MethodNode getter) {
-		return ASMVariables.of(clazz, getter);
-	}
-
-	@Deprecated
-	public static ASMVariable asFieldAccess(ClassNode clazz, MethodNode getter, MethodNode setter) {
-		return ASMVariables.of(clazz, getter, setter);
-	}
-
-	@Deprecated
-	public static CodePiece asCodePiece(InsnList insns) {
-		return CodePieces.of(insns);
-	}
-
-	@Deprecated
-	public static CodePiece asCodePiece(AbstractInsnNode insn) {
-		return CodePieces.of(insn);
-	}
-
-	@Deprecated
-	public static CodePiece emptyCodePiece() {
-		return CodePieces.of();
 	}
 
 	public static boolean matches(AbstractInsnNode a, AbstractInsnNode b) {
@@ -921,6 +835,24 @@ public final class ASMUtils {
 			return (T) Fastreflect.defineDynamicClass(cw.toByteArray()).newInstance();
 		} catch (Exception e) {
 			throw Throwables.propagate(e);
+		}
+	}
+
+	public static <T> T getAnnotationProperty(AnnotationNode ann, String key) {
+		return getAnnotationProperty(ann, key, (T) null);
+	}
+
+	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, Class<? extends Annotation> annClass) {
+		T result = getAnnotationProperty(ann, key, (T) null);
+		if (result == null) {
+			try {
+				//noinspection unchecked
+				return (T) annClass.getMethod(key).getDefaultValue();
+			} catch (NoSuchMethodException e) {
+				return null;
+			}
+		} else {
+			return result;
 		}
 	}
 

@@ -41,7 +41,7 @@ public class NBTTransformer {
 
 	static void transform(ClassNode clazz, ClassInfo classInfo, ListIterator<MethodNode> methods) {
 		ClassType type = findType(classInfo);
-		Collection<ASMVariable> variables = ASMUtils.propertiesWith(clazz, ToNbt.class);
+		Collection<ASMVariable> variables = ASMVariables.allWith(clazz, ToNbt.class, CodePieces.getThis());
 
 		MethodInfo putIntoMethod = nbtASMHooks.getMethod("putInto");
 		MethodInfo getFromMethod = nbtASMHooks.getMethod("getFrom");
@@ -108,7 +108,7 @@ public class NBTTransformer {
 					propName,
 					info.convert()).appendTo(write);
 
-			variable.setOnThis(info.get()).appendTo(read);
+			variable.set(info.get()).appendTo(read);
 		}
 
 		read.add(new InsnNode(RETURN));
@@ -218,7 +218,7 @@ public class NBTTransformer {
 				String convertDesc = getMethodDescriptor(nbtBaseType, type);
 
 				Object[] getArgs = { nbtValue };
-				Object[] convertArgs = { property.getFromThis() };
+				Object[] convertArgs = { property.get() };
 				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs);
 			}
 		},
@@ -233,7 +233,7 @@ public class NBTTransformer {
 				String convertDesc = getMethodDescriptor(nbtBaseType, getType(Enum.class));
 
 				Object[] getArgs = { nbtValue, type };
-				Object[] convertArgs = { property.getFromThis() };
+				Object[] convertArgs = { property.get() };
 				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs, property.getType());
 			}
 		},
@@ -250,7 +250,7 @@ public class NBTTransformer {
 				String convertDesc = getMethodDescriptor(type, nbtBaseType);
 
 				Object[] getArgs = { nbtValue };
-				Object[] convertArgs = { property.getFromThis() };
+				Object[] convertArgs = { property.get() };
 				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs);
 			}
 		},
@@ -266,7 +266,7 @@ public class NBTTransformer {
 
 				String convertMethod = "convert";
 				String convertDesc = getMethodDescriptor(nbtBaseType, getType(Enum[].class));
-				Object[] convertArgs = { property.getFromThis() };
+				Object[] convertArgs = { property.get() };
 				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs, property.getType());
 			}
 		},
@@ -283,7 +283,7 @@ public class NBTTransformer {
 
 				String convertMethod = "convert_deep_" + convClassName;
 				String convertDesc = getMethodDescriptor(nbtBaseType, getType(Object[].class), INT_TYPE);
-				Object[] convertArgs = { property.getFromThis(), type.getDimensions() };
+				Object[] convertArgs = { property.get(), type.getDimensions() };
 				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs, property.getType());
 			}
 		},
@@ -298,7 +298,7 @@ public class NBTTransformer {
 
 				String convertMethod = "convert_deep_java_lang_Enum";
 				String convertDesc = getMethodDescriptor(nbtBaseType, getType(Object[].class), INT_TYPE);
-				Object[] convertArgs = { property.getFromThis(), type.getDimensions() };
+				Object[] convertArgs = { property.get(), type.getDimensions() };
 				return new ConvertInfo(getMethod, convertMethod, getDesc, convertDesc, getArgs, convertArgs, property.getType());
 			}
 		};
