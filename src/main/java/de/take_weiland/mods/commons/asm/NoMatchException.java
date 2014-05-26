@@ -5,6 +5,8 @@ package de.take_weiland.mods.commons.asm;
  */
 public class NoMatchException extends RuntimeException {
 
+	private static final long serialVersionUID = 2506604241429349354L;
+
 	public NoMatchException() {
 	}
 

@@ -38,7 +38,6 @@ public final class Items {
 	 * @param item
 	 * @param baseName
 	 */
-	@SuppressWarnings("unchecked")
 	public static void init(Item item, String baseName, String modId) {
 		item.setTextureName(modId + ":" + baseName);
 		item.setUnlocalizedName(modId + "." + baseName); // full unlocalized key is "item.MODID.NAME.name"		
