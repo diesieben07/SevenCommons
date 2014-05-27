@@ -6,6 +6,7 @@ import net.minecraft.client.gui.GuiTextField;
 
 /**
  * Utilities for working with {@link net.minecraft.client.gui.GuiScreen GuiScreens}
+ * @author diesieben07
  */
 public final class Guis {
 

@@ -19,12 +19,24 @@ import net.minecraftforge.fluids.IFluidTank;
 import static net.minecraftforge.common.ForgeDirection.*;
 import static org.lwjgl.opengl.GL11.*;
 
+/**
+ * Helpful utilities for rendering
+ * @author diesieben07
+ */
 public final class Rendering {
 	
 	private Rendering() { }
 	
 	private static final Gui gui = new Gui();
 	
+	/**
+	 * Fills a specified area on the screen with the provided {@link net.minecraft.util.Icon Icon}
+	 * @param icon The {@link net.minecraft.util.Icon Icon} to be displayed
+	 * @param x The X coordinate to start drawing from
+	 * @param y The Y coordinate to start drawing form
+	 * @param width The width of the provided icon to draw on the screen
+	 * @param height The height of the provided icon to draw on the screen
+	 */
 	public static void fillAreaWithIcon(Icon icon, int x, int y, int width, int height) {
 		int scale = Guis.computeGuiScale();
 

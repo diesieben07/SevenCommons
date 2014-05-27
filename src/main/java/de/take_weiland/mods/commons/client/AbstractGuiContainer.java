@@ -11,6 +11,13 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
+/**
+ * A base implementation of GuiContainer
+ * @author diesieben07
+ *
+ * @param <I> An IInventory
+ * @param <C> An SCContainer
+ */
 public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & SCContainer<I>> extends GuiContainer {
 
 	protected final ResourceLocation texture;

@@ -8,6 +8,7 @@ import java.lang.annotation.ElementType;
 import java.util.List;
 
 /**
+ * Default base implementation of {@link ASMVariable}
  * @author diesieben07
  */
 public abstract class AbstractASMVariable implements ASMVariable {

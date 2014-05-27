@@ -3,9 +3,11 @@ package de.take_weiland.mods.commons.asm;
 import com.google.common.base.*;
 import com.google.common.collect.*;
 import com.google.common.primitives.Primitives;
+
 import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import net.minecraft.launchwrapper.IClassNameTransformer;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
@@ -526,14 +528,6 @@ public final class ASMUtils {
 		return b.build();
 	}
 
-	/**
-	 * @deprecated use {@link MCPNames#use()}
-	 */
-	@Deprecated
-	public static boolean useMcpNames() {
-		return MCPNames.use();
-	}
-
 	// *** name utilities *** //
 
 	public static String getMethodDescriptor(Class<?> returnType, Class<?>... args) {
@@ -564,16 +558,6 @@ public final class ASMUtils {
 	 */
 	public static String binaryName(String internalName) {
 		return internalName.replace('/', '.');
-	}
-
-	@Deprecated
-	public static String makeNameInternal(String name) {
-		return internalName(name);
-	}
-
-	@Deprecated
-	public static String undoInternalName(String name) {
-		return binaryName(name);
 	}
 
 	private static IClassNameTransformer nameTransformer;
@@ -609,16 +593,6 @@ public final class ASMUtils {
 	public static String untransformName(String transformedName) {
 		IClassNameTransformer t = getClassNameTransformer();
 		return internalName(t == null ? transformedName : t.unmapClassName(binaryName(transformedName)));
-	}
-
-	@Deprecated
-	public static String obfuscateClass(String deobfName) {
-		return untransformName(deobfName);
-	}
-
-	@Deprecated
-	public static String deobfuscateClass(String obfName) {
-		return transformName(obfName);
 	}
 
 	// *** Misc Utils *** //
@@ -697,7 +671,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given class
+	 * Gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given class
 	 * @param clazz the class
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
@@ -729,7 +703,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given method
+	 * Gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given method
 	 * @param method the method
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
@@ -842,6 +816,7 @@ public final class ASMUtils {
 		return getAnnotationProperty(ann, key, (T) null);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, Class<? extends Annotation> annClass) {
 		T result = getAnnotationProperty(ann, key, (T) null);
 		if (result == null) {
@@ -856,6 +831,7 @@ public final class ASMUtils {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, T defaultValue) {
 		List<Object> data = ann.values;
 		int len;
@@ -933,13 +909,4 @@ public final class ASMUtils {
 		b.append(elementType.getDescriptor());
 		return Type.getObjectType(b.toString());
 	}
-
-	/**
-	 * @deprecated use {@link de.take_weiland.mods.commons.asm.ClassInfo#isAssignableFrom(ClassInfo)}
-	 */
-	@Deprecated
-	public static boolean isAssignableFrom(ClassInfo parent, ClassInfo child) {
-		return parent.isAssignableFrom(child);
-	}
-
 }
