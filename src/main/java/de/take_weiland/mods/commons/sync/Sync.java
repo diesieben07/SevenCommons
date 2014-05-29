@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ ElementType.FIELD, ElementType.METHOD })
-public @interface Synced {
+public @interface Sync {
 
 	/**
 	 * define the {@link TypeSyncer} to use with for this field<br>
@@ -35,17 +35,17 @@ public @interface Synced {
 
     /**
      * override where the Packets to sync this class should be sent to<br />
-     * The same constructor rules as for {@link de.take_weiland.mods.commons.sync.Synced#syncer() syncer()} apply
+     * The same constructor rules as for {@link Sync#syncer() syncer()} apply
      */
     Class<? extends PacketTarget> target() default AnnotationNull.class;
 
 	/**
-	 * When applied to a Method, define the corresponding setter method (must be in this class and marked with {@link de.take_weiland.mods.commons.sync.Synced.Setter @Setter})
+	 * When applied to a Method, define the corresponding setter method (must be in this class and marked with {@link Sync.Setter @Setter})
 	 */
 	String setter() default "NULL"; // default value doesn't matter as it's read by ASM and default values are not present in an AnnotationNode
 
 	/**
-	 * mark a method as a setter, needs a corresponding {@link de.take_weiland.mods.commons.sync.Synced @Synced} method with the same ID
+	 * mark a method as a setter, needs a corresponding {@link Sync @Synced} method with the same ID
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)

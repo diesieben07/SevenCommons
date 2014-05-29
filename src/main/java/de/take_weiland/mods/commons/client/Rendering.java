@@ -104,7 +104,8 @@ public final class Rendering {
 		float r = (float) (color >> 16 & 0xFF) / 255.0F;
 		float g = (float) (color >> 8 & 0xFF) / 255.0F;
 		float b = (float) (color & 0xFF) / 255.0F;
-		
+
+		// TODO: don't enable blending if we don't need to
 		glEnable(GL_BLEND);
 		glDisable(GL_TEXTURE_2D);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

@@ -36,18 +36,22 @@ class GetterSetterPair extends ClassBoundASMVariable {
 		this.setter = setter;
 	}
 
+	private CodePiece getCache;
 	@Override
 	public CodePiece get() {
-		InsnList insns = new InsnList();
-		int invokeOp;
-		if (!isStatic()) {
-			instance.appendTo(insns);
-			invokeOp = (setter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
-		} else {
-			invokeOp = INVOKESTATIC;
+		if (getCache == null) {
+			InsnList insns = new InsnList();
+			int invokeOp;
+			if (!isStatic()) {
+				instance.appendTo(insns);
+				invokeOp = (setter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
+			} else {
+				invokeOp = INVOKESTATIC;
+			}
+			insns.add(new MethodInsnNode(invokeOp, clazz.name, getter.name, getter.desc));
+			getCache = CodePieces.of(insns);
 		}
-		insns.add(new MethodInsnNode(invokeOp, clazz.name, getter.name, getter.desc));
-		return CodePieces.of(insns);
+		return getCache;
 	}
 
 	@Override

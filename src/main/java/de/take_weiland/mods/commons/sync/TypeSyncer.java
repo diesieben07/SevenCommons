@@ -4,9 +4,9 @@ import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 
 /**
- * <p>A TypeSyncer serializes and deserializes objects to a byte stream to be used with {@link de.take_weiland.mods.commons.sync.Synced @Synced}.</p>
+ * <p>A TypeSyncer serializes and deserializes objects to a byte stream to be used with {@link Sync @Synced}.</p>
  * <p>Either register a global syncer with {@link de.take_weiland.mods.commons.sync.Syncing#registerSyncer(Class, TypeSyncer)} or define an override with
- * {@link Synced#syncer()}</p>
+ * {@link Sync#syncer()}</p>
  */
 public interface TypeSyncer<T> {
 

@@ -20,18 +20,22 @@ class ASMField extends ClassBoundASMVariable {
 		this.field = field;
 	}
 
+	private CodePiece getCache;
 	@Override
 	public CodePiece get() {
-		InsnList insns = new InsnList();
-		int getOp;
-		if (!isStatic()) {
-			instance.appendTo(insns);
-			getOp = GETFIELD;
-		} else {
-			getOp = GETSTATIC;
+		if (getCache == null) {
+			InsnList insns = new InsnList();
+			int getOp;
+			if (!isStatic()) {
+				instance.appendTo(insns);
+				getOp = GETFIELD;
+			} else {
+				getOp = GETSTATIC;
+			}
+			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
+			getCache = CodePieces.of(insns);
 		}
-		insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
-		return CodePieces.of(insns);
+		return getCache;
 	}
 
 	@Override

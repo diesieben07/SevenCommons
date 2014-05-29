@@ -11,8 +11,8 @@ public final class Syncing {
 	private static Map<Class<?>, TypeSyncer<?>> syncers = Maps.newHashMap();
 
 	/**
-	 * <p>register a global TypeSyncer to make the given type available for syncing with {@link de.take_weiland.mods.commons.sync.Synced @Synced}.</p>
-	 * <p>Overrides may be specified using {@link de.take_weiland.mods.commons.sync.Synced#syncer()}</p>
+	 * <p>register a global TypeSyncer to make the given type available for syncing with {@link Sync @Synced}.</p>
+	 * <p>Overrides may be specified using {@link Sync#syncer()}</p>
 	 * @param clazz the class to register a syncer for
 	 * @param syncer the syncer to register
 	 */

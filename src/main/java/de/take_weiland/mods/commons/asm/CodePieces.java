@@ -5,6 +5,7 @@ import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Array;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.VOID_TYPE;
 import static org.objectweb.asm.Type.getMethodDescriptor;
@@ -42,10 +43,26 @@ public final class CodePieces {
 	}
 
 	public static CodePiece instantiate(String internalName) {
+		return instantiate(internalName, new Type[0]);
+	}
+
+	public static CodePiece instantiate(Class<?> c, Type[] argTypes, CodePiece... args) {
+		return instantiate(Type.getInternalName(c), argTypes, args);
+	}
+
+	public static CodePiece instantiate(Type t, Type[] argTypes, CodePiece... args) {
+		return instantiate(t.getInternalName(), argTypes, args);
+	}
+
+	public static CodePiece instantiate(String internalName, Type[] argTypes, CodePiece... args) {
+		checkArgument(args.length == argTypes.length, "parameter list length mismatch");
 		InsnList insns = new InsnList();
 		insns.add(new TypeInsnNode(NEW, internalName));
 		insns.add(new InsnNode(DUP));
-		insns.add(new MethodInsnNode(INVOKESPECIAL, internalName, "<init>", getMethodDescriptor(VOID_TYPE)));
+		for (CodePiece arg : args) {
+			arg.appendTo(insns);
+		}
+		insns.add(new MethodInsnNode(INVOKESPECIAL, internalName, "<init>", getMethodDescriptor(VOID_TYPE, argTypes)));
 		return of(insns);
 	}
 
@@ -61,12 +78,14 @@ public final class CodePieces {
 		return of(new TypeInsnNode(CHECKCAST, internalName));
 	}
 
+	private static CodePiece thisLoader;
 	public static CodePiece getThis() {
-		return of(new VarInsnNode(ALOAD, 0));
+		return thisLoader == null ? (thisLoader = of(new VarInsnNode(ALOAD, 0))) : thisLoader;
 	}
 
+	private static CodePiece nullLoader;
 	public static CodePiece constantNull() {
-		return of(new InsnNode(ACONST_NULL));
+		return nullLoader == null ? (nullLoader = of(new InsnNode(ACONST_NULL))) : nullLoader;
 	}
 
 	public static CodePiece constant(Object o) {

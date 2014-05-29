@@ -2,9 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import com.google.common.collect.*;
 import cpw.mods.fml.common.FMLLog;
-import de.take_weiland.mods.commons.asm.MCPNames;
-import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.ClassInfo;
+import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.*;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.PacketBuilder;
@@ -20,10 +18,12 @@ import org.objectweb.asm.tree.*;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static org.objectweb.asm.Opcodes.*;
+
 /**
  * contains black bytecode magic. Do not touch.
  */
-public final class SyncingTransformer {
+public final class SyncingTransformer_new implements ASMClassTransformer {
 
 	private static final Logger LOGGER;
 	private static final String syncAsmHooks = "de/take_weiland/mods/commons/internal/SyncASMHooks";
@@ -31,6 +31,7 @@ public final class SyncingTransformer {
 	private static final ClassInfo entityCI = ClassInfo.of("net/minecraft/entity/Entity");
 	private static final ClassInfo tileEntityCI = ClassInfo.of("net/minecraft/tileentity/TileEntity");
 	private static final ClassInfo containerCI = ClassInfo.of("net/minecraft/inventory/Container");
+	private static final ClassInfo packetTargetCI = ClassInfo.of(PacketTarget.class);
 
 
 	static {
@@ -38,7 +39,23 @@ public final class SyncingTransformer {
 		LOGGER = Logger.getLogger("SevenCommonsSync");
 	}
 
-	public static boolean transform(ClassNode clazz, ClassInfo classInfo, ListIterator<FieldNode> fields, ListIterator<MethodNode> methods) {
+	@Override
+	public boolean transforms(String internalName) {
+		return !internalName.startsWith("net/minecraft/")
+				&& !internalName.startsWith("net/minecraftforge/")
+				&& !internalName.startsWith("cpw/mods/fml/");
+	}
+
+	@Override
+	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
+		if (classInfo.isInterface() || classInfo.isAbstract() || classInfo.isEnum()) {
+			return false;
+		}
+
+		if (!ASMUtils.hasAnnotationOnAnything(clazz, Sync.class)) {
+			return false;
+		}
+
 		SyncType type;
 		if (entityCI.isAssignableFrom(classInfo)) {
 			type = SyncType.ENTITY;
@@ -51,6 +68,26 @@ public final class SyncingTransformer {
 		} else {
 			LOGGER.warning(String.format("Can't sync class %s, it will be ignored.", clazz.name));
 			return false;
+		}
+
+		List<ASMVariable> variables = ASMVariables.allWith(clazz, Sync.class, CodePieces.getThis());
+		List<SyncedElement> elements = Lists.newArrayListWithCapacity(variables.size());
+
+		Map<Type, CodePiece> knownPacketTargets = Maps.newHashMap();
+		Map<Type, CodePiece> knownSyncers = Maps.newHashMap();
+
+
+		for (ASMVariable var : variables) {
+			AnnotationNode syncedAnnotation = var.getterAnnotation(Sync.class);
+			Type packetTargetType = ASMUtils.getAnnotationProperty(syncedAnnotation, "target");
+			if (packetTargetType != null && !knownPacketTargets.containsKey(packetTargetType)) {
+				knownPacketTargets.put(packetTargetType, obtainPacketTarget(packetTargetType));
+			}
+
+			Type syncerType = ASMUtils.getAnnotationProperty(syncedAnnotation, "syncer");
+			if (syncerType != null && !knownSyncers.containsKey(syncerType)) {
+				knownSyncers.put(syncerType, obtainSyncer(syncerType));
+			}
 		}
 
 		LinkedListMultimap<Type, SyncedElement> elements = LinkedListMultimap.create(); // need LinkedList to preserve iteration order
@@ -96,6 +133,56 @@ public final class SyncingTransformer {
 			clazz.interfaces.add("de/take_weiland/mods/commons/internal/SyncedEntityProperties");
 		}
 		return true;
+	}
+
+	private static CodePiece obtainPacketTarget(ClassNode clazz, Type packetTargetType) {
+		ClassNode targetClazz = ASMUtils.getThinClassNode(packetTargetType.getInternalName());
+
+		boolean hasNoArgCstr = false;
+		Type[] chosenCstr = null;
+
+		for (MethodNode cstr : ASMUtils.getConstructors(clazz)) {
+			if (!ASMUtils.isAccessibleFrom(clazz, targetClazz, cstr)) {
+				continue;
+			}
+			Type[] params = Type.getArgumentTypes(cstr.desc);
+			if (params.length == 0) {
+				hasNoArgCstr = true;
+			} else if (params.length == 1) {
+				String internalName = params[0].getInternalName();
+
+				if (internalName.equals(clazz.name)) {
+					chosenCstr = params;
+					break;
+				} else if (internalName.equals("java/lang/Object")) {
+					chosenCstr = params;
+				}
+			}
+		}
+
+		if (!hasNoArgCstr && chosenCstr == null) {
+			throw new IllegalArgumentException("Failed to find suitable constructor for PacketTarget " + packetTargetType.getInternalName());
+		}
+
+		boolean fieldStatic = chosenCstr == null;
+
+		String fName = "_sc$packetTarget_" + packetTargetType.getInternalName().replace('/', '_');
+
+		int modifiers = ACC_PRIVATE | (fieldStatic ? ACC_STATIC : 0);
+		FieldNode field = new FieldNode(modifiers, fName, packetTargetType.getDescriptor(), null, null);
+		clazz.fields.add(field);
+
+		ASMVariable var;
+		if (!fieldStatic) {
+			var = ASMVariables.of(clazz, field, CodePieces.getThis());
+			CodePiece cp = var.set(CodePieces.instantiate(packetTargetType, chosenCstr, CodePieces.getThis()));
+			ASMUtils.initialize(clazz, cp);
+		} else {
+			var = ASMVariables.of(clazz, field);
+			CodePiece cp = var.set(CodePieces.instantiate(packetTargetType));
+			ASMUtils.initializeStatic(clazz, cp);
+		}
+		return var.get();
 	}
 
 	private static void createGetter(ClassNode clazz, ListIterator<MethodNode> methods, String name, FieldNode field) {
@@ -557,65 +644,14 @@ public final class SyncingTransformer {
 
 	private static class SyncedElement {
 
-		boolean isMethod;
-		FieldNode field;
-		MethodNode method;
-		boolean isPrimitive;
-		boolean syncerStatic;
-		Type syncer;
-		int index;
-		String setter;
-		boolean isEnum;
+		final ASMVariable variable;
+		final ASMVariable packetTarget;
+		final ASMVariable syncer;
 
-		FieldNode syncerField;
-		FieldNode companion;
-
-		SyncedElement(FieldNode field, int index) {
-			this.field = field;
-			this.isPrimitive = true;
-			this.isMethod = false;
-			this.index = index;
-		}
-
-		SyncedElement(FieldNode field, int index, boolean syncerStatic, Type syncer) {
-			this.field = field;
-			this.isMethod = false;
-			this.isPrimitive = false;
-			this.syncerStatic = syncerStatic;
+		SyncedElement(ASMVariable variable, ASMVariable packetTarget, ASMVariable syncer) {
+			this.variable = variable;
+			this.packetTarget = packetTarget;
 			this.syncer = syncer;
-			this.index = index;
-			checkEnum();
-		}
-
-		SyncedElement(MethodNode method, String setter, int index) {
-			this.method = method;
-			this.setter = setter;
-			this.isMethod = true;
-			this.isPrimitive = true;
-			this.index = index;
-		}
-
-		SyncedElement(MethodNode method, int index, String setter, boolean syncerStatic, Type syncer) {
-			this.method = method;
-			this.isMethod = true;
-			this.isPrimitive = false;
-			this.syncerStatic = syncerStatic;
-			this.syncer = syncer;
-			this.index = index;
-			this.setter = setter;
-			checkEnum();
-		}
-
-		private void checkEnum() {
-			isEnum = ClassInfo.of(Enum.class).isAssignableFrom(ClassInfo.of(getTypeToSync().getClassName()));
-		}
-
-		String getName() {
-			return isMethod ? method.name : field.name;
-		}
-
-		Type getTypeToSync() {
-			return isMethod ? Type.getReturnType(method.desc) : Type.getType(field.desc);
 		}
 	}
 

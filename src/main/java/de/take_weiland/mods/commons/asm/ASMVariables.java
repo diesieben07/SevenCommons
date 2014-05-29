@@ -12,8 +12,8 @@ import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
@@ -67,11 +67,11 @@ public final class ASMVariables {
 		return of(clazz, getter, setter, null);
 	}
 
-	public static Collection<ASMVariable> allOf(ClassNode clazz, CodePiece instance) {
+	public static List<ASMVariable> allOf(ClassNode clazz, CodePiece instance) {
 		return allOf(clazz, instance, defaultSetterProvider(clazz));
 	}
 
-	public static Collection<ASMVariable> allOf(ClassNode clazz, CodePiece instance, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
+	public static List<ASMVariable> allOf(ClassNode clazz, CodePiece instance, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
 		boolean useStatic = instance == null;
 		Predicate<FieldNode> fieldFilter = useStatic ? isFieldStatic() : Predicates.not(isFieldStatic());
 		Predicate<MethodNode> methodFilter = Predicates.and(
@@ -84,17 +84,17 @@ public final class ASMVariables {
 		));
 	}
 
-	public static Collection<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation, CodePiece instance, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
+	public static List<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation, CodePiece instance, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
 		return ImmutableList.copyOf(Iterators.concat(
 				methodsAsVariables(ASMUtils.methodsWith(clazz, annotation).iterator(), clazz, instance, setterProvider),
 				fieldsAsVariables(ASMUtils.fieldsWith(clazz, annotation).iterator(), clazz, instance)));
 	}
 
-	public static Collection<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation) {
+	public static List<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation) {
 		return allWith(clazz, annotation, null);
 	}
 
-	public static Collection<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation, CodePiece instance) {
+	public static List<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation, CodePiece instance) {
 		return allWith(clazz, annotation, instance, defaultSetterProvider(clazz));
 	}
 

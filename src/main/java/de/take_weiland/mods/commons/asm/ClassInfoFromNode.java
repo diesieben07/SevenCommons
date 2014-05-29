@@ -1,9 +1,12 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.collect.ImmutableList;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
 * @author diesieben07
@@ -54,14 +57,34 @@ final class ClassInfoFromNode extends ClassInfo {
 
 	@Override
 	public MethodInfo getMethod(String method) {
+		if (method.equals("<init>") || method.equals("<clinit>")) {
+			return null;
+		}
 		MethodNode m = ASMUtils.findMethod(clazz, method);
 		return m == null ? null : new MethodInfoASM(this, m);
 	}
 
 	@Override
 	public MethodInfo getMethod(String method, String desc) {
+		if (method.equals("<init>") || method.equals("<clinit>")) {
+			return null;
+		}
 		MethodNode m = ASMUtils.findMethod(clazz, method, desc);
 		return m == null ? null : new MethodInfoASM(this, m);
 	}
 
+	private List<Type[]> constructors;
+	@Override
+	public List<Type[]> constructorTypes() {
+		if (constructors == null) {
+			ImmutableList.Builder<Type[]> builder = ImmutableList.builder();
+			for (MethodNode method : clazz.methods) {
+				if (method.name.equals("<init>")) {
+					builder.add(Type.getArgumentTypes(method.desc));
+				}
+			}
+			constructors = builder.build();
+		}
+		return constructors;
+	}
 }

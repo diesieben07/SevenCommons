@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.asm;
 
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
@@ -48,17 +47,22 @@ class ASMLocalVariable extends AbstractASMVariable {
 		return ElementType.LOCAL_VARIABLE;
 	}
 
+	private CodePiece getCache;
 	@Override
 	public CodePiece get() {
-		return CodePieces.of(new VarInsnNode(getType().getOpcode(ILOAD), var.index));
+		if (getCache == null) {
+			getCache = CodePieces.of(new VarInsnNode(getType().getOpcode(ILOAD), var.index));
+		}
+		return getCache;
 	}
 
+	private CodePiece setCache;
 	@Override
 	public CodePiece set(CodePiece loadValue) {
-		InsnList insns = new InsnList();
-		loadValue.appendTo(insns);
-		insns.add(new VarInsnNode(getType().getOpcode(ISTORE), var.index));
-		return CodePieces.of(insns);
+		if (setCache == null) {
+			setCache = CodePieces.of(new VarInsnNode(getType().getOpcode(ISTORE), var.index));
+		}
+		return loadValue.append(setCache);
 	}
 
 	@Override
