@@ -7,14 +7,14 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
 /**
- * <p>Abstract base class for CodePieces.</p>
- * <p>At least {@link #build()} must be implemented, but
+ * Abstract base class for CodePieces.<br/>
+ * At least {@link #build()} must be implemented, but
  * {@link #insertBefore(org.objectweb.asm.tree.InsnList, org.objectweb.asm.tree.AbstractInsnNode)},
  * {@link #insertAfter(org.objectweb.asm.tree.InsnList, org.objectweb.asm.tree.AbstractInsnNode)},
  * {@link #appendTo(org.objectweb.asm.tree.InsnList)} and
  * {@link #prependTo(org.objectweb.asm.tree.InsnList)}
  * can (and should) be overridden if the creation of a new InsnList for this operation is not the best way
- * (e.g. CodePieces that contain only a single instruction.</p>
+ * (e.g. CodePieces that contain only a single instruction.
  *
  * @author diesieben07
  */

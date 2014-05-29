@@ -14,9 +14,9 @@ import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
 
 /**
- * <p>Implementation of {@link net.minecraft.launchwrapper.IClassTransformer} which uses a number of {@link de.take_weiland.mods.commons.asm.ASMClassTransformer ASMClassTransformers}
- * to transform classes.</p>
- * <p>This class makes a best-effort to reuse ClassNodes so that the class bytes don't have to be parsed over and over again.</p>
+ * Implementation of {@link net.minecraft.launchwrapper.IClassTransformer IClassTransformer} which uses a number of {@link de.take_weiland.mods.commons.asm.ASMClassTransformer ASMClassTransformers}
+ * to transform classes.<br/>
+ * This class makes a best-effort to reuse ClassNodes so that the class bytes don't have to be parsed over and over again.
  *
  * @author diesieben07
  */
