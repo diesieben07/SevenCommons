@@ -10,6 +10,8 @@ public interface PacketTarget {
 
 	void send(Packet packet);
 	
+	public static final String CLASS_NAME = "de/take_weiland/mods/commons/net/PacketTarget";
+
 	public static final PacketTarget SERVER = new PacketTarget() {
 
 		@Override

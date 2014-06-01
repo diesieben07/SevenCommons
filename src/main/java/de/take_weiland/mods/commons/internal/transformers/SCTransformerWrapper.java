@@ -23,6 +23,7 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 
 		// @Synced & @ToNbt
 		register(new AnnotationFindingTransformer());
+		register(new SyncingTransformer_new());
 
 		register(new ListenableTransformer());
 	}

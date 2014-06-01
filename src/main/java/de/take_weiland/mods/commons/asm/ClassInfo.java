@@ -11,9 +11,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -260,24 +258,9 @@ public abstract class ClassInfo {
 
 	public abstract boolean hasMethod(String method, String desc);
 
-	public List<Type[]> constructorTypes() {
-		return constructorTypes(true);
-	}
-
-	public abstract List<Type[]> constructorTypes(boolean includePrivate);
-
 	public abstract MethodInfo getMethod(String method);
 
 	public abstract MethodInfo getMethod(String method, String desc);
-
-	public boolean hasConstructor(Type... parameters) {
-		for (Type[] params : constructorTypes()) {
-			if (Arrays.equals(params, parameters)) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	public MethodInfo unboundMethod(String method, String desc) {
 		return unboundMethod(method, desc, ACC_PUBLIC);

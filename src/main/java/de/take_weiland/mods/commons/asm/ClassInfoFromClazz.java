@@ -4,7 +4,6 @@ import com.google.common.collect.Collections2;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
@@ -103,18 +102,6 @@ final class ClassInfoFromClazz extends ClassInfo {
 	}
 
 	private List<Type[]> constructors;
-	@Override
-	public List<Type[]> constructorTypes(boolean includePrivate) {
-		if (constructors == null) {
-			Constructor<?>[] reflCnstrs = clazz.getDeclaredConstructors();
-			int len = reflCnstrs.length;
-			constructors = Arrays.asList(new Type[len][]);
-			for (int i = 0; i < len; ++i) {
-				constructors.set(i, Type.getArgumentTypes(Type.getConstructorDescriptor(reflCnstrs[i])));
-			}
-		}
-		return constructors;
-	}
 
 	private List<Type[]> constructorsVisible;
 }

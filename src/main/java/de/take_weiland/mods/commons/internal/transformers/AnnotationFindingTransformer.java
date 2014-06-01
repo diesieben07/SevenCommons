@@ -39,7 +39,7 @@ public class AnnotationFindingTransformer extends AbstractAnalyzingTransformer {
 					continue;
 				}
 				if (!synced && ann.desc.equals(syncedDesc)) {
-					SyncingTransformer.transform(clazz, classInfo, fieldIt, methodsIt);
+//					SyncingTransformer.transform(clazz, classInfo, fieldIt, methodsIt);
 					synced = true;
 				}
 				if (nbt && synced) {

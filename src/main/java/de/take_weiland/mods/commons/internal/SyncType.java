@@ -14,7 +14,7 @@ import java.util.List;
 
 public enum SyncType {
 
-	ENTITY("net/minecraft/entity/Entity", MCPNames.F_WORLD_OBJ_ENTITY_MCP, MCPNames.F_WORLD_OBJ_ENTITY_SRG, MCPNames.M_ON_UPDATE_MCP, MCPNames.M_ON_UPDATE_SRG) {
+	ENTITY("entity", "net/minecraft/entity/Entity", MCPNames.F_WORLD_OBJ_ENTITY_MCP, MCPNames.F_WORLD_OBJ_ENTITY_SRG, MCPNames.M_ON_UPDATE_MCP, MCPNames.M_ON_UPDATE_SRG) {
 		
 		@Override
 		public void sendPacket(Object entity, SimplePacket p) {
@@ -33,7 +33,7 @@ public enum SyncType {
 		
 	},
 	
-	TILE_ENTITY("net/minecraft/tileentity/TileEntity", MCPNames.F_WORLD_OBJ_TILEENTITY_MCP, MCPNames.F_WORLD_OBJ_TILEENTITY_SRG, MCPNames.M_UPDATE_ENTITY_MCP, MCPNames.M_UPDATE_ENTITY_SRG) {
+	TILE_ENTITY("tileEntity", "net/minecraft/tileentity/TileEntity", MCPNames.F_WORLD_OBJ_TILEENTITY_MCP, MCPNames.F_WORLD_OBJ_TILEENTITY_SRG, MCPNames.M_UPDATE_ENTITY_MCP, MCPNames.M_UPDATE_ENTITY_SRG) {
 		
 		@Override
 		public void sendPacket(Object te, SimplePacket p) {
@@ -58,7 +58,7 @@ public enum SyncType {
 		
 	},
 	
-	CONTAINER(null, null, null, MCPNames.M_DETECT_AND_SEND_CHANGES_MCP, MCPNames.M_DETECT_AND_SEND_CHANGES_SRG) {
+	CONTAINER("container", null, null, null, MCPNames.M_DETECT_AND_SEND_CHANGES_MCP, MCPNames.M_DETECT_AND_SEND_CHANGES_SRG) {
 		
 		@Override
 		public void sendPacket(Object container, SimplePacket p) {
@@ -76,7 +76,7 @@ public enum SyncType {
 		}
 		
 	},
-	ENTITY_PROPS(null, null, null, "_sc$tickEntityProps", "_sc$tickEntityProps") {
+	ENTITY_PROPS("entityProps", null, null, null, "_sc$tickEntityProps", "_sc$tickEntityProps") {
 		
 		@Override
 		public void sendPacket(Object props, SimplePacket p) {
@@ -103,14 +103,16 @@ public enum SyncType {
 		}
 		
 	};
-	
+
+	private final String simpleName;
 	private final String rootClass;
 	private final String worldField;
 	private final String worldFieldSrg;
 	private final String tickMcp;
 	private final String tickSrg;
 	
-	private SyncType(String rootClass, String worldField, String worldFieldSrg, String tickMcp, String tickSrg) {
+	private SyncType(String simpleName, String rootClass, String worldField, String worldFieldSrg, String tickMcp, String tickSrg) {
+		this.simpleName = simpleName;
 		this.rootClass = rootClass;
 		this.worldField = worldField;
 		this.worldFieldSrg = worldFieldSrg;
@@ -128,6 +130,10 @@ public enum SyncType {
 
 	public String getTickMethod() {
 		return MCPNames.use() ? tickMcp : tickSrg;
+	}
+
+	public String getSimpleName() {
+		return simpleName;
 	}
 
 	public abstract void sendPacket(Object obj, SimplePacket p);

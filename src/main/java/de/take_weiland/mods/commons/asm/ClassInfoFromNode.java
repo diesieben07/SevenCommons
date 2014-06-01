@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.collect.ImmutableList;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -74,17 +73,4 @@ final class ClassInfoFromNode extends ClassInfo {
 	}
 
 	private List<Type[]> constructors;
-	@Override
-	public List<Type[]> constructorTypes() {
-		if (constructors == null) {
-			ImmutableList.Builder<Type[]> builder = ImmutableList.builder();
-			for (MethodNode method : clazz.methods) {
-				if (method.name.equals("<init>")) {
-					builder.add(Type.getArgumentTypes(method.desc));
-				}
-			}
-			constructors = builder.build();
-		}
-		return constructors;
-	}
 }

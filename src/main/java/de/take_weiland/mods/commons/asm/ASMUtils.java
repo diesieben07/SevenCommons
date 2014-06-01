@@ -1,24 +1,28 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.*;
-import com.google.common.collect.*;
-import com.google.common.primitives.Primitives;
+import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import de.take_weiland.mods.commons.OverrideSetter;
-import de.take_weiland.mods.commons.reflect.SCReflection;
 import net.minecraft.launchwrapper.IClassNameTransformer;
+import net.minecraft.launchwrapper.Launch;
 import org.apache.commons.lang3.ArrayUtils;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.lang.annotation.*;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.tree.AbstractInsnNode.*;
 
@@ -180,25 +184,138 @@ public final class ASMUtils {
 		return m;
 	}
 
-	private static final Predicate<MethodNode> IS_CONSTRUCTOR = Predicates.compose(Predicates.equalTo("<init>"), new Function<MethodNode, String>() {
-		@Override
-		public String apply(MethodNode input) {
-			return input.name;
+	public static boolean isConstructor(MethodNode method) {
+		return method.name.equals("<init>");
+	}
+
+	private static Predicate<MethodNode> isConstructor;
+	static Predicate<MethodNode> predIsConstructor() {
+		if (isConstructor == null) {
+			isConstructor = new Predicate<MethodNode>() {
+				@Override
+				public boolean apply(MethodNode input) {
+					return isConstructor(input);
+				}
+			};
 		}
-	});
+		return isConstructor;
+	}
+
+	private static Predicate<MethodNode> isPublic;
+	private static Predicate<MethodNode> predIsPublic() {
+		if (isPublic == null) {
+			isPublic = new Predicate<MethodNode>() {
+				@Override
+				public boolean apply(MethodNode input) {
+					return (input.access & ACC_PUBLIC) == ACC_PUBLIC;
+				}
+			};
+		}
+		return isPublic;
+	}
+
+	static Predicate<MethodNode> predVisibleTo(final ClassNode callingClass, final ClassNode targetClass) {
+		return new Predicate<MethodNode>() {
+			@Override
+			public boolean apply(MethodNode input) {
+				return ASMUtils.isAccessibleFrom(callingClass, targetClass, input);
+			}
+		};
+	}
+
+	static Predicate<MethodNode> predHasAnnotation(final Class<? extends Annotation> annotation) {
+		return new Predicate<MethodNode>() {
+			@Override
+			public boolean apply(MethodNode input) {
+				return ASMUtils.hasAnnotation(input, annotation);
+			}
+		};
+	}
+
+	private static Predicate<MethodNode> atMostOneArg;
+	static Predicate<MethodNode> predHasMaxOneArg() {
+		if (atMostOneArg == null) {
+			atMostOneArg = new Predicate<MethodNode>() {
+				@Override
+				public boolean apply(MethodNode input) {
+					return Type.getArgumentTypes(input.desc).length <= 1;
+				}
+			};
+		}
+		return atMostOneArg;
+	}
 
 	/**
 	 * <p>get all constructors of the given ClassNode</p>
-	 * <p>The returned collection is a live-view, so if new constructors get added, they will be present in the returned collection immediately</p>
+	 * <p>The returned collection is a live-view, so if new constructors get added, they will be present in the returned collection immediately.</p>
 	 * @param clazz the class
 	 * @return all constructors
 	 */
 	public static Collection<MethodNode> getConstructors(ClassNode clazz) {
-		return Collections2.filter(clazz.methods, IS_CONSTRUCTOR);
+		return Collections2.filter(clazz.methods, predIsConstructor());
+	}
+
+	public static void initialize(ClassNode clazz, CodePiece code) {
+		List<MethodNode> rootCtsrs = getRootConstructors(clazz);
+		if (rootCtsrs.size() == 0) {
+			String name = "<init>";
+			String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
+
+			MethodNode method = new MethodNode(ACC_PUBLIC, name, desc, null, null);
+			method.instructions.add(new VarInsnNode(ALOAD, 0));
+			method.instructions.add(new MethodInsnNode(INVOKESPECIAL, clazz.superName, name, desc));
+			method.instructions.add(new InsnNode(RETURN));
+			clazz.methods.add(method);
+			rootCtsrs = Arrays.asList(method);
+		}
+		for (MethodNode cstr : rootCtsrs) {
+			code.insertAfter(cstr.instructions, findFirst(cstr.instructions, INVOKESPECIAL));
+		}
+	}
+
+	public static void initializeStatic(ClassNode clazz, CodePiece code) {
+		MethodNode method = findMethod(clazz, "<clinit>");
+		if (method == null) {
+			method = new MethodNode(ACC_PUBLIC | ACC_STATIC, "<clinit>", Type.getMethodDescriptor(Type.VOID_TYPE), null, null);
+			method.instructions.add(new InsnNode(RETURN));
+			clazz.methods.add(method);
+		}
+		code.prependTo(method.instructions);
+	}
+
+	public static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, MethodNode method) {
+		return isAccessibleFrom(accessingClass, targetClass, method.access);
+	}
+
+	public static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, FieldNode field) {
+		return isAccessibleFrom(accessingClass, targetClass, field.access);
+	}
+
+	@SuppressWarnings("SimplifiableIfStatement") // yeah, no, not much simpler
+	public static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, int targetAccess) {
+		if ((targetClass.access & ACC_PUBLIC) != ACC_PUBLIC && !getPackage(accessingClass.name).equals(getPackage(targetClass.name))) {
+			return false;
+		}
+		if ((targetAccess & ACC_PUBLIC) == ACC_PUBLIC) {
+			return true;
+		}
+		if ((targetAccess & ACC_PRIVATE) == ACC_PRIVATE) {
+			return accessingClass.name.equals(targetClass.name);
+		}
+		if (getPackage(accessingClass.name).equals(getPackage(targetClass.name))) {
+			return true;
+		} else if ((targetAccess & ACC_PROTECTED) == ACC_PROTECTED) {
+			return ClassInfo.of(targetClass).isAssignableFrom(ClassInfo.of(targetClass));
+		} else {
+			return false;
+		}
+	}
+
+	private static String getPackage(String internalName) {
+		return internalName.substring(0, internalName.lastIndexOf('/'));
 	}
 
 	/**
-	 * <p>Get all constructors, which don't call another constructor of the same class.</p>
 	 * <p>Useful if you need to add code that is called, whenever a new instance of the class is created, no matter through which constructor.</p>
 	 * @param clazz the class
 	 * @return all root constructors
@@ -567,7 +684,7 @@ public final class ASMUtils {
 	 */
 	public static IClassNameTransformer getClassNameTransformer() {
 		if (!nameTransChecked) {
-			nameTransformer = Iterables.getOnlyElement(Iterables.filter(CLASSLOADER.getTransformers(), IClassNameTransformer.class), null);
+			nameTransformer = Iterables.getOnlyElement(Iterables.filter(Launch.classLoader.getTransformers(), IClassNameTransformer.class), null);
 			nameTransChecked = true;
 		}
 		return nameTransformer;
@@ -611,7 +728,7 @@ public final class ASMUtils {
 	 */
 	public static ClassNode getClassNode(String name, int readerFlags) {
 		try {
-			byte[] bytes = CLASSLOADER.getClassBytes(transformName(name));
+			byte[] bytes = Launch.classLoader.getClassBytes(transformName(name));
 			if (bytes == null) {
 				throw new MissingClassException(name);
 			}
@@ -658,6 +775,41 @@ public final class ASMUtils {
 		return getClassNode(bytes, THIN_FLAGS);
 	}
 
+
+	public static boolean hasAnnotationOnAnything(ClassNode clazz, Class<? extends Annotation> annotation) {
+		String desc = Type.getDescriptor(annotation);
+		boolean isVisible = isVisible(annotation);
+
+		Target target = annotation.getAnnotation(Target.class);
+		ElementType[] targets = target == null ? null : target.value();
+
+		if ((targets == null || ArrayUtils.contains(targets, ElementType.TYPE)) && findAnnotation(isVisible ? clazz.visibleAnnotations : clazz.invisibleAnnotations, desc) != null) {
+			return true;
+		}
+
+		if (targets == null || ArrayUtils.contains(targets, ElementType.FIELD)) {
+			List<FieldNode> fields = clazz.fields;
+			//noinspection ForLoopReplaceableByForEach
+			for (int i = 0, len = fields.size(); i < len; ++i) {
+				FieldNode field = fields.get(i);
+				if (findAnnotation(isVisible ? field.visibleAnnotations : field.invisibleAnnotations, desc) != null) {
+					return true;
+				}
+			}
+		}
+		if (targets == null || ArrayUtils.contains(targets, ElementType.METHOD)) {
+			List<MethodNode> methods = clazz.methods;
+			//noinspection ForLoopReplaceableByForEach
+			for (int i = 0, len = methods.size(); i < len; ++i) {
+				MethodNode method = methods.get(i);
+				if (findAnnotation(isVisible ? method.visibleAnnotations : method.invisibleAnnotations, desc) != null) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given field
 	 * @param field the field
@@ -669,39 +821,17 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * Gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given class
+	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given class
 	 * @param clazz the class
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
 	public static AnnotationNode getAnnotationRaw(ClassNode clazz, Class<? extends Annotation> ann) {
-		AnnotationNode node = getAnnotationRaw(clazz.visibleAnnotations, clazz.invisibleAnnotations, ElementType.TYPE, ann);
-		if (node != null || clazz.superName == null) {
-			return node;
-		}
-
-		boolean inherited = ann.isAnnotationPresent(Inherited.class);
-		ClassInfo info = ClassInfo.of(clazz.superName);
-		do {
-//			AnnotationNode ann = info.get
-		} while (false);
-		if (true) return null;
-		do {
-			node = getAnnotationRaw(clazz.visibleAnnotations, clazz.invisibleAnnotations, ElementType.TYPE, ann);
-			if (node != null) {
-				return node;
-			}
-			if (info == null) {
-				info = ClassInfo.of(clazz.superName);
-			} else {
-				info = info.superclass();
-			}
-		} while (false);
-		return null;
+		return getAnnotationRaw(clazz.visibleAnnotations, clazz.invisibleAnnotations, ElementType.TYPE, ann);
 	}
 
 	/**
-	 * Gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given method
+	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given method
 	 * @param method the method
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
@@ -710,111 +840,49 @@ public final class ASMUtils {
 		return getAnnotationRaw(method.visibleAnnotations, method.invisibleAnnotations, ElementType.METHOD, ann);
 	}
 
-	static AnnotationNode getAnnotationRaw(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, ElementType reqType, Class<? extends Annotation> ann) {
-		Target annTarget = ann.getAnnotation(Target.class);
-		if (annTarget != null && !ArrayUtils.contains(annTarget.value(), reqType)) {
-			return null;
-		}
+	private static boolean canBePresentOn(Class<? extends Annotation> annotation, ElementType type) {
+		Target target = annotation.getAnnotation(Target.class);
+		return target == null || ArrayUtils.contains(target.value(), type);
+	}
 
-		Retention ret = ann.getAnnotation(Retention.class);
-		RetentionPolicy retention = ret == null ? RetentionPolicy.CLASS : ret.value();
+	private static boolean isVisible(Class<? extends Annotation> annotation) {
+		Retention ret = annotation.getAnnotation(Retention.class);
+		if (ret == null) {
+			// defaults to CLASS
+			return true;
+		}
+		RetentionPolicy retention = ret.value();
 		checkArgument(retention != RetentionPolicy.SOURCE, "Cannot check SOURCE annotations from class files!");
+		return retention == RetentionPolicy.RUNTIME;
+	}
 
-		List<AnnotationNode> anns = retention == RetentionPolicy.CLASS ? invisAnn : visAnn;
-		if (anns == null) {
+	private static AnnotationNode findAnnotation(List<AnnotationNode> annotations, String annotationDescriptor) {
+		if (annotations == null) {
 			return null;
 		}
-		String desc = Type.getDescriptor(ann);
 		// avoid generating Iterator garbage
 		//noinspection ForLoopReplaceableByForEach
-		for (int i = 0, len = anns.size(); i < len; ++i) {
-			AnnotationNode node;
-			if ((node = anns.get(i)).desc.equals(desc)) {
+		for (int i = 0, len = annotations.size(); i < len; ++i) {
+			AnnotationNode node = annotations.get(i);
+			if (node.desc.equals(annotationDescriptor)) {
 				return node;
 			}
 		}
 		return null;
 	}
 
-	public static <T extends Annotation> T getAnnotation(ClassNode clazz, Class<T> annotationType) {
-		return compileAnnotation(getAnnotationRaw(clazz, annotationType), annotationType);
-	}
-
-	public static <T extends Annotation> T getAnnotation(FieldNode field, Class<T> annotationType) {
-		return compileAnnotation(getAnnotationRaw(field, annotationType), annotationType);
-	}
-
-	public static <T extends Annotation> T getAnnotation(MethodNode method, Class<T> annotationType) {
-		return compileAnnotation(getAnnotationRaw(method, annotationType), annotationType);
-	}
-
-	private static <T extends Annotation> T compileAnnotation(AnnotationNode node, Class<T> annotationType) {
-		ClassWriter cw = new ClassWriter(0);
-		cw.visitSource(".dynamic", null);
-
-		String className = SCReflection.nextDynamicClassName(ASMUtils.class.getPackage());
-		String superName = Type.getInternalName(AbstractDynamicAnnotation.class);
-
-		cw.visit(V1_6, ACC_PUBLIC, className, null, superName, new String[]{ Type.getInternalName(annotationType) });
-
-		String cName = "<init>";
-		String cDesc = getMethodDescriptor(void.class, AnnotationNode.class);
-
-		MethodVisitor mv = cw.visitMethod(0, cName, cDesc, null, null);
-		mv.visitCode();
-
-		mv.visitVarInsn(ALOAD, 0);
-		mv.visitVarInsn(ALOAD, 1);
-		mv.visitMethodInsn(INVOKESPECIAL, superName, cName, cDesc);
-		mv.visitInsn(RETURN);
-
-		mv.visitMaxs(2, 2);
-		mv.visitEnd();
-
-		String asmUtils = Type.getInternalName(ASMUtils.class);
-		String getAnnProp = "getAnnotationProperty";
-		String getAnnPropDesc = getMethodDescriptor(Object.class, AnnotationNode.class, String.class, Object.class);
-
-		for (Method m : annotationType.getMethods()) {
-			Class<?> returnType = m.getReturnType();
-			Class<?> wrappedReturnType = Primitives.wrap(returnType);
-
-			mv = cw.visitMethod(ACC_PUBLIC, m.getName(), Type.getMethodDescriptor(m), null, null);
-			mv.visitCode();
-
-			mv.visitVarInsn(ALOAD, 0);
-			mv.visitFieldInsn(GETFIELD, superName, AbstractDynamicAnnotation.FIELD_NAME, Type.getDescriptor(AnnotationNode.class));
-			mv.visitLdcInsn(m.getName());
-
-			CodePieces.constant(m.getDefaultValue()).appendTo(mv);
-
-			mv.visitMethodInsn(INVOKESTATIC, asmUtils, getAnnProp, getAnnPropDesc);
-			mv.visitTypeInsn(CHECKCAST, Type.getInternalName(wrappedReturnType));
-
-			if (returnType.isPrimitive()) {
-				String unwrapMethod = returnType.getName() + "Value";
-				mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(wrappedReturnType), unwrapMethod, getMethodDescriptor(returnType));
-			}
-
-			mv.visitInsn(Type.getType(returnType).getOpcode(IRETURN));
-
-			mv.visitMaxs(3, 1);
-			mv.visitEnd();
+	static AnnotationNode getAnnotationRaw(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, ElementType reqType, Class<? extends Annotation> ann) {
+		if (!canBePresentOn(ann, reqType)) {
+			return null;
 		}
-		cw.visitEnd();
-		try {
-			//noinspection unchecked
-			return (T) SCReflection.defineDynamicClass(cw.toByteArray()).newInstance();
-		} catch (Exception e) {
-			throw Throwables.propagate(e);
-		}
+
+		return findAnnotation(isVisible(ann) ? visAnn : invisAnn, Type.getDescriptor(ann));
 	}
 
 	public static <T> T getAnnotationProperty(AnnotationNode ann, String key) {
 		return getAnnotationProperty(ann, key, (T) null);
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, Class<? extends Annotation> annClass) {
 		T result = getAnnotationProperty(ann, key, (T) null);
 		if (result == null) {
@@ -829,7 +897,6 @@ public final class ASMUtils {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, T defaultValue) {
 		List<Object> data = ann.values;
 		int len;
@@ -882,6 +949,28 @@ public final class ASMUtils {
 	 */
 	public static boolean isPrimitive(Type type) {
 		return type.getSort() != Type.ARRAY && type.getSort() != Type.OBJECT && type.getSort() != Type.METHOD;
+	}
+
+	public static int argumentCount(Type type) {
+		checkArgument(type.getSort() == Type.METHOD);
+		return argumentCount(type.getDescriptor());
+	}
+
+	public static int argumentCount(String methodDesc) {
+		int off = 1; // skip initial '('
+		int size = 0;
+		while (true) {
+			char c = methodDesc.charAt(off++);
+			if (c == ')') { // end of descriptor
+				return size;
+			} else if (c == 'L') {
+				// skip over the object name
+				off = methodDesc.indexOf(';', off) + 1;
+				++size;
+			} else if (c != '[') { // ignore array braces
+				++size;
+			}
+		}
 	}
 
 	/**

@@ -10,6 +10,11 @@ import de.take_weiland.mods.commons.net.WritableDataBuf;
  */
 public interface TypeSyncer<T> {
 
+	public static final String CLASS_NAME = "de/take_weiland/mods/commons/sync/TypeSyncer";
+	public static final String METHOD_EQUAL = "equal";
+	public static final String METHOD_WRITE = "write";
+	public static final String METHOD_READ = "read";
+
 	/**
 	 * determine if the two values are equal
 	 * @param now guaranteed to be non-null

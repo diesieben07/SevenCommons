@@ -3,12 +3,11 @@ package de.take_weiland.mods.commons;
 import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import de.take_weiland.mods.commons.nbt.ToNbt;
-import net.minecraft.nbt.NBTTagByteArray;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
+import de.take_weiland.mods.commons.sync.Sync;
+import de.take_weiland.mods.commons.sync.TypeSyncer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.player.EntityInteractEvent;
@@ -19,20 +18,7 @@ public class testmod_sc {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) throws Exception {
-//		FMLInterModComms.sendMessage("sevencommons", "setUpdateUrl", "http://www.take-weiland.de/testmod.json");
 		Reflection.initialize(TestTe.class);
-
-		final NBTTagCompound nbt = new NBTTagCompound();
-		NBTTagList list = new NBTTagList();
-		for (int i = 0; i < 5; ++i) {
-			list.appendTag(new NBTTagByteArray("", new byte[] { 1, 2, 4, 7 }));
-		}
-		nbt.setTag("moreDims", list);
-
-//		TestTe t = new TestTe();
-//		t.readFromNBT(nbt);
-//		System.out.println(Arrays.deepToString(t.moreDims));
-
 		System.exit(0);
 		MinecraftForge.EVENT_BUS.register(this);
 
@@ -44,19 +30,36 @@ public class testmod_sc {
 
 	public static class TestTe extends TileEntity {
 
-		@ToNbt
-		private ForgeDirection[][][] foobar;
+		@Sync
+		private int foobar;
 
-		@Override
-		public void writeToNBT(NBTTagCompound nbt) {
-			super.writeToNBT(nbt);
-			System.out.println("writeToNBT!");
+		@Sync
+		private long foobar2;
+
+		@Sync(syncer = TestSyncer.class)
+		private String aString;
+	}
+
+	static class TestSyncer implements TypeSyncer<String> {
+
+		@InstanceProvider
+		public static TestSyncer instance() {
+			return null;
 		}
 
 		@Override
-		public void readFromNBT(NBTTagCompound par1NBTTagCompound) {
-			super.readFromNBT(par1NBTTagCompound);
-			System.out.println("readFromNBT!");
+		public boolean equal(String now, String prev) {
+			return false;
+		}
+
+		@Override
+		public void write(String instance, WritableDataBuf out) {
+
+		}
+
+		@Override
+		public String read(String oldInstance, DataBuf in) {
+			return null;
 		}
 	}
 
