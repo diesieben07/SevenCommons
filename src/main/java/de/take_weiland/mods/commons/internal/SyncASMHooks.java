@@ -17,6 +17,7 @@ public final class SyncASMHooks {
 	private SyncASMHooks() { }
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/SyncASMHooks";
+	public static final String WRITE_INDEX = "writeIndex";
 	public static final String WRITE_INTEGRATED = "write";
 	public static final String READ_PRIMITIVE = "read_%s";
 	public static final String SEND_PACKET = "send_%s";
@@ -64,17 +65,8 @@ public final class SyncASMHooks {
 		builder.writeString(s);
 	}
 
-	public static <T> PacketBuilder doSync(int index, T oldValue, T newValue, TypeSyncer<? super T> syncer, PacketBuilder builder) {
-		if (!syncer.equal(oldValue, newValue)) {
-			builder = writeIndex(builder, index);
-			syncer.write(newValue, builder);
-		}
-		return builder;
-	}
-
-	private static PacketBuilder writeIndex(PacketBuilder builder, int index) {
+	private static void writeIndex(WritableDataBuf builder, int index) {
 		builder.writeByte(index);
-		return builder;
 	}
 
 	public static <T> TypeSyncer<T> getSyncerFor(Class<T> toSync) {

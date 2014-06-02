@@ -125,9 +125,18 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 				.ifTrue(packetBuilderCache.set(CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.CREATE_BUILDER, Type.getMethodDescriptor(Type.getType(PacketBuilder.class)))))
 				.append(packetBuilderCache.get());
 
-		for (SyncedElement element : elements) {
+		for (int i = 0, len = elements.size(); i < len; i++) {
+			SyncedElement element = elements.get(i);
+			CodePiece writeIndex = CodePieces.invokeStatic(
+					SyncASMHooks.CLASS_NAME, SyncASMHooks.WRITE_INDEX,
+					ASMUtils.getMethodDescriptor(void.class, WritableDataBuf.class, int.class),
+					checkedGetPacketBuilder, CodePieces.constant(i));
+
+			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderCache.get());
+			CodePiece updateCompanion = element.companion.set(element.variable.get());
+
 			element.syncer.equals(element.companion.get(), element.variable.get())
-					.ifFalse(element.syncer.write(element.variable.get(), checkedGetPacketBuilder))
+					.ifFalse(writeIndex.append(writeData).append(updateCompanion))
 					.appendTo(insns);
 		}
 		insns.add(end);
