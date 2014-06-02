@@ -1,11 +1,13 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.InstanceProvider;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -144,19 +146,49 @@ public final class CodePieces {
 		return of(call);
 	}
 
-	public static CodePiece cacheLocal(ClassNode clazz, MethodNode method, Type type, CodePiece code) {
+	public static LocalCached cacheLocal(ClassNode clazz, MethodNode method, Type type, CodePiece code) {
 		int idx = 0;
-		for (LocalVariableNode lVar : method.localVariables) {
-			if (lVar.index >= idx) idx = lVar.index + 1;
+		Iterator<VarInsnNode> it = Iterators.filter(method.instructions.iterator(), VarInsnNode.class);
+		while (it.hasNext()) {
+			VarInsnNode varInsn = it.next();
+			idx = Math.max(idx, varInsn.var);
 		}
-		LabelNode start = new LabelNode();
-		LabelNode end = new LabelNode();
-		method.instructions.insert(start);
-		method.instructions.insertBefore(ASMUtils.findLastReturn(method), end);
-		LocalVariableNode var = new LocalVariableNode("_sc$local$" + idx, type.getDescriptor(), null, start, end, idx);
-		ASMVariable wrap = ASMVariables.of(var);
-		wrap.set(code).insertAfter(method.instructions, start);
-		return wrap.get();
+		for (LocalVariableNode localVar : method.localVariables) {
+			idx = Math.max(idx, localVar.index);
+		}
+
+		ASMVariable theCache = ASMVariables.of(new LocalVariableNode(null, type.getDescriptor(), null, null, null, ++idx));
+
+		LabelNode subStart = new LabelNode();
+		LabelNode subEnd = new LabelNode();
+
+		InsnList sub = new InsnList();
+		LocalVariableNode calledFrom = new LocalVariableNode("_sc$calledFrom", Type.INT_TYPE.getDescriptor(), null, subStart, subEnd, ++idx);
+		method.localVariables.add(calledFrom);
+
+		sub.add(subStart);
+		sub.add(new VarInsnNode(ISTORE, calledFrom.index));
+
+		isNull(theCache.get()).ifTrue(theCache.set(code)).appendTo(sub);
+		theCache.get().appendTo(sub);
+
+		sub.add(new VarInsnNode(RET, calledFrom.index));
+		sub.add(subEnd);
+
+		CodePiece getValue = of(new JumpInsnNode(JSR, subStart));
+		((SingleInsnCodePiece) getValue).dontClone = true;
+		return new LocalCached(getValue, sub);
+	}
+
+	public static final class LocalCached {
+
+		public final CodePiece getValue;
+		public final InsnList subroutine;
+
+		LocalCached(CodePiece getValue, InsnList subroutine) {
+			this.getValue = getValue;
+			this.subroutine = subroutine;
+		}
 	}
 
 	public static ASMCondition makeCondition(CodePiece piece) {

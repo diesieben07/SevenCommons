@@ -16,6 +16,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.io.PrintStream;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -158,23 +159,19 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		LabelNode beginning = new LabelNode();
 		insns.add(beginning);
 		LabelNode end = new LabelNode();
-		LocalVariableNode localVar = new LocalVariableNode("_sc$pb", desc, null, beginning, end, 1);
-		ASMVariable packetBuilderCache = ASMVariables.of(localVar);
 
-		packetBuilderCache.set(CodePieces.constantNull()).appendTo(insns);
-
-		CodePiece checkedGetPacketBuilder = CodePieces.isNull(packetBuilderCache.get())
-				.ifTrue(packetBuilderCache.set(CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.CREATE_BUILDER, Type.getMethodDescriptor(Type.getType(PacketBuilder.class)))))
-				.append(packetBuilderCache.get());
+		CodePieces.LocalCached packetBuilderCache = CodePieces.cacheLocal(clazz, syncMethod,
+				Type.getType(PacketBuilder.class),
+				CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.CREATE_BUILDER, Type.getMethodDescriptor(Type.getType(PacketBuilder.class))));
 
 		for (int i = 0, len = elements.size(); i < len; i++) {
 			SyncedElement element = elements.get(i);
 			CodePiece writeIndex = CodePieces.invokeStatic(
 					SyncASMHooks.CLASS_NAME, SyncASMHooks.WRITE_INDEX,
 					ASMUtils.getMethodDescriptor(void.class, WritableDataBuf.class, int.class),
-					checkedGetPacketBuilder, CodePieces.constant(i));
+					packetBuilderCache.getValue, CodePieces.constant(i));
 
-			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderCache.get());
+			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderCache.getValue);
 			CodePiece updateCompanion = element.companion.set(element.variable.get());
 
 			element.syncer.equals(element.companion.get(), element.variable.get())
@@ -183,6 +180,13 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		}
 		insns.add(end);
 		insns.add(new InsnNode(RETURN));
+
+		insns.add(packetBuilderCache.subroutine);
+		Iterator<AbstractInsnNode> it = insns.iterator();
+		while (it.hasNext()) {
+			AbstractInsnNode node = it.next();
+			System.out.println(node);
+		}
 	}
 
 	private static CodePiece obtainInstance(ClassNode clazz, Type packetTargetType) {

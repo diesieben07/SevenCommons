@@ -13,6 +13,7 @@ class SingleInsnCodePiece extends AbstractCodePiece {
 
 	private final AbstractInsnNode insn;
 	private boolean used;
+	boolean dontClone = false;
 
 	SingleInsnCodePiece(AbstractInsnNode insn) {
 		this.insn = checkNotNull(insn, "InsnNode");
@@ -46,7 +47,7 @@ class SingleInsnCodePiece extends AbstractCodePiece {
 	}
 
 	private AbstractInsnNode getInsn() {
-		if (used) {
+		if (!dontClone && used) {
 			return ASMUtils.clone(insn);
 		} else {
 			used = true;
