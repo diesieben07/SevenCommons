@@ -22,6 +22,10 @@ public class testmod_sc {
 		System.exit(0);
 		MinecraftForge.EVENT_BUS.register(this);
 
+		boolean a = false;
+		boolean b = true;
+
+		System.out.println(a == b);
 	}
 
 	@ForgeSubscribe
@@ -30,7 +34,6 @@ public class testmod_sc {
 
 	public static class TestTe extends TileEntity {
 
-		@Sync
 		private int foobar;
 
 		@Sync
@@ -38,13 +41,26 @@ public class testmod_sc {
 
 		@Sync(syncer = TestSyncer.class)
 		private String aString;
+
+		@Sync
+		public int getFoobar() {
+			return foobar;
+		}
+
+		private void setFoobar(int foo) {
+			this.foobar = foo;
+		}
 	}
 
 	static class TestSyncer implements TypeSyncer<String> {
 
-		@InstanceProvider
-		public static TestSyncer instance() {
-			return null;
+//		@InstanceProvider
+//		public static TestSyncer instance(TestTe tile) {
+//			return null;
+//		}
+
+		TestSyncer(TestTe te) {
+
 		}
 
 		@Override

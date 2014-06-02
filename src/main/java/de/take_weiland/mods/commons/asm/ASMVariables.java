@@ -46,11 +46,11 @@ public final class ASMVariables {
 
 	public static ASMVariable of(ClassNode clazz, MethodNode getter, MethodNode setter, CodePiece instance) {
 		if (instance == null) {
-			checkNotStatic(getter.access, "getter");
-			if (setter != null) checkNotStatic(setter.access, "setter");
-		} else {
 			checkStatic(getter.access, "getter");
 			if (setter != null) checkStatic(setter.access, "setter");
+		} else {
+			checkNotStatic(getter.access, "getter");
+			if (setter != null) checkNotStatic(setter.access, "setter");
 		}
 		return new GetterSetterPair(checkNotNull(clazz, "clazz"), getter, setter, instance);
 	}

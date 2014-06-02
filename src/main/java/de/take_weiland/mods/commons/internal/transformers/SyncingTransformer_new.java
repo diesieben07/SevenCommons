@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cpw.mods.fml.common.FMLLog;
@@ -15,6 +16,7 @@ import org.objectweb.asm.tree.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static org.objectweb.asm.Opcodes.*;
@@ -182,11 +184,13 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 	private static abstract class Syncer {
 
+		private static final Set<Type> integratedTypes = ImmutableSet.of(
+			Type.getType(String.class)
+		);
+
 		static Syncer forType(Type t) {
-			if (ASMUtils.isPrimitive(t)) {
-				return new PrimitiveSyncer(t);
-			} else if (t.getInternalName().equals("java/lang/String")) {
-				return new PrimitiveSyncer(t);
+			if (ASMUtils.isPrimitive(t) || integratedTypes.contains(t)) {
+				return new IntegratedSyncer(t);
 			} else {
 				throw new UnsupportedOperationException("NYI");
 			}
@@ -203,11 +207,11 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 	}
 
-	private static class PrimitiveSyncer extends Syncer {
+	private static class IntegratedSyncer extends Syncer {
 
 		final Type typeToSync;
 
-		PrimitiveSyncer(Type typeToSync) {
+		IntegratedSyncer(Type typeToSync) {
 			this.typeToSync = typeToSync;
 		}
 
@@ -219,7 +223,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			packetBuilder.appendTo(insns);
 
 			String owner = SyncASMHooks.CLASS_NAME;
-			String name = SyncASMHooks.WRITE_PRIMITIVE;
+			String name = SyncASMHooks.WRITE_INTEGRATED;
 			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, typeToSync, Type.getType(WritableDataBuf.class));
 
 			insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));

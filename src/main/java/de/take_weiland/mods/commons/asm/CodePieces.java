@@ -137,12 +137,12 @@ public final class CodePieces {
 
 			@Override
 			public CodePiece ifTrue(CodePiece code) {
-				return make(code, opcode);
+				return make(code, opcodeNegated);
 			}
 
 			@Override
 			public CodePiece ifFalse(CodePiece code) {
-				return make(code, opcodeNegated);
+				return make(code, opcode);
 			}
 
 			@Override
@@ -183,7 +183,7 @@ public final class CodePieces {
 	public static ASMCondition equal(CodePiece a, CodePiece b, Type type, boolean useEquals) {
 		switch (type.getSort()) {
 			case Type.BOOLEAN:
-				return booleansEqual(a, b);
+				return makeCondition(a.append(b).append(ofOpcode(IXOR)), IFEQ, IFNE);
 			case Type.BYTE:
 			case Type.SHORT:
 			case Type.INT:
@@ -224,70 +224,6 @@ public final class CodePieces {
 			default:
 				throw new IllegalArgumentException("Invalid Type for comparision!");
 		}
-	}
-
-	private static ASMCondition booleansEqual(final CodePiece a, final CodePiece b) {
-		return new ASMCondition() {
-			@Override
-			public CodePiece ifTrue(CodePiece code) {
-				InsnList insns = new InsnList();
-				LabelNode aFalse = new LabelNode();
-				LabelNode equal = new LabelNode();
-				LabelNode after = new LabelNode();
-				b.appendTo(insns);
-				a.appendTo(insns);
-				insns.add(new JumpInsnNode(IFEQ, aFalse)); // if a is false, jump below
-				insns.add(new JumpInsnNode(IFNE, after)); // a is true here, if b is false, skip execution
-				insns.add(equal);
-				code.appendTo(insns);
-				insns.add(new JumpInsnNode(GOTO, after));
-				insns.add(aFalse);
-				insns.add(new JumpInsnNode(IFNE, equal));
-				insns.add(after);
-				return of(insns);
-			}
-
-			@Override
-			public CodePiece ifFalse(CodePiece code) {
-				InsnList insns = new InsnList();
-				LabelNode aFalse = new LabelNode();
-				LabelNode notEqual = new LabelNode();
-				LabelNode after = new LabelNode();
-				b.appendTo(insns);
-				a.appendTo(insns);
-				insns.add(new JumpInsnNode(IFEQ, aFalse)); // if a is false, jump below
-				insns.add(new JumpInsnNode(IFEQ, after)); // a is true here, if b is true, skip execution (condition is false)
-				insns.add(notEqual);
-				code.appendTo(insns);
-				insns.add(new JumpInsnNode(GOTO, after));
-				insns.add(aFalse);
-				insns.add(new JumpInsnNode(IFEQ, notEqual));
-				insns.add(after);
-				return of(insns);
-			}
-
-			@Override
-			public CodePiece doIfElse(CodePiece onTrue, CodePiece onFalse) {
-				InsnList insns = new InsnList();
-				LabelNode aFalse = new LabelNode();
-				LabelNode equal = new LabelNode();
-				LabelNode notEqual = new LabelNode();
-				LabelNode after = new LabelNode();
-				b.appendTo(insns);
-				a.appendTo(insns);
-				insns.add(new JumpInsnNode(IFEQ, aFalse)); // if a is false, jump below
-				insns.add(new JumpInsnNode(IFNE, notEqual)); // a is true here, if b is false, skip execution
-				insns.add(equal);
-				onTrue.appendTo(insns);
-				insns.add(new JumpInsnNode(GOTO, after));
-				insns.add(aFalse);
-				insns.add(new JumpInsnNode(IFNE, equal));
-				insns.add(notEqual);
-				onFalse.appendTo(insns);
-				insns.add(after);
-				return of(insns);
-			}
-		};
 	}
 
 	public static CodePiece invokeStatic(String clazz, String method, String desc, CodePiece... args) {
@@ -364,6 +300,7 @@ public final class CodePieces {
 			}
 		}
 
+		desc = Type.getMethodDescriptor(VOID_TYPE, argTypes);
 		for (MethodNode cstr : ASMUtils.getConstructors(targetClass)) {
 			if (cstr.desc.equals(desc)) {
 				return instantiate(targetType.getInternalName(), argTypes, args);

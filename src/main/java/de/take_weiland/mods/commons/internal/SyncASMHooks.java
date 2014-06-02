@@ -2,10 +2,7 @@ package de.take_weiland.mods.commons.internal;
 
 import com.google.common.collect.Lists;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
-import de.take_weiland.mods.commons.net.DataBuf;
-import de.take_weiland.mods.commons.net.DataBuffers;
-import de.take_weiland.mods.commons.net.PacketBuilder;
-import de.take_weiland.mods.commons.net.PacketTarget;
+import de.take_weiland.mods.commons.net.*;
 import de.take_weiland.mods.commons.sync.Syncing;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 import de.take_weiland.mods.commons.util.Sides;
@@ -20,7 +17,7 @@ public final class SyncASMHooks {
 	private SyncASMHooks() { }
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/SyncASMHooks";
-	public static final String WRITE_PRIMITIVE = "writePrimitive";
+	public static final String WRITE_INTEGRATED = "write";
 	public static final String READ_PRIMITIVE = "read_%s";
 	public static final String SEND_PACKET = "send_%s";
 	public static final String CREATE_BUILDER = "createBuilder";
@@ -29,6 +26,42 @@ public final class SyncASMHooks {
 		PacketBuilder b = SCModContainer.packets.builder(SCPackets.SYNC);
 		// TODO
 		return b;
+	}
+
+	public static void write(boolean value, WritableDataBuf builder) {
+		builder.writeBoolean(value);
+	}
+
+	public static void write(byte value, WritableDataBuf builder) {
+		builder.writeByte(value);
+	}
+
+	public static void write(short value, WritableDataBuf builder) {
+		builder.writeShort(value);
+	}
+
+	public static void write(int value, WritableDataBuf builder) {
+		builder.writeInt(value);
+	}
+
+	public static void write(long value, WritableDataBuf builder) {
+		builder.writeLong(value);
+	}
+
+	public static void write(char value, WritableDataBuf builder) {
+		builder.writeChar(value);
+	}
+
+	public static void write(float value, WritableDataBuf builder) {
+		builder.writeFloat(value);
+	}
+
+	public static void write(double value, WritableDataBuf builder) {
+		builder.writeDouble(value);
+	}
+
+	public static void write(String s, WritableDataBuf builder) {
+		builder.writeString(s);
 	}
 
 	public static <T> PacketBuilder doSync(int index, T oldValue, T newValue, TypeSyncer<? super T> syncer, PacketBuilder builder) {
