@@ -368,16 +368,36 @@ public final class CodePieces {
 		return of(loadInt(i));
 	}
 
-	public static CodePiece constant(Long l) {
-		return ofLdc(l);
+	public static CodePiece constant(long l) {
+		if (l == 0) {
+			return ofOpcode(LCONST_0);
+		} else if (l == 1) {
+			return ofOpcode(LCONST_1);
+		} else {
+			return ofLdc(l);
+		}
 	}
 
-	public static CodePiece constant(Float f) {
-		return ofLdc(f);
+	public static CodePiece constant(float f) {
+		if (f == 0f) {
+			return ofOpcode(FCONST_0);
+		} else if (f == 1f) {
+			return ofOpcode(FCONST_1);
+		} else if (f == 2f) {
+			return ofOpcode(FCONST_2);
+		} else {
+			return ofLdc(f);
+		}
 	}
 
-	public static CodePiece constant(Double d) {
-		return ofLdc(d);
+	public static CodePiece constant(double d) {
+		if (d == 0d) {
+			return ofOpcode(DCONST_0);
+		} else if (d == 1d) {
+			return ofOpcode(DCONST_1);
+		} else {
+			return ofLdc(d);
+		}
 	}
 
 	public static CodePiece constant(String s) {
@@ -478,6 +498,26 @@ public final class CodePieces {
 	}
 
 	private static AbstractInsnNode loadInt(int i) {
+		if (i >= -1 && i <= 5) {
+			switch (i) {
+				case -1:
+					return new InsnNode(ICONST_M1);
+				case 0:
+					return new InsnNode(ICONST_0);
+				case 1:
+					return new InsnNode(ICONST_1);
+				case 2:
+					return new InsnNode(ICONST_2);
+				case 3:
+					return new InsnNode(ICONST_3);
+				case 4:
+					return new InsnNode(ICONST_4);
+				case 5:
+					return new InsnNode(ICONST_5);
+				default:
+					throw new AssertionError();
+			}
+		}
 		if (i >= Byte.MIN_VALUE && i <= Byte.MAX_VALUE) {
 			return new IntInsnNode(BIPUSH, i);
 		} else if (i >= Short.MIN_VALUE && i <= Short.MAX_VALUE) {
