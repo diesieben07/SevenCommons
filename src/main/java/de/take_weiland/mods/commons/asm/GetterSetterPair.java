@@ -107,7 +107,7 @@ class GetterSetterPair extends ClassBoundASMVariable {
 	@Override
 	public String name() {
 		if (getter.name.startsWith("get")) {
-			return Character.toLowerCase(getter.name.charAt(0)) + getter.name.substring(4);
+			return Character.toLowerCase(getter.name.charAt(3)) + getter.name.substring(4);
 		} else {
 			return getter.name;
 		}
