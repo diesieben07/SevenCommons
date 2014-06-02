@@ -44,7 +44,7 @@ class GetterSetterPair extends ClassBoundASMVariable {
 			int invokeOp;
 			if (!isStatic()) {
 				instance.appendTo(insns);
-				invokeOp = (setter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
+				invokeOp = (getter.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
 			} else {
 				invokeOp = INVOKESTATIC;
 			}

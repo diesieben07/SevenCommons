@@ -116,7 +116,6 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		insns.add(beginning);
 		LabelNode end = new LabelNode();
 		LocalVariableNode localVar = new LocalVariableNode("_sc$pb", desc, null, beginning, end, 1);
-		syncMethod.localVariables.add(localVar);
 		ASMVariable packetBuilderCache = ASMVariables.of(localVar);
 
 		packetBuilderCache.set(CodePieces.constantNull()).appendTo(insns);
@@ -167,7 +166,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			}
 		}
 
-		return CodePieces.cache(clazz, packetTargetType, instanceLoader, canBeStatic);
+		return CodePieces.cache(clazz, packetTargetType, instanceLoader, canBeStatic, false);
 	}
 
 	private static ASMVariable makeCompanion(ClassNode clazz, ASMVariable var) {

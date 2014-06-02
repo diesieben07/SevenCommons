@@ -54,14 +54,14 @@ public final class CodePieces {
 	}
 
 	public static CodePiece cacheStatic(ClassNode clazz, Type type, CodePiece code) {
-		return cache(clazz, type, code, true);
+		return cache(clazz, type, code, true, false);
 	}
 
 	public static CodePiece cache(ClassNode clazz, Type type, CodePiece code) {
-		return cache(clazz, type, code, false);
+		return cache(clazz, type, code, false, false);
 	}
 
-	public static CodePiece cache(ClassNode clazz, Type type, CodePiece code, boolean _static) {
+	public static CodePiece cache(ClassNode clazz, Type type, CodePiece code, boolean _static, boolean canBeNull) {
 		CodePiece loadInstance;
 		int getOp;
 		int putOp;
@@ -80,29 +80,60 @@ public final class CodePieces {
 			invokeOp = INVOKESPECIAL;
 		}
 
+		boolean isPrimitive = ASMUtils.isPrimitive(type);
+
 		String name = nextUniqueName();
 		String mDesc = Type.getMethodDescriptor(type);
 		FieldNode field = new FieldNode(access, name, type.getDescriptor(), null, null);
+		FieldNode marker = null;
+		if (canBeNull || isPrimitive) {
+			marker = new FieldNode(access, name + "$present", Type.BOOLEAN_TYPE.getDescriptor(), null, null);
+			clazz.fields.add(marker);
+		}
+
 		MethodNode method = new MethodNode(access, name, mDesc, null, null);
-
 		InsnList insns = method.instructions;
-		loadInstance.appendTo(insns);
-		insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
-		insns.add(new InsnNode(DUP));
+		if (marker == null) {
+			loadInstance.appendTo(insns);
+			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
+			insns.add(new InsnNode(DUP));
 
-		LabelNode isNull = new LabelNode();
-		insns.add(new JumpInsnNode(IFNULL, isNull));
-		insns.add(new InsnNode(type.getOpcode(IRETURN)));
+			LabelNode isNull = new LabelNode();
+			insns.add(new JumpInsnNode(IFNULL, isNull));
+			insns.add(new InsnNode(type.getOpcode(IRETURN)));
 
-		insns.add(isNull);
-		insns.add(new InsnNode(POP));
+			insns.add(isNull);
+			insns.add(new InsnNode(POP));
+			loadInstance.appendTo(insns);
+			code.appendTo(insns);
+			insns.add(new FieldInsnNode(putOp, clazz.name, field.name, field.desc));
+			loadInstance.appendTo(insns);
+			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
+			insns.add(new InsnNode(type.getOpcode(IRETURN)));
+		} else {
+			loadInstance.appendTo(insns);
+			insns.add(new FieldInsnNode(getOp, clazz.name, marker.name, marker.desc));
 
-		loadInstance.appendTo(insns);
-		code.appendTo(insns);
-		insns.add(new FieldInsnNode(putOp, clazz.name, field.name, field.desc));
-		loadInstance.appendTo(insns);
-		insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
-		insns.add(new InsnNode(type.getOpcode(IRETURN)));
+			LabelNode isMissing = new LabelNode();
+			insns.add(new JumpInsnNode(IFEQ, isMissing));
+			loadInstance.appendTo(insns);
+			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
+			insns.add(new InsnNode(type.getOpcode(IRETURN)));
+
+			insns.add(isMissing);
+			loadInstance.appendTo(insns);
+			constant(true).appendTo(insns);
+			insns.add(new FieldInsnNode(putOp, clazz.name, marker.name, marker.desc));
+
+			loadInstance.appendTo(insns);
+			code.appendTo(insns);
+			insns.add(new FieldInsnNode(putOp, clazz.name, field.name, field.desc));
+
+			loadInstance.appendTo(insns);
+			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
+
+			insns.add(new InsnNode(type.getOpcode(IRETURN)));
+		}
 
 		clazz.fields.add(field);
 		clazz.methods.add(method);
