@@ -18,6 +18,7 @@ public final class SyncASMHooks {
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/SyncASMHooks";
 	public static final String WRITE_INDEX = "writeIndex";
+	public static final String READ_INDEX = "readIndex";
 	public static final String WRITE_INTEGRATED = "write";
 	public static final String READ_PRIMITIVE = "read_%s";
 	public static final String SEND_PACKET = "send_%s";
@@ -27,6 +28,14 @@ public final class SyncASMHooks {
 		PacketBuilder b = SCModContainer.packets.builder(SCPackets.SYNC);
 		// TODO
 		return b;
+	}
+
+	public static void writeIndex(WritableDataBuf buf, int index) {
+		buf.writeByte(index);
+	}
+
+	public static int readIndex(DataBuf buf) {
+		return buf.readByte();
 	}
 
 	public static void write(boolean value, WritableDataBuf builder) {
@@ -64,11 +73,6 @@ public final class SyncASMHooks {
 	public static void write(String s, WritableDataBuf builder) {
 		builder.writeString(s);
 	}
-
-	private static void writeIndex(WritableDataBuf builder, int index) {
-		builder.writeByte(index);
-	}
-
 	public static <T> TypeSyncer<T> getSyncerFor(Class<T> toSync) {
 		TypeSyncer<T> syncer = Syncing.getSyncerFor(toSync);
 		if (syncer == null) {

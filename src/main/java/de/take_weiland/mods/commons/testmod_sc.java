@@ -26,6 +26,22 @@ public class testmod_sc {
 		boolean b = true;
 
 		System.out.println(a == b);
+		Object o = null;
+		while (true) {
+			switch (o.hashCode()) {
+				case -1:
+					return;
+				case 0:
+					// todo
+					break;
+				case 1:
+					// todo:
+					break;
+				default:
+					System.out.println("Invalid index!");
+					break;
+			}
+		}
 	}
 
 	@ForgeSubscribe
@@ -42,7 +58,6 @@ public class testmod_sc {
 		@Sync(syncer = TestSyncer.class)
 		private String aString;
 
-		@Sync
 		public int getFoobar() {
 			return foobar;
 		}

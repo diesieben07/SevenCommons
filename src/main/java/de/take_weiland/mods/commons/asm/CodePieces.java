@@ -267,19 +267,26 @@ public final class CodePieces {
 		return of(insns);
 	}
 
-	public static CodePiece invoke(ClassNode clazz, MethodNode method, CodePiece... args) {
-		boolean isStatic = (method.access & ACC_STATIC) == ACC_STATIC;
-		int reqArgs = ASMUtils.argumentCount(method.desc) + (isStatic ? 0 : 1);
+	public static CodePiece invoke(int invokeOpcode, String clazz, String method, String desc, CodePiece... args) {
+		boolean isStatic = invokeOpcode == INVOKESTATIC;
+		int reqArgs = ASMUtils.argumentCount(desc) + (isStatic ? 0 : 1);
 		checkArgument(args.length == reqArgs, "Argument count mismatch");
-		InsnList insns = new InsnList();
 
+		InsnList insns = new InsnList();
 		for (CodePiece arg : args) {
 			arg.appendTo(insns);
 		}
 
-		int invokeOp = isStatic ? INVOKESTATIC : (method.access & ACC_PRIVATE) == ACC_PRIVATE ? INVOKESPECIAL : INVOKEVIRTUAL;
-		insns.add(new MethodInsnNode(invokeOp, clazz.name, method.name, method.desc));
+		insns.add(new MethodInsnNode(invokeOpcode, clazz, method, desc));
 		return of(insns);
+	}
+
+	public static CodePiece invoke(ClassNode clazz, MethodNode method, CodePiece... args) {
+		boolean isStatic = (method.access & ACC_STATIC) == ACC_STATIC;
+		boolean isPrivate = (method.access & ACC_PRIVATE) == ACC_PRIVATE;
+		boolean isInterface = (clazz.access & ACC_INTERFACE) == ACC_INTERFACE;
+		int opcode = isStatic ? INVOKESTATIC : (isPrivate ? INVOKESPECIAL : (isInterface ? INVOKEINTERFACE : INVOKEVIRTUAL));
+		return invoke(opcode, clazz.name, method.name, method.desc, args);
 	}
 
 	public static CodePiece instantiate(Class<?> c) {

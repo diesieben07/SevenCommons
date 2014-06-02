@@ -7,6 +7,7 @@ import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.SyncASMHooks;
 import de.take_weiland.mods.commons.internal.SyncType;
+import de.take_weiland.mods.commons.internal.SyncedObject;
 import de.take_weiland.mods.commons.net.*;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
@@ -14,6 +15,7 @@ import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,7 +100,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 				syncer = Syncer.forType(var.getType());
 			} else if (!knownSyncers.containsKey(syncerType)) {
 				CodePiece syncerInstance = obtainInstance(clazz, syncerType);
-				syncer = new CustomSyncer(syncerInstance);
+				syncer = new CustomSyncer(syncerInstance, var.getType());
 				knownSyncers.put(syncerType, syncer);
 			} else {
 				syncer = knownSyncers.get(syncerType);
@@ -107,6 +109,47 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			elements.add(new SyncedElement(var, makeCompanion(clazz, var), packetTarget, syncer));
 		}
 
+		createSyncMethod(clazz, elements);
+		createReadMethod(clazz, elements);
+		clazz.interfaces.add(Type.getInternalName(SyncedObject.class));
+		return true;
+	}
+
+	private static void createReadMethod(ClassNode clazz, List<SyncedElement> elements) {
+		MethodNode method = new MethodNode(ACC_PUBLIC, SyncedObject.READ, ASMUtils.getMethodDescriptor(void.class, DataBuf.class), null, null);
+		clazz.methods.add(method);
+		InsnList insns = method.instructions;
+
+		LabelNode start = new LabelNode();
+		insns.add(start);
+		CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.READ_INDEX, ASMUtils.getMethodDescriptor(int.class, DataBuf.class),
+				CodePieces.of(new VarInsnNode(ALOAD, 1))).appendTo(insns);
+		LabelNode[] jumpLabels = new LabelNode[elements.size() + 1];
+		for (int i = 0, len = jumpLabels.length; i < len; ++i) {
+			jumpLabels[i] = new LabelNode();
+		}
+		LabelNode dflt = new LabelNode();
+
+		insns.add(new TableSwitchInsnNode(-1, elements.size() - 1, dflt, jumpLabels));
+		insns.add(jumpLabels[0]);
+		insns.add(new InsnNode(RETURN));
+		for (int i = 0, len = elements.size(); i < len; ++i) {
+			SyncedElement element = elements.get(i);
+			insns.add(jumpLabels[i + 1]);
+			element.variable.set(element.syncer.read(element.variable.get(), CodePieces.of(new VarInsnNode(ALOAD, 1))))
+					.appendTo(insns);
+			insns.add(new JumpInsnNode(GOTO, start));
+		}
+		insns.add(dflt);
+		// TODO: this is a problem, produce some sort of warning
+		CodePieces.invoke(INVOKEVIRTUAL, "java/io/PrintStream", "println", ASMUtils.getMethodDescriptor(void.class, Object.class),
+				CodePieces.of(new FieldInsnNode(GETSTATIC, "java/lang/System", "out", Type.getDescriptor(PrintStream.class))),
+				CodePieces.constant("Invalid Index!"))
+				.appendTo(insns);
+		insns.add(new JumpInsnNode(GOTO, start));
+	}
+
+	private static void createSyncMethod(ClassNode clazz, List<SyncedElement> elements) {
 		MethodNode syncMethod = new MethodNode(ACC_PRIVATE, "_sc$doSync", Type.getMethodDescriptor(Type.VOID_TYPE), null, null);
 		clazz.methods.add(syncMethod);
 		InsnList insns = syncMethod.instructions;
@@ -140,7 +183,6 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		}
 		insns.add(end);
 		insns.add(new InsnNode(RETURN));
-		return true;
 	}
 
 	private static CodePiece obtainInstance(ClassNode clazz, Type packetTargetType) {
@@ -264,7 +306,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 			String owner = SyncASMHooks.CLASS_NAME;
 			String name = String.format(SyncASMHooks.READ_PRIMITIVE, typeToSync.getClassName());
-			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(DataBuf.class));
+			String desc = Type.getMethodDescriptor(typeToSync, Type.getType(DataBuf.class));
 
 			insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
 
@@ -275,9 +317,11 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 	private static class CustomSyncer extends Syncer {
 
 		private final CodePiece syncer;
+		private final Type actualType;
 
-		CustomSyncer(CodePiece syncer) {
+		CustomSyncer(CodePiece syncer, Type actualType) {
 			this.syncer = syncer;
+			this.actualType = actualType;
 		}
 
 		@Override
@@ -325,7 +369,9 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			String desc = Type.getMethodDescriptor(objectType, objectType, Type.getType(DataBuf.class));
 
 			insns.add(new MethodInsnNode(INVOKEINTERFACE, owner, name, desc));
-
+			if (!ASMUtils.isPrimitive(actualType) || !actualType.equals(objectType)) {
+				insns.add(new TypeInsnNode(CHECKCAST, actualType.getInternalName()));
+			}
 			return CodePieces.of(insns);
 		}
 	}
