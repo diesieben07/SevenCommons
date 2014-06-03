@@ -146,7 +146,7 @@ public final class CodePieces {
 		return of(call);
 	}
 
-	public static LocalCached cacheLocal(ClassNode clazz, MethodNode method, Type type, CodePiece code) {
+	public static CodePiece cacheLocal(MethodNode method, Type type, CodePiece code) {
 		int idx = 0;
 		Iterator<VarInsnNode> it = Iterators.filter(method.instructions.iterator(), VarInsnNode.class);
 		while (it.hasNext()) {
@@ -159,36 +159,9 @@ public final class CodePieces {
 
 		ASMVariable theCache = ASMVariables.of(new LocalVariableNode(null, type.getDescriptor(), null, null, null, ++idx));
 
-		LabelNode subStart = new LabelNode();
-		LabelNode subEnd = new LabelNode();
-
-		InsnList sub = new InsnList();
-		LocalVariableNode calledFrom = new LocalVariableNode("_sc$calledFrom", Type.INT_TYPE.getDescriptor(), null, subStart, subEnd, ++idx);
-		method.localVariables.add(calledFrom);
-
-		sub.add(subStart);
-		sub.add(new VarInsnNode(ISTORE, calledFrom.index));
-
-		isNull(theCache.get()).ifTrue(theCache.set(code)).appendTo(sub);
-		theCache.get().appendTo(sub);
-
-		sub.add(new VarInsnNode(RET, calledFrom.index));
-		sub.add(subEnd);
-
-		CodePiece getValue = of(new JumpInsnNode(JSR, subStart));
-		((SingleInsnCodePiece) getValue).dontClone = true;
-		return new LocalCached(getValue, sub);
-	}
-
-	public static final class LocalCached {
-
-		public final CodePiece getValue;
-		public final InsnList subroutine;
-
-		LocalCached(CodePiece getValue, InsnList subroutine) {
-			this.getValue = getValue;
-			this.subroutine = subroutine;
-		}
+		return isNull(theCache.get())
+				.ifTrue(theCache.set(code))
+				.append(theCache.get());
 	}
 
 	public static ASMCondition makeCondition(CodePiece piece) {

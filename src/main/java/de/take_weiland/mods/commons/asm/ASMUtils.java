@@ -605,18 +605,18 @@ public final class ASMUtils {
 		return clone;
 	}
 
-	/**
-	 * Clones the given
-	 * @param insns
-	 * @param from
-	 * @return
-	 */
-	public static InsnList clone(InsnList insns, AbstractInsnNode from) {
-		return clone(insns, from, insns.getLast());
+	public static InsnList clone(InsnList insns) {
+		return clone(insns, labelCloneMap(insns.getFirst()));
 	}
 
-	public static InsnList clone(InsnList insns) {
-		return clone(insns, insns.getFirst(), insns.getLast());
+	public static InsnList clone(InsnList list, Map<LabelNode, LabelNode> map) {
+		InsnList cloned = new InsnList();
+		AbstractInsnNode current = list.getFirst();
+		while (current != null) {
+			cloned.add(current.clone(map));
+			current = current.getNext();
+		}
+		return cloned;
 	}
 
 	@SuppressWarnings("unchecked")

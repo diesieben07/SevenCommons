@@ -16,7 +16,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.io.PrintStream;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -155,12 +154,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		clazz.methods.add(syncMethod);
 		InsnList insns = syncMethod.instructions;
 
-		String desc = Type.getDescriptor(PacketBuilder.class);
-		LabelNode beginning = new LabelNode();
-		insns.add(beginning);
-		LabelNode end = new LabelNode();
-
-		CodePieces.LocalCached packetBuilderCache = CodePieces.cacheLocal(clazz, syncMethod,
+		CodePiece packetBuilderCache = CodePieces.cacheLocal(syncMethod,
 				Type.getType(PacketBuilder.class),
 				CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.CREATE_BUILDER, Type.getMethodDescriptor(Type.getType(PacketBuilder.class))));
 
@@ -169,24 +163,22 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			CodePiece writeIndex = CodePieces.invokeStatic(
 					SyncASMHooks.CLASS_NAME, SyncASMHooks.WRITE_INDEX,
 					ASMUtils.getMethodDescriptor(void.class, WritableDataBuf.class, int.class),
-					packetBuilderCache.getValue, CodePieces.constant(i));
+					packetBuilderCache, CodePieces.constant(i));
 
-			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderCache.getValue);
+			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderCache);
 			CodePiece updateCompanion = element.companion.set(element.variable.get());
 
 			element.syncer.equals(element.companion.get(), element.variable.get())
 					.ifFalse(writeIndex.append(writeData).append(updateCompanion))
 					.appendTo(insns);
 		}
-		insns.add(end);
 		insns.add(new InsnNode(RETURN));
 
-		insns.add(packetBuilderCache.subroutine);
-		Iterator<AbstractInsnNode> it = insns.iterator();
-		while (it.hasNext()) {
-			AbstractInsnNode node = it.next();
-			System.out.println(node);
-		}
+//		Iterator<AbstractInsnNode> it = insns.iterator();
+//		while (it.hasNext()) {
+//			AbstractInsnNode node = it.next();
+//			System.out.println(node);
+//		}
 	}
 
 	private static CodePiece obtainInstance(ClassNode clazz, Type packetTargetType) {
