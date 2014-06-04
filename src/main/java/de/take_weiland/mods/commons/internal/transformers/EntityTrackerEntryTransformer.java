@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import de.take_weiland.mods.commons.asm.*;
+import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -25,21 +26,16 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 	}
 
 	private CodePiece generateEventCall(ClassNode clazz) {
-		InsnList insns = new InsnList();
 		Type entityPlayer = getObjectType("net/minecraft/entity/player/EntityPlayer");
 		Type entity = getObjectType("net/minecraft/entity/Entity");
-		
-		
-		insns.add(new VarInsnNode(ALOAD, 1)); // the player
-		insns.add(new VarInsnNode(ALOAD, 0));
-		String name = MCPNames.field(MCPNames.F_MY_ENTITY_SRG);
-		String desc = entity.getDescriptor();
-		insns.add(new FieldInsnNode(GETFIELD, clazz.name, name, desc));
-		
-		desc = getMethodDescriptor(VOID_TYPE, entityPlayer, entity);
-		insns.add(new MethodInsnNode(INVOKESTATIC, "de/take_weiland/mods/commons/internal/ASMHooks", "onStartTracking", desc));
 
-		return CodePieces.of(insns);
+		String myEntity = MCPNames.field(MCPNames.F_MY_ENTITY_SRG);
+
+		String methodDesc = getMethodDescriptor(VOID_TYPE, entityPlayer, entity);
+
+		return CodePieces.invokeStatic(ASMHooks.CLASS_NAME, "onStartTracking", methodDesc,
+				CodePieces.of(new VarInsnNode(ALOAD, 1)),
+				CodePieces.getField(clazz.name, myEntity, entity.getDescriptor(), CodePieces.getThis()));
 	}
 
 	private CodeLocation findInsertionHook(MethodNode method) {

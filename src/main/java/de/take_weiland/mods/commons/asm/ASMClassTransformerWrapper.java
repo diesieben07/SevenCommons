@@ -7,7 +7,6 @@ import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.util.CheckClassAdapter;
 
 import java.util.ArrayList;
 
@@ -62,10 +61,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 		}
 
 		if (changed) {
-			ClassWriter c = new ClassWriter(COMPUTE_MAXS);
-			clazz.accept(c);
-			new ClassReader(c.toByteArray()).accept(new CheckClassAdapter(new ClassNode()), 0);
-			ClassWriter cw = new ExtendedClassWriter(COMPUTE_FRAMES | COMPUTE_MAXS);
+			ClassWriter cw = new ExtendedClassWriter(COMPUTE_MAXS | COMPUTE_FRAMES);
 			clazz.accept(cw);
 			return cw.toByteArray();
 		}

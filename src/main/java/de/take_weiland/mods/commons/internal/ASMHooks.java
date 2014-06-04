@@ -26,6 +26,8 @@ import java.io.IOException;
  */
 public final class ASMHooks {
 
+	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/ASMHooks";
+
 	private ASMHooks() { }
 
 	private static final int ZOMBIE_IS_CONVERTING_FLAG = 14;

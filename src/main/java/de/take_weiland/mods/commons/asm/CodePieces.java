@@ -1,13 +1,11 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.InstanceProvider;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -39,6 +37,39 @@ public final class CodePieces {
 			return of(insns.getFirst());
 		} else {
 			return new InsnListCodePiece(insns);
+		}
+	}
+
+	public static CodePiece[] parse(Object... data) {
+		int len = data.length;
+		CodePiece[] result = new CodePiece[len];
+		for (int i = 0; i < len; ++i) {
+			result[i] = parse0(data[i]);
+		}
+		return result;
+	}
+
+	private static CodePiece parse0(Object o) {
+		if (o instanceof CodePiece) {
+			return (CodePiece) o;
+		} else if (o instanceof AbstractInsnNode) {
+			return of((AbstractInsnNode) o);
+		} else if (o instanceof InsnList) {
+			return of((InsnList) o);
+		} else {
+			return constant(o);
+		}
+	}
+
+	public static CodePiece concat(CodePiece... pieces) {
+		if (pieces.length == 0) {
+			return of();
+		} else {
+			CodePiece result = pieces[0];
+			for (int i = 1, len = pieces.length; i < len; ++i) {
+				result = result.append(pieces[i]);
+			}
+			return result;
 		}
 	}
 
@@ -140,24 +171,13 @@ public final class CodePieces {
 		clazz.fields.add(field);
 		clazz.methods.add(method);
 
-		InsnList call = new InsnList();
-		loadInstance.appendTo(call);
-		call.add(new MethodInsnNode(invokeOp, clazz.name, method.name, method.desc));
-		return of(call);
+		return invoke(invokeOp, clazz.name, method.name, method.desc, loadInstance);
 	}
 
-	public static CodePiece cacheLocal(MethodNode method, Type type, CodePiece code) {
-		int idx = 0;
-		Iterator<VarInsnNode> it = Iterators.filter(method.instructions.iterator(), VarInsnNode.class);
-		while (it.hasNext()) {
-			VarInsnNode varInsn = it.next();
-			idx = Math.max(idx, varInsn.var);
-		}
-		for (LocalVariableNode localVar : method.localVariables) {
-			idx = Math.max(idx, localVar.index);
-		}
-
-		ASMVariable theCache = ASMVariables.of(new LocalVariableNode(null, type.getDescriptor(), null, null, null, ++idx));
+	public static CodePiece cacheLocal(MethodNode method, Type type, CodePiece code, int varIndex) {
+		LocalVariableNode var = new LocalVariableNode(null, type.getDescriptor(), null, null, null, varIndex);
+		ASMVariable theCache = ASMVariables.of(var);
+		theCache.set(constantNull()).prependTo(method.instructions);
 
 		return isNull(theCache.get())
 				.ifTrue(theCache.set(code))
@@ -183,27 +203,23 @@ public final class CodePieces {
 
 			@Override
 			public CodePiece doIfElse(CodePiece onTrue, CodePiece onFalse) {
-				InsnList insns = new InsnList();
-				conditionArgs.appendTo(insns);
 				LabelNode isTrue = new LabelNode();
 				LabelNode after = new LabelNode();
-				insns.add(new JumpInsnNode(opcode, isTrue));
-				onFalse.appendTo(insns);
-				insns.add(new JumpInsnNode(GOTO, after));
-				insns.add(isTrue);
-				onTrue.appendTo(insns);
-				insns.add(after);
-				return of(insns);
+				return conditionArgs
+						.append(new JumpInsnNode(opcode, isTrue))
+						.append(onFalse)
+						.append(new JumpInsnNode(GOTO, after))
+						.append(isTrue)
+						.append(onTrue)
+						.append(after);
 			}
 
 			private CodePiece make(CodePiece code, int opcode) {
-				InsnList insns = new InsnList();
-				conditionArgs.appendTo(insns);
 				LabelNode after = new LabelNode();
-				insns.add(new JumpInsnNode(opcode, after));
-				code.appendTo(insns);
-				insns.add(after);
-				return of(insns);
+				return conditionArgs
+						.append(new JumpInsnNode(opcode, after))
+						.append(code)
+						.append(after);
 			}
 		};
 	}
@@ -226,11 +242,11 @@ public final class CodePieces {
 			case Type.CHAR:
 				return makeCondition(a.append(b), IF_ICMPEQ, IF_ICMPNE);
 			case Type.LONG:
-				return makeCondition(a.append(b).append(ofOpcode(LCMP)));
+				return makeCondition(a.append(b).append(ofOpcode(LCMP)), IFEQ, IFNE);
 			case Type.FLOAT:
-				return makeCondition(a.append(b).append(ofOpcode(FCMPL)));
+				return makeCondition(a.append(b).append(ofOpcode(FCMPL)), IFEQ, IFNE);
 			case Type.DOUBLE:
-				return makeCondition(a.append(b).append(ofOpcode(DCMPL)));
+				return makeCondition(a.append(b).append(ofOpcode(DCMPL)), IFEQ, IFNE);
 			case Type.OBJECT:
 				if (!useEquals) {
 					return makeCondition(a.append(b), IF_ACMPEQ, IF_ACMPNE);
@@ -262,14 +278,43 @@ public final class CodePieces {
 		}
 	}
 
+	public static CodePiece getField(ClassNode clazz, FieldNode field, CodePiece instance) {
+		checkArgument((field.access & ACC_STATIC) != ACC_STATIC, "No instance needed for static field");
+		return instance.append(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
+	}
+
+	public static CodePiece getField(ClassNode clazz, FieldNode field) {
+		checkArgument((field.access & ACC_STATIC) == ACC_STATIC, "Instance needed for non-static field");
+		return of(new FieldInsnNode(GETSTATIC, clazz.name, field.name, field.desc));
+	}
+
+	public static CodePiece getField(String clazz, String field, Type type, CodePiece instance) {
+		return getField(clazz, field, type.getDescriptor(), instance);
+	}
+
+	public static CodePiece getField(String clazz, String field, Class<?> type, CodePiece instance) {
+		return getField(clazz, field, Type.getDescriptor(type), instance);
+	}
+
+	public static CodePiece getField(String clazz, String field, String desc, CodePiece instance) {
+		return instance.append(new FieldInsnNode(GETFIELD, clazz, field, desc));
+	}
+
+	public static CodePiece getField(String clazz, String field, Type type) {
+		return getField(clazz, field, type.getDescriptor());
+	}
+
+	public static CodePiece getField(String clazz, String field, Class<?> type) {
+		return getField(clazz, field, Type.getDescriptor(type));
+	}
+
+	public static CodePiece getField(String clazz, String field, String desc) {
+		return of(new FieldInsnNode(GETSTATIC, clazz, field, desc));
+	}
+
 	public static CodePiece invokeStatic(String clazz, String method, String desc, CodePiece... args) {
 		checkArgument(args.length == Type.getArgumentTypes(desc).length, "argument count mismatch");
-		InsnList insns = new InsnList();
-		for (CodePiece arg : args) {
-			arg.appendTo(insns);
-		}
-		insns.add(new MethodInsnNode(INVOKESTATIC, clazz, method, desc));
-		return of(insns);
+		return invoke(INVOKESTATIC, clazz, method, desc, args);
 	}
 
 	public static CodePiece invoke(int invokeOpcode, String clazz, String method, String desc, CodePiece... args) {
@@ -277,13 +322,7 @@ public final class CodePieces {
 		int reqArgs = ASMUtils.argumentCount(desc) + (isStatic ? 0 : 1);
 		checkArgument(args.length == reqArgs, "Argument count mismatch");
 
-		InsnList insns = new InsnList();
-		for (CodePiece arg : args) {
-			arg.appendTo(insns);
-		}
-
-		insns.add(new MethodInsnNode(invokeOpcode, clazz, method, desc));
-		return of(insns);
+		return concat(args).append(new MethodInsnNode(invokeOpcode, clazz, method, desc));
 	}
 
 	public static CodePiece invoke(ClassNode clazz, MethodNode method, CodePiece... args) {
@@ -292,6 +331,12 @@ public final class CodePieces {
 		boolean isInterface = (clazz.access & ACC_INTERFACE) == ACC_INTERFACE;
 		int opcode = isStatic ? INVOKESTATIC : (isPrivate ? INVOKESPECIAL : (isInterface ? INVOKEINTERFACE : INVOKEVIRTUAL));
 		return invoke(opcode, clazz.name, method.name, method.desc, args);
+	}
+
+	public static CodePiece invokeSuper(ClassNode clazz, MethodNode method, CodePiece... args) {
+		checkArgument((method.access & ACC_STATIC) != ACC_STATIC, "Cannot call super on static method");
+		checkArgument((method.access & ACC_PRIVATE) != ACC_PRIVATE, "Cannot call super on private method");
+		return invoke(INVOKESPECIAL, clazz.superName, method.name, method.desc, args);
 	}
 
 	public static CodePiece instantiate(Class<?> c) {
@@ -316,14 +361,10 @@ public final class CodePieces {
 
 	public static CodePiece instantiate(String internalName, Type[] argTypes, CodePiece... args) {
 		checkArgument(args.length == argTypes.length, "parameter list length mismatch");
-		InsnList insns = new InsnList();
-		insns.add(new TypeInsnNode(NEW, internalName));
-		insns.add(new InsnNode(DUP));
-		for (CodePiece arg : args) {
-			arg.appendTo(insns);
-		}
-		insns.add(new MethodInsnNode(INVOKESPECIAL, internalName, "<init>", getMethodDescriptor(VOID_TYPE, argTypes)));
-		return of(insns);
+		return of(new TypeInsnNode(NEW, internalName))
+				.append(new InsnNode(DUP))
+				.append(concat(args))
+				.append(new MethodInsnNode(INVOKESPECIAL, internalName, "<init>", getMethodDescriptor(VOID_TYPE, argTypes)));
 	}
 
 	public static CodePiece obtainInstance(ClassNode callingClass, ClassNode targetClass) {
@@ -362,6 +403,18 @@ public final class CodePieces {
 
 	public static CodePiece castTo(String internalName) {
 		return of(new TypeInsnNode(CHECKCAST, internalName));
+	}
+
+	public static CodePiece castTo(Class<?> c, CodePiece code) {
+		return castTo(Type.getInternalName(c), code);
+	}
+
+	public static CodePiece castTo(Type type, CodePiece code) {
+		return castTo(type.getInternalName(), code);
+	}
+
+	public static CodePiece castTo(String internalName, CodePiece code) {
+		return code.append(new TypeInsnNode(CHECKCAST, internalName));
 	}
 
 	private static CodePiece thisLoader;
@@ -492,29 +545,29 @@ public final class CodePieces {
 	}
 
 	private static CodePiece ofArray(Object arr) {
-		InsnList insns = new InsnList();
 		Type compType = Type.getType(arr.getClass().getComponentType());
 
 		int len = Array.getLength(arr);
 
-		insns.add(loadInt(len));
+		CodePiece result = constant(len);
 
 		if (ASMUtils.isPrimitive(compType)) {
-			insns.add(new IntInsnNode(NEWARRAY, toArrayType(compType)));
+			result = result.append(new IntInsnNode(NEWARRAY, toArrayType(compType)));
 		} else {
-			insns.add(new TypeInsnNode(ANEWARRAY, compType.getInternalName()));
+			result = result.append(new TypeInsnNode(ANEWARRAY, compType.getInternalName()));
 		}
 
 		int storeOpcode = compType.getOpcode(IASTORE);
 
 		for (int i = 0; i < len; ++i) {
-			insns.add(new InsnNode(DUP));
-			insns.add(loadInt(i));
-			constant(Array.get(arr, i));
-			insns.add(new InsnNode(storeOpcode));
+			result = result
+					.append(new InsnNode(DUP))
+					.append(constant(i))
+					.append(constant(Array.get(arr, i)))
+					.append(new InsnNode(storeOpcode));
 		}
 
-		return of(insns);
+		return result;
 	}
 
 	private static int toArrayType(Type type) {

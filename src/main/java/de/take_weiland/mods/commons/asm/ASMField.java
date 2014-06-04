@@ -24,33 +24,22 @@ class ASMField extends ClassBoundASMVariable {
 	@Override
 	public CodePiece get() {
 		if (getCache == null) {
-			InsnList insns = new InsnList();
-			int getOp;
 			if (!isStatic()) {
-				instance.appendTo(insns);
-				getOp = GETFIELD;
+				getCache = instance.append(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
 			} else {
-				getOp = GETSTATIC;
+				getCache = CodePieces.of(new FieldInsnNode(GETSTATIC, clazz.name, field.name, field.desc));
 			}
-			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
-			getCache = CodePieces.of(insns);
 		}
 		return getCache;
 	}
 
 	@Override
 	public CodePiece set(CodePiece loadValue) {
-		InsnList insns = new InsnList();
-		int setOp;
-		if (!isStatic()) {
-			instance.appendTo(insns);
-			setOp = PUTFIELD;
-		} else {
-			setOp = PUTSTATIC;
-		}
-		loadValue.appendTo(insns);
-		insns.add(new FieldInsnNode(setOp, clazz.name, field.name, field.desc));
-		return CodePieces.of(insns);
+		boolean isStatic = isStatic();
+		CodePiece result = loadValue
+				.append(new FieldInsnNode(isStatic ? PUTSTATIC : PUTFIELD, clazz.name, field.name, field.desc));
+
+		return isStatic ? result : instance.append(result);
 	}
 
 	@Override

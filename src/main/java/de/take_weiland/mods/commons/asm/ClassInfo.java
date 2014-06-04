@@ -262,22 +262,6 @@ public abstract class ClassInfo {
 
 	public abstract MethodInfo getMethod(String method, String desc);
 
-	public MethodInfo unboundMethod(String method, String desc) {
-		return unboundMethod(method, desc, ACC_PUBLIC);
-	}
-
-	public MethodInfo unboundStaticMethod(String method, String desc) {
-		return unboundStaticMethod(method, desc, ACC_PUBLIC | ACC_STATIC);
-	}
-
-	public MethodInfo unboundMethod(String method, String desc, int modifiers) {
-		return MethodInfo.unbound(internalName(), method, desc, modifiers);
-	}
-
-	public MethodInfo unboundStaticMethod(String method, String desc, int modifiers) {
-		return unboundMethod(method, desc, modifiers | ACC_STATIC);
-	}
-
 	private static class ClassInfoLoader extends CacheLoader<String, ClassInfo> {
 
 		@Override

@@ -14,6 +14,8 @@ import java.lang.reflect.Array;
  */
 public final class NBTASMHooks {
 
+	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/NBTASMHooks";
+
 	public static void putInto(NBTTagCompound into, String key, NBTBase value) {
 		into.setTag(key, value);
 	}

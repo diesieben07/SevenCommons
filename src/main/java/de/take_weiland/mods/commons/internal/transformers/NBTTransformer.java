@@ -56,22 +56,24 @@ public class NBTTransformer {
 		// this is needed because it is basically impossible to find all the possible exitpoints
 		// (return, throw, etc.) of the method, which we would need to make sure our code always gets executed
 		// instead we rename the present method and call it instead
-		MethodInfo presentReadMethod = classInfo.getMethod(type.getNbtRead());
+		MethodNode presentReadMethod = ASMUtils.findMethod(clazz, type.getNbtRead());
 		if (presentReadMethod != null) {
-			MethodNode methodNode = presentReadMethod.asmNode();
-			methodNode.name = "_sc$renamedNbtRead";
-			methodNode.access = (methodNode.access & ~(ACC_PUBLIC | ACC_PROTECTED)) | ACC_PRIVATE;
+			presentReadMethod.name = "_sc$renamedNbtRead";
+			presentReadMethod.access = (presentReadMethod.access & ~(ACC_PUBLIC | ACC_PROTECTED)) | ACC_PRIVATE;
 
-			presentReadMethod.callOnThisWith(new VarInsnNode(ALOAD, 1)).appendTo(read);
+			CodePieces.invoke(clazz, presentReadMethod,
+					CodePieces.getThis(),
+					CodePieces.of(new VarInsnNode(ALOAD, 1))).appendTo(read);
 		}
 
-		MethodInfo presentWriteMethod = classInfo.getMethod(type.getNbtWrite());
+		MethodNode presentWriteMethod = ASMUtils.findMethod(clazz, type.getNbtWrite());
 		if (presentWriteMethod != null) {
-			MethodNode methodNode = presentWriteMethod.asmNode();
-			methodNode.name = "_sc$renamedNbtWrite";
-			methodNode.access = (methodNode.access & ~(ACC_PUBLIC | ACC_PROTECTED)) | ACC_PRIVATE;
+			presentWriteMethod.name = "_sc$renamedNbtWrite";
+			presentWriteMethod.access = (presentWriteMethod.access & ~(ACC_PUBLIC | ACC_PROTECTED)) | ACC_PRIVATE;
 
-			presentWriteMethod.callOnThisWith(new VarInsnNode(ALOAD, 1)).appendTo(write);
+			CodePieces.invoke(clazz, presentWriteMethod,
+					CodePieces.getThis(),
+					CodePieces.of(new VarInsnNode(ALOAD, 1))).appendTo(write);
 		}
 
 		methods.add(readMethod);
@@ -84,28 +86,30 @@ public class NBTTransformer {
 		boolean[] callSuper = type.shouldCallSuper(classInfo, presentReadMethod != null, presentWriteMethod != null);
 
 		if (callSuper[READ]) {
-			insertSuperCall(classInfo, read, type.getNbtRead());
+			insertSuperCall(clazz, read, type.getNbtRead());
 		}
 
 		if (callSuper[WRITE]) {
-			insertSuperCall(classInfo, write, type.getNbtWrite());
+			insertSuperCall(clazz, write, type.getNbtWrite());
 		}
 
 		for (ASMVariable variable : variables) {
 			AnnotationNode ann = variable.getterAnnotation(ToNbt.class);
 			String propName = ASMUtils.getAnnotationProperty(ann, "value", variable.name());
 
-			CodePiece nbtValue = getFromMethod.callWith(
-					new VarInsnNode(ALOAD, 1),
-					propName
-			);
+			CodePiece nbtValue = CodePieces.invokeStatic(
+					NBTASMHooks.CLASS_NAME,	"getFrom", ASMUtils.getMethodDescriptor(NBTBase.class, NBTTagCompound.class, String.class),
+					CodePieces.of(new VarInsnNode(ALOAD, 1)), CodePieces.constant(propName));
+
 
 			ConvertInfo info = ConvertType.get(variable).createInfo(variable, nbtValue);
 			info.convert().appendTo(write);
 
-			putIntoMethod.callWith(
-					new VarInsnNode(ALOAD, 1),
-					propName,
+			CodePieces.invokeStatic(
+					NBTASMHooks.CLASS_NAME, "putInto",
+					ASMUtils.getMethodDescriptor(void.class, NBTTagCompound.class, String.class, NBTBase.class),
+					CodePieces.of(new VarInsnNode(ALOAD, 1)),
+					CodePieces.constant(propName),
 					info.convert()).appendTo(write);
 
 			variable.set(info.get()).appendTo(read);
@@ -116,9 +120,11 @@ public class NBTTransformer {
 
 	}
 
-	private static void insertSuperCall(ClassInfo clazz, InsnList insns, String methodName) {
-		clazz.getMethod(methodName)
-				.callSuperWith(new VarInsnNode(ALOAD, 1)).appendTo(insns);
+	private static void insertSuperCall(ClassNode clazz, InsnList insns, String methodName) {
+		CodePieces.invokeSuper(clazz,
+				ASMUtils.findMethod(clazz, methodName),
+				CodePieces.getThis(),
+				CodePieces.of(new VarInsnNode(ALOAD, 1))).appendTo(insns);
 	}
 
 	private static ClassType findType(ClassInfo classInfo) {
@@ -358,13 +364,14 @@ public class NBTTransformer {
 		}
 
 		CodePiece convert() {
-			return nbtASMHooks.getMethod(convertMethod, convertDesc).callWith(convertArgs);
+			return CodePieces.invokeStatic(NBTASMHooks.CLASS_NAME, convertMethod, convertDesc,
+					CodePieces.parse(convertArgs));
 		}
 
 		CodePiece get() {
-			CodePiece piece = nbtASMHooks.getMethod(getMethod, getDesc).callWith(getArgs);
+			CodePiece piece = CodePieces.invokeStatic(NBTASMHooks.CLASS_NAME, getMethod, getDesc, CodePieces.parse(convertArgs));
 			if (cast != null) {
-				return piece.append(CodePieces.castTo(cast));
+				return CodePieces.castTo(cast, piece);
 			} else {
 				return piece;
 			}

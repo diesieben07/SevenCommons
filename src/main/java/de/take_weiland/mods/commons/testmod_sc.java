@@ -55,7 +55,6 @@ public class testmod_sc {
 		@Sync
 		private long foobar2;
 
-		@Sync(syncer = TestSyncer.class)
 		private String aString;
 
 		public int getFoobar() {

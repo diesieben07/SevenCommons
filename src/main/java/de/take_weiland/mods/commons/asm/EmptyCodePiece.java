@@ -44,6 +44,16 @@ enum EmptyCodePiece implements CodePiece {
 	}
 
 	@Override
+	public CodePiece append(AbstractInsnNode node) {
+		return CodePieces.of(node);
+	}
+
+	@Override
+	public CodePiece append(InsnList insns) {
+		return CodePieces.of(insns);
+	}
+
+	@Override
 	public CodePiece append(CodePiece other) {
 		return other;
 	}
@@ -52,6 +62,17 @@ enum EmptyCodePiece implements CodePiece {
 	public CodePiece prepend(CodePiece other) {
 		return other;
 	}
+
+	@Override
+	public CodePiece prepend(AbstractInsnNode node) {
+		return CodePieces.of(node);
+	}
+
+	@Override
+	public CodePiece prepend(InsnList insns) {
+		return CodePieces.of(insns);
+	}
+
 
 	@Override
 	public int size() {

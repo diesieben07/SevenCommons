@@ -111,7 +111,27 @@ public abstract class AbstractCodePiece implements CodePiece {
 	}
 
 	@Override
+	public CodePiece append(AbstractInsnNode node) {
+		return append(CodePieces.of(node));
+	}
+
+	@Override
+	public CodePiece append(InsnList insns) {
+		return append(CodePieces.of(insns));
+	}
+
+	@Override
 	public final CodePiece prepend(CodePiece other) {
 		return other.append(this);
+	}
+
+	@Override
+	public CodePiece prepend(AbstractInsnNode node) {
+		return CodePieces.of(node).append(this);
+	}
+
+	@Override
+	public CodePiece prepend(InsnList insns) {
+		return CodePieces.of(insns).append(this);
 	}
 }

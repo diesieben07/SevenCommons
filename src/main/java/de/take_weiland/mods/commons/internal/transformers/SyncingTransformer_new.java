@@ -153,10 +153,14 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		MethodNode syncMethod = new MethodNode(ACC_PRIVATE, "_sc$doSync", Type.getMethodDescriptor(Type.VOID_TYPE), null, null);
 		clazz.methods.add(syncMethod);
 		InsnList insns = syncMethod.instructions;
+		LabelNode start = new LabelNode();
+		LabelNode end = new LabelNode();
+		insns.add(start);
 
 		CodePiece packetBuilderCache = CodePieces.cacheLocal(syncMethod,
 				Type.getType(PacketBuilder.class),
-				CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.CREATE_BUILDER, Type.getMethodDescriptor(Type.getType(PacketBuilder.class))));
+				CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.CREATE_BUILDER, Type.getMethodDescriptor(Type.getType(PacketBuilder.class))),
+				1);
 
 		for (int i = 0, len = elements.size(); i < len; i++) {
 			SyncedElement element = elements.get(i);
@@ -169,9 +173,10 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			CodePiece updateCompanion = element.companion.set(element.variable.get());
 
 			element.syncer.equals(element.companion.get(), element.variable.get())
-					.ifFalse(writeIndex.append(writeData).append(updateCompanion))
+					.ifFalse(writeData)
 					.appendTo(insns);
 		}
+		insns.add(end);
 		insns.add(new InsnNode(RETURN));
 
 //		Iterator<AbstractInsnNode> it = insns.iterator();
@@ -272,9 +277,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			String name = SyncASMHooks.WRITE_INTEGRATED;
 			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, typeToSync, Type.getType(WritableDataBuf.class));
 
-			insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
-
-			return CodePieces.of(insns);
+			return CodePieces.invokeStatic(owner, name, desc, newValue, packetBuilder);
 		}
 
 		@Override
@@ -282,31 +285,13 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			return CodePieces.equal(oldValue, newValue, typeToSync, true);
 		}
 
-		private static void doCompare(int compareOp, InsnList insns) {
-			LabelNode notEqual = new LabelNode();
-			LabelNode after = new LabelNode();
-			insns.add(new InsnNode(compareOp));
-			insns.add(new JumpInsnNode(IFNE, notEqual));
-			insns.add(new InsnNode(ICONST_1));
-			insns.add(new JumpInsnNode(GOTO, after));
-			insns.add(notEqual);
-			insns.add(new InsnNode(ICONST_0));
-			insns.add(after);
-		}
-
 		@Override
 		CodePiece read(CodePiece oldValue, CodePiece packetBuilder) {
-			InsnList insns = new InsnList();
-
-			packetBuilder.appendTo(insns);
-
 			String owner = SyncASMHooks.CLASS_NAME;
 			String name = String.format(SyncASMHooks.READ_PRIMITIVE, typeToSync.getClassName());
 			String desc = Type.getMethodDescriptor(typeToSync, Type.getType(DataBuf.class));
 
-			insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
-
-			return CodePieces.of(insns);
+			return CodePieces.invokeStatic(owner, name, desc, packetBuilder);
 		}
 	}
 
@@ -322,53 +307,38 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 		@Override
 		ASMCondition equals(CodePiece oldValue, CodePiece newValue) {
-			InsnList insns = new InsnList();
-			syncer.appendTo(insns);
-			newValue.appendTo(insns);
-			oldValue.appendTo(insns);
-
 			String owner = TypeSyncer.CLASS_NAME;
 			String name = TypeSyncer.METHOD_EQUAL;
 			Type objectType = Type.getType(Object.class);
 			String desc = Type.getMethodDescriptor(Type.BOOLEAN_TYPE, objectType, objectType);
 
-			insns.add(new MethodInsnNode(INVOKEINTERFACE, owner, name, desc));
-			return CodePieces.makeCondition(CodePieces.of(insns), IFNE, IFEQ);
+			CodePiece invoke = CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, syncer, newValue, oldValue);
+
+			return CodePieces.makeCondition(invoke, IFNE, IFEQ);
 		}
 
 		@Override
 		CodePiece write(CodePiece newValue, CodePiece packetBuilder) {
-			InsnList insns = new InsnList();
-			syncer.appendTo(insns);
-			newValue.appendTo(insns);
-			packetBuilder.appendTo(insns);
-
 			String owner = TypeSyncer.CLASS_NAME;
 			String name = TypeSyncer.METHOD_WRITE;
 			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), Type.getType(WritableDataBuf.class));
 
-			insns.add(new MethodInsnNode(INVOKEINTERFACE, owner, name, desc));
-			return CodePieces.of(insns);
+			return CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, syncer, newValue, packetBuilder);
 		}
 
 		@Override
 		CodePiece read(CodePiece oldValue, CodePiece packetBuilder) {
-			InsnList insns = new InsnList();
-
-			syncer.appendTo(insns);
-			oldValue.appendTo(insns);
-			packetBuilder.appendTo(insns);
-
 			String owner = TypeSyncer.CLASS_NAME;
 			String name = TypeSyncer.METHOD_READ;
 			Type objectType = Type.getType(Object.class);
 			String desc = Type.getMethodDescriptor(objectType, objectType, Type.getType(DataBuf.class));
 
-			insns.add(new MethodInsnNode(INVOKEINTERFACE, owner, name, desc));
+			CodePiece invoke = CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, syncer, oldValue, packetBuilder);
 			if (!ASMUtils.isPrimitive(actualType) || !actualType.equals(objectType)) {
-				insns.add(new TypeInsnNode(CHECKCAST, actualType.getInternalName()));
+				return CodePieces.castTo(actualType, invoke);
+			} else {
+				return invoke;
 			}
-			return CodePieces.of(insns);
 		}
 	}
 
@@ -388,15 +358,11 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 		@Override
 		CodePiece send(CodePiece simplePacket) {
-			InsnList insns = new InsnList();
-			simplePacket.appendTo(insns);
-
 			String owner = SyncASMHooks.CLASS_NAME;
 			String name = String.format(SyncASMHooks.SEND_PACKET, type.getSimpleName());
 			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(SimplePacket.class));
 
-			insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
-			return CodePieces.of(insns);
+			return CodePieces.invokeStatic(owner, name, desc, simplePacket);
 		}
 	}
 
@@ -410,17 +376,12 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 		@Override
 		CodePiece send(CodePiece simplePacket) {
-			InsnList insns = new InsnList();
-			simplePacket.appendTo(insns);
-			customTarget.appendTo(insns);
-
 			String owner = SimplePacket.CLASS_NAME;
 			String name = SimplePacket.METHOD_SEND_TO;
 			String desc = Type.getMethodDescriptor(Type.getType(SimplePacket.class), Type.getType(PacketTarget.class));
 
-			insns.add(new MethodInsnNode(INVOKEINTERFACE, owner, name, desc));
-			insns.add(new InsnNode(POP));
-			return CodePieces.of(insns);
+			return CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, customTarget, simplePacket)
+					.append(CodePieces.ofOpcode(POP));
 		}
 	}
 

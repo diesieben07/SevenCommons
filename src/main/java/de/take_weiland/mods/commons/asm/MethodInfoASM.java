@@ -29,13 +29,4 @@ class MethodInfoASM extends MethodInfo {
 		return method.access;
 	}
 
-	@Override
-	public boolean isEditable() {
-		return true;
-	}
-
-	@Override
-	public MethodNode asmNode() {
-		return method;
-	}
 }

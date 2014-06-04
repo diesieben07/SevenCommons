@@ -27,9 +27,17 @@ public interface CodePiece {
 
 	void replace(CodeLocation location);
 
+	CodePiece append(AbstractInsnNode node);
+
+	CodePiece append(InsnList insns);
+
 	CodePiece append(CodePiece other);
 
 	CodePiece prepend(CodePiece other);
+
+	CodePiece prepend(AbstractInsnNode node);
+
+	CodePiece prepend(InsnList insns);
 
 	int size();
 
