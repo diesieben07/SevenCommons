@@ -41,7 +41,7 @@ public abstract class AbstractCodePiece implements CodePiece {
 		}
 		Map<LabelNode, LabelNode> labels = labelsPerList.get(list);
 		if (labels == null) {
-			labelsPerList.put(list, (labels = ComputingMap.create(instanceProvider)));
+			labelsPerList.put(list, (labels = ComputingMap.of(instanceProvider)));
 		}
 		return labels;
 	}
