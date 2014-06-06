@@ -5,10 +5,8 @@ package de.take_weiland.mods.commons.asm;
  */
 public interface ASMCondition {
 
-	CodePiece ifTrue(CodePiece code);
+	ASMConditionThenApplied then(CodePiece code);
 
-	CodePiece ifFalse(CodePiece code);
-
-	CodePiece doIfElse(CodePiece onTrue, CodePiece onFalse);
+	ASMConditionElseApplied otherwise(CodePiece code);
 
 }

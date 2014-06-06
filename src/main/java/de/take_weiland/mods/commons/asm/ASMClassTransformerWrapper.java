@@ -6,11 +6,11 @@ import com.google.common.collect.Lists;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.ArrayList;
 
-import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
 
 /**
@@ -61,7 +61,8 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 		}
 
 		if (changed) {
-			ClassWriter cw = new ExtendedClassWriter(COMPUTE_MAXS | COMPUTE_FRAMES);
+			ClassWriter cw = new ExtendedClassWriter(COMPUTE_MAXS);
+			clazz.version = Opcodes.V1_5;
 			clazz.accept(cw);
 			return cw.toByteArray();
 		}

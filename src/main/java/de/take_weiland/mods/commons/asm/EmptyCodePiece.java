@@ -5,12 +5,17 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
+import java.util.Collections;
+import java.util.Iterator;
+
 /**
  * @author diesieben07
  */
 enum EmptyCodePiece implements CodePiece {
 
 	INSTANCE;
+
+
 
 	@Override
 	public InsnList build() {
@@ -79,4 +84,8 @@ enum EmptyCodePiece implements CodePiece {
 		return 0;
 	}
 
+	@Override
+	public Iterator<AbstractInsnNode> iterator() {
+		return Collections.emptyIterator();
+	}
 }

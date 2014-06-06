@@ -9,6 +9,7 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -53,6 +54,11 @@ public abstract class AbstractCodePiece implements CodePiece {
 			map.put(label, (clone = new LabelNode()));
 		}
 		return clone;
+	}
+
+	@Override
+	public Iterator<AbstractInsnNode> iterator() {
+		return build().iterator();
 	}
 
 	@Override
@@ -106,7 +112,7 @@ public abstract class AbstractCodePiece implements CodePiece {
 		if (other instanceof CombinedCodePiece) {
 			return new CombinedCodePiece(ObjectArrays.concat(this, ((CombinedCodePiece) other).pieces));
 		} else {
-			return new CombinedCodePiece(this, other);
+			return new CombinedCodePiece(new CodePiece[] { this, other });
 		}
 	}
 

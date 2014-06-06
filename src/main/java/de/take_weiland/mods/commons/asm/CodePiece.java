@@ -10,7 +10,7 @@ import org.objectweb.asm.tree.InsnList;
  *
  * @author diesieben07
  */
-public interface CodePiece {
+public interface CodePiece extends Iterable<AbstractInsnNode> {
 
 	/**
 	 * <p>Create an InsnList that contains a copy of the instructions in this CodePiece.</p>
@@ -89,28 +89,55 @@ public interface CodePiece {
 
 	/**
 	 * <p>Append the given instruction to this CodePiece.</p>
-	 * <p>The instruction must not be used in any InsnList.</p>
+	 * <p>The instruction must not be used in any InsnList before or after this operation.</p>
 	 * @param node the instruction to append
-	 * @return this, for convenience
+	 * @return a new CodePiece containing first the instructions in this CodePiece and then the given instruction
 	 */
 	CodePiece append(AbstractInsnNode node);
 
 	/**
 	 * <p>Append the given InsnList to this CodePiece.</p>
-	 * <p>The list must not be elsewhere.</p>
-	 * @param node the instruction to append
-	 * @return this, for convenience
+	 * <p>The list must not be used elsewhere before or after this operation.</p>
+	 * @param insns the list to append
+	 * @return a new CodePiece containing first the instructions in this CodePiece and then the instructions in the given InsnList.
 	 */
 	CodePiece append(InsnList insns);
 
+	/**
+	 * <p>Appends the given CodePiece to this CodePiece, leaving this and the other CodePiece intact and usable.</p>
+	 * @param other the CodePiece to append
+	 * @return a new CodePiece containing first the instructions in this CodePiece and then the instructions in the given CodePiece.
+	 */
 	CodePiece append(CodePiece other);
 
+	/**
+	 * <p>Prepends the given CodePiece to this CodePiece, leaving this and the other CodePiece intact and usable.</p>
+	 * <p>This method returns an equivalent result to {@code other.append(this)}</p>
+	 * @param other the CodePiece to prepend
+	 * @return a new CodePiece containing first the instructions in the given CodePiece and then the instructions in this CodePiece
+	 */
 	CodePiece prepend(CodePiece other);
 
+	/**
+	 * <p>Append the given InsnList to this CodePiece.</p>
+	 * <p>The list must not be used elsewhere before or after this operation.</p>
+	 * @param insns the list to append
+	 * @return a new CodePiece containing first the instructions in this CodePiece and then the instructions in the given InsnList.
+	 */
 	CodePiece prepend(AbstractInsnNode node);
 
+	/**
+	 * <p>Prepend the given instruction to this CodePiece.</p>
+	 * <p>The instruction must not be used in any InsnList before or after this operation.</p>
+	 * @param node the instruction to append
+	 * @return a new CodePiece containing first the instructions in this CodePiece and then the given instruction
+	 */
 	CodePiece prepend(InsnList insns);
 
+	/**
+	 * <p>Returns the number of instructions in this CodePiece.</p>
+	 * @return the number of instructions
+	 */
 	int size();
 
 }

@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,27 +31,4 @@ class InsnListCodePiece extends AbstractCodePiece {
 		insns.accept(mv);
 	}
 
-	@Override
-	public CodePiece append(AbstractInsnNode node) {
-		insns.add(node);
-		return this;
-	}
-
-	@Override
-	public CodePiece append(InsnList insns) {
-		this.insns.add(insns);
-		return this;
-	}
-
-	@Override
-	public CodePiece prepend(AbstractInsnNode node) {
-		insns.insert(node);
-		return this;
-	}
-
-	@Override
-	public CodePiece prepend(InsnList insns) {
-		this.insns.insert(insns);
-		return this;
-	}
 }

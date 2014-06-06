@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.asm;
 import de.take_weiland.mods.commons.InstanceProvider;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
+import org.objectweb.asm.util.Printer;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
@@ -10,7 +11,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.*;
+import static org.objectweb.asm.Type.VOID_TYPE;
+import static org.objectweb.asm.Type.getMethodDescriptor;
 
 /**
  * @author diesieben07
@@ -65,11 +67,7 @@ public final class CodePieces {
 		if (pieces.length == 0) {
 			return of();
 		} else {
-			CodePiece result = pieces[0];
-			for (int i = 1, len = pieces.length; i < len; ++i) {
-				result = result.append(pieces[i]);
-			}
-			return result;
+			return new CombinedCodePiece(pieces);
 		}
 	}
 
@@ -179,103 +177,10 @@ public final class CodePieces {
 		ASMVariable theCache = ASMVariables.of(var);
 		theCache.set(constantNull()).prependTo(method.instructions);
 
-		return isNull(theCache.get())
-				.ifTrue(theCache.set(code))
+		return Conditions.ifNull(theCache.get())
+				.then(theCache.set(code))
+				.build()
 				.append(theCache.get());
-	}
-
-	public static ASMCondition makeCondition(CodePiece piece) {
-		return makeCondition(piece, IFNE, IFEQ);
-	}
-
-	public static ASMCondition makeCondition(final CodePiece conditionArgs, final int opcode, final int opcodeNegated) {
-		return new ASMCondition() {
-
-			@Override
-			public CodePiece ifTrue(CodePiece code) {
-				return make(code, opcodeNegated);
-			}
-
-			@Override
-			public CodePiece ifFalse(CodePiece code) {
-				return make(code, opcode);
-			}
-
-			@Override
-			public CodePiece doIfElse(CodePiece onTrue, CodePiece onFalse) {
-				LabelNode isTrue = new LabelNode();
-				LabelNode after = new LabelNode();
-				return conditionArgs
-						.append(new JumpInsnNode(opcode, isTrue))
-						.append(onFalse)
-						.append(new JumpInsnNode(GOTO, after))
-						.append(isTrue)
-						.append(onTrue)
-						.append(after);
-			}
-
-			private CodePiece make(CodePiece code, int opcode) {
-				LabelNode after = new LabelNode();
-				return conditionArgs
-						.append(new JumpInsnNode(opcode, after))
-						.append(code)
-						.append(after);
-			}
-		};
-	}
-
-	public static ASMCondition isNull(final CodePiece value) {
-		return makeCondition(value, IFNULL, IFNONNULL);
-	}
-
-	public static ASMCondition equal(CodePiece a, CodePiece b, Type type) {
-		return equal(a, b, type, false);
-	}
-
-	public static ASMCondition equal(CodePiece a, CodePiece b, Type type, boolean useEquals) {
-		switch (type.getSort()) {
-			case Type.BOOLEAN:
-				return makeCondition(a.append(b).append(ofOpcode(IXOR)), IFEQ, IFNE);
-			case Type.BYTE:
-			case Type.SHORT:
-			case Type.INT:
-			case Type.CHAR:
-				return makeCondition(a.append(b), IF_ICMPEQ, IF_ICMPNE);
-			case Type.LONG:
-				return makeCondition(a.append(b).append(ofOpcode(LCMP)), IFEQ, IFNE);
-			case Type.FLOAT:
-				return makeCondition(a.append(b).append(ofOpcode(FCMPL)), IFEQ, IFNE);
-			case Type.DOUBLE:
-				return makeCondition(a.append(b).append(ofOpcode(DCMPL)), IFEQ, IFNE);
-			case Type.OBJECT:
-				if (!useEquals) {
-					return makeCondition(a.append(b), IF_ACMPEQ, IF_ACMPNE);
-				} else {
-					Type objectType = Type.getType(Object.class);
-					return makeCondition(
-							invokeStatic("com/google/common/base/Objects",
-									"equal",
-									getMethodDescriptor(BOOLEAN_TYPE, objectType, objectType),
-									a, b));
-				}
-			case Type.ARRAY:
-				if (!useEquals) {
-					return makeCondition(a.append(b), IF_ACMPEQ, IF_ACMPNE);
-				} else {
-					String mName = type.getDimensions() == 1 ? "equals" : "deepEquals";
-					String desc = type.getDimensions() == 1 ?
-							getMethodDescriptor(BOOLEAN_TYPE, type, type) :
-							getMethodDescriptor(BOOLEAN_TYPE, getType(Object[].class), getType(Object[].class));
-
-					return makeCondition(
-							invokeStatic("java/util/Arrays",
-									mName,
-									desc,
-									a, b));
-				}
-			default:
-				throw new IllegalArgumentException("Invalid Type for comparision!");
-		}
 	}
 
 	public static CodePiece getField(ClassNode clazz, FieldNode field, CodePiece instance) {
@@ -321,6 +226,28 @@ public final class CodePieces {
 		boolean isStatic = invokeOpcode == INVOKESTATIC;
 		int reqArgs = ASMUtils.argumentCount(desc) + (isStatic ? 0 : 1);
 		checkArgument(args.length == reqArgs, "Argument count mismatch");
+
+		System.out.println("invoking " + clazz + "/" + method);
+
+		if (args.length > 0) {
+			System.out.println(args.length);
+			for (int i = 0; i < args.length; i++) {
+				CodePiece arg = args[i];
+				System.out.println(" == " + i + " == ");
+				for (AbstractInsnNode node : arg) {
+					int opcode = node.getOpcode();
+					System.out.println(node.getClass().getSimpleName() + " {" + (opcode >= 0 ? Printer.OPCODES[opcode] : opcode) + "}");
+				}
+			}
+
+			System.out.println(" == concat == ");
+
+			for (AbstractInsnNode node : concat(args)) {
+				int opcode = node.getOpcode();
+				System.out.println(node.getClass().getSimpleName() + " {" + (opcode >= 0 ? Printer.OPCODES[opcode] : opcode) + "}");
+			}
+//			System.exit(0);
+		}
 
 		return concat(args).append(new MethodInsnNode(invokeOpcode, clazz, method, desc));
 	}

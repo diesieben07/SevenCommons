@@ -14,6 +14,7 @@ import de.take_weiland.mods.commons.sync.TypeSyncer;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
+import org.objectweb.asm.util.Printer;
 
 import java.io.PrintStream;
 import java.util.List;
@@ -166,24 +167,40 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			SyncedElement element = elements.get(i);
 			CodePiece writeIndex = CodePieces.invokeStatic(
 					SyncASMHooks.CLASS_NAME, SyncASMHooks.WRITE_INDEX,
-					ASMUtils.getMethodDescriptor(void.class, WritableDataBuf.class, int.class),
+					Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(WritableDataBuf.class), Type.INT_TYPE),
 					packetBuilderCache, CodePieces.constant(i));
 
 			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderCache);
 			CodePiece updateCompanion = element.companion.set(element.variable.get());
 
-			element.syncer.equals(element.companion.get(), element.variable.get())
-					.ifFalse(writeData)
-					.appendTo(insns);
+			CodePiece allDo = writeData;
+			System.out.println("== ALL ==");
+
+			for (AbstractInsnNode node : allDo) {
+				int opcode = node.getOpcode();
+				System.out.println(node.getClass().getSimpleName() + " {" + (opcode >= 0 ? Printer.OPCODES[opcode] : opcode) + "}");
+			}
+
+			CodePiece condition = element.syncer.equals(element.companion.get(), element.variable.get())
+					.otherwise(allDo)
+					.build();
+
+			System.out.println("== Condition ==");
+
+			for (AbstractInsnNode node : condition) {
+				int opcode = node.getOpcode();
+				System.out.println(node.getClass().getSimpleName() + " {" + (opcode >= 0 ? Printer.OPCODES[opcode] : opcode) + "}");
+			}
+
+//			System.exit(0);
+
+//			writeIndex.appendTo(insns);
+			condition.appendTo(insns);
+//			updateCompanion.appendTo(insns);
 		}
 		insns.add(end);
 		insns.add(new InsnNode(RETURN));
 
-//		Iterator<AbstractInsnNode> it = insns.iterator();
-//		while (it.hasNext()) {
-//			AbstractInsnNode node = it.next();
-//			System.out.println(node);
-//		}
 	}
 
 	private static CodePiece obtainInstance(ClassNode clazz, Type packetTargetType) {
@@ -268,21 +285,17 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 		@Override
 		CodePiece write(CodePiece newValue, CodePiece packetBuilder) {
-			InsnList insns = new InsnList();
-
-			newValue.appendTo(insns);
-			packetBuilder.appendTo(insns);
-
 			String owner = SyncASMHooks.CLASS_NAME;
 			String name = SyncASMHooks.WRITE_INTEGRATED;
 			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, typeToSync, Type.getType(WritableDataBuf.class));
 
-			return CodePieces.invokeStatic(owner, name, desc, newValue, packetBuilder);
+			CodePiece invoke = CodePieces.invokeStatic(owner, name, desc, newValue, packetBuilder);
+			return invoke;
 		}
 
 		@Override
 		ASMCondition equals(CodePiece oldValue, CodePiece newValue) {
-			return CodePieces.equal(oldValue, newValue, typeToSync, true);
+			return Conditions.ifEqual(oldValue, newValue, typeToSync, true);
 		}
 
 		@Override
@@ -314,7 +327,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 			CodePiece invoke = CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, syncer, newValue, oldValue);
 
-			return CodePieces.makeCondition(invoke, IFNE, IFEQ);
+			return Conditions.of(invoke, IFNE, IFEQ);
 		}
 
 		@Override

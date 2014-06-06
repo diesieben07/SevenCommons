@@ -13,7 +13,7 @@ class CombinedCodePiece extends AbstractCodePiece {
 	final CodePiece[] pieces;
 	private int sizeCache = -1;
 
-	CombinedCodePiece(CodePiece... pieces) {
+	CombinedCodePiece(CodePiece[] pieces) {
 		this.pieces = pieces;
 	}
 
@@ -59,7 +59,7 @@ class CombinedCodePiece extends AbstractCodePiece {
 
 	@Override
 	public void prependTo(InsnList to) {
-		for (int i = pieces.length - 1; i >= 0; --i) {
+		for (int i = pieces.length - 1; i >= 0; i--) {
 			pieces[i].prependTo(to);
 		}
 	}
@@ -67,8 +67,14 @@ class CombinedCodePiece extends AbstractCodePiece {
 	@Override
 	public CodePiece append(CodePiece other) {
 		if (other instanceof CombinedCodePiece) {
-			return new CombinedCodePiece(ObjectArrays.concat(pieces, ((CombinedCodePiece) other).pieces, CodePiece.class));
+			System.out.println("Concat arrays");
+			CodePiece[] concat = ObjectArrays.concat(pieces, ((CombinedCodePiece) other).pieces, CodePiece.class);
+			System.out.println("len left = " + pieces.length);
+			System.out.println("len right = " + ((CombinedCodePiece) other).pieces.length);
+			System.out.println("len comb = " + concat.length);
+			return new CombinedCodePiece(concat);
 		} else {
+			System.out.println("Concat behind array");
 			return new CombinedCodePiece(ObjectArrays.concat(pieces, other));
 		}
 	}
