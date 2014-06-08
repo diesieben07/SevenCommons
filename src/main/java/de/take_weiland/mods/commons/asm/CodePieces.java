@@ -344,6 +344,8 @@ public final class CodePieces {
 			return constant(((int) o));
 		} else if (o instanceof Long || o instanceof Float || o instanceof Double || o instanceof String || o instanceof Type) {
 			return ofLdc(o);
+		} else if (o instanceof Enum) {
+			return constant((Enum<?>) o);
 		} else if (o instanceof Class) {
 			return constant(((Class<?>) o));
 		} else if (o.getClass().isArray()) {
@@ -412,6 +414,11 @@ public final class CodePieces {
 		return c == null ? constantNull() : ofLdc(Type.getType(c));
 	}
 
+	public static CodePiece constant(Enum<?> e) {
+		Class<? extends Enum<?>> enumClass = e.getDeclaringClass();
+		return getField(Type.getInternalName(enumClass), e.name(), enumClass);
+	}
+
 	public static CodePiece constant(boolean[] arr) {
 		return ofArray(arr);
 	}
@@ -453,25 +460,25 @@ public final class CodePieces {
 
 		int len = Array.getLength(arr);
 
-		CodePiece result = constant(len);
+		CodeBuilder builder = new CodeBuilder();
+		builder.add(loadInt(len));
 
 		if (ASMUtils.isPrimitive(compType)) {
-			result = result.append(new IntInsnNode(NEWARRAY, toArrayType(compType)));
+			builder.add(new IntInsnNode(NEWARRAY, toArrayType(compType)));
 		} else {
-			result = result.append(new TypeInsnNode(ANEWARRAY, compType.getInternalName()));
+			builder.add(new TypeInsnNode(ANEWARRAY, compType.getInternalName()));
 		}
 
 		int storeOpcode = compType.getOpcode(IASTORE);
 
 		for (int i = 0; i < len; ++i) {
-			result = result
-					.append(new InsnNode(DUP))
-					.append(constant(i))
-					.append(constant(Array.get(arr, i)))
-					.append(new InsnNode(storeOpcode));
+			builder.add(new InsnNode(DUP))
+					.add(loadInt(i))
+					.add(constant(Array.get(arr, i)))
+					.add(new InsnNode(storeOpcode));
 		}
 
-		return result;
+		return builder.build();
 	}
 
 	private static int toArrayType(Type type) {
