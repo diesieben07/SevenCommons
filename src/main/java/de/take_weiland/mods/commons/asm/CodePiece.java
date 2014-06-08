@@ -3,6 +3,9 @@ package de.take_weiland.mods.commons.asm;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LabelNode;
+
+import java.util.Map;
 
 /**
  * <p>Represents a piece of Bytecode.</p>
@@ -10,13 +13,7 @@ import org.objectweb.asm.tree.InsnList;
  *
  * @author diesieben07
  */
-public interface CodePiece extends Iterable<AbstractInsnNode> {
-
-	/**
-	 * <p>Create an InsnList that contains a copy of the instructions in this CodePiece.</p>
-	 * @return a new InsnList
-	 */
-	InsnList build();
+public interface CodePiece {
 
 	/**
 	 * <p>Appends the instructions in this CodePiece to the given InsnList.</p>
@@ -33,14 +30,6 @@ public interface CodePiece extends Iterable<AbstractInsnNode> {
 	 * @param to the list to append to
 	 */
 	void prependTo(InsnList to);
-
-	/**
-	 * <p>Lets the given MethodVisitor visit all instructions in this CodePiece.</p>
-	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
-	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>
-	 * @param mv the MethodVisitor to append to
-	 */
-	void appendTo(MethodVisitor mv);
 
 	/**
 	 * <p>Inserts the instructions in this CodePiece after the given location, which must be part of the InsnList.</p>

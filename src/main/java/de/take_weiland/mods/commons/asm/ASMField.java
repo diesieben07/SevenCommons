@@ -25,9 +25,9 @@ class ASMField extends ClassBoundASMVariable {
 	public CodePiece get() {
 		if (getCache == null) {
 			if (!isStatic()) {
-				getCache = instance.append(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
+				return instance.append(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
 			} else {
-				getCache = CodePieces.of(new FieldInsnNode(GETSTATIC, clazz.name, field.name, field.desc));
+				return CodePieces.of(new FieldInsnNode(GETSTATIC, clazz.name, field.name, field.desc));
 			}
 		}
 		return getCache;

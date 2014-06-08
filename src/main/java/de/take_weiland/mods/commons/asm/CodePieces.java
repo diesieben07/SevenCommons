@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.asm;
 import de.take_weiland.mods.commons.InstanceProvider;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
-import org.objectweb.asm.util.Printer;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
@@ -226,28 +225,6 @@ public final class CodePieces {
 		boolean isStatic = invokeOpcode == INVOKESTATIC;
 		int reqArgs = ASMUtils.argumentCount(desc) + (isStatic ? 0 : 1);
 		checkArgument(args.length == reqArgs, "Argument count mismatch");
-
-		System.out.println("invoking " + clazz + "/" + method);
-
-		if (args.length > 0) {
-			System.out.println(args.length);
-			for (int i = 0; i < args.length; i++) {
-				CodePiece arg = args[i];
-				System.out.println(" == " + i + " == ");
-				for (AbstractInsnNode node : arg) {
-					int opcode = node.getOpcode();
-					System.out.println(node.getClass().getSimpleName() + " {" + (opcode >= 0 ? Printer.OPCODES[opcode] : opcode) + "}");
-				}
-			}
-
-			System.out.println(" == concat == ");
-
-			for (AbstractInsnNode node : concat(args)) {
-				int opcode = node.getOpcode();
-				System.out.println(node.getClass().getSimpleName() + " {" + (opcode >= 0 ? Printer.OPCODES[opcode] : opcode) + "}");
-			}
-//			System.exit(0);
-		}
 
 		return concat(args).append(new MethodInsnNode(invokeOpcode, clazz, method, desc));
 	}

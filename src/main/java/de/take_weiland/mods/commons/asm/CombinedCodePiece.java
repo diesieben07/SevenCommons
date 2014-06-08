@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.collect.ObjectArrays;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
@@ -18,64 +16,32 @@ class CombinedCodePiece extends AbstractCodePiece {
 	}
 
 	@Override
-	public InsnList build() {
-		InsnList result = new InsnList();
-		for (CodePiece piece : pieces) {
-			piece.appendTo(result);
-		}
-		return result;
-	}
-
-	@Override
-	public void insertAfter(InsnList into, AbstractInsnNode location) {
-		for (CodePiece piece : pieces) {
-			piece.insertAfter(into, location);
-			location = ASMUtils.getNext(location, piece.size());
-		}
-	}
-
-	@Override
-	public void insertBefore(InsnList into, AbstractInsnNode location) {
-		for (int i = pieces.length - 1; i >= 0; --i) {
-			CodePiece piece = pieces[i];
-			piece.insertBefore(into, location);
-			location = ASMUtils.getPrevious(location, piece.size());
-		}
-	}
-
-	@Override
-	public void appendTo(MethodVisitor mv) {
-		for (CodePiece piece : pieces) {
-			piece.appendTo(mv);
-		}
-	}
-
-	@Override
-	public void appendTo(InsnList to) {
-		for (CodePiece piece : pieces) {
-			piece.appendTo(to);
-		}
-	}
-
-	@Override
-	public void prependTo(InsnList to) {
-		for (int i = pieces.length - 1; i >= 0; i--) {
-			pieces[i].prependTo(to);
-		}
-	}
-
-	@Override
-	public CodePiece append(CodePiece other) {
-		if (other instanceof CombinedCodePiece) {
-			System.out.println("Concat arrays");
-			CodePiece[] concat = ObjectArrays.concat(pieces, ((CombinedCodePiece) other).pieces, CodePiece.class);
-			System.out.println("len left = " + pieces.length);
-			System.out.println("len right = " + ((CombinedCodePiece) other).pieces.length);
-			System.out.println("len comb = " + concat.length);
-			return new CombinedCodePiece(concat);
+	public void insertBefore(InsnList list, AbstractInsnNode location) {
+		if (location == list.getFirst()) {
+			for (int i = pieces.length - 1; i >= 0; --i) {
+				pieces[i].insertBefore(list, list.getFirst());
+			}
 		} else {
-			System.out.println("Concat behind array");
-			return new CombinedCodePiece(ObjectArrays.concat(pieces, other));
+			for (int i = pieces.length - 1; i >= 0; i--) {
+				AbstractInsnNode nodeBefore = location.getPrevious();
+				pieces[i].insertBefore(list, location);
+				location = nodeBefore.getNext();
+			}
+		}
+	}
+
+	@Override
+	public void insertAfter(InsnList list, AbstractInsnNode location) {
+		if (location == list.getLast()) {
+			for (CodePiece piece : pieces) {
+				piece.insertAfter(list, list.getLast());
+			}
+		} else {
+			for (CodePiece piece : pieces) {
+				AbstractInsnNode nodeAfter = location.getNext();
+				piece.insertAfter(list, location);
+				location = nodeAfter.getPrevious();
+			}
 		}
 	}
 

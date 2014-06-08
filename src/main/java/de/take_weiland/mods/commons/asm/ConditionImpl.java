@@ -6,7 +6,7 @@ import org.objectweb.asm.tree.LabelNode;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static org.objectweb.asm.Opcodes.GOTO;
+import static org.objectweb.asm.Opcodes.*;
 
 /**
  * @author diesieben07
@@ -50,13 +50,14 @@ class ConditionImpl implements ASMCondition, ASMConditionElseApplied, ASMConditi
 		if (hasElse && hasThen) {
 			LabelNode after = new LabelNode();
 			LabelNode isFalse = new LabelNode();
-			return conditionArgs
-					.append(new JumpInsnNode(falseOpcode, isFalse))
-					.append(onThen)
-					.append(new JumpInsnNode(GOTO, after))
-					.append(isFalse)
-					.append(onElse)
-					.append(after);
+			return new MixedCombinedCodePiece(
+					conditionArgs,
+					new JumpInsnNode(falseOpcode, isFalse),
+					onThen,
+					new JumpInsnNode(GOTO, after),
+					isFalse,
+					onElse,
+					after);
 		} else if (hasElse) {
 			return end0(trueOpcode, onElse);
 		} else {
@@ -66,10 +67,11 @@ class ConditionImpl implements ASMCondition, ASMConditionElseApplied, ASMConditi
 
 	private CodePiece end0(int invOpcode, CodePiece code) {
 		LabelNode after = new LabelNode();
-		return conditionArgs
-				.append(new JumpInsnNode(invOpcode, after))
-				.append(code)
-				.append(after);
+		return new MixedCombinedCodePiece(
+				conditionArgs,
+				new JumpInsnNode(invOpcode, after),
+				code,
+				after);
 	}
 
 	private static void checkUse(boolean cond) {

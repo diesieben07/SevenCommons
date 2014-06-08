@@ -111,6 +111,7 @@ public final class JavaUtils {
 
 	public static void clear(Iterator<?> it) {
 		while (it.hasNext()) {
+			it.next();
 			it.remove();
 		}
 	}

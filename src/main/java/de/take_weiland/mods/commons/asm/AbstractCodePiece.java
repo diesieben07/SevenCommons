@@ -1,21 +1,20 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.util.ComputingMap;
 import de.take_weiland.mods.commons.util.JavaUtils;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
  * Abstract base class for CodePieces.<br/>
- * At least {@link #build()} must be implemented, but
+ * // TODO
  * {@link #insertBefore(org.objectweb.asm.tree.InsnList, org.objectweb.asm.tree.AbstractInsnNode)},
  * {@link #insertAfter(org.objectweb.asm.tree.InsnList, org.objectweb.asm.tree.AbstractInsnNode)},
  * {@link #appendTo(org.objectweb.asm.tree.InsnList)} and
@@ -27,63 +26,41 @@ import java.util.WeakHashMap;
  */
 public abstract class AbstractCodePiece implements CodePiece {
 
-	private static Map<InsnList, Map<LabelNode, LabelNode>> labelsPerList;
-	private static Function<Object, LabelNode> instanceProvider;
+	private static Map<InsnList, Map<LabelNode, LabelNode>> contexts;
 
-	protected static Map<LabelNode, LabelNode> cloneMapFor(InsnList list) {
-		if (labelsPerList == null) {
-			labelsPerList = new WeakHashMap<>();
-			instanceProvider = new Function<Object, LabelNode>() {
+	protected static Map<LabelNode, LabelNode> persistentContext(InsnList insns) {
+		if (contexts == null) {
+			contexts = new WeakHashMap<>();
+		}
+		Map<LabelNode, LabelNode> context = contexts.get(insns);
+		if (context == null) {
+			contexts.put(insns, (context = Maps.newHashMap()));
+		}
+		return context;
+	}
+
+	private static Function<LabelNode, LabelNode> instanceProvider;
+
+	protected static Map<LabelNode, LabelNode> newContext() {
+		if (instanceProvider == null) {
+			instanceProvider = new Function<LabelNode, LabelNode>() {
 				@Override
-				public LabelNode apply(Object input) {
+				public LabelNode apply(LabelNode input) {
 					return new LabelNode();
 				}
 			};
 		}
-		Map<LabelNode, LabelNode> labels = labelsPerList.get(list);
-		if (labels == null) {
-			labelsPerList.put(list, (labels = ComputingMap.of(instanceProvider)));
-		}
-		return labels;
-	}
-
-	protected static LabelNode cloneFor(InsnList list, LabelNode label) {
-		Map<LabelNode, LabelNode> map = cloneMapFor(list);
-		LabelNode clone = map.get(label);
-		if (clone == null) {
-			map.put(label, (clone = new LabelNode()));
-		}
-		return clone;
+		return ComputingMap.of(instanceProvider);
 	}
 
 	@Override
-	public Iterator<AbstractInsnNode> iterator() {
-		return build().iterator();
+	public final void prependTo(InsnList to) {
+		insertBefore(to, to.getFirst());
 	}
 
 	@Override
-	public void insertAfter(InsnList into, AbstractInsnNode location) {
-		into.insert(location, build());
-	}
-
-	@Override
-	public void insertBefore(InsnList into, AbstractInsnNode location) {
-		into.insertBefore(location, build());
-	}
-
-	@Override
-	public void appendTo(InsnList to) {
-		to.add(build());
-	}
-
-	@Override
-	public void prependTo(InsnList to) {
-		to.insert(build());
-	}
-
-	@Override
-	public void appendTo(MethodVisitor mv) {
-		build().accept(mv);
+	public final void appendTo(InsnList to) {
+		insertAfter(to, to.getLast());
 	}
 
 	@Override
@@ -97,18 +74,19 @@ public abstract class AbstractCodePiece implements CodePiece {
 	}
 
 	@Override
-	public void replace(CodeLocation location) {
-		AbstractInsnNode firstBefore = location.first().getPrevious();
-		JavaUtils.clear(location);
-		if (firstBefore == null) {
+	public final void replace(CodeLocation location) {
+		if (location.first() == location.list().getFirst()) {
+			JavaUtils.clear(location);
 			prependTo(location.list());
 		} else {
+			AbstractInsnNode firstBefore = location.first().getPrevious();
+			JavaUtils.clear(location);
 			insertAfter(location.list(), firstBefore);
 		}
 	}
 
 	@Override
-	public CodePiece append(CodePiece other) {
+	public final CodePiece append(CodePiece other) {
 		if (other instanceof CombinedCodePiece) {
 			return new CombinedCodePiece(ObjectArrays.concat(this, ((CombinedCodePiece) other).pieces));
 		} else {
@@ -117,12 +95,12 @@ public abstract class AbstractCodePiece implements CodePiece {
 	}
 
 	@Override
-	public CodePiece append(AbstractInsnNode node) {
+	public final CodePiece append(AbstractInsnNode node) {
 		return append(CodePieces.of(node));
 	}
 
 	@Override
-	public CodePiece append(InsnList insns) {
+	public final CodePiece append(InsnList insns) {
 		return append(CodePieces.of(insns));
 	}
 
