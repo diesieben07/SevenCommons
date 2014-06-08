@@ -27,6 +27,12 @@ class ConditionImpl implements ASMCondition, ASMConditionElseApplied, ASMConditi
 		this.falseOpcode = falseOpcode;
 	}
 
+	private ASMCondition negated;
+	@Override
+	public ASMCondition negate() {
+		return negated == null ? (negated = new Negated()) : negated;
+	}
+
 	@Override
 	public ASMConditionThenApplied then(@NotNull CodePiece code) {
 		checkUse(onThen == null);
@@ -43,6 +49,10 @@ class ConditionImpl implements ASMCondition, ASMConditionElseApplied, ASMConditi
 
 	@Override
 	public CodePiece build() {
+		return build0(onThen, onElse);
+	}
+
+	CodePiece build0(CodePiece onThen, CodePiece onElse) {
 		boolean hasElse = onElse != null;
 		boolean hasThen = onThen != null;
 		checkUse(hasElse || hasThen);
@@ -74,7 +84,37 @@ class ConditionImpl implements ASMCondition, ASMConditionElseApplied, ASMConditi
 				after);
 	}
 
-	private static void checkUse(boolean cond) {
+	static void checkUse(boolean cond) {
 		checkState(cond, "Incorrect use of ASMCondition interface!");
+	}
+
+	private class Negated implements ASMCondition, ASMConditionThenApplied, ASMConditionElseApplied {
+
+		private CodePiece onThen;
+		private CodePiece onElse;
+
+		@Override
+		public ASMCondition negate() {
+			return ConditionImpl.this;
+		}
+
+		@Override
+		public ASMConditionThenApplied then(CodePiece code) {
+			checkUse(onThen == null);
+			onThen = checkNotNull(code);
+			return this;
+		}
+
+		@Override
+		public ASMConditionElseApplied otherwise(CodePiece code) {
+			checkUse(onElse == null);
+			onElse = checkNotNull(code);
+			return this;
+		}
+
+		@Override
+		public CodePiece build() {
+			return build0(onElse, onThen);
+		}
 	}
 }

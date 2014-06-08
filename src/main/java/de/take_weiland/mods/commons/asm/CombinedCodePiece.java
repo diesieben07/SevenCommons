@@ -1,32 +1,32 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.collect.Iterables;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * @author diesieben07
  */
 class CombinedCodePiece extends AbstractCodePiece {
 
-	final CodePiece[] pieces;
+	final Iterable<CodePiece> pieces;
 	private int sizeCache = -1;
 
-	CombinedCodePiece(CodePiece[] pieces) {
+	CombinedCodePiece(CodePiece... pieces) {
+		this(Arrays.asList(pieces));
+	}
+
+	CombinedCodePiece(Iterable<CodePiece> pieces) {
 		this.pieces = pieces;
 	}
 
 	@Override
 	public void insertBefore(InsnList list, AbstractInsnNode location) {
-		if (location == list.getFirst()) {
-			for (int i = pieces.length - 1; i >= 0; --i) {
-				pieces[i].insertBefore(list, list.getFirst());
-			}
-		} else {
-			for (int i = pieces.length - 1; i >= 0; i--) {
-				AbstractInsnNode nodeBefore = location.getPrevious();
-				pieces[i].insertBefore(list, location);
-				location = nodeBefore.getNext();
-			}
+		for (CodePiece piece : pieces) {
+			piece.insertBefore(list, location);
 		}
 	}
 
@@ -57,4 +57,25 @@ class CombinedCodePiece extends AbstractCodePiece {
 		}
 		return size;
 	}
+
+	@Override
+	public CodePiece append0(CodePiece other) {
+		return new CombinedCodePiece(Iterables.concat(this.pieces, Collections.singleton(other)));
+	}
+
+	@Override
+	public CodePiece append0(CombinedCodePiece other) {
+		return new CombinedCodePiece(Iterables.concat(this.pieces, other.pieces));
+	}
+
+	@Override
+	public CodePiece append0(MixedCombinedCodePiece other) {
+		return new MixedCombinedCodePiece(Iterables.concat(this.pieces, other.elements));
+	}
+
+	@Override
+	public CodePiece callProperAppend(CodePieceInternal origin) {
+		return origin.append0(this);
+	}
+
 }

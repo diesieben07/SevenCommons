@@ -109,7 +109,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			elements.add(new SyncedElement(var, makeCompanion(clazz, var), packetTarget, syncer));
 		}
 
-		createSyncMethod(clazz, elements);
+		createSyncMethod(clazz, elements, type);
 		createReadMethod(clazz, elements);
 		clazz.interfaces.add(Type.getInternalName(SyncedObject.class));
 		return true;
@@ -149,7 +149,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		insns.add(new JumpInsnNode(GOTO, start));
 	}
 
-	private static void createSyncMethod(ClassNode clazz, List<SyncedElement> elements) {
+	private static void createSyncMethod(ClassNode clazz, List<SyncedElement> elements, SyncType type) {
 		MethodNode syncMethod = new MethodNode(ACC_PRIVATE, "_sc$doSync", Type.getMethodDescriptor(Type.VOID_TYPE), null, null);
 		clazz.methods.add(syncMethod);
 		InsnList insns = syncMethod.instructions;
@@ -159,8 +159,10 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 		CodePiece packetBuilderCache = CodePieces.cacheLocal(syncMethod,
 				Type.getType(PacketBuilder.class),
-				CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.CREATE_BUILDER, Type.getMethodDescriptor(Type.getType(PacketBuilder.class))),
-				1);
+				CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME,
+						SyncASMHooks.CREATE_BUILDER,
+						ASMUtils.getMethodDescriptor(PacketBuilder.class, SyncType.class),
+						CodePieces.constant(type)));
 
 		for (int i = 0, len = elements.size(); i < len; i++) {
 			SyncedElement element = elements.get(i);
@@ -173,7 +175,8 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			CodePiece updateCompanion = element.companion.set(element.variable.get());
 
 			element.syncer.equals(element.companion.get(), element.variable.get())
-					.otherwise(writeIndex.append(writeData).append(updateCompanion))
+					.negate()
+					.then(writeIndex.append(writeData).append(updateCompanion))
 					.build().appendTo(insns);
 
 		}

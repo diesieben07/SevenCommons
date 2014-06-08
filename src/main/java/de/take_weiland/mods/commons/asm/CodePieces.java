@@ -1,11 +1,13 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.InstanceProvider;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -169,6 +171,25 @@ public final class CodePieces {
 		clazz.methods.add(method);
 
 		return invoke(invokeOp, clazz.name, method.name, method.desc, loadInstance);
+	}
+
+	public static CodePiece cacheLocal(MethodNode method, Type type, CodePiece code) {
+		int idx;
+		if ((method.access & ACC_STATIC) == ACC_STATIC) {
+			idx = 0;
+		} else {
+			idx = 1;
+		}
+		for (LocalVariableNode var : method.localVariables) {
+			if (var.index >= idx) idx = var.index + 1;
+		}
+		Iterator<VarInsnNode> varInsns = Iterators.filter(method.instructions.iterator(), VarInsnNode.class);
+		while (varInsns.hasNext()) {
+			VarInsnNode insn = varInsns.next();
+			if (insn.var >= idx) idx = insn.var + 1;
+		}
+
+		return cacheLocal(method, type, code, idx);
 	}
 
 	public static CodePiece cacheLocal(MethodNode method, Type type, CodePiece code, int varIndex) {

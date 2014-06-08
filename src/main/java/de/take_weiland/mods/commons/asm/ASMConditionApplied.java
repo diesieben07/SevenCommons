@@ -7,5 +7,4 @@ public interface ASMConditionApplied {
 
 	CodePiece build();
 
-
 }

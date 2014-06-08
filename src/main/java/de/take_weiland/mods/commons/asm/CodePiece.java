@@ -1,11 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.LabelNode;
-
-import java.util.Map;
 
 /**
  * <p>Represents a piece of Bytecode.</p>
@@ -13,7 +9,7 @@ import java.util.Map;
  *
  * @author diesieben07
  */
-public interface CodePiece {
+public interface CodePiece extends CodePieceInternal {
 
 	/**
 	 * <p>Appends the instructions in this CodePiece to the given InsnList.</p>

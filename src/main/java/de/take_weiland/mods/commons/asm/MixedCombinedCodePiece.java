@@ -1,11 +1,12 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.collect.Iterables;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -13,13 +14,13 @@ import java.util.Map;
  */
 class MixedCombinedCodePiece extends AbstractCodePiece {
 
-	private final List<Object> elements;
+	final Iterable<Object> elements;
 
 	MixedCombinedCodePiece(Object... elements) {
 		this.elements = Arrays.asList(elements);
 	}
 
-	MixedCombinedCodePiece(List<Object> elements) {
+	MixedCombinedCodePiece(Iterable<Object> elements) {
 		this.elements = elements;
 	}
 
@@ -107,5 +108,25 @@ class MixedCombinedCodePiece extends AbstractCodePiece {
 
 	private static RuntimeException invalidElement() {
 		return new IllegalStateException("Invalid Element in MixedCombinedCodePiece!");
+	}
+
+	@Override
+	public CodePiece append0(CodePiece other) {
+		return new MixedCombinedCodePiece(Iterables.concat(elements, Collections.singleton(other)));
+	}
+
+	@Override
+	public CodePiece append0(CombinedCodePiece other) {
+		return new MixedCombinedCodePiece(Iterables.concat(elements, other.pieces));
+	}
+
+	@Override
+	public CodePiece append0(MixedCombinedCodePiece other) {
+		return new MixedCombinedCodePiece(Iterables.concat(elements, other.elements));
+	}
+
+	@Override
+	public CodePiece callProperAppend(CodePieceInternal origin) {
+		return origin.append0(this);
 	}
 }

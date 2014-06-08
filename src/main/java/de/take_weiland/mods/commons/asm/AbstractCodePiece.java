@@ -1,14 +1,15 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.util.ComputingMap;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -87,11 +88,27 @@ public abstract class AbstractCodePiece implements CodePiece {
 
 	@Override
 	public final CodePiece append(CodePiece other) {
-		if (other instanceof CombinedCodePiece) {
-			return new CombinedCodePiece(ObjectArrays.concat(this, ((CombinedCodePiece) other).pieces));
-		} else {
-			return new CombinedCodePiece(new CodePiece[] { this, other });
-		}
+		return other.callProperAppend(this);
+	}
+
+	@Override
+	public CodePiece append0(CodePiece other) {
+		return new CombinedCodePiece(this, other);
+	}
+
+	@Override
+	public CodePiece append0(CombinedCodePiece other) {
+		return new CombinedCodePiece(Iterables.concat(Collections.singleton(this), other.pieces));
+	}
+
+	@Override
+	public CodePiece append0(MixedCombinedCodePiece other) {
+		return new MixedCombinedCodePiece(Iterables.concat(Collections.singleton(this), other.elements));
+	}
+
+	@Override
+	public CodePiece callProperAppend(CodePieceInternal origin) {
+		return origin.append0(this);
 	}
 
 	@Override
@@ -118,4 +135,6 @@ public abstract class AbstractCodePiece implements CodePiece {
 	public CodePiece prepend(InsnList insns) {
 		return CodePieces.of(insns).append(this);
 	}
+
+
 }

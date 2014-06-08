@@ -24,7 +24,7 @@ public final class SyncASMHooks {
 	public static final String SEND_PACKET = "send_%s";
 	public static final String CREATE_BUILDER = "createBuilder";
 
-	public static PacketBuilder createBuilder() {
+	public static PacketBuilder createBuilder(SyncType type) {
 		PacketBuilder b = SCModContainer.packets.builder(SCPackets.SYNC);
 		// TODO
 		return b;
