@@ -157,11 +157,12 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		LabelNode end = new LabelNode();
 		insns.add(start);
 
-		CodePiece packetBuilderCache = CodePieces.cacheLocal(syncMethod,
+		CodePieces.LocalCache packetBuilderCache = CodePieces.cacheLocal(syncMethod,
 				Type.getType(PacketBuilder.class),
 				CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME,
 						SyncASMHooks.CREATE_BUILDER,
-						ASMUtils.getMethodDescriptor(PacketBuilder.class, SyncType.class),
+						ASMUtils.getMethodDescriptor(PacketBuilder.class, Object.class, SyncType.class),
+						CodePieces.getThis(),
 						CodePieces.constant(type)));
 
 		for (int i = 0, len = elements.size(); i < len; i++) {
@@ -169,9 +170,9 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			CodePiece writeIndex = CodePieces.invokeStatic(
 					SyncASMHooks.CLASS_NAME, SyncASMHooks.WRITE_INDEX,
 					Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(PacketBuilder.class), Type.INT_TYPE),
-					packetBuilderCache, CodePieces.constant(i));
+					packetBuilderCache.get, CodePieces.constant(i));
 
-			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderCache);
+			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderCache.direct);
 			CodePiece updateCompanion = element.companion.set(element.variable.get());
 
 			element.syncer.equals(element.companion.get(), element.variable.get())

@@ -173,7 +173,7 @@ public final class CodePieces {
 		return invoke(invokeOp, clazz.name, method.name, method.desc, loadInstance);
 	}
 
-	public static CodePiece cacheLocal(MethodNode method, Type type, CodePiece code) {
+	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code) {
 		int idx;
 		if ((method.access & ACC_STATIC) == ACC_STATIC) {
 			idx = 0;
@@ -192,15 +192,26 @@ public final class CodePieces {
 		return cacheLocal(method, type, code, idx);
 	}
 
-	public static CodePiece cacheLocal(MethodNode method, Type type, CodePiece code, int varIndex) {
+	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code, int varIndex) {
 		LocalVariableNode var = new LocalVariableNode(null, type.getDescriptor(), null, null, null, varIndex);
 		ASMVariable theCache = ASMVariables.of(var);
 		theCache.set(constantNull()).prependTo(method.instructions);
 
-		return Conditions.ifNull(theCache.get())
+		return new LocalCache(Conditions.ifNull(theCache.get())
 				.then(theCache.set(code))
 				.build()
-				.append(theCache.get());
+				.append(theCache.get()), theCache.get());
+	}
+
+	public static final class LocalCache {
+
+		public final CodePiece get;
+		public final CodePiece direct;
+
+		LocalCache(CodePiece get, CodePiece direct) {
+			this.get = get;
+			this.direct = direct;
+		}
 	}
 
 	public static CodePiece getField(ClassNode clazz, FieldNode field, CodePiece instance) {
