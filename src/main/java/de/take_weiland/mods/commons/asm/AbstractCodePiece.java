@@ -88,27 +88,17 @@ public abstract class AbstractCodePiece implements CodePiece {
 
 	@Override
 	public final CodePiece append(CodePiece other) {
-		return other.callProperAppend(this);
+		return append0(other);
 	}
 
-	@Override
-	public CodePiece append0(CodePiece other) {
-		return new CombinedCodePiece(this, other);
-	}
-
-	@Override
-	public CodePiece append0(CombinedCodePiece other) {
-		return new CombinedCodePiece(Iterables.concat(Collections.singleton(this), other.pieces));
-	}
-
-	@Override
-	public CodePiece append0(MixedCombinedCodePiece other) {
-		return new MixedCombinedCodePiece(Iterables.concat(Collections.singleton(this), other.elements));
-	}
-
-	@Override
-	public CodePiece callProperAppend(CodePieceInternal origin) {
-		return origin.append0(this);
+	CodePiece append0(CodePiece other) {
+		if (other instanceof CombinedCodePiece) {
+			return new CombinedCodePiece(Iterables.concat(Collections.singleton(this), ((CombinedCodePiece) other).pieces));
+		} else if (other instanceof MixedCombinedCodePiece) {
+			return new MixedCombinedCodePiece(Iterables.concat(Collections.singleton(this), ((MixedCombinedCodePiece) other).elements));
+		} else {
+			return new CombinedCodePiece(this, other);
+		}
 	}
 
 	@Override

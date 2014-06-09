@@ -59,23 +59,13 @@ class CombinedCodePiece extends AbstractCodePiece {
 	}
 
 	@Override
-	public CodePiece append0(CodePiece other) {
-		return new CombinedCodePiece(Iterables.concat(this.pieces, Collections.singleton(other)));
+	CodePiece append0(CodePiece other) {
+		if (other instanceof CombinedCodePiece) {
+			return new CombinedCodePiece(Iterables.concat(this.pieces, ((CombinedCodePiece) other).pieces));
+		} else if (other instanceof MixedCombinedCodePiece) {
+			return new MixedCombinedCodePiece(Iterables.concat(this.pieces, ((MixedCombinedCodePiece) other).elements));
+		} else {
+			return new CombinedCodePiece(Iterables.concat(this.pieces, Collections.singleton(other)));
+		}
 	}
-
-	@Override
-	public CodePiece append0(CombinedCodePiece other) {
-		return new CombinedCodePiece(Iterables.concat(this.pieces, other.pieces));
-	}
-
-	@Override
-	public CodePiece append0(MixedCombinedCodePiece other) {
-		return new MixedCombinedCodePiece(Iterables.concat(this.pieces, other.elements));
-	}
-
-	@Override
-	public CodePiece callProperAppend(CodePieceInternal origin) {
-		return origin.append0(this);
-	}
-
 }

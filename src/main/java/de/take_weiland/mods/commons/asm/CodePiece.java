@@ -9,7 +9,7 @@ import org.objectweb.asm.tree.InsnList;
  *
  * @author diesieben07
  */
-public interface CodePiece extends CodePieceInternal {
+public interface CodePiece {
 
 	/**
 	 * <p>Appends the instructions in this CodePiece to the given InsnList.</p>
