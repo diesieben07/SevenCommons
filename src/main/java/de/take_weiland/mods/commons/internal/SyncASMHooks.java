@@ -23,15 +23,21 @@ public final class SyncASMHooks {
 	public static final String READ_PRIMITIVE = "read_%s";
 	public static final String SEND_PACKET = "send_%s";
 	public static final String CREATE_BUILDER = "createBuilder";
+	public static final String SEND_FINISHED = "writeFinished";
 
 	public static PacketBuilder createBuilder(Object syncInstance, SyncType type) {
 		PacketBuilder b = SCModContainer.packets.builder(SCPackets.SYNC);
-		// TODO
+		DataBuffers.writeEnum(b, type);
+		type.injectInfo(syncInstance, b);
 		return b;
 	}
 
-	public static void writeIndex(WritableDataBuf buf, int index) {
+	public static void writeIndex(PacketBuilder buf, int index) {
 		buf.writeByte(index);
+	}
+
+	public static void writeFinished(Object syncInstance, SyncType type, PacketBuilder builder) {
+		type.sendPacket(syncInstance, builder.build());
 	}
 
 	public static int readIndex(DataBuf buf) {

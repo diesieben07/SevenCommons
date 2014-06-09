@@ -11,6 +11,8 @@ import de.take_weiland.mods.commons.internal.SyncedObject;
 import de.take_weiland.mods.commons.net.*;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
+import de.take_weiland.mods.commons.util.ItemStacks;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -167,10 +169,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 		for (int i = 0, len = elements.size(); i < len; i++) {
 			SyncedElement element = elements.get(i);
-			CodePiece writeIndex = CodePieces.invokeStatic(
-					SyncASMHooks.CLASS_NAME, SyncASMHooks.WRITE_INDEX,
-					Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(PacketBuilder.class), Type.INT_TYPE),
-					packetBuilderCache.get, CodePieces.constant(i));
+			CodePiece writeIndex = writeIndex(packetBuilderCache.get, i);
 
 			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderCache.direct);
 			CodePiece updateCompanion = element.companion.set(element.variable.get());
@@ -181,9 +180,24 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 					.build().appendTo(insns);
 
 		}
+		Conditions.ifNull(packetBuilderCache.direct)
+				.otherwise(writeIndex(packetBuilderCache.direct, -1)
+						.append(CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.SEND_FINISHED,
+								ASMUtils.getMethodDescriptor(void.class, Object.class, SyncType.class, PacketBuilder.class),
+								CodePieces.getThis(), CodePieces.constant(type), packetBuilderCache.direct)))
+				.build()
+				.appendTo(insns);
+
 		insns.add(end);
 		insns.add(new InsnNode(RETURN));
 
+	}
+
+	private static CodePiece writeIndex(CodePiece packetBuilder, int index) {
+		return CodePieces.invokeStatic(
+				SyncASMHooks.CLASS_NAME, SyncASMHooks.WRITE_INDEX,
+				Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(PacketBuilder.class), Type.INT_TYPE),
+				packetBuilder, CodePieces.constant(index));
 	}
 
 	private static CodePiece obtainInstance(ClassNode clazz, Type packetTargetType) {
@@ -242,6 +256,10 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		static Syncer forType(Type t) {
 			if (ASMUtils.isPrimitive(t) || integratedTypes.contains(t)) {
 				return new IntegratedSyncer(t);
+			} else if (t.getInternalName().equals("net/minecraft/item/ItemStack")) {
+				return ItemStackSyncer.instance();
+			} else if (ClassInfo.of(t).isEnum()) {
+				return new EnumSyncer(t);
 			} else {
 				throw new UnsupportedOperationException("NYI");
 			}
@@ -258,6 +276,66 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 
 	}
 
+	private static class ItemStackSyncer extends Syncer {
+
+		private static ItemStackSyncer instance;
+
+		static ItemStackSyncer instance() {
+			return instance == null ? (instance = new ItemStackSyncer()) : instance;
+		}
+
+		@Override
+		ASMCondition equals(CodePiece oldValue, CodePiece newValue) {
+			return Conditions.ifTrue(CodePieces.invokeStatic(Type.getInternalName(ItemStacks.class),
+					"equal", ASMUtils.getMethodDescriptor(boolean.class, ItemStack.class, ItemStack.class),
+					oldValue, newValue));
+		}
+
+		@Override
+		CodePiece write(CodePiece newValue, CodePiece packetBuilder) {
+			return CodePieces.invokeStatic(Type.getInternalName(DataBuffers.class),
+					"writeItemStack", ASMUtils.getMethodDescriptor(void.class, WritableDataBuf.class, ItemStack.class),
+					packetBuilder, newValue);
+		}
+
+		@Override
+		CodePiece read(CodePiece oldValue, CodePiece packetBuilder) {
+			return CodePieces.invokeStatic(Type.getInternalName(DataBuffers.class),
+					"readItemStack", ASMUtils.getMethodDescriptor(ItemStack.class, DataBuf.class),
+					packetBuilder);
+		}
+	}
+
+	private static class EnumSyncer extends Syncer {
+
+		private final Type type;
+
+		EnumSyncer(Type type) {
+			this.type = type;
+		}
+
+		@Override
+		ASMCondition equals(CodePiece oldValue, CodePiece newValue) {
+			return Conditions.ifEqual(oldValue, newValue, type, false);
+		}
+
+		@Override
+		CodePiece write(CodePiece newValue, CodePiece packetBuilder) {
+			return CodePieces.invokeStatic(Type.getInternalName(DataBuffers.class),
+					"writeEnum",
+					ASMUtils.getMethodDescriptor(void.class, WritableDataBuf.class, Enum.class),
+					packetBuilder, newValue);
+		}
+
+		@Override
+		CodePiece read(CodePiece oldValue, CodePiece dataBuf) {
+			return CodePieces.castTo(type, CodePieces.invokeStatic(Type.getInternalName(DataBuffers.class),
+					"readEnum",
+					ASMUtils.getMethodDescriptor(Enum.class, DataBuf.class, Class.class),
+					dataBuf, CodePieces.constant(type)));
+		}
+	}
+
 	private static class IntegratedSyncer extends Syncer {
 
 		final Type typeToSync;
@@ -272,8 +350,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 			String name = SyncASMHooks.WRITE_INTEGRATED;
 			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, typeToSync, Type.getType(WritableDataBuf.class));
 
-			CodePiece invoke = CodePieces.invokeStatic(owner, name, desc, newValue, packetBuilder);
-			return invoke;
+			return CodePieces.invokeStatic(owner, name, desc, newValue, packetBuilder);
 		}
 
 		@Override
@@ -284,7 +361,7 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		@Override
 		CodePiece read(CodePiece oldValue, CodePiece packetBuilder) {
 			String owner = SyncASMHooks.CLASS_NAME;
-			String name = String.format(SyncASMHooks.READ_PRIMITIVE, typeToSync.getClassName());
+			String name = String.format(SyncASMHooks.READ_PRIMITIVE, typeToSync.getClassName().replace('.', '_'));
 			String desc = Type.getMethodDescriptor(typeToSync, Type.getType(DataBuf.class));
 
 			return CodePieces.invokeStatic(owner, name, desc, packetBuilder);

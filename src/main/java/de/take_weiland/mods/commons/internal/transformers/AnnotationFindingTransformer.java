@@ -24,12 +24,11 @@ public class AnnotationFindingTransformer extends AbstractAnalyzingTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
+		// TODO
 		boolean synced = false;
 		boolean nbt = false;
 		ListIterator<MethodNode> methodsIt = clazz.methods.listIterator();
-		ListIterator<FieldNode> fieldIt = clazz.fields.listIterator();
-		while (fieldIt.hasNext()) {
-			FieldNode field = fieldIt.next();
+		for (FieldNode field : clazz.fields) {
 			Iterable<AnnotationNode> anns = JavaUtils.concatNullable(field.visibleAnnotations, field.invisibleAnnotations);
 			for (AnnotationNode ann : anns) {
 				if (!nbt && ann.desc.equals(toNbtDesc)) {
@@ -48,17 +47,6 @@ public class AnnotationFindingTransformer extends AbstractAnalyzingTransformer {
 			}
 		}
 
-		while (methodsIt.hasNext()) {
-			MethodNode method = methodsIt.next();
-			Iterable<AnnotationNode> anns = JavaUtils.concatNullable(method.visibleAnnotations, method.invisibleAnnotations);
-			for (AnnotationNode ann : anns) {
-				if (!synced && ann.desc.equals(syncedDesc)) {
-					if (SyncingTransformer.transform(clazz, classInfo, fieldIt, methodsIt)) {
-						return true;
-					}
-				}
-			}
-		}
 		return nbt || synced;
 	}
 

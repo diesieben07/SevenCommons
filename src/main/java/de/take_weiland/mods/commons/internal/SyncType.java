@@ -17,17 +17,17 @@ public enum SyncType {
 	ENTITY("entity", "net/minecraft/entity/Entity", MCPNames.F_WORLD_OBJ_ENTITY_MCP, MCPNames.F_WORLD_OBJ_ENTITY_SRG, MCPNames.M_ON_UPDATE_MCP, MCPNames.M_ON_UPDATE_SRG) {
 		
 		@Override
-		public void sendPacket(Object entity, SimplePacket p) {
+		void sendPacket(Object entity, SimplePacket p) {
 			p.sendToAllTracking((Entity) entity);
 		}
 
 		@Override
-		public void injectInfo(Object obj, WritableDataBuf out) {
+		void injectInfo(Object obj, WritableDataBuf out) {
 			out.writeInt(((Entity) obj).entityId);
 		}
 
 		@Override
-		public Object recreate(EntityPlayer player, DataBuf in) {
+		Object recreate(EntityPlayer player, DataBuf in) {
 			return player.worldObj.getEntityByID(in.readInt());
 		}
 		
@@ -36,12 +36,12 @@ public enum SyncType {
 	TILE_ENTITY("tileEntity", "net/minecraft/tileentity/TileEntity", MCPNames.F_WORLD_OBJ_TILEENTITY_MCP, MCPNames.F_WORLD_OBJ_TILEENTITY_SRG, MCPNames.M_UPDATE_ENTITY_MCP, MCPNames.M_UPDATE_ENTITY_SRG) {
 		
 		@Override
-		public void sendPacket(Object te, SimplePacket p) {
+		void sendPacket(Object te, SimplePacket p) {
 			p.sendToAllTracking((TileEntity) te);
 		}
 
 		@Override
-		public void injectInfo(Object obj, WritableDataBuf out) {
+		void injectInfo(Object obj, WritableDataBuf out) {
 			TileEntity te = (TileEntity) obj;
 			out.writeVarInt(te.xCoord);
 			out.writeVarInt(te.yCoord);
@@ -49,7 +49,7 @@ public enum SyncType {
 		}
 
 		@Override
-		public Object recreate(EntityPlayer player, DataBuf in) {
+		Object recreate(EntityPlayer player, DataBuf in) {
 			int x = in.readVarInt();
 			int y = in.readVarInt();
 			int z = in.readVarInt();
@@ -61,17 +61,17 @@ public enum SyncType {
 	CONTAINER("container", null, null, null, MCPNames.M_DETECT_AND_SEND_CHANGES_MCP, MCPNames.M_DETECT_AND_SEND_CHANGES_SRG) {
 		
 		@Override
-		public void sendPacket(Object container, SimplePacket p) {
+		void sendPacket(Object container, SimplePacket p) {
 			p.sendToViewing((Container) container);
 		}
 
 		@Override
-		public void injectInfo(Object obj, WritableDataBuf out) {
+		void injectInfo(Object obj, WritableDataBuf out) {
 			out.writeByte(((Container) obj).windowId);
 		}
 
 		@Override
-		public Object recreate(EntityPlayer player, DataBuf in) {
+		Object recreate(EntityPlayer player, DataBuf in) {
 			return player.openContainer.windowId == in.readByte() ? player.openContainer : null;
 		}
 		
@@ -79,19 +79,19 @@ public enum SyncType {
 	ENTITY_PROPS("entityProps", null, null, null, "_sc$tickEntityProps", "_sc$tickEntityProps") {
 		
 		@Override
-		public void sendPacket(Object props, SimplePacket p) {
+		void sendPacket(Object props, SimplePacket p) {
 			p.sendToAllAssociated(((SyncedEntityProperties) props)._sc$getPropsEntity());
 		}
 
 		@Override
-		public void injectInfo(Object obj, WritableDataBuf out) {
+		void injectInfo(Object obj, WritableDataBuf out) {
 			SyncedEntityProperties sep = (SyncedEntityProperties) obj;
 			ENTITY.injectInfo(sep._sc$getPropsEntity(), out);
 			out.writeVarInt(sep._sc$getPropsIndex());
 		}
 
 		@Override
-		public Object recreate(EntityPlayer player, DataBuf in) {
+		Object recreate(EntityPlayer player, DataBuf in) {
 			Object entity = ENTITY.recreate(player, in);
 			if (entity != null) {
 				List<SyncedEntityProperties> props = ((EntityProxy)entity)._sc$getSyncedProperties();
@@ -120,15 +120,15 @@ public enum SyncType {
 		this.tickSrg = tickSrg;
 	}
 
-	public String getRootClass() {
+	String getRootClass() {
 		return rootClass;
 	}
 	
-	public String getWorldFieldName() {
+	String getWorldFieldName() {
 		return MCPNames.use() ? worldField : worldFieldSrg;
 	}
 
-	public String getTickMethod() {
+	String getTickMethod() {
 		return MCPNames.use() ? tickMcp : tickSrg;
 	}
 
@@ -136,8 +136,8 @@ public enum SyncType {
 		return simpleName;
 	}
 
-	public abstract void sendPacket(Object obj, SimplePacket p);
-	public abstract void injectInfo(Object obj, WritableDataBuf out);
-	public abstract Object recreate(EntityPlayer player, DataBuf in);
+	abstract void sendPacket(Object obj, SimplePacket p);
+	abstract void injectInfo(Object obj, WritableDataBuf out);
+	abstract Object recreate(EntityPlayer player, DataBuf in);
 
 }

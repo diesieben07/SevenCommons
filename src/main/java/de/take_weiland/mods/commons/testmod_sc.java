@@ -7,10 +7,13 @@ import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.player.EntityInteractEvent;
+
+import java.lang.annotation.ElementType;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 //@NetworkMod()
@@ -50,20 +53,18 @@ public class testmod_sc {
 
 	public static class TestTe extends TileEntity {
 
-		private int foobar;
+		@Sync
+		private ItemStack foobar;
 
 		@Sync
 		private long foobar2;
 
+		@Sync
+		private ElementType bla;
+
+		@Sync
 		private String aString;
 
-		public int getFoobar() {
-			return foobar;
-		}
-
-		private void setFoobar(int foo) {
-			this.foobar = foo;
-		}
 	}
 
 	static class TestSyncer implements TypeSyncer<String> {
