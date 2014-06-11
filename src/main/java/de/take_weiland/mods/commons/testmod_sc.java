@@ -7,6 +7,7 @@ import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
+import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.MinecraftForge;
@@ -21,7 +22,7 @@ public class testmod_sc {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) throws Exception {
-		Reflection.initialize(TestTe.class);
+		Reflection.initialize(TestTe.class, Container.class);
 		System.exit(0);
 		MinecraftForge.EVENT_BUS.register(this);
 

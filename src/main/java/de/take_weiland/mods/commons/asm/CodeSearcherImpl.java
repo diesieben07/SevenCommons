@@ -9,7 +9,6 @@ import org.objectweb.asm.tree.InsnList;
 import java.util.NoSuchElementException;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * @author diesieben07
@@ -115,7 +114,9 @@ class CodeSearcherImpl implements CodeSearcher {
 
 	@Override
 	public CodeLocation endHere() {
-		checkState(start != null, "Start not set!");
+		if (start == null) {
+			startHere();
+		}
 		return CodeLocation.create(insns, start, resolvePos());
 	}
 

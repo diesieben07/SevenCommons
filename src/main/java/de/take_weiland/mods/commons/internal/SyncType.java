@@ -14,7 +14,7 @@ import java.util.List;
 
 public enum SyncType {
 
-	ENTITY("entity", "net/minecraft/entity/Entity", MCPNames.F_WORLD_OBJ_ENTITY_MCP, MCPNames.F_WORLD_OBJ_ENTITY_SRG, MCPNames.M_ON_UPDATE_MCP, MCPNames.M_ON_UPDATE_SRG) {
+	ENTITY("entity", "net/minecraft/entity/Entity", MCPNames.F_WORLD_OBJ_ENTITY_MCP, MCPNames.F_WORLD_OBJ_ENTITY_SRG, MCPNames.M_ON_UPDATE_SRG) {
 		
 		@Override
 		void sendPacket(Object entity, SimplePacket p) {
@@ -33,7 +33,7 @@ public enum SyncType {
 		
 	},
 	
-	TILE_ENTITY("tileEntity", "net/minecraft/tileentity/TileEntity", MCPNames.F_WORLD_OBJ_TILEENTITY_MCP, MCPNames.F_WORLD_OBJ_TILEENTITY_SRG, MCPNames.M_UPDATE_ENTITY_MCP, MCPNames.M_UPDATE_ENTITY_SRG) {
+	TILE_ENTITY("tileEntity", "net/minecraft/tileentity/TileEntity", MCPNames.F_WORLD_OBJ_TILEENTITY_MCP, MCPNames.F_WORLD_OBJ_TILEENTITY_SRG, MCPNames.M_UPDATE_ENTITY_SRG) {
 		
 		@Override
 		void sendPacket(Object te, SimplePacket p) {
@@ -58,7 +58,7 @@ public enum SyncType {
 		
 	},
 	
-	CONTAINER("container", null, null, null, MCPNames.M_DETECT_AND_SEND_CHANGES_MCP, MCPNames.M_DETECT_AND_SEND_CHANGES_SRG) {
+	CONTAINER("container", null, null, null, MCPNames.M_DETECT_AND_SEND_CHANGES_SRG) {
 		
 		@Override
 		void sendPacket(Object container, SimplePacket p) {
@@ -76,7 +76,7 @@ public enum SyncType {
 		}
 		
 	},
-	ENTITY_PROPS("entityProps", null, null, null, "_sc$tickEntityProps", "_sc$tickEntityProps") {
+	ENTITY_PROPS("entityProps", null, null, null, "_sc$tickEntityProps") {
 		
 		@Override
 		void sendPacket(Object props, SimplePacket p) {
@@ -103,37 +103,51 @@ public enum SyncType {
 		}
 		
 	};
+	public static final String CLASS_TILE_ENTITY = "net/minecraft/tileentity/TileEntity";
+	public static final String CLASS_ENTITY = "net/minecraft/entity/Entity";
+	public static final String CLASS_CONTAINER = "net/minecraft/inventory/Container";
 
 	private final String simpleName;
 	private final String rootClass;
 	private final String worldField;
 	private final String worldFieldSrg;
-	private final String tickMcp;
 	private final String tickSrg;
 	
-	private SyncType(String simpleName, String rootClass, String worldField, String worldFieldSrg, String tickMcp, String tickSrg) {
+	private SyncType(String simpleName, String rootClass, String worldField, String worldFieldSrg, String tickSrg) {
 		this.simpleName = simpleName;
 		this.rootClass = rootClass;
 		this.worldField = worldField;
 		this.worldFieldSrg = worldFieldSrg;
-		this.tickMcp = tickMcp;
 		this.tickSrg = tickSrg;
 	}
 
-	String getRootClass() {
+	public String getRootClass() {
 		return rootClass;
 	}
-	
-	String getWorldFieldName() {
+
+	public String getWorldFieldName() {
 		return MCPNames.use() ? worldField : worldFieldSrg;
 	}
 
-	String getTickMethod() {
-		return MCPNames.use() ? tickMcp : tickSrg;
+	public String getTickMethod() {
+		return MCPNames.method(tickSrg);
 	}
 
 	public String getSimpleName() {
 		return simpleName;
+	}
+
+	public static SyncType forBaseClass(String clazz) {
+		switch (clazz) {
+			case CLASS_CONTAINER:
+				return CONTAINER;
+			case CLASS_ENTITY:
+				return ENTITY;
+			case CLASS_TILE_ENTITY:
+				return TILE_ENTITY;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	abstract void sendPacket(Object obj, SimplePacket p);

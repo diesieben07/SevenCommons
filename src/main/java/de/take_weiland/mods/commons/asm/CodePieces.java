@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.collect.Iterators;
+import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.InstanceProvider;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -272,7 +273,7 @@ public final class CodePieces {
 	public static CodePiece invokeSuper(ClassNode clazz, MethodNode method, CodePiece... args) {
 		checkArgument((method.access & ACC_STATIC) != ACC_STATIC, "Cannot call super on static method");
 		checkArgument((method.access & ACC_PRIVATE) != ACC_PRIVATE, "Cannot call super on private method");
-		return invoke(INVOKESPECIAL, clazz.superName, method.name, method.desc, args);
+		return invoke(INVOKESPECIAL, clazz.superName, method.name, method.desc, ObjectArrays.concat(getThis(), args));
 	}
 
 	public static CodePiece instantiate(Class<?> c) {

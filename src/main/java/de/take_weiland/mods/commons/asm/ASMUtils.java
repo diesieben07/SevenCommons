@@ -115,25 +115,11 @@ public final class ASMUtils {
 	/**
 	 * Find the method with the given name. It is automatically chosen between MCP and SRG name, depending on if this code is running in a development environment.
 	 * @param clazz the class
-	 * @param mcpName the MCP name of the method (e.g. {@code updateEntity})
 	 * @param srgName the SRG name of the method (e.g. {@code func_70316_g}
 	 * @return the first method with the given name or null if no such method is found
 	 */
-	public static MethodNode findMinecraftMethod(ClassNode clazz, String mcpName, String srgName) {
-		return findMethod(clazz, MCPNames.use() ? mcpName : srgName);
-	}
-
-	/**
-	 * find the method with the given name and descriptor. It is automatically chosen between MCP and SRG name, depending on if this code is running in a development environment.
-	 * @param clazz the class
-	 * @param mcpName the MCP name of the method (e.g. {@code updateEntity})
-	 * @param srgName the SRG name of the method (e.g. {@code func_70316_g}
-	 * @param desc the method descriptor of the method
-	 * @return the method or null if no such method is found
-	 * @see org.objectweb.asm.Type#getMethodDescriptor
-	 */
-	public static MethodNode findMinecraftMethod(ClassNode clazz, String mcpName, String srgName, String desc) {
-		return findMethod(clazz, MCPNames.use() ? mcpName : srgName, desc);
+	public static MethodNode findMinecraftMethod(ClassNode clazz, String srgName) {
+		return findMethod(clazz, MCPNames.method(srgName));
 	}
 
 	/**
@@ -161,25 +147,13 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * like {@link #findMinecraftMethod(org.objectweb.asm.tree.ClassNode, String, String, String)}, but throws if method not found
+	 * like {@link #findMinecraftMethod(org.objectweb.asm.tree.ClassNode, String)}, but throws if method not found
 	 * @throws MissingMethodException if method doesn't exist
 	 */
-	public static MethodNode requireMinecraftMethod(ClassNode clazz, String mcpName, String srgName, String desc) {
-		MethodNode m = findMinecraftMethod(clazz, mcpName, srgName, desc);
+	public static MethodNode requireMinecraftMethod(ClassNode clazz, String mcpName) {
+		MethodNode m = findMinecraftMethod(clazz, mcpName);
 		if (m == null) {
-			throw MissingMethodException.withDesc(mcpName, srgName, desc, clazz.name);
-		}
-		return m;
-	}
-
-	/**
-	 * like {@link #findMinecraftMethod(org.objectweb.asm.tree.ClassNode, String, String)}, but throws if method not found
-	 * @throws MissingMethodException if method doesn't exist
-	 */
-	public static MethodNode requireMinecraftMethod(ClassNode clazz, String mcpName, String srgName) {
-		MethodNode m = findMinecraftMethod(clazz, mcpName, srgName);
-		if (m == null) {
-			throw MissingMethodException.create(mcpName, srgName, clazz.name);
+			throw MissingMethodException.create(mcpName, clazz.name);
 		}
 		return m;
 	}

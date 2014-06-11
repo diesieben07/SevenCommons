@@ -5,16 +5,14 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import static de.take_weiland.mods.commons.asm.MCPNames.M_CONVERT_TO_VILLAGER_MCP;
 import static de.take_weiland.mods.commons.asm.MCPNames.M_CONVERT_TO_VILLAGER_SRG;
-import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.SIPUSH;
+import static org.objectweb.asm.Opcodes.*;
 
 public final class EntityZombieTransformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_CONVERT_TO_VILLAGER_MCP, M_CONVERT_TO_VILLAGER_SRG);
+		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_CONVERT_TO_VILLAGER_SRG);
 
 		makeHook(clazz).insertAfter(findTarget(method));
 

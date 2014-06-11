@@ -1,9 +1,6 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.asm.ASMClassTransformer;
-import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.ClassInfo;
-import de.take_weiland.mods.commons.asm.MCPNames;
+import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.EntityProxy;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
@@ -89,13 +86,15 @@ public final class EntityTransformer implements ASMClassTransformer {
 	private void transformOnUpdate(ClassNode clazz, MethodNode method, FieldNode syncedProps) {
 		InsnList insns = new InsnList();
 		insns.add(new VarInsnNode(ALOAD, 0));
-		insns.add(new InsnNode(DUP));
+		insns.add(new VarInsnNode(ALOAD, 0));
 		insns.add(new FieldInsnNode(GETFIELD, clazz.name, syncedProps.name, syncedProps.desc));
 
 		String owner = "de/take_weiland/mods/commons/internal/SyncASMHooks";
 		String name = "tickSyncedProperties";
 		String desc = getMethodDescriptor(VOID_TYPE, getObjectType(clazz.name), getType(List.class));
 		insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
+
+		SyncingTransformer.addBaseSyncMethodCall(clazz.name, CodePieces.getThis()).appendTo(insns);
 
 		method.instructions.insert(insns);
 	}

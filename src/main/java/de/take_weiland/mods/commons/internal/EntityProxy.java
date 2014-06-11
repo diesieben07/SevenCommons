@@ -10,5 +10,5 @@ public interface EntityProxy {
 	List<SyncedEntityProperties> _sc$getSyncedProperties();
 	
 	void _sc$setSyncedProperties(List<SyncedEntityProperties> props);
-	
+
 }

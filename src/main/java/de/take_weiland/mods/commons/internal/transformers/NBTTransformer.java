@@ -2,8 +2,6 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.NBTASMHooks;
-import de.take_weiland.mods.commons.nbt.NBTSerializable;
-import de.take_weiland.mods.commons.nbt.NBTSerializer;
 import de.take_weiland.mods.commons.nbt.ToNbt;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTBase;
@@ -27,24 +25,16 @@ public class NBTTransformer {
 	private static final int READ = 0;
 	private static final int WRITE = 1;
 
-	private static final ClassInfo nbtASMHooks = ClassInfo.of(NBTASMHooks.class);
-
 	private static final Type nbtBaseType = getType(NBTBase.class);
 	private static final Type nbtTagCompoundType = getType(NBTTagCompound.class);
-	private static final Type stringType = getType(String.class);
 
 	private static final ClassInfo tileEntityClassInfo = ClassInfo.of(TileEntity.class);
 	private static final ClassInfo entityClassInfo = ClassInfo.of(Entity.class);
 	private static final ClassInfo entityPropsClassInfo = ClassInfo.of(IExtendedEntityProperties.class);
-	private static final ClassInfo nbtSerializableClassInfo = ClassInfo.of(NBTSerializable.class);
-	private static final ClassInfo nbtSerializerClassInfo = ClassInfo.of(NBTSerializer.class);
 
 	static void transform(ClassNode clazz, ClassInfo classInfo, ListIterator<MethodNode> methods) {
 		ClassType type = findType(classInfo);
 		Collection<ASMVariable> variables = ASMVariables.allWith(clazz, ToNbt.class, CodePieces.getThis());
-
-		MethodInfo putIntoMethod = nbtASMHooks.getMethod("putInto");
-		MethodInfo getFromMethod = nbtASMHooks.getMethod("getFrom");
 
 		MethodNode readMethod = new MethodNode(ACC_PUBLIC, type.getNbtRead(), getMethodDescriptor(VOID_TYPE, nbtTagCompoundType), null, null);
 		MethodNode writeMethod = new MethodNode(ACC_PUBLIC, type.getNbtWrite(), getMethodDescriptor(VOID_TYPE, nbtTagCompoundType), null, null);
@@ -123,7 +113,6 @@ public class NBTTransformer {
 	private static void insertSuperCall(ClassNode clazz, InsnList insns, String methodName) {
 		CodePieces.invokeSuper(clazz,
 				ASMUtils.findMethod(clazz, methodName),
-				CodePieces.getThis(),
 				CodePieces.of(new VarInsnNode(ALOAD, 1))).appendTo(insns);
 	}
 

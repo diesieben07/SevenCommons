@@ -7,14 +7,13 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import static de.take_weiland.mods.commons.asm.MCPNames.M_CLONE_PLAYER_MCP;
 import static de.take_weiland.mods.commons.asm.MCPNames.M_CLONE_PLAYER_SRG;
 
 public final class EntityPlayerTransformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_CLONE_PLAYER_MCP, M_CLONE_PLAYER_SRG);
+		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_CLONE_PLAYER_SRG);
 		InsnList insns = new InsnList();
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 1)); // load this = the new player
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0)); // load the first parameter = the old player

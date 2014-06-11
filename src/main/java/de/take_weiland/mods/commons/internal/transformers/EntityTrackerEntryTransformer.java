@@ -9,7 +9,6 @@ import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import static de.take_weiland.mods.commons.asm.MCPNames.M_TRY_START_WATCHING_THIS_MCP;
 import static de.take_weiland.mods.commons.asm.MCPNames.M_TRY_START_WATCHING_THIS_SRG;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -18,7 +17,7 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS_MCP, M_TRY_START_WATCHING_THIS_SRG);
+		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS_SRG);
 
 		generateEventCall(clazz).insertBefore(findInsertionHook(method));
 

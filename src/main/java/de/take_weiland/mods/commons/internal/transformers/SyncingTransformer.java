@@ -24,11 +24,15 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Type.VOID_TYPE;
+import static org.objectweb.asm.Type.getMethodDescriptor;
 
 /**
  * contains black bytecode magic. Do not touch.
  */
-public final class SyncingTransformer_new implements ASMClassTransformer {
+public final class SyncingTransformer implements ASMClassTransformer {
+
+	public static final String SYNC_METHOD = "_sc$doSync";
 
 	private static final Logger LOGGER;
 	private static final String syncAsmHooks = "de/take_weiland/mods/commons/internal/SyncASMHooks";
@@ -117,6 +121,16 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 		return true;
 	}
 
+	public static void addBaseSyncMethod(ClassNode clazz) {
+		MethodNode method = new MethodNode(ACC_PUBLIC, SyncingTransformer.SYNC_METHOD, Type.getMethodDescriptor(VOID_TYPE), null, null);
+		method.instructions.add(new InsnNode(RETURN));
+		clazz.methods.add(method);
+	}
+
+	public static CodePiece addBaseSyncMethodCall(String targetClass, CodePiece instance) {
+		return CodePieces.invoke(INVOKEVIRTUAL, targetClass, SYNC_METHOD, getMethodDescriptor(VOID_TYPE), instance);
+	}
+
 	private static void createReadMethod(ClassNode clazz, List<SyncedElement> elements) {
 		MethodNode method = new MethodNode(ACC_PUBLIC, SyncedObject.READ, ASMUtils.getMethodDescriptor(void.class, DataBuf.class), null, null);
 		clazz.methods.add(method);
@@ -152,9 +166,13 @@ public final class SyncingTransformer_new implements ASMClassTransformer {
 	}
 
 	private static void createSyncMethod(ClassNode clazz, List<SyncedElement> elements, SyncType type) {
-		MethodNode syncMethod = new MethodNode(ACC_PRIVATE, "_sc$doSync", Type.getMethodDescriptor(Type.VOID_TYPE), null, null);
+		// this method is added by ClassTransformers to Entity, TileEntity & Container and called by the classes respective
+		// tick method to simplify things a lot (otherwise each subclass would have to figure out if to call super or not).
+		MethodNode syncMethod = new MethodNode(ACC_PUBLIC, SYNC_METHOD, Type.getMethodDescriptor(Type.VOID_TYPE), null, null);
 		clazz.methods.add(syncMethod);
 		InsnList insns = syncMethod.instructions;
+		CodePieces.invokeSuper(clazz, syncMethod).appendTo(insns);
+
 		LabelNode start = new LabelNode();
 		LabelNode end = new LabelNode();
 		insns.add(start);
