@@ -15,13 +15,13 @@ public abstract class AbstractASMVariable implements ASMVariable {
 
 	@Override
 	public final AnnotationNode getterAnnotation(Class<? extends Annotation> ann) {
-		return ASMUtils.getAnnotationRaw(getterAnns(true), getterAnns(false), annotationType(), ann);
+		return ASMUtils.getAnnotation(getterAnns(true), getterAnns(false), annotationType(), ann);
 	}
 
 	@Override
 	public final AnnotationNode setterAnnotation(Class<? extends Annotation> ann) {
 		checkWritable();
-		return ASMUtils.getAnnotationRaw(setterAnns(true), setterAnns(false), annotationType(), ann);
+		return ASMUtils.getAnnotation(setterAnns(true), setterAnns(false), annotationType(), ann);
 	}
 
 	@Override

@@ -7,9 +7,12 @@ import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
+import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
+import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.player.EntityInteractEvent;
@@ -22,7 +25,7 @@ public class testmod_sc {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) throws Exception {
-		Reflection.initialize(TestTe.class, Container.class);
+		Reflection.initialize(Test.class, Container.class);
 		System.exit(0);
 		MinecraftForge.EVENT_BUS.register(this);
 
@@ -52,7 +55,14 @@ public class testmod_sc {
 	public void onPlayerInteract(EntityInteractEvent event) throws InterruptedException {
 	}
 
-	public static class TestTe extends TileEntity {
+	private static abstract class Base implements IExtendedEntityProperties {
+
+		@Sync
+		private ItemStack garumP;
+
+	}
+
+	public static class Test extends Base {
 
 		@Sync
 		private ItemStack foobar;
@@ -66,6 +76,20 @@ public class testmod_sc {
 		@Sync
 		private String aString;
 
+		@Override
+		public void saveNBTData(NBTTagCompound compound) {
+
+		}
+
+		@Override
+		public void loadNBTData(NBTTagCompound compound) {
+
+		}
+
+		@Override
+		public void init(Entity entity, World world) {
+
+		}
 	}
 
 	static class TestSyncer implements TypeSyncer<String> {
@@ -75,7 +99,7 @@ public class testmod_sc {
 //			return null;
 //		}
 
-		TestSyncer(TestTe te) {
+		TestSyncer(Test te) {
 
 		}
 

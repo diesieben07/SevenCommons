@@ -7,13 +7,13 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import static de.take_weiland.mods.commons.asm.MCPNames.M_SET_WORLD_AND_RESOLUTION_SRG;
+import static de.take_weiland.mods.commons.asm.MCPNames.M_SET_WORLD_AND_RESOLUTION;
 
 public final class GuiScreenTransformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_SET_WORLD_AND_RESOLUTION_SRG);
+		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_SET_WORLD_AND_RESOLUTION);
 		InsnList insns = new InsnList();
 
 		insns.add(new VarInsnNode(Opcodes.ALOAD, 0));

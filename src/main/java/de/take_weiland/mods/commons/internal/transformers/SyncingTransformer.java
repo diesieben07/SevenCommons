@@ -7,6 +7,7 @@ import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.SyncASMHooks;
 import de.take_weiland.mods.commons.internal.SyncType;
+import de.take_weiland.mods.commons.internal.SyncedEntityProperties;
 import de.take_weiland.mods.commons.internal.SyncedObject;
 import de.take_weiland.mods.commons.net.*;
 import de.take_weiland.mods.commons.sync.Sync;
@@ -23,24 +24,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import static de.take_weiland.mods.commons.asm.MCPNames.CLASS_ENTITY;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.VOID_TYPE;
-import static org.objectweb.asm.Type.getMethodDescriptor;
+import static org.objectweb.asm.Type.*;
 
 /**
  * contains black bytecode magic. Do not touch.
  */
 public final class SyncingTransformer implements ASMClassTransformer {
 
-	public static final String SYNC_METHOD = "_sc$doSync";
-
 	private static final Logger LOGGER;
-	private static final String syncAsmHooks = "de/take_weiland/mods/commons/internal/SyncASMHooks";
 	private static final ClassInfo extPropsCI = ClassInfo.of(IExtendedEntityProperties.class);
 	private static final ClassInfo entityCI = ClassInfo.of("net/minecraft/entity/Entity");
 	private static final ClassInfo tileEntityCI = ClassInfo.of("net/minecraft/tileentity/TileEntity");
 	private static final ClassInfo containerCI = ClassInfo.of("net/minecraft/inventory/Container");
-	private static final ClassInfo packetTargetCI = ClassInfo.of(PacketTarget.class);
 
 
 	static {
@@ -58,7 +55,7 @@ public final class SyncingTransformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		if (classInfo.isInterface() || classInfo.isAbstract() || classInfo.isEnum()) {
+		if (classInfo.isInterface() || classInfo.isEnum()) {
 			return false;
 		}
 
@@ -66,18 +63,25 @@ public final class SyncingTransformer implements ASMClassTransformer {
 			return false;
 		}
 
-		SyncType type;
+		SyncType type = null;
 		if (entityCI.isAssignableFrom(classInfo)) {
 			type = SyncType.ENTITY;
 		} else if (tileEntityCI.isAssignableFrom(classInfo)) {
 			type = SyncType.TILE_ENTITY;
 		} else if (containerCI.isAssignableFrom(classInfo)) {
 			type = SyncType.CONTAINER;
-		} else if (extPropsCI.isAssignableFrom(classInfo)) {
-			type = SyncType.ENTITY_PROPS;
-		} else {
-			LOGGER.warning(String.format("Can't sync class %s, it will be ignored.", clazz.name));
-			return false;
+		}
+
+		if (extPropsCI.isAssignableFrom(classInfo)) {
+			if (type == null) {
+				type = SyncType.ENTITY_PROPS;
+			} else {
+				throw new IllegalStateException("Cannot sync on IExtendedEntityProperties class which extends Entity, TileEntity or Container!");
+			}
+		}
+
+		if (type == null) {
+			throw new IllegalStateException(String.format("Can't sync class %s", clazz.name));
 		}
 
 		List<ASMVariable> variables = ASMVariables.allWith(clazz, Sync.class, CodePieces.getThis());
@@ -85,7 +89,6 @@ public final class SyncingTransformer implements ASMClassTransformer {
 
 		Map<Type, SyncPacketTarget> knownPacketTargets = Maps.newHashMap();
 		Map<Type, Syncer> knownSyncers = Maps.newHashMap();
-
 
 		for (ASMVariable var : variables) {
 			AnnotationNode syncedAnnotation = var.getterAnnotation(Sync.class);
@@ -115,23 +118,132 @@ public final class SyncingTransformer implements ASMClassTransformer {
 			elements.add(new SyncedElement(var, makeCompanion(clazz, var), packetTarget, syncer));
 		}
 
-		createSyncMethod(clazz, elements, type);
-		createReadMethod(clazz, elements);
+		// checks if any superclass of this class already has @Sync properties
+		int superSyncCount = countSuperSyncs(clazz);
+
+		// only need to add the SyncedEntityProperties interface if superclass has not already done it
+		if (type == SyncType.ENTITY_PROPS && superSyncCount > 0) {
+			addEntityPropertyStuff(clazz);
+		}
+
+		// this checks if the virtual context ("this") matches the static context.
+		// this is needed so that only the class furthest down in the hierarchy chain calls the sync method from the tick method
+		ASMCondition isActualClass = makeActualClassCheck(clazz);
+
+		// create the method that actually syncs the data
+		MethodNode syncMethod = createSyncMethod(clazz, elements, type, superSyncCount);
+
+		// create the method that reads the data back from the packet
+		createReadMethod(clazz, superSyncCount, elements);
+
+		// call the sync method from the tick method
+		makeSyncCall(clazz, syncMethod, type, superSyncCount > 0, isActualClass);
+
 		clazz.interfaces.add(Type.getInternalName(SyncedObject.class));
 		return true;
 	}
 
-	public static void addBaseSyncMethod(ClassNode clazz) {
-		MethodNode method = new MethodNode(ACC_PUBLIC, SyncingTransformer.SYNC_METHOD, Type.getMethodDescriptor(VOID_TYPE), null, null);
-		method.instructions.add(new InsnNode(RETURN));
+	private static MethodNode addElementCountGetter(ClassNode clazz, boolean isSuperSynced, int elements) {
+		MethodNode method = new MethodNode(ACC_PROTECTED, "_sc$syncElementCount", ASMUtils.getMethodDescriptor(int.class), null, null);
 		clazz.methods.add(method);
+		if (!isSuperSynced) {
+			CodePieces.constant(elements).append(CodePieces.ofOpcode(IRETURN)).appendTo(method.instructions);
+		} else {
+			CodePieces.invokeSuper(clazz, method)
+					.append(CodePieces.constant(elements))
+					.append(CodePieces.ofOpcode(IADD))
+					.append(CodePieces.ofOpcode(IRETURN))
+					.appendTo(method.instructions);
+		}
+
+		return method;
 	}
 
-	public static CodePiece addBaseSyncMethodCall(String targetClass, CodePiece instance) {
-		return CodePieces.invoke(INVOKEVIRTUAL, targetClass, SYNC_METHOD, getMethodDescriptor(VOID_TYPE), instance);
+	private static ASMCondition makeActualClassCheck(ClassNode clazz) {
+		FieldNode field = new FieldNode(ACC_PRIVATE | ACC_FINAL | ACC_TRANSIENT, "_sc$thisIsSameClass", Type.BOOLEAN_TYPE.getDescriptor(), null, null);
+		clazz.fields.add(field);
+
+		CodePiece set = CodePieces.setField(clazz, field,
+				CodePieces.getThis(),
+				Conditions.ifEqual(
+					CodePieces.constant(Type.getObjectType(clazz.name)),
+					CodePieces.invoke(INVOKEVIRTUAL, "java/lang/Object", "getClass", ASMUtils.getMethodDescriptor(Class.class), CodePieces.getThis()), getType(Class.class), false)
+				.then(CodePieces.constant(true))
+				.otherwise(CodePieces.constant(false))
+				.build());
+
+		ASMUtils.initialize(clazz, set);
+		return Conditions.ifTrue(CodePieces.getField(clazz, field, CodePieces.getThis()));
 	}
 
-	private static void createReadMethod(ClassNode clazz, List<SyncedElement> elements) {
+
+	private static void addEntityPropertyStuff(ClassNode clazz) {
+		// tick method is handled by makeSyncCall
+
+		Type entityType = getObjectType(CLASS_ENTITY);
+		Type stringType = getType(String.class);
+
+		FieldNode ownerField = new FieldNode(ACC_PRIVATE, "_sc$syncPropsOwner", entityType.getDescriptor(), null, null);
+		clazz.fields.add(ownerField);
+
+		MethodNode ownerGetter = new MethodNode(ACC_PUBLIC, SyncedEntityProperties.GET_ENTITY, getMethodDescriptor(entityType), null, null);
+		clazz.methods.add(ownerGetter);
+		CodePieces.getField(clazz, ownerField, CodePieces.getThis()).appendTo(ownerGetter.instructions);
+		ownerGetter.instructions.add(new InsnNode(ARETURN));
+
+		FieldNode identField = new FieldNode(ACC_PRIVATE, "_sc$syncPropsIdent", stringType.getDescriptor(), null, null);
+		clazz.fields.add(identField);
+
+		MethodNode identGetter = new MethodNode(ACC_PUBLIC, SyncedEntityProperties.GET_IDENTIFIER, getMethodDescriptor(stringType), null, null);
+		clazz.methods.add(identGetter);
+		CodePieces.getField(clazz, identField, CodePieces.getThis()).appendTo(identGetter.instructions);
+		identGetter.instructions.add(new InsnNode(ARETURN));
+
+		MethodNode method = new MethodNode(ACC_PUBLIC, SyncedEntityProperties.INJECT_DATA, getMethodDescriptor(VOID_TYPE, entityType, stringType), null, null);
+		clazz.methods.add(method);
+		InsnList insns = method.instructions;
+
+		CodePieces.setField(clazz, ownerField, CodePieces.getThis(), CodePieces.of(new VarInsnNode(ALOAD, 1))).appendTo(insns);
+		CodePieces.setField(clazz, identField, CodePieces.getThis(), CodePieces.of(new VarInsnNode(ALOAD, 2))).appendTo(insns);
+
+		insns.add(new InsnNode(RETURN));
+
+		clazz.interfaces.add(SyncedEntityProperties.CLASS_NAME);
+	}
+
+	private static void makeSyncCall(ClassNode clazz, MethodNode syncMethod, SyncType type, boolean isSuperSynced, ASMCondition isActualClass) {
+		String name = type.getTickMethod();
+		MethodNode tickMethod = ASMUtils.findMethod(clazz, name);
+		if (tickMethod == null) {
+			tickMethod = new MethodNode(ACC_PUBLIC, name, getMethodDescriptor(VOID_TYPE), null, null);
+			// tick method for ENTITY_PROPS only exist if class is Synced, so only call super tick method, if a superclass is actually synced
+			if (type != SyncType.ENTITY_PROPS || isSuperSynced) {
+				CodePieces.invokeSuper(clazz, tickMethod).appendTo(tickMethod.instructions);
+			}
+			tickMethod.instructions.add(new InsnNode(RETURN));
+			clazz.methods.add(tickMethod);
+		}
+		isActualClass.then(CodePieces.invoke(clazz, syncMethod, CodePieces.getThis(), CodePieces.constantNull(), CodePieces.constant(true))
+							.append(CodePieces.ofOpcode(POP)))
+				.build()
+				.prependTo(tickMethod.instructions);
+	}
+
+	private static int countSuperSyncs(ClassNode clazz) {
+		int count = 0;
+		while (clazz != null && !"java/lang/Object".equals(clazz.superName)) {
+			clazz = ASMUtils.getThinClassNode(clazz.superName);
+			for (MethodNode method : clazz.methods) {
+				if (ASMUtils.hasAnnotation(method, Sync.class)) ++count;
+			}
+			for (FieldNode field : clazz.fields) {
+				if (ASMUtils.hasAnnotation(field, Sync.class)) ++count;
+			}
+		}
+		return count;
+	}
+
+	private static void createReadMethod(ClassNode clazz, int superSyncCount, List<SyncedElement> elements) {
 		MethodNode method = new MethodNode(ACC_PUBLIC, SyncedObject.READ, ASMUtils.getMethodDescriptor(void.class, DataBuf.class), null, null);
 		clazz.methods.add(method);
 		InsnList insns = method.instructions;
@@ -140,18 +252,25 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		insns.add(start);
 		CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.READ_INDEX, ASMUtils.getMethodDescriptor(int.class, DataBuf.class),
 				CodePieces.of(new VarInsnNode(ALOAD, 1))).appendTo(insns);
-		LabelNode[] jumpLabels = new LabelNode[elements.size() + 1];
+
+		Conditions.ifEqual(CodePieces.ofOpcode(DUP), CodePieces.constant(-1), Type.INT_TYPE)
+				.then(CodePieces.ofOpcode(POP).append(CodePieces.ofOpcode(RETURN)))
+				.build()
+				.appendTo(insns);
+
+		CodePieces.constant(-superSyncCount).appendTo(insns);
+		insns.add(new InsnNode(IADD));
+
+		LabelNode[] jumpLabels = new LabelNode[elements.size()];
 		for (int i = 0, len = jumpLabels.length; i < len; ++i) {
 			jumpLabels[i] = new LabelNode();
 		}
 		LabelNode dflt = new LabelNode();
 
-		insns.add(new TableSwitchInsnNode(-1, elements.size() - 1, dflt, jumpLabels));
-		insns.add(jumpLabels[0]);
-		insns.add(new InsnNode(RETURN));
+		insns.add(new TableSwitchInsnNode(0, elements.size() - 1, dflt, jumpLabels));
 		for (int i = 0, len = elements.size(); i < len; ++i) {
 			SyncedElement element = elements.get(i);
-			insns.add(jumpLabels[i + 1]);
+			insns.add(jumpLabels[i]);
 			element.variable.set(element.syncer.read(element.variable.get(), CodePieces.of(new VarInsnNode(ALOAD, 1))))
 					.appendTo(insns);
 			insns.add(new JumpInsnNode(GOTO, start));
@@ -165,31 +284,36 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		insns.add(new JumpInsnNode(GOTO, start));
 	}
 
-	private static void createSyncMethod(ClassNode clazz, List<SyncedElement> elements, SyncType type) {
-		// this method is added by ClassTransformers to Entity, TileEntity & Container and called by the classes respective
-		// tick method to simplify things a lot (otherwise each subclass would have to figure out if to call super or not).
-		MethodNode syncMethod = new MethodNode(ACC_PUBLIC, SYNC_METHOD, Type.getMethodDescriptor(Type.VOID_TYPE), null, null);
+	private static MethodNode createSyncMethod(ClassNode clazz, List<SyncedElement> elements, SyncType type, int superSyncCount) {
+		Type packetBuilderType = getType(PacketBuilder.class);
+		MethodNode syncMethod = new MethodNode(ACC_PROTECTED, "_sc$doSync", Type.getMethodDescriptor(packetBuilderType, packetBuilderType, Type.BOOLEAN_TYPE), null, null);
 		clazz.methods.add(syncMethod);
 		InsnList insns = syncMethod.instructions;
-		CodePieces.invokeSuper(clazz, syncMethod).appendTo(insns);
 
-		LabelNode start = new LabelNode();
-		LabelNode end = new LabelNode();
-		insns.add(start);
+		int packetBuilderVar = 3;
+		CodePiece initialBuilderValue;
+		if (superSyncCount > 0) {
+			initialBuilderValue = CodePieces.invokeSuper(clazz, syncMethod, CodePieces.of(new VarInsnNode(ALOAD, 1)), CodePieces.constant(false));
+		} else {
+			initialBuilderValue = CodePieces.constantNull();
+		}
 
-		CodePieces.LocalCache packetBuilderCache = CodePieces.cacheLocal(syncMethod,
-				Type.getType(PacketBuilder.class),
-				CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME,
-						SyncASMHooks.CREATE_BUILDER,
+		initialBuilderValue.append(CodePieces.of(new VarInsnNode(ASTORE, packetBuilderVar))).appendTo(insns);
+
+		CodePiece packetBuilderDirect = CodePieces.of(new VarInsnNode(ALOAD, packetBuilderVar));
+		CodePiece packetBuilderCache = Conditions.ifNull(packetBuilderDirect)
+				.then(CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.CREATE_BUILDER,
 						ASMUtils.getMethodDescriptor(PacketBuilder.class, Object.class, SyncType.class),
-						CodePieces.getThis(),
-						CodePieces.constant(type)));
+						CodePieces.getThis(), CodePieces.constant(type))
+						.append(CodePieces.of(new VarInsnNode(ASTORE, packetBuilderVar))))
+				.build()
+				.append(packetBuilderDirect);
 
 		for (int i = 0, len = elements.size(); i < len; i++) {
 			SyncedElement element = elements.get(i);
-			CodePiece writeIndex = writeIndex(packetBuilderCache.get, i);
+			CodePiece writeIndex = writeIndex(packetBuilderCache, i + superSyncCount);
 
-			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderCache.direct);
+			CodePiece writeData = element.syncer.write(element.variable.get(), packetBuilderDirect);
 			CodePiece updateCompanion = element.companion.set(element.variable.get());
 
 			element.syncer.equals(element.companion.get(), element.variable.get())
@@ -198,17 +322,21 @@ public final class SyncingTransformer implements ASMClassTransformer {
 					.build().appendTo(insns);
 
 		}
-		Conditions.ifNull(packetBuilderCache.direct)
-				.otherwise(writeIndex(packetBuilderCache.direct, -1)
-						.append(CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.SEND_FINISHED,
-								ASMUtils.getMethodDescriptor(void.class, Object.class, SyncType.class, PacketBuilder.class),
-								CodePieces.getThis(), CodePieces.constant(type), packetBuilderCache.direct)))
+
+		Conditions.ifNull(packetBuilderDirect)
+				.otherwise(Conditions.ifTrue(CodePieces.of(new VarInsnNode(ILOAD, 2)))
+						.then(writeIndex(packetBuilderDirect, -1)
+								.append(CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.SEND_FINISHED,
+										ASMUtils.getMethodDescriptor(void.class, Object.class, SyncType.class, PacketBuilder.class),
+										CodePieces.getThis(), CodePieces.constant(type), packetBuilderDirect)))
+						.build())
 				.build()
 				.appendTo(insns);
 
-		insns.add(end);
-		insns.add(new InsnNode(RETURN));
+		packetBuilderDirect.appendTo(insns);
+		insns.add(new InsnNode(ARETURN));
 
+		return syncMethod;
 	}
 
 	private static CodePiece writeIndex(CodePiece packetBuilder, int index) {

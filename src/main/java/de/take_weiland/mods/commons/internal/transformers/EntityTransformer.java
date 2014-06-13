@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.EntityProxy;
+import de.take_weiland.mods.commons.internal.SyncASMHooks;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -18,7 +19,7 @@ public final class EntityTransformer implements ASMClassTransformer {
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
 		FieldNode syncedProps = addSyncedPropsField(clazz);
 
-		String onUpdate = MCPNames.use() ? M_ON_UPDATE_MCP : M_ON_UPDATE_SRG;
+		String onUpdate = MCPNames.method(M_ON_UPDATE);
 
 		for (MethodNode method : clazz.methods) {
 			if (method.name.equals(M_REGISTER_EXT_PROPS)) {
@@ -73,7 +74,7 @@ public final class EntityTransformer implements ASMClassTransformer {
 		insns.add(new VarInsnNode(ALOAD, 1));
 		insns.add(new VarInsnNode(ALOAD, 2));
 
-		String owner = "de/take_weiland/mods/commons/internal/SyncASMHooks";
+		String owner = SyncASMHooks.CLASS_NAME;
 		String name = "onNewEntityProperty";
 		String desc = getMethodDescriptor(listType, getObjectType(clazz.name), listType, getType(String.class), getType(IExtendedEntityProperties.class));
 		insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
@@ -89,12 +90,10 @@ public final class EntityTransformer implements ASMClassTransformer {
 		insns.add(new VarInsnNode(ALOAD, 0));
 		insns.add(new FieldInsnNode(GETFIELD, clazz.name, syncedProps.name, syncedProps.desc));
 
-		String owner = "de/take_weiland/mods/commons/internal/SyncASMHooks";
-		String name = "tickSyncedProperties";
+		String owner = SyncASMHooks.CLASS_NAME;
+		String name = SyncASMHooks.TICK_PROPERTIES;
 		String desc = getMethodDescriptor(VOID_TYPE, getObjectType(clazz.name), getType(List.class));
 		insns.add(new MethodInsnNode(INVOKESTATIC, owner, name, desc));
-
-		SyncingTransformer.addBaseSyncMethodCall(clazz.name, CodePieces.getThis()).appendTo(insns);
 
 		method.instructions.insert(insns);
 	}

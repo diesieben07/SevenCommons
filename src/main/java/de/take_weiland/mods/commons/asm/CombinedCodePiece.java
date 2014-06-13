@@ -25,8 +25,14 @@ class CombinedCodePiece extends AbstractCodePiece {
 
 	@Override
 	public void insertBefore(InsnList list, AbstractInsnNode location) {
-		for (CodePiece piece : pieces) {
-			piece.insertBefore(list, location);
+		if (location == null) {
+			for (CodePiece piece : pieces) {
+				piece.appendTo(list);
+			}
+		} else {
+			for (CodePiece piece : pieces) {
+				piece.insertBefore(list, location);
+			}
 		}
 	}
 

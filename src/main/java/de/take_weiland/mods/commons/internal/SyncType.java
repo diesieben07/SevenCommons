@@ -4,21 +4,19 @@ import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.net.DataBuf;
 import de.take_weiland.mods.commons.net.SimplePacket;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
-
-import java.util.List;
+import net.minecraftforge.common.IExtendedEntityProperties;
 
 public enum SyncType {
 
-	ENTITY("entity", "net/minecraft/entity/Entity", MCPNames.F_WORLD_OBJ_ENTITY_MCP, MCPNames.F_WORLD_OBJ_ENTITY_SRG, MCPNames.M_ON_UPDATE_SRG) {
+	ENTITY("entity", "net/minecraft/entity/Entity", MCPNames.F_WORLD_OBJ_ENTITY, MCPNames.M_ON_UPDATE) {
 		
 		@Override
 		void sendPacket(Object entity, SimplePacket p) {
-			p.sendToAllTracking((Entity) entity);
+			p.sendToAllAssociated((Entity) entity);
 		}
 
 		@Override
@@ -33,7 +31,7 @@ public enum SyncType {
 		
 	},
 	
-	TILE_ENTITY("tileEntity", "net/minecraft/tileentity/TileEntity", MCPNames.F_WORLD_OBJ_TILEENTITY_MCP, MCPNames.F_WORLD_OBJ_TILEENTITY_SRG, MCPNames.M_UPDATE_ENTITY_SRG) {
+	TILE_ENTITY("tileEntity", "net/minecraft/tileentity/TileEntity", MCPNames.F_WORLD_OBJ_TILEENTITY, MCPNames.M_UPDATE_ENTITY) {
 		
 		@Override
 		void sendPacket(Object te, SimplePacket p) {
@@ -58,7 +56,7 @@ public enum SyncType {
 		
 	},
 	
-	CONTAINER("container", null, null, null, MCPNames.M_DETECT_AND_SEND_CHANGES_SRG) {
+	CONTAINER("container", null, null, MCPNames.M_DETECT_AND_SEND_CHANGES) {
 		
 		@Override
 		void sendPacket(Object container, SimplePacket p) {
@@ -76,7 +74,7 @@ public enum SyncType {
 		}
 		
 	},
-	ENTITY_PROPS("entityProps", null, null, null, "_sc$tickEntityProps") {
+	ENTITY_PROPS("entityProps", null, null, SyncedEntityProperties.TICK) {
 		
 		@Override
 		void sendPacket(Object props, SimplePacket p) {
@@ -87,17 +85,15 @@ public enum SyncType {
 		void injectInfo(Object obj, WritableDataBuf out) {
 			SyncedEntityProperties sep = (SyncedEntityProperties) obj;
 			ENTITY.injectInfo(sep._sc$getPropsEntity(), out);
-			out.writeVarInt(sep._sc$getPropsIndex());
+			out.writeString(sep._sc$getPropsIdentifier());
 		}
 
 		@Override
 		Object recreate(EntityPlayer player, DataBuf in) {
-			Object entity = ENTITY.recreate(player, in);
+			Entity entity = (Entity) ENTITY.recreate(player, in);
 			if (entity != null) {
-				List<SyncedEntityProperties> props = ((EntityProxy)entity)._sc$getSyncedProperties();
-				if (props != null) {
-					return JavaUtils.get(props, in.readVarInt());
-				}
+				IExtendedEntityProperties props = entity.getExtendedProperties(in.readString());
+				return props instanceof SyncedEntityProperties ? props : null;
 			}
 			return null;
 		}
@@ -109,14 +105,12 @@ public enum SyncType {
 
 	private final String simpleName;
 	private final String rootClass;
-	private final String worldField;
 	private final String worldFieldSrg;
 	private final String tickSrg;
 	
-	private SyncType(String simpleName, String rootClass, String worldField, String worldFieldSrg, String tickSrg) {
+	private SyncType(String simpleName, String rootClass, String worldFieldSrg, String tickSrg) {
 		this.simpleName = simpleName;
 		this.rootClass = rootClass;
-		this.worldField = worldField;
 		this.worldFieldSrg = worldFieldSrg;
 		this.tickSrg = tickSrg;
 	}
@@ -126,28 +120,15 @@ public enum SyncType {
 	}
 
 	public String getWorldFieldName() {
-		return MCPNames.use() ? worldField : worldFieldSrg;
+		return MCPNames.field(worldFieldSrg);
 	}
 
 	public String getTickMethod() {
-		return MCPNames.method(tickSrg);
+		return this == ENTITY_PROPS ? tickSrg : MCPNames.method(tickSrg);
 	}
 
 	public String getSimpleName() {
 		return simpleName;
-	}
-
-	public static SyncType forBaseClass(String clazz) {
-		switch (clazz) {
-			case CLASS_CONTAINER:
-				return CONTAINER;
-			case CLASS_ENTITY:
-				return ENTITY;
-			case CLASS_TILE_ENTITY:
-				return TILE_ENTITY;
-			default:
-				throw new IllegalArgumentException();
-		}
 	}
 
 	abstract void sendPacket(Object obj, SimplePacket p);

@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ClassInfo;
+import de.take_weiland.mods.commons.asm.MCPNames;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -32,9 +33,9 @@ public class Packet250Transformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		String readMethod = use() ? M_READ_PACKET_DATA_MCP : M_READ_PACKET_DATA_SRG;
-		String writeMethod = use() ? M_WRITE_PACKET_DATA_MCP : M_WRITE_PACKET_DATA_SRG;
-		String getPacketSizeMethod = use() ? M_GET_PACKET_SIZE_MCP : M_GET_PACKET_SIZE_SRG;
+		String readMethod = MCPNames.method(M_READ_PACKET_DATA);
+		String writeMethod = MCPNames.method(M_WRITE_PACKET_DATA);
+		String getPacketSizeMethod = MCPNames.method(M_GET_PACKET_SIZE);
 		boolean foundCstr = false, foundRead = false, foundWrite = false, foundSize = false;
 		for (MethodNode method : clazz.methods) {
 			if (method.name.equals("<init>") && method.desc.equals(CSTR_DESC)) {

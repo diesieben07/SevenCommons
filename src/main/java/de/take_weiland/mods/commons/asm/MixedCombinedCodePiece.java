@@ -58,7 +58,7 @@ class MixedCombinedCodePiece extends AbstractCodePiece {
 	@Override
 	public void insertBefore(InsnList to, AbstractInsnNode location) {
 		Map<LabelNode, LabelNode> context = newContext();
-		if (location == to.getFirst()) {
+		if (location == null) {
 			for (Object element : elements) {
 				if (element instanceof AbstractInsnNode) {
 					to.insert(((AbstractInsnNode) element).clone(context));
@@ -70,7 +70,6 @@ class MixedCombinedCodePiece extends AbstractCodePiece {
 			}
 		} else {
 			for (Object element : elements) {
-				AbstractInsnNode beforeLocation = location.getPrevious();
 				if (element instanceof AbstractInsnNode) {
 					to.insertBefore(location, ((AbstractInsnNode) element).clone(context));
 				} else if (element instanceof InsnList) {
@@ -78,7 +77,6 @@ class MixedCombinedCodePiece extends AbstractCodePiece {
 				} else if (element instanceof CodePiece) {
 					((CodePiece) element).insertBefore(to, location);
 				}
-				location = beforeLocation.getNext();
 			}
 		}
 	}

@@ -17,6 +17,7 @@ public final class SyncASMHooks {
 	private SyncASMHooks() { }
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/SyncASMHooks";
+	public static final String TICK_PROPERTIES = "tickSyncedProperties";
 	public static final String WRITE_INDEX = "writeIndex";
 	public static final String READ_INDEX = "readIndex";
 	public static final String WRITE_INTEGRATED = "write";
@@ -119,7 +120,7 @@ public final class SyncASMHooks {
 	public static List<IExtendedEntityProperties> onNewEntityProperty(Entity owner, List<IExtendedEntityProperties> syncedList, String identifier, IExtendedEntityProperties props) {
 		if (Sides.logical(owner).isServer() && props instanceof SyncedEntityProperties) {
 			(syncedList == null ? syncedList = Lists.newArrayList() : syncedList).add(props);
-			((SyncedEntityProperties)props)._sc$injectEntityPropsData(owner, identifier, syncedList.size() - 1);
+			((SyncedEntityProperties)props)._sc$injectEntityPropsData(owner, identifier);
 		}
 		return syncedList;
 	}
@@ -127,6 +128,7 @@ public final class SyncASMHooks {
 	public static void tickSyncedProperties(Entity owner, List<SyncedEntityProperties> props) {
 		if (Sides.logical(owner).isServer() && props != null) {
 			int len = props.size();
+			//noinspection ForLoopReplaceableByForEach
 			for (int i = 0; i < len; ++i) {
 				props.get(i)._sc$tickEntityProps();
 			}

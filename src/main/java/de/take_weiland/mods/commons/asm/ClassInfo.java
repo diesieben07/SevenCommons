@@ -6,7 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import de.take_weiland.mods.commons.internal.InternalReflector;
-import de.take_weiland.mods.commons.internal.SevenCommons;
+import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -15,7 +15,6 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import static de.take_weiland.mods.commons.internal.SevenCommons.CLASSLOADER;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
@@ -60,7 +59,7 @@ public abstract class ClassInfo {
 			case ARRAY:
 			case OBJECT:
 				// Type.getClassName incorrectly returns something like "java.lang.Object[][]" instead of "[[Ljava.lang.Object"
-				// so we have to convert the internal name (which is corrent) manually
+				// so we have to convert the internal name (which is correct) manually
 				return cache.getUnchecked(ASMUtils.binaryName(type.getInternalName()));
 			case METHOD:
 				throw new IllegalArgumentException("Invalid Type!");
@@ -81,7 +80,7 @@ public abstract class ClassInfo {
 		return cache.getUnchecked(ASMUtils.binaryName(className));
 	}
 
-	private static ClassInfo create(String className) {
+	static ClassInfo create(String className) {
 		switch (className) {
 			case "boolean":
 				return of(boolean.class);
@@ -113,15 +112,15 @@ public abstract class ClassInfo {
 	private static ClassInfo ofObject(String className) {
 		Class<?> clazz;
 		// first, try to get the class if it's already loaded
-		if ((clazz = InternalReflector.instance.findLoadedClass(CLASSLOADER, className)) != null) {
+		if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, className)) != null) {
 			return new ClassInfoFromClazz(clazz);
 		// didn't find it. Try with the transformed name now
-		} else if ((clazz = InternalReflector.instance.findLoadedClass(CLASSLOADER, ASMUtils.transformName(className))) != null) {
+		} else if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, ASMUtils.transformName(className))) != null) {
 			return new ClassInfoFromClazz(clazz);
 		} else {
 			try {
 				// the class is definitely not loaded, get it's bytes
-				byte[] bytes = SevenCommons.CLASSLOADER.getClassBytes(ASMUtils.transformName(className));
+				byte[] bytes = Launch.classLoader.getClassBytes(ASMUtils.transformName(className));
 				// somehow we can't access the class bytes (happens for JDK classes for example)
 				// we try and load the class now
 				if (bytes == null) {

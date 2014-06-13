@@ -9,7 +9,7 @@ import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import static de.take_weiland.mods.commons.asm.MCPNames.M_TRY_START_WATCHING_THIS_SRG;
+import static de.take_weiland.mods.commons.asm.MCPNames.M_TRY_START_WATCHING_THIS;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
@@ -17,7 +17,7 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS_SRG);
+		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, M_TRY_START_WATCHING_THIS);
 
 		generateEventCall(clazz).insertBefore(findInsertionHook(method));
 
@@ -28,7 +28,7 @@ public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 		Type entityPlayer = getObjectType("net/minecraft/entity/player/EntityPlayer");
 		Type entity = getObjectType("net/minecraft/entity/Entity");
 
-		String myEntity = MCPNames.field(MCPNames.F_MY_ENTITY_SRG);
+		String myEntity = MCPNames.field(MCPNames.F_MY_ENTITY);
 
 		String methodDesc = getMethodDescriptor(VOID_TYPE, entityPlayer, entity);
 

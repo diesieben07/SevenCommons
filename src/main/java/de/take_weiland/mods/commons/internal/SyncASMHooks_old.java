@@ -59,7 +59,7 @@ public final class SyncASMHooks_old {
 	public static List<IExtendedEntityProperties> onNewEntityProperty(Entity owner, List<IExtendedEntityProperties> syncedList, String identifier, IExtendedEntityProperties props) {
 		if (Sides.logical(owner).isServer() && props instanceof SyncedEntityProperties) {
 			(syncedList == null ? syncedList = Lists.newArrayList() : syncedList).add(props);
-			((SyncedEntityProperties)props)._sc$injectEntityPropsData(owner, identifier, syncedList.size() - 1);
+			((SyncedEntityProperties)props)._sc$injectEntityPropsData(owner, identifier);
 		}
 		return syncedList;
 	}

@@ -354,7 +354,7 @@ public final class ASMUtils {
 
 		String setterName;
 
-		AnnotationNode overrideSetter = getAnnotationRaw(getter, OverrideSetter.class);
+		AnnotationNode overrideSetter = getAnnotation(getter, OverrideSetter.class);
 		if (overrideSetter != null) {
 			setterName = getAnnotationProperty(overrideSetter, "value");
 		} else {
@@ -790,8 +790,8 @@ public final class ASMUtils {
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
-	public static AnnotationNode getAnnotationRaw(FieldNode field, Class<? extends Annotation> ann) {
-		return getAnnotationRaw(field.visibleAnnotations, field.invisibleAnnotations, ElementType.FIELD, ann);
+	public static AnnotationNode getAnnotation(FieldNode field, Class<? extends Annotation> ann) {
+		return getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, ElementType.FIELD, ann);
 	}
 
 	/**
@@ -800,8 +800,8 @@ public final class ASMUtils {
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
-	public static AnnotationNode getAnnotationRaw(ClassNode clazz, Class<? extends Annotation> ann) {
-		return getAnnotationRaw(clazz.visibleAnnotations, clazz.invisibleAnnotations, ElementType.TYPE, ann);
+	public static AnnotationNode getAnnotation(ClassNode clazz, Class<? extends Annotation> ann) {
+		return getAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, ElementType.TYPE, ann);
 	}
 
 	/**
@@ -810,8 +810,8 @@ public final class ASMUtils {
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
-	public static AnnotationNode getAnnotationRaw(MethodNode method, Class<? extends Annotation> ann) {
-		return getAnnotationRaw(method.visibleAnnotations, method.invisibleAnnotations, ElementType.METHOD, ann);
+	public static AnnotationNode getAnnotation(MethodNode method, Class<? extends Annotation> ann) {
+		return getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, ElementType.METHOD, ann);
 	}
 
 	private static boolean canBePresentOn(Class<? extends Annotation> annotation, ElementType type) {
@@ -845,7 +845,7 @@ public final class ASMUtils {
 		return null;
 	}
 
-	static AnnotationNode getAnnotationRaw(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, ElementType reqType, Class<? extends Annotation> ann) {
+	static AnnotationNode getAnnotation(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, ElementType reqType, Class<? extends Annotation> ann) {
 		if (!canBePresentOn(ann, reqType)) {
 			return null;
 		}
@@ -893,7 +893,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(FieldNode field, Class<? extends Annotation> annotation) {
-		return getAnnotationRaw(field, annotation) != null;
+		return getAnnotation(field, annotation) != null;
 	}
 
 	/**
@@ -903,7 +903,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(ClassNode clazz, Class<? extends Annotation> annotation) {
-		return getAnnotationRaw(clazz, annotation) != null;
+		return getAnnotation(clazz, annotation) != null;
 	}
 
 	/**
@@ -913,7 +913,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(MethodNode method, Class<? extends Annotation> annotation) {
-		return getAnnotationRaw(method, annotation) != null;
+		return getAnnotation(method, annotation) != null;
 	}
 
 	/**

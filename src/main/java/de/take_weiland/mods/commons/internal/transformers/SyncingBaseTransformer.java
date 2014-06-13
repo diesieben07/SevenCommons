@@ -12,7 +12,7 @@ public class SyncingBaseTransformer implements ASMClassTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		SyncingTransformer.addBaseSyncMethod(clazz);
+//		SyncingTransformer.addBaseSyncMethod(clazz);
 		return true;
 	}
 

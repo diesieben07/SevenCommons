@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.VOID_TYPE;
+import static org.objectweb.asm.Type.getDescriptor;
 import static org.objectweb.asm.Type.getMethodDescriptor;
 
 /**
@@ -175,6 +176,10 @@ public final class CodePieces {
 	}
 
 	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code) {
+		return cacheLocal(method, type, code, constantNull());
+	}
+
+	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code, CodePiece initialValue) {
 		int idx;
 		if ((method.access & ACC_STATIC) == ACC_STATIC) {
 			idx = 0;
@@ -190,13 +195,17 @@ public final class CodePieces {
 			if (insn.var >= idx) idx = insn.var + 1;
 		}
 
-		return cacheLocal(method, type, code, idx);
+		return cacheLocal(method, type, code, initialValue, idx);
 	}
 
 	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code, int varIndex) {
+		return cacheLocal(method, type, code, constantNull(), varIndex);
+	}
+
+	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code, CodePiece initialValue, int varIndex) {
 		LocalVariableNode var = new LocalVariableNode(null, type.getDescriptor(), null, null, null, varIndex);
 		ASMVariable theCache = ASMVariables.of(var);
-		theCache.set(constantNull()).prependTo(method.instructions);
+		theCache.set(initialValue).prependTo(method.instructions);
 
 		return new LocalCache(Conditions.ifNull(theCache.get())
 				.then(theCache.set(code))
@@ -216,13 +225,21 @@ public final class CodePieces {
 	}
 
 	public static CodePiece getField(ClassNode clazz, FieldNode field, CodePiece instance) {
-		checkArgument((field.access & ACC_STATIC) != ACC_STATIC, "No instance needed for static field");
+		requireNotStatic(field);
 		return instance.append(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
 	}
 
 	public static CodePiece getField(ClassNode clazz, FieldNode field) {
-		checkArgument((field.access & ACC_STATIC) == ACC_STATIC, "Instance needed for non-static field");
+		requireStatic(field);
 		return of(new FieldInsnNode(GETSTATIC, clazz.name, field.name, field.desc));
+	}
+
+	private static void requireNotStatic(FieldNode field) {
+		checkArgument((field.access & ACC_STATIC) != ACC_STATIC, "No instance needed for static field");
+	}
+
+	private static void requireStatic(FieldNode field) {
+		checkArgument((field.access & ACC_STATIC) == ACC_STATIC, "Instance needed for non-static field");
 	}
 
 	public static CodePiece getField(String clazz, String field, Type type, CodePiece instance) {
@@ -247,6 +264,40 @@ public final class CodePieces {
 
 	public static CodePiece getField(String clazz, String field, String desc) {
 		return of(new FieldInsnNode(GETSTATIC, clazz, field, desc));
+	}
+
+	public static CodePiece setField(ClassNode clazz, FieldNode field, CodePiece instance, CodePiece value) {
+		requireNotStatic(field);
+		return setField(clazz.name, field.name, field.desc, instance, value);
+	}
+
+	public static CodePiece setField(ClassNode clazz, FieldNode field, CodePiece value) {
+		requireStatic(field);
+		return setField(clazz.name, field.name, field.desc, value);
+	}
+
+	public static CodePiece setField(String clazz, String field, Type type, CodePiece instance, CodePiece value) {
+		return setField(clazz, field, type.getDescriptor(), instance, value);
+	}
+
+	public static CodePiece setField(String clazz, String field, Class<?> type, CodePiece instance, CodePiece value) {
+		return setField(clazz, field, getDescriptor(type), instance, value);
+	}
+
+	public static CodePiece setField(String clazz, String field, String desc, CodePiece instance, CodePiece value) {
+		return instance.append(value).append(of(new FieldInsnNode(PUTFIELD, clazz, field, desc)));
+	}
+
+	public static CodePiece setField(String clazz, String field, Type type, CodePiece value) {
+		return setField(clazz, field, type.getDescriptor(), value);
+	}
+
+	public static CodePiece setField(String clazz, String field, Class<?> type, CodePiece value) {
+		return setField(clazz, field, getDescriptor(type), value);
+	}
+
+	public static CodePiece setField(String clazz, String field, String desc, CodePiece value) {
+		return value.append(of(new FieldInsnNode(PUTSTATIC, clazz, field, desc)));
 	}
 
 	public static CodePiece invokeStatic(String clazz, String method, String desc, CodePiece... args) {
