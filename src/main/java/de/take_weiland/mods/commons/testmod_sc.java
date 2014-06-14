@@ -62,7 +62,13 @@ public class testmod_sc {
 
 	}
 
-	public static class Test extends Base {
+
+	private static abstract class Blubb extends Base {
+
+
+	}
+
+	public static class Test extends Blubb {
 
 		@Sync
 		private ItemStack foobar;

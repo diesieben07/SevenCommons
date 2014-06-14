@@ -122,7 +122,7 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		int superSyncCount = countSuperSyncs(clazz);
 
 		// only need to add the SyncedEntityProperties interface if superclass has not already done it
-		if (type == SyncType.ENTITY_PROPS && superSyncCount > 0) {
+		if (type == SyncType.ENTITY_PROPS && superSyncCount == 0) {
 			addEntityPropertyStuff(clazz);
 		}
 
