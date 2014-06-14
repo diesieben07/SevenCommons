@@ -19,7 +19,10 @@ public final class PacketSync extends ModPacket {
 		SyncType type = DataBuffers.readEnum(in, SyncType.class);
 		Object readObj = type.recreate(player, in);
 		if (readObj instanceof SyncedObject) {
-			((SyncedObject) readObj)._sc$syncRead(in);
+			if (((SyncedObject) readObj)._sc$syncRead(in) != -1) {
+				// TODO: some exception ?
+				System.out.println("Unhandled Sync index for " + readObj);
+			}
 		}
 	}
 

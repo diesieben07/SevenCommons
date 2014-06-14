@@ -6,6 +6,6 @@ public interface SyncedObject {
 
 	public static final String READ = "_sc$syncRead";
 
-	void _sc$syncRead(DataBuf in);
+	int _sc$syncRead(DataBuf in);
 	
 }

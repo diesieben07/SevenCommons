@@ -18,7 +18,6 @@ import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -143,37 +142,22 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		return true;
 	}
 
-	private static MethodNode addElementCountGetter(ClassNode clazz, boolean isSuperSynced, int elements) {
-		MethodNode method = new MethodNode(ACC_PROTECTED, "_sc$syncElementCount", ASMUtils.getMethodDescriptor(int.class), null, null);
-		clazz.methods.add(method);
-		if (!isSuperSynced) {
-			CodePieces.constant(elements).append(CodePieces.ofOpcode(IRETURN)).appendTo(method.instructions);
-		} else {
-			CodePieces.invokeSuper(clazz, method)
-					.append(CodePieces.constant(elements))
-					.append(CodePieces.ofOpcode(IADD))
-					.append(CodePieces.ofOpcode(IRETURN))
-					.appendTo(method.instructions);
-		}
+	private static ASMCondition makeActualClassCheck(ClassNode clazz) {
+		MethodNode method = createSyncClassGetter(clazz);
 
-		return method;
+		return Conditions.ifEqual(CodePieces.invoke(clazz, method, CodePieces.getThis()),
+					CodePieces.constant(Type.getObjectType(clazz.name)),
+					Type.getType(Class.class), false);
 	}
 
-	private static ASMCondition makeActualClassCheck(ClassNode clazz) {
-		FieldNode field = new FieldNode(ACC_PRIVATE | ACC_FINAL | ACC_TRANSIENT, "_sc$thisIsSameClass", Type.BOOLEAN_TYPE.getDescriptor(), null, null);
-		clazz.fields.add(field);
+	private static MethodNode createSyncClassGetter(ClassNode clazz) {
+		MethodNode method = new MethodNode(ACC_PROTECTED, "_sc$syncClass", getMethodDescriptor(getType(Class.class)), null, null);
+		clazz.methods.add(method);
 
-		CodePiece set = CodePieces.setField(clazz, field,
-				CodePieces.getThis(),
-				Conditions.ifEqual(
-					CodePieces.constant(Type.getObjectType(clazz.name)),
-					CodePieces.invoke(INVOKEVIRTUAL, "java/lang/Object", "getClass", ASMUtils.getMethodDescriptor(Class.class), CodePieces.getThis()), getType(Class.class), false)
-				.then(CodePieces.constant(true))
-				.otherwise(CodePieces.constant(false))
-				.build());
+		CodePieces.constant(Type.getObjectType(clazz.name)).appendTo(method.instructions);
+		method.instructions.add(new InsnNode(ARETURN));
 
-		ASMUtils.initialize(clazz, set);
-		return Conditions.ifTrue(CodePieces.getField(clazz, field, CodePieces.getThis()));
+		return method;
 	}
 
 
@@ -244,22 +228,50 @@ public final class SyncingTransformer implements ASMClassTransformer {
 	}
 
 	private static void createReadMethod(ClassNode clazz, int superSyncCount, List<SyncedElement> elements) {
-		MethodNode method = new MethodNode(ACC_PUBLIC, SyncedObject.READ, ASMUtils.getMethodDescriptor(void.class, DataBuf.class), null, null);
+		MethodNode method = new MethodNode(ACC_PUBLIC, SyncedObject.READ, ASMUtils.getMethodDescriptor(int.class, DataBuf.class), null, null);
 		clazz.methods.add(method);
 		InsnList insns = method.instructions;
 
+		LabelNode methodStart = new LabelNode();
+		LabelNode methodEnd = new LabelNode();
+
+		insns.add(methodStart);
+
+		final int _this = 0;
+		final int buf = 1;
+		final int idx = 2;
+		final int first = 3;
+		method.localVariables.add(new LocalVariableNode("this", getObjectType(clazz.name).getDescriptor(), null, methodStart, methodEnd, _this));
+		method.localVariables.add(new LocalVariableNode("buf", getDescriptor(DataBuf.class), null, methodStart, methodEnd, buf));
+		method.localVariables.add(new LocalVariableNode("idx", Type.INT_TYPE.getDescriptor(), null, methodStart, methodEnd, idx));
+		if (superSyncCount > 0) {
+			method.localVariables.add(new LocalVariableNode("first", Type.BOOLEAN_TYPE.getDescriptor(), null, methodStart, methodEnd, first));
+			CodePieces.constant(true).appendTo(insns);
+			insns.add(new VarInsnNode(ISTORE, first));
+		}
+
 		LabelNode start = new LabelNode();
 		insns.add(start);
-		CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.READ_INDEX, ASMUtils.getMethodDescriptor(int.class, DataBuf.class),
-				CodePieces.of(new VarInsnNode(ALOAD, 1))).appendTo(insns);
 
-		Conditions.ifEqual(CodePieces.ofOpcode(DUP), CodePieces.constant(-1), Type.INT_TYPE)
-				.then(CodePieces.ofOpcode(POP).append(CodePieces.ofOpcode(RETURN)))
-				.build()
+		if (superSyncCount > 0) {
+			Conditions.ifTrue(CodePieces.of(new VarInsnNode(ILOAD, first)))
+					.then(CodePieces.invokeSuper(clazz, method, CodePieces.of(new VarInsnNode(ALOAD, buf)))
+							.append(new VarInsnNode(ISTORE, idx))
+							.append(CodePieces.constant(false).append(new VarInsnNode(ISTORE, first))))
+					.otherwise(CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.READ_INDEX,
+									ASMUtils.getMethodDescriptor(int.class, DataBuf.class),
+									CodePieces.of(new VarInsnNode(ALOAD, buf)))
+								.append(CodePieces.of(new VarInsnNode(ISTORE, idx))))
+					.build()
+					.appendTo(insns);
+		} else {
+			CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.READ_INDEX,
+					ASMUtils.getMethodDescriptor(int.class, DataBuf.class),
+					CodePieces.of(new VarInsnNode(ALOAD, buf)))
 				.appendTo(insns);
 
-		CodePieces.constant(-superSyncCount).appendTo(insns);
-		insns.add(new InsnNode(IADD));
+			insns.add(new VarInsnNode(ISTORE, idx));
+		}
 
 		LabelNode[] jumpLabels = new LabelNode[elements.size()];
 		for (int i = 0, len = jumpLabels.length; i < len; ++i) {
@@ -267,21 +279,26 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		}
 		LabelNode dflt = new LabelNode();
 
-		insns.add(new TableSwitchInsnNode(0, elements.size() - 1, dflt, jumpLabels));
+		int[] keys = new int[elements.size()];
+		for (int i = 0, len = keys.length; i < len; ++i) {
+			keys[i] = i + superSyncCount;
+		}
+
+		insns.add(new VarInsnNode(ILOAD, idx));
+		insns.add(new LookupSwitchInsnNode(dflt, keys, jumpLabels));
+
 		for (int i = 0, len = elements.size(); i < len; ++i) {
 			SyncedElement element = elements.get(i);
 			insns.add(jumpLabels[i]);
-			element.variable.set(element.syncer.read(element.variable.get(), CodePieces.of(new VarInsnNode(ALOAD, 1))))
+			element.variable.set(element.syncer.read(element.variable.get(), CodePieces.of(new VarInsnNode(ALOAD, buf))))
 					.appendTo(insns);
 			insns.add(new JumpInsnNode(GOTO, start));
 		}
 		insns.add(dflt);
-		// TODO: this is a problem, produce some sort of warning
-		CodePieces.invoke(INVOKEVIRTUAL, "java/io/PrintStream", "println", ASMUtils.getMethodDescriptor(void.class, Object.class),
-				CodePieces.of(new FieldInsnNode(GETSTATIC, "java/lang/System", "out", Type.getDescriptor(PrintStream.class))),
-				CodePieces.constant("Invalid Index!"))
-				.appendTo(insns);
-		insns.add(new JumpInsnNode(GOTO, start));
+		insns.add(new VarInsnNode(ILOAD, idx));
+		insns.add(new InsnNode(IRETURN));
+
+		insns.add(methodEnd);
 	}
 
 	private static MethodNode createSyncMethod(ClassNode clazz, List<SyncedElement> elements, SyncType type, int superSyncCount) {
