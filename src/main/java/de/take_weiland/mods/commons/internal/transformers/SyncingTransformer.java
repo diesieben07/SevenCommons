@@ -118,6 +118,7 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		}
 
 		// checks if any superclass of this class already has @Sync properties
+		// and counts them to avoid conflicting IDs
 		int superSyncCount = countSuperSyncs(clazz);
 
 		// only need to add the SyncedEntityProperties interface if superclass has not already done it
@@ -126,7 +127,7 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		}
 
 		// this checks if the virtual context ("this") matches the static context.
-		// this is needed so that only the class furthest down in the hierarchy chain calls the sync method from the tick method
+		// this is needed so that only the (synced) class furthest down in the hierarchy chain calls the sync method from the tick method
 		ASMCondition isActualClass = makeActualClassCheck(clazz);
 
 		// create the method that actually syncs the data
@@ -143,21 +144,17 @@ public final class SyncingTransformer implements ASMClassTransformer {
 	}
 
 	private static ASMCondition makeActualClassCheck(ClassNode clazz) {
-		MethodNode method = createSyncClassGetter(clazz);
-
-		return Conditions.ifEqual(CodePieces.invoke(clazz, method, CodePieces.getThis()),
-					CodePieces.constant(Type.getObjectType(clazz.name)),
-					Type.getType(Class.class), false);
-	}
-
-	private static MethodNode createSyncClassGetter(ClassNode clazz) {
+		// cannot use getClass because that might return a non-synced class if there is a non-synced class in the hierarchy chain
+		// in that case we want to get first synced class while walking up the chain
 		MethodNode method = new MethodNode(ACC_PROTECTED, "_sc$syncClass", getMethodDescriptor(getType(Class.class)), null, null);
 		clazz.methods.add(method);
 
 		CodePieces.constant(Type.getObjectType(clazz.name)).appendTo(method.instructions);
 		method.instructions.add(new InsnNode(ARETURN));
 
-		return method;
+		return Conditions.ifEqual(CodePieces.invoke(clazz, method, CodePieces.getThis()),
+					CodePieces.constant(Type.getObjectType(clazz.name)),
+					Type.getType(Class.class), false);
 	}
 
 
@@ -303,26 +300,32 @@ public final class SyncingTransformer implements ASMClassTransformer {
 
 	private static MethodNode createSyncMethod(ClassNode clazz, List<SyncedElement> elements, SyncType type, int superSyncCount) {
 		Type packetBuilderType = getType(PacketBuilder.class);
-		MethodNode syncMethod = new MethodNode(ACC_PROTECTED, "_sc$doSync", Type.getMethodDescriptor(packetBuilderType, packetBuilderType, Type.BOOLEAN_TYPE), null, null);
-		clazz.methods.add(syncMethod);
-		InsnList insns = syncMethod.instructions;
+		MethodNode method = new MethodNode(ACC_PROTECTED, "_sc$doSync", Type.getMethodDescriptor(packetBuilderType, packetBuilderType, Type.BOOLEAN_TYPE), null, null);
+		clazz.methods.add(method);
+		InsnList insns = method.instructions;
 
-		int packetBuilderVar = 3;
-		CodePiece initialBuilderValue;
+		LabelNode start = new LabelNode();
+		LabelNode end = new LabelNode();
+
+		final int _this = 0;
+		final int packetBuilder = 1;
+		final int isRootCall = 2;
+		method.localVariables.add(new LocalVariableNode("this", Type.getObjectType(clazz.name).getDescriptor(), null, start, end, _this));
+		method.localVariables.add(new LocalVariableNode("packetBuilder", packetBuilderType.getDescriptor(), null, start, end, packetBuilder));
+		method.localVariables.add(new LocalVariableNode("isRootCall", Type.BOOLEAN_TYPE.getDescriptor(), null, start, end, isRootCall));
+
 		if (superSyncCount > 0) {
-			initialBuilderValue = CodePieces.invokeSuper(clazz, syncMethod, CodePieces.of(new VarInsnNode(ALOAD, 1)), CodePieces.constant(false));
-		} else {
-			initialBuilderValue = CodePieces.constantNull();
+			CodePieces.invokeSuper(clazz, method, CodePieces.of(new VarInsnNode(ALOAD, packetBuilder)), CodePieces.constant(false))
+					.append(new VarInsnNode(ASTORE, packetBuilder))
+					.appendTo(insns);
 		}
 
-		initialBuilderValue.append(CodePieces.of(new VarInsnNode(ASTORE, packetBuilderVar))).appendTo(insns);
-
-		CodePiece packetBuilderDirect = CodePieces.of(new VarInsnNode(ALOAD, packetBuilderVar));
+		CodePiece packetBuilderDirect = CodePieces.of(new VarInsnNode(ALOAD, packetBuilder));
 		CodePiece packetBuilderCache = Conditions.ifNull(packetBuilderDirect)
 				.then(CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.CREATE_BUILDER,
 						ASMUtils.getMethodDescriptor(PacketBuilder.class, Object.class, SyncType.class),
 						CodePieces.getThis(), CodePieces.constant(type))
-						.append(CodePieces.of(new VarInsnNode(ASTORE, packetBuilderVar))))
+						.append(CodePieces.of(new VarInsnNode(ASTORE, packetBuilder))))
 				.build()
 				.append(packetBuilderDirect);
 
@@ -341,7 +344,7 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		}
 
 		Conditions.ifNull(packetBuilderDirect)
-				.otherwise(Conditions.ifTrue(CodePieces.of(new VarInsnNode(ILOAD, 2)))
+				.otherwise(Conditions.ifTrue(CodePieces.of(new VarInsnNode(ILOAD, isRootCall)))
 						.then(writeIndex(packetBuilderDirect, -1)
 								.append(CodePieces.invokeStatic(SyncASMHooks.CLASS_NAME, SyncASMHooks.SEND_FINISHED,
 										ASMUtils.getMethodDescriptor(void.class, Object.class, SyncType.class, PacketBuilder.class),
@@ -353,7 +356,7 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		packetBuilderDirect.appendTo(insns);
 		insns.add(new InsnNode(ARETURN));
 
-		return syncMethod;
+		return method;
 	}
 
 	private static CodePiece writeIndex(CodePiece packetBuilder, int index) {
