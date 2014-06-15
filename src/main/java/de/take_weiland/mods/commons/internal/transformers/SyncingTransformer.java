@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -21,6 +22,7 @@ import org.objectweb.asm.tree.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import static de.take_weiland.mods.commons.asm.MCPNames.CLASS_ENTITY;
@@ -86,22 +88,10 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		List<ASMVariable> variables = ASMVariables.allWith(clazz, Sync.class, CodePieces.getThis());
 		List<SyncedElement> elements = Lists.newArrayListWithCapacity(variables.size());
 
-		Map<Type, SyncPacketTarget> knownPacketTargets = Maps.newHashMap();
 		Map<Type, Syncer> knownSyncers = Maps.newHashMap();
 
 		for (ASMVariable var : variables) {
 			AnnotationNode syncedAnnotation = var.getterAnnotation(Sync.class);
-			Type packetTargetType = ASMUtils.getAnnotationProperty(syncedAnnotation, "target");
-			SyncPacketTarget packetTarget;
-			if (packetTargetType == null) {
-				packetTarget = new PacketTargetDefault(type);
-			} else if (!knownPacketTargets.containsKey(packetTargetType)) {
-				CodePiece packetTargetInstance = obtainInstance(clazz, packetTargetType);
-				packetTarget = new PacketTargetCustom(packetTargetInstance);
-				knownPacketTargets.put(packetTargetType, packetTarget);
-			} else {
-				packetTarget = knownPacketTargets.get(packetTargetType);
-			}
 			Type syncerType = ASMUtils.getAnnotationProperty(syncedAnnotation, "syncer");
 			Syncer syncer;
 			if (syncerType == null) {
@@ -114,7 +104,7 @@ public final class SyncingTransformer implements ASMClassTransformer {
 				syncer = knownSyncers.get(syncerType);
 			}
 
-			elements.add(new SyncedElement(var, makeCompanion(clazz, var), packetTarget, syncer));
+			elements.add(new SyncedElement(var, makeCompanion(clazz, var), syncer));
 		}
 
 		// checks if any superclass of this class already has @Sync properties
@@ -402,26 +392,37 @@ public final class SyncingTransformer implements ASMClassTransformer {
 
 		final ASMVariable variable;
 		final ASMVariable companion;
-		final SyncPacketTarget packetTarget;
 		final Syncer syncer;
 
-		SyncedElement(ASMVariable variable, ASMVariable companion, SyncPacketTarget packetTarget, Syncer syncer) {
+		SyncedElement(ASMVariable variable, ASMVariable companion, Syncer syncer) {
 			this.variable = variable;
 			this.companion = companion;
-			this.packetTarget = packetTarget;
 			this.syncer = syncer;
 		}
 	}
 
 	private static abstract class Syncer {
 
+		static final Map<Type, Type> boxedTypes = ImmutableMap.<Type, Type>builder()
+			.put(getType(Boolean.class), Type.BOOLEAN_TYPE)
+			.put(getType(Byte.class), Type.BYTE_TYPE)
+			.put(getType(Short.class), Type.SHORT_TYPE)
+			.put(getType(Integer.class), Type.INT_TYPE)
+			.put(getType(Long.class), Type.LONG_TYPE)
+			.put(getType(Character.class), Type.CHAR_TYPE)
+			.put(getType(Float.class), Type.FLOAT_TYPE)
+			.put(getType(Double.class), Type.DOUBLE_TYPE)
+			.build();
+
 		private static final Set<Type> integratedTypes = ImmutableSet.of(
-			Type.getType(String.class)
+			Type.getType(String.class), Type.getType(UUID.class)
 		);
 
 		static Syncer forType(Type t) {
 			if (ASMUtils.isPrimitive(t) || integratedTypes.contains(t)) {
 				return new IntegratedSyncer(t);
+			} else if (boxedTypes.containsKey(t)) {
+				return new BoxedSyncer(t);
 			} else if (t.getInternalName().equals("net/minecraft/item/ItemStack")) {
 				return ItemStackSyncer.instance();
 			} else if (ClassInfo.of(t).isEnum()) {
@@ -440,6 +441,49 @@ public final class SyncingTransformer implements ASMClassTransformer {
 
 		abstract CodePiece read(CodePiece oldValue, CodePiece packetBuilder);
 
+	}
+
+	private static class BoxedSyncer extends Syncer {
+
+		private final Type type;
+
+		BoxedSyncer(Type type) {
+			this.type = type;
+		}
+
+		@Override
+		ASMCondition equals(CodePiece oldValue, CodePiece newValue) {
+			return Conditions.ifEqual(oldValue, newValue, type, true);
+		}
+
+		@Override
+		CodePiece write(CodePiece newValue, CodePiece packetBuilder) {
+			Type unboxed = boxedTypes.get(type);
+			String owner = SyncASMHooks.CLASS_NAME;
+			String name = SyncASMHooks.WRITE_INTEGRATED;
+			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, unboxed, Type.getType(WritableDataBuf.class));
+
+			String unboxName = unboxed.getClassName() + "Value";
+			String unboxDesc = getMethodDescriptor(unboxed);
+
+			return CodePieces.invokeStatic(owner, name, desc,
+					CodePieces.invoke(INVOKEVIRTUAL, type.getInternalName(), unboxName, unboxDesc, newValue),
+					packetBuilder);
+		}
+
+		@Override
+		CodePiece read(CodePiece oldValue, CodePiece packetBuilder) {
+			Type unboxed = boxedTypes.get(type);
+
+			String owner = SyncASMHooks.CLASS_NAME;
+			String name = String.format(SyncASMHooks.READ_INTEGRATED, unboxed.getClassName().replace('.', '_'));
+			String desc = Type.getMethodDescriptor(unboxed, Type.getType(DataBuf.class));
+
+			String boxDesc = getMethodDescriptor(type, unboxed);
+
+			return CodePieces.invokeStatic(type.getInternalName(), "valueOf", boxDesc,
+						CodePieces.invokeStatic(owner, name, desc, packetBuilder));
+		}
 	}
 
 	private static class ItemStackSyncer extends Syncer {
@@ -527,7 +571,7 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		@Override
 		CodePiece read(CodePiece oldValue, CodePiece packetBuilder) {
 			String owner = SyncASMHooks.CLASS_NAME;
-			String name = String.format(SyncASMHooks.READ_PRIMITIVE, typeToSync.getClassName().replace('.', '_'));
+			String name = String.format(SyncASMHooks.READ_INTEGRATED, typeToSync.getClassName().replace('.', '_'));
 			String desc = Type.getMethodDescriptor(typeToSync, Type.getType(DataBuf.class));
 
 			return CodePieces.invokeStatic(owner, name, desc, packetBuilder);
@@ -578,49 +622,6 @@ public final class SyncingTransformer implements ASMClassTransformer {
 			} else {
 				return invoke;
 			}
-		}
-	}
-
-	private static abstract class SyncPacketTarget {
-
-		abstract CodePiece send(CodePiece simplePacket);
-
-	}
-
-	private static class PacketTargetDefault extends SyncPacketTarget {
-
-		private final SyncType type;
-
-		PacketTargetDefault(SyncType type) {
-			this.type = type;
-		}
-
-		@Override
-		CodePiece send(CodePiece simplePacket) {
-			String owner = SyncASMHooks.CLASS_NAME;
-			String name = String.format(SyncASMHooks.SEND_PACKET, type.getSimpleName());
-			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(SimplePacket.class));
-
-			return CodePieces.invokeStatic(owner, name, desc, simplePacket);
-		}
-	}
-
-	private static class PacketTargetCustom extends SyncPacketTarget {
-
-		private final CodePiece customTarget;
-
-		PacketTargetCustom(CodePiece customTarget) {
-			this.customTarget = customTarget;
-		}
-
-		@Override
-		CodePiece send(CodePiece simplePacket) {
-			String owner = SimplePacket.CLASS_NAME;
-			String name = SimplePacket.METHOD_SEND_TO;
-			String desc = Type.getMethodDescriptor(Type.getType(SimplePacket.class), Type.getType(PacketTarget.class));
-
-			return CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, customTarget, simplePacket)
-					.append(CodePieces.ofOpcode(POP));
 		}
 	}
 

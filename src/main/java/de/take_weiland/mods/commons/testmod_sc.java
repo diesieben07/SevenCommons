@@ -74,12 +74,12 @@ public class testmod_sc {
 		private ItemStack foobar;
 
 		@Sync
-		private long foobar2;
+		private Long foobar2;
 
 		@Sync
 		private ElementType bla;
 
-		@Sync
+		@Sync(syncer = TestSyncer.class)
 		private String aString;
 
 		@Override

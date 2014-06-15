@@ -15,7 +15,7 @@ public enum SyncType {
 	ENTITY("entity", "net/minecraft/entity/Entity", MCPNames.F_WORLD_OBJ_ENTITY, MCPNames.M_ON_UPDATE) {
 		
 		@Override
-		void sendPacket(Object entity, SimplePacket p) {
+		public void sendPacket(Object entity, SimplePacket p) {
 			p.sendToAllAssociated((Entity) entity);
 		}
 
@@ -34,7 +34,7 @@ public enum SyncType {
 	TILE_ENTITY("tileEntity", "net/minecraft/tileentity/TileEntity", MCPNames.F_WORLD_OBJ_TILEENTITY, MCPNames.M_UPDATE_ENTITY) {
 		
 		@Override
-		void sendPacket(Object te, SimplePacket p) {
+		public void sendPacket(Object te, SimplePacket p) {
 			p.sendToAllTracking((TileEntity) te);
 		}
 
@@ -59,7 +59,7 @@ public enum SyncType {
 	CONTAINER("container", null, null, MCPNames.M_DETECT_AND_SEND_CHANGES) {
 		
 		@Override
-		void sendPacket(Object container, SimplePacket p) {
+		public void sendPacket(Object container, SimplePacket p) {
 			p.sendToViewing((Container) container);
 		}
 
@@ -77,7 +77,7 @@ public enum SyncType {
 	ENTITY_PROPS("entityProps", null, null, SyncedEntityProperties.TICK) {
 		
 		@Override
-		void sendPacket(Object props, SimplePacket p) {
+		public void sendPacket(Object props, SimplePacket p) {
 			p.sendToAllAssociated(((SyncedEntityProperties) props)._sc$getPropsEntity());
 		}
 
@@ -131,7 +131,7 @@ public enum SyncType {
 		return simpleName;
 	}
 
-	abstract void sendPacket(Object obj, SimplePacket p);
+	public abstract void sendPacket(Object obj, SimplePacket p);
 	abstract void injectInfo(Object obj, WritableDataBuf out);
 	abstract Object recreate(EntityPlayer player, DataBuf in);
 

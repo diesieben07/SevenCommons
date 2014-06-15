@@ -1,4 +1,4 @@
-ng ibuildscript {
+buildscript {
     repositories {
         mavenCentral()
         maven {

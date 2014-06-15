@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.internal.AnnotationNull;
-import de.take_weiland.mods.commons.net.PacketTarget;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -32,27 +31,5 @@ public @interface Sync {
 	 * If the latter is present, it will be picked instead and passed the object being synced (Container, TileEntity, etc.)
 	 */
 	Class<? extends TypeSyncer<?>> syncer() default AnnotationNull.class;
-
-    /**
-     * override where the Packets to sync this class should be sent to<br />
-     * The same constructor rules as for {@link Sync#syncer() syncer()} apply
-     */
-    Class<? extends PacketTarget> target() default AnnotationNull.class;
-
-	/**
-	 * When applied to a Method, define the corresponding setter method (must be in this class and marked with {@link Sync.Setter @Setter})
-	 */
-	String setter() default "NULL"; // default value doesn't matter as it's read by ASM and default values are not present in an AnnotationNode
-
-	/**
-	 * mark a method as a setter, needs a corresponding {@link Sync @Synced} method with the same ID
-	 */
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.METHOD)
-	static @interface Setter {
-
-		String value();
-
-	}
 
 }
