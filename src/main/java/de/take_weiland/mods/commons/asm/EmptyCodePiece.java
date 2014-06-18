@@ -12,6 +12,11 @@ enum EmptyCodePiece implements CodePiece {
 	INSTANCE;
 
 	@Override
+	public InsnList build() {
+		return new InsnList();
+	}
+
+	@Override
 	public void appendTo(InsnList to) { }
 
 	@Override

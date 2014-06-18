@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.asm;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import de.take_weiland.mods.commons.util.ComputingMap;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -11,7 +10,6 @@ import org.objectweb.asm.tree.LabelNode;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 /**
  * Abstract base class for CodePieces.<br/>
@@ -27,19 +25,6 @@ import java.util.WeakHashMap;
  */
 public abstract class AbstractCodePiece implements CodePiece {
 
-	private static Map<InsnList, Map<LabelNode, LabelNode>> contexts;
-
-	protected static Map<LabelNode, LabelNode> persistentContext(InsnList insns) {
-		if (contexts == null) {
-			contexts = new WeakHashMap<>();
-		}
-		Map<LabelNode, LabelNode> context = contexts.get(insns);
-		if (context == null) {
-			contexts.put(insns, (context = Maps.newHashMap()));
-		}
-		return context;
-	}
-
 	private static Function<LabelNode, LabelNode> instanceProvider;
 
 	protected static Map<LabelNode, LabelNode> newContext() {
@@ -52,6 +37,13 @@ public abstract class AbstractCodePiece implements CodePiece {
 			};
 		}
 		return ComputingMap.of(instanceProvider);
+	}
+
+	@Override
+	public InsnList build() {
+		InsnList list = new InsnList();
+		appendTo(list);
+		return list;
 	}
 
 	@Override

@@ -74,7 +74,7 @@ public class testmod_sc {
 		private ItemStack foobar;
 
 		@Sync
-		private Long foobar2;
+		private long foobar2;
 
 		@Sync
 		private ElementType bla;
@@ -94,7 +94,14 @@ public class testmod_sc {
 
 		@Override
 		public void init(Entity entity, World world) {
-
+			DataBuf buf = null;
+			int a = 5;
+			do {
+				switch (a) {
+					default:
+						System.out.println("bklar");
+				}
+			} while (buf.available() != 0);
 		}
 	}
 
@@ -105,9 +112,9 @@ public class testmod_sc {
 //			return null;
 //		}
 
-		TestSyncer(Test te) {
-
-		}
+//		TestSyncer(Test te) {
+//
+//		}
 
 		@Override
 		public boolean equal(String now, String prev) {

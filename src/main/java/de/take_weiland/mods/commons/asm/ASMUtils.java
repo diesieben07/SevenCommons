@@ -372,6 +372,15 @@ public final class ASMUtils {
 		return findMethod(clazz, setterName, setterDesc);
 	}
 
+	public static boolean isReturn(int opcode) {
+		return opcode == RETURN
+				|| opcode == IRETURN
+				|| opcode == LRETURN
+				|| opcode == FRETURN
+				|| opcode == DRETURN
+				|| opcode == ARETURN;
+	}
+
 	public static boolean matches(AbstractInsnNode a, AbstractInsnNode b) {
 		return matches(a, b, false);
 	}

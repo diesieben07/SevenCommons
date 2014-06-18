@@ -11,6 +11,8 @@ import org.objectweb.asm.tree.InsnList;
  */
 public interface CodePiece {
 
+	InsnList build();
+
 	/**
 	 * <p>Appends the instructions in this CodePiece to the given InsnList.</p>
 	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.

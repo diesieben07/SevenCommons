@@ -102,7 +102,7 @@ public final class CodePieces {
 		int invokeOp;
 		int access = ACC_PRIVATE;
 		if (_static) {
-			loadInstance = of();
+			loadInstance = null;
 			getOp = GETSTATIC;
 			putOp = PUTSTATIC;
 			invokeOp = INVOKESTATIC;
@@ -128,7 +128,7 @@ public final class CodePieces {
 		MethodNode method = new MethodNode(access, name, mDesc, null, null);
 		InsnList insns = method.instructions;
 		if (marker == null) {
-			loadInstance.appendTo(insns);
+			if (!_static) loadInstance.appendTo(insns);
 			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
 			insns.add(new InsnNode(DUP));
 
@@ -138,32 +138,32 @@ public final class CodePieces {
 
 			insns.add(isNull);
 			insns.add(new InsnNode(POP));
-			loadInstance.appendTo(insns);
+			if (!_static) loadInstance.appendTo(insns);
 			code.appendTo(insns);
 			insns.add(new FieldInsnNode(putOp, clazz.name, field.name, field.desc));
-			loadInstance.appendTo(insns);
+			if (!_static) loadInstance.appendTo(insns);
 			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
 			insns.add(new InsnNode(type.getOpcode(IRETURN)));
 		} else {
-			loadInstance.appendTo(insns);
+			if (!_static) loadInstance.appendTo(insns);
 			insns.add(new FieldInsnNode(getOp, clazz.name, marker.name, marker.desc));
 
 			LabelNode isMissing = new LabelNode();
 			insns.add(new JumpInsnNode(IFEQ, isMissing));
-			loadInstance.appendTo(insns);
+			if (!_static) loadInstance.appendTo(insns);
 			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
 			insns.add(new InsnNode(type.getOpcode(IRETURN)));
 
 			insns.add(isMissing);
-			loadInstance.appendTo(insns);
+			if (!_static) loadInstance.appendTo(insns);
 			constant(true).appendTo(insns);
 			insns.add(new FieldInsnNode(putOp, clazz.name, marker.name, marker.desc));
 
-			loadInstance.appendTo(insns);
+			if (!_static) loadInstance.appendTo(insns);
 			code.appendTo(insns);
 			insns.add(new FieldInsnNode(putOp, clazz.name, field.name, field.desc));
 
-			loadInstance.appendTo(insns);
+			if (!_static) loadInstance.appendTo(insns);
 			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
 
 			insns.add(new InsnNode(type.getOpcode(IRETURN)));
@@ -172,7 +172,7 @@ public final class CodePieces {
 		clazz.fields.add(field);
 		clazz.methods.add(method);
 
-		return invoke(invokeOp, clazz.name, method.name, method.desc, loadInstance);
+		return invoke(invokeOp, clazz.name, method.name, method.desc, _static ? new CodePiece[0] : new CodePiece[]{ loadInstance });
 	}
 
 	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code) {

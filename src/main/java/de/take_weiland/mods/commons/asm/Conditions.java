@@ -1,7 +1,11 @@
 package de.take_weiland.mods.commons.asm;
 
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.LabelNode;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
@@ -9,6 +13,14 @@ import static org.objectweb.asm.Type.*;
  * @author diesieben07
  */
 public final class Conditions {
+
+	public static ASMCondition alwaysTrue() {
+		return new AlwaysTrue();
+	}
+
+	public static ASMCondition alwaysFalse() {
+		return new AlwaysFalse();
+	}
 
 	public static ASMCondition ifTrue(CodePiece piece) {
 		return of(piece, IFNE, IFEQ);
@@ -70,6 +82,90 @@ public final class Conditions {
 			default:
 				throw new IllegalArgumentException("Invalid Type for comparision!");
 		}
+	}
+
+	private static class AlwaysFalse implements ASMCondition, ASMConditionElseApplied, ASMConditionThenApplied {
+
+		private CodePiece code;
+
+		@Override
+		public ASMCondition negate() {
+			return new AlwaysTrue();
+		}
+
+		@Override
+		public ASMConditionThenApplied then(CodePiece code) {
+			return this;
+		}
+
+		@Override
+		public ASMConditionElseApplied otherwise(CodePiece code) {
+			checkArgument(this.code == null, "Incorrect usage!");
+			this.code = checkNotNull(code, "code");
+			return this;
+		}
+
+		@Override
+		public CodePiece build() {
+			return code == null ? CodePieces.of() : code;
+		}
+
+		@Override
+		public CodePiece makeDoWhile(CodePiece code) {
+			return code;
+		}
+
+		@Override
+		public CodePiece makeWhile(CodePiece code) {
+			return CodePieces.of();
+		}
+	}
+
+	private static class AlwaysTrue implements ASMCondition, ASMConditionElseApplied, ASMConditionThenApplied {
+
+		private CodePiece code;
+
+		@Override
+		public ASMCondition negate() {
+			return null;
+		}
+
+		@Override
+		public ASMConditionThenApplied then(CodePiece code) {
+			checkArgument(this.code == null, "Incorrect usage!");
+			this.code = checkNotNull(code, "code");
+			return this;
+		}
+
+		@Override
+		public ASMConditionElseApplied otherwise(CodePiece code) {
+			return this;
+		}
+
+		@Override
+		public CodePiece build() {
+			return code == null ? CodePieces.of() : code;
+		}
+
+		@Override
+		public CodePiece makeDoWhile(CodePiece code) {
+			return loop(code);
+		}
+
+		@Override
+		public CodePiece makeWhile(CodePiece code) {
+			return loop(code);
+		}
+
+		private static CodePiece loop(CodePiece code) {
+			LabelNode start = new LabelNode();
+			return new CodeBuilder()
+					.add(start)
+					.add(code)
+					.add(new JumpInsnNode(GOTO, start))
+					.build();
+		}
+
 	}
 
 	private Conditions() { }

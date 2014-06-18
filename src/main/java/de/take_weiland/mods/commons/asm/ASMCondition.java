@@ -7,6 +7,10 @@ public interface ASMCondition {
 
 	ASMCondition negate();
 
+	CodePiece makeDoWhile(CodePiece code);
+
+	CodePiece makeWhile(CodePiece code);
+
 	ASMConditionThenApplied then(CodePiece code);
 
 	ASMConditionElseApplied otherwise(CodePiece code);

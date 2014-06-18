@@ -27,6 +27,39 @@ class ConditionImpl implements ASMCondition, ASMConditionElseApplied, ASMConditi
 		this.falseOpcode = falseOpcode;
 	}
 
+	@Override
+	public CodePiece makeWhile(CodePiece code) {
+		return makeWhile0(falseOpcode, code);
+	}
+
+	CodePiece makeWhile0(int falseOpcode, CodePiece code) {
+		LabelNode start = new LabelNode();
+		LabelNode after = new LabelNode();
+		return new CodeBuilder()
+				.add(start)
+				.add(conditionArgs)
+				.add(new JumpInsnNode(falseOpcode, after))
+				.add(code)
+				.add(new JumpInsnNode(GOTO, start))
+				.add(after)
+				.build();
+	}
+
+	@Override
+	public CodePiece makeDoWhile(CodePiece code) {
+		return makeDoWhile0(trueOpcode, code);
+	}
+
+	CodePiece makeDoWhile0(int trueOpcode, CodePiece code) {
+		LabelNode start = new LabelNode();
+		return new CodeBuilder()
+				.add(start)
+				.add(code)
+				.add(conditionArgs)
+				.add(new JumpInsnNode(trueOpcode, start))
+				.build();
+	}
+
 	private ASMCondition negated;
 	@Override
 	public ASMCondition negate() {
@@ -110,6 +143,16 @@ class ConditionImpl implements ASMCondition, ASMConditionElseApplied, ASMConditi
 			checkUse(onElse == null);
 			onElse = checkNotNull(code);
 			return this;
+		}
+
+		@Override
+		public CodePiece makeDoWhile(CodePiece code) {
+			return makeDoWhile0(falseOpcode, code);
+		}
+
+		@Override
+		public CodePiece makeWhile(CodePiece code) {
+			return makeWhile0(trueOpcode, code);
 		}
 
 		@Override
