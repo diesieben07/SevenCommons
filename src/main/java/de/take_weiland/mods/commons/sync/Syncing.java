@@ -29,7 +29,7 @@ public final class Syncing {
 	public static <T> TypeSyncer<T> getSyncerFor(Class<T> clazz) {
 		return (TypeSyncer<T>) syncers.get(clazz);
 	}
-	
+
 	static {
 		// default built-in syncers
 		registerSyncer(String.class, new StringSyncer());

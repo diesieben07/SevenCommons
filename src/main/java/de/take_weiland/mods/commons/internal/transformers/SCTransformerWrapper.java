@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.ASMClassTransformerWrapper;
+import de.take_weiland.mods.commons.internal.transformers.sync.SyncingTransformer;
 
 /**
  * @author diesieben07
@@ -26,7 +27,6 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		register(new AnnotationFindingTransformer());
 
 		// @Synced
-		register(new SyncingBaseTransformer());
 		register(new SyncingTransformer());
 
 		register(new ListenableTransformer());

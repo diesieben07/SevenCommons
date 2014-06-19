@@ -13,9 +13,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.ForgeSubscribe;
-import net.minecraftforge.event.entity.player.EntityInteractEvent;
 
 import java.lang.annotation.ElementType;
 
@@ -27,32 +24,6 @@ public class testmod_sc {
 	public void preInit(FMLPreInitializationEvent event) throws Exception {
 		Reflection.initialize(Test.class, Container.class);
 		System.exit(0);
-		MinecraftForge.EVENT_BUS.register(this);
-
-		boolean a = false;
-		boolean b = true;
-
-		System.out.println(a == b);
-		Object o = null;
-		while (true) {
-			switch (o.hashCode()) {
-				case -1:
-					return;
-				case 0:
-					// todo
-					break;
-				case 1:
-					// todo:
-					break;
-				default:
-					System.out.println("Invalid index!");
-					break;
-			}
-		}
-	}
-
-	@ForgeSubscribe
-	public void onPlayerInteract(EntityInteractEvent event) throws InterruptedException {
 	}
 
 	private static abstract class Base implements IExtendedEntityProperties {
@@ -94,27 +65,10 @@ public class testmod_sc {
 
 		@Override
 		public void init(Entity entity, World world) {
-			DataBuf buf = null;
-			int a = 5;
-			do {
-				switch (a) {
-					default:
-						System.out.println("bklar");
-				}
-			} while (buf.available() != 0);
 		}
 	}
 
 	static class TestSyncer implements TypeSyncer<String> {
-
-//		@InstanceProvider
-//		public static TestSyncer instance(TestTe tile) {
-//			return null;
-//		}
-
-//		TestSyncer(Test te) {
-//
-//		}
 
 		@Override
 		public boolean equal(String now, String prev) {

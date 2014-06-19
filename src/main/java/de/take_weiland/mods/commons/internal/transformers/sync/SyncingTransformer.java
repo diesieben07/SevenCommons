@@ -1,20 +1,16 @@
-package de.take_weiland.mods.commons.internal.transformers;
+package de.take_weiland.mods.commons.internal.transformers.sync;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import cpw.mods.fml.common.FMLLog;
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.SyncASMHooks;
 import de.take_weiland.mods.commons.internal.SyncType;
 import de.take_weiland.mods.commons.internal.SyncedEntityProperties;
 import de.take_weiland.mods.commons.internal.SyncedObject;
-import de.take_weiland.mods.commons.net.*;
+import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.PacketBuilder;
+import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Sync;
-import de.take_weiland.mods.commons.sync.TypeSyncer;
-import de.take_weiland.mods.commons.util.ItemStacks;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
@@ -22,9 +18,6 @@ import org.objectweb.asm.tree.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.logging.Logger;
 
 import static de.take_weiland.mods.commons.asm.MCPNames.CLASS_ENTITY;
 import static org.objectweb.asm.Opcodes.*;
@@ -35,17 +28,11 @@ import static org.objectweb.asm.Type.*;
  */
 public final class SyncingTransformer implements ASMClassTransformer {
 
-	private static final Logger LOGGER;
 	private static final ClassInfo extPropsCI = ClassInfo.of(IExtendedEntityProperties.class);
 	private static final ClassInfo entityCI = ClassInfo.of("net/minecraft/entity/Entity");
 	private static final ClassInfo tileEntityCI = ClassInfo.of("net/minecraft/tileentity/TileEntity");
 	private static final ClassInfo containerCI = ClassInfo.of("net/minecraft/inventory/Container");
 
-
-	static {
-		FMLLog.makeLog("SevenCommonsSync");
-		LOGGER = Logger.getLogger("SevenCommonsSync");
-	}
 
 	@Override
 	public boolean transforms(String internalName) {
@@ -90,9 +77,12 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		List<SyncedElement> elements = Lists.newArrayListWithCapacity(variables.size());
 
 		Map<Type, Syncer> knownSyncers = Maps.newHashMap();
+		Map<Type, ASMPacketTarget> knownPacketTargets = Maps.newHashMap();
 
-		for (ASMVariable var : variables) {
+		for (int i = 0, variablesSize = variables.size(); i < variablesSize; i++) {
+			ASMVariable var = variables.get(i);
 			AnnotationNode syncedAnnotation = var.getterAnnotation(Sync.class);
+
 			Type syncerType = ASMUtils.getAnnotationProperty(syncedAnnotation, "syncer");
 			Syncer syncer;
 			if (syncerType == null) {
@@ -105,7 +95,17 @@ public final class SyncingTransformer implements ASMClassTransformer {
 				syncer = knownSyncers.get(syncerType);
 			}
 
-			elements.add(new SyncedElement(var, makeCompanion(clazz, var), syncer));
+			Type ptType = ASMUtils.getAnnotationProperty(syncedAnnotation, "target");
+			ASMPacketTarget packetTarget;
+			if (ptType == null) {
+				packetTarget = DefaultPacketTarget.instance();
+			} else if (!knownPacketTargets.containsKey(ptType)) {
+				CodePiece ptInstance = obtainInstance(clazz, ptType);
+				packetTarget = new CustomPacketTarget(ptInstance);
+				knownPacketTargets.put(ptType, packetTarget);
+			}
+
+			elements.add(new SyncedElement(i, var, makeCompanion(clazz, var), syncer));
 		}
 
 		// checks if any superclass of this class already has @Sync properties
@@ -439,264 +439,6 @@ public final class SyncingTransformer implements ASMClassTransformer {
 		FieldNode field = new FieldNode(ACC_PRIVATE, var.name() + "_sc$syncCompanion", var.getType().getDescriptor(), null, null);
 		clazz.fields.add(field);
 		return ASMVariables.of(clazz, field, CodePieces.getThis());
-	}
-
-	private static class SyncedElement {
-
-		final ASMVariable variable;
-		final ASMVariable companion;
-		final Syncer syncer;
-
-		SyncedElement(ASMVariable variable, ASMVariable companion, Syncer syncer) {
-			this.variable = variable;
-			this.companion = companion;
-			this.syncer = syncer;
-		}
-	}
-
-	private static abstract class Syncer {
-
-		static final Map<Type, Type> boxedTypes = ImmutableMap.<Type, Type>builder()
-			.put(getType(Boolean.class), Type.BOOLEAN_TYPE)
-			.put(getType(Byte.class), Type.BYTE_TYPE)
-			.put(getType(Short.class), Type.SHORT_TYPE)
-			.put(getType(Integer.class), Type.INT_TYPE)
-			.put(getType(Long.class), Type.LONG_TYPE)
-			.put(getType(Character.class), Type.CHAR_TYPE)
-			.put(getType(Float.class), Type.FLOAT_TYPE)
-			.put(getType(Double.class), Type.DOUBLE_TYPE)
-			.build();
-
-		private static final Set<Type> integratedTypes = ImmutableSet.of(
-			Type.getType(String.class), Type.getType(UUID.class)
-		);
-
-		static Syncer forType(Type t) {
-			if (ASMUtils.isPrimitive(t) || integratedTypes.contains(t)) {
-				return new IntegratedSyncer(t);
-			} else if (boxedTypes.containsKey(t)) {
-				return new BoxedSyncer(t);
-			} else if (t.getInternalName().equals("net/minecraft/item/ItemStack")) {
-				return ItemStackSyncer.instance();
-			} else if (ClassInfo.of(t).isEnum()) {
-				return new EnumSyncer(t);
-			} else {
-				throw new UnsupportedOperationException("NYI");
-			}
-		}
-
-		abstract ASMCondition equals(CodePiece oldValue, CodePiece newValue);
-
-		/**
-		 * writes the value to the PacketBuilder
-		 */
-		abstract CodePiece write(CodePiece newValue, CodePiece packetBuilder);
-
-		ASMCondition isNull(CodePiece value) {
-			return Conditions.ifNull(value);
-		}
-
-		CodePiece wrapIndex(CodePiece value, int index) {
-			return Conditions.ifNull(value)
-					.then(CodePieces.constant(-index))
-					.otherwise(CodePieces.constant(index))
-					.build();
-		}
-
-		abstract CodePiece read(CodePiece oldValue, CodePiece packetBuilder);
-
-	}
-
-	private static class BoxedSyncer extends Syncer {
-
-		private final Type type;
-
-		BoxedSyncer(Type type) {
-			this.type = type;
-		}
-
-		@Override
-		ASMCondition equals(CodePiece oldValue, CodePiece newValue) {
-			return Conditions.ifEqual(oldValue, newValue, type, true);
-		}
-
-		@Override
-		CodePiece write(CodePiece newValue, CodePiece packetBuilder) {
-			Type unboxed = boxedTypes.get(type);
-			String owner = SyncASMHooks.CLASS_NAME;
-			String name = SyncASMHooks.WRITE_INTEGRATED;
-			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, unboxed, Type.getType(WritableDataBuf.class));
-
-			String unboxName = unboxed.getClassName() + "Value";
-			String unboxDesc = getMethodDescriptor(unboxed);
-
-			return CodePieces.invokeStatic(owner, name, desc,
-					CodePieces.invoke(INVOKEVIRTUAL, type.getInternalName(), unboxName, unboxDesc, newValue),
-					packetBuilder);
-		}
-
-		@Override
-		CodePiece read(CodePiece oldValue, CodePiece packetBuilder) {
-			Type unboxed = boxedTypes.get(type);
-
-			String owner = SyncASMHooks.CLASS_NAME;
-			String name = String.format(SyncASMHooks.READ_INTEGRATED, unboxed.getClassName().replace('.', '_'));
-			String desc = Type.getMethodDescriptor(unboxed, Type.getType(DataBuf.class));
-
-			String boxDesc = getMethodDescriptor(type, unboxed);
-
-			return CodePieces.invokeStatic(type.getInternalName(), "valueOf", boxDesc,
-						CodePieces.invokeStatic(owner, name, desc, packetBuilder));
-		}
-	}
-
-	private static class ItemStackSyncer extends Syncer {
-
-		private static ItemStackSyncer instance;
-
-		static ItemStackSyncer instance() {
-			return instance == null ? (instance = new ItemStackSyncer()) : instance;
-		}
-
-		@Override
-		ASMCondition equals(CodePiece oldValue, CodePiece newValue) {
-			return Conditions.ifTrue(CodePieces.invokeStatic(Type.getInternalName(ItemStacks.class),
-					"equal", ASMUtils.getMethodDescriptor(boolean.class, ItemStack.class, ItemStack.class),
-					oldValue, newValue));
-		}
-
-		@Override
-		CodePiece write(CodePiece newValue, CodePiece packetBuilder) {
-			return CodePieces.invokeStatic(Type.getInternalName(DataBuffers.class),
-					"writeItemStack", ASMUtils.getMethodDescriptor(void.class, WritableDataBuf.class, ItemStack.class),
-					packetBuilder, newValue);
-		}
-
-		@Override
-		CodePiece read(CodePiece oldValue, CodePiece packetBuilder) {
-			return CodePieces.invokeStatic(Type.getInternalName(DataBuffers.class),
-					"readItemStack", ASMUtils.getMethodDescriptor(ItemStack.class, DataBuf.class),
-					packetBuilder);
-		}
-	}
-
-	private static class EnumSyncer extends Syncer {
-
-		private final Type type;
-
-		EnumSyncer(Type type) {
-			this.type = type;
-		}
-
-		@Override
-		ASMCondition equals(CodePiece oldValue, CodePiece newValue) {
-			return Conditions.ifEqual(oldValue, newValue, type, false);
-		}
-
-		@Override
-		CodePiece write(CodePiece newValue, CodePiece packetBuilder) {
-			return CodePieces.invokeStatic(Type.getInternalName(DataBuffers.class),
-					"writeEnum",
-					ASMUtils.getMethodDescriptor(void.class, WritableDataBuf.class, Enum.class),
-					packetBuilder, newValue);
-		}
-
-		@Override
-		CodePiece read(CodePiece oldValue, CodePiece dataBuf) {
-			return CodePieces.castTo(type, CodePieces.invokeStatic(Type.getInternalName(DataBuffers.class),
-					"readEnum",
-					ASMUtils.getMethodDescriptor(Enum.class, DataBuf.class, Class.class),
-					dataBuf, CodePieces.constant(type)));
-		}
-	}
-
-	private static class IntegratedSyncer extends Syncer {
-
-		final Type typeToSync;
-
-		IntegratedSyncer(Type typeToSync) {
-			this.typeToSync = typeToSync;
-		}
-
-		@Override
-		ASMCondition isNull(CodePiece value) {
-			return ASMUtils.isPrimitive(typeToSync) ? Conditions.alwaysFalse() : super.isNull(value);
-		}
-
-		@Override
-		CodePiece wrapIndex(CodePiece value, int index) {
-			return CodePieces.constant(index);
-		}
-
-		@Override
-		CodePiece write(CodePiece newValue, CodePiece packetBuilder) {
-			String owner = SyncASMHooks.CLASS_NAME;
-			String name = SyncASMHooks.WRITE_INTEGRATED;
-			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, typeToSync, Type.getType(WritableDataBuf.class));
-
-			return CodePieces.invokeStatic(owner, name, desc, newValue, packetBuilder);
-		}
-
-		@Override
-		ASMCondition equals(CodePiece oldValue, CodePiece newValue) {
-			return Conditions.ifEqual(oldValue, newValue, typeToSync, true);
-		}
-
-		@Override
-		CodePiece read(CodePiece oldValue, CodePiece packetBuilder) {
-			String owner = SyncASMHooks.CLASS_NAME;
-			String name = String.format(SyncASMHooks.READ_INTEGRATED, typeToSync.getClassName().replace('.', '_'));
-			String desc = Type.getMethodDescriptor(typeToSync, Type.getType(DataBuf.class));
-
-			return CodePieces.invokeStatic(owner, name, desc, packetBuilder);
-		}
-	}
-
-	private static class CustomSyncer extends Syncer {
-
-		private final CodePiece syncer;
-		private final Type actualType;
-
-		CustomSyncer(CodePiece syncer, Type actualType) {
-			this.syncer = syncer;
-			this.actualType = actualType;
-		}
-
-		@Override
-		ASMCondition equals(CodePiece oldValue, CodePiece newValue) {
-			String owner = TypeSyncer.CLASS_NAME;
-			String name = TypeSyncer.METHOD_EQUAL;
-			Type objectType = Type.getType(Object.class);
-			String desc = Type.getMethodDescriptor(Type.BOOLEAN_TYPE, objectType, objectType);
-
-			CodePiece invoke = CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, syncer, newValue, oldValue);
-
-			return Conditions.of(invoke, IFNE, IFEQ);
-		}
-
-		@Override
-		CodePiece write(CodePiece newValue, CodePiece packetBuilder) {
-			String owner = TypeSyncer.CLASS_NAME;
-			String name = TypeSyncer.METHOD_WRITE;
-			String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), Type.getType(WritableDataBuf.class));
-
-			return CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, syncer, newValue, packetBuilder);
-		}
-
-		@Override
-		CodePiece read(CodePiece oldValue, CodePiece packetBuilder) {
-			String owner = TypeSyncer.CLASS_NAME;
-			String name = TypeSyncer.METHOD_READ;
-			Type objectType = Type.getType(Object.class);
-			String desc = Type.getMethodDescriptor(objectType, objectType, Type.getType(DataBuf.class));
-
-			CodePiece invoke = CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, syncer, oldValue, packetBuilder);
-			if (!ASMUtils.isPrimitive(actualType) || !actualType.equals(objectType)) {
-				return CodePieces.castTo(actualType, invoke);
-			} else {
-				return invoke;
-			}
-		}
 	}
 
 }

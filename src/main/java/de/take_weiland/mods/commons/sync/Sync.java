@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.internal.AnnotationNull;
+import de.take_weiland.mods.commons.net.PacketTarget;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -31,5 +32,7 @@ public @interface Sync {
 	 * If the latter is present, it will be picked instead and passed the object being synced (Container, TileEntity, etc.)
 	 */
 	Class<? extends TypeSyncer<?>> syncer() default AnnotationNull.class;
+
+	Class<? extends PacketTarget> target() default AnnotationNull.class;
 
 }
