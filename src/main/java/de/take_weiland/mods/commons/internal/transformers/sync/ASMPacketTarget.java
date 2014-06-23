@@ -10,4 +10,6 @@ abstract class ASMPacketTarget {
 
 	abstract CodePiece sendPacket(SyncType type, CodePiece packet);
 
+	abstract String methodPostfix();
+
 }

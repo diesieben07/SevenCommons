@@ -25,4 +25,9 @@ class DefaultPacketTarget extends ASMPacketTarget {
 		return CodePieces.invoke(INVOKEVIRTUAL, getInternalName(SyncType.class), "sendPacket", desc,
 				CodePieces.constant(type), CodePieces.getThis(), packet);
 	}
+
+	@Override
+	String methodPostfix() {
+		return "_sc$default";
+	}
 }

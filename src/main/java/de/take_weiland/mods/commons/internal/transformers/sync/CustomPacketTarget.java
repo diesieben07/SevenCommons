@@ -5,6 +5,7 @@ import de.take_weiland.mods.commons.asm.CodePieces;
 import de.take_weiland.mods.commons.internal.SyncType;
 import de.take_weiland.mods.commons.net.PacketTarget;
 import de.take_weiland.mods.commons.net.SimplePacket;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.InsnNode;
 
 import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
@@ -18,9 +19,11 @@ import static org.objectweb.asm.Type.getType;
  */
 class CustomPacketTarget extends ASMPacketTarget {
 
+	private final Type ptType;
 	private final CodePiece ptInstance;
 
-	CustomPacketTarget(CodePiece ptInstance) {
+	CustomPacketTarget(Type ptType, CodePiece ptInstance) {
+		this.ptType = ptType;
 		this.ptInstance = ptInstance;
 	}
 
@@ -29,5 +32,10 @@ class CustomPacketTarget extends ASMPacketTarget {
 		String desc = getMethodDescriptor(getType(SimplePacket.class), getType(PacketTarget.class));
 		return CodePieces.invoke(INVOKEINTERFACE, getInternalName(SimplePacket.class), "sendTo", desc,
 				packet, ptInstance).append(new InsnNode(POP));
+	}
+
+	@Override
+	String methodPostfix() {
+		return ptType.getInternalName().replace('/', '_');
 	}
 }

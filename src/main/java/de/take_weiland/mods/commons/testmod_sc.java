@@ -4,15 +4,14 @@ import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import de.take_weiland.mods.commons.net.DataBuf;
+import de.take_weiland.mods.commons.net.PacketTarget;
 import de.take_weiland.mods.commons.net.WritableDataBuf;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
-import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
-import net.minecraftforge.common.IExtendedEntityProperties;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.tileentity.TileEntity;
 
 import java.lang.annotation.ElementType;
 
@@ -26,20 +25,7 @@ public class testmod_sc {
 		System.exit(0);
 	}
 
-	private static abstract class Base implements IExtendedEntityProperties {
-
-		@Sync
-		private ItemStack garumP;
-
-	}
-
-
-	private static abstract class Blubb extends Base {
-
-
-	}
-
-	public static class Test extends Blubb {
+	public static class Test extends TileEntity {
 
 		@Sync
 		private ItemStack foobar;
@@ -47,25 +33,12 @@ public class testmod_sc {
 		@Sync
 		private long foobar2;
 
-		@Sync
+		@Sync(target = TestPacketTarget.class)
 		private ElementType bla;
 
 		@Sync(syncer = TestSyncer.class)
 		private String aString;
 
-		@Override
-		public void saveNBTData(NBTTagCompound compound) {
-
-		}
-
-		@Override
-		public void loadNBTData(NBTTagCompound compound) {
-
-		}
-
-		@Override
-		public void init(Entity entity, World world) {
-		}
 	}
 
 	static class TestSyncer implements TypeSyncer<String> {
@@ -83,6 +56,14 @@ public class testmod_sc {
 		@Override
 		public String read(String oldInstance, DataBuf in) {
 			return null;
+		}
+	}
+
+	static class TestPacketTarget implements PacketTarget {
+
+		@Override
+		public void send(Packet packet) {
+
 		}
 	}
 

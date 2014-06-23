@@ -80,7 +80,7 @@ public final class Conditions {
 									a, b));
 				}
 			default:
-				throw new IllegalArgumentException("Invalid Type for comparision!");
+				throw new IllegalArgumentException("Invalid Type for comparison!");
 		}
 	}
 
