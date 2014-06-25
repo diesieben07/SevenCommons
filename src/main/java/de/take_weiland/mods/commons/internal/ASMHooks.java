@@ -27,6 +27,7 @@ import java.io.IOException;
 public final class ASMHooks {
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/ASMHooks";
+	public static final String ON_START_TRACKING = "onStartTracking";
 
 	private ASMHooks() { }
 
