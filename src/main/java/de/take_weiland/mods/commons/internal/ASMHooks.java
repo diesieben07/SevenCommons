@@ -52,7 +52,6 @@ public final class ASMHooks {
 	}
 	
 	public static void onStartTracking(EntityPlayer player, Entity tracked) {
-		SyncASMHooks.syncEntityPropertyIds(player, tracked);
 		MinecraftForge.EVENT_BUS.post(new PlayerStartTrackingEvent(player, tracked));
 	}
 

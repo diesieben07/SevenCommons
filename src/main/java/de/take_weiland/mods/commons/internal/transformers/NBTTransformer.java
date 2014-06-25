@@ -32,6 +32,8 @@ public class NBTTransformer {
 	private static final ClassInfo entityClassInfo = ClassInfo.of(Entity.class);
 	private static final ClassInfo entityPropsClassInfo = ClassInfo.of(IExtendedEntityProperties.class);
 
+
+
 	static void transform(ClassNode clazz, ClassInfo classInfo, ListIterator<MethodNode> methods) {
 		ClassType type = findType(classInfo);
 		Collection<ASMVariable> variables = ASMVariables.allWith(clazz, ToNbt.class, CodePieces.getThis());

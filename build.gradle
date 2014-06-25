@@ -61,7 +61,6 @@ processResources {
     from (sourceSets.main.resources.srcDirs)
 }
 
-
 artifacts {
 	archives deobfJar 
 	archives sourceJar

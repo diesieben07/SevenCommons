@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.ClassInfo;
 import de.take_weiland.mods.commons.nbt.ToNbt;
-import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -20,12 +19,10 @@ import java.util.ListIterator;
 public class AnnotationFindingTransformer extends AbstractAnalyzingTransformer {
 
 	private static final String toNbtDesc = Type.getDescriptor(ToNbt.class);
-	private static final String syncedDesc = Type.getDescriptor(Sync.class);
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
 		// TODO
-		boolean synced = false;
 		boolean nbt = false;
 		ListIterator<MethodNode> methodsIt = clazz.methods.listIterator();
 		for (FieldNode field : clazz.fields) {
@@ -34,20 +31,11 @@ public class AnnotationFindingTransformer extends AbstractAnalyzingTransformer {
 				if (!nbt && ann.desc.equals(toNbtDesc)) {
 					NBTTransformer.transform(clazz, classInfo, methodsIt);
 					nbt = true;
-					nbt = true;
-					continue;
-				}
-				if (!synced && ann.desc.equals(syncedDesc)) {
-//					SyncingTransformer.transform(clazz, classInfo, fieldIt, methodsIt);
-					synced = true;
-				}
-				if (nbt && synced) {
-					return true; // Warning: if more tests are added for methods, change this to a break!
 				}
 			}
 		}
 
-		return nbt || synced;
+		return nbt;
 	}
 
 }

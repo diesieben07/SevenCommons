@@ -9,10 +9,8 @@ import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.config.ConfigInjector;
 import de.take_weiland.mods.commons.config.GetProperty;
-import de.take_weiland.mods.commons.internal.SCEventHandler;
 import de.take_weiland.mods.commons.internal.SCPackets;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
@@ -20,7 +18,6 @@ import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketFactory;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraftforge.common.Configuration;
-import net.minecraftforge.common.MinecraftForge;
 
 import java.io.File;
 
@@ -79,10 +76,6 @@ public final class SCModContainer extends DummyModContainer {
 		packets = Network.simplePacketHandler("SevenCommons", SCPackets.class);
 
 		proxy.preInit(event);
-
-		SCEventHandler eh = new SCEventHandler();
-		MinecraftForge.EVENT_BUS.register(eh);
-		GameRegistry.registerPlayerTracker(eh);
 	}
 
 	@Override
