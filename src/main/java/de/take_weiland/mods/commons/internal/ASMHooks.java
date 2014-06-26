@@ -4,13 +4,10 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
-import de.take_weiland.mods.commons.event.ZombieConvertEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.monster.EntityZombie;
-import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.packet.Packet250CustomPayload;
 import net.minecraftforge.common.MinecraftForge;
@@ -28,23 +25,12 @@ public final class ASMHooks {
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/ASMHooks";
 	public static final String ON_START_TRACKING = "onStartTracking";
+	public static final String ON_PLAYER_CLONE = "onPlayerClone";
 
 	private ASMHooks() { }
 
-	private static final int ZOMBIE_IS_CONVERTING_FLAG = 14;
-	
 	public static void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {
 		MinecraftForge.EVENT_BUS.post(new PlayerCloneEvent(oldPlayer, newPlayer));
-	}
-	
-	public static EntityVillager onZombieConvert(EntityZombie zombie, EntityVillager villager) {
-		ZombieConvertEvent event = new ZombieConvertEvent(zombie, villager);
-		if (MinecraftForge.EVENT_BUS.post(event)) {
-			zombie.getDataWatcher().updateObject(ZOMBIE_IS_CONVERTING_FLAG, Byte.valueOf((byte)0)); // reset the isConverting flag if the event was canceled
-			return null;
-		} else {
-			return event.villager;
-		}
 	}
 
 	@SideOnly(Side.CLIENT)

@@ -551,10 +551,6 @@ public final class ASMUtils {
 		}
 	}
 
-	public static CodeSearcher searchIn(InsnList insns) {
-		return new CodeSearcherImpl(insns);
-	}
-
 	public static int fastIdx(InsnList list, AbstractInsnNode insn) {
 		if (insn == list.getFirst()) {
 			return 0;

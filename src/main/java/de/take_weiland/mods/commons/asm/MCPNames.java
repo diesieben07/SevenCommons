@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import org.objectweb.asm.Type;
 
 import java.io.File;
 import java.io.IOException;
@@ -161,6 +160,8 @@ public final class MCPNames {
 	public static final String F_CAN_LOOSE_FOCUS = "field_73821_k";
 
 	public static final String M_SEND_PACKET_TO_PLAYER = "func_72567_b";
+
+	public static final String M_REMOVE_ENTITY = "func_72900_e";
 
 	public static final String M_WRITE_ENTITY_TO_NBT = "func_70014_b";
 

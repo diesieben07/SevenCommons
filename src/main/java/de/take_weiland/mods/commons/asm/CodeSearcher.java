@@ -1,42 +1,41 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.InsnList;
+
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author diesieben07
  */
-public interface CodeSearcher {
+public final class CodeSearcher {
 
-	CodeSearcher find(int opcode);
+	private final List<Stage> stages = Lists.newArrayList();
 
-	CodeSearcher find(AbstractInsnNode insn, boolean lenient);
+	public CodeSearcher add(Stage stage) {
+		stages.add(checkNotNull(stage));
+		return this;
+	}
 
-	CodeSearcher find(AbstractInsnNode insn);
+	public AbstractInsnNode find(InsnList list) {
+		return find(list.getFirst());
+	}
 
-	CodeSearcher find(Predicate<? super AbstractInsnNode> predicate);
+	public AbstractInsnNode find(AbstractInsnNode start) {
+		AbstractInsnNode current = start;
+		for (Stage stage : stages) {
+			current = stage.findNext(current);
+		}
+		return current;
+	}
 
-	CodeSearcher find(Class<? extends AbstractInsnNode> type);
+	public static interface Stage {
 
-	<T extends AbstractInsnNode> CodeSearcher find(Class<T> type, Predicate<? super T> predicate);
+		AbstractInsnNode findNext(AbstractInsnNode current);
 
-	<S> CodeSearcher find(Function<? super AbstractInsnNode, ? extends S> function, Predicate<? super S> predicate);
-
-	<T extends AbstractInsnNode, S> CodeSearcher find(Class<T> type, Function<? super T, ? extends S> function, Predicate<? super S> predicate);
-
-	CodeSearcher jumpToStart();
-
-	CodeSearcher jumpToEnd();
-
-	CodeSearcher backwards();
-
-	CodeSearcher forwards();
-
-	CodeSearcher startHere();
-
-	CodeLocation endHere();
-
-	CodeSearcher reset();
+	}
 
 }

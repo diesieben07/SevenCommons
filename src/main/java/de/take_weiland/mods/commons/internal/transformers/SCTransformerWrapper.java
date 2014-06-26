@@ -11,7 +11,6 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 	protected void setup() {
 		// vanilla stuff
 		register(new GuiScreenTransformer());
-		register(new EntityZombieTransformer());
 		register(new EntityPlayerTransformer());
 		register(new EntityTrackerEntryTransformer());
 		register(new Packet250Transformer());
