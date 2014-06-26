@@ -17,14 +17,10 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.lang.annotation.*;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.tree.AbstractInsnNode.*;
 
 public final class ASMUtils {
 
@@ -33,7 +29,7 @@ public final class ASMUtils {
 	// *** bytecode analyzing helpers *** //
 
 	/**
-	 * finds the last return instruction in the given method.
+	 * <p>Find the last return instruction in the given method.</p>
 	 * @param method the method
 	 * @return the last return instruction
 	 * @throws java.lang.IllegalArgumentException if the method doesn't have valid return opcode (should never happen with any valid method)
@@ -46,42 +42,44 @@ public final class ASMUtils {
 		return node;
 	}
 
-	@Deprecated
-	public static AbstractInsnNode findLast(MethodNode method, int opcode) {
-		return findLast(method.instructions, opcode);
-	}
-
+	/**
+	 * <p>Find the last instruction with the given opcode in the given InsnList.</p>
+	 * @param insns the InsnList
+	 * @param opcode the opcode to find
+	 * @return the last instruction with the given opcode
+	 */
 	public static AbstractInsnNode findLast(InsnList insns, int opcode) {
 		AbstractInsnNode node = insns.getLast();
-		do {
+		while (node != null) {
 			if (node.getOpcode() == opcode) {
 				return node;
 			}
 			node = node.getPrevious();
-		} while (node != null);
+		}
 		return null;
 	}
 
+	/**
+	 * <p>Find the first instruction with the given opcode in the given InsnList.</p>
+	 * @param insns the InsnList
+	 * @param opcode the opcode to find
+	 * @return the first instruction with the given opcode
+	 */
 	public static AbstractInsnNode findFirst(InsnList insns, int opcode) {
 		AbstractInsnNode node = insns.getFirst();
-		do {
+		while (node != null) {
 			if (node.getOpcode() == opcode) {
 				return node;
 			}
 			node = node.getNext();
-		} while (node != null);
+		}
 		return null;
-	}
-
-	@Deprecated
-	public static AbstractInsnNode findFirst(MethodNode method, int opcode) {
-		return findFirst(method.instructions, opcode);
 	}
 
 	// *** method finding helpers *** //
 
 	/**
-	 * find the method with the given name. If multiple methods with the same parameters exist, the first one will be returned
+	 * <p>Find the method with the given name. If multiple methods with the same name exist, the first one will be returned.</p>
 	 * @param clazz the class
 	 * @param name the method name to search for
 	 * @return the first method with the given name or null if no such method is found
@@ -96,12 +94,11 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * find the method with the given name and method descriptor.
+	 * <p>Find the method with the given name and method descriptor.</p>
 	 * @param clazz the class
 	 * @param name the method name to search for
 	 * @param desc the method descriptor to search for
 	 * @return the method with the given name and descriptor or null if no such method is found
-	 * @see org.objectweb.asm.Type#getMethodDescriptor
 	 */
 	public static MethodNode findMethod(ClassNode clazz, String name, String desc) {
 		for (MethodNode method : clazz.methods) {
@@ -113,18 +110,21 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * Find the method with the given name. It is automatically chosen between MCP and SRG name, depending on if this code is running in a development environment.
+	 * <p>Find the method with the given name. It is automatically chosen between MCP and SRG name, depending on if this code is running in a development environment.</p>
 	 * @param clazz the class
 	 * @param srgName the SRG name of the method (e.g. {@code func_70316_g}
-	 * @return the first method with the given name or null if no such method is found
+	 * @return the method matching the given SRG name or null if no such method is found
 	 */
 	public static MethodNode findMinecraftMethod(ClassNode clazz, String srgName) {
 		return findMethod(clazz, MCPNames.method(srgName));
 	}
 
 	/**
-	 * like {@link #findMethod(org.objectweb.asm.tree.ClassNode, String)}, but throws if method not found
-	 * @throws MissingMethodException if method doesn't exist
+	 * <p>Find the method with the given name. If multiple methods with the same name exist, the first one will be returned.</p>
+	 * @param clazz the class
+	 * @param name the method name to search for
+	 * @return the first method with the given name
+	 * @throws de.take_weiland.mods.commons.asm.MissingMethodException if no such method was found
 	 */
 	public static MethodNode requireMethod(ClassNode clazz, String name) {
 		MethodNode m = findMethod(clazz, name);
@@ -135,8 +135,12 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * like {@link #findMethod(org.objectweb.asm.tree.ClassNode, String, String)}, but throws if method not found
-	 * @throws MissingMethodException if method doesn't exist
+	 * <p>Find the method with the given name and method descriptor.</p>
+	 * @param clazz the class
+	 * @param name the method name to search for
+	 * @param desc the method descriptor to search for
+	 * @return the method with the given name and descriptor
+	 * @throws de.take_weiland.mods.commons.asm.MissingMethodException if no such method was found
 	 */
 	public static MethodNode requireMethod(ClassNode clazz, String name, String desc) {
 		MethodNode m = findMethod(clazz, name, desc);
@@ -147,88 +151,28 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * like {@link #findMinecraftMethod(org.objectweb.asm.tree.ClassNode, String)}, but throws if method not found
-	 * @throws MissingMethodException if method doesn't exist
+	 * <p>Find the method with the given name. It is automatically chosen between MCP and SRG name, depending on if this code is running in a development environment.</p>
+	 * @param clazz the class
+	 * @param srgName the SRG name of the method (e.g. {@code func_70316_g}
+	 * @return the method matching the given SRG name
+	 * @throws de.take_weiland.mods.commons.asm.MissingMethodException if no such method was found
 	 */
-	public static MethodNode requireMinecraftMethod(ClassNode clazz, String mcpName) {
-		MethodNode m = findMinecraftMethod(clazz, mcpName);
+	public static MethodNode requireMinecraftMethod(ClassNode clazz, String srgName) {
+		MethodNode m = findMinecraftMethod(clazz, srgName);
 		if (m == null) {
-			throw MissingMethodException.create(mcpName, clazz.name);
+			throw MissingMethodException.create(srgName, clazz.name);
 		}
 		return m;
 	}
 
-	public static boolean isConstructor(MethodNode method) {
-		return method.name.equals("<init>");
-	}
-
-	private static Predicate<MethodNode> isConstructor;
-	static Predicate<MethodNode> predIsConstructor() {
-		if (isConstructor == null) {
-			isConstructor = new Predicate<MethodNode>() {
-				@Override
-				public boolean apply(MethodNode input) {
-					return isConstructor(input);
-				}
-			};
-		}
-		return isConstructor;
-	}
-
-	private static Predicate<MethodNode> isPublic;
-	private static Predicate<MethodNode> predIsPublic() {
-		if (isPublic == null) {
-			isPublic = new Predicate<MethodNode>() {
-				@Override
-				public boolean apply(MethodNode input) {
-					return (input.access & ACC_PUBLIC) == ACC_PUBLIC;
-				}
-			};
-		}
-		return isPublic;
-	}
-
-	static Predicate<MethodNode> predVisibleTo(final ClassNode callingClass, final ClassNode targetClass) {
-		return new Predicate<MethodNode>() {
-			@Override
-			public boolean apply(MethodNode input) {
-				return ASMUtils.isAccessibleFrom(callingClass, targetClass, input);
-			}
-		};
-	}
-
-	static Predicate<MethodNode> predHasAnnotation(final Class<? extends Annotation> annotation) {
-		return new Predicate<MethodNode>() {
-			@Override
-			public boolean apply(MethodNode input) {
-				return ASMUtils.hasAnnotation(input, annotation);
-			}
-		};
-	}
-
-	private static Predicate<MethodNode> atMostOneArg;
-	static Predicate<MethodNode> predHasMaxOneArg() {
-		if (atMostOneArg == null) {
-			atMostOneArg = new Predicate<MethodNode>() {
-				@Override
-				public boolean apply(MethodNode input) {
-					return Type.getArgumentTypes(input.desc).length <= 1;
-				}
-			};
-		}
-		return atMostOneArg;
-	}
-
 	/**
-	 * <p>get all constructors of the given ClassNode</p>
-	 * <p>The returned collection is a live-view, so if new constructors get added, they will be present in the returned collection immediately.</p>
+	 * <p>Add the given code to the instance-initializer of the given class.</p>
+	 * <p>Effectively this class inserts the code into every root-constructor of the class. If no constructor is present,
+	 * this method will create the default constructor.</p>
+	 * <p>The code may not contain exitpoints (such as return or throws) or this method may produce faulty code.</p>
 	 * @param clazz the class
-	 * @return all constructors
+	 * @param code the code to initialize
 	 */
-	public static Collection<MethodNode> getConstructors(ClassNode clazz) {
-		return Collections2.filter(clazz.methods, predIsConstructor());
-	}
-
 	public static void initialize(ClassNode clazz, CodePiece code) {
 		List<MethodNode> rootCtsrs = getRootConstructors(clazz);
 		if (rootCtsrs.size() == 0) {
@@ -247,6 +191,13 @@ public final class ASMUtils {
 		}
 	}
 
+	/**
+	 * <p>Add the given code to the static-initializer of the given class.</p>
+	 * <p>If the static-initializer is not present, this method will create it.</p>
+	 * <p>The code may not contain exitpoints (such as return or throws) or this method may produce faulty code.</p>
+	 * @param clazz the class
+	 * @param code the code to initialize
+	 */
 	public static void initializeStatic(ClassNode clazz, CodePiece code) {
 		MethodNode method = findMethod(clazz, "<clinit>");
 		if (method == null) {
@@ -257,36 +208,85 @@ public final class ASMUtils {
 		code.prependTo(method.instructions);
 	}
 
+	/**
+	 * <p>Determine if the given method is a constructor.</p>
+	 * @param method the method
+	 * @return true if the method is a constructor
+	 */
+	public static boolean isConstructor(MethodNode method) {
+		return method.name.equals("<init>");
+	}
+
+	static Predicate<MethodNode> predIsConstructor() {
+		return new Predicate<MethodNode>() {
+			@Override
+			public boolean apply(MethodNode input) {
+				return isConstructor(input);
+			}
+		};
+	}
+
+	/**
+	 * <p>Get all constructors of the given class.</p>
+	 * <p>The returned collection is a live-view, so if new constructors get added, they will be present in the returned collection immediately.</p>
+	 * @param clazz the class
+	 * @return all constructors
+	 */
+	public static Collection<MethodNode> getConstructors(ClassNode clazz) {
+		return Collections2.filter(clazz.methods, predIsConstructor());
+	}
+
+	/**
+	 * <p>Determine if the method in the given {@code targetClass} can be accessed from the {@code accessingClass}.</p>
+	 * @param accessingClass the class trying to access the field
+	 * @param targetClass the class containing the field
+	 * @param method the method to check for
+	 * @return if the given method can be accessed
+	 */
 	public static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, MethodNode method) {
 		return isAccessibleFrom(accessingClass, targetClass, method.access);
 	}
 
+	/**
+	 * <p>Determine if the field in the given {@code targetClass} can be accessed from the {@code accessingClass}.</p>
+	 * @param accessingClass the class trying to access the field
+	 * @param targetClass the class containing the field
+	 * @param field the field to check for
+	 * @return if the given field can be accessed
+	 */
 	public static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, FieldNode field) {
 		return isAccessibleFrom(accessingClass, targetClass, field.access);
 	}
 
-	@SuppressWarnings("SimplifiableIfStatement") // yeah, no, not much simpler
-	public static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, int targetAccess) {
-		if ((targetClass.access & ACC_PUBLIC) != ACC_PUBLIC && !getPackage(accessingClass.name).equals(getPackage(targetClass.name))) {
-			return false;
-		}
+	private static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, int targetAccess) {
+		// public methods are reachable from everywhere
 		if ((targetAccess & ACC_PUBLIC) == ACC_PUBLIC) {
 			return true;
 		}
-		if ((targetAccess & ACC_PRIVATE) == ACC_PRIVATE) {
-			return accessingClass.name.equals(targetClass.name);
-		}
-		if (getPackage(accessingClass.name).equals(getPackage(targetClass.name))) {
+
+		// classes can access their own methods
+		if (accessingClass.name.equals(targetClass.name)) {
 			return true;
-		} else if ((targetAccess & ACC_PROTECTED) == ACC_PROTECTED) {
-			return ClassInfo.of(targetClass).isAssignableFrom(ClassInfo.of(targetClass));
-		} else {
+		}
+
+		// private methods are only reachable from within the same class
+		if ((targetAccess & ACC_PRIVATE) == ACC_PRIVATE) {
 			return false;
 		}
+
+		// method can only be protected or package-private at this point
+		// if package is equal, it's accessible
+		if (getPackage(accessingClass.name).equals(getPackage(targetClass.name))) {
+			return true;
+		}
+
+		// if method is protected, check the class hierarchy
+		return (targetAccess & ACC_PROTECTED) == ACC_PROTECTED && ClassInfo.of(targetClass).isAssignableFrom(ClassInfo.of(targetClass));
 	}
 
 	private static String getPackage(String internalName) {
-		return internalName.substring(0, internalName.lastIndexOf('/'));
+		int idx = internalName.lastIndexOf('/');
+		return idx == -1 ? "" : internalName.substring(0, idx);
 	}
 
 	/**
@@ -312,10 +312,10 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Get all methods in the given class which have the given Annotation</p>
+	 * <p>Get all methods in the given class which have the given annotation.</p>
 	 * @param clazz the ClassNode
 	 * @param annotation the annotation to search for
-	 * @return a Collection containing all methods in the class which have the given Annotation
+	 * @return a Collection containing all methods in the class which have the given annotation
 	 */
 	public static Collection<MethodNode> methodsWith(ClassNode clazz, final Class<? extends Annotation> annotation) {
 		return Collections2.filter(clazz.methods, new Predicate<MethodNode>() {
@@ -327,10 +327,10 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Get all fields in the given class which have the given Annotation</p>
+	 * <p>Get all fields in the given class which have the given annotation.</p>
 	 * @param clazz the ClassNode
 	 * @param annotation the annotation to search for
-	 * @return a Collection containing all fields in the class which have the given Annotation
+	 * @return a Collection containing all fields in the class which have the given annotation
 	 */
 	public static Collection<FieldNode> fieldsWith(ClassNode clazz, final Class<? extends Annotation> annotation) {
 		return Collections2.filter(clazz.fields, new Predicate<FieldNode>() {
@@ -349,6 +349,19 @@ public final class ASMUtils {
 		return returnType;
 	}
 
+	/**
+	 * <p>Find the setter for a given getter. This method gives precedence to the {@link de.take_weiland.mods.commons.OverrideSetter} annotation.
+	 * If it is not present, the following rules apply:</p>
+	 * <ul>
+	 *     <li>getFoobar => setFoobar</li>
+	 *     <li>isFoobar => setFoobar</li>
+	 *     <li>foobar => foobar (in .java files)</li>
+	 *     <li>foobar => foobar_$eq (in .scala files)</li>
+	 * </ul>
+	 * @param clazz the class containing the getter
+	 * @param getter the getter method
+	 * @return the setter corresponding to the given getter, or null if no setter was found
+	 */
 	public static MethodNode findSetter(ClassNode clazz, MethodNode getter) {
 		Type type = getterType(getter);
 
@@ -358,9 +371,9 @@ public final class ASMUtils {
 		if (overrideSetter != null) {
 			setterName = getAnnotationProperty(overrideSetter, "value");
 		} else {
-			if (getter.name.startsWith("get")) {
+			if (getter.name.startsWith("get") && getter.name.length() >= 4 && Character.isUpperCase(getter.name.charAt(3))) {
 				setterName = "set" + getter.name.substring(3);
-			} else if (getter.name.startsWith("is")) {
+			} else if (getter.name.startsWith("is") && getter.name.length() >= 3 && Character.isUpperCase(getter.name.charAt(2))) {
 				setterName = "set" + getter.name.substring(2);
 			} else if (Strings.nullToEmpty(clazz.sourceFile).endsWith(".scala")) {
 				setterName = getter.name + "_$eq";
@@ -370,107 +383,6 @@ public final class ASMUtils {
 		}
 		String setterDesc = Type.getMethodDescriptor(Type.VOID_TYPE, type);
 		return findMethod(clazz, setterName, setterDesc);
-	}
-
-	public static boolean isReturn(int opcode) {
-		return opcode == RETURN
-				|| opcode == IRETURN
-				|| opcode == LRETURN
-				|| opcode == FRETURN
-				|| opcode == DRETURN
-				|| opcode == ARETURN;
-	}
-
-	public static boolean matches(AbstractInsnNode a, AbstractInsnNode b) {
-		return matches(a, b, false);
-	}
-
-	public static boolean matches(AbstractInsnNode a, AbstractInsnNode b, boolean lenient) {
-		if (a.getOpcode() != b.getOpcode()) {
-			return false;
-		}
-		if (lenient) {
-			return true;
-		}
-		switch (a.getType()) {
-			case INSN:
-			case JUMP_INSN:
-			case LABEL:
-			case FRAME:
-			case LINE:
-				return true;
-			case INT_INSN:
-				return intInsnEq((IntInsnNode) a, (IntInsnNode) b);
-			case VAR_INSN:
-				return varInsnEq((VarInsnNode) a, (VarInsnNode) b);
-			case TYPE_INSN:
-				return typeInsnEq((TypeInsnNode) a, (TypeInsnNode) b);
-			case FIELD_INSN:
-				return fieldInsnEq((FieldInsnNode) a, (FieldInsnNode) b);
-			case METHOD_INSN:
-				return methodInsnEq((MethodInsnNode) a, (MethodInsnNode) b);
-			case LDC_INSN:
-				return ldcInsnEq((LdcInsnNode) a, (LdcInsnNode) b);
-			case IINC_INSN:
-				return iincInsnEq((IincInsnNode) a, (IincInsnNode) b);
-			case TABLESWITCH_INSN:
-				return tableSwitchEq((TableSwitchInsnNode) a, (TableSwitchInsnNode) b);
-			case LOOKUPSWITCH_INSN:
-				return lookupSwitchEq((LookupSwitchInsnNode) a, (LookupSwitchInsnNode) b);
-			case MULTIANEWARRAY_INSN:
-				return multiANewArrayEq((MultiANewArrayInsnNode) a, (MultiANewArrayInsnNode) b);
-			case INVOKE_DYNAMIC_INSN:
-				return invokeDynamicEq((InvokeDynamicInsnNode) a, (InvokeDynamicInsnNode) b);
-			default:
-				throw new AssertionError();
-		}
-	}
-
-	private static boolean intInsnEq(IntInsnNode a, IntInsnNode b) {
-		return a.operand == b.operand;
-	}
-
-	private static boolean varInsnEq(VarInsnNode a, VarInsnNode b) {
-		return a.var == b.var;
-	}
-
-	private static boolean typeInsnEq(TypeInsnNode a, TypeInsnNode b) {
-		return a.desc.equals(b.desc);
-	}
-
-	private static boolean fieldInsnEq(FieldInsnNode a, FieldInsnNode b) {
-		return a.name.equals(b.name) && a.owner.equals(b.owner) && a.desc.equals(b.desc);
-	}
-
-	private static boolean methodInsnEq(MethodInsnNode a, MethodInsnNode b) {
-		return a.name.equals(b.name) && a.owner.equals(b.owner) && a.desc.equals(b.desc);
-	}
-
-	private static boolean ldcInsnEq(LdcInsnNode a, LdcInsnNode b) {
-		return a.cst.equals(b.cst);
-	}
-
-	private static boolean iincInsnEq(IincInsnNode a, IincInsnNode b) {
-		return a.var == b.var && a.incr == b.incr;
-	}
-
-	private static boolean tableSwitchEq(TableSwitchInsnNode a, TableSwitchInsnNode b) {
-		return a.min == b.min && a.max == b.max;
-	}
-
-	private static boolean lookupSwitchEq(LookupSwitchInsnNode a, LookupSwitchInsnNode b) {
-		return a.keys.equals(b.keys);
-	}
-
-	private static boolean multiANewArrayEq(MultiANewArrayInsnNode a, MultiANewArrayInsnNode b) {
-		return a.dims == b.dims && a.desc.equals(b.desc);
-	}
-
-	private static boolean invokeDynamicEq(InvokeDynamicInsnNode a, InvokeDynamicInsnNode b) {
-		return a.name.equals(b.name)
-				&& a.desc.equals(b.desc)
-				&& a.bsm.equals(b.bsm)
-				&& Arrays.equals(a.bsmArgs, b.bsmArgs);
 	}
 
 	/**
@@ -527,38 +439,6 @@ public final class ASMUtils {
 			}
 		}
 		return insn;
-	}
-
-	/**
-	 * <p>Provides identical functionality to {@link #getPrevious(org.objectweb.asm.tree.AbstractInsnNode, int)},
-	 * but can provide constant-time performance in certain situations, as opposed to the linear-time performance of
-	 * {@link #getPrevious(org.objectweb.asm.tree.AbstractInsnNode, int)}.</p>
-	 * <p>The constant-time implementation is used if the cache of the InsnList is already created. To force that to happen,
-	 * call {@link org.objectweb.asm.tree.InsnList#get(int)} once before calling this method.</p>
-	 * @param list the InsnList of the instruction
-	 * @param insn the instruction
-	 * @param n how many steps to move backwards
-	 * @return the instruction {@code n} steps backwards
-	 * @throws java.lang.IndexOutOfBoundsException if the list ends before n steps have been walked
-	 */
-	public static AbstractInsnNode getPrevious(InsnList list, AbstractInsnNode insn, int n) {
-		if (SCASMAccessHook.getCache(list) != null) {
-			int idx = SCASMAccessHook.getIndex(insn);
-			checkArgument(idx >= 0, "instruction doesn't belong to list!");
-			return list.get(idx - n);
-		} else {
-			return getPrevious(insn, n);
-		}
-	}
-
-	public static int fastIdx(InsnList list, AbstractInsnNode insn) {
-		if (insn == list.getFirst()) {
-			return 0;
-		} else if (insn == list.getLast()) {
-			return list.size() - 1;
-		} else {
-			return list.indexOf(insn);
-		}
 	}
 
 	/**
@@ -754,7 +634,14 @@ public final class ASMUtils {
 		return getClassNode(bytes, THIN_FLAGS);
 	}
 
+	// *** annotation utilities *** //
 
+	/**
+	 * <p>Finds the given annotation on the given Class or on any Field or Method in the class.</p>
+	 * @param clazz the class to search in
+	 * @param annotation the annotation to find
+	 * @return true if the annotation was found on the Class or any Field or Method
+	 */
 	public static boolean hasAnnotationOnAnything(ClassNode clazz, Class<? extends Annotation> annotation) {
 		String desc = Type.getDescriptor(annotation);
 		boolean isVisible = isVisible(annotation);
@@ -790,7 +677,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given field
+	 * <p>gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given field</p>
 	 * @param field the field
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
@@ -800,7 +687,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given class
+	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given class
 	 * @param clazz the class
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
@@ -810,7 +697,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given Annotation class, if present on the given method
+	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given method
 	 * @param method the method
 	 * @param ann the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
@@ -828,7 +715,7 @@ public final class ASMUtils {
 		Retention ret = annotation.getAnnotation(Retention.class);
 		if (ret == null) {
 			// defaults to CLASS
-			return true;
+			return false;
 		}
 		RetentionPolicy retention = ret.value();
 		checkArgument(retention != RetentionPolicy.SOURCE, "Cannot check SOURCE annotations from class files!");
@@ -858,24 +745,29 @@ public final class ASMUtils {
 		return findAnnotation(isVisible(ann) ? visAnn : invisAnn, Type.getDescriptor(ann));
 	}
 
+	/**
+	 * <p>Retrieves the given property from the annotation or {@code null} if it is not present.</p>
+	 * <p>This method does not take the {@code default} value for this property into account.
+	 * If you need those, use {@link #getAnnotationProperty(org.objectweb.asm.tree.AnnotationNode, String, Class)} instead.</p>
+	 * @param ann the AnnotationNode
+	 * @param key the name of the property to get
+	 * @param <T> the type of the property
+	 * @return the value of the property or null if the property is not present
+	 */
 	public static <T> T getAnnotationProperty(AnnotationNode ann, String key) {
 		return getAnnotationProperty(ann, key, (T) null);
 	}
 
-	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, Class<? extends Annotation> annClass) {
-		T result = getAnnotationProperty(ann, key, (T) null);
-		if (result == null) {
-			try {
-				//noinspection unchecked
-				return (T) annClass.getMethod(key).getDefaultValue();
-			} catch (NoSuchMethodException e) {
-				return null;
-			}
-		} else {
-			return result;
-		}
-	}
-
+	/**
+	 * <p>Retrieves the given property from the annotation or {@code defaultValue} if it is not present.</p>
+	 * <p>This method does not take the {@code default} value for this property into account.
+	 * If you need those, use {@link #getAnnotationProperty(org.objectweb.asm.tree.AnnotationNode, String, Class)} instead.</p>
+	 * @param ann the AnnotationNode
+	 * @param key the name of the property to get
+	 * @param defaultValue a default value, in case the property is not present.
+	 * @param <T> the type of the property
+	 * @return the value of the property or {@code defaultValue} if the property is not present
+	 */
 	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, T defaultValue) {
 		List<Object> data = ann.values;
 		int len;
@@ -892,7 +784,30 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * check if the given Annotation class is present on this field
+	 * <p>Retrieves the given property from the annotation or any default value specified in the annotation class.</p>
+	 * @param ann the AnnotationNode
+	 * @param key the name of the property to get
+	 * @param annClass the class of the annotation
+	 * @param <T> the type of the property
+	 * @throws java.util.NoSuchElementException if this annotation doesn't have this property
+	 * @return the value of the property or the default value specified in the annotation class
+	 */
+	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, Class<? extends Annotation> annClass) {
+		T result = getAnnotationProperty(ann, key, (T) null);
+		if (result == null) {
+			try {
+				//noinspection unchecked
+				return (T) annClass.getMethod(key).getDefaultValue();
+			} catch (NoSuchMethodException e) {
+				throw new NoSuchElementException("Annotation property " + key + "missing");
+			}
+		} else {
+			return result;
+		}
+	}
+
+	/**
+	 * <p>Check if the given annotation class is present on this field.</p>
 	 * @param field the field
 	 * @param annotation the annotation
 	 * @return true if the annotation is present
@@ -902,7 +817,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * check if the given Annotation class is present on this class
+	 * <p>Check if the given annotation class is present on this class.</p>
 	 * @param clazz the class
 	 * @param annotation the annotation
 	 * @return true if the annotation is present
@@ -912,7 +827,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * check if the given Annotation class is present on this method
+	 * <p>Check if the given annotation class is present on this method.</p>
 	 * @param method the method
 	 * @param annotation the annotation
 	 * @return true if the annotation is present
@@ -922,7 +837,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * Checks if the given {@link org.objectweb.asm.Type} represents a primitive or void
+	 * <p>Checks if the given {@link org.objectweb.asm.Type} represents a primitive type or the void type.</p>
 	 * @param type the type
 	 * @return true if the {@code Type} represents a primitive type or void
 	 */
@@ -930,11 +845,23 @@ public final class ASMUtils {
 		return type.getSort() != Type.ARRAY && type.getSort() != Type.OBJECT && type.getSort() != Type.METHOD;
 	}
 
+	/**
+	 * <p>Counts the number of arguments that a method with the given Type needs.</p>
+	 * <p>The Type must be of Type {@link Type#METHOD}.</p>
+	 * @param type the method type
+	 * @return the number of arguments of the method
+	 */
 	public static int argumentCount(Type type) {
 		checkArgument(type.getSort() == Type.METHOD);
 		return argumentCount(type.getDescriptor());
 	}
 
+	/**
+	 * <p>Counts the number of arguments that a method with the given descriptor needs.</p>
+	 * <p>The descriptor must be a method descriptor.</p>
+	 * @param methodDesc the method descriptor
+	 * @return the number of arguments of the method
+	 */
 	public static int argumentCount(String methodDesc) {
 		int off = 1; // skip initial '('
 		int size = 0;
@@ -954,7 +881,7 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Create a new {@link org.objectweb.asm.Type} that represents an array with {@code dimensions} dimensions and the
-	 * Component Type {@code elementType}.</p>
+	 * component type {@code elementType}.</p>
 	 * @param elementType the component type of the array type to create, must not be a Method type.
 	 * @param dimensions the number of dimensions to create
 	 * @return a new Type representing the array type.

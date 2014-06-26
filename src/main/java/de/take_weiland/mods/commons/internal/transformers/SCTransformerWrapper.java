@@ -21,7 +21,7 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		register(new PacketTransformer());
 
 		// @ToNbt
-		register(new AnnotationFindingTransformer());
+		register(new NBTTransformer());
 
 		register(new ListenableTransformer());
 	}

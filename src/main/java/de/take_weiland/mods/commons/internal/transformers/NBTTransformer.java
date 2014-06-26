@@ -12,7 +12,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.util.Collection;
-import java.util.ListIterator;
 
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -20,7 +19,7 @@ import static org.objectweb.asm.Type.*;
 /**
  * @author diesieben07
  */
-public class NBTTransformer {
+public class NBTTransformer implements ASMClassTransformer {
 
 	private static final int READ = 0;
 	private static final int WRITE = 1;
@@ -32,9 +31,12 @@ public class NBTTransformer {
 	private static final ClassInfo entityClassInfo = ClassInfo.of(Entity.class);
 	private static final ClassInfo entityPropsClassInfo = ClassInfo.of(IExtendedEntityProperties.class);
 
+	@Override
+	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
+		if (!ASMUtils.hasAnnotationOnAnything(clazz, ToNbt.class)) {
+			return false;
+		}
 
-
-	static void transform(ClassNode clazz, ClassInfo classInfo, ListIterator<MethodNode> methods) {
 		ClassType type = findType(classInfo);
 		Collection<ASMVariable> variables = ASMVariables.allWith(clazz, ToNbt.class, CodePieces.getThis());
 
@@ -68,8 +70,8 @@ public class NBTTransformer {
 					CodePieces.of(new VarInsnNode(ALOAD, 1))).appendTo(write);
 		}
 
-		methods.add(readMethod);
-		methods.add(writeMethod);
+		clazz.methods.add(readMethod);
+		clazz.methods.add(writeMethod);
 
 		// determine if our method needs to call the super method
 		// this is the case if
@@ -110,6 +112,7 @@ public class NBTTransformer {
 		read.add(new InsnNode(RETURN));
 		write.add(new InsnNode(RETURN));
 
+		return true;
 	}
 
 	private static void insertSuperCall(ClassNode clazz, InsnList insns, String methodName) {
@@ -369,4 +372,10 @@ public class NBTTransformer {
 		}
 	}
 
+	@Override
+	public boolean transforms(String internalName) {
+		return !internalName.startsWith("cpw/mods/fml/")
+				&& !internalName.startsWith("net/minecraftforge/")
+				&& !internalName.startsWith("net/minecraft/");
+	}
 }

@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.collect.Iterators;
 import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.InstanceProvider;
 import org.objectweb.asm.Type;
@@ -8,14 +7,10 @@ import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.VOID_TYPE;
-import static org.objectweb.asm.Type.getDescriptor;
-import static org.objectweb.asm.Type.getMethodDescriptor;
+import static org.objectweb.asm.Type.*;
 
 /**
  * @author diesieben07
@@ -71,156 +66,6 @@ public final class CodePieces {
 			return of();
 		} else {
 			return new CombinedCodePiece(pieces);
-		}
-	}
-
-	private static AtomicLong cacheCounter;
-
-	private static String nextUniqueName() {
-		if (cacheCounter == null) {
-			synchronized (CodePieces.class) {
-				if (cacheCounter == null) {
-					cacheCounter = new AtomicLong();
-				}
-			}
-		}
-		return "_sc$cache$" + String.valueOf(cacheCounter.getAndIncrement()).replace('-', 'm');
-	}
-
-	public static CodePiece cacheStatic(ClassNode clazz, Type type, CodePiece code) {
-		return cache(clazz, type, code, true, false);
-	}
-
-	public static CodePiece cache(ClassNode clazz, Type type, CodePiece code) {
-		return cache(clazz, type, code, false, false);
-	}
-
-	public static CodePiece cache(ClassNode clazz, Type type, CodePiece code, boolean _static, boolean canBeNull) {
-		CodePiece loadInstance;
-		int getOp;
-		int putOp;
-		int invokeOp;
-		int access = ACC_PRIVATE;
-		if (_static) {
-			loadInstance = null;
-			getOp = GETSTATIC;
-			putOp = PUTSTATIC;
-			invokeOp = INVOKESTATIC;
-			access |= ACC_STATIC;
-		} else {
-			loadInstance = getThis();
-			getOp = GETFIELD;
-			putOp = PUTFIELD;
-			invokeOp = INVOKESPECIAL;
-		}
-
-		boolean isPrimitive = ASMUtils.isPrimitive(type);
-
-		String name = nextUniqueName();
-		String mDesc = Type.getMethodDescriptor(type);
-		FieldNode field = new FieldNode(access, name, type.getDescriptor(), null, null);
-		FieldNode marker = null;
-		if (canBeNull || isPrimitive) {
-			marker = new FieldNode(access, name + "$present", Type.BOOLEAN_TYPE.getDescriptor(), null, null);
-			clazz.fields.add(marker);
-		}
-
-		MethodNode method = new MethodNode(access, name, mDesc, null, null);
-		InsnList insns = method.instructions;
-		if (marker == null) {
-			if (!_static) loadInstance.appendTo(insns);
-			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
-			insns.add(new InsnNode(DUP));
-
-			LabelNode isNull = new LabelNode();
-			insns.add(new JumpInsnNode(IFNULL, isNull));
-			insns.add(new InsnNode(type.getOpcode(IRETURN)));
-
-			insns.add(isNull);
-			insns.add(new InsnNode(POP));
-			if (!_static) loadInstance.appendTo(insns);
-			code.appendTo(insns);
-			insns.add(new FieldInsnNode(putOp, clazz.name, field.name, field.desc));
-			if (!_static) loadInstance.appendTo(insns);
-			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
-			insns.add(new InsnNode(type.getOpcode(IRETURN)));
-		} else {
-			if (!_static) loadInstance.appendTo(insns);
-			insns.add(new FieldInsnNode(getOp, clazz.name, marker.name, marker.desc));
-
-			LabelNode isMissing = new LabelNode();
-			insns.add(new JumpInsnNode(IFEQ, isMissing));
-			if (!_static) loadInstance.appendTo(insns);
-			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
-			insns.add(new InsnNode(type.getOpcode(IRETURN)));
-
-			insns.add(isMissing);
-			if (!_static) loadInstance.appendTo(insns);
-			constant(true).appendTo(insns);
-			insns.add(new FieldInsnNode(putOp, clazz.name, marker.name, marker.desc));
-
-			if (!_static) loadInstance.appendTo(insns);
-			code.appendTo(insns);
-			insns.add(new FieldInsnNode(putOp, clazz.name, field.name, field.desc));
-
-			if (!_static) loadInstance.appendTo(insns);
-			insns.add(new FieldInsnNode(getOp, clazz.name, field.name, field.desc));
-
-			insns.add(new InsnNode(type.getOpcode(IRETURN)));
-		}
-
-		clazz.fields.add(field);
-		clazz.methods.add(method);
-
-		return invoke(invokeOp, clazz.name, method.name, method.desc, _static ? new CodePiece[0] : new CodePiece[]{ loadInstance });
-	}
-
-	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code) {
-		return cacheLocal(method, type, code, constantNull());
-	}
-
-	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code, CodePiece initialValue) {
-		int idx;
-		if ((method.access & ACC_STATIC) == ACC_STATIC) {
-			idx = 0;
-		} else {
-			idx = 1;
-		}
-		for (LocalVariableNode var : method.localVariables) {
-			if (var.index >= idx) idx = var.index + 1;
-		}
-		Iterator<VarInsnNode> varInsns = Iterators.filter(method.instructions.iterator(), VarInsnNode.class);
-		while (varInsns.hasNext()) {
-			VarInsnNode insn = varInsns.next();
-			if (insn.var >= idx) idx = insn.var + 1;
-		}
-
-		return cacheLocal(method, type, code, initialValue, idx);
-	}
-
-	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code, int varIndex) {
-		return cacheLocal(method, type, code, constantNull(), varIndex);
-	}
-
-	public static LocalCache cacheLocal(MethodNode method, Type type, CodePiece code, CodePiece initialValue, int varIndex) {
-		LocalVariableNode var = new LocalVariableNode(null, type.getDescriptor(), null, null, null, varIndex);
-		ASMVariable theCache = ASMVariables.of(var);
-		theCache.set(initialValue).prependTo(method.instructions);
-
-		return new LocalCache(Conditions.ifNull(theCache.get())
-				.then(theCache.set(code))
-				.build()
-				.append(theCache.get()), theCache.get());
-	}
-
-	public static final class LocalCache {
-
-		public final CodePiece get;
-		public final CodePiece direct;
-
-		LocalCache(CodePiece get, CodePiece direct) {
-			this.get = get;
-			this.direct = direct;
 		}
 	}
 

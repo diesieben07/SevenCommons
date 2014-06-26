@@ -33,40 +33,6 @@ public final class CodeLocation implements Iterable<AbstractInsnNode> {
 		return new CodeLocation(list, list.getFirst(), last);
 	}
 
-	public static CodeLocation allFromExcl(InsnList list, AbstractInsnNode beforeFirst) {
-		return allFrom(list, requireNext(beforeFirst));
-	}
-
-	public static CodeLocation allToExcl(InsnList list, AbstractInsnNode afterLast) {
-		return allTo(list, requirePrev(afterLast));
-	}
-
-	public static CodeLocation firstOf(InsnList list) {
-		return new CodeLocation(list, list.getFirst(), list.getLast());
-	}
-
-	public static CodeLocation lastOf(InsnList list) {
-		return new CodeLocation(list, list.getLast(), list.getLast());
-	}
-
-	public static CodeLocation nFrom(InsnList list, AbstractInsnNode first, int n) {
-		checkArgument(n >= 0, "n must not be negative");
-		return new CodeLocation(list, first, ASMUtils.getNext(list, first, n));
-	}
-
-	public static CodeLocation firstNOf(InsnList list, int n) {
-		return nFrom(list, list.getFirst(), n);
-	}
-
-	public static CodeLocation nBefore(InsnList list, AbstractInsnNode last, int n) {
-		checkArgument(n >= 0, "n must not be negative");
-		return new CodeLocation(list, ASMUtils.getPrevious(list, last, n), last);
-	}
-
-	public static CodeLocation lastNOf(InsnList list, int n) {
-		return nBefore(list, list.getLast(), n);
-	}
-
 	public AbstractInsnNode first() {
 		return first;
 	}
