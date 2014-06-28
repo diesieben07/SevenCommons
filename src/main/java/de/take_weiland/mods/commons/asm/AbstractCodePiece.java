@@ -11,23 +11,11 @@ import org.objectweb.asm.tree.LabelNode;
 import java.util.Collections;
 import java.util.Map;
 
-/**
- * Abstract base class for CodePieces.<br/>
- * // TODO
- * {@link #insertBefore(org.objectweb.asm.tree.InsnList, org.objectweb.asm.tree.AbstractInsnNode)},
- * {@link #insertAfter(org.objectweb.asm.tree.InsnList, org.objectweb.asm.tree.AbstractInsnNode)},
- * {@link #appendTo(org.objectweb.asm.tree.InsnList)} and
- * {@link #prependTo(org.objectweb.asm.tree.InsnList)}
- * can (and should) be overridden if the creation of a new InsnList for this operation is not the best way
- * (e.g. CodePieces that contain only a single instruction.
- *
- * @author diesieben07
- */
-public abstract class AbstractCodePiece implements CodePiece {
+abstract class AbstractCodePiece implements CodePiece {
 
 	private static Function<LabelNode, LabelNode> instanceProvider;
 
-	protected static Map<LabelNode, LabelNode> newContext() {
+	static Map<LabelNode, LabelNode> newContext() {
 		if (instanceProvider == null) {
 			instanceProvider = new Function<LabelNode, LabelNode>() {
 				@Override

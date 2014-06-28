@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
+import com.google.common.collect.ImmutableList;
+import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ASMClassTransformerWrapper;
 
 /**
@@ -8,22 +10,22 @@ import de.take_weiland.mods.commons.asm.ASMClassTransformerWrapper;
 public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 
 	@Override
-	protected void setup() {
+	protected void setup(ImmutableList.Builder<ASMClassTransformer> builder) {
 		// vanilla stuff
-		register(new GuiScreenTransformer());
-		register(new EntityPlayerTransformer());
-		register(new EntityTrackerEntryTransformer());
-		register(new Packet250Transformer());
+		builder.add(new GuiScreenTransformer());
+		builder.add(new EntityPlayerTransformer());
+		builder.add(new EntityTrackerEntryTransformer());
+		builder.add(new Packet250Transformer());
 
 
 		// packets
-		register(new SimplePacketTypeTransformer());
-		register(new PacketTransformer());
+		builder.add(new SimplePacketTypeTransformer());
+		builder.add(new PacketTransformer());
 
 		// @ToNbt
-		register(new NBTTransformer());
+		builder.add(new NBTTransformer());
 
-		register(new ListenableTransformer());
+		builder.add(new ListenableTransformer());
 	}
 
 }

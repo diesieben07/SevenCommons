@@ -1,14 +1,13 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
 
@@ -21,12 +20,12 @@ import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
  */
 public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 
-	private final ArrayList<ASMClassTransformer> transformers;
+	private final List<ASMClassTransformer> transformers;
 
-	protected ASMClassTransformerWrapper() {
-		transformers = Lists.newArrayList();
-		setup();
-		transformers.trimToSize();
+	public ASMClassTransformerWrapper() {
+		ImmutableList.Builder<ASMClassTransformer> b = ImmutableList.builder();
+		setup(b);
+		transformers = b.build();
 	}
 
 	@Override
@@ -69,16 +68,9 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 	}
 
 	/**
-	 * register your transformers here
+	 * <p>Register your transformers here.</p>
+	 * @param builder a builder to add your transformers to
 	 */
-	protected abstract void setup();
-
-	/**
-	 * register an {@link de.take_weiland.mods.commons.asm.ASMClassTransformer}
-	 * @param transformer the transformer to register
-	 */
-	protected final void register(ASMClassTransformer transformer) {
-		transformers.add(Preconditions.checkNotNull(transformer, "transformer must not be null"));
-	}
+	protected abstract void setup(ImmutableList.Builder<ASMClassTransformer> builder);
 
 }
