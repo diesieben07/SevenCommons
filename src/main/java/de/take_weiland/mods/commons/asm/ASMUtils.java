@@ -20,6 +20,7 @@ import java.lang.annotation.*;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.objectweb.asm.Opcodes.*;
 
 public final class ASMUtils {
@@ -318,6 +319,7 @@ public final class ASMUtils {
 	 * @return a Collection containing all methods in the class which have the given annotation
 	 */
 	public static Collection<MethodNode> methodsWith(ClassNode clazz, final Class<? extends Annotation> annotation) {
+		checkNotNull(annotation, "annotation");
 		return Collections2.filter(clazz.methods, new Predicate<MethodNode>() {
 			@Override
 			public boolean apply(MethodNode method) {

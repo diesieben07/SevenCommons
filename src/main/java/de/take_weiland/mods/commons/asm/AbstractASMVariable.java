@@ -7,11 +7,7 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.util.List;
 
-/**
- * Default base implementation of {@link ASMVariable}
- * @author diesieben07
- */
-public abstract class AbstractASMVariable implements ASMVariable {
+abstract class AbstractASMVariable implements ASMVariable {
 
 	@Override
 	public final AnnotationNode getterAnnotation(Class<? extends Annotation> ann) {
@@ -46,14 +42,14 @@ public abstract class AbstractASMVariable implements ASMVariable {
 		return hasGetterModifier(Opcodes.ACC_STATIC);
 	}
 
-	protected abstract List<AnnotationNode> getterAnns(boolean visible);
+	abstract List<AnnotationNode> getterAnns(boolean visible);
 
-	protected abstract List<AnnotationNode> setterAnns(boolean visible);
+	abstract List<AnnotationNode> setterAnns(boolean visible);
 
-	protected abstract int setterModifiers();
+	abstract int setterModifiers();
 
-	protected abstract int getterModifiers();
+	abstract int getterModifiers();
 
-	protected abstract ElementType annotationType();
+	abstract ElementType annotationType();
 
 }

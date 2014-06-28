@@ -1,7 +1,9 @@
 package de.take_weiland.mods.commons.asm;
 
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 
 import java.lang.annotation.ElementType;
 import java.util.List;
@@ -25,9 +27,9 @@ class ASMField extends ClassBoundASMVariable {
 	public CodePiece get() {
 		if (getCache == null) {
 			if (!isStatic()) {
-				getCache = instance.append(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
+				getCache = CodePieces.getField(clazz, field, instance);
 			} else {
-				getCache = CodePieces.of(new FieldInsnNode(GETSTATIC, clazz.name, field.name, field.desc));
+				getCache = CodePieces.getField(clazz, field);
 			}
 		}
 		return getCache;
@@ -36,10 +38,11 @@ class ASMField extends ClassBoundASMVariable {
 	@Override
 	public CodePiece set(CodePiece loadValue) {
 		boolean isStatic = isStatic();
-		CodePiece result = loadValue
-				.append(new FieldInsnNode(isStatic ? PUTSTATIC : PUTFIELD, clazz.name, field.name, field.desc));
-
-		return isStatic ? result : instance.append(result);
+		if (isStatic()) {
+			return CodePieces.setField(clazz, field, loadValue);
+		} else {
+			return CodePieces.setField(clazz, field, instance, loadValue);
+		}
 	}
 
 	@Override

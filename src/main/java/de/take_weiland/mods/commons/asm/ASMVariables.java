@@ -16,62 +16,156 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.objectweb.asm.Opcodes.ACC_STATIC;
+import static org.objectweb.asm.Opcodes.*;
 
 /**
+ * <p>Factory class for ASMVariables.</p>
  * @author diesieben07
  */
 public final class ASMVariables {
 
+	/**
+	 * <p>Creates an {@code ASMVariable} that represents the local variable with the given index in the given method.</p>
+	 * @param method the method containing the variable
+	 * @param idx the local variable to get
+	 * @return an ASMVariable that represents the local variable
+	 */
 	public static ASMVariable local(MethodNode method, int idx) {
-		return of(method.localVariables.get(idx));
+		for (LocalVariableNode variable : method.localVariables) {
+			if (variable.index == idx) {
+				return of(variable);
+			}
+		}
+		throw new IllegalArgumentException("No such local variable");
 	}
 
+	/**
+	 * <p>Creates an {@code ASMVariable} that represents the given LocalVariableNode.</p>
+	 * @param var the local variable
+	 * @return an ASMVariable that represents the local variable
+	 */
 	public static ASMVariable of(LocalVariableNode var) {
 		return new ASMLocalVariable(var);
 	}
 
+	/**
+	 * <p>Creates an {@code ASMVariable} that represents the given non-static field.</p>
+	 * @param clazz the class containing the field
+	 * @param field the field
+	 * @param instance the instance to get the field from
+	 * @return an ASMVariable that represents the field
+	 */
 	public static ASMVariable of(ClassNode clazz, FieldNode field, CodePiece instance) {
-		if (instance == null) {
-			checkStatic(field.access, "field");
-		} else {
-			checkNotStatic(field.access, "field");
-		}
+		checkNotStatic(field.access, "field");
 		return new ASMField(clazz, field, instance);
 	}
 
+	/**
+	 * <p>Creates an {@code ASMVariable} that represents the given static field.</p>
+	 * @param clazz the class containing the field
+	 * @param field the field
+	 * @return an ASMVariable that represents the field
+	 */
 	public static ASMVariable of(ClassNode clazz, FieldNode field) {
-		return of(clazz, field, null);
+		checkStatic(field.access, "field");
+		return new ASMField(clazz, field, null);
 	}
 
+	/**
+	 * <p>Creates an {@code ASMVariable} that represents the given non-static getter and setter.</p>
+	 * @param clazz the class containing the getter and setter
+	 * @param getter the getter method
+	 * @param setter the setter method
+	 * @param instance the instance to use to invoke the getter and setter
+	 * @return an ASMVariable that represents the getter and setter
+	 */
 	public static ASMVariable of(ClassNode clazz, MethodNode getter, MethodNode setter, CodePiece instance) {
-		if (instance == null) {
-			checkStatic(getter.access, "getter");
-			if (setter != null) checkStatic(setter.access, "setter");
-		} else {
-			checkNotStatic(getter.access, "getter");
-			if (setter != null) checkNotStatic(setter.access, "setter");
-		}
-		return new GetterSetterPair(checkNotNull(clazz, "clazz"), getter, setter, instance);
+		checkNotStatic(getter.access, "getter");
+		checkNotStatic(setter.access, "setter");
+		return new GetterSetterPair(clazz, getter, setter, instance);
 	}
 
+	/**
+	 * <p>Creates an {@code ASMVariable} that represents the given static getter.</p>
+	 * @param clazz the class containing the getter
+	 * @param getter the getter method
+	 * @return an ASMVariable that represents the getter
+	 */
 	public static ASMVariable of(ClassNode clazz, MethodNode getter) {
-		return of(clazz, getter, null, null);
+		checkStatic(getter.access, "getter");
+		return new GetterSetterPair(clazz, getter, null, null);
 	}
 
+	/**
+	 * <p>Creates an {@code ASMVariable} that represents the given non-static getter.</p>
+	 * @param clazz the class containing the getter
+	 * @param getter the getter method
+	 * @param instance the instance to use to invoke the getter
+	 * @return an ASMVariable that represents the getter
+	 */
 	public static ASMVariable of(ClassNode clazz, MethodNode getter, CodePiece instance) {
-		return of(clazz, getter, null, instance);
+		checkNotStatic(getter.access, "getter");
+		return new GetterSetterPair(clazz, getter, null, instance);
 	}
 
+	/**
+	 * <p>Creates an {@code ASMVariable} that represents the given static getter and setter.</p>
+	 * @param clazz the class containing the getter and setter
+	 * @param getter the getter method
+	 * @param setter the setter method
+	 * @return an ASMVariable that represents the getter and setter
+	 */
 	public static ASMVariable of(ClassNode clazz, MethodNode getter, MethodNode setter) {
-		return of(clazz, getter, setter, null);
+		checkStatic(getter.access, "getter");
+		checkStatic(setter.access, "setter");
+		return new GetterSetterPair(clazz, getter, setter, null);
 	}
 
+	/**
+	 * <p>Creates a List containing all non-static ASMVariables in the given class.</p>
+	 * <p>{@link de.take_weiland.mods.commons.asm.ASMUtils#findSetter(org.objectweb.asm.tree.ClassNode, org.objectweb.asm.tree.MethodNode)} is used
+	 * to find the corresponding setter for a getter.</p>
+	 * @param clazz the class to scan
+	 * @param instance the instance to use for the ASMVariables
+	 * @return a List of all non-static ASMVariables
+	 */
 	public static List<ASMVariable> allOf(ClassNode clazz, CodePiece instance) {
-		return allOf(clazz, instance, defaultSetterProvider(clazz));
+		return allOf0(clazz, checkNotNull(instance), defaultSetterProvider(clazz));
 	}
 
+	/**
+	 * <p>Creates a List containing all static ASMVariables in the given class.</p>
+	 * <p>{@link de.take_weiland.mods.commons.asm.ASMUtils#findSetter(org.objectweb.asm.tree.ClassNode, org.objectweb.asm.tree.MethodNode)} is used
+	 * to find the corresponding setter for a getter.</p>
+	 * @param clazz the class to scan
+	 * @return a List of all static ASMVariables
+	 */
+	public static List<ASMVariable> allOf(ClassNode clazz) {
+		return allOf0(clazz, null, defaultSetterProvider(clazz));
+	}
+
+	/**
+	 * <p>Creates a List containing all non-static ASMVariables in the given class.</p>
+	 * @param clazz the class to scan
+	 * @param instance the instance to use for the ASMVariables
+	 * @param setterProvider a Function that provides the setter for a given getter, or null if no setter is found
+	 * @return a List of all non-static ASMVariables
+	 */
 	public static List<ASMVariable> allOf(ClassNode clazz, CodePiece instance, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
+		return allOf0(clazz, checkNotNull(instance), setterProvider);
+	}
+
+	/**
+	 * <p>Creates a List containing all static ASMVariables in the given class.</p>
+	 * @param clazz the class to scan
+	 * @param setterProvider a Function that provides the setter for a given getter, or null if no setter is found
+	 * @return a List of all static ASMVariables
+	 */
+	public static List<ASMVariable> allOf(ClassNode clazz, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
+		return allOf0(clazz, null, setterProvider);
+	}
+
+	private static List<ASMVariable> allOf0(ClassNode clazz, CodePiece instance, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
 		boolean useStatic = instance == null;
 		Predicate<FieldNode> fieldFilter = useStatic ? isFieldStatic() : Predicates.not(isFieldStatic());
 		Predicate<MethodNode> methodFilter = Predicates.and(
@@ -84,18 +178,55 @@ public final class ASMVariables {
 		));
 	}
 
+	/**
+	 * <p>Creates a List containing all static ASMVariables in the given class that have the given annotation.</p>
+	 * <p>{@link de.take_weiland.mods.commons.asm.ASMUtils#findSetter(org.objectweb.asm.tree.ClassNode, org.objectweb.asm.tree.MethodNode)} is used
+	 * to find the corresponding setter for a getter.</p>
+	 * @param clazz the class to scan
+	 * @return a List of all static ASMVariables
+	 */
+	public static List<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation) {
+		return allWith0(clazz, annotation, null, defaultSetterProvider(clazz));
+	}
+
+	/**
+	 * <p>Creates a List containing all non-static ASMVariables in the given class that have the given annotation.</p>
+	 * <p>{@link de.take_weiland.mods.commons.asm.ASMUtils#findSetter(org.objectweb.asm.tree.ClassNode, org.objectweb.asm.tree.MethodNode)} is used
+	 * to find the corresponding setter for a getter.</p>
+	 * @param clazz the class to scan
+	 * @param instance the instance to use for the ASMVariables
+	 * @return a List of all non-static ASMVariables
+	 */
+	public static List<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation, CodePiece instance) {
+		return allWith0(clazz, annotation, checkNotNull(instance), defaultSetterProvider(clazz));
+	}
+
+	/**
+	 * <p>Creates a List containing all static ASMVariables in the given class that have the given annotation.</p>
+	 * @param clazz the class to scan
+	 * @param setterProvider a Function that provides the setter for a given getter, or null if no setter is found
+	 * @return a List of all static ASMVariables
+	 */
+	public static List<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
+		return allWith0(clazz, annotation, null, setterProvider);
+	}
+
+	/**
+	 * <p>Creates a List containing all non-static ASMVariables in the given class that have the given annotation.</p>
+	 * @param clazz the class to scan
+	 * @param instance the instance to use for the ASMVariables
+	 * @param setterProvider a Function that provides the setter for a given getter, or null if no setter is found
+	 * @return a List of all non-static ASMVariables
+	 */
 	public static List<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation, CodePiece instance, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
+		return allWith0(clazz, annotation, checkNotNull(instance), setterProvider);
+	}
+
+	private static List<ASMVariable> allWith0(ClassNode clazz, Class<? extends Annotation> annotation, CodePiece instance, Function<? super MethodNode, ? extends MethodNode> setterProvider) {
+		checkNotNull(setterProvider, "setterProvider");
 		return ImmutableList.copyOf(Iterators.concat(
 				methodsAsVariables(ASMUtils.methodsWith(clazz, annotation).iterator(), clazz, instance, setterProvider),
 				fieldsAsVariables(ASMUtils.fieldsWith(clazz, annotation).iterator(), clazz, instance)));
-	}
-
-	public static List<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation) {
-		return allWith(clazz, annotation, null);
-	}
-
-	public static List<ASMVariable> allWith(ClassNode clazz, Class<? extends Annotation> annotation, CodePiece instance) {
-		return allWith(clazz, annotation, instance, defaultSetterProvider(clazz));
 	}
 
 	private static Predicate<FieldNode> isFieldStatic() {
@@ -149,7 +280,11 @@ public final class ASMVariables {
 		return new Function<FieldNode, ASMVariable>() {
 			@Override
 			public ASMVariable apply(FieldNode field) {
-				return ASMVariables.of(clazz, field, instance);
+				if (instance == null) {
+					return ASMVariables.of(clazz, field);
+				} else {
+					return ASMVariables.of(clazz, field, instance);
+				}
 			}
 		};
 	}
@@ -158,7 +293,7 @@ public final class ASMVariables {
 		return new Function<MethodNode, ASMVariable>() {
 			@Override
 			public ASMVariable apply(MethodNode method) {
-				return ASMVariables.of(clazz, method, setterProvider.apply(method), instance);
+				return new GetterSetterPair(clazz, method, setterProvider.apply(method), instance);
 			}
 		};
 	}
