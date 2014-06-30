@@ -376,6 +376,7 @@ public class NBTTransformer implements ASMClassTransformer {
 	public boolean transforms(String internalName) {
 		return !internalName.startsWith("cpw/mods/fml/")
 				&& !internalName.startsWith("net/minecraftforge/")
-				&& !internalName.startsWith("net/minecraft/");
+				&& !internalName.startsWith("net/minecraft/")
+				&& !internalName.startsWith("org/apache/");
 	}
 }

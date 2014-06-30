@@ -7,16 +7,10 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public abstract class MethodInfo {
 
-	private final String className;
-	ClassInfo clazz;
+	private final ClassInfo clazz;
 
 	MethodInfo(ClassInfo clazz) {
 		this.clazz = clazz;
-		this.className = clazz.internalName();
-	}
-
-	MethodInfo(String className) {
-		this.className = className;
 	}
 
 	public abstract String name();
@@ -25,12 +19,8 @@ public abstract class MethodInfo {
 
 	public abstract int modifiers();
 
-	public String containingClassName() {
-		return className;
-	}
-
 	public ClassInfo containingClass() {
-		return clazz == null ? (clazz = ClassInfo.of(className)) : clazz;
+		return clazz;
 	}
 
 	public boolean hasModifier(int mod) {
@@ -55,10 +45,6 @@ public abstract class MethodInfo {
 
 	public boolean isStaticInit() {
 		return name().equals("<clinit>");
-	}
-
-	public boolean exists() {
-		return true;
 	}
 
 }

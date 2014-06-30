@@ -74,6 +74,7 @@ public final class SCModContainer extends DummyModContainer {
 		ConfigInjector.inject(config, getClass());
 
 		packets = Network.simplePacketHandler("SevenCommons", SCPackets.class);
+		ClassInfoUtil.preInit();
 
 		proxy.preInit(event);
 	}

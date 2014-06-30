@@ -31,7 +31,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	public static File source;
 
 	public static SCMetaInternalProxy metaProxy;
-	
+
 	static {
 		LOGGER = MiscUtil.getLogger("SevenCommons");
 	}
@@ -47,7 +47,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 				"de.take_weiland.mods.commons.internal.transformers.",
 				"de.take_weiland.mods.commons.internal.exclude.",
 				"de.take_weiland.mods.commons.util.JavaUtils",
-				"de.take_weiland.mods.commons.sync."
+				"de.take_weiland.mods.commons.nbt."
 		};
 
 		for (String e : excl) {

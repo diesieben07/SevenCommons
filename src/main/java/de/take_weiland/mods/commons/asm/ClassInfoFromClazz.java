@@ -1,12 +1,12 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.collect.Collections2;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -15,15 +15,17 @@ import java.util.List;
 final class ClassInfoFromClazz extends ClassInfo {
 
 	private final Class<?> clazz;
-	private final Collection<String> interfaces;
+	private List<String> interfaces;
 
 	ClassInfoFromClazz(Class<?> clazz) {
 		this.clazz = clazz;
-		interfaces = Collections2.transform(Arrays.asList(clazz.getInterfaces()), ClassToNameFunc.INSTANCE);
 	}
 
 	@Override
-	public Collection<String> interfaces() {
+	public List<String> interfaces() {
+		if (interfaces == null) {
+			interfaces = Lists.transform(Arrays.asList(clazz.getInterfaces()), ClassToNameFunc.INSTANCE);
+		}
 		return interfaces;
 	}
 
@@ -62,9 +64,9 @@ final class ClassInfoFromClazz extends ClassInfo {
 	}
 
 	@Override
-	public boolean hasMethod(String method) {
+	public boolean hasMethod(String name) {
 		for (Method m : clazz.getDeclaredMethods()) {
-			if (m.getName().equals(method)) {
+			if (m.getName().equals(name)) {
 				return true;
 			}
 		}
@@ -72,9 +74,9 @@ final class ClassInfoFromClazz extends ClassInfo {
 	}
 
 	@Override
-	public boolean hasMethod(String method, String desc) {
+	public boolean hasMethod(String name, String desc) {
 		for (Method m : clazz.getDeclaredMethods()) {
-			if (m.getName().equals(method) && desc.equals(Type.getMethodDescriptor(m))) {
+			if (m.getName().equals(name) && desc.equals(Type.getMethodDescriptor(m))) {
 				return true;
 			}
 		}
@@ -82,9 +84,9 @@ final class ClassInfoFromClazz extends ClassInfo {
 	}
 
 	@Override
-	public MethodInfo getMethod(String method) {
+	public MethodInfo getMethod(String name) {
 		for (Method m : clazz.getDeclaredMethods()) {
-			if (m.getName().equals(method)) {
+			if (m.getName().equals(name)) {
 				return new MethodInfoReflect(this, m);
 			}
 		}
@@ -92,9 +94,9 @@ final class ClassInfoFromClazz extends ClassInfo {
 	}
 
 	@Override
-	public MethodInfo getMethod(String method, String desc) {
+	public MethodInfo getMethod(String name, String desc) {
 		for (Method m : clazz.getDeclaredMethods()) {
-			if (m.getName().equals(method) && Type.getMethodDescriptor(m).equals(desc)) {
+			if (m.getName().equals(name) && Type.getMethodDescriptor(m).equals(desc)) {
 				return new MethodInfoReflect(this, m);
 			}
 		}
@@ -104,4 +106,13 @@ final class ClassInfoFromClazz extends ClassInfo {
 	private List<Type[]> constructors;
 
 	private List<Type[]> constructorsVisible;
+
+	private static enum ClassToNameFunc implements Function<Class<?>, String> {
+		INSTANCE;
+
+		@Override
+		public String apply(Class<?> input) {
+			return Type.getInternalName(input);
+		}
+	}
 }
