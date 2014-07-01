@@ -8,6 +8,12 @@ public class testmod_sc {
 
 
 	{
+		try {
+			System.out.println(Class.class.getDeclaredMethod("<clinit>"));
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		}
+		System.exit(0);
 	}
 
 

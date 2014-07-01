@@ -1,5 +1,6 @@
-package de.take_weiland.mods.commons.asm;
+package de.take_weiland.mods.commons.asm.info;
 
+import de.take_weiland.mods.commons.asm.ASMUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;

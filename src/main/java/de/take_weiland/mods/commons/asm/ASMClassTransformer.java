@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import org.objectweb.asm.tree.ClassNode;
 
 /**
@@ -14,7 +15,7 @@ public interface ASMClassTransformer {
 	 * <p>Transform the given ClassNode. Only called when {@link #transforms(String)} returns true for the class name.</p>
 	 *
 	 * @param clazz the class to transform
-	 * @param classInfo a {@link de.take_weiland.mods.commons.asm.ClassInfo} instance representing the class
+	 * @param classInfo a {@link de.take_weiland.mods.commons.asm.info.ClassInfo} instance representing the class
 	 * @return true if the class was transformed
 	 */
 	boolean transform(ClassNode clazz, ClassInfo classInfo);

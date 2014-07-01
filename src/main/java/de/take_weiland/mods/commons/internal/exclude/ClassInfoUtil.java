@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.exclude;
 
 import com.google.common.collect.*;
-import de.take_weiland.mods.commons.asm.ClassInfo;
+import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.world.WorldEvent;

@@ -1,5 +1,7 @@
-package de.take_weiland.mods.commons.asm;
+package de.take_weiland.mods.commons.asm.info;
 
+import de.take_weiland.mods.commons.asm.ASMUtils;
+import de.take_weiland.mods.commons.asm.MissingClassException;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import de.take_weiland.mods.commons.internal.InternalReflector;
 import net.minecraft.launchwrapper.Launch;
@@ -17,10 +19,13 @@ import static org.objectweb.asm.Type.*;
  * <p>Some information about a class, obtain via {@link ClassInfo#of(String)}, {@link ClassInfo#of(Class)} or {@link ClassInfo#of(org.objectweb.asm.tree.ClassNode)}</p>
  * @author diesieben07
  */
-public abstract class ClassInfo {
+public abstract class ClassInfo implements HasModifiers {
 
 	private Set<String> supers;
 	private ClassInfo zuper;
+
+	// limit subclasses to this package
+	ClassInfo() { }
 
 	/**
 	 * <p>Create a {@code ClassInfo} representing the given class.</p>
@@ -227,12 +232,6 @@ public abstract class ClassInfo {
 	}
 
 	/**
-	 * <p>Get all Modifiers present on this class (equivalent to {@link Class#getModifiers()}).</p>
-	 * @return the modifiers
-	 */
-	public abstract int modifiers();
-
-	/**
 	 * <p>Determine if this ClassInfo represents an enum class (equivalent to {@link Class#isEnum()}.</p>
 	 * <p>Note: Like the JDK method this method will return false for the classes generated for specialized enum constants.</p>
 	 * @return true if this ClassInfo represents an enum class
@@ -257,11 +256,7 @@ public abstract class ClassInfo {
 		return hasModifier(ACC_INTERFACE);
 	}
 
-	/**
-	 * <p>Determine if the given modifier is set on the class represented by this ClassInfo.</p>
-	 * @param mod the modifier to check
-	 * @return true if the given modifier is set
-	 */
+	@Override
 	public boolean hasModifier(int mod) {
 		return (modifiers() & mod) == mod;
 	}
@@ -282,7 +277,7 @@ public abstract class ClassInfo {
 	public abstract boolean hasMethod(String name, String desc);
 
 	/**
-	 * <p>Get a {@link de.take_weiland.mods.commons.asm.MethodInfo} that represents the first method in this
+	 * <p>Get a {@link MethodInfo} that represents the first method in this
 	 * class that has the given name.</p>
 	 * @param name the method name
 	 * @return a MethodInfo
@@ -290,7 +285,7 @@ public abstract class ClassInfo {
 	public abstract MethodInfo getMethod(String name);
 
 	/**
-	 * <p>Get a {@link de.take_weiland.mods.commons.asm.MethodInfo} that represents the method with the given name and signature
+	 * <p>Get a {@link MethodInfo} that represents the method with the given name and signature
 	 * in this class.</p>
 	 * @param name the method name
 	 * @param desc the method descriptor

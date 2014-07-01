@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.asm;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;

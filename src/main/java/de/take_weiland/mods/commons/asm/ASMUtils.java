@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import de.take_weiland.mods.commons.OverrideSetter;
+import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.Launch;
 import org.apache.commons.lang3.ArrayUtils;

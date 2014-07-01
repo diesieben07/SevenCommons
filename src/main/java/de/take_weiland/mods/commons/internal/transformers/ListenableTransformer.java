@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.Listenable;
 import de.take_weiland.mods.commons.asm.ASMClassTransformer;
-import de.take_weiland.mods.commons.asm.ClassInfo;
+import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.ListenableInternal;
 import org.objectweb.asm.tree.*;
 

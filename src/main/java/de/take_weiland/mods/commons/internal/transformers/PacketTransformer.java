@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.ClassInfo;
+import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.ModPacketProxy;
 import org.objectweb.asm.tree.*;
 

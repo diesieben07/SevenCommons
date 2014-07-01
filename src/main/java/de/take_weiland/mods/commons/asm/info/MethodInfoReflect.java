@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.asm;
+package de.take_weiland.mods.commons.asm.info;
 
 import org.objectweb.asm.Type;
 

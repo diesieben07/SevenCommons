@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.ClassInfo;
+import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
