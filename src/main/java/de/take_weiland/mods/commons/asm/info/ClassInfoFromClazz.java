@@ -66,11 +66,6 @@ final class ClassInfoFromClazz extends ClassInfo {
 
 	@Override
 	public boolean hasMethod(String name) {
-		if (name.equals("<init>")) {
-			// classes always have at least one constructor
-			return true;
-		}
-		// can't check for <clinit> here sadly (?)
 		for (Method m : clazz.getDeclaredMethods()) {
 			if (m.getName().equals(name)) {
 				return true;
@@ -81,17 +76,9 @@ final class ClassInfoFromClazz extends ClassInfo {
 
 	@Override
 	public boolean hasMethod(String name, String desc) {
-		if (name.equals("<init>")) {
-			for (Constructor<?> c : clazz.getDeclaredConstructors()) {
-				if (desc.equals(Type.getConstructorDescriptor(c))) {
-					return true;
-				}
-			}
-		} else {
-			for (Method m : clazz.getDeclaredMethods()) {
-				if (m.getName().equals(name) && desc.equals(Type.getMethodDescriptor(m))) {
-					return true;
-				}
+		for (Method m : clazz.getDeclaredMethods()) {
+			if (m.getName().equals(name) && desc.equals(Type.getMethodDescriptor(m))) {
+				return true;
 			}
 		}
 		return false;
@@ -99,13 +86,9 @@ final class ClassInfoFromClazz extends ClassInfo {
 
 	@Override
 	public MethodInfo getMethod(String name) {
-		if (name.equals("<init>")) {
-			return new MethodInfoReflectCstr(this, clazz.getDeclaredConstructors()[0]);
-		} else {
-			for (Method m : clazz.getDeclaredMethods()) {
-				if (m.getName().equals(name)) {
-					return new MethodInfoReflect(this, m);
-				}
+		for (Method m : clazz.getDeclaredMethods()) {
+			if (m.getName().equals(name)) {
+				return new MethodInfoReflect(this, m);
 			}
 		}
 		return null;
@@ -113,17 +96,29 @@ final class ClassInfoFromClazz extends ClassInfo {
 
 	@Override
 	public MethodInfo getMethod(String name, String desc) {
-		if (name.equals("<init>")) {
-			for (Constructor<?> c : clazz.getDeclaredConstructors()) {
-				if (Type.getConstructorDescriptor(c).equals(desc)) {
-					return new MethodInfoReflectCstr(this, c);
-				}
+		for (Method m : clazz.getDeclaredMethods()) {
+			if (m.getName().equals(name) && Type.getMethodDescriptor(m).equals(desc)) {
+				return new MethodInfoReflect(this, m);
 			}
-		} else {
-			for (Method m : clazz.getDeclaredMethods()) {
-				if (m.getName().equals(name) && Type.getMethodDescriptor(m).equals(desc)) {
-					return new MethodInfoReflect(this, m);
-				}
+		}
+		return null;
+	}
+
+	@Override
+	public boolean hasConstructor(String desc) {
+		for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
+			if (Type.getConstructorDescriptor(constructor).equals(desc)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public MethodInfo getConstructor(String desc) {
+		for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
+			if (Type.getConstructorDescriptor(constructor).equals(desc)) {
+				return new MethodInfoReflectCstr(this, constructor);
 			}
 		}
 		return null;

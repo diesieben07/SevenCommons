@@ -2,8 +2,8 @@ package de.take_weiland.mods.commons.asm.info;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.MissingClassException;
-import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import de.take_weiland.mods.commons.internal.InternalReflector;
+import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -217,8 +217,7 @@ public abstract class ClassInfo implements HasModifiers {
 	}
 
 	/**
-	 * <p>Get the number of dimensions of this array class, or 0 if this ClassInfo does not represent an
-	 * array class.</p>
+	 * <p>Get the number of dimensions of this array class, or 0 if this ClassInfo does not represent an array class.</p>
 	 * @return the number of dimensions
 	 */
 	public abstract int getDimensions();
@@ -262,17 +261,17 @@ public abstract class ClassInfo implements HasModifiers {
 	}
 
 	/**
-	 * <p>Determine if a method with the given name is present in the class represented by this ClassInfo.</p>
+	 * <p>Determine if a method with the given name is present in this class.</p>
 	 * @param name the method name to check for
 	 * @return true if this class a method with the given name
 	 */
 	public abstract boolean hasMethod(String name);
 
 	/**
-	 * <p>Determine if a method with the given name and descriptor is present in the class represented by this ClassInfo.</p>
+	 * <p>Determine if a method with the given name and descriptor is present in this class.</p>
 	 * @param name the method name to check for
 	 * @param desc the method descriptor to check for
-	 * @return true if this class a method with the given name and descriptor
+	 * @return true if this class has a method with the given name and descriptor
 	 */
 	public abstract boolean hasMethod(String name, String desc);
 
@@ -280,18 +279,31 @@ public abstract class ClassInfo implements HasModifiers {
 	 * <p>Get a {@link MethodInfo} that represents the first method in this
 	 * class that has the given name.</p>
 	 * @param name the method name
-	 * @return a MethodInfo
+	 * @return a MethodInfo or null if no such method was found
 	 */
 	public abstract MethodInfo getMethod(String name);
 
 	/**
-	 * <p>Get a {@link MethodInfo} that represents the method with the given name and signature
-	 * in this class.</p>
+	 * <p>Get a {@link MethodInfo} that represents the method with the given name and signature in this class.</p>
 	 * @param name the method name
 	 * @param desc the method descriptor
-	 * @return a MethodInfo
+	 * @return a MethodInfo or null if no such method was found
 	 */
 	public abstract MethodInfo getMethod(String name, String desc);
+
+	/**
+	 * <p>Determine if a constructor with the given descriptor is present in this class.</p>
+	 * @param desc the constructor descriptor
+	 * @return true if this class has a constructor with the given descriptor
+	 */
+	public abstract boolean hasConstructor(String desc);
+
+	/**
+	 * <p>Get a {@link de.take_weiland.mods.commons.asm.info.MethodInfo} that represents the constructor of this class with the given signature.</p>
+	 * @param desc the constructor descriptor
+	 * @return a MethodInfo or null if no such constructor was found
+	 */
+	public abstract MethodInfo getConstructor(String desc);
 
 	@Override
 	public boolean equals(Object o) {

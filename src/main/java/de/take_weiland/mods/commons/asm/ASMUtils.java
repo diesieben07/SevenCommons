@@ -378,7 +378,7 @@ public final class ASMUtils {
 				setterName = "set" + getter.name.substring(3);
 			} else if (getter.name.startsWith("is") && getter.name.length() >= 3 && Character.isUpperCase(getter.name.charAt(2))) {
 				setterName = "set" + getter.name.substring(2);
-			} else if (Strings.nullToEmpty(clazz.sourceFile).endsWith(".scala")) {
+			} else if (isScala(clazz)) {
 				setterName = getter.name + "_$eq";
 			} else {
 				setterName = getter.name;
@@ -635,6 +635,17 @@ public final class ASMUtils {
 	 */
 	public static ClassNode getThinClassNode(byte[] bytes) {
 		return getClassNode(bytes, THIN_FLAGS);
+	}
+
+	/**
+	 * <p>Tries to determine if the given ClassNode represents a scala class.</p>
+	 * @param clazz the ClassNode
+	 * @return true if the class is a scala class, false if it is most likely a non-scala class
+	 */
+	public static boolean isScala(ClassNode clazz) {
+		return Strings.nullToEmpty(clazz.sourceFile).toLowerCase().endsWith(".scala")
+				|| findAnnotation(clazz.visibleAnnotations, "Lscala/reflect/ScalaSignature;") != null
+				|| findAnnotation(clazz.visibleAnnotations, "Lscala/reflect/ScalaLongSignature;") != null;
 	}
 
 	// *** annotation utilities *** //

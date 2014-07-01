@@ -31,4 +31,8 @@ class MethodInfoReflectCstr extends MethodInfo {
 		return constructor.getModifiers();
 	}
 
+	@Override
+	public boolean isConstructor() {
+		return true;
+	}
 }

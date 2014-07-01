@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.asm.info;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -48,17 +47,17 @@ final class ClassInfoFromNode extends ClassInfo {
 
 	@Override
 	public boolean hasMethod(String name) {
-		return ASMUtils.findMethod(clazz, name) != null;
+		return !isHidden(name) && ASMUtils.findMethod(clazz, name) != null;
 	}
 
 	@Override
 	public boolean hasMethod(String name, String desc) {
-		return ASMUtils.findMethod(clazz, name, desc) != null;
+		return !isHidden(name) && ASMUtils.findMethod(clazz, name, desc) != null;
 	}
 
 	@Override
 	public MethodInfo getMethod(String name) {
-		if (name.equals("<init>") || name.equals("<clinit>")) {
+		if (isHidden(name)) {
 			return null;
 		}
 		MethodNode m = ASMUtils.findMethod(clazz, name);
@@ -67,12 +66,26 @@ final class ClassInfoFromNode extends ClassInfo {
 
 	@Override
 	public MethodInfo getMethod(String name, String desc) {
-		if (name.equals("<init>") || name.equals("<clinit>")) {
+		if (isHidden(name)) {
 			return null;
 		}
 		MethodNode m = ASMUtils.findMethod(clazz, name, desc);
 		return m == null ? null : new MethodInfoASM(this, m);
 	}
 
-	private List<Type[]> constructors;
+	@Override
+	public boolean hasConstructor(String desc) {
+		return ASMUtils.findMethod(clazz, "<init>", desc) != null;
+	}
+
+	@Override
+	public MethodInfo getConstructor(String desc) {
+		MethodNode c = ASMUtils.findMethod(clazz, "<init>", desc);
+		return c == null ? null : new MethodInfoASM(this, c);
+	}
+
+	private static boolean isHidden(String name) {
+		return name.equals("<init>") || name.equals("<clinit>");
+	}
+
 }

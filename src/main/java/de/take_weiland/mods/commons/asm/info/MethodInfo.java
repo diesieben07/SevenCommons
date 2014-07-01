@@ -34,6 +34,7 @@ public abstract class MethodInfo implements HasModifiers {
 		return clazz;
 	}
 
+	@Override
 	public boolean hasModifier(int mod) {
 		return (modifiers() & mod) == mod;
 	}

@@ -30,4 +30,9 @@ class MethodInfoReflect extends MethodInfo {
 	public int modifiers() {
 		return method.getModifiers();
 	}
+
+	@Override
+	public boolean isConstructor() {
+		return false;
+	}
 }
