@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.asm.info;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.List;
@@ -43,6 +44,17 @@ final class ClassInfoFromNode extends ClassInfo {
 	public int getDimensions() {
 		// we never load array classes as a ClassNode
 		return 0;
+	}
+
+	@Override
+	public boolean hasField(String name) {
+		return ASMUtils.findField(clazz, name) != null;
+	}
+
+	@Override
+	public FieldInfo getField(String name) {
+		FieldNode field = ASMUtils.findField(clazz, name);
+		return field != null ? new FieldInfoASM(this, field) : null;
 	}
 
 	@Override

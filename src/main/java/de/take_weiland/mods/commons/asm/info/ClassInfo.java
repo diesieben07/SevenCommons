@@ -19,7 +19,7 @@ import static org.objectweb.asm.Type.*;
  * <p>Some information about a class, obtain via {@link ClassInfo#of(String)}, {@link ClassInfo#of(Class)} or {@link ClassInfo#of(org.objectweb.asm.tree.ClassNode)}</p>
  * @author diesieben07
  */
-public abstract class ClassInfo implements HasModifiers {
+public abstract class ClassInfo extends HasModifiers {
 
 	private Set<String> supers;
 	private ClassInfo zuper;
@@ -223,16 +223,41 @@ public abstract class ClassInfo implements HasModifiers {
 	public abstract int getDimensions();
 
 	/**
-	 * <p>Determine if this ClassInfo represents an array class (equivalent to {@link Class#isArray()}</p>
-	 * @return true if this ClassInfo represents an array class
+	 * <p>Determine if this class is an array class (equivalent to {@link Class#isArray()}</p>
+	 * @return true if this class is an array class
 	 */
 	public boolean isArray() {
 		return getDimensions() > 0;
 	}
 
 	/**
+	 * <p>Determine if this class is an interface.</p>
+	 * @return true if this class is an interface
+	 */
+	public boolean isInterface() {
+		return hasModifier(ACC_INTERFACE);
+	}
+
+	/**
+	 * <p>Determine if this class is abstract</p>
+	 * @return true if this class is abstract
+	 */
+	public boolean isAbstract() {
+		return hasModifier(ACC_ABSTRACT);
+	}
+
+	/**
+	 * <p>Determine if this class is an annotation.</p>
+	 * @return true if this class is an annotation
+	 */
+	public boolean isAnnotation() {
+		return hasModifier(ACC_ANNOTATION);
+	}
+
+	/**
 	 * <p>Determine if this ClassInfo represents an enum class (equivalent to {@link Class#isEnum()}.</p>
-	 * <p>Note: Like the JDK method this method will return false for the classes generated for specialized enum constants.</p>
+	 * <p>Note: Like the JDK method this method will return false for the classes generated for specialized enum constants.
+	 * Use {@code hasModifier(ACC_ENUM)} to include those explicitly.</p>
 	 * @return true if this ClassInfo represents an enum class
 	 */
 	public boolean isEnum() {
@@ -240,30 +265,23 @@ public abstract class ClassInfo implements HasModifiers {
 	}
 
 	/**
-	 * <p>Determine if this ClassInfo represents an abstract class.</p>
-	 * @return true if this ClassInfo represents an abstract class
+	 * <p>Determine if a field with the given name is present in this class.</p>
+	 * @param name the field name to check for
+	 * @return true if this class contains a field with the given name
 	 */
-	public boolean isAbstract() {
-		return hasModifier(ACC_ABSTRACT);
-	}
+	public abstract boolean hasField(String name);
 
 	/**
-	 * <p>Determine if this ClassInfo represents an interface.</p>
-	 * @return true if this ClassInfo represents an interface
+	 * <p>Get a {@link de.take_weiland.mods.commons.asm.info.FieldInfo} that represents the field with the given name in this class.</p>
+	 * @param name the field name
+	 * @return a FieldInfo or null if no such field was found
 	 */
-	public boolean isInterface() {
-		return hasModifier(ACC_INTERFACE);
-	}
-
-	@Override
-	public boolean hasModifier(int mod) {
-		return (modifiers() & mod) == mod;
-	}
+	public abstract FieldInfo getField(String name);
 
 	/**
 	 * <p>Determine if a method with the given name is present in this class.</p>
 	 * @param name the method name to check for
-	 * @return true if this class a method with the given name
+	 * @return true if this class contains a method with the given name
 	 */
 	public abstract boolean hasMethod(String name);
 
@@ -271,7 +289,7 @@ public abstract class ClassInfo implements HasModifiers {
 	 * <p>Determine if a method with the given name and descriptor is present in this class.</p>
 	 * @param name the method name to check for
 	 * @param desc the method descriptor to check for
-	 * @return true if this class has a method with the given name and descriptor
+	 * @return true if this class contains a method with the given name and descriptor
 	 */
 	public abstract boolean hasMethod(String name, String desc);
 

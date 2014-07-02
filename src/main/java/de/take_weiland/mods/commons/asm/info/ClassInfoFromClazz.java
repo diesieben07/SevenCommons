@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -62,6 +63,26 @@ final class ClassInfoFromClazz extends ClassInfo {
 		} else {
 			return 0;
 		}
+	}
+
+	@Override
+	public boolean hasField(String name) {
+		for (Field field : clazz.getDeclaredFields()) {
+			if (field.getName().equals(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public FieldInfo getField(String name) {
+		for (Field field : clazz.getDeclaredFields()) {
+			if (field.getName().equals(name)) {
+				return new FieldInfoReflect(this, field);
+			}
+		}
+		return null;
 	}
 
 	@Override

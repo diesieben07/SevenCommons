@@ -78,7 +78,58 @@ public final class ASMUtils {
 		return null;
 	}
 
-	// *** method finding helpers *** //
+	// *** member finding helpers *** //
+
+	/**
+	 * <p>Find the field with the given name.</p>
+	 * @param clazz the class
+	 * @param name the field name to search for
+	 * @return the field with the given name or null if no such field was found
+	 */
+	public static FieldNode findField(ClassNode clazz, String name) {
+		for (FieldNode field : clazz.fields) {
+			if (field.name.equals(name)) {
+				return field;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * <p>Find the field with the given name. It is automatically chosen between MCP name and SRG name, depending on the runtime environment.</p>
+	 * @param clazz the class
+	 * @param srg the SRG name of the field (e.g. field_70123_h)
+	 * @return the field with the given name or null if no such field was found
+	 */
+	public static FieldNode findMinecraftField(ClassNode clazz, String srg) {
+		return findField(clazz, MCPNames.field(srg));
+	}
+
+	/**
+	 * <p>Find the field with the given name.</p>
+	 * @param clazz the class
+	 * @param name the field name to search for
+	 * @return the field with the given name
+	 * @throws de.take_weiland.mods.commons.asm.MissingFieldException if no such field was found
+	 */
+	public static FieldNode requireField(ClassNode clazz, String name) {
+		FieldNode field = findField(clazz, name);
+		if (field == null) {
+			throw new MissingFieldException(clazz.name, name);
+		}
+		return field;
+	}
+
+	/**
+	 * <p>Find the field with the given name. The name will be automatically translated to the MCP name if needed, depending on the runtime environment.</p>
+	 * @param clazz the class
+	 * @param srg the SRG name of the field (e.g. field_70123_h)
+	 * @return the field with the given name
+	 * @throws de.take_weiland.mods.commons.asm.MissingFieldException if no such field was found
+	 */
+	public static FieldNode requireMinecraftField(ClassNode clazz, String srg) {
+		return requireField(clazz, MCPNames.field(srg));
+	}
 
 	/**
 	 * <p>Find the method with the given name. If multiple methods with the same name exist, the first one will be returned.</p>
@@ -112,7 +163,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Find the method with the given name. It is automatically chosen between MCP and SRG name, depending on if this code is running in a development environment.</p>
+	 * <p>Find the method with the given name. It is automatically chosen between MCP and SRG name, depending on the runtime environment.</p>
 	 * @param clazz the class
 	 * @param srgName the SRG name of the method (e.g. {@code func_70316_g}
 	 * @return the method matching the given SRG name or null if no such method is found
@@ -153,7 +204,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Find the method with the given name. It is automatically chosen between MCP and SRG name, depending on if this code is running in a development environment.</p>
+	 * <p>Find the method with the given name. It is automatically chosen between MCP and SRG name, depending on the runtime environment.</p>
 	 * @param clazz the class
 	 * @param srgName the SRG name of the method (e.g. {@code func_70316_g}
 	 * @return the method matching the given SRG name
