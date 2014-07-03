@@ -14,7 +14,7 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * @author diesieben07
  */
-public final class CodeBuilder {
+final class CodeBuilder {
 
 	private boolean hasNonCodePiece = false;
 	private ArrayList<Object> objects = Lists.newArrayList();
@@ -55,7 +55,7 @@ public final class CodeBuilder {
 			// a) CombinedCodePiece never puts anything in the list
 			// b) we never write to this list after this point
 			// c) this list only contains CodePieces
-			//noinspection unchecked
+			//noinspection unchecked,rawtypes
 			return new CombinedCodePiece((List) list);
 		}
 	}

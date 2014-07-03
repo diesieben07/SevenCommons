@@ -48,33 +48,6 @@ public interface CodePiece {
 	void insertBefore(InsnList to, AbstractInsnNode location);
 
 	/**
-	 * <p>Inserts the instructions in this CodePiece after the given location.</p>
-	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
-	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>
-	 * @param to the list to append to
-	 * @param location the position where to insert the code, must be part of the InsnList
-	 */
-	void insertAfter(CodeLocation location);
-
-	/**
-	 * <p>Inserts the instructions in this CodePiece before the given location.</p>
-	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
-	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>
-	 * @param to the list to append to
-	 * @param location the position where to insert the code, must be part of the InsnList
-	 */
-	void insertBefore(CodeLocation location);
-
-	/**
-	 * <p>Replaces the given CodeLocation with the instructions in this CodePiece, making the location invalid.</p>
-	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
-	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>
-	 * @param to the list to append to
-	 * @param location the position where to insert the code, must be part of the InsnList
-	 */
-	void replace(CodeLocation location);
-
-	/**
 	 * <p>Append the given instruction to this CodePiece.</p>
 	 * <p>The instruction must not be used in any InsnList before or after this operation.</p>
 	 * @param node the instruction to append

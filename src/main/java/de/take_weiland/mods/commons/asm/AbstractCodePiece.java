@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.asm;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.util.ComputingMap;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
@@ -42,28 +41,6 @@ abstract class AbstractCodePiece implements CodePiece {
 	@Override
 	public final void appendTo(InsnList to) {
 		insertAfter(to, to.getLast());
-	}
-
-	@Override
-	public final void insertBefore(CodeLocation location) {
-		insertBefore(location.list(), location.first());
-	}
-
-	@Override
-	public final void insertAfter(CodeLocation location) {
-		insertAfter(location.list(), location.last());
-	}
-
-	@Override
-	public final void replace(CodeLocation location) {
-		if (location.first() == location.list().getFirst()) {
-			JavaUtils.clear(location);
-			prependTo(location.list());
-		} else {
-			AbstractInsnNode firstBefore = location.first().getPrevious();
-			JavaUtils.clear(location);
-			insertAfter(location.list(), firstBefore);
-		}
 	}
 
 	@Override

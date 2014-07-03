@@ -37,7 +37,6 @@ class ASMField extends ClassBoundASMVariable {
 
 	@Override
 	public CodePiece set(CodePiece loadValue) {
-		boolean isStatic = isStatic();
 		if (isStatic()) {
 			return CodePieces.setField(clazz, field, loadValue);
 		} else {

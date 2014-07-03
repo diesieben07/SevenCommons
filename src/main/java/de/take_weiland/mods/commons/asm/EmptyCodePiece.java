@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.asm;
 
-import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
@@ -27,17 +26,6 @@ enum EmptyCodePiece implements CodePiece {
 
 	@Override
 	public void insertBefore(InsnList to, AbstractInsnNode location) { }
-
-	@Override
-	public void insertAfter(CodeLocation location) { }
-
-	@Override
-	public void insertBefore(CodeLocation location) { }
-
-	@Override
-	public void replace(CodeLocation location) {
-		JavaUtils.clear(location.iterator());
-	}
 
 	@Override
 	public CodePiece append(AbstractInsnNode node) {

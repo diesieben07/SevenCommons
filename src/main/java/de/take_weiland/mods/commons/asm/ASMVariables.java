@@ -20,6 +20,7 @@ import static org.objectweb.asm.Opcodes.*;
 
 /**
  * <p>Factory class for ASMVariables.</p>
+ * @see de.take_weiland.mods.commons.asm.ASMVariable
  * @author diesieben07
  */
 public final class ASMVariables {

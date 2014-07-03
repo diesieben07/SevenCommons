@@ -1,34 +1,53 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.collect.ObjectArrays;
-import de.take_weiland.mods.commons.InstanceProvider;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Array;
-import java.util.Collection;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
 /**
+ * <p>Factory class for CodePieces</p>
+ * @see de.take_weiland.mods.commons.asm.CodePiece
  * @author diesieben07
  */
 public final class CodePieces {
 
+	/**
+	 * <p>Creates an empty CodePiece.</p>
+	 * @return an empty CodePiece
+	 */
 	public static CodePiece of() {
 		return EmptyCodePiece.INSTANCE;
 	}
 
+	/**
+	 * <p>Creates a CodePiece that represents a single opcode. The opcode must be valid for an {@link org.objectweb.asm.tree.InsnNode} (it takes no parameters).</p>
+	 * @param opcode the opcode
+	 * @return a CodePiece that represents the opcode
+	 */
 	public static CodePiece ofOpcode(int opcode) {
 		return of(new InsnNode(opcode));
 	}
 
+	/**
+	 * <p>Creates a CodePiece that represents the given instruction.</p>
+	 * @param insn the instruction
+	 * @return a CodePiece
+	 */
 	public static CodePiece of(AbstractInsnNode insn) {
 		return new SingleInsnCodePiece(insn);
 	}
 
+	/**
+	 * <p>Creates a CodePiece that represents all instructions in the given list. The list should not be used after being passed to this method.</p>
+	 * @param insns the InsnList
+	 * @return a CodePiece
+	 */
 	public static CodePiece of(InsnList insns) {
 		int size = insns.size();
 		if (size == 0) {
@@ -40,6 +59,7 @@ public final class CodePieces {
 		}
 	}
 
+	@Deprecated
 	public static CodePiece[] parse(Object... data) {
 		int len = data.length;
 		CodePiece[] result = new CodePiece[len];
@@ -61,19 +81,39 @@ public final class CodePieces {
 		}
 	}
 
+	/**
+	 * <p>Create a CodePiece that represents all CodePieces in the given array, in order.</p>
+	 * @param pieces the pieces to concatenate
+	 * @return a CodePiece
+	 */
 	public static CodePiece concat(CodePiece... pieces) {
 		if (pieces.length == 0) {
 			return of();
+		} else if (pieces.length == 1) {
+			return pieces[0];
 		} else {
 			return new CombinedCodePiece(pieces);
 		}
 	}
 
+	/**
+	 * <p>Create a CodePiece that will get the given field from the given class using the given instance.</p>
+	 * @param clazz the class containing the field
+	 * @param field the field
+	 * @param instance a CodePiece representing the instance
+	 * @return a CodePiece
+	 */
 	public static CodePiece getField(ClassNode clazz, FieldNode field, CodePiece instance) {
 		requireNotStatic(field);
 		return instance.append(new FieldInsnNode(GETFIELD, clazz.name, field.name, field.desc));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will get the given static field from the given class.</p>
+	 * @param clazz the class containing the field
+	 * @param field the field
+	 * @return a CodePiece
+	 */
 	public static CodePiece getField(ClassNode clazz, FieldNode field) {
 		requireStatic(field);
 		return of(new FieldInsnNode(GETSTATIC, clazz.name, field.name, field.desc));
@@ -87,69 +127,197 @@ public final class CodePieces {
 		checkArgument((field.access & ACC_STATIC) == ACC_STATIC, "Instance needed for non-static field");
 	}
 
+	/**
+	 * <p>Create a CodePiece that will get the given field from the given class using the given instance.</p>
+	 * @param clazz the class containing the field
+	 * @param field the name of the field
+	 * @param type the type of the field
+	 * @param instance a CodePiece representing the instance
+	 * @return a CodePiece
+	 */
 	public static CodePiece getField(String clazz, String field, Type type, CodePiece instance) {
 		return getField(clazz, field, type.getDescriptor(), instance);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will get the given field from the given class using the given instance.</p>
+	 * @param clazz the class containing the field
+	 * @param field the name of the field
+	 * @param type the type of the field
+	 * @param instance a CodePiece representing the instance
+	 * @return a CodePiece
+	 */
 	public static CodePiece getField(String clazz, String field, Class<?> type, CodePiece instance) {
 		return getField(clazz, field, Type.getDescriptor(type), instance);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will get the given field from the given class using the given instance.</p>
+	 * @param clazz the class containing the field
+	 * @param field the name of the field
+	 * @param desc the type descriptor of the field
+	 * @param instance a CodePiece representing the instance
+	 * @return a CodePiece
+	 */
 	public static CodePiece getField(String clazz, String field, String desc, CodePiece instance) {
 		return instance.append(new FieldInsnNode(GETFIELD, clazz, field, desc));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will get the given static field from the given class.</p>
+	 * @param clazz the class containing the field
+	 * @param field the field
+	 * @param type the type of the field
+	 * @return a CodePiece
+	 */
 	public static CodePiece getField(String clazz, String field, Type type) {
 		return getField(clazz, field, type.getDescriptor());
 	}
 
+	/**
+	 * <p>Create a CodePiece that will get the given static field from the given class.</p>
+	 * @param clazz the class containing the field
+	 * @param field the field
+	 * @param type the type of the field
+	 * @return a CodePiece
+	 */
 	public static CodePiece getField(String clazz, String field, Class<?> type) {
 		return getField(clazz, field, Type.getDescriptor(type));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will get the given static field from the given class.</p>
+	 * @param clazz the class containing the field
+	 * @param field the field
+	 * @param desc the type descriptor of the field
+	 * @return a CodePiece
+	 */
 	public static CodePiece getField(String clazz, String field, String desc) {
 		return of(new FieldInsnNode(GETSTATIC, clazz, field, desc));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will set the given field to the given value using the given instance.</p>
+	 * @param clazz the class containing the field
+	 * @param field the field
+	 * @param instance a CodePiece representing the instance
+	 * @param value a CodePiece representing the new value
+	 * @return a CodePiece
+	 */
 	public static CodePiece setField(ClassNode clazz, FieldNode field, CodePiece instance, CodePiece value) {
 		requireNotStatic(field);
 		return setField(clazz.name, field.name, field.desc, instance, value);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will set the given static field to the given value.</p>
+	 * @param clazz the class containing the field
+	 * @param field the field
+	 * @param value a CodePiece representing the new value
+	 * @return a CodePiece
+	 */
 	public static CodePiece setField(ClassNode clazz, FieldNode field, CodePiece value) {
 		requireStatic(field);
 		return setField(clazz.name, field.name, field.desc, value);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will set the given field to the given value using the given instance.</p>
+	 * @param clazz the class containing the field
+	 * @param field the name of the field
+	 * @param type the type of the field
+	 * @param instance a CodePiece representing the instance
+	 * @param value a CodePiece representing the new value
+	 * @return a CodePiece
+	 */
 	public static CodePiece setField(String clazz, String field, Type type, CodePiece instance, CodePiece value) {
 		return setField(clazz, field, type.getDescriptor(), instance, value);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will set the given field to the given value using the given instance.</p>
+	 * @param clazz the class containing the field
+	 * @param field the name of the field
+	 * @param type the type of the field
+	 * @param instance a CodePiece representing the instance
+	 * @param value a CodePiece representing the new value
+	 * @return a CodePiece
+	 */
 	public static CodePiece setField(String clazz, String field, Class<?> type, CodePiece instance, CodePiece value) {
 		return setField(clazz, field, getDescriptor(type), instance, value);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will set the given field to the given value using the given instance.</p>
+	 * @param clazz the class containing the field
+	 * @param field the name of the field
+	 * @param desc the type descriptor of the field
+	 * @param instance a CodePiece representing the instance
+	 * @param value a CodePiece representing the new value
+	 * @return a CodePiece
+	 */
 	public static CodePiece setField(String clazz, String field, String desc, CodePiece instance, CodePiece value) {
 		return instance.append(value).append(of(new FieldInsnNode(PUTFIELD, clazz, field, desc)));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will set the given static field to the given value.</p>
+	 * @param clazz the class containing the field
+	 * @param field the name of the field
+	 * @param type the type of the field
+	 * @param value a CodePiece representing the new value
+	 * @return a CodePiece
+	 */
 	public static CodePiece setField(String clazz, String field, Type type, CodePiece value) {
 		return setField(clazz, field, type.getDescriptor(), value);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will set the given static field to the given value.</p>
+	 * @param clazz the class containing the field
+	 * @param field the name of the field
+	 * @param type the type of the field
+	 * @param value a CodePiece representing the new value
+	 * @return a CodePiece
+	 */
 	public static CodePiece setField(String clazz, String field, Class<?> type, CodePiece value) {
 		return setField(clazz, field, getDescriptor(type), value);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will set the given static field to the given value.</p>
+	 * @param clazz the class containing the field
+	 * @param field the name of the field
+	 * @param desc the type descriptor of the field
+	 * @param value a CodePiece representing the new value
+	 * @return a CodePiece
+	 */
 	public static CodePiece setField(String clazz, String field, String desc, CodePiece value) {
 		return value.append(of(new FieldInsnNode(PUTSTATIC, clazz, field, desc)));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will invoke the given static method with the given arguments.</p>
+	 * @param clazz the class containing the method
+	 * @param method the method to invoke
+	 * @param desc the method descriptor
+	 * @param args the arguments for the method
+	 * @return a CodePiece
+	 */
 	public static CodePiece invokeStatic(String clazz, String method, String desc, CodePiece... args) {
 		checkArgument(args.length == Type.getArgumentTypes(desc).length, "argument count mismatch");
 		return invoke(INVOKESTATIC, clazz, method, desc, args);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will invoke the given method using the given opcode and arguments.</p>
+	 * @param invokeOpcode the opcode to use to invoke the method (must be {@code INVOKEVIRTUAL}, {@code INVOKESPECIAL} or {@code INVOKESTATIC})
+	 * @param clazz the class containing the method
+	 * @param method the method to invoke
+	 * @param desc the method descriptor
+	 * @param args the arguments for the method (in case of a non-static method pass the instance as the first argument)
+	 * @return a CodePiece
+	 */
 	public static CodePiece invoke(int invokeOpcode, String clazz, String method, String desc, CodePiece... args) {
 		boolean isStatic = invokeOpcode == INVOKESTATIC;
 		int reqArgs = ASMUtils.argumentCount(desc) + (isStatic ? 0 : 1);
@@ -158,6 +326,13 @@ public final class CodePieces {
 		return concat(args).append(new MethodInsnNode(invokeOpcode, clazz, method, desc));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will invoke the given method using the given opcode and arguments.</p>
+	 * @param clazz the class containing the method
+	 * @param method the method to invoke
+	 * @param args the arguments for the method (in case of a non-static method pass the instance as the first argument)
+	 * @return a CodePiece
+	 */
 	public static CodePiece invoke(ClassNode clazz, MethodNode method, CodePiece... args) {
 		boolean isStatic = (method.access & ACC_STATIC) == ACC_STATIC;
 		boolean isPrivate = (method.access & ACC_PRIVATE) == ACC_PRIVATE;
@@ -166,32 +341,75 @@ public final class CodePieces {
 		return invoke(opcode, clazz.name, method.name, method.desc, args);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will invoke the super method of the given method using the given opcode and arguments.</p>
+	 * @param clazz the class containing the method (not the super method)
+	 * @param method the method to invoke
+	 * @param args the arguments for the method (in case of a non-static method pass the instance as the first argument)
+	 * @return a CodePiece
+	 */
 	public static CodePiece invokeSuper(ClassNode clazz, MethodNode method, CodePiece... args) {
 		checkArgument((method.access & ACC_STATIC) != ACC_STATIC, "Cannot call super on static method");
 		checkArgument((method.access & ACC_PRIVATE) != ACC_PRIVATE, "Cannot call super on private method");
 		return invoke(INVOKESPECIAL, clazz.superName, method.name, method.desc, ObjectArrays.concat(getThis(), args));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will create a new instance of the given class.</p>
+	 * @param c the class to instantiate
+	 * @return a CodePiece
+	 */
 	public static CodePiece instantiate(Class<?> c) {
 		return instantiate(Type.getInternalName(c));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will create a new instance of the given class.</p>
+	 * @param t the class to instantiate
+	 * @return a CodePiece
+	 */
 	public static CodePiece instantiate(Type t) {
 		return instantiate(t.getInternalName());
 	}
 
+	/**
+	 * <p>Create a CodePiece that will create a new instance of the given class.</p>
+	 * @param internalName the internal name of the class to instantiate
+	 * @return a CodePiece
+	 */
 	public static CodePiece instantiate(String internalName) {
 		return instantiate(internalName, new Type[0]);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will create a new instance of the given class, passing the given arguments to the constructor.</p>
+	 * @param c the class to instantiate
+	 * @param argTypes the constructor argument types, in order
+	 * @param args the constructor arguments
+	 * @return a CodePiece
+	 */
 	public static CodePiece instantiate(Class<?> c, Type[] argTypes, CodePiece... args) {
 		return instantiate(Type.getInternalName(c), argTypes, args);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will create a new instance of the given class, passing the given arguments to the constructor.</p>
+	 * @param t the class to instantiate
+	 * @param argTypes the constructor argument types, in order
+	 * @param args the constructor arguments
+	 * @return a CodePiece
+	 */
 	public static CodePiece instantiate(Type t, Type[] argTypes, CodePiece... args) {
 		return instantiate(t.getInternalName(), argTypes, args);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will create a new instance of the given class, passing the given arguments to the constructor.</p>
+	 * @param internalName the internal name of the class to instantiate
+	 * @param argTypes the constructor argument types, in order
+	 * @param args the constructor arguments
+	 * @return a CodePiece
+	 */
 	public static CodePiece instantiate(String internalName, Type[] argTypes, CodePiece... args) {
 		checkArgument(args.length == argTypes.length, "parameter list length mismatch");
 		return of(new TypeInsnNode(NEW, internalName))
@@ -200,66 +418,99 @@ public final class CodePieces {
 				.append(new MethodInsnNode(INVOKESPECIAL, internalName, "<init>", getMethodDescriptor(VOID_TYPE, argTypes)));
 	}
 
-	public static CodePiece obtainInstance(ClassNode callingClass, ClassNode targetClass) {
-		return obtainInstance(callingClass, targetClass, new Type[0]);
-	}
-
-	public static CodePiece obtainInstance(ClassNode callingClass, ClassNode targetClass, Type[] argTypes, CodePiece... args) {
-		Type targetType = Type.getObjectType(targetClass.name);
-		String desc = Type.getMethodDescriptor(targetType, argTypes);
-		Collection<MethodNode> methods = ASMUtils.methodsWith(targetClass, InstanceProvider.class);
-		for (MethodNode method : methods) {
-			if (method.desc.equals(desc)) {
-				if ((method.access & ACC_STATIC) != ACC_STATIC) {
-					throw new IllegalStateException(String.format("@InstanceProvider present on non-static method %s in %s", method.name, targetClass.name));
-				}
-				return invoke(targetClass, method, args);
-			}
-		}
-
-		desc = Type.getMethodDescriptor(VOID_TYPE, argTypes);
-		for (MethodNode cstr : ASMUtils.getConstructors(targetClass)) {
-			if (cstr.desc.equals(desc)) {
-				return instantiate(targetType.getInternalName(), argTypes, args);
-			}
-		}
-		return null;
-	}
-
+	/**
+	 * <p>Create a CodePiece that will cast the value on top of the stack to the given class.</p>
+	 * @param c the class to cast to
+	 * @return a CodePiece
+	 */
 	public static CodePiece castTo(Class<?> c) {
 		return castTo(Type.getInternalName(c));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will cast the value on top of the stack to the given class.</p>
+	 * @param type the type of the class to cast to
+	 * @return a CodePiece
+	 */
 	public static CodePiece castTo(Type type) {
 		return castTo(type.getInternalName());
 	}
 
+	/**
+	 * <p>Create a CodePiece that will cast the value on top of the stack to the given class.</p>
+	 * @param internalName the internal name of the class class to cast to
+	 * @return a CodePiece
+	 */
 	public static CodePiece castTo(String internalName) {
 		return of(new TypeInsnNode(CHECKCAST, internalName));
 	}
 
-	public static CodePiece castTo(Class<?> c, CodePiece code) {
-		return castTo(Type.getInternalName(c), code);
+	/**
+	 * <p>Create a CodePiece that represents the given value, casted to the given class.</p>
+	 * @param c the class to cast to
+	 * @param value a CodePiece representing the value
+	 * @return a CodePiece
+	 */
+	public static CodePiece castTo(Class<?> c, CodePiece value) {
+		return castTo(Type.getInternalName(c), value);
 	}
 
-	public static CodePiece castTo(Type type, CodePiece code) {
-		return castTo(type.getInternalName(), code);
+	/**
+	 * <p>Create a CodePiece that represents the given value, casted to the given class.</p>
+	 * @param type the type of the class to cast to
+	 * @param value a CodePiece representing the value
+	 * @return a CodePiece
+	 */
+	public static CodePiece castTo(Type type, CodePiece value) {
+		return castTo(type.getInternalName(), value);
 	}
 
-	public static CodePiece castTo(String internalName, CodePiece code) {
-		return code.append(new TypeInsnNode(CHECKCAST, internalName));
+	/**
+	 * <p>Create a CodePiece that represents the given value, casted to the given class.</p>
+	 * @param internalName the internal name of the class class to cast to
+	 * @param value a CodePiece representing the value
+	 * @return a CodePiece
+	 */
+	public static CodePiece castTo(String internalName, CodePiece value) {
+		return value.append(new TypeInsnNode(CHECKCAST, internalName));
 	}
 
 	private static CodePiece thisLoader;
+
+	/**
+	 * <p>Create a CodePiece that will load the current {@code this} reference onto the stack.</p>
+	 * @return a CodePiece
+	 */
 	public static CodePiece getThis() {
 		return thisLoader == null ? (thisLoader = of(new VarInsnNode(ALOAD, 0))) : thisLoader;
 	}
 
 	private static CodePiece nullLoader;
+
+	/**
+	 * <p>Create a CodePiece that will load {@code null} onto the stack.</p>
+	 * @return a CodePiece
+	 */
 	public static CodePiece constantNull() {
 		return nullLoader == null ? (nullLoader = of(new InsnNode(ACONST_NULL))) : nullLoader;
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 * <p>The object must be one of following:</p>
+	 * <ul>
+	 *     <li>{@code null}</li>
+	 *     <li>A primitive wrapper ({@code Boolean}, {@code Byte}, {@code Short}, {@code Integer}, {@code Long}, {@code Character},
+	 *    {@code Float}, {@code Double})</li>
+	 *     <li>A {@code String}</li>
+	 *     <li>An {@code Enum}</li>
+	 *     <li>A {@code Class}</li>
+	 *     <li>An ASM {@code Type}</li>
+	 *     <li>An array containing only the above</li>
+	 * </ul>
+	 * @param o the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(Object o) {
 		if (o == null) {
 			return constantNull();
@@ -272,43 +523,73 @@ public final class CodePieces {
 		} else if (o instanceof Integer) {
 			return constant(((int) o));
 		} else if (o instanceof Long || o instanceof Float || o instanceof Double || o instanceof String || o instanceof Type) {
-			return ofLdc(o);
+			return ldcConstant(o);
 		} else if (o instanceof Enum) {
 			return constant((Enum<?>) o);
 		} else if (o instanceof Class) {
 			return constant(((Class<?>) o));
 		} else if (o.getClass().isArray()) {
-			return ofArray(o);
+			return arrayConstant(o);
 		}
 		throw new IllegalArgumentException("Invalid constant: " + o);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 * @param b the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(boolean b) {
 		return constant(b ? 1 : 0);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 * @param b the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(byte b) {
 		return constant((int) b);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 * @param s the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(short s) {
 		return constant((int) s);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 * @param i the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(int i) {
-		return of(loadInt(i));
+		return of(intConstant(i));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 * @param l the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(long l) {
 		if (l == 0) {
 			return ofOpcode(LCONST_0);
 		} else if (l == 1) {
 			return ofOpcode(LCONST_1);
 		} else {
-			return ofLdc(l);
+			return ldcConstant(l);
 		}
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 * @param f the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(float f) {
 		if (f == 0f) {
 			return ofOpcode(FCONST_0);
@@ -317,80 +598,151 @@ public final class CodePieces {
 		} else if (f == 2f) {
 			return ofOpcode(FCONST_2);
 		} else {
-			return ofLdc(f);
+			return ldcConstant(f);
 		}
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 * @param d the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(double d) {
 		if (d == 0d) {
 			return ofOpcode(DCONST_0);
 		} else if (d == 1d) {
 			return ofOpcode(DCONST_1);
 		} else {
-			return ofLdc(d);
+			return ldcConstant(d);
 		}
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 * @param s the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(String s) {
-		return ofLdc(s);
+		return ldcConstant(s);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given class constant onto the stack.</p>
+	 * @param t the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(Type t) {
-		return ofLdc(t);
+		return ldcConstant(t);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given class constant onto the stack.</p>
+	 * @param c the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(Class<?> c) {
-		return c == null ? constantNull() : ofLdc(Type.getType(c));
+		return c == null ? constantNull() : ldcConstant(Type.getType(c));
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given enum constant onto the stack.</p>
+	 * @param e the constant
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(Enum<?> e) {
 		Class<? extends Enum<?>> enumClass = e.getDeclaringClass();
 		return getField(Type.getInternalName(enumClass), e.name(), enumClass);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 * @param arr the array
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(boolean[] arr) {
-		return ofArray(arr);
+		return arrayConstant(arr);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 * @param arr the array
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(byte[] arr) {
-		return ofArray(arr);
+		return arrayConstant(arr);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 * @param arr the array
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(short[] arr) {
-		return ofArray(arr);
+		return arrayConstant(arr);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 * @param arr the array
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(int[] arr) {
-		return ofArray(arr);
+		return arrayConstant(arr);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 * @param arr the array
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(long[] arr) {
-		return ofArray(arr);
+		return arrayConstant(arr);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 * @param arr the array
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(char[] arr) {
-		return ofArray(arr);
+		return arrayConstant(arr);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 * @param arr the array
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(float[] arr) {
-		return ofArray(arr);
+		return arrayConstant(arr);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 * @param arr the array
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(double[] arr) {
-		return ofArray(arr);
+		return arrayConstant(arr);
 	}
 
+	/**
+	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 * <p>The array may only contain valid constants (see {@link #constant(Object)}</p>
+	 * @param arr the array
+	 * @return a CodePiece
+	 */
 	public static CodePiece constant(Object[] arr) {
-		return ofArray(arr);
+		return arrayConstant(arr);
 	}
 
-	private static CodePiece ofArray(Object arr) {
+	private static CodePiece arrayConstant(Object arr) {
 		Type compType = Type.getType(arr.getClass().getComponentType());
 
 		int len = Array.getLength(arr);
 
 		CodeBuilder builder = new CodeBuilder();
-		builder.add(loadInt(len));
+		builder.add(intConstant(len));
 
 		if (ASMUtils.isPrimitive(compType)) {
 			builder.add(new IntInsnNode(NEWARRAY, toArrayType(compType)));
@@ -402,7 +754,7 @@ public final class CodePieces {
 
 		for (int i = 0; i < len; ++i) {
 			builder.add(new InsnNode(DUP))
-					.add(loadInt(i))
+					.add(intConstant(i))
 					.add(constant(Array.get(arr, i)))
 					.add(new InsnNode(storeOpcode));
 		}
@@ -433,37 +785,34 @@ public final class CodePieces {
 		}
 	}
 
-	private static AbstractInsnNode loadInt(int i) {
-		if (i >= -1 && i <= 5) {
-			switch (i) {
-				case -1:
-					return new InsnNode(ICONST_M1);
-				case 0:
-					return new InsnNode(ICONST_0);
-				case 1:
-					return new InsnNode(ICONST_1);
-				case 2:
-					return new InsnNode(ICONST_2);
-				case 3:
-					return new InsnNode(ICONST_3);
-				case 4:
-					return new InsnNode(ICONST_4);
-				case 5:
-					return new InsnNode(ICONST_5);
-				default:
-					throw new AssertionError();
-			}
-		}
-		if (i >= Byte.MIN_VALUE && i <= Byte.MAX_VALUE) {
-			return new IntInsnNode(BIPUSH, i);
-		} else if (i >= Short.MIN_VALUE && i <= Short.MAX_VALUE) {
-			return new IntInsnNode(SIPUSH, i);
-		} else {
-			return new LdcInsnNode(i);
+	private static AbstractInsnNode intConstant(int i) {
+		switch (i) {
+			case -1:
+				return new InsnNode(ICONST_M1);
+			case 0:
+				return new InsnNode(ICONST_0);
+			case 1:
+				return new InsnNode(ICONST_1);
+			case 2:
+				return new InsnNode(ICONST_2);
+			case 3:
+				return new InsnNode(ICONST_3);
+			case 4:
+				return new InsnNode(ICONST_4);
+			case 5:
+				return new InsnNode(ICONST_5);
+			default:
+				if (i >= Byte.MIN_VALUE && i <= Byte.MAX_VALUE) {
+					return new IntInsnNode(BIPUSH, i);
+				} else if (i >= Short.MIN_VALUE && i <= Short.MAX_VALUE) {
+					return new IntInsnNode(SIPUSH, i);
+				} else {
+					return new LdcInsnNode(i);
+				}
 		}
 	}
 
-	private static CodePiece ofLdc(Object o) {
+	private static CodePiece ldcConstant(Object o) {
 		if (o == null) {
 			return constantNull();
 		} else {
