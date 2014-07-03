@@ -4,7 +4,7 @@ import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Keyboard;
 
 /**
- * Abstract base class for GuiScreens which have a parent screen that should be reopened when this screen closes.
+ * <p>Abstract base class for GuiScreens which have a parent screen that should be reopened when this screen closes.</p>
  * @author diesieben07
  */
 public abstract class GuiScreenWithParent extends GuiScreen {
@@ -19,7 +19,7 @@ public abstract class GuiScreenWithParent extends GuiScreen {
 	}
 
 	/**
-	 * Close this GuiScreen (display the parent screen again)
+	 * <p>Close this GuiScreen (display the parent screen again).</p>
 	 */
 	protected void close() {
 		mc.displayGuiScreen(parent);

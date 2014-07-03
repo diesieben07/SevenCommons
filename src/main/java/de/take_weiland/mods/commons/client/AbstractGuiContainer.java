@@ -12,11 +12,11 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 /**
- * A base implementation of GuiContainer
+ * <p>A base implementation for Guis with an Inventory (GuiContainer).</p>
  * @author diesieben07
  *
- * @param <I> An IInventory
- * @param <C> An SCContainer
+ * @param <I> The type of inventory this Gui displays
+ * @param <C> The type of container this Gui displays
  */
 public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & SCContainer<I>> extends GuiContainer {
 
@@ -54,15 +54,15 @@ public abstract class AbstractGuiContainer<I extends IInventory, C extends Conta
 		return inv.isInvNameLocalized() ? inv.getInvName() : I18n.getString(inv.getInvName());
 	}
 
-	protected final void triggerButton(int buttonId) {
+	protected final void triggerContainerButton(int buttonId) {
 		mc.playerController.sendEnchantPacket(container.windowId, UnsignedBytes.checkedCast(buttonId));
 		container.onButtonClick(Side.CLIENT, mc.thePlayer, buttonId);
 	}
 
 	@Override
 	protected void actionPerformed(GuiButton button) {
-		if (container.handlesButton(mc.thePlayer, button.id)) {
-			triggerButton(button.id);
+		if (container.isContainerButton(mc.thePlayer, button.id)) {
+			triggerContainerButton(button.id);
 		}
 	}
 

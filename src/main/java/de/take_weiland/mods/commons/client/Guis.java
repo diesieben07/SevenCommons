@@ -1,11 +1,10 @@
 package de.take_weiland.mods.commons.client;
 
-import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiTextField;
 
 /**
- * Utilities for working with {@link net.minecraft.client.gui.GuiScreen GuiScreens}
+ * <p>Utilities for working with {@code GuiScreens}</p>
+ * @see net.minecraft.client.gui.GuiScreen
  * @author diesieben07
  */
 public final class Guis {
@@ -13,37 +12,15 @@ public final class Guis {
 	private Guis() { }
 
 	/**
-	 * Copies the state from one Text field to the other. Useful to preserve state when the resolution changes.
-	 * @param from the text field to copy from
-	 * @param to the text field to copy to
-	 */
-	public static void copyState(GuiTextField from, GuiTextField to) {
-		SCReflector reflector = SCReflector.instance;
-
-		// i hope i didnt forget any
-		to.setText(from.getText());
-		to.setCursorPosition(from.getCursorPosition());
-		to.setSelectionPos(from.getSelectionEnd());
-		to.setFocused(from.isFocused());
-		to.setEnabled(reflector.isEnabled(from));
-		to.setMaxStringLength(from.getMaxStringLength());
-		to.setCanLoseFocus(reflector.canLooseFocus(from));
-		to.setEnableBackgroundDrawing(from.getEnableBackgroundDrawing());
-		to.setTextColor(reflector.getEnabledColor(from));
-		to.setDisabledTextColour(reflector.getDisabledColor(from));
-		to.setVisible(from.getVisible());
-	}
-
-	/**
-	 * closes any currently open GuiScreen.
+	 * <p>Close any currently open GuiScreen.</p>
 	 */
 	public static void close() {
 		Minecraft.getMinecraft().displayGuiScreen(null);
 	}
 
 	/**
-	 * determines whether the point with given {@code pointX} and {@code pointY} coordinates is in the rectangle at position {@code x, y} and with dimensions
-	 * {@code width x height}
+	 * <p>Determine whether the point with given {@code pointX} and {@code pointY} coordinates is in the rectangle at position {@code x, y} and with dimensions
+	 * {@code width} and {@code height}.</p>
 	 * @param x x position of the rectangle
 	 * @param y y position of the rectangle
 	 * @param width width of the rectangle
@@ -57,10 +34,10 @@ public final class Guis {
 	}
 
 	/**
-	 * computes the current GUI scale. Calling this method is equivalent to<br />
-	 * <pre>{@code
+	 * <p>Computes the current GUI scale. Calling this method is equivalent to the following:</p>
+	 * <p><pre>{@code
 	 * Minecraft mc = Minecraft.getMinecraft();
-	 * int scale = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight).getScaleFactor(); }</pre>
+	 * int scale = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight).getScaleFactor(); }</pre></p>
 	 * @return the current GUI scale
 	 */
 	public static int computeGuiScale() {
