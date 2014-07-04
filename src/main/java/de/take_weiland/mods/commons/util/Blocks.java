@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.Function;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.internal.InstanceCacheHolder;
 import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.templates.SCItemBlock;
@@ -10,15 +10,16 @@ import de.take_weiland.mods.commons.templates.TypedItemBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SCBlockAccessor;
 import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+
+import static de.take_weiland.mods.commons.util.RegistrationUtil.checkPhase;
 
 public final class Blocks {
 
 	private Blocks() { }
 
 	/**
-	 * Equivalent to {@link #init(String, net.minecraft.block.Block, String, Class)} using the currently active Mod and a default ItemBlock class.
+	 * <p>Equivalent to {@link #init(String, net.minecraft.block.Block, String, Class)} using the currently active mod and a default ItemBlock class.</p>
 	 * @param block the Block instance
 	 * @param baseName base name for this block
 	 */
@@ -27,7 +28,7 @@ public final class Blocks {
 	}
 
 	/**
-	 * Equivalent to {@link #init(String, net.minecraft.block.Block, String, Class)} using a default ItemBlock class
+	 * <p>Equivalent to {@link #init(String, net.minecraft.block.Block, String, Class)} using a default ItemBlock class.</p>
 	 * @param modId Your ModId
 	 * @param block the Block instance
 	 * @param baseName base name for this block
@@ -37,7 +38,7 @@ public final class Blocks {
 	}
 
 	/**
-	 * Equivalent to {@link #init(String, net.minecraft.block.Block, String, Class)} using the currently active Mod
+	 * <p>Equivalent to {@link #init(String, net.minecraft.block.Block, String, Class)} using the currently active mod.</p>
 	 * @param block the Block instance
 	 * @param baseName base name for this block
 	 * @param itemClass the ItemBlock class to use
@@ -46,6 +47,7 @@ public final class Blocks {
 		init(Loader.instance().activeModContainer().getModId(), block, baseName, itemClass);
 	}
 
+	@SuppressWarnings("rawtypes") // not sure what this warning is about
 	private static Class<? extends SCItemBlock> getItemBlockClass(Block block) {
 		return block instanceof HasSubtypes ? TypedItemBlock.class : SCItemBlock.class;
 	}
@@ -65,6 +67,8 @@ public final class Blocks {
 	 * @param itemClass the ItemBlock class to use
 	 */
 	public static void init(String modId, Block block, String baseName, Class<? extends ItemBlock> itemClass) {
+		checkPhase("Block");
+
 		if (SCBlockAccessor.getIconNameRaw(block) == null) {
 			block.setTextureName(modId + ":" + baseName);
 		}
@@ -75,20 +79,13 @@ public final class Blocks {
 		GameRegistry.registerBlock(block, itemClass, baseName);
 		
 		if (block instanceof HasSubtypes) {
-			ItemStacks.registerSubstacks(baseName, block, STACK_FUNCTION);
+			ItemStacks.registerSubstacks(baseName, block, InstanceCacheHolder.BLOCK_STACK_FUNCTION);
 		}
 	}
 
-	private static final Function<Block, ItemStack> STACK_FUNCTION = new Function<Block, ItemStack>() {
-		@Override
-		public ItemStack apply(Block input) {
-			return new ItemStack(input);
-		}
-	};
-
 	/**
-	 * Generic implementation for {@link net.minecraft.block.Block#breakBlock}. This method drops the contents of any Inventory
-	 * associated with the block.
+	 * <p>Generic implementation for {@link net.minecraft.block.Block#breakBlock}. This method drops the contents of any Inventory
+	 * associated with the block and should therefor be called before any TileEntity is removed.</p>
 	 * @param block the Block instance
 	 * @param world the World
 	 * @param x x position

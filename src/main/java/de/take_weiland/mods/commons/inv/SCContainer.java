@@ -7,7 +7,7 @@ import net.minecraft.item.ItemStack;
 
 public interface SCContainer<T extends IInventory> {
 
-	boolean handlesButton(EntityPlayer player, int buttonId);
+	boolean isContainerButton(EntityPlayer player, int buttonId);
 	
 	T inventory();
 	

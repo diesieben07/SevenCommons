@@ -13,7 +13,7 @@ import net.minecraft.inventory.IInventory;
 public interface NameableInventory extends IInventory {
 
 	/**
-	 * wheteher this inventory has been renamed
+	 * whether this inventory has been renamed
 	 * @return true if this inventory has a custom name
 	 */
 	boolean hasCustomName();

@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Function;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
 import de.take_weiland.mods.commons.meta.Subtype;
@@ -126,7 +125,7 @@ public final class ItemStacks {
 	@SuppressWarnings("unchecked")
 	static <T extends Enum<T> & Subtype, R> void registerSubstacks(String baseName, R item, Function<R, ItemStack> function) {
 		MetadataProperty<T> prop = ((HasSubtypes<T>) item).subtypeProperty();
-		T[] types = SevenCommons.metaProxy.backingValues(prop);
+		T[] types = prop.values();
 		for (T type : types) {
 			ItemStack stack = function.apply(item);
 			stack.setItemDamage(prop.toMeta(type, 0));

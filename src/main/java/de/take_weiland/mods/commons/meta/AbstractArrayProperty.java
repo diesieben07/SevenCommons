@@ -17,21 +17,24 @@ abstract class AbstractArrayProperty<T> extends GenericProperty<T> {
 		checkArgument(values.length >= 2, "Must have at least 2 elements!");
 		this.shift = shift;
 		int bitCount = Integer.numberOfTrailingZeros(Integer.highestOneBit(values.length - 1)) + 1;
+		checkArgument(shift >= bitCount + 1, "Too many values for given shift (need at least %s)", bitCount - 1);
 		this.mask = (1 << bitCount) - 1;
 		this.values = values;
 	}
 
-	T value0(int metadata) {
-		return JavaUtils.get(values, metadata);
-	}
-
-	final T[] values() {
+	@Override
+	public final T[] values() {
 		return values;
 	}
 
 	@Override
+	public final boolean hasDistinctValues() {
+		return true;
+	}
+
+	@Override
 	public final T value(int metadata) {
-		return value0((metadata >> shift) & mask);
+		return JavaUtils.get(values, (metadata >> shift) & mask);
 	}
 
 	@Override

@@ -1,18 +1,24 @@
 package de.take_weiland.mods.commons.meta;
 
 import com.google.common.primitives.Ints;
-import de.take_weiland.mods.commons.internal.SCMetaInternalProxy;
-import de.take_weiland.mods.commons.internal.SevenCommons;
-import net.minecraft.world.World;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
+ * <p>Factory methods for MetadataProperties.</p>
+ * @see de.take_weiland.mods.commons.meta.MetadataProperty
  * @author diesieben07
  */
 public final class MetaProperties {
 
+	/**
+	 * <p>Create a MetadataProperty, whose values are the constants of the given enum class.</p>
+	 * @param shift the shift
+	 * @param clazz
+	 * @param <T>
+	 * @return
+	 */
 	public static <T extends Enum<T>> MetadataProperty<T> newProperty(int shift, Class<T> clazz) {
 		return new EnumProperty<>(shift, checkNotNull(clazz, "clazz"));
 	}
@@ -33,39 +39,6 @@ public final class MetaProperties {
 
 	public static IntProperty newIntProperty(int shift, int bits) {
 		return new IntPropertyImpl(shift, bits);
-	}
-
-	private static MetaBuilderImpl clientBuilder;
-	private static MetaBuilderImpl serverBuilder;
-
-	public static MetaBuilder builder(World world) {
-		MetaBuilderImpl b;
-		if (world.isRemote) {
-			b = clientBuilder;
-			if (b == null) {
-				return (clientBuilder = new MetaBuilderImpl());
-			}
-		} else {
-			b = serverBuilder;
-			if (b == null) {
-				return (serverBuilder = new MetaBuilderImpl());
-			}
-		}
-		b.reset();
-		return b;
-	}
-
-	static {
-		SevenCommons.metaProxy = new SCMetaInternalProxy() {
-			@Override
-			public <E> E[] backingValues(MetadataProperty<E> property) {
-				return ((AbstractArrayProperty<E>) property).values();
-			}
-		};
-	}
-
-	public static MetaBuilder builder() {
-		return new MetaBuilderImpl();
 	}
 
 	public static <A, B> int combine(MetadataProperty<? super A> p1, A v1, MetadataProperty<? super B> p2, B v2) {
@@ -96,17 +69,15 @@ public final class MetaProperties {
 		return p8.toMeta(v8, p7.toMeta(v7, p6.toMeta(v6, p5.toMeta(v5, p4.toMeta(v4, p3.toMeta(v3, p2.toMeta(v2, p1.toMeta(v1, 0))))))));
 	}
 
-	// going beyond 8 is madness, anything else needs to be handled by the caller
+	// going beyond 8 is madness, for anything more use the MetaBuilder
 
 	/**
-	 *
 	 * @deprecated use {@link #newProperty(int, Class)} for Enum properties
 	 */
 	@Deprecated
 	@SafeVarargs
 	public static <T extends Enum<T>> MetadataProperty<T> newProperty(int shift, T... values) {
-		checkArgument(checkNotNull(values, "values").length >= 1, "Cannot use Empty enum!");
-		return newProperty(shift, values[0].getDeclaringClass());
+		throw new UnsupportedOperationException();
 	}
 
 	private static int checkShift(int shift) {

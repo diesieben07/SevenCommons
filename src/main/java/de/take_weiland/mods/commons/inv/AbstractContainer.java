@@ -75,7 +75,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	}
 	
 	@Override
-	public boolean handlesButton(EntityPlayer player, int buttonId) {
+	public boolean isContainerButton(EntityPlayer player, int buttonId) {
 		return false;
 	}
 	
@@ -83,7 +83,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	public void onButtonClick(Side side, EntityPlayer player, int buttonId) { }
 
 	@Override
-	public boolean enchantItem(EntityPlayer player, int id) {
+	public final boolean enchantItem(EntityPlayer player, int id) {
 		id = UnsignedBytes.toInt((byte)id);
 		onButtonClick(Sides.logical(player), player, id);
 		return true;

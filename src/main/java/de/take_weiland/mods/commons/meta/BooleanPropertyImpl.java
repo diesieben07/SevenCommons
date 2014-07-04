@@ -40,4 +40,14 @@ final class BooleanPropertyImpl extends GenericProperty<Boolean> implements Bool
 		return toMeta(value.booleanValue(), previousMeta);
 	}
 
+	private static Boolean[] values;
+	@Override
+	public Boolean[] values() {
+		return values == null ? (values = new Boolean[] { Boolean.FALSE, Boolean.TRUE }) : values;
+	}
+
+	@Override
+	public boolean hasDistinctValues() {
+		return true;
+	}
 }

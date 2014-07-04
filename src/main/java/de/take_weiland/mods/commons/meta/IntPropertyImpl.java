@@ -32,4 +32,9 @@ class IntPropertyImpl extends GenericProperty<Integer> implements IntProperty {
 	public int toMeta(Integer value, int previousMeta) {
 		return toMeta(value.intValue(), previousMeta);
 	}
+
+	@Override
+	public Integer[] values() {
+		throw new UnsupportedOperationException();
+	}
 }
