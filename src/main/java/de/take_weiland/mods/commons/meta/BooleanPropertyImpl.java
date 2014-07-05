@@ -1,5 +1,8 @@
 package de.take_weiland.mods.commons.meta;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
+
 /**
  * @author diesieben07
  */
@@ -23,6 +26,16 @@ final class BooleanPropertyImpl extends GenericProperty<Boolean> implements Bool
 	@Override
 	public boolean booleanValue(int metadata) {
 		return (metadata & mask) != 0;
+	}
+
+	@Override
+	public boolean booleanValue(ItemStack stack) {
+		return booleanValue(stack.getItemDamage());
+	}
+
+	@Override
+	public boolean booleanValue(World world, int x, int y, int z) {
+		return booleanValue(world.getBlockMetadata(x, y, z));
 	}
 
 	@Override

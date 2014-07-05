@@ -21,7 +21,7 @@ public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extend
 	public String getUnlocalizedName(ItemStack stack) {
 		return block.getUnlocalizedName()
 				+ "."
-				+ block.subtypeProperty().value(stack).unlocalizedName();
+				+ block.subtypeProperty().value(stack).subtypeName();
 	}
 
 }

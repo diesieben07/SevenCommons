@@ -1,5 +1,8 @@
 package de.take_weiland.mods.commons.meta;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
+
 /**
  * @author diesieben07
  */
@@ -16,6 +19,16 @@ class IntPropertyImpl extends GenericProperty<Integer> implements IntProperty {
 	@Override
 	public int intValue(int metadata) {
 		return (metadata >> shift) & mask;
+	}
+
+	@Override
+	public int intValue(World world, int x, int y, int z) {
+		return intValue(world.getBlockMetadata(x, y, z));
+	}
+
+	@Override
+	public int intValue(ItemStack stack) {
+		return intValue(stack.getItemDamage());
 	}
 
 	@Override
@@ -36,5 +49,10 @@ class IntPropertyImpl extends GenericProperty<Integer> implements IntProperty {
 	@Override
 	public Integer[] values() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean hasDistinctValues() {
+		return false;
 	}
 }

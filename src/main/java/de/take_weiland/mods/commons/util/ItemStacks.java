@@ -130,7 +130,7 @@ public final class ItemStacks {
 			ItemStack stack = function.apply(item);
 			stack.setItemDamage(prop.toMeta(type, 0));
 
-			String name = baseName + "." + type.unlocalizedName();
+			String name = baseName + "." + type.subtypeName();
 			GameRegistry.registerCustomItemStack(name, stack);
 		}
 	}
