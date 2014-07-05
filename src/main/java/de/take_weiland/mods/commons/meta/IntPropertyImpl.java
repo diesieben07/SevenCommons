@@ -37,6 +37,22 @@ class IntPropertyImpl extends GenericProperty<Integer> implements IntProperty {
 	}
 
 	@Override
+	public ItemStack apply(int value, ItemStack stack) {
+		stack.setItemDamage(toMeta(value, stack.getItemDamage()));
+		return stack;
+	}
+
+	@Override
+	public void apply(int value, World world, int x, int y, int z) {
+		world.setBlockMetadataWithNotify(x, y, z, toMeta(value, world.getBlockMetadata(x, y, z)), 3);
+	}
+
+	@Override
+	public void apply(int value, World world, int x, int y, int z, int notifyFlags) {
+		world.setBlockMetadataWithNotify(x, y, z, toMeta(value, world.getBlockMetadata(x, y, z)), notifyFlags);
+	}
+
+	@Override
 	public Integer value(int metadata) {
 		return intValue(metadata);
 	}

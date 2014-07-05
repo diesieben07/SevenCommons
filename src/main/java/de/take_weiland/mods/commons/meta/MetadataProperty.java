@@ -42,9 +42,34 @@ public interface MetadataProperty<T> {
 	 */
 	int toMeta(T value, int previousMeta);
 
+	/**
+	 * <p>Apply the given value to the ItemStack.</p>
+	 * @param value the value to store
+	 * @param stack the ItemStack
+	 * @return the same ItemStack, for convenience
+	 */
 	ItemStack apply(T value, ItemStack stack);
 
+	/**
+	 * <p>Apply the given value to the Block at the given location in the world.</p>
+	 * @param value the value to store
+	 * @param world the World
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 * @param z the z coordinate
+	 */
 	void apply(T value, World world, int x, int y, int z);
+
+	/**
+	 * <p>Apply the given value to the Block at the given location in the world.</p>
+	 * @param value the value to store
+	 * @param world the World
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 * @param z the z coordinate
+	 * @param notifyFlags the notify flags to pass to {@link net.minecraft.world.World#setBlockMetadataWithNotify(int, int, int, int, int)} (see there for documentation)
+	 */
+	void apply(T value, World world, int x, int y, int z, int notifyFlags);
 
 	/**
 	 * <p>Check if this property has distinct values (such as an Enum or a property based on an array).</p>

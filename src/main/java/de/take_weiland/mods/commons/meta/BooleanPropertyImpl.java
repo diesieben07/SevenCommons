@@ -44,6 +44,22 @@ final class BooleanPropertyImpl extends GenericProperty<Boolean> implements Bool
 	}
 
 	@Override
+	public ItemStack apply(boolean value, ItemStack stack) {
+		stack.setItemDamage(toMeta(value, stack.getItemDamage()));
+		return stack;
+	}
+
+	@Override
+	public void apply(boolean value, World world, int x, int y, int z) {
+		world.setBlockMetadataWithNotify(x, y, z, toMeta(value, world.getBlockMetadata(x, y, z)), 3);
+	}
+
+	@Override
+	public void apply(boolean value, World world, int x, int y, int z, int notifyFlags) {
+		world.setBlockMetadataWithNotify(x, y, z, toMeta(value, world.getBlockMetadata(x, y, z)), notifyFlags);
+	}
+
+	@Override
 	public Boolean value(int metadata) {
 		return booleanValue(metadata);
 	}
