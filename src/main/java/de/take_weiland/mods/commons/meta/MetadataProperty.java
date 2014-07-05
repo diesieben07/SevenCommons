@@ -42,6 +42,10 @@ public interface MetadataProperty<T> {
 	 */
 	int toMeta(T value, int previousMeta);
 
+	ItemStack apply(T value, ItemStack stack);
+
+	void apply(T value, World world, int x, int y, int z);
+
 	/**
 	 * <p>Check if this property has distinct values (such as an Enum or a property based on an array).</p>
 	 * @return true if this property has distinct values

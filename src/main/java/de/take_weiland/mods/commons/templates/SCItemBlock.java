@@ -7,7 +7,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 
 public class SCItemBlock<T extends Block> extends ItemBlock {
@@ -22,26 +21,27 @@ public class SCItemBlock<T extends Block> extends ItemBlock {
 
 	@Override
 	public boolean placeBlockAt(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, int metadata) {
-		boolean result = super.placeBlockAt(stack, player, world, x, y, z, side, hitX, hitY, hitZ, metadata);
-		if (stack.hasDisplayName() && block.hasTileEntity(metadata)) {
+		boolean result;
+		if ((result = super.placeBlockAt(stack, player, world, x, y, z, side, hitX, hitY, hitZ, metadata))) {
+			doSCPlaceFeatures(stack, player, world, x, y, z, side);
+		}
+		return result;
+	}
+
+	protected final void doSCPlaceFeatures(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int meta) {
+		if (stack.hasDisplayName() && block.hasTileEntity(meta)) {
 			TileEntity te = world.getBlockTileEntity(x, y, z);
 			if (te instanceof NameableInventory &&
 					(!(te instanceof TileAutoName) ||
 							((TileAutoName) te).shouldAutoname(player, stack, world, x, y, z))) {
-					((NameableInventory)te).setCustomName(stack.getDisplayName());
+				((NameableInventory)te).setCustomName(stack.getDisplayName());
 			}
 		}
-		return result;
 	}
 
 	@Override
 	public String getUnlocalizedNameInefficiently(ItemStack item) {
 		return getUnlocalizedName(item); // some optimization
-	}
-
-	@Override
-	public Icon getIconFromDamage(int meta) {
-		return block.getIcon(0, meta);
 	}
 
 }
