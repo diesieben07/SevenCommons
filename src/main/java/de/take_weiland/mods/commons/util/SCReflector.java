@@ -12,7 +12,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureObject;
@@ -87,22 +86,6 @@ public interface SCReflector {
 	Map<Class<? extends Packet>, Integer> getClassToIdMap(Packet dummy);
 
 	@SideOnly(Side.CLIENT)
-	@Getter(field = F_IS_ENABLED, srg = true)
-	boolean isEnabled(GuiTextField textField);
-
-	@SideOnly(Side.CLIENT)
-	@Getter(field = F_DISABLED_COLOR, srg = true)
-	int getDisabledColor(GuiTextField textField);
-
-	@SideOnly(Side.CLIENT)
-	@Getter(field = F_ENABLED_COLOR, srg = true)
-	int getEnabledColor(GuiTextField textField);
-
-	@SideOnly(Side.CLIENT)
-	@Getter(field = F_CAN_LOOSE_FOCUS, srg = true)
-	boolean canLooseFocus(GuiTextField textField);
-
-	@SideOnly(Side.CLIENT)
 	@Getter(field = F_BUTTON_LIST, srg = true)
 	List<GuiButton> getButtonList(GuiScreen screen);
 
@@ -130,7 +113,7 @@ public interface SCReflector {
 
 	@SideOnly(Side.CLIENT)
 	@Getter(field = F_Z_LEVEL, srg = true)
-	int getZLevel(Gui gui);
+	float getZLevel(Gui gui);
 
 	@Invoke(method = M_ADD_SLOT_TO_CONTAINER, srg = true)
 	Slot addSlot(Container container, Slot slot);
