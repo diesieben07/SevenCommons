@@ -183,6 +183,24 @@ public final class MCPNames {
 
 	public static final String F_UNLOCALIZED_NAME_BLOCK = "field_71968_b";
 
+	public static final String M_SET_HAS_SUBTYPES = "func_77627_a";
+
+	public static final String F_ICON_STRING = "field_111218_cA";
+
+	public static final String F_UNLOCALIZED_NAME_ITEM = "field_77774_bZ";
+
+	public static final String F_TEXTURE_NAME_BLOCK = "field_111026_f";
+
+	public static final String M_ACTION_PERFORMED = "func_73875_a";
+
+	public static final String F_Z_LEVEL = "field_73735_i";
+
+	public static final String M_ADD_SLOT_TO_CONTAINER = "func_75146_a";
+
+	public static final String M_MERGE_ITEM_STACK = "func_75135_a";
+
+	public static final String F_CRAFTERS = "field_75149_d";
+
 	private MCPNames() { }
 	
 }

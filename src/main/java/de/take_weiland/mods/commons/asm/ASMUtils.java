@@ -457,28 +457,6 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Provides identical functionality to {@link #getNext(org.objectweb.asm.tree.AbstractInsnNode, int)},
-	 * but can provide constant-time performance in certain situations, as opposed to the linear-time performance of
-	 * {@link #getNext(org.objectweb.asm.tree.AbstractInsnNode, int)}.</p>
-	 * <p>The constant-time implementation is used if the cache of the InsnList is already created. To force that to happen,
-	 * call {@link org.objectweb.asm.tree.InsnList#get(int)} once before calling this method.</p>
-	 * @param list the InsnList of the instruction
-	 * @param insn the instruction
-	 * @param n how many steps to move forwards
-	 * @return the instruction {@code n} steps forwards
-	 * @throws java.lang.IndexOutOfBoundsException if the list ends before n steps have been walked
-	 */
-	public static AbstractInsnNode getNext(InsnList list, AbstractInsnNode insn, int n) {
-		if (SCASMAccessHook.getCache(list) != null) {
-			int idx = SCASMAccessHook.getIndex(insn);
-			checkArgument(idx >= 0, "instruction doesn't belong to list!");
-			return list.get(idx + n);
-		} else {
-			return getNext(insn, n);
-		}
-	}
-
-	/**
 	 * Walks {@code n} steps backwards in the InsnList of the given instruction.
 	 * @param insn the starting point
 	 * @param n how many steps to move backwards

@@ -4,13 +4,13 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.util.Entities;
+import de.take_weiland.mods.commons.util.SCReflector;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
-import net.minecraft.inventory.SCContainerAccessor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.INetworkManager;
@@ -121,7 +121,7 @@ public final class Packets {
 //		Could use the shorter
 //		Packets.sendPacketToPlayers(packet, Iterators.filter(crafters.iterator(), EntityPlayerMP.class));
 //		but this version here avoids the object spam of the above
-		List<ICrafting> crafters = SCContainerAccessor.getCrafters(c);
+		List<ICrafting> crafters = SCReflector.instance.getCrafters(c);
 		int len = crafters.size();
 		for (int i = 0; i < len; ++i) {
 			ICrafting crafter = crafters.get(i);

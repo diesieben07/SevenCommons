@@ -5,8 +5,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.internal.InstanceCacheHolder;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SCItemAccessor;
 
 import static de.take_weiland.mods.commons.util.RegistrationUtil.checkPhase;
 
@@ -14,34 +12,48 @@ public final class Items {
 
 	private Items() { }
 
+	/**
+	 * <p>Equivalent to {@link #init(net.minecraft.item.Item, String, String)} with the currently active ModId.</p>
+	 * @param item the Item instance
+	 * @param baseName base name for this Item
+	 */
 	public static void init(Item item, String baseName) {
-		init(item, baseName,Loader.instance().activeModContainer().getModId());
+		// check phase here already so that we don't fail with a NPE on activeModContainer instead
+		checkPhase("Item");
+		init(item, baseName, Loader.instance().activeModContainer().getModId());
 	}
 
 	/**
-	 * Performs some generic initialization on the given Item
+	 * <p>Performs some generic initialization on the given Item:</p>
 	 * <ul>
-	 * 	<li>sets the IconName to <tt>CurrentModId:baseName</tt></li>
-	 * 	<li>sets the UnlocalizedName to <tt>item.CurrentModId.baseName</tt> (Note: the full language key is <tt>item.CurrentModId.baseName.name</tt>)</li>
-	 *  <li>If it is a Subtyped item (implementing {@link de.take_weiland.mods.commons.meta.HasSubtypes}):
-	 *  	<ul>
-	 *  		<li>calls item.setHasSubtypes(true)</li>
-	 * 			<li>for each subtype registers a {@link GameRegistry#registerCustomItemStack(String, ItemStack) custom ItemStack} with the name <tt>baseName.SubtypeName</tt></li>
-	 *  	</ul></li>
-	 *  <li>{@link GameRegistry#registerItem(Item, String) registers the Item} with <tt>baseName</tt></li>
+	 *    <li>Sets the Item's texture to <tt>modId:baseName</tt>, unless it is already set</li>
+	 *    <li>Sets the Item's unlocalized name to <tt>modId.baseName</tt>, unless it is already set</li>
+	 *    <li>Register the Item with {@link cpw.mods.fml.common.registry.GameRegistry#registerItem(net.minecraft.item.Item, String, String)}</li>
+	 *    <li>If the Item has subtypes (implementing {@link de.take_weiland.mods.commons.meta.HasSubtypes}):
+	 *      <ul>
+	 *          <li>Call {@link Item#setHasSubtypes(boolean) setHasSubtypes(true)}</li>
+	 *          <li>Register custom ItemStacks for the subtypes with {@link cpw.mods.fml.common.registry.GameRegistry#registerCustomItemStack(String, net.minecraft.item.ItemStack)}</li>
+	 *      </ul>
+	 *    </li>
 	 * </ul>
-	 * @param item
-	 * @param baseName
+	 * @param item the Item instance
+	 * @param baseName base name for this Item
+	 * @param modId your ModId
 	 */
 	public static void init(Item item, String baseName, String modId) {
 		checkPhase("Item");
 
-		item.setTextureName(modId + ":" + baseName);
-		item.setUnlocalizedName(modId + "." + baseName); // full unlocalized key is "item.MODID.NAME.name"		
+		if (SCReflector.instance.getRawIconName(item) == null) {
+			item.setTextureName(modId + ":" + baseName);
+		}
+
+		if (SCReflector.instance.getRawUnlocalizedName(item) == null) {
+			item.setUnlocalizedName(modId + "." + baseName);
+		}
 		
 		if (item instanceof HasSubtypes) {
-			SCItemAccessor.setHasSubtypes(item);
-			
+			SCReflector.instance.setHasSubtypes(item, true);
+
 			ItemStacks.registerSubstacks(baseName, item, InstanceCacheHolder.ITEM_STACK_FUNCTION);
 		}
 		

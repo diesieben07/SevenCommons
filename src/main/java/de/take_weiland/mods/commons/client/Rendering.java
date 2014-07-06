@@ -4,7 +4,6 @@ import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.SCGuiAccessor;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -521,7 +520,7 @@ public final class Rendering {
 	}
 
 	private static float getZLevel() {
-		return SCGuiAccessor.getZLevel(Minecraft.getMinecraft().currentScreen);
+		return SCReflector.instance.getZLevel(Minecraft.getMinecraft().currentScreen);
 	}
 
 }

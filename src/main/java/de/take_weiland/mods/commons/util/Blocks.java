@@ -11,7 +11,6 @@ import de.take_weiland.mods.commons.meta.Subtype;
 import de.take_weiland.mods.commons.templates.SCItemBlock;
 import de.take_weiland.mods.commons.templates.TypedItemBlock;
 import net.minecraft.block.Block;
-import net.minecraft.block.SCBlockAccessor;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.world.World;
 
@@ -24,7 +23,7 @@ public final class Blocks {
 	private Blocks() { }
 
 	/**
-	 * <p>Equivalent to {@link #init(String, net.minecraft.block.Block, String, Class)} using the currently active mod and a default ItemBlock class.</p>
+	 * <p>Equivalent to {@link #init(net.minecraft.block.Block, String, Class, String)} using the currently active mod and a default ItemBlock class.</p>
 	 * @param block the Block instance
 	 * @param baseName base name for this block
 	 */
@@ -33,47 +32,47 @@ public final class Blocks {
 	}
 
 	/**
-	 * <p>Equivalent to {@link #init(String, net.minecraft.block.Block, String, Class)} using a default ItemBlock class.</p>
+	 * <p>Equivalent to {@link #init(net.minecraft.block.Block, String, Class, String)} using a default ItemBlock class.</p>
 	 * @param modId Your ModId
 	 * @param block the Block instance
 	 * @param baseName base name for this block
 	 */
 	public static void init(String modId, Block block, String baseName) {
-		init(modId, block, baseName, getItemBlockClass(block, null));
+		init(block, baseName, getItemBlockClass(block, null), modId);
 	}
 
 	/**
-	 * <p>Equivalent to {@link #init(String, net.minecraft.block.Block, String, Class)} using the currently active mod.</p>
+	 * <p>Equivalent to {@link #init(net.minecraft.block.Block, String, Class, String)} using the currently active mod.</p>
 	 * @param block the Block instance
 	 * @param baseName base name for this block
 	 * @param itemClass the ItemBlock class to use
 	 */
 	public static void init(Block block, String baseName, Class<? extends ItemBlock> itemClass) {
-		checkPhase("Block"); // check here already so that we don't fail with a NPE on activeModContainer instead
-		init(Loader.instance().activeModContainer().getModId(), block, baseName, itemClass);
+		// check phase here already so that we don't fail with a NPE on activeModContainer instead
+		checkPhase("Block");
+		init(block, baseName, itemClass, Loader.instance().activeModContainer().getModId());
 	}
 
 	/**
-	 * <p>Generic initialization for Blocks.</p>
-	 * <p>This does the following setup tasks:</p>
-	 * <ol>
-	 *    <li>Sets the block's texture to <i>modId</i>:<i>baseName</i>, unless it is already set</li>
-	 *    <li>Sets the block's unlocalized name to <i>modId</i>.<i>baseName</i>, unless it is already set</li>
+	 * <p>Generic initialization for Blocks:</p>
+	 * <ul>
+	 *    <li>Sets the Block's texture to <tt>modId:baseName</tt>, unless it is already set</li>
+	 *    <li>Sets the Block's unlocalized name to <tt>modId.baseName</tt>, unless it is already set</li>
 	 *    <li>Register the block with {@link cpw.mods.fml.common.registry.GameRegistry#registerBlock(net.minecraft.block.Block, Class, String, String)}</li>
-	 *    <li></li>
-	 * </ol>
+	 *    <li><i>TODO!</i></li>
+	 * </ul>
 	 * <p>The ItemBlock class provided should extend {@link de.take_weiland.mods.commons.templates.SCItemBlock} (resp.
 	 * {@link de.take_weiland.mods.commons.templates.TypedItemBlock} for Blocks that implement {@link de.take_weiland.mods.commons.meta.HasSubtypes})
 	 * to enable all features of SevenCommons for this Block.</p>
-	 * @param modId Your ModId
 	 * @param block the Block instance
 	 * @param baseName base name for this block
 	 * @param itemClass the ItemBlock class to use
+	 * @param modId Your ModId
 	 */
-	public static void init(String modId, Block block, String baseName, Class<? extends ItemBlock> itemClass) {
+	public static void init(Block block, String baseName, Class<? extends ItemBlock> itemClass, String modId) {
 		checkPhase("Block");
 
-		if (SCBlockAccessor.getIconNameRaw(block) == null) {
+		if (SCReflector.instance.getRawIconName(block) == null) {
 			block.setTextureName(modId + ":" + baseName);
 		}
 		if (SCReflector.instance.getRawUnlocalizedName(block) == null) {

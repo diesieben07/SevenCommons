@@ -4,10 +4,12 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.reflect.Getter;
+import de.take_weiland.mods.commons.reflect.Invoke;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.reflect.Setter;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -15,6 +17,10 @@ import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureObject;
 import net.minecraft.entity.EntityTracker;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -105,5 +111,34 @@ public interface SCReflector {
 
 	@Getter(field = F_UNLOCALIZED_NAME_BLOCK, srg = true)
 	String getRawUnlocalizedName(Block block);
+
+	@Invoke(method = M_SET_HAS_SUBTYPES, srg = true)
+	Item setHasSubtypes(Item instance, boolean value);
+
+	@Getter(field = F_ICON_STRING, srg = true)
+	String getRawIconName(Item item);
+
+	@Getter(field = F_UNLOCALIZED_NAME_ITEM, srg = true)
+	String getRawUnlocalizedName(Item item);
+
+	@Getter(field = F_TEXTURE_NAME_BLOCK, srg = true)
+	String getRawIconName(Block block);
+
+	@SideOnly(Side.CLIENT)
+	@Invoke(method = M_ACTION_PERFORMED, srg = true)
+	void actionPerformed(GuiScreen screen, GuiButton button);
+
+	@SideOnly(Side.CLIENT)
+	@Getter(field = F_Z_LEVEL, srg = true)
+	int getZLevel(Gui gui);
+
+	@Invoke(method = M_ADD_SLOT_TO_CONTAINER, srg = true)
+	Slot addSlot(Container container, Slot slot);
+
+	@Invoke(method = M_MERGE_ITEM_STACK, srg = true)
+	boolean mergeItemStack(Container container, ItemStack stack, int slotStart, int slotEnd, boolean direction);
+
+	@Getter(field = F_CRAFTERS, srg = true)
+	List<ICrafting> getCrafters(Container container);
 
 }

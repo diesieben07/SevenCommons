@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.client;
 
 import com.google.common.collect.Lists;
+import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.SCGuiAccessor;
 import net.minecraft.util.MathHelper;
 
 import java.util.List;
@@ -116,7 +116,7 @@ public abstract class ScrollPane extends Gui {
 		if (isPointInRegion(0, 0, width, height, mouseX, mouseY)) {
 			for (GuiButton button : buttons) {
 				if (button.mousePressed(mc, mouseX, mouseY)) {
-					SCGuiAccessor.actionPerformed(screen, button);
+					SCReflector.instance.actionPerformed(screen, button);
 				}
 			}
 		}
