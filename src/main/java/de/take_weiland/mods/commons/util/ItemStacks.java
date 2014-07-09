@@ -9,35 +9,48 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
+/**
+ * <p>Utilities for ItemStacks.</p>
+ * @see net.minecraft.item.ItemStack
+ */
 public final class ItemStacks {
 
-	private ItemStacks() { }
-
-	@Deprecated
-	public static boolean canMergeFully(ItemStack from, ItemStack into) {
-		return fitsInto(from, into);
-	}
-
+	/**
+	 * <p>Tests if the first ItemStack can be fully merged into the second one.</p>
+	 * @param from the ItemStack to merge, may be null
+	 * @param into the ItemStack to merge into, may be null
+	 * @return true if the first ItemStack can be fully merged into the second one
+	 */
 	public static boolean fitsInto(ItemStack from, ItemStack into) {
-		return from == null || into == null || canMergeFullyImpl(from, into);
+		return from == null || into == null || fitsIntoImpl(from, into);
 	}
-	
-	private static boolean canMergeFullyImpl(ItemStack from, ItemStack into) {
+
+	private static boolean fitsIntoImpl(@NotNull ItemStack from, @NotNull ItemStack into) {
 		return equalsImpl(from, into) && from.stackSize + into.stackSize <= into.getMaxStackSize();
 	}
-	
-	@Deprecated()
-	public static boolean containsSame(ItemStack a, ItemStack b) {
-		return equal(a, b);
-	}
-	
+
+	/**
+	 * <p>Determine if the given ItemStacks are equal.</p>
+	 * <p>This method checks the ItemID, damage value and NBT data of the stack, it does not check stack sizes.</p>
+	 * @param a an ItemStack
+	 * @param b an ItemStack
+	 * @return true if the ItemStack are equal
+	 */
 	public static boolean equal(ItemStack a, ItemStack b) {
-		return a == b || !(a == null ^ b == null) && equalsImpl(a, b);
+		return a == null ? b == null : (b != null && equalsImpl(a, b));
 	}
-	
-	private static boolean equalsImpl(ItemStack stack1, ItemStack stack2) {
-		return stack1.isItemEqual(stack2) && ItemStack.areItemStackTagsEqual(stack1, stack2);
+
+	private static boolean equalsImpl(@NotNull ItemStack a, @NotNull ItemStack b) {
+		return a.itemID == b.itemID && a.getItemDamage() == b.getItemDamage()
+				&& Objects.equals(a.stackTagCompound, b.stackTagCompound);
+	}
+
+	public static boolean identical(ItemStack a, ItemStack b) {
+		return a == null ? b == null : (b != null && equalsImpl(a, b) && a.stackSize == b.stackSize);
 	}
 	
 	public static ItemStack merge(ItemStack from, ItemStack into) {
@@ -134,4 +147,6 @@ public final class ItemStacks {
 			GameRegistry.registerCustomItemStack(name, stack);
 		}
 	}
+
+	private ItemStacks() { }
 }
