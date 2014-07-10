@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.tileentity;
 
-import de.take_weiland.mods.commons.Listenable;
-import de.take_weiland.mods.commons.Listenables;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.util.Blocks;
 import de.take_weiland.mods.commons.inv.Inventories;
@@ -22,7 +20,7 @@ import net.minecraft.tileentity.TileEntity;
  * will automatically take the name of a renamed ItemStack when placed. To control that behavior, implement
  * {@link TileAutoName}</p>
  */
-public abstract class TileEntityInventory<T extends TileEntityInventory<T>> extends AbstractTileEntity implements IInventory, Listenable<T>, NameableInventory {
+public abstract class TileEntityInventory extends AbstractTileEntity implements IInventory, NameableInventory {
 
 	private static final String CUSTOM_NAME_KEY = "_sc$customName";
 	private boolean hasName = false;
@@ -78,12 +76,6 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 	}
 
 	@Override
-	public final void onInventoryChanged() {
-		super.onInventoryChanged();
-		Listenables.onChange(this);
-	}
-
-	@Override
 	public String getInvName() {
 		return hasCustomName() ? getCustomName() : unlocalizedName();
 	}
@@ -131,9 +123,6 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 
 	@Override
 	public void closeChest() { }
-
-	@Override
-	public void onChange() { }
 
 	// NameableInventory
 	@Override

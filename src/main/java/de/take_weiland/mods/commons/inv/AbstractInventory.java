@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.inv;
 
-import de.take_weiland.mods.commons.Listenable;
-import de.take_weiland.mods.commons.Listenables;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -9,10 +7,8 @@ import net.minecraft.nbt.NBTTagCompound;
 
 /**
  * <p>Basic implementation of {@link net.minecraft.inventory.IInventory}.</p>
- * <p>This implementation also implements {@link de.take_weiland.mods.commons.Listenable}. By default, listeners
- * will be notified when {@link #onInventoryChanged()} is called.</p>
  */
-public abstract class AbstractInventory<T extends AbstractInventory<T>> implements IInventory, Listenable<T> {
+public abstract class AbstractInventory implements IInventory {
 
 	/**
 	 * Backing storage array
@@ -76,11 +72,6 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 	}
 	
 	@Override
-	public final void onInventoryChanged() {
-		Listenables.onChange(this);
-	}
-	
-	@Override
 	public void openChest() { }
 
 	@Override
@@ -108,8 +99,5 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 	public void readFromNbt(NBTTagCompound nbt) {
 		Inventories.readInventory(storage, nbt);
 	}
-
-	@Override
-	public void onChange() { }
 
 }

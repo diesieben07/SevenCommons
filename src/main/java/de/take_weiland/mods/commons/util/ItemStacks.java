@@ -5,6 +5,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
 import de.take_weiland.mods.commons.meta.Subtype;
+import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -86,6 +87,10 @@ public final class ItemStacks {
 		}
 		return stack.stackTagCompound;
 	}
+
+    public static NBTTagCompound getNbt(ItemStack stack, String key) {
+        return NBT.getOrCreateCompound(getNbt(stack), key);
+    }
 	
 	public static ItemStack of(Item item) {
 		return new ItemStack(item);

@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.inv;
 
 import de.take_weiland.mods.commons.util.ItemStacks;
-import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -12,7 +11,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>An inventory that stores its contents to an {@link net.minecraft.item.ItemStack}</p>
  * <p>If the ItemStack being written to is in an inventory itself, {@link ItemInventory.WithInventory} should be used instead.</p>
  */
-public abstract class ItemInventory<T extends ItemInventory<T>> extends AbstractInventory<T> {
+public abstract class ItemInventory<T extends ItemInventory<T>> extends AbstractInventory {
 
 	/**
 	 * <p>The default NBT key used for storing the data.</p>
@@ -72,13 +71,12 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
         this(size, item, DEFAULT_NBT_KEY);
     }
 
-	@Override
-	public void onChange() {
-		super.onChange();
-		saveData();
-	}
+    @Override
+    public void onInventoryChanged() {
+        saveData();
+    }
 
-	/**
+    /**
 	 * saves this inventory to the ItemStack.
 	 */
 	protected final void saveData() {
@@ -86,7 +84,7 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 	}
 
 	private NBTTagCompound getNbt() {
-		return NBT.getOrCreateCompound(ItemStacks.getNbt(stack), nbtKey);
+		return ItemStacks.getNbt(stack, nbtKey);
 	}
 
 	public abstract static class WithInventory<T extends WithInventory<T>> extends ItemInventory<T> {
@@ -118,12 +116,12 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
         private static ItemStack checkStack(IInventory inv, int slot) {
             return checkNotNull(checkNotNull(inv, "Inventory must not be null!").getStackInSlot(slot), "Inventory slot is empty!");
         }
-		
-		@Override
-		public void onChange() {
-			super.onChange();
-			inv.setInventorySlotContents(slot, stack);
-		}
+
+        @Override
+        public void onInventoryChanged() {
+            super.onInventoryChanged();
+            inv.setInventorySlotContents(slot, stack);
+        }
 
 	}
 
