@@ -9,7 +9,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * <p>an inventory that stores its contents to an {@link net.minecraft.item.ItemStack}</p>
+ * <p>An inventory that stores its contents to an {@link net.minecraft.item.ItemStack}</p>
  * <p>If the ItemStack being written to is in an inventory itself, {@link ItemInventory.WithInventory} should be used instead.</p>
  */
 public abstract class ItemInventory<T extends ItemInventory<T>> extends AbstractInventory<T> {

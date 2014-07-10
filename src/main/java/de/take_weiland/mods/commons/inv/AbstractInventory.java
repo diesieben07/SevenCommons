@@ -20,18 +20,26 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 	protected final ItemStack[] storage;
 
 	/**
-	 * <p>The default constructor calls {@link #getSizeInventory()} to determine the inventory size.</p>
-	 * <p>If that is not desired, use {@link de.take_weiland.mods.commons.tileentity.TileEntityInventory.WithSize} instead.</p>
+	 * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
 	 */
 	protected AbstractInventory() {
 		storage = new ItemStack[getSizeInventory()];
 	}
 
-	AbstractInventory(int size) {
+    /**
+     * <p>Alternate constructor that doesn't need {@link #getSizeInventory()} to be overridden.</p>
+     * @param size the size of this inventory
+     */
+	protected AbstractInventory(int size) {
 		storage = new ItemStack[size];
 	}
 
-	@Override
+    @Override
+    public int getSizeInventory() {
+        return storage.length;
+    }
+
+    @Override
 	public ItemStack getStackInSlot(int slot) {
 		return JavaUtils.get(storage, slot);
 	}
@@ -104,23 +112,4 @@ public abstract class AbstractInventory<T extends AbstractInventory<T>> implemen
 	@Override
 	public void onChange() { }
 
-	/**
-	 * Use this subclass of {@code AbstractInventory} if {@link IInventory#getSizeInventory()} should not be called
-	 * from the constructor (due to initialization order issues). In this case, you need to provide the size to the
-	 * constructor explicitly.
-	 */
-	public static abstract class WithSize<T extends WithSize<T>> extends AbstractInventory<T> {
-
-		private final int size;
-
-		protected WithSize(int size) {
-			super(size);
-			this.size = size;
-		}
-
-		@Override
-		public final int getSizeInventory() {
-			return size;
-		}
-	}
 }

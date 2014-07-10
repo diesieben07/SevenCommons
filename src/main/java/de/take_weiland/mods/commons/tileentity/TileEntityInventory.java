@@ -33,15 +33,18 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 	 */
 	protected final ItemStack[] storage;
 
-	/**
-	 * <p>The default constructor calls {@link #getSizeInventory()} to determine the inventory size.</p>
-	 * <p>If that is not desired, use {@link TileEntityInventory.WithSize} instead.</p>
-	 */
-	public TileEntityInventory() {
+    /**
+     * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
+     */
+	protected TileEntityInventory() {
 		storage = new ItemStack[getSizeInventory()];
 	}
 
-	TileEntityInventory(int size) {
+    /**
+     * <p>Alternate constructor that doesn't need {@link #getSizeInventory()} to be overridden.</p>
+     * @param size the size of this inventory
+     */
+	protected TileEntityInventory(int size) {
 		storage = new ItemStack[size];
 	}
 
@@ -147,24 +150,6 @@ public abstract class TileEntityInventory<T extends TileEntityInventory<T>> exte
 	@Override
 	public String getCustomName() {
 		return name;
-	}
-
-	/**
-	 * Like {@link de.take_weiland.mods.commons.inv.AbstractInventory.WithSize} but for TileEntities
-	 */
-	public static abstract class WithSize<T extends WithSize<T>> extends TileEntityInventory<T> {
-
-		private final int size;
-
-		public WithSize(int size) {
-			super(size);
-			this.size = size;
-		}
-
-		@Override
-		public final int getSizeInventory() {
-			return size;
-		}
 	}
 
 }
