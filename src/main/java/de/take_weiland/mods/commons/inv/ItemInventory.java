@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class ItemInventory<T extends ItemInventory<T>> extends AbstractInventory<T> {
 
 	/**
-	 * the default NBT key used for storing the data
+	 * <p>The default NBT key used for storing the data.</p>
 	 */
 	public static final String DEFAULT_NBT_KEY = "_sc$itemInventory";
 
@@ -29,23 +29,48 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 	protected final String nbtKey;
 
 	/**
-	 * this constructor uses the given NBT key to store the data
-	 * @param item the ItemStack to save to
+	 * <p>This constructor uses the given NBT key to store the data.</p>
+     * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
+	 * @param stack the ItemStack to save to
 	 * @param nbtKey the NBT key to use
 	 */
-	protected ItemInventory(ItemStack item, String nbtKey) {
-		stack = item;
+	protected ItemInventory(ItemStack stack, String nbtKey) {
+        super();
+		this.stack = stack;
 		this.nbtKey = nbtKey;
 		readFromNbt(getNbt());
 	}
 
+    /**
+     * <p>This constructor uses the given NBT key to store the data.</p>
+     * @param size the size of this inventory
+     * @param stack the ItemStack to save to
+     * @param nbtKey the NBT key to use
+     */
+    protected ItemInventory(int size, ItemStack stack, String nbtKey) {
+        super(size);
+        this.stack = stack;
+        this.nbtKey = nbtKey;
+        readFromNbt(getNbt());
+    }
+
 	/**
-	 * this constructor uses the {@link #DEFAULT_NBT_KEY} to store the data
+	 * <p>This constructor uses the {@link #DEFAULT_NBT_KEY} to store the data.</p>
+     * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
 	 * @param item the ItemStack to save to
 	 */
 	protected ItemInventory(ItemStack item) {
 		this(item, DEFAULT_NBT_KEY);
 	}
+
+    /**
+     * <p>This constructor uses the {@link #DEFAULT_NBT_KEY} to store the data.</p>
+     * @param size the size of this inventory
+     * @param item the ItemStack to save to
+     */
+    protected ItemInventory(int size, ItemStack item) {
+        this(size, item, DEFAULT_NBT_KEY);
+    }
 
 	@Override
 	public void onChange() {
@@ -71,15 +96,29 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 
 		protected WithInventory(IInventory inv, int slot, String nbtKey) {
 			// hell yeah
-			super(checkNotNull(checkNotNull(inv, "Inventory must not be null!").getStackInSlot(slot), "Inventory slot is empty!"), nbtKey);
+			super(checkStack(inv, slot), nbtKey);
 			this.slot = slot;
 			this.inv = inv;
 		}
-		
-		protected WithInventory(IInventory inv, int index) {
-			this(inv, index, DEFAULT_NBT_KEY);
-		}
 
+        protected WithInventory(int size, IInventory inv, int slot, String nbtKey) {
+            super(size, checkStack(inv, slot), nbtKey);
+            this.slot = slot;
+            this.inv = inv;
+        }
+
+        protected WithInventory(IInventory inv, int index) {
+            this(inv, index, DEFAULT_NBT_KEY);
+        }
+
+        protected WithInventory(int size, IInventory inv, int index) {
+            this(size, inv, index, DEFAULT_NBT_KEY);
+        }
+
+        private static ItemStack checkStack(IInventory inv, int slot) {
+            return checkNotNull(checkNotNull(inv, "Inventory must not be null!").getStackInSlot(slot), "Inventory slot is empty!");
+        }
+		
 		@Override
 		public void onChange() {
 			super.onChange();
