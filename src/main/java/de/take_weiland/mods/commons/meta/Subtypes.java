@@ -1,3 +1,5 @@
+package de.take_weiland.mods.commons.meta;
+
 import com.google.common.collect.ImmutableList;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
