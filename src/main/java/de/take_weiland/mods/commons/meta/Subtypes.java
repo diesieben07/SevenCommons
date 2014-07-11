@@ -66,6 +66,28 @@ public final class Subtypes {
         return Arrays.asList(stacks);
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> void getSubBlocksImpl(BLOCK block, List list) {
+        MetadataProperty<TYPE> property = block.subtypeProperty();
+
+        for (TYPE subtype : property.values()) {
+            list.add(new ItemStack(block, 1, property.toMeta(subtype, 0)));
+        }
+    }
+
+    public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> List<ItemStack> getSubBlocks(BLOCK block) {
+        MetadataProperty<TYPE> property = block.subtypeProperty();
+        TYPE[] types = property.values();
+        int len = types.length;
+        ItemStack[] stacks = new ItemStack[len];
+
+        for (int i = 0; i < len; ++i) {
+            stacks[i] = new ItemStack(block, 1, property.toMeta(types[i], 0));
+        }
+
+        return Arrays.asList(stacks);
+    }
+
     private Subtypes() { }
 
 }
