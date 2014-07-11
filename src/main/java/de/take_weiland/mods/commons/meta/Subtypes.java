@@ -11,6 +11,19 @@ import java.util.List;
  */
 public final class Subtypes {
 
+    @SuppressWarnings("unchecked")
+    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> TYPE getType(ItemStack stack) {
+        return getType((ITEM) stack.getItem(), stack.getItemDamage());
+    }
+
+    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> TYPE getType(ITEM item, ItemStack stack) {
+        return getType(item, stack.getItemDamage());
+    }
+
+    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> TYPE getType(ITEM item, int meta) {
+        return item.subtypeProperty().value(meta);
+    }
+
     public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> String fullName(ITEM item, TYPE type) {
         return item.getUnlocalizedName() + "." + type.subtypeName();
     }
