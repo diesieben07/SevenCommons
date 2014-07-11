@@ -201,7 +201,9 @@ public final class MCPNames {
 
 	public static final String F_CRAFTERS = "field_75149_d";
 
-	public static final String F_GET_ICON_STRING = "func_111208_A";
+	public static final String M_GET_ICON_STRING = "func_111208_A";
+
+	public static final String M_GET_TEXTURE_NAME = "func_111023_E";
 
 	private MCPNames() {
 	}

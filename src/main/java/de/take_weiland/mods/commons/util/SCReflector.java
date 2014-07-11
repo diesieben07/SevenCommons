@@ -108,8 +108,11 @@ public interface SCReflector {
 	@Getter(field = F_TEXTURE_NAME_BLOCK, srg = true)
 	String getRawIconName(Block block);
 
-	@Invoke(method = F_GET_ICON_STRING, srg = true)
+	@Invoke(method = M_GET_ICON_STRING, srg = true)
 	String getIconName(Item item);
+
+	@Invoke(method = M_GET_TEXTURE_NAME, srg = true)
+	String getIconName(Block block);
 
 	@SideOnly(Side.CLIENT)
 	@Invoke(method = M_ACTION_PERFORMED, srg = true)
