@@ -80,7 +80,7 @@ public class SyncingTransformer implements ASMClassTransformer {
 			if (adapterCreator == null) {
 				String name = "_sc$adapterCreator" + adapterCount++;
 				String desc = Type.getDescriptor(InstanceCreator.class);
-				FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_TRANSIENT, name, desc, null, null);
+				FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_FINAL | ACC_TRANSIENT, name, desc, null, null);
 				clazz.fields.add(field);
 
 				// TODO: support Collections
@@ -97,7 +97,7 @@ public class SyncingTransformer implements ASMClassTransformer {
 
 			String name = var.name() + "_sc$syncAdapter";
 			String desc = Type.getDescriptor(SyncAdapter.class);
-			FieldNode adapterInstance = new FieldNode(ACC_PRIVATE | ACC_TRANSIENT, name, desc, null, null);
+			FieldNode adapterInstance = new FieldNode(ACC_PRIVATE | ACC_FINAL | ACC_TRANSIENT, name, desc, null, null);
 			clazz.fields.add(adapterInstance);
 
 			ASMVariable adapterInstanceVar = ASMVariables.of(clazz, adapterInstance, CodePieces.getThis());
