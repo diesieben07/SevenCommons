@@ -1,9 +1,5 @@
 package de.take_weiland.mods.commons.meta;
 
-import com.google.common.collect.ImmutableList;
-import de.take_weiland.mods.commons.meta.HasSubtypes;
-import de.take_weiland.mods.commons.meta.MetadataProperty;
-import de.take_weiland.mods.commons.meta.Subtype;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 

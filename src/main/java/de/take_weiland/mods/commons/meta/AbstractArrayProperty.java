@@ -9,7 +9,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 abstract class AbstractArrayProperty<T> extends GenericProperty<T> {
 
-	private final T[] values;
+	final T[] values;
 	private final int shift;
 	private final int mask;
 

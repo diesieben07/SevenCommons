@@ -3,6 +3,8 @@ package de.take_weiland.mods.commons.meta;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
+import java.util.Map;
+
 /**
  * <p>A property of a Block or Item, encoded in it's metadata / damage value.</p>
  * <p>A MetadataProperty takes up a certain number of bits in the metadata value, depending on how many distinct values it can represent.</p>
@@ -83,5 +85,7 @@ public interface MetadataProperty<T> {
 	 * @throws java.lang.UnsupportedOperationException if this method doesn't have distinct values
 	 */
 	T[] values();
+
+    <V> Map<T, V> createMap();
 
 }
