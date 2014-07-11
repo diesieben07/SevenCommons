@@ -76,6 +76,10 @@ public final class ItemStacks {
 		}
 		return into;
 	}
+
+    public static Block getBlock(ItemStack stack) {
+        return Block.blocksList[stack.itemID];
+    }
 	
 	public static ItemStack emptyToNull(ItemStack stack) {
 		return stack == null || stack.stackSize <= 0 ? null : stack;

@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.meta;
 
+import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
@@ -11,29 +12,36 @@ import java.util.List;
  */
 public final class Subtypes {
 
-    @SuppressWarnings("unchecked")
-    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> TYPE getType(ItemStack stack) {
-        return getType((ITEM) stack.getItem(), stack.getItemDamage());
+    public static <TYPE extends Subtype> TYPE getType(HasSubtypes<TYPE> holder, ItemStack stack) {
+        return getType(holder, stack.getItemDamage());
     }
 
-    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> TYPE getType(ITEM item, ItemStack stack) {
-        return getType(item, stack.getItemDamage());
+    public static <TYPE extends Subtype> TYPE getType(HasSubtypes<TYPE> holder, int meta) {
+        return holder.subtypeProperty().value(meta);
     }
 
-    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> TYPE getType(ITEM item, int meta) {
-        return item.subtypeProperty().value(meta);
-    }
-
-    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> String fullName(ITEM item, TYPE type) {
+    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> String name(ITEM item, TYPE type) {
         return item.getUnlocalizedName() + "." + type.subtypeName();
     }
 
-    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> String fullName(ITEM item, ItemStack stack) {
-        return fullName(item, item.subtypeProperty().value(stack));
+    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> String name(ITEM item, ItemStack stack) {
+        return name(item, item.subtypeProperty().value(stack));
     }
 
-    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> String fullName(ITEM item, int meta) {
-        return fullName(item, item.subtypeProperty().value(meta));
+    public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> String name(ITEM item, int meta) {
+        return name(item, item.subtypeProperty().value(meta));
+    }
+
+    public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> String name(BLOCK block, TYPE type) {
+        return block.getUnlocalizedName() + "." + type.subtypeName();
+    }
+
+    public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> String name(BLOCK block, ItemStack stack) {
+        return name(block, block.subtypeProperty().value(stack));
+    }
+
+    public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> String name(BLOCK block, int meta) {
+        return name(block, block.subtypeProperty().value(meta));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
