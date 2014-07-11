@@ -14,7 +14,7 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * @author diesieben07
  */
-final class CodeBuilder {
+public final class CodeBuilder {
 
 	private boolean hasNonCodePiece = false;
 	private ArrayList<Object> objects = Lists.newArrayList();

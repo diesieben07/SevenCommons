@@ -102,9 +102,6 @@ public final class SCReflection {
 	private static final ReflectionStrategy strategy = selectStrategy();
 	private static final Logger logger = null; //SevenCommons.scLogger();
 
-	static {
-	}
-
 	private static ReflectionStrategy selectStrategy() {
 		if (JavaUtils.hasUnsafe()) {
 			try {

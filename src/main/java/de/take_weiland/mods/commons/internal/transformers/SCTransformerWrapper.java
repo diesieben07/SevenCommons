@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 import com.google.common.collect.ImmutableList;
 import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ASMClassTransformerWrapper;
+import de.take_weiland.mods.commons.internal.transformers.sync.SyncingTransformer;
 
 /**
  * @author diesieben07
@@ -24,6 +25,8 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 
 		// @ToNbt
 		builder.add(new NBTTransformer());
+
+		builder.add(new SyncingTransformer());
 
 		builder.add(new ListenableTransformer());
 	}

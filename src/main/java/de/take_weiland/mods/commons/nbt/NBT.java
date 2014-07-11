@@ -46,6 +46,10 @@ public final class NBT {
 		return parent.getTagList(key);
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T extends NBTBase> T copy(T nbt) {
+		return nbt == null ? null : (T) nbt.copy();
+	}
 
 	public static Function<NBTTagString, String> getStringFunction() {
 		return NbtStringDataFunction.INSTANCE;

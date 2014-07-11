@@ -11,6 +11,6 @@ abstract class ClassBoundASMVariable extends AbstractASMVariable {
 
 	ClassBoundASMVariable(ClassNode clazz, CodePiece instance) {
 		this.clazz = checkNotNull(clazz, "clazz");
-		this.instance = checkNotNull(instance, "instance");
+		this.instance = instance;
 	}
 }
