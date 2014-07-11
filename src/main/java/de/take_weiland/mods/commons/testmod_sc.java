@@ -24,6 +24,4 @@ public class testmod_sc {
 	}
 
 
-
-
 }

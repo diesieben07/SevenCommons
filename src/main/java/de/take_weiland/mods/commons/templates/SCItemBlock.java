@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 public class SCItemBlock<T extends Block> extends ItemBlock {
 
 	protected final T block;
-	
+
 	@SuppressWarnings("unchecked")
 	public SCItemBlock(int itemId, Block block) {
 		super(itemId);
@@ -34,7 +34,7 @@ public class SCItemBlock<T extends Block> extends ItemBlock {
 			if (te instanceof NameableInventory &&
 					(!(te instanceof TileAutoName) ||
 							((TileAutoName) te).shouldAutoname(player, stack, world, x, y, z))) {
-				((NameableInventory)te).setCustomName(stack.getDisplayName());
+				((NameableInventory) te).setCustomName(stack.getDisplayName());
 			}
 		}
 	}

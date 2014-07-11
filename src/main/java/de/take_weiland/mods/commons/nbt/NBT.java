@@ -14,11 +14,13 @@ import java.util.Map;
 
 public final class NBT {
 
-	private NBT() { }
+	private NBT() {
+	}
 
 	/**
 	 * view the given NBTTagList as a {@link List}<br>
 	 * the type parameter T can be used if you are sure that this list only contains NBT-Tags of the given type
+	 *
 	 * @param nbtList the list to view
 	 * @return a modifiable list view of the NBTTagList
 	 */
@@ -36,7 +38,7 @@ public final class NBT {
 		}
 		return parent.getCompoundTag(key);
 	}
-	
+
 	public static NBTTagList getOrCreateList(NBTTagCompound parent, String key) {
 		if (!parent.hasKey(key)) {
 			parent.setTag(key, new NBTTagList());
@@ -90,14 +92,14 @@ public final class NBT {
 	}
 
 	private static enum NbtStringDataFunction implements Function<NBTTagString, String> {
-		
+
 		INSTANCE;
-		
+
 		@Override
 		public String apply(NBTTagString input) {
 			return input.data;
 		}
-		
+
 	}
 
 	static {

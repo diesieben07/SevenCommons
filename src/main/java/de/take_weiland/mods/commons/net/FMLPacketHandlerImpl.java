@@ -83,19 +83,19 @@ final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHand
 	public PacketBuilder builder(TYPE t) {
 		return builder0(t.ordinal(), -1); // -1 will pick the default capacity
 	}
-	
+
 	@Override
 	public PacketBuilder builder(TYPE t, int capacity) {
 		checkArgument(capacity > 0, "capacity must be > 0");
 		return builder0(t.ordinal(), capacity);
 	}
-	
+
 	private PacketBufferImpl<TYPE> builder0(int id, int capacity) {
 		return new PacketBufferImpl<>(capacity, this, id);
 	}
-	
+
 	// PacketFactoryInternal
-	
+
 	@Override
 	public SimplePacket build(PacketBufferImpl<TYPE> buf) {
 		buf.seek(0);

@@ -18,8 +18,8 @@ import java.io.IOException;
 
 /**
  * A class containing methods called from ASM generated code.
- * @author diesieben07
  *
+ * @author diesieben07
  */
 public final class ASMHooks {
 
@@ -27,7 +27,8 @@ public final class ASMHooks {
 	public static final String ON_START_TRACKING = "onStartTracking";
 	public static final String ON_PLAYER_CLONE = "onPlayerClone";
 
-	private ASMHooks() { }
+	private ASMHooks() {
+	}
 
 	public static void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {
 		MinecraftForge.EVENT_BUS.post(new PlayerCloneEvent(oldPlayer, newPlayer));
@@ -37,13 +38,13 @@ public final class ASMHooks {
 	public static void onGuiInit(GuiScreen gui) {
 		MinecraftForge.EVENT_BUS.post(new GuiInitEvent(gui, SCReflector.instance.getButtonList(gui)));
 	}
-	
+
 	public static void onStartTracking(EntityPlayer player, Entity tracked) {
 		MinecraftForge.EVENT_BUS.post(new PlayerStartTrackingEvent(player, tracked));
 	}
 
 	public static void writeVarShort(DataOutput out, int i) throws IOException {
-		int low =   i & 0b0000_0000_0111_1111_1111_1111;
+		int low = i & 0b0000_0000_0111_1111_1111_1111;
 		int high = (i & 0b0111_1111_1000_0000_0000_0000) >> 15;
 		if (high != 0) {
 			low |= 0b1000_0000_0000_0000;

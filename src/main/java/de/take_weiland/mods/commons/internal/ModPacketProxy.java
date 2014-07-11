@@ -6,6 +6,6 @@ public interface ModPacketProxy<TYPE extends Enum<TYPE> & SimplePacketType & Sim
 
 	public static final String GET_TYPE = "_sc$getPacketType";
 
-	TYPE  _sc$getPacketType();
+	TYPE _sc$getPacketType();
 
 }

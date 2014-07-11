@@ -48,6 +48,7 @@ class ASMLocalVariable extends AbstractASMVariable {
 	}
 
 	private CodePiece getCache;
+
 	@Override
 	public CodePiece get() {
 		if (getCache == null) {
@@ -57,6 +58,7 @@ class ASMLocalVariable extends AbstractASMVariable {
 	}
 
 	private CodePiece setCache;
+
 	@Override
 	public CodePiece set(CodePiece loadValue) {
 		if (setCache == null) {

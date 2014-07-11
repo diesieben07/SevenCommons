@@ -16,7 +16,8 @@ import java.util.ListIterator;
 
 public final class JavaUtils {
 
-	private JavaUtils() { }
+	private JavaUtils() {
+	}
 
 	/**
 	 * returns the value at the given slot in the array, or null if the slot is out of bounds
@@ -133,9 +134,10 @@ public final class JavaUtils {
 	/**
 	 * Creates a new {@link com.google.common.base.Predicate} that returns true if the input is an instance
 	 * of the given class and the given predicate also applies to true.
+	 *
 	 * @param predicate the Predicate
-	 * @param <T> the Type of the resulting predicate, for convenience, it can always handle any input
-	 * @param <F> the Class to check for first
+	 * @param <T>       the Type of the resulting predicate, for convenience, it can always handle any input
+	 * @param <F>       the Class to check for first
 	 * @return a new Predicate
 	 */
 	public static <T, F> Predicate<T> instanceOfAnd(Class<F> clazz, Predicate<? super F> predicate) {
@@ -157,10 +159,10 @@ public final class JavaUtils {
 		// return is never reached
 		return JavaUtils.<RuntimeException>throwUnchecked0(t);
 	}
-	
+
 	@SuppressWarnings("unchecked") // dirty hack. the cast doesn't exist in bytecode, so it always succeeds
 	private static <T extends Throwable> RuntimeException throwUnchecked0(Throwable t) throws T {
-		throw (T)t;
+		throw (T) t;
 	}
 
 	/**
@@ -168,23 +170,23 @@ public final class JavaUtils {
 	 * The long can be decoded with {@link #decodeIntA(long)} and {@link #decodeIntB(long)} respectively
 	 */
 	public static long encodeInts(int a, int b) {
-		return (((long)a) << 32) | (b & 0xffffffffL);
+		return (((long) a) << 32) | (b & 0xffffffffL);
 	}
 
 	/**
 	 * decode the first int encoded into the given long with {@link #encodeInts(int, int)}
 	 */
 	public static int decodeIntA(long l) {
-		return (int)(l >> 32);
+		return (int) (l >> 32);
 	}
 
 	/**
 	 * decode the second int encoded into the given long with {@link #encodeInts(int, int)}
 	 */
 	public static int decodeIntB(long l) {
-		return (int)l;
+		return (int) l;
 	}
-	
+
 	@Deprecated
 	@Unsafe
 	public static <T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
@@ -210,9 +212,9 @@ public final class JavaUtils {
 	public static <T extends Enum<T>> T byOrdinal(Class<T> clazz, int ordinal) {
 		return get(getEnumConstantsShared(clazz), ordinal);
 	}
-	
+
 	private static EnumValueGetter ENUM_GETTER;
-	
+
 	static {
 		try {
 			Class.forName("sun.misc.SharedSecrets");
@@ -248,10 +250,10 @@ public final class JavaUtils {
 		}
 
 	}
-	
+
 	private static Object unsafe;
 	private static boolean unsafeChecked;
-	
+
 	private static void initUnsafe() {
 		if (unsafeChecked) {
 			return;
@@ -268,6 +270,7 @@ public final class JavaUtils {
 
 	/**
 	 * checks if sun.misc.Unsafe is available on this JVM
+	 *
 	 * @return true if sun.misc.Unsafe was found
 	 */
 	@Unsafe

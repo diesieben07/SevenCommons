@@ -28,6 +28,7 @@ public final class SCReflection {
 	/**
 	 * <p>create an Instance of the given Accessor Interface. The result of this method should be permanently cached, because
 	 * this method defines a new class every time it is invoked.</p>
+	 *
 	 * @param iface the Accessor Interface
 	 * @return a newly created object, implementing the given interface
 	 */
@@ -37,6 +38,7 @@ public final class SCReflection {
 
 	/**
 	 * define a temporary class from the bytes which can be garbage collected if no longer in use.
+	 *
 	 * @param clazz the bytes describing the class
 	 * @return the defined class
 	 */
@@ -65,6 +67,7 @@ public final class SCReflection {
 
 	/**
 	 * get a unique name for a dynamic class
+	 *
 	 * @return a unique name
 	 */
 	public static String nextDynamicClassName() {
@@ -98,7 +101,7 @@ public final class SCReflection {
 	private static final FastreflectSecurityManager sm = new FastreflectSecurityManager();
 	private static final ReflectionStrategy strategy = selectStrategy();
 	private static final Logger logger = null; //SevenCommons.scLogger();
-	
+
 	static {
 	}
 
@@ -110,9 +113,9 @@ public final class SCReflection {
 				// then not
 			}
 		}
-		
+
 		logger.warning("Using slow Strategy! This may lead to performance penalties. Please use Oracle's VM.");
-		
+
 		return new NativeJavaStrategy();
 	}
 

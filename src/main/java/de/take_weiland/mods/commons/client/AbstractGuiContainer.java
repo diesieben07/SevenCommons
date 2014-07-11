@@ -13,16 +13,16 @@ import org.lwjgl.opengl.GL11;
 
 /**
  * <p>A base implementation for Guis with an Inventory (GuiContainer).</p>
- * @author diesieben07
  *
  * @param <I> The type of inventory this Gui displays
  * @param <C> The type of container this Gui displays
+ * @author diesieben07
  */
 public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & SCContainer<I>> extends GuiContainer {
 
 	protected final ResourceLocation texture;
 	protected final C container;
-	
+
 	public AbstractGuiContainer(C container) {
 		super(container);
 		this.container = container;
@@ -33,7 +33,7 @@ public abstract class AbstractGuiContainer<I extends IInventory, C extends Conta
 		GL11.glColor3f(1, 1, 1);
 		mc.renderEngine.bindTexture(texture);
 	}
-	
+
 	protected abstract ResourceLocation provideTexture();
 
 	@Override
@@ -43,7 +43,7 @@ public abstract class AbstractGuiContainer<I extends IInventory, C extends Conta
 			drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
 		}
 	}
-	
+
 	@Override
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 		fontRenderer.drawString(getInvDisplayName(), 8, 6, 0x404040);

@@ -37,6 +37,7 @@ import static de.take_weiland.mods.commons.asm.MCPNames.*;
 /**
  * Accessor interface for various private fields and methods around the Minecraft code.<br />
  * If the field/method to access is static, the instance parameter is ignored, null can be passed.<br />
+ *
  * @see de.take_weiland.mods.commons.reflect.SCReflection
  */
 public interface SCReflector {
@@ -53,7 +54,7 @@ public interface SCReflector {
 	@Unsafe
 	@Getter(field = F_TAG_MAP, srg = true)
 	Map<String, NBTBase> getWrappedMap(NBTTagCompound nbt);
-	
+
 	@SideOnly(Side.CLIENT)
 	@Getter(field = F_FOV_MODIFIER_HAND, srg = true)
 	float getFovHand(EntityRenderer e);
@@ -61,26 +62,26 @@ public interface SCReflector {
 	@SideOnly(Side.CLIENT)
 	@Setter(field = F_FOV_MODIFIER_HAND, srg = true)
 	void setFovHand(EntityRenderer e, float fov);
-	
+
 	@SideOnly(Side.CLIENT)
 	@Getter(field = F_FOV_MODIFIER_HAND_PREV, srg = true)
 	float getFovHandPrev(EntityRenderer e);
-	
+
 	@SideOnly(Side.CLIENT)
 	@Setter(field = F_FOV_MODIFIER_HAND_PREV, srg = true)
 	void setFovHandPrev(EntityRenderer e, float fovPrev);
-	
+
 	@SideOnly(Side.CLIENT)
 	@Getter(field = F_TIMER, srg = true)
 	Timer getTimer(Minecraft mc);
-	
+
 	@Getter(field = F_TRACKED_ENTITY_IDS, srg = true)
 	IntHashMap getTrackerMap(EntityTracker tracker);
-	
+
 	@SideOnly(Side.CLIENT)
 	@Getter(field = F_MAP_TEXTURE_OBJECTS, srg = true)
 	Map<ResourceLocation, TextureObject> getTexturesMap(TextureManager manager);
-	
+
 	@Unsafe
 	@Getter(field = F_PACKET_CLASS_TO_ID_MAP, srg = true)
 	Map<Class<? extends Packet>, Integer> getClassToIdMap(Packet dummy);
@@ -107,8 +108,8 @@ public interface SCReflector {
 	@Getter(field = F_TEXTURE_NAME_BLOCK, srg = true)
 	String getRawIconName(Block block);
 
-    @Invoke(method = F_GET_ICON_STRING, srg = true)
-    String getIconName(Item item);
+	@Invoke(method = F_GET_ICON_STRING, srg = true)
+	String getIconName(Item item);
 
 	@SideOnly(Side.CLIENT)
 	@Invoke(method = M_ACTION_PERFORMED, srg = true)

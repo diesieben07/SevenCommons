@@ -17,30 +17,31 @@ import static org.objectweb.asm.Type.*;
 class SunProprietaryStrategy extends AbstractStrategy {
 
 	private static final Unsafe unsafe = (Unsafe) JavaUtils.getUnsafe();
+
 	@Override
 	public <T> T createAccessor(Class<T> iface) {
 		InterfaceInfo info = analyze(iface);
 		ClassWriter cw = new ClassWriter(0);
-		
+
 		cw.visit(V1_6, ACC_PUBLIC, SCReflection.nextDynamicClassName(), null, "sun/reflect/MagicAccessorImpl", new String[] { getInternalName(iface) });
 		cw.visitSource(".dynamic", null);
-		
+
 		makeConstructor(cw);
-		
+
 		for (Map.Entry<Method, Field> entry : info.getters.entrySet()) {
 			makeGetter(cw, entry.getKey(), entry.getValue());
 		}
-		
+
 		for (Map.Entry<Method, Field> entry : info.setters.entrySet()) {
 			makeSetter(cw, entry.getKey(), entry.getValue());
 		}
-		
+
 		for (Map.Entry<Method, Method> entry : info.invokers.entrySet()) {
 			makeInvoker(cw, entry.getKey(), entry.getValue());
 		}
-		
+
 		cw.visitEnd();
-		
+
 		Class<?> clazz = SCReflection.defineDynamicClass(cw.toByteArray());
 		try {
 			return clazz.asSubclass(iface).newInstance();
@@ -48,7 +49,7 @@ class SunProprietaryStrategy extends AbstractStrategy {
 			throw new RuntimeException("Internal error in Fastreflect!", e);
 		}
 	}
-	
+
 	@Override
 	public Class<?> defineDynClass(byte[] clazz, Class<?> context) {
 		return unsafe.defineAnonymousClass(context, clazz, null);
@@ -59,25 +60,25 @@ class SunProprietaryStrategy extends AbstractStrategy {
 		String desc = getMethodDescriptor(VOID_TYPE);
 		MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, name, desc, null, null);
 		mv.visitCode();
-		
+
 		mv.visitVarInsn(ALOAD, 0);
 		mv.visitMethodInsn(INVOKESPECIAL, "sun/reflect/MagicAccessorImpl", name, desc);
 		mv.visitInsn(RETURN);
-		
+
 		mv.visitMaxs(1, 1);
-		
+
 		mv.visitEnd();
 	}
 
 	private void makeGetter(ClassWriter cw, Method getter, Field field) {
 		boolean isStatic = Modifier.isStatic(field.getModifiers());
-		
+
 		String owner;
 		String name = getter.getName();
 		String desc = getMethodDescriptor(getter);
 		MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, name, desc, null, null);
 		mv.visitCode();
-		
+
 		owner = getInternalName(field.getDeclaringClass());
 		name = field.getName();
 		desc = getDescriptor(field.getType());
@@ -87,23 +88,23 @@ class SunProprietaryStrategy extends AbstractStrategy {
 			mv.visitVarInsn(ALOAD, 1);
 			mv.visitFieldInsn(GETFIELD, owner, name, desc);
 		}
-		
+
 		mv.visitInsn(getType(field.getType()).getOpcode(IRETURN));
-		
+
 		mv.visitMaxs(1, 2);
-		
+
 		mv.visitEnd();
 	}
-	
+
 	private void makeSetter(ClassWriter cw, Method setter, Field field) {
 		boolean isStatic = Modifier.isStatic(field.getModifiers());
-		
+
 		String owner;
 		String name = setter.getName();
 		String desc = getMethodDescriptor(setter);
 		MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, name, desc, null, null);
 		mv.visitCode();
-		
+
 		owner = getInternalName(field.getDeclaringClass());
 		name = field.getName();
 		desc = getDescriptor(field.getType());
@@ -115,26 +116,26 @@ class SunProprietaryStrategy extends AbstractStrategy {
 			mv.visitVarInsn(ALOAD, 2);
 			mv.visitFieldInsn(PUTFIELD, owner, name, desc);
 		}
-		
+
 		mv.visitInsn(RETURN);
-		
+
 		mv.visitMaxs(isStatic ? 1 : 2, 3);
-		
+
 		mv.visitEnd();
 	}
-	
+
 	private void makeInvoker(ClassWriter cw, Method invoker, Method target) {
 		boolean isStatic = Modifier.isStatic(target.getModifiers());
-		
+
 		String owner;
 		String name = invoker.getName();
 		String desc = getMethodDescriptor(invoker);
 		MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, name, desc, null, null);
 		mv.visitCode();
-		
+
 		Class<?>[] params = invoker.getParameterTypes();
 		int len = params.length;
-		
+
 		owner = getInternalName(target.getDeclaringClass());
 		name = target.getName();
 		desc = getMethodDescriptor(target);
@@ -143,11 +144,11 @@ class SunProprietaryStrategy extends AbstractStrategy {
 			mv.visitVarInsn(paramType.getOpcode(ILOAD), i + 1); // var 0 is this
 		}
 		mv.visitMethodInsn(isStatic ? INVOKESTATIC : INVOKEVIRTUAL, owner, name, desc);
-		
+
 		mv.visitInsn(getType(target.getReturnType()).getOpcode(IRETURN));
-		
+
 		mv.visitMaxs(isStatic ? len - 1 : len, len + 1);
-		
+
 		mv.visitEnd();
 	}
 

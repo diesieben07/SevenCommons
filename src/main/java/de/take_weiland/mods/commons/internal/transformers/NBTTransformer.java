@@ -93,7 +93,7 @@ public class NBTTransformer implements ASMClassTransformer {
 			String propName = ASMUtils.getAnnotationProperty(ann, "value", variable.name());
 
 			CodePiece nbtValue = CodePieces.invokeStatic(
-					NBTASMHooks.CLASS_NAME,	"getFrom", ASMUtils.getMethodDescriptor(NBTBase.class, NBTTagCompound.class, String.class),
+					NBTASMHooks.CLASS_NAME, "getFrom", ASMUtils.getMethodDescriptor(NBTBase.class, NBTTagCompound.class, String.class),
 					CodePieces.of(new VarInsnNode(ALOAD, 1)), CodePieces.constant(propName));
 
 

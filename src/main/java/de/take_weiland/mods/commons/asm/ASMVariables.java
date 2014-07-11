@@ -20,15 +20,17 @@ import static org.objectweb.asm.Opcodes.*;
 
 /**
  * <p>Factory class for ASMVariables.</p>
- * @see de.take_weiland.mods.commons.asm.ASMVariable
+ *
  * @author diesieben07
+ * @see de.take_weiland.mods.commons.asm.ASMVariable
  */
 public final class ASMVariables {
 
 	/**
 	 * <p>Creates an {@code ASMVariable} that represents the local variable with the given index in the given method.</p>
+	 *
 	 * @param method the method containing the variable
-	 * @param idx the local variable to get
+	 * @param idx    the local variable to get
 	 * @return an ASMVariable that represents the local variable
 	 */
 	public static ASMVariable local(MethodNode method, int idx) {
@@ -42,6 +44,7 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates an {@code ASMVariable} that represents the given LocalVariableNode.</p>
+	 *
 	 * @param var the local variable
 	 * @return an ASMVariable that represents the local variable
 	 */
@@ -51,8 +54,9 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates an {@code ASMVariable} that represents the given non-static field.</p>
-	 * @param clazz the class containing the field
-	 * @param field the field
+	 *
+	 * @param clazz    the class containing the field
+	 * @param field    the field
 	 * @param instance the instance to get the field from
 	 * @return an ASMVariable that represents the field
 	 */
@@ -63,6 +67,7 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates an {@code ASMVariable} that represents the given static field.</p>
+	 *
 	 * @param clazz the class containing the field
 	 * @param field the field
 	 * @return an ASMVariable that represents the field
@@ -74,9 +79,10 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates an {@code ASMVariable} that represents the given non-static getter and setter.</p>
-	 * @param clazz the class containing the getter and setter
-	 * @param getter the getter method
-	 * @param setter the setter method
+	 *
+	 * @param clazz    the class containing the getter and setter
+	 * @param getter   the getter method
+	 * @param setter   the setter method
 	 * @param instance the instance to use to invoke the getter and setter
 	 * @return an ASMVariable that represents the getter and setter
 	 */
@@ -88,7 +94,8 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates an {@code ASMVariable} that represents the given static getter.</p>
-	 * @param clazz the class containing the getter
+	 *
+	 * @param clazz  the class containing the getter
 	 * @param getter the getter method
 	 * @return an ASMVariable that represents the getter
 	 */
@@ -99,8 +106,9 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates an {@code ASMVariable} that represents the given non-static getter.</p>
-	 * @param clazz the class containing the getter
-	 * @param getter the getter method
+	 *
+	 * @param clazz    the class containing the getter
+	 * @param getter   the getter method
 	 * @param instance the instance to use to invoke the getter
 	 * @return an ASMVariable that represents the getter
 	 */
@@ -111,7 +119,8 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates an {@code ASMVariable} that represents the given static getter and setter.</p>
-	 * @param clazz the class containing the getter and setter
+	 *
+	 * @param clazz  the class containing the getter and setter
 	 * @param getter the getter method
 	 * @param setter the setter method
 	 * @return an ASMVariable that represents the getter and setter
@@ -126,7 +135,8 @@ public final class ASMVariables {
 	 * <p>Creates a List containing all non-static ASMVariables in the given class.</p>
 	 * <p>{@link de.take_weiland.mods.commons.asm.ASMUtils#findSetter(org.objectweb.asm.tree.ClassNode, org.objectweb.asm.tree.MethodNode)} is used
 	 * to find the corresponding setter for a getter.</p>
-	 * @param clazz the class to scan
+	 *
+	 * @param clazz    the class to scan
 	 * @param instance the instance to use for the ASMVariables
 	 * @return a List of all non-static ASMVariables
 	 */
@@ -138,6 +148,7 @@ public final class ASMVariables {
 	 * <p>Creates a List containing all static ASMVariables in the given class.</p>
 	 * <p>{@link de.take_weiland.mods.commons.asm.ASMUtils#findSetter(org.objectweb.asm.tree.ClassNode, org.objectweb.asm.tree.MethodNode)} is used
 	 * to find the corresponding setter for a getter.</p>
+	 *
 	 * @param clazz the class to scan
 	 * @return a List of all static ASMVariables
 	 */
@@ -147,8 +158,9 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates a List containing all non-static ASMVariables in the given class.</p>
-	 * @param clazz the class to scan
-	 * @param instance the instance to use for the ASMVariables
+	 *
+	 * @param clazz          the class to scan
+	 * @param instance       the instance to use for the ASMVariables
 	 * @param setterProvider a Function that provides the setter for a given getter, or null if no setter is found
 	 * @return a List of all non-static ASMVariables
 	 */
@@ -158,7 +170,8 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates a List containing all static ASMVariables in the given class.</p>
-	 * @param clazz the class to scan
+	 *
+	 * @param clazz          the class to scan
 	 * @param setterProvider a Function that provides the setter for a given getter, or null if no setter is found
 	 * @return a List of all static ASMVariables
 	 */
@@ -172,10 +185,10 @@ public final class ASMVariables {
 		Predicate<MethodNode> methodFilter = Predicates.and(
 				useStatic ? isMethodStatic() : Predicates.not(isMethodStatic()),
 				isGetter()
-			);
+		);
 		return ImmutableList.copyOf(Iterators.concat(
-			fieldsAsVariables(Iterators.filter(clazz.fields.iterator(), fieldFilter), clazz, instance),
-			methodsAsVariables(Iterators.filter(clazz.methods.iterator(), methodFilter), clazz, instance, setterProvider)
+				fieldsAsVariables(Iterators.filter(clazz.fields.iterator(), fieldFilter), clazz, instance),
+				methodsAsVariables(Iterators.filter(clazz.methods.iterator(), methodFilter), clazz, instance, setterProvider)
 		));
 	}
 
@@ -183,6 +196,7 @@ public final class ASMVariables {
 	 * <p>Creates a List containing all static ASMVariables in the given class that have the given annotation.</p>
 	 * <p>{@link de.take_weiland.mods.commons.asm.ASMUtils#findSetter(org.objectweb.asm.tree.ClassNode, org.objectweb.asm.tree.MethodNode)} is used
 	 * to find the corresponding setter for a getter.</p>
+	 *
 	 * @param clazz the class to scan
 	 * @return a List of all static ASMVariables
 	 */
@@ -194,7 +208,8 @@ public final class ASMVariables {
 	 * <p>Creates a List containing all non-static ASMVariables in the given class that have the given annotation.</p>
 	 * <p>{@link de.take_weiland.mods.commons.asm.ASMUtils#findSetter(org.objectweb.asm.tree.ClassNode, org.objectweb.asm.tree.MethodNode)} is used
 	 * to find the corresponding setter for a getter.</p>
-	 * @param clazz the class to scan
+	 *
+	 * @param clazz    the class to scan
 	 * @param instance the instance to use for the ASMVariables
 	 * @return a List of all non-static ASMVariables
 	 */
@@ -204,7 +219,8 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates a List containing all static ASMVariables in the given class that have the given annotation.</p>
-	 * @param clazz the class to scan
+	 *
+	 * @param clazz          the class to scan
 	 * @param setterProvider a Function that provides the setter for a given getter, or null if no setter is found
 	 * @return a List of all static ASMVariables
 	 */
@@ -214,8 +230,9 @@ public final class ASMVariables {
 
 	/**
 	 * <p>Creates a List containing all non-static ASMVariables in the given class that have the given annotation.</p>
-	 * @param clazz the class to scan
-	 * @param instance the instance to use for the ASMVariables
+	 *
+	 * @param clazz          the class to scan
+	 * @param instance       the instance to use for the ASMVariables
 	 * @param setterProvider a Function that provides the setter for a given getter, or null if no setter is found
 	 * @return a List of all non-static ASMVariables
 	 */
@@ -311,6 +328,7 @@ public final class ASMVariables {
 		}
 	}
 
-	private ASMVariables() { }
+	private ASMVariables() {
+	}
 
 }

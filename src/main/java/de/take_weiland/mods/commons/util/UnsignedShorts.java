@@ -5,7 +5,8 @@ package de.take_weiland.mods.commons.util;
  */
 public final class UnsignedShorts {
 
-	private UnsignedShorts() { }
+	private UnsignedShorts() {
+	}
 
 	/**
 	 * Maximum value an Unsigned Short can hold
@@ -14,6 +15,7 @@ public final class UnsignedShorts {
 
 	/**
 	 * Convert the given short to an Integer, treating the short as unsigned
+	 *
 	 * @param unsigned the unsigned short
 	 * @return the value of the unsigned short
 	 */
@@ -23,6 +25,7 @@ public final class UnsignedShorts {
 
 	/**
 	 * convert the given integer to an unsigned short
+	 *
 	 * @param value the integer to convert, must be <= {@link #MAX_VALUE}
 	 * @return the unsigned short
 	 */
@@ -30,7 +33,7 @@ public final class UnsignedShorts {
 		if (value >> Short.SIZE != 0) {
 			throw new IllegalArgumentException(String.format("Out of Range: %d", value));
 		}
-		return (short)value;
+		return (short) value;
 	}
-	
+
 }

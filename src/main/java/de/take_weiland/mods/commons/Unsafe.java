@@ -8,9 +8,10 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * Objects marked with this Annotation should be treated carefully as they perform potentially unsafe operations if used incorrectly.
+ *
  * @author diesieben07
  */
-@Target({ TYPE, METHOD, CONSTRUCTOR, FIELD } )
+@Target({ TYPE, METHOD, CONSTRUCTOR, FIELD })
 @Retention(SOURCE)
 public @interface Unsafe {
 

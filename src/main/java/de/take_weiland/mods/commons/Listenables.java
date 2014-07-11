@@ -37,6 +37,7 @@ public final class Listenables {
 		}
 	}
 
-	private Listenables() { }
+	private Listenables() {
+	}
 
 }

@@ -17,6 +17,7 @@ public abstract class FieldInfo extends MemberInfo {
 
 	/**
 	 * <p>Get the type-descriptor of this field.</p>
+	 *
 	 * @return the descriptor
 	 */
 	public abstract String desc();
@@ -28,6 +29,7 @@ public abstract class FieldInfo extends MemberInfo {
 
 	/**
 	 * <p>Determine if this field is {@code volatile}.</p>
+	 *
 	 * @return true if this field is {@code volatile}
 	 */
 	public boolean isVolatile() {
@@ -36,6 +38,7 @@ public abstract class FieldInfo extends MemberInfo {
 
 	/**
 	 * <p>Determine if this field is {@code transient}.</p>
+	 *
 	 * @return true if this field is {@code transient}
 	 */
 	public boolean isTransient() {
@@ -44,6 +47,7 @@ public abstract class FieldInfo extends MemberInfo {
 
 	/**
 	 * <p>Determine if this field is an enum constant.</p>
+	 *
 	 * @return true if this field is an enum constant
 	 */
 	public boolean isEnumConstant() {

@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.asm;
 
 /**
-* @author diesieben07
-*/
+ * @author diesieben07
+ */
 public class MissingMethodException extends RuntimeException {
-	
+
 	private static final long serialVersionUID = -3756768220392690974L;
 
 	MissingMethodException(String text) {

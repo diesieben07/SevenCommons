@@ -22,20 +22,21 @@ public abstract class AbstractInventory implements IInventory {
 		storage = new ItemStack[getSizeInventory()];
 	}
 
-    /**
-     * <p>Alternate constructor that doesn't need {@link #getSizeInventory()} to be overridden.</p>
-     * @param size the size of this inventory
-     */
+	/**
+	 * <p>Alternate constructor that doesn't need {@link #getSizeInventory()} to be overridden.</p>
+	 *
+	 * @param size the size of this inventory
+	 */
 	protected AbstractInventory(int size) {
 		storage = new ItemStack[size];
 	}
 
-    @Override
-    public int getSizeInventory() {
-        return storage.length;
-    }
+	@Override
+	public int getSizeInventory() {
+		return storage.length;
+	}
 
-    @Override
+	@Override
 	public ItemStack getStackInSlot(int slot) {
 		return JavaUtils.get(storage, slot);
 	}
@@ -70,12 +71,14 @@ public abstract class AbstractInventory implements IInventory {
 	public int getInventoryStackLimit() {
 		return 64;
 	}
-	
-	@Override
-	public void openChest() { }
 
 	@Override
-	public void closeChest() { }
+	public void openChest() {
+	}
+
+	@Override
+	public void closeChest() {
+	}
 
 	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack item) {
@@ -85,6 +88,7 @@ public abstract class AbstractInventory implements IInventory {
 	/**
 	 * <p>Writes this inventory to an {@link net.minecraft.nbt.NBTTagCompound}.</p>
 	 * <p>By default calls {@link Inventories#writeInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound)}</p>
+	 *
 	 * @param nbt the NBTTagCompound to write to
 	 */
 	public void writeToNbt(NBTTagCompound nbt) {
@@ -94,6 +98,7 @@ public abstract class AbstractInventory implements IInventory {
 	/**
 	 * <p>Reads this inventory from an {@link net.minecraft.nbt.NBTTagCompound}.</p>
 	 * <p>By default calls {@link Inventories#readInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound)}</p>
+	 *
 	 * @param nbt the NBTTagCompound to read from
 	 */
 	public void readFromNbt(NBTTagCompound nbt) {

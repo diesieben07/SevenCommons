@@ -20,20 +20,23 @@ import static org.lwjgl.opengl.GL11.*;
 
 /**
  * <p>Helpful utilities for various rendering tasks.</p>
+ *
  * @author diesieben07
  */
 public final class Rendering {
-	
-	private Rendering() { }
-	
+
+	private Rendering() {
+	}
+
 	private static final Gui gui = new Gui();
-	
+
 	/**
 	 * <p>Fills a specified area on the screen with the provided {@link net.minecraft.util.Icon Icon}.</p>
-	 * @param icon The {@link net.minecraft.util.Icon Icon} to be displayed
-	 * @param x The X coordinate to start drawing from
-	 * @param y The Y coordinate to start drawing form
-	 * @param width The width of the provided icon to draw on the screen
+	 *
+	 * @param icon   The {@link net.minecraft.util.Icon Icon} to be displayed
+	 * @param x      The X coordinate to start drawing from
+	 * @param y      The Y coordinate to start drawing form
+	 * @param width  The width of the provided icon to draw on the screen
 	 * @param height The height of the provided icon to draw on the screen
 	 */
 	public static void fillAreaWithIcon(Icon icon, int x, int y, int width, int height) {
@@ -42,7 +45,7 @@ public final class Rendering {
 		// TODO: restore/respect any glScissor already set
 		glScissor(0, Minecraft.getMinecraft().displayHeight - (y + height) * scale, (width + x) * scale, height * scale);
 		glEnable(GL_SCISSOR_TEST);
-		
+
 		int cols = MathHelper.ceiling_float_int(width / 16F);
 		int rows = MathHelper.ceiling_float_int(height / 16F);
 		for (int row = 0; row < rows; row++) {
@@ -50,18 +53,19 @@ public final class Rendering {
 				gui.drawTexturedModelRectFromIcon(x + col * 16, y + row * 16, icon, 16, 16);
 			}
 		}
-		
+
 		glDisable(GL_SCISSOR_TEST);
 	}
 
 	/**
 	 * <p>Draw a vertical bar representing the fullness of a Tank filled with the given FluidStack and of the given capacity.</p>
-	 * @param fluidStack the FluidStack
+	 *
+	 * @param fluidStack   the FluidStack
 	 * @param tankCapacity the capacity of the tank (maximum amount of fluid in the FluidStack)
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle to draw
-	 * @param fullHeight the height of the rectangle, if the tank is full
+	 * @param x            the x coordinate
+	 * @param y            the y coordinate
+	 * @param width        the width of the rectangle to draw
+	 * @param fullHeight   the height of the rectangle, if the tank is full
 	 */
 	public static void drawFluidStack(FluidStack fluidStack, int tankCapacity, int x, int y, int width, int fullHeight) {
 		TextureManager renderEngine = Minecraft.getMinecraft().renderEngine;
@@ -69,7 +73,7 @@ public final class Rendering {
 		if (fluidStack != null) {
 			Fluid fluid = fluidStack.getFluid();
 			Icon fluidIcon = fluid.getStillIcon();
-			int fluidHeight = MathHelper.ceiling_float_int((fluidStack.amount / (float)tankCapacity) * fullHeight);
+			int fluidHeight = MathHelper.ceiling_float_int((fluidStack.amount / (float) tankCapacity) * fullHeight);
 
 			glColor3f(1f, 1f, 1f);
 			renderEngine.bindTexture(renderEngine.getResourceLocation(fluid.getSpriteNumber()));
@@ -79,10 +83,11 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a vertical bar representing the fullness of the given {@code IFluidTank}.</p>
-	 * @param tank the tank
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle to draw
+	 *
+	 * @param tank       the tank
+	 * @param x          the x coordinate
+	 * @param y          the y coordinate
+	 * @param width      the width of the rectangle to draw
 	 * @param fullHeight the height of the rectangle, if the tank is full
 	 */
 	public static void drawTank(IFluidTank tank, int x, int y, int width, int fullHeight) {
@@ -91,38 +96,39 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a simple inventory block. This method draws a cuboid based on the current block dimensions.</p>
-	 * @param block the Block to draw
-	 * @param meta the Block metadata
+	 *
+	 * @param block    the Block to draw
+	 * @param meta     the Block metadata
 	 * @param renderer the RenderBlocks instance
 	 */
 	public static void drawInventoryBlock(Block block, int meta, RenderBlocks renderer) {
 		Tessellator t = Tessellator.instance;
-		
+
 		t.startDrawingQuads();
 		t.setNormal(-1, 0, 0);
 		renderer.renderFaceXNeg(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, WEST.ordinal(), meta));
 		t.draw();
-		
+
 		t.startDrawingQuads();
 		t.setNormal(1, 0, 0);
 		renderer.renderFaceXPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, EAST.ordinal(), meta));
 		t.draw();
-		
+
 		t.startDrawingQuads();
 		t.setNormal(0, 0, -1);
 		renderer.renderFaceZNeg(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, NORTH.ordinal(), meta));
 		t.draw();
-		
+
 		t.startDrawingQuads();
 		t.setNormal(0, 0, 1);
 		renderer.renderFaceZPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, SOUTH.ordinal(), meta));
 		t.draw();
-		
+
 		t.startDrawingQuads();
 		t.setNormal(0, -1, 0);
 		renderer.renderFaceYNeg(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, DOWN.ordinal(), meta));
 		t.draw();
-		
+
 		t.startDrawingQuads();
 		t.setNormal(0, 1, 0);
 		renderer.renderFaceYPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, UP.ordinal(), meta));
@@ -131,11 +137,12 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a colored rectangle.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle
+	 *
+	 * @param x      the x coordinate
+	 * @param y      the y coordinate
+	 * @param width  the width of the rectangle
 	 * @param height the height of the rectangle
-	 * @param color the color (in RGB format, e.g. {@code 0xFF0000})
+	 * @param color  the color (in RGB format, e.g. {@code 0xFF0000})
 	 */
 	public static void drawColoredQuad(int x, int y, int width, int height, int color) {
 		drawColoredQuad(x, y, width, height, color, 0xFF, getZLevel());
@@ -143,12 +150,13 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a colored rectangle.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle
+	 *
+	 * @param x      the x coordinate
+	 * @param y      the y coordinate
+	 * @param width  the width of the rectangle
 	 * @param height the height of the rectangle
-	 * @param color the color (in RGB format, e.g. {@code 0xFF0000})
-	 * @param alpha the opacity of the rectangle (0 = completely transparent, 255 = completely opaque)
+	 * @param color  the color (in RGB format, e.g. {@code 0xFF0000})
+	 * @param alpha  the opacity of the rectangle (0 = completely transparent, 255 = completely opaque)
 	 */
 	public static void drawColoredQuad(int x, int y, int width, int height, int color, int alpha) {
 		drawColoredQuad(x, y, width, height, color, alpha, getZLevel());
@@ -156,12 +164,13 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a colored rectangle.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle
+	 *
+	 * @param x      the x coordinate
+	 * @param y      the y coordinate
+	 * @param width  the width of the rectangle
 	 * @param height the height of the rectangle
-	 * @param color the color (in RGB format, e.g. {@code 0xFF0000})
-	 * @param alpha the opacity of the rectangle (0 = completely transparent, 255 = completely opaque)
+	 * @param color  the color (in RGB format, e.g. {@code 0xFF0000})
+	 * @param alpha  the opacity of the rectangle (0 = completely transparent, 255 = completely opaque)
 	 * @param zLevel the z-level to draw at
 	 */
 	public static void drawColoredQuad(int x, int y, int width, int height, int color, int alpha, float zLevel) {
@@ -181,17 +190,17 @@ public final class Rendering {
 		}
 
 		glColor4f(r, g, b, alpha / 255F);
-		
+
 		Tessellator t = Tessellator.instance;
 		t.startDrawingQuads();
-		
+
 		t.addVertex(x, y + height, zLevel);
 		t.addVertex(x + width, y + height, zLevel);
 		t.addVertex(x + width, y, zLevel);
 		t.addVertex(x, y, zLevel);
-		
+
 		t.draw();
-		
+
 		glEnable(GL_TEXTURE_2D);
 		if (alpha != 255) {
 			glDisable(GL_BLEND);
@@ -200,12 +209,13 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a vertical gradient.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the gradient
-	 * @param height the height of the gradient
+	 *
+	 * @param x         the x coordinate
+	 * @param y         the y coordinate
+	 * @param width     the width of the gradient
+	 * @param height    the height of the gradient
 	 * @param fromColor the start color in RGB format
-	 * @param toColor the end color in RGB format
+	 * @param toColor   the end color in RGB format
 	 */
 	public static void verticalGradient(int x, int y, int width, int height, int fromColor, int toColor) {
 		drawGradient(false, x, y, width, height, fromColor, toColor);
@@ -213,14 +223,15 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a vertical gradient.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the gradient
-	 * @param height the height of the gradient
+	 *
+	 * @param x         the x coordinate
+	 * @param y         the y coordinate
+	 * @param width     the width of the gradient
+	 * @param height    the height of the gradient
 	 * @param fromColor the start color in RGB format
 	 * @param fromAlpha the alpha value for the start color (0-255)
-	 * @param toColor the end color in RGB format
-	 * @param toAlpha the alpha value for the end color (0-255)
+	 * @param toColor   the end color in RGB format
+	 * @param toAlpha   the alpha value for the end color (0-255)
 	 */
 	public static void verticalGradient(int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha) {
 		drawGradient(false, x, y, width, height, fromColor, fromAlpha, toColor, toAlpha);
@@ -228,15 +239,16 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a vertical gradient.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the gradient
-	 * @param height the height of the gradient
+	 *
+	 * @param x         the x coordinate
+	 * @param y         the y coordinate
+	 * @param width     the width of the gradient
+	 * @param height    the height of the gradient
 	 * @param fromColor the start color in RGB format
 	 * @param fromAlpha the alpha value for the start color (0-255)
-	 * @param toColor the end color in RGB format
-	 * @param toAlpha the alpha value for the end color (0-255)
-	 * @param zLevel the z-level to draw at
+	 * @param toColor   the end color in RGB format
+	 * @param toAlpha   the alpha value for the end color (0-255)
+	 * @param zLevel    the z-level to draw at
 	 */
 	public static void verticalGradient(int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha, float zLevel) {
 		drawGradient(false, x, y, width, height, fromColor, fromAlpha, toColor, toAlpha, zLevel);
@@ -244,12 +256,13 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a horizontal gradient.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the gradient
-	 * @param height the height of the gradient
+	 *
+	 * @param x         the x coordinate
+	 * @param y         the y coordinate
+	 * @param width     the width of the gradient
+	 * @param height    the height of the gradient
 	 * @param fromColor the start color in RGB format
-	 * @param toColor the end color in RGB format
+	 * @param toColor   the end color in RGB format
 	 */
 	public static void horizontalGradient(int x, int y, int width, int height, int fromColor, int toColor) {
 		drawGradient(true, x, y, width, height, fromColor, toColor);
@@ -257,14 +270,15 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a horizontal gradient.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the gradient
-	 * @param height the height of the gradient
+	 *
+	 * @param x         the x coordinate
+	 * @param y         the y coordinate
+	 * @param width     the width of the gradient
+	 * @param height    the height of the gradient
 	 * @param fromColor the start color in RGB format
 	 * @param fromAlpha the alpha value for the start color (0-255)
-	 * @param toColor the end color in RGB format
-	 * @param toAlpha the alpha value for the end color (0-255)
+	 * @param toColor   the end color in RGB format
+	 * @param toAlpha   the alpha value for the end color (0-255)
 	 */
 	public static void horizontalGradient(int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha) {
 		drawGradient(true, x, y, width, height, fromColor, fromAlpha, toColor, toAlpha);
@@ -272,15 +286,16 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a horizontal gradient.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the gradient
-	 * @param height the height of the gradient
+	 *
+	 * @param x         the x coordinate
+	 * @param y         the y coordinate
+	 * @param width     the width of the gradient
+	 * @param height    the height of the gradient
 	 * @param fromColor the start color in RGB format
 	 * @param fromAlpha the alpha value for the start color (0-255)
-	 * @param toColor the end color in RGB format
-	 * @param toAlpha the alpha value for the end color (0-255)
-	 * @param zLevel the z-level to draw at
+	 * @param toColor   the end color in RGB format
+	 * @param toAlpha   the alpha value for the end color (0-255)
+	 * @param zLevel    the z-level to draw at
 	 */
 	public static void horizontalGradient(int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha, float zLevel) {
 		drawGradient(true, x, y, width, height, fromColor, fromAlpha, toColor, toAlpha, zLevel);
@@ -288,13 +303,14 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a gradient.</p>
+	 *
 	 * @param horizontal if a horizontal or vertical gradient should be drawn
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the gradient
-	 * @param height the height of the gradient
-	 * @param fromColor the start color in RGB format
-	 * @param toColor the end color in RGB format
+	 * @param x          the x coordinate
+	 * @param y          the y coordinate
+	 * @param width      the width of the gradient
+	 * @param height     the height of the gradient
+	 * @param fromColor  the start color in RGB format
+	 * @param toColor    the end color in RGB format
 	 */
 	public static void drawGradient(boolean horizontal, int x, int y, int width, int height, int fromColor, int toColor) {
 		drawGradient(horizontal, x, y, width, height, fromColor, 0xFF, toColor, 0xFF, getZLevel());
@@ -302,15 +318,16 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a gradient.</p>
+	 *
 	 * @param horizontal if a horizontal or vertical gradient should be drawn
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the gradient
-	 * @param height the height of the gradient
-	 * @param fromColor the start color in RGB format
-	 * @param fromAlpha the alpha value for the start color (0-255)
-	 * @param toColor the end color in RGB format
-	 * @param toAlpha the alpha value for the end color (0-255)
+	 * @param x          the x coordinate
+	 * @param y          the y coordinate
+	 * @param width      the width of the gradient
+	 * @param height     the height of the gradient
+	 * @param fromColor  the start color in RGB format
+	 * @param fromAlpha  the alpha value for the start color (0-255)
+	 * @param toColor    the end color in RGB format
+	 * @param toAlpha    the alpha value for the end color (0-255)
 	 */
 	public static void drawGradient(boolean horizontal, int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha) {
 		drawGradient(horizontal, x, y, width, height, fromColor, fromAlpha, toColor, toAlpha, getZLevel());
@@ -318,16 +335,17 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a gradient.</p>
+	 *
 	 * @param horizontal if a horizontal or vertical gradient should be drawn
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the gradient
-	 * @param height the height of the gradient
-	 * @param fromColor the start color in RGB format
-	 * @param fromAlpha the alpha value for the start color (0-255)
-	 * @param toColor the end color in RGB format
-	 * @param toAlpha the alpha value for the end color (0-255)
-	 * @param zLevel the z-level to draw at
+	 * @param x          the x coordinate
+	 * @param y          the y coordinate
+	 * @param width      the width of the gradient
+	 * @param height     the height of the gradient
+	 * @param fromColor  the start color in RGB format
+	 * @param fromAlpha  the alpha value for the start color (0-255)
+	 * @param toColor    the end color in RGB format
+	 * @param toAlpha    the alpha value for the end color (0-255)
+	 * @param zLevel     the z-level to draw at
 	 */
 	public static void drawGradient(boolean horizontal, int x, int y, int width, int height, int fromColor, int fromAlpha, int toColor, int toAlpha, float zLevel) {
 		if (fromAlpha == 0 && toAlpha == 0) {
@@ -401,16 +419,17 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a textured rectangle.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle
-	 * @param height the height of the rectangle
-	 * @param u the x coordinate in the texture
-	 * @param v the y coordinate in the texture
-	 * @param uSize the width of the rectangle in the texture
-	 * @param vSize the height of the rectangle in the texture
+	 *
+	 * @param x       the x coordinate
+	 * @param y       the y coordinate
+	 * @param width   the width of the rectangle
+	 * @param height  the height of the rectangle
+	 * @param u       the x coordinate in the texture
+	 * @param v       the y coordinate in the texture
+	 * @param uSize   the width of the rectangle in the texture
+	 * @param vSize   the height of the rectangle in the texture
 	 * @param texSize the dimensions of the texture (width & height)
-	 * @param zLevel the z-level to draw at
+	 * @param zLevel  the z-level to draw at
 	 */
 	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uSize, int vSize, int texSize, float zLevel) {
 		drawTexturedQuad(x, y, width, height, u, v, uSize, vSize, texSize, texSize, zLevel);
@@ -418,14 +437,15 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a textured rectangle.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle
-	 * @param height the height of the rectangle
-	 * @param u the x coordinate in the texture
-	 * @param v the y coordinate in the texture
-	 * @param uSize the width of the rectangle in the texture
-	 * @param vSize the height of the rectangle in the texture
+	 *
+	 * @param x       the x coordinate
+	 * @param y       the y coordinate
+	 * @param width   the width of the rectangle
+	 * @param height  the height of the rectangle
+	 * @param u       the x coordinate in the texture
+	 * @param v       the y coordinate in the texture
+	 * @param uSize   the width of the rectangle in the texture
+	 * @param vSize   the height of the rectangle in the texture
 	 * @param texSize the dimensions of the texture (width & height)
 	 */
 	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uSize, int vSize, int texSize) {
@@ -434,15 +454,16 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a textured rectangle.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle
-	 * @param height the height of the rectangle
-	 * @param u the x coordinate in the texture
-	 * @param v the y coordinate in the texture
-	 * @param uSize the width of the rectangle in the texture
-	 * @param vSize the height of the rectangle in the texture
-	 * @param texWidth the width of the texture
+	 *
+	 * @param x         the x coordinate
+	 * @param y         the y coordinate
+	 * @param width     the width of the rectangle
+	 * @param height    the height of the rectangle
+	 * @param u         the x coordinate in the texture
+	 * @param v         the y coordinate in the texture
+	 * @param uSize     the width of the rectangle in the texture
+	 * @param vSize     the height of the rectangle in the texture
+	 * @param texWidth  the width of the texture
 	 * @param texHeight the height of the texture
 	 */
 	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uSize, int vSize, int texWidth, int texHeight) {
@@ -451,25 +472,26 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a textured rectangle.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle
-	 * @param height the height of the rectangle
-	 * @param u the x coordinate in the texture
-	 * @param v the y coordinate in the texture
-	 * @param uSize the width of the rectangle in the texture
-	 * @param vSize the height of the rectangle in the texture
-	 * @param texWidth the width of the texture
+	 *
+	 * @param x         the x coordinate
+	 * @param y         the y coordinate
+	 * @param width     the width of the rectangle
+	 * @param height    the height of the rectangle
+	 * @param u         the x coordinate in the texture
+	 * @param v         the y coordinate in the texture
+	 * @param uSize     the width of the rectangle in the texture
+	 * @param vSize     the height of the rectangle in the texture
+	 * @param texWidth  the width of the texture
 	 * @param texHeight the height of the texture
-	 * @param zLevel the z-level to draw at
+	 * @param zLevel    the z-level to draw at
 	 */
 	public static void drawTexturedQuad(int x, int y, int width, int height, int u, int v, int uSize, int vSize, int texWidth, int texHeight, float zLevel) {
 		float uFact = 1f / texWidth;
 		float vFact = 1f / texHeight;
-		
+
 		int uEnd = u + uSize;
 		int vEnd = v + vSize;
-		
+
 		Tessellator t = Tessellator.instance;
 		t.startDrawingQuads();
 		t.addVertexWithUV(x, y + height, zLevel, u * uFact, vEnd * vFact);
@@ -481,9 +503,10 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a textured rectangle with the entire texture scaled to the given dimensions.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle
+	 *
+	 * @param x      the x coordinate
+	 * @param y      the y coordinate
+	 * @param width  the width of the rectangle
 	 * @param height the height of the rectangle
 	 */
 	public static void drawTexturedQuadFit(int x, int y, int width, int height) {
@@ -492,9 +515,10 @@ public final class Rendering {
 
 	/**
 	 * <p>Draw a textured rectangle with the entire texture scaled to the given dimensions.</p>
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param width the width of the rectangle
+	 *
+	 * @param x      the x coordinate
+	 * @param y      the y coordinate
+	 * @param width  the width of the rectangle
 	 * @param height the height of the rectangle
 	 * @param zLevel the z-level to draw at
 	 */
@@ -510,6 +534,7 @@ public final class Rendering {
 
 	/**
 	 * <p>Unload the texture specified by the given ResourceLocation.</p>
+	 *
 	 * @param loc the ResourceLocation
 	 */
 	public static void unloadTexture(ResourceLocation loc) {

@@ -26,7 +26,7 @@ final class DataBufAsInputstream extends InputStream {
 
 	@Override
 	public int read(@NotNull byte[] b, int off, int len) throws IOException {
-        return buf.copyTo(b, off, len);
+		return buf.copyTo(b, off, len);
 	}
 
 	@Override

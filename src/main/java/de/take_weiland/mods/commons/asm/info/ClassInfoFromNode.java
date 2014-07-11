@@ -10,8 +10,8 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
-* @author diesieben07
-*/
+ * @author diesieben07
+ */
 final class ClassInfoFromNode extends ClassInfo {
 
 	private final ClassNode clazz;

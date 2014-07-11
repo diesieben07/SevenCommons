@@ -16,16 +16,20 @@ enum EmptyCodePiece implements CodePiece {
 	}
 
 	@Override
-	public void appendTo(InsnList to) { }
+	public void appendTo(InsnList to) {
+	}
 
 	@Override
-	public void prependTo(InsnList to) { }
+	public void prependTo(InsnList to) {
+	}
 
 	@Override
-	public void insertAfter(InsnList to, AbstractInsnNode location) { }
+	public void insertAfter(InsnList to, AbstractInsnNode location) {
+	}
 
 	@Override
-	public void insertBefore(InsnList to, AbstractInsnNode location) { }
+	public void insertBefore(InsnList to, AbstractInsnNode location) {
+	}
 
 	@Override
 	public CodePiece append(AbstractInsnNode node) {

@@ -4,8 +4,8 @@ import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.net.SimplePacketType;
 
 /**
-* @author diesieben07
-*/
+ * @author diesieben07
+ */
 public enum SCPackets implements SimplePacketType {
 
 	INV_NAME(PacketInventoryName.class);

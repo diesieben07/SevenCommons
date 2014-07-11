@@ -8,10 +8,11 @@ import static java.lang.annotation.ElementType.*;
 
 /**
  * Elements marked with this annotation are internal to an implementation and should not be used by client code even though they are visible
+ *
  * @author diesieben07
  */
 @Retention(RetentionPolicy.SOURCE)
-@Target({ TYPE, METHOD, CONSTRUCTOR, FIELD, PACKAGE } )
+@Target({ TYPE, METHOD, CONSTRUCTOR, FIELD, PACKAGE })
 public @interface Internal {
 
 }

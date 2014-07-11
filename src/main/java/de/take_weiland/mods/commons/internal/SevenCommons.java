@@ -22,7 +22,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	public static final String VERSION = "1.0";
 
 	public static boolean MCP_ENVIRONMENT;
-	
+
 	public static final Logger LOGGER;
 	public static File MINECRAFT_DIR;
 
@@ -52,11 +52,11 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 			Launch.classLoader.addTransformerExclusion(e);
 		}
 	}
-	
+
 	@Override
 	public String[] getASMTransformerClass() {
 		return new String[] {
-			"de.take_weiland.mods.commons.internal.transformers.SCTransformerWrapper",
+				"de.take_weiland.mods.commons.internal.transformers.SCTransformerWrapper",
 		};
 	}
 
@@ -74,7 +74,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 	public void injectData(Map<String, Object> data) {
 		MCP_ENVIRONMENT = !(Boolean) data.get("runtimeDeobfuscationEnabled");
 		MINECRAFT_DIR = (File) data.get("mcLocation");
-		source = (File)data.get("coremodLocation");
+		source = (File) data.get("coremodLocation");
 		if (source == null) { // this is usually in a dev env
 			try {
 				source = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI());

@@ -13,7 +13,7 @@ public class PacketInventoryName extends ModPacket {
 
 	private int windowId;
 	private String name;
-	
+
 	public PacketInventoryName(int windowId, String name) {
 		this.windowId = windowId;
 		this.name = name;
@@ -29,7 +29,7 @@ public class PacketInventoryName extends ModPacket {
 		out.writeByte(windowId);
 		out.writeString(name);
 	}
-	
+
 	@Override
 	protected void handle(DataBuf in, EntityPlayer player, Side side) {
 		if (player.openContainer.windowId == in.readByte() && player.openContainer instanceof SCContainer) {

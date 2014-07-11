@@ -29,54 +29,58 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 
 	/**
 	 * <p>This constructor uses the given NBT key to store the data.</p>
-     * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
-	 * @param stack the ItemStack to save to
+	 * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
+	 *
+	 * @param stack  the ItemStack to save to
 	 * @param nbtKey the NBT key to use
 	 */
 	protected ItemInventory(ItemStack stack, String nbtKey) {
-        super();
+		super();
 		this.stack = stack;
 		this.nbtKey = nbtKey;
 		readFromNbt(getNbt());
 	}
 
-    /**
-     * <p>This constructor uses the given NBT key to store the data.</p>
-     * @param size the size of this inventory
-     * @param stack the ItemStack to save to
-     * @param nbtKey the NBT key to use
-     */
-    protected ItemInventory(int size, ItemStack stack, String nbtKey) {
-        super(size);
-        this.stack = stack;
-        this.nbtKey = nbtKey;
-        readFromNbt(getNbt());
-    }
+	/**
+	 * <p>This constructor uses the given NBT key to store the data.</p>
+	 *
+	 * @param size   the size of this inventory
+	 * @param stack  the ItemStack to save to
+	 * @param nbtKey the NBT key to use
+	 */
+	protected ItemInventory(int size, ItemStack stack, String nbtKey) {
+		super(size);
+		this.stack = stack;
+		this.nbtKey = nbtKey;
+		readFromNbt(getNbt());
+	}
 
 	/**
 	 * <p>This constructor uses the {@link #DEFAULT_NBT_KEY} to store the data.</p>
-     * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
+	 * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
+	 *
 	 * @param item the ItemStack to save to
 	 */
 	protected ItemInventory(ItemStack item) {
 		this(item, DEFAULT_NBT_KEY);
 	}
 
-    /**
-     * <p>This constructor uses the {@link #DEFAULT_NBT_KEY} to store the data.</p>
-     * @param size the size of this inventory
-     * @param item the ItemStack to save to
-     */
-    protected ItemInventory(int size, ItemStack item) {
-        this(size, item, DEFAULT_NBT_KEY);
-    }
+	/**
+	 * <p>This constructor uses the {@link #DEFAULT_NBT_KEY} to store the data.</p>
+	 *
+	 * @param size the size of this inventory
+	 * @param item the ItemStack to save to
+	 */
+	protected ItemInventory(int size, ItemStack item) {
+		this(size, item, DEFAULT_NBT_KEY);
+	}
 
-    @Override
-    public void onInventoryChanged() {
-        saveData();
-    }
+	@Override
+	public void onInventoryChanged() {
+		saveData();
+	}
 
-    /**
+	/**
 	 * saves this inventory to the ItemStack.
 	 */
 	protected final void saveData() {
@@ -99,29 +103,29 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 			this.inv = inv;
 		}
 
-        protected WithInventory(int size, IInventory inv, int slot, String nbtKey) {
-            super(size, checkStack(inv, slot), nbtKey);
-            this.slot = slot;
-            this.inv = inv;
-        }
+		protected WithInventory(int size, IInventory inv, int slot, String nbtKey) {
+			super(size, checkStack(inv, slot), nbtKey);
+			this.slot = slot;
+			this.inv = inv;
+		}
 
-        protected WithInventory(IInventory inv, int index) {
-            this(inv, index, DEFAULT_NBT_KEY);
-        }
+		protected WithInventory(IInventory inv, int index) {
+			this(inv, index, DEFAULT_NBT_KEY);
+		}
 
-        protected WithInventory(int size, IInventory inv, int index) {
-            this(size, inv, index, DEFAULT_NBT_KEY);
-        }
+		protected WithInventory(int size, IInventory inv, int index) {
+			this(size, inv, index, DEFAULT_NBT_KEY);
+		}
 
-        private static ItemStack checkStack(IInventory inv, int slot) {
-            return checkNotNull(checkNotNull(inv, "Inventory must not be null!").getStackInSlot(slot), "Inventory slot is empty!");
-        }
+		private static ItemStack checkStack(IInventory inv, int slot) {
+			return checkNotNull(checkNotNull(inv, "Inventory must not be null!").getStackInSlot(slot), "Inventory slot is empty!");
+		}
 
-        @Override
-        public void onInventoryChanged() {
-            super.onInventoryChanged();
-            inv.setInventorySlotContents(slot, stack);
-        }
+		@Override
+		public void onInventoryChanged() {
+			super.onInventoryChanged();
+			inv.setInventorySlotContents(slot, stack);
+		}
 
 	}
 

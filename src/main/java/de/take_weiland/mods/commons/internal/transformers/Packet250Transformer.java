@@ -17,6 +17,7 @@ import static org.objectweb.asm.Type.*;
 /**
  * Makes Packet250CustomPayload support up to about 8 Megabytes in size while still staying somewhat compatible
  * to the original protocol. Borrowed from FML: <a href="https://github.com/MinecraftForge/FML/commit/d0dd05a15c2eca9eabd308319c2ed85cb632922b">https://github.com/MinecraftForge/FML/commit/d0dd05a15c2eca9eabd308319c2ed85cb632922b</a>
+ *
  * @author diesieben07
  */
 public class Packet250Transformer implements ASMClassTransformer {

@@ -64,6 +64,7 @@ public final class ClassInfoUtil {
 		return ImmutableSet.copyOf(set);
 	}
 
-	private ClassInfoUtil() { }
+	private ClassInfoUtil() {
+	}
 
 }

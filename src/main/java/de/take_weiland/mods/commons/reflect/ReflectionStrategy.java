@@ -5,5 +5,5 @@ interface ReflectionStrategy {
 	<T> T createAccessor(Class<T> iface);
 
 	Class<?> defineDynClass(byte[] clazz, Class<?> context);
-	
+
 }

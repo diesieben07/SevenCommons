@@ -22,35 +22,35 @@ public final class PacketTransformer extends AbstractAnalyzingTransformer {
 		}
 
 		clazz.access = (clazz.access & ~(ACC_PRIVATE | ACC_PROTECTED)) | ACC_PUBLIC;
-		
+
 		FieldNode type = createTypeField(clazz);
-		
+
 		createGetter(clazz, type, ModPacketProxy.GET_TYPE);
-		
+
 		clazz.interfaces.add("de/take_weiland/mods/commons/internal/ModPacketProxy");
 		return true;
 	}
-	
+
 	private static void createGetter(ClassNode clazz, FieldNode field, String name) {
 		String desc = getMethodDescriptor(getType(field.desc));
 		MethodNode method = new MethodNode(ACC_PUBLIC, name, desc, null, null);
-		
+
 		method.instructions.add(new FieldInsnNode(GETSTATIC, clazz.name, field.name, field.desc));
 		method.instructions.add(new InsnNode(ARETURN));
-		
+
 		clazz.methods.add(method);
 	}
 
 	public static final String TYPE_FIELD = "_sc$packettype";
-	
+
 	private static FieldNode createTypeField(ClassNode clazz) {
 		String name = TYPE_FIELD;
 		String desc = getDescriptor(Enum.class);
 		FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC, name, desc, null, null);
 		clazz.fields.add(field);
 		return field;
-	} 
-	
+	}
+
 	private static void addDefaultConstructor(ClassNode clazz) {
 		String name = "<init>";
 		String desc = getMethodDescriptor(VOID_TYPE);

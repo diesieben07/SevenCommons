@@ -12,8 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
-* @author diesieben07
-*/
+ * @author diesieben07
+ */
 final class ClassInfoFromClazz extends ClassInfo {
 
 	private final Class<?> clazz;

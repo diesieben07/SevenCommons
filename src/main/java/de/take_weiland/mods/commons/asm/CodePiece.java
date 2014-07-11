@@ -5,9 +5,9 @@ import org.objectweb.asm.tree.InsnList;
 
 /**
  * <p>Represents a piece of Bytecode.</p>
- * @see de.take_weiland.mods.commons.asm.CodePieces The CodePieces class for working with CodePieces
  *
  * @author diesieben07
+ * @see de.take_weiland.mods.commons.asm.CodePieces The CodePieces class for working with CodePieces
  */
 public interface CodePiece {
 
@@ -17,6 +17,7 @@ public interface CodePiece {
 	 * <p>Appends the instructions in this CodePiece to the given InsnList.</p>
 	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
 	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>
+	 *
 	 * @param to the list to append to
 	 */
 	void appendTo(InsnList to);
@@ -25,6 +26,7 @@ public interface CodePiece {
 	 * <p>Prepends the instructions in this CodePiece to the given InsnList.</p>
 	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
 	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>
+	 *
 	 * @param to the list to append to
 	 */
 	void prependTo(InsnList to);
@@ -33,7 +35,8 @@ public interface CodePiece {
 	 * <p>Inserts the instructions in this CodePiece after the given location, which must be part of the InsnList.</p>
 	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
 	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>
-	 * @param to the list to append to
+	 *
+	 * @param to       the list to append to
 	 * @param location the position where to insert the code, must be part of the InsnList
 	 */
 	void insertAfter(InsnList to, AbstractInsnNode location);
@@ -42,7 +45,8 @@ public interface CodePiece {
 	 * <p>Inserts the instructions in this CodePiece before the given location, which must be part of the InsnList.</p>
 	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
 	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>
-	 * @param to the list to append to
+	 *
+	 * @param to       the list to append to
 	 * @param location the position where to insert the code, must be part of the InsnList
 	 */
 	void insertBefore(InsnList to, AbstractInsnNode location);
@@ -50,6 +54,7 @@ public interface CodePiece {
 	/**
 	 * <p>Append the given instruction to this CodePiece.</p>
 	 * <p>The instruction must not be used in any InsnList before or after this operation.</p>
+	 *
 	 * @param node the instruction to append
 	 * @return a new CodePiece containing first the instructions in this CodePiece and then the given instruction
 	 */
@@ -58,6 +63,7 @@ public interface CodePiece {
 	/**
 	 * <p>Append the given InsnList to this CodePiece.</p>
 	 * <p>The list must not be used elsewhere before or after this operation.</p>
+	 *
 	 * @param insns the list to append
 	 * @return a new CodePiece containing first the instructions in this CodePiece and then the instructions in the given InsnList.
 	 */
@@ -65,6 +71,7 @@ public interface CodePiece {
 
 	/**
 	 * <p>Appends the given CodePiece to this CodePiece, leaving this and the other CodePiece intact and usable.</p>
+	 *
 	 * @param other the CodePiece to append
 	 * @return a new CodePiece containing first the instructions in this CodePiece and then the instructions in the given CodePiece.
 	 */
@@ -73,6 +80,7 @@ public interface CodePiece {
 	/**
 	 * <p>Prepends the given CodePiece to this CodePiece, leaving this and the other CodePiece intact and usable.</p>
 	 * <p>This method returns an equivalent result to {@code other.append(this)}</p>
+	 *
 	 * @param other the CodePiece to prepend
 	 * @return a new CodePiece containing first the instructions in the given CodePiece and then the instructions in this CodePiece
 	 */
@@ -81,6 +89,7 @@ public interface CodePiece {
 	/**
 	 * <p>Append the given InsnList to this CodePiece.</p>
 	 * <p>The list must not be used elsewhere before or after this operation.</p>
+	 *
 	 * @param insns the list to append
 	 * @return a new CodePiece containing first the instructions in this CodePiece and then the instructions in the given InsnList.
 	 */
@@ -89,6 +98,7 @@ public interface CodePiece {
 	/**
 	 * <p>Prepend the given instruction to this CodePiece.</p>
 	 * <p>The instruction must not be used in any InsnList before or after this operation.</p>
+	 *
 	 * @param node the instruction to append
 	 * @return a new CodePiece containing first the instructions in this CodePiece and then the given instruction
 	 */
@@ -96,6 +106,7 @@ public interface CodePiece {
 
 	/**
 	 * <p>Returns the number of instructions in this CodePiece.</p>
+	 *
 	 * @return the number of instructions
 	 */
 	int size();

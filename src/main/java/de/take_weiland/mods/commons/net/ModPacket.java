@@ -17,17 +17,18 @@ import static com.google.common.base.Preconditions.checkState;
  * Register your Types with {@link Network#simplePacketHandler(String, Class)}</p>
  * <p>To send this packet, use the Methods implemented from {@link de.take_weiland.mods.commons.net.SimplePacket}. Example:
  * <pre>{@code
- *new ExamplePacket(someData, "moreData").sendToServer();
- *new DifferentPacket(evenMoreData).sendToPlayer(somePlayer);
+ * new ExamplePacket(someData, "moreData").sendToServer();
+ * new DifferentPacket(evenMoreData).sendToPlayer(somePlayer);
  * }</pre></p>
  */
 public abstract class ModPacket extends ModPacketBase {
 
 	/**
 	 * Reads this packet's data from the given buffer (as written by {@link #write(WritableDataBuf)} and then performs this packet's action.
+	 *
 	 * @param buffer the buffer containing the packet data
 	 * @param player the player handling this packet, on the client side it's the client-player, on the server side it's the player sending the packet
-	 * @param side the (logical) side receiving the packet
+	 * @param side   the (logical) side receiving the packet
 	 */
 	protected abstract void handle(DataBuf buffer, EntityPlayer player, Side side);
 

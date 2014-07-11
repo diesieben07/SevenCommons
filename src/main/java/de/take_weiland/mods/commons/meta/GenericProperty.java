@@ -37,12 +37,12 @@ abstract class GenericProperty<T> implements MetadataProperty<T> {
 		world.setBlockMetadataWithNotify(x, y, z, toMeta(value, world.getBlockMetadata(x, y, z)), notifyFlags);
 	}
 
-    @Override
-    public <V> Map<T, V> createMap() {
-        if (hasDistinctValues()) {
-            return Maps.newHashMapWithExpectedSize(values().length);
-        } else {
-            return Maps.newHashMap();
-        }
-    }
+	@Override
+	public <V> Map<T, V> createMap() {
+		if (hasDistinctValues()) {
+			return Maps.newHashMapWithExpectedSize(values().length);
+		} else {
+			return Maps.newHashMap();
+		}
+	}
 }

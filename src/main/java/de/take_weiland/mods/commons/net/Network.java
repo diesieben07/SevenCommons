@@ -20,13 +20,15 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public final class Network {
 
-	private Network() { }
+	private Network() {
+	}
 
 	/**
 	 * create a {@link de.take_weiland.mods.commons.net.PacketFactory} that uses the given Channel to send Packets of type {@code TYPE} and dispatches handling off to the given PacketHandler.
-	 * @param channel the Packet channel to send on
+	 *
+	 * @param channel   the Packet channel to send on
 	 * @param typeClass the Enum class holding the possible Packet types
-	 * @param handler the handler to handle the packets
+	 * @param handler   the handler to handle the packets
 	 * @return a new PacketFactory
 	 */
 	public static <TYPE extends Enum<TYPE>> PacketFactory<TYPE> makeFactory(String channel, Class<TYPE> typeClass, PacketHandler<TYPE> handler) {
@@ -36,7 +38,8 @@ public final class Network {
 	/**
 	 * <p>create a {@link PacketFactory} that uses the given Channel to send Packets of type {@code TYPE} and dispatches handling off to the corresponding
 	 * {@link ModPacket} class of the respective TYPE.</p>
-	 * @param channel the Packet channel to send on
+	 *
+	 * @param channel   the Packet channel to send on
 	 * @param typeClass the Enum class holding the possible Packet types
 	 * @return a new PacketFactory
 	 */
@@ -65,6 +68,7 @@ public final class Network {
 
 	/**
 	 * gets the INetworkManager associated with the given NetHandler
+	 *
 	 * @param netHandler the NetHandler to get the INetworkManager from
 	 * @return the INetworkManager
 	 */
@@ -72,9 +76,9 @@ public final class Network {
 		if (!netHandler.isServerHandler()) {
 			return SCModContainer.proxy.getNetworkManagerFromClient(netHandler);
 		} else if (netHandler instanceof NetServerHandler) {
-			return ((NetServerHandler)netHandler).netManager;
+			return ((NetServerHandler) netHandler).netManager;
 		} else {
-			return ((NetLoginHandler)netHandler).myTCPConnection;
+			return ((NetLoginHandler) netHandler).myTCPConnection;
 		}
 	}
 

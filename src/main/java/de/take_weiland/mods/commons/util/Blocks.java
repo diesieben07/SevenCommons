@@ -20,11 +20,13 @@ import static de.take_weiland.mods.commons.util.RegistrationUtil.checkPhase;
 
 public final class Blocks {
 
-	private Blocks() { }
+	private Blocks() {
+	}
 
 	/**
 	 * <p>Equivalent to {@link #init(net.minecraft.block.Block, String, Class, String)} using the currently active mod and a default ItemBlock class.</p>
-	 * @param block the Block instance
+	 *
+	 * @param block    the Block instance
 	 * @param baseName base name for this block
 	 */
 	public static void init(Block block, String baseName) {
@@ -33,8 +35,9 @@ public final class Blocks {
 
 	/**
 	 * <p>Equivalent to {@link #init(net.minecraft.block.Block, String, Class, String)} using a default ItemBlock class.</p>
-	 * @param modId Your ModId
-	 * @param block the Block instance
+	 *
+	 * @param modId    Your ModId
+	 * @param block    the Block instance
 	 * @param baseName base name for this block
 	 */
 	public static void init(String modId, Block block, String baseName) {
@@ -43,8 +46,9 @@ public final class Blocks {
 
 	/**
 	 * <p>Equivalent to {@link #init(net.minecraft.block.Block, String, Class, String)} using the currently active mod.</p>
-	 * @param block the Block instance
-	 * @param baseName base name for this block
+	 *
+	 * @param block     the Block instance
+	 * @param baseName  base name for this block
 	 * @param itemClass the ItemBlock class to use
 	 */
 	public static void init(Block block, String baseName, Class<? extends ItemBlock> itemClass) {
@@ -56,18 +60,19 @@ public final class Blocks {
 	/**
 	 * <p>Generic initialization for Blocks:</p>
 	 * <ul>
-	 *    <li>Sets the Block's texture to <tt>modId:baseName</tt>, unless it is already set</li>
-	 *    <li>Sets the Block's unlocalized name to <tt>modId.baseName</tt>, unless it is already set</li>
-	 *    <li>Register the block with {@link cpw.mods.fml.common.registry.GameRegistry#registerBlock(net.minecraft.block.Block, Class, String, String)}</li>
-	 *    <li><i>TODO!</i></li>
+	 * <li>Sets the Block's texture to <tt>modId:baseName</tt>, unless it is already set</li>
+	 * <li>Sets the Block's unlocalized name to <tt>modId.baseName</tt>, unless it is already set</li>
+	 * <li>Register the block with {@link cpw.mods.fml.common.registry.GameRegistry#registerBlock(net.minecraft.block.Block, Class, String, String)}</li>
+	 * <li><i>TODO!</i></li>
 	 * </ul>
 	 * <p>The ItemBlock class provided should extend {@link de.take_weiland.mods.commons.templates.SCItemBlock} (resp.
 	 * {@link de.take_weiland.mods.commons.templates.TypedItemBlock} for Blocks that implement {@link de.take_weiland.mods.commons.meta.HasSubtypes})
 	 * to enable all features of SevenCommons for this Block.</p>
-	 * @param block the Block instance
-	 * @param baseName base name for this block
+	 *
+	 * @param block     the Block instance
+	 * @param baseName  base name for this block
 	 * @param itemClass the ItemBlock class to use
-	 * @param modId Your ModId
+	 * @param modId     Your ModId
 	 */
 	public static void init(Block block, String baseName, Class<? extends ItemBlock> itemClass, String modId) {
 		checkPhase("Block");
@@ -76,11 +81,11 @@ public final class Blocks {
 			block.setTextureName(modId + ":" + baseName);
 		}
 		if (SCReflector.instance.getRawUnlocalizedName(block) == null) {
-			block.setUnlocalizedName(modId + "." +  baseName);
+			block.setUnlocalizedName(modId + "." + baseName);
 		}
 
 		GameRegistry.registerBlock(block, getItemBlockClass(block, itemClass), baseName);
-		
+
 		if (block instanceof HasSubtypes) {
 			ItemStacks.registerSubstacks(baseName, block, InstanceCacheHolder.BLOCK_STACK_FUNCTION);
 		}
@@ -89,12 +94,13 @@ public final class Blocks {
 	/**
 	 * <p>Generic implementation for {@link net.minecraft.block.Block#breakBlock}. This method drops the contents of any Inventory
 	 * associated with the block and should therefor be called before any TileEntity is removed.</p>
+	 *
 	 * @param block the Block instance
 	 * @param world the World
-	 * @param x x position
-	 * @param y y position
-	 * @param z z position
-	 * @param meta the metadata of the block being broken
+	 * @param x     x position
+	 * @param y     y position
+	 * @param z     z position
+	 * @param meta  the metadata of the block being broken
 	 */
 	public static void genericBreak(Block block, World world, int x, int y, int z, int meta) {
 		if (block.hasTileEntity(meta)) {
@@ -105,10 +111,11 @@ public final class Blocks {
 	/**
 	 * <p>Generic implementation for {@link net.minecraft.block.Block#getSubBlocks(int, net.minecraft.creativetab.CreativeTabs, java.util.List)}.
 	 * This method takes the {@link de.take_weiland.mods.commons.meta.HasSubtypes} interface into account.</p>
+	 *
 	 * @param block the Block instance
-	 * @param list the list to add ItemStacks to
+	 * @param list  the list to add ItemStacks to
 	 */
-	@SuppressWarnings({"rawtypes", "unchecked"})
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void getSubBlocksImpl(Block block, List list) {
 		if (block instanceof HasSubtypes) {
 			// this should technically be <? extends Subtype> but Java has no way of doing this

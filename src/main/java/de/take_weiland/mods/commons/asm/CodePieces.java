@@ -12,13 +12,15 @@ import static org.objectweb.asm.Type.*;
 
 /**
  * <p>Factory class for CodePieces</p>
- * @see de.take_weiland.mods.commons.asm.CodePiece
+ *
  * @author diesieben07
+ * @see de.take_weiland.mods.commons.asm.CodePiece
  */
 public final class CodePieces {
 
 	/**
 	 * <p>Creates an empty CodePiece.</p>
+	 *
 	 * @return an empty CodePiece
 	 */
 	public static CodePiece of() {
@@ -27,6 +29,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Creates a CodePiece that represents a single opcode. The opcode must be valid for an {@link org.objectweb.asm.tree.InsnNode} (it takes no parameters).</p>
+	 *
 	 * @param opcode the opcode
 	 * @return a CodePiece that represents the opcode
 	 */
@@ -36,6 +39,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Creates a CodePiece that represents the given instruction.</p>
+	 *
 	 * @param insn the instruction
 	 * @return a CodePiece
 	 */
@@ -45,6 +49,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Creates a CodePiece that represents all instructions in the given list. The list should not be used after being passed to this method.</p>
+	 *
 	 * @param insns the InsnList
 	 * @return a CodePiece
 	 */
@@ -83,6 +88,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that represents all CodePieces in the given array, in order.</p>
+	 *
 	 * @param pieces the pieces to concatenate
 	 * @return a CodePiece
 	 */
@@ -98,8 +104,9 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will get the given field from the given class using the given instance.</p>
-	 * @param clazz the class containing the field
-	 * @param field the field
+	 *
+	 * @param clazz    the class containing the field
+	 * @param field    the field
 	 * @param instance a CodePiece representing the instance
 	 * @return a CodePiece
 	 */
@@ -110,6 +117,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will get the given static field from the given class.</p>
+	 *
 	 * @param clazz the class containing the field
 	 * @param field the field
 	 * @return a CodePiece
@@ -129,9 +137,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will get the given field from the given class using the given instance.</p>
-	 * @param clazz the class containing the field
-	 * @param field the name of the field
-	 * @param type the type of the field
+	 *
+	 * @param clazz    the class containing the field
+	 * @param field    the name of the field
+	 * @param type     the type of the field
 	 * @param instance a CodePiece representing the instance
 	 * @return a CodePiece
 	 */
@@ -141,9 +150,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will get the given field from the given class using the given instance.</p>
-	 * @param clazz the class containing the field
-	 * @param field the name of the field
-	 * @param type the type of the field
+	 *
+	 * @param clazz    the class containing the field
+	 * @param field    the name of the field
+	 * @param type     the type of the field
 	 * @param instance a CodePiece representing the instance
 	 * @return a CodePiece
 	 */
@@ -153,9 +163,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will get the given field from the given class using the given instance.</p>
-	 * @param clazz the class containing the field
-	 * @param field the name of the field
-	 * @param desc the type descriptor of the field
+	 *
+	 * @param clazz    the class containing the field
+	 * @param field    the name of the field
+	 * @param desc     the type descriptor of the field
 	 * @param instance a CodePiece representing the instance
 	 * @return a CodePiece
 	 */
@@ -165,9 +176,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will get the given static field from the given class.</p>
+	 *
 	 * @param clazz the class containing the field
 	 * @param field the field
-	 * @param type the type of the field
+	 * @param type  the type of the field
 	 * @return a CodePiece
 	 */
 	public static CodePiece getField(String clazz, String field, Type type) {
@@ -176,9 +188,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will get the given static field from the given class.</p>
+	 *
 	 * @param clazz the class containing the field
 	 * @param field the field
-	 * @param type the type of the field
+	 * @param type  the type of the field
 	 * @return a CodePiece
 	 */
 	public static CodePiece getField(String clazz, String field, Class<?> type) {
@@ -187,9 +200,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will get the given static field from the given class.</p>
+	 *
 	 * @param clazz the class containing the field
 	 * @param field the field
-	 * @param desc the type descriptor of the field
+	 * @param desc  the type descriptor of the field
 	 * @return a CodePiece
 	 */
 	public static CodePiece getField(String clazz, String field, String desc) {
@@ -198,10 +212,11 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will set the given field to the given value using the given instance.</p>
-	 * @param clazz the class containing the field
-	 * @param field the field
+	 *
+	 * @param clazz    the class containing the field
+	 * @param field    the field
 	 * @param instance a CodePiece representing the instance
-	 * @param value a CodePiece representing the new value
+	 * @param value    a CodePiece representing the new value
 	 * @return a CodePiece
 	 */
 	public static CodePiece setField(ClassNode clazz, FieldNode field, CodePiece instance, CodePiece value) {
@@ -211,6 +226,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will set the given static field to the given value.</p>
+	 *
 	 * @param clazz the class containing the field
 	 * @param field the field
 	 * @param value a CodePiece representing the new value
@@ -223,11 +239,12 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will set the given field to the given value using the given instance.</p>
-	 * @param clazz the class containing the field
-	 * @param field the name of the field
-	 * @param type the type of the field
+	 *
+	 * @param clazz    the class containing the field
+	 * @param field    the name of the field
+	 * @param type     the type of the field
 	 * @param instance a CodePiece representing the instance
-	 * @param value a CodePiece representing the new value
+	 * @param value    a CodePiece representing the new value
 	 * @return a CodePiece
 	 */
 	public static CodePiece setField(String clazz, String field, Type type, CodePiece instance, CodePiece value) {
@@ -236,11 +253,12 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will set the given field to the given value using the given instance.</p>
-	 * @param clazz the class containing the field
-	 * @param field the name of the field
-	 * @param type the type of the field
+	 *
+	 * @param clazz    the class containing the field
+	 * @param field    the name of the field
+	 * @param type     the type of the field
 	 * @param instance a CodePiece representing the instance
-	 * @param value a CodePiece representing the new value
+	 * @param value    a CodePiece representing the new value
 	 * @return a CodePiece
 	 */
 	public static CodePiece setField(String clazz, String field, Class<?> type, CodePiece instance, CodePiece value) {
@@ -249,11 +267,12 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will set the given field to the given value using the given instance.</p>
-	 * @param clazz the class containing the field
-	 * @param field the name of the field
-	 * @param desc the type descriptor of the field
+	 *
+	 * @param clazz    the class containing the field
+	 * @param field    the name of the field
+	 * @param desc     the type descriptor of the field
 	 * @param instance a CodePiece representing the instance
-	 * @param value a CodePiece representing the new value
+	 * @param value    a CodePiece representing the new value
 	 * @return a CodePiece
 	 */
 	public static CodePiece setField(String clazz, String field, String desc, CodePiece instance, CodePiece value) {
@@ -262,9 +281,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will set the given static field to the given value.</p>
+	 *
 	 * @param clazz the class containing the field
 	 * @param field the name of the field
-	 * @param type the type of the field
+	 * @param type  the type of the field
 	 * @param value a CodePiece representing the new value
 	 * @return a CodePiece
 	 */
@@ -274,9 +294,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will set the given static field to the given value.</p>
+	 *
 	 * @param clazz the class containing the field
 	 * @param field the name of the field
-	 * @param type the type of the field
+	 * @param type  the type of the field
 	 * @param value a CodePiece representing the new value
 	 * @return a CodePiece
 	 */
@@ -286,9 +307,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will set the given static field to the given value.</p>
+	 *
 	 * @param clazz the class containing the field
 	 * @param field the name of the field
-	 * @param desc the type descriptor of the field
+	 * @param desc  the type descriptor of the field
 	 * @param value a CodePiece representing the new value
 	 * @return a CodePiece
 	 */
@@ -298,10 +320,11 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will invoke the given static method with the given arguments.</p>
-	 * @param clazz the class containing the method
+	 *
+	 * @param clazz  the class containing the method
 	 * @param method the method to invoke
-	 * @param desc the method descriptor
-	 * @param args the arguments for the method
+	 * @param desc   the method descriptor
+	 * @param args   the arguments for the method
 	 * @return a CodePiece
 	 */
 	public static CodePiece invokeStatic(String clazz, String method, String desc, CodePiece... args) {
@@ -311,11 +334,12 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will invoke the given method using the given opcode and arguments.</p>
+	 *
 	 * @param invokeOpcode the opcode to use to invoke the method (must be {@code INVOKEVIRTUAL}, {@code INVOKESPECIAL} or {@code INVOKESTATIC})
-	 * @param clazz the class containing the method
-	 * @param method the method to invoke
-	 * @param desc the method descriptor
-	 * @param args the arguments for the method (in case of a non-static method pass the instance as the first argument)
+	 * @param clazz        the class containing the method
+	 * @param method       the method to invoke
+	 * @param desc         the method descriptor
+	 * @param args         the arguments for the method (in case of a non-static method pass the instance as the first argument)
 	 * @return a CodePiece
 	 */
 	public static CodePiece invoke(int invokeOpcode, String clazz, String method, String desc, CodePiece... args) {
@@ -328,9 +352,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will invoke the given method using the given opcode and arguments.</p>
-	 * @param clazz the class containing the method
+	 *
+	 * @param clazz  the class containing the method
 	 * @param method the method to invoke
-	 * @param args the arguments for the method (in case of a non-static method pass the instance as the first argument)
+	 * @param args   the arguments for the method (in case of a non-static method pass the instance as the first argument)
 	 * @return a CodePiece
 	 */
 	public static CodePiece invoke(ClassNode clazz, MethodNode method, CodePiece... args) {
@@ -343,9 +368,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will invoke the super method of the given method using the given opcode and arguments.</p>
-	 * @param clazz the class containing the method (not the super method)
+	 *
+	 * @param clazz  the class containing the method (not the super method)
 	 * @param method the method to invoke
-	 * @param args the arguments for the method (in case of a non-static method pass the instance as the first argument)
+	 * @param args   the arguments for the method (in case of a non-static method pass the instance as the first argument)
 	 * @return a CodePiece
 	 */
 	public static CodePiece invokeSuper(ClassNode clazz, MethodNode method, CodePiece... args) {
@@ -356,6 +382,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will create a new instance of the given class.</p>
+	 *
 	 * @param c the class to instantiate
 	 * @return a CodePiece
 	 */
@@ -365,6 +392,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will create a new instance of the given class.</p>
+	 *
 	 * @param t the class to instantiate
 	 * @return a CodePiece
 	 */
@@ -374,6 +402,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will create a new instance of the given class.</p>
+	 *
 	 * @param internalName the internal name of the class to instantiate
 	 * @return a CodePiece
 	 */
@@ -383,9 +412,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will create a new instance of the given class, passing the given arguments to the constructor.</p>
-	 * @param c the class to instantiate
+	 *
+	 * @param c        the class to instantiate
 	 * @param argTypes the constructor argument types, in order
-	 * @param args the constructor arguments
+	 * @param args     the constructor arguments
 	 * @return a CodePiece
 	 */
 	public static CodePiece instantiate(Class<?> c, Type[] argTypes, CodePiece... args) {
@@ -394,9 +424,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will create a new instance of the given class, passing the given arguments to the constructor.</p>
-	 * @param t the class to instantiate
+	 *
+	 * @param t        the class to instantiate
 	 * @param argTypes the constructor argument types, in order
-	 * @param args the constructor arguments
+	 * @param args     the constructor arguments
 	 * @return a CodePiece
 	 */
 	public static CodePiece instantiate(Type t, Type[] argTypes, CodePiece... args) {
@@ -405,9 +436,10 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will create a new instance of the given class, passing the given arguments to the constructor.</p>
+	 *
 	 * @param internalName the internal name of the class to instantiate
-	 * @param argTypes the constructor argument types, in order
-	 * @param args the constructor arguments
+	 * @param argTypes     the constructor argument types, in order
+	 * @param args         the constructor arguments
 	 * @return a CodePiece
 	 */
 	public static CodePiece instantiate(String internalName, Type[] argTypes, CodePiece... args) {
@@ -420,6 +452,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will cast the value on top of the stack to the given class.</p>
+	 *
 	 * @param c the class to cast to
 	 * @return a CodePiece
 	 */
@@ -429,6 +462,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will cast the value on top of the stack to the given class.</p>
+	 *
 	 * @param type the type of the class to cast to
 	 * @return a CodePiece
 	 */
@@ -438,6 +472,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will cast the value on top of the stack to the given class.</p>
+	 *
 	 * @param internalName the internal name of the class class to cast to
 	 * @return a CodePiece
 	 */
@@ -447,7 +482,8 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that represents the given value, casted to the given class.</p>
-	 * @param c the class to cast to
+	 *
+	 * @param c     the class to cast to
 	 * @param value a CodePiece representing the value
 	 * @return a CodePiece
 	 */
@@ -457,7 +493,8 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that represents the given value, casted to the given class.</p>
-	 * @param type the type of the class to cast to
+	 *
+	 * @param type  the type of the class to cast to
 	 * @param value a CodePiece representing the value
 	 * @return a CodePiece
 	 */
@@ -467,8 +504,9 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that represents the given value, casted to the given class.</p>
+	 *
 	 * @param internalName the internal name of the class class to cast to
-	 * @param value a CodePiece representing the value
+	 * @param value        a CodePiece representing the value
 	 * @return a CodePiece
 	 */
 	public static CodePiece castTo(String internalName, CodePiece value) {
@@ -479,6 +517,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the current {@code this} reference onto the stack.</p>
+	 *
 	 * @return a CodePiece
 	 */
 	public static CodePiece getThis() {
@@ -489,6 +528,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load {@code null} onto the stack.</p>
+	 *
 	 * @return a CodePiece
 	 */
 	public static CodePiece constantNull() {
@@ -499,15 +539,16 @@ public final class CodePieces {
 	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
 	 * <p>The object must be one of following:</p>
 	 * <ul>
-	 *     <li>{@code null}</li>
-	 *     <li>A primitive wrapper ({@code Boolean}, {@code Byte}, {@code Short}, {@code Integer}, {@code Long}, {@code Character},
-	 *    {@code Float}, {@code Double})</li>
-	 *     <li>A {@code String}</li>
-	 *     <li>An {@code Enum}</li>
-	 *     <li>A {@code Class}</li>
-	 *     <li>An ASM {@code Type}</li>
-	 *     <li>An array containing only the above</li>
+	 * <li>{@code null}</li>
+	 * <li>A primitive wrapper ({@code Boolean}, {@code Byte}, {@code Short}, {@code Integer}, {@code Long}, {@code Character},
+	 * {@code Float}, {@code Double})</li>
+	 * <li>A {@code String}</li>
+	 * <li>An {@code Enum}</li>
+	 * <li>A {@code Class}</li>
+	 * <li>An ASM {@code Type}</li>
+	 * <li>An array containing only the above</li>
 	 * </ul>
+	 *
 	 * @param o the constant
 	 * @return a CodePiece
 	 */
@@ -536,6 +577,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 *
 	 * @param b the constant
 	 * @return a CodePiece
 	 */
@@ -545,6 +587,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 *
 	 * @param b the constant
 	 * @return a CodePiece
 	 */
@@ -554,6 +597,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 *
 	 * @param s the constant
 	 * @return a CodePiece
 	 */
@@ -563,6 +607,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 *
 	 * @param i the constant
 	 * @return a CodePiece
 	 */
@@ -572,6 +617,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 *
 	 * @param l the constant
 	 * @return a CodePiece
 	 */
@@ -587,6 +633,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 *
 	 * @param f the constant
 	 * @return a CodePiece
 	 */
@@ -604,6 +651,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 *
 	 * @param d the constant
 	 * @return a CodePiece
 	 */
@@ -619,6 +667,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
+	 *
 	 * @param s the constant
 	 * @return a CodePiece
 	 */
@@ -628,6 +677,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given class constant onto the stack.</p>
+	 *
 	 * @param t the constant
 	 * @return a CodePiece
 	 */
@@ -637,6 +687,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given class constant onto the stack.</p>
+	 *
 	 * @param c the constant
 	 * @return a CodePiece
 	 */
@@ -646,6 +697,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given enum constant onto the stack.</p>
+	 *
 	 * @param e the constant
 	 * @return a CodePiece
 	 */
@@ -656,6 +708,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 *
 	 * @param arr the array
 	 * @return a CodePiece
 	 */
@@ -665,6 +718,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 *
 	 * @param arr the array
 	 * @return a CodePiece
 	 */
@@ -674,6 +728,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 *
 	 * @param arr the array
 	 * @return a CodePiece
 	 */
@@ -683,6 +738,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 *
 	 * @param arr the array
 	 * @return a CodePiece
 	 */
@@ -692,6 +748,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 *
 	 * @param arr the array
 	 * @return a CodePiece
 	 */
@@ -701,6 +758,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 *
 	 * @param arr the array
 	 * @return a CodePiece
 	 */
@@ -710,6 +768,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 *
 	 * @param arr the array
 	 * @return a CodePiece
 	 */
@@ -719,6 +778,7 @@ public final class CodePieces {
 
 	/**
 	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
+	 *
 	 * @param arr the array
 	 * @return a CodePiece
 	 */
@@ -729,6 +789,7 @@ public final class CodePieces {
 	/**
 	 * <p>Create a CodePiece that will load the given array onto the stack.</p>
 	 * <p>The array may only contain valid constants (see {@link #constant(Object)}</p>
+	 *
 	 * @param arr the array
 	 * @return a CodePiece
 	 */

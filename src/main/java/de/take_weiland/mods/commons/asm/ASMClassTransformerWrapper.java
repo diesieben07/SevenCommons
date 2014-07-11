@@ -70,6 +70,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 
 	/**
 	 * <p>Register your transformers here.</p>
+	 *
 	 * @param builder a builder to add your transformers to
 	 */
 	protected abstract void setup(ImmutableList.Builder<ASMClassTransformer> builder);

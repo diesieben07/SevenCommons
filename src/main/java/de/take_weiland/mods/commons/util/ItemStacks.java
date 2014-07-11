@@ -16,12 +16,14 @@ import java.util.Objects;
 
 /**
  * <p>Utilities for ItemStacks.</p>
+ *
  * @see net.minecraft.item.ItemStack
  */
 public final class ItemStacks {
 
 	/**
 	 * <p>Tests if the first ItemStack can be fully merged into the second one.</p>
+	 *
 	 * @param from the ItemStack to merge, may be null
 	 * @param into the ItemStack to merge into, may be null
 	 * @return true if the first ItemStack can be fully merged into the second one
@@ -37,6 +39,7 @@ public final class ItemStacks {
 	/**
 	 * <p>Determine if the given ItemStacks are equal.</p>
 	 * <p>This method checks the ItemID, damage value and NBT data of the stack, it does not check stack sizes.</p>
+	 *
 	 * @param a an ItemStack
 	 * @param b an ItemStack
 	 * @return true if the ItemStack are equal
@@ -53,22 +56,22 @@ public final class ItemStacks {
 	public static boolean identical(ItemStack a, ItemStack b) {
 		return a == null ? b == null : (b != null && equalsImpl(a, b) && a.stackSize == b.stackSize);
 	}
-	
+
 	public static ItemStack merge(ItemStack from, ItemStack into) {
 		return merge(from, into, false);
 	}
-	
+
 	public static ItemStack merge(ItemStack from, ItemStack into, boolean force) {
 		if (from == null) {
 			return into;
 		}
-		
+
 		if (into == null) {
 			ItemStack result = from.copy();
 			from.stackSize = 0;
 			return result;
 		}
-		
+
 		if (force || equalsImpl(from, into)) {
 			int transferCount = Math.min(into.getMaxStackSize() - into.stackSize, from.stackSize);
 			from.stackSize -= transferCount;
@@ -77,10 +80,10 @@ public final class ItemStacks {
 		return into;
 	}
 
-    public static Block getBlock(ItemStack stack) {
-        return Block.blocksList[stack.itemID];
-    }
-	
+	public static Block getBlock(ItemStack stack) {
+		return Block.blocksList[stack.itemID];
+	}
+
 	public static ItemStack emptyToNull(ItemStack stack) {
 		return stack == null || stack.stackSize <= 0 ? null : stack;
 	}
@@ -92,30 +95,30 @@ public final class ItemStacks {
 		return stack.stackTagCompound;
 	}
 
-    public static NBTTagCompound getNbt(ItemStack stack, String key) {
-        return NBT.getOrCreateCompound(getNbt(stack), key);
-    }
-	
+	public static NBTTagCompound getNbt(ItemStack stack, String key) {
+		return NBT.getOrCreateCompound(getNbt(stack), key);
+	}
+
 	public static ItemStack of(Item item) {
 		return new ItemStack(item);
 	}
-	
+
 	public static ItemStack of(Item item, int quantity) {
 		return new ItemStack(item, quantity);
 	}
-	
+
 	public static ItemStack of(Item item, int quantity, int meta) {
 		return new ItemStack(item, quantity, meta);
 	}
-	
+
 	public static ItemStack of(Block block) {
 		return new ItemStack(block);
 	}
-	
+
 	public static ItemStack of(Block block, int quantity) {
 		return new ItemStack(block, quantity);
 	}
-	
+
 	public static ItemStack of(Block block, int quantity, int meta) {
 		return new ItemStack(block, quantity, meta);
 	}
@@ -123,23 +126,23 @@ public final class ItemStacks {
 	public static boolean is(ItemStack stack, int id) {
 		return stack != null && stack.itemID == id;
 	}
-	
+
 	public static boolean is(ItemStack stack, int id, int meta) {
 		return stack != null && stack.itemID == id && stack.getItemDamage() == meta;
 	}
-	
+
 	public static boolean is(ItemStack stack, Item item) {
 		return stack != null && stack.itemID == item.itemID;
 	}
-	
+
 	public static boolean is(ItemStack stack, Item item, int meta) {
 		return stack != null && stack.itemID == item.itemID && stack.getItemDamage() == meta;
 	}
-	
+
 	public static boolean is(ItemStack stack, Block block, int meta) {
 		return stack != null && stack.itemID == block.blockID && stack.getItemDamage() == meta;
 	}
-	
+
 	public static boolean is(ItemStack stack, Block block) {
 		return stack != null && stack.itemID == block.blockID;
 	}
@@ -157,5 +160,6 @@ public final class ItemStacks {
 		}
 	}
 
-	private ItemStacks() { }
+	private ItemStacks() {
+	}
 }

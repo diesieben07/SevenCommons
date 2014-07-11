@@ -10,6 +10,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <p>Used to define an alternate corresponding setter for a getter.</p>
  * <p>This method is not needed if your Setter follows JavaBeans naming convention ({@code Foo getFoo()} and {@code void setFoo(Foo)}.</p>
  * <p></p>
+ *
  * @author diesieben07
  */
 @Retention(CLASS)
@@ -20,6 +21,7 @@ public @interface OverrideSetter {
 
 	@Retention(CLASS)
 	@Target(METHOD)
-	@interface ScalaSetter { }
+	@interface ScalaSetter {
+	}
 
 }

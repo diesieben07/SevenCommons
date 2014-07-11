@@ -34,7 +34,8 @@ import java.util.List;
  */
 public final class Packets {
 
-	private Packets() { }
+	private Packets() {
+	}
 
 	public static void sendToServer(Packet p) {
 		SCModContainer.proxy.sendPacketToServer(p);
@@ -55,7 +56,7 @@ public final class Packets {
 	public static void sendPacketToPlayers(Packet p, Iterable<? extends EntityPlayer> players) {
 		sendPacketToPlayers(p, players.iterator());
 	}
-	
+
 	public static void sendPacketToPlayers(Packet p, Iterator<? extends EntityPlayer> players) {
 		try {
 			while (players.hasNext()) {
@@ -65,7 +66,7 @@ public final class Packets {
 			throw clientPlayer(e);
 		}
 	}
-	
+
 	public static void sendPacketToPlayers(Packet p, EntityPlayer... players) {
 		try {
 			for (EntityPlayer player : players) {
@@ -105,7 +106,7 @@ public final class Packets {
 	 */
 	public static void sendPacketToAllTrackingChunk(Packet p, World w, int chunkX, int chunkZ) {
 		if (Sides.logical(w).isServer()) {
-			PlayerInstance pi = ((WorldServer)w).getPlayerManager().getOrCreateChunkWatcher(chunkX, chunkZ, false);
+			PlayerInstance pi = ((WorldServer) w).getPlayerManager().getOrCreateChunkWatcher(chunkX, chunkZ, false);
 			if (pi != null) {
 				pi.sendToAllPlayersWatchingChunk(p);
 			}

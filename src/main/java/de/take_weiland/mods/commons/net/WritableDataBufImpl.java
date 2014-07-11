@@ -17,7 +17,7 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 		super(wrap, 0, wrap.length);
 		actualLen = 0;
 	}
-	
+
 	private static final byte BOOL_FALSE = 0;
 	private static final byte BOOL_TRUE = 1;
 
@@ -39,7 +39,7 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 		int pos = this.pos;
 		byte[] buf = this.buf;
 		buf[pos] = (byte) ((s >>> 8) & 0xff);
-		buf[pos + 1] = (byte) (s &0xff);
+		buf[pos + 1] = (byte) (s & 0xff);
 		this.pos += 2;
 		return (SELF) this;
 	}
@@ -49,9 +49,9 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 		grow0(4);
 		int pos = this.pos;
 		byte[] buf = this.buf;
-		buf[pos] = (byte)((i >>> 24) & 0xff);
+		buf[pos] = (byte) ((i >>> 24) & 0xff);
 		buf[pos + 1] = (byte) ((i >>> 16) & 0xff);
-		buf[pos + 2] = (byte) ((i >>>  8) & 0xff);
+		buf[pos + 2] = (byte) ((i >>> 8) & 0xff);
 		buf[pos + 3] = (byte) (i & 0xff);
 		this.pos += 4;
 		return (SELF) this;
@@ -62,14 +62,14 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 		grow0(8);
 		int pos = this.pos;
 		byte[] buf = this.buf;
-		buf[pos]     = (byte)(l >>> 56);
-		buf[pos + 1] = (byte)(l >>> 48);
-		buf[pos + 2] = (byte)(l >>> 40);
-		buf[pos + 3] = (byte)(l >>> 32);
-		buf[pos + 4] = (byte)(l >>> 24);
-		buf[pos + 5] = (byte)(l >>> 16);
-		buf[pos + 6] = (byte)(l >>>  8);
-		buf[pos + 7] = (byte)(l >>>  0);
+		buf[pos] = (byte) (l >>> 56);
+		buf[pos + 1] = (byte) (l >>> 48);
+		buf[pos + 2] = (byte) (l >>> 40);
+		buf[pos + 3] = (byte) (l >>> 32);
+		buf[pos + 4] = (byte) (l >>> 24);
+		buf[pos + 5] = (byte) (l >>> 16);
+		buf[pos + 6] = (byte) (l >>> 8);
+		buf[pos + 7] = (byte) (l >>> 0);
 		this.pos += 8;
 		return (SELF) this;
 	}
@@ -94,7 +94,7 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	public SELF writeDouble(double d) {
 		return writeLong(Double.doubleToLongBits(d));
 	}
-	
+
 	private static int varIntSize(int i) {
 		return ((i & notFirst7Bits) == 0) ? 1 : ((i & notFirst14Bits) == 0) ? 2 : ((i & notFirst21Bits) == 0) ? 3 : ((i & notFirst28Bits) == 0) ? 4 : 5;
 	}
@@ -164,9 +164,9 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	@Override
 	public SELF writeRaw(byte[] arr, int off, int len) {
 		DataBuffers.validateArray(arr, off, len);
-        grow0(len);
-        System.arraycopy(arr, off, buf, pos, len);
-        pos += len;
+		grow0(len);
+		System.arraycopy(arr, off, buf, pos, len);
+		pos += len;
 		return (SELF) this;
 	}
 
@@ -183,14 +183,14 @@ abstract class WritableDataBufImpl<SELF extends WritableDataBufImpl<SELF>> exten
 	}
 
 	private OutputStream outStreamView;
-	
+
 	@Override
 	public OutputStream asOutputStream() {
 		return outStreamView == null ? (outStreamView = new DataBufAsOutputStream(this)) : outStreamView;
 	}
-	
+
 	private DataOutput dataOutputView;
-	
+
 	@Override
 	public DataOutput asDataOutput() {
 		return dataOutputView == null ? (dataOutputView = new DataOutputStream(asOutputStream())) : dataOutputView;

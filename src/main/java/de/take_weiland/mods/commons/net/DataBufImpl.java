@@ -101,7 +101,7 @@ class DataBufImpl implements DataBuf {
 	public double readDouble() {
 		return Double.longBitsToDouble(readLong());
 	}
-	
+
 	@Override
 	public int readVarInt() {
 		int result = 0;
@@ -182,7 +182,7 @@ class DataBufImpl implements DataBuf {
 	}
 
 	private InputStream inStreamView;
-	
+
 	@NotNull
 	@Override
 	public InputStream asInputStream() {
@@ -190,7 +190,7 @@ class DataBufImpl implements DataBuf {
 	}
 
 	private DataInput dataInputView;
-	
+
 	@NotNull
 	@Override
 	public DataInput asDataInput() {
@@ -201,7 +201,7 @@ class DataBufImpl implements DataBuf {
 	public int available() {
 		return actualLen - pos;
 	}
-	
+
 	@Override
 	public void seek(int pos) {
 		Preconditions.checkPositionIndex(pos, actualLen, "Position");
@@ -222,7 +222,7 @@ class DataBufImpl implements DataBuf {
 	public int copyTo(@NotNull DataOutput out) throws IOException {
 		return copyTo(out, -1);
 	}
-	
+
 	@Override
 	public int copyTo(@NotNull OutputStream out, int amount) throws IOException {
 		amount = amount < 0 ? available() : Math.min(amount, available());

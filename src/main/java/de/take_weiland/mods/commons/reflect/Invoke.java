@@ -18,14 +18,16 @@ public @interface Invoke {
 	/**
 	 * The method to invoke. If it is an obfuscated method, provide the SRG name (e.g. func_123456_a)
 	 * and set {@link #srg()} to true
+	 *
 	 * @return the method to invoke
 	 */
 	String method();
 
 	/**
 	 * Set this to true if the field name provided by {@link #field()} is an SRG name
+	 *
 	 * @return true if it's a SRG field
 	 */
 	boolean srg() default false;
-	
+
 }

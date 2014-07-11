@@ -9,7 +9,7 @@ import net.minecraft.network.packet.Packet;
 public interface PacketTarget {
 
 	void send(Packet packet);
-	
+
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/net/PacketTarget";
 
 	public static final PacketTarget SERVER = new PacketTarget() {
@@ -22,12 +22,12 @@ public interface PacketTarget {
 	};
 
 	public static final PacketTarget ALL_PLAYERS = new PacketTarget() {
-		
+
 		@Override
 		public void send(Packet packet) {
 			PacketDispatcher.sendPacketToAllPlayers(packet);
 		}
-		
+
 	};
-	
+
 }

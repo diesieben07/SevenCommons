@@ -17,11 +17,13 @@ public final class DataBuffers {
 
 	private static final int DEFAULT_CAPACTIY = 128;
 
-	private DataBuffers() { }
+	private DataBuffers() {
+	}
 
 	/**
 	 * <p>returns a new DataBuf that reads from the given array.
 	 * Changes to the array are reflected in the buffer</p>
+	 *
 	 * @param data the backing array
 	 * @return a new DataBuf
 	 */
@@ -31,18 +33,20 @@ public final class DataBuffers {
 
 	/**
 	 * <p>Same as {@link #newBuffer(byte[])}, but only uses {@code len} bytes from the array, starting at {@code off}</p>
+	 *
 	 * @param data the backing array
-	 * @param off the offset to start reading from
-	 * @param len the number of bytes to read
+	 * @param off  the offset to start reading from
+	 * @param len  the number of bytes to read
 	 * @return a new DataBuf
 	 */
 	public static DataBuf newBuffer(byte[] data, int off, int len) {
-        validateArray(data, off, len);
+		validateArray(data, off, len);
 		return new DataBufImpl(data, off, len);
 	}
 
 	/**
 	 * creates a new WritableDataBuf with a starting capacity of 128 bytes
+	 *
 	 * @return a new WritableDataBuf
 	 */
 	public static WritableDataBuf newWritableBuffer() {
@@ -51,6 +55,7 @@ public final class DataBuffers {
 
 	/**
 	 * creates a new WritableDataBuf with the given starting capacity
+	 *
 	 * @return a new WritableDataBuf
 	 */
 	public static WritableDataBuf newWritableBuffer(int capacity) {

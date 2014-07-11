@@ -14,18 +14,21 @@ public interface NameableInventory extends IInventory {
 
 	/**
 	 * whether this inventory has been renamed
+	 *
 	 * @return true if this inventory has a custom name
 	 */
 	boolean hasCustomName();
 
 	/**
 	 * set the custom name for this inventory
+	 *
 	 * @param name the custom name
 	 */
 	void setCustomName(String name);
 
 	/**
 	 * get the custom name for this inventory
+	 *
 	 * @return the custom name or null if none
 	 */
 	String getCustomName();

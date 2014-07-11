@@ -6,7 +6,7 @@ import net.minecraft.network.packet.NetHandler;
 import net.minecraft.network.packet.Packet;
 
 public interface SevenCommonsProxy {
-	
+
 	public void preInit(FMLPreInitializationEvent event);
 
 	INetworkManager getNetworkManagerFromClient(NetHandler clientHandler);

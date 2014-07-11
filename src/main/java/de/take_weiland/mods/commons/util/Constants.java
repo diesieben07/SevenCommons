@@ -3,15 +3,16 @@ package de.take_weiland.mods.commons.util;
 
 public final class Constants {
 
-	private Constants() { }
-	
+	private Constants() {
+	}
+
 	public static final int SIDE_UP = 0;
 	public static final int SIDE_DOWN = 1;
 	public static final int SIDE_NORTH = 2;
 	public static final int SIDE_SOUTH = 3;
 	public static final int SIDE_WEST = 4;
 	public static final int SIDE_EAST = 5;
-	
+
 	public static final int CLOTH_WHITE = 0;
 	public static final int CLOTH_ORANGE = 1;
 	public static final int CLOTH_MAGENTA = 2;
@@ -28,7 +29,7 @@ public final class Constants {
 	public static final int CLOTH_GREEN = 13;
 	public static final int CLOTH_RED = 14;
 	public static final int CLOTH_BLACK = 15;
-	
+
 	public static final int DYE_WHITE = 15;
 	public static final int DYE_ORANGE = 14;
 	public static final int DYE_MAGENTA = 13;
@@ -45,7 +46,7 @@ public final class Constants {
 	public static final int DYE_GREEN = 2;
 	public static final int DYE_RED = 1;
 	public static final int DYE_BLACK = 0;
-	
+
 	public static final int SET_UPDATE_NEIGHBOURS = 1;
 	public static final int SET_UPDATE_CLIENT = 2;
 	public static final int SET_PREVENT_RERENDER = 4;

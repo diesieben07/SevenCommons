@@ -7,8 +7,9 @@ import java.util.logging.Logger;
 
 public final class MiscUtil {
 
-	private MiscUtil() { }
-	
+	private MiscUtil() {
+	}
+
 	private static SCReflector reflector;
 
 	public static Logger getLogger() {

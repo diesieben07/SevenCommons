@@ -70,6 +70,7 @@ final class BooleanPropertyImpl extends GenericProperty<Boolean> implements Bool
 	}
 
 	private static Boolean[] values;
+
 	@Override
 	public Boolean[] values() {
 		return values == null ? (values = new Boolean[] { Boolean.FALSE, Boolean.TRUE }) : values;

@@ -49,6 +49,7 @@ public final class Containers {
 
 	/**
 	 * generic implementation for {@link Container#transferStackInSlot}
+	 *
 	 * @param container
 	 * @param player
 	 * @param slotIndex
@@ -56,21 +57,21 @@ public final class Containers {
 	 */
 	public static <T extends Container & SCContainer<?>> ItemStack transferStack(T container, EntityPlayer player, int slotIndex) {
 		ItemStack result = null;
-		
+
 		Slot slot = (Slot) container.inventorySlots.get(slotIndex);
-		
+
 		int firstPlayerSlot = container.getFirstPlayerSlot();
 		if (firstPlayerSlot < 0) {
 			return null;
 		}
 
 		if (slot != null && slot.getHasStack()) {
-			
+
 			ItemStack stackInSlot = slot.getStack();
 			result = stackInSlot.copy();
 
 			IInventory playerInv = container.getPlayer().inventory;
-			
+
 			if (slot.inventory == playerInv) {
 				long enc = container.getSlotRange(stackInSlot);
 				int targetBegin = JavaUtils.decodeIntA(enc);

@@ -23,6 +23,7 @@ class ASMField extends ClassBoundASMVariable {
 	}
 
 	private CodePiece getCache;
+
 	@Override
 	public CodePiece get() {
 		if (getCache == null) {

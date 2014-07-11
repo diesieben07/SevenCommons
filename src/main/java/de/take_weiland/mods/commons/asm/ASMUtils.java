@@ -26,12 +26,14 @@ import static org.objectweb.asm.Opcodes.*;
 
 public final class ASMUtils {
 
-	private ASMUtils() { }
+	private ASMUtils() {
+	}
 
 	// *** bytecode analyzing helpers *** //
 
 	/**
 	 * <p>Find the last return instruction in the given method.</p>
+	 *
 	 * @param method the method
 	 * @return the last return instruction
 	 * @throws java.lang.IllegalArgumentException if the method doesn't have valid return opcode (should never happen with any valid method)
@@ -46,7 +48,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the last instruction with the given opcode in the given InsnList.</p>
-	 * @param insns the InsnList
+	 *
+	 * @param insns  the InsnList
 	 * @param opcode the opcode to find
 	 * @return the last instruction with the given opcode
 	 */
@@ -63,7 +66,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the first instruction with the given opcode in the given InsnList.</p>
-	 * @param insns the InsnList
+	 *
+	 * @param insns  the InsnList
 	 * @param opcode the opcode to find
 	 * @return the first instruction with the given opcode
 	 */
@@ -82,8 +86,9 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the field with the given name.</p>
+	 *
 	 * @param clazz the class
-	 * @param name the field name to search for
+	 * @param name  the field name to search for
 	 * @return the field with the given name or null if no such field was found
 	 */
 	public static FieldNode findField(ClassNode clazz, String name) {
@@ -97,8 +102,9 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the field with the given name. It is automatically chosen between MCP name and SRG name, depending on the runtime environment.</p>
+	 *
 	 * @param clazz the class
-	 * @param srg the SRG name of the field (e.g. field_70123_h)
+	 * @param srg   the SRG name of the field (e.g. field_70123_h)
 	 * @return the field with the given name or null if no such field was found
 	 */
 	public static FieldNode findMinecraftField(ClassNode clazz, String srg) {
@@ -107,8 +113,9 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the field with the given name.</p>
+	 *
 	 * @param clazz the class
-	 * @param name the field name to search for
+	 * @param name  the field name to search for
 	 * @return the field with the given name
 	 * @throws de.take_weiland.mods.commons.asm.MissingFieldException if no such field was found
 	 */
@@ -122,8 +129,9 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the field with the given name. The name will be automatically translated to the MCP name if needed, depending on the runtime environment.</p>
+	 *
 	 * @param clazz the class
-	 * @param srg the SRG name of the field (e.g. field_70123_h)
+	 * @param srg   the SRG name of the field (e.g. field_70123_h)
 	 * @return the field with the given name
 	 * @throws de.take_weiland.mods.commons.asm.MissingFieldException if no such field was found
 	 */
@@ -133,8 +141,9 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the method with the given name. If multiple methods with the same name exist, the first one will be returned.</p>
+	 *
 	 * @param clazz the class
-	 * @param name the method name to search for
+	 * @param name  the method name to search for
 	 * @return the first method with the given name or null if no such method is found
 	 */
 	public static MethodNode findMethod(ClassNode clazz, String name) {
@@ -148,9 +157,10 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the method with the given name and method descriptor.</p>
+	 *
 	 * @param clazz the class
-	 * @param name the method name to search for
-	 * @param desc the method descriptor to search for
+	 * @param name  the method name to search for
+	 * @param desc  the method descriptor to search for
 	 * @return the method with the given name and descriptor or null if no such method is found
 	 */
 	public static MethodNode findMethod(ClassNode clazz, String name, String desc) {
@@ -164,7 +174,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the method with the given name. It is automatically chosen between MCP and SRG name, depending on the runtime environment.</p>
-	 * @param clazz the class
+	 *
+	 * @param clazz   the class
 	 * @param srgName the SRG name of the method (e.g. {@code func_70316_g}
 	 * @return the method matching the given SRG name or null if no such method is found
 	 */
@@ -174,8 +185,9 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the method with the given name. If multiple methods with the same name exist, the first one will be returned.</p>
+	 *
 	 * @param clazz the class
-	 * @param name the method name to search for
+	 * @param name  the method name to search for
 	 * @return the first method with the given name
 	 * @throws de.take_weiland.mods.commons.asm.MissingMethodException if no such method was found
 	 */
@@ -189,9 +201,10 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the method with the given name and method descriptor.</p>
+	 *
 	 * @param clazz the class
-	 * @param name the method name to search for
-	 * @param desc the method descriptor to search for
+	 * @param name  the method name to search for
+	 * @param desc  the method descriptor to search for
 	 * @return the method with the given name and descriptor
 	 * @throws de.take_weiland.mods.commons.asm.MissingMethodException if no such method was found
 	 */
@@ -205,7 +218,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Find the method with the given name. It is automatically chosen between MCP and SRG name, depending on the runtime environment.</p>
-	 * @param clazz the class
+	 *
+	 * @param clazz   the class
 	 * @param srgName the SRG name of the method (e.g. {@code func_70316_g}
 	 * @return the method matching the given SRG name
 	 * @throws de.take_weiland.mods.commons.asm.MissingMethodException if no such method was found
@@ -223,8 +237,9 @@ public final class ASMUtils {
 	 * <p>Effectively this class inserts the code into every root-constructor of the class. If no constructor is present,
 	 * this method will create the default constructor.</p>
 	 * <p>The code may not contain exitpoints (such as return or throws) or this method may produce faulty code.</p>
+	 *
 	 * @param clazz the class
-	 * @param code the code to initialize
+	 * @param code  the code to initialize
 	 */
 	public static void initialize(ClassNode clazz, CodePiece code) {
 		List<MethodNode> rootCtsrs = getRootConstructors(clazz);
@@ -248,8 +263,9 @@ public final class ASMUtils {
 	 * <p>Add the given code to the static-initializer of the given class.</p>
 	 * <p>If the static-initializer is not present, this method will create it.</p>
 	 * <p>The code may not contain exitpoints (such as return or throws) or this method may produce faulty code.</p>
+	 *
 	 * @param clazz the class
-	 * @param code the code to initialize
+	 * @param code  the code to initialize
 	 */
 	public static void initializeStatic(ClassNode clazz, CodePiece code) {
 		MethodNode method = findMethod(clazz, "<clinit>");
@@ -263,6 +279,7 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Determine if the given method is a constructor.</p>
+	 *
 	 * @param method the method
 	 * @return true if the method is a constructor
 	 */
@@ -282,6 +299,7 @@ public final class ASMUtils {
 	/**
 	 * <p>Get all constructors of the given class.</p>
 	 * <p>The returned collection is a live-view, so if new constructors get added, they will be present in the returned collection immediately.</p>
+	 *
 	 * @param clazz the class
 	 * @return all constructors
 	 */
@@ -291,9 +309,10 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Determine if the method in the given {@code targetClass} can be accessed from the {@code accessingClass}.</p>
+	 *
 	 * @param accessingClass the class trying to access the field
-	 * @param targetClass the class containing the field
-	 * @param method the method to check for
+	 * @param targetClass    the class containing the field
+	 * @param method         the method to check for
 	 * @return if the given method can be accessed
 	 */
 	public static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, MethodNode method) {
@@ -302,9 +321,10 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Determine if the field in the given {@code targetClass} can be accessed from the {@code accessingClass}.</p>
+	 *
 	 * @param accessingClass the class trying to access the field
-	 * @param targetClass the class containing the field
-	 * @param field the field to check for
+	 * @param targetClass    the class containing the field
+	 * @param field          the field to check for
 	 * @return if the given field can be accessed
 	 */
 	public static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, FieldNode field) {
@@ -344,6 +364,7 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Useful if you need to add code that is called, whenever a new instance of the class is created, no matter through which constructor.</p>
+	 *
 	 * @param clazz the class
 	 * @return all root constructors
 	 */
@@ -366,7 +387,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Get all methods in the given class which have the given annotation.</p>
-	 * @param clazz the ClassNode
+	 *
+	 * @param clazz      the ClassNode
 	 * @param annotation the annotation to search for
 	 * @return a Collection containing all methods in the class which have the given annotation
 	 */
@@ -382,7 +404,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Get all fields in the given class which have the given annotation.</p>
-	 * @param clazz the ClassNode
+	 *
+	 * @param clazz      the ClassNode
 	 * @param annotation the annotation to search for
 	 * @return a Collection containing all fields in the class which have the given annotation
 	 */
@@ -407,12 +430,13 @@ public final class ASMUtils {
 	 * <p>Find the setter for a given getter. This method gives precedence to the {@link de.take_weiland.mods.commons.OverrideSetter} annotation.
 	 * If it is not present, the following rules apply:</p>
 	 * <ul>
-	 *     <li>getFoobar => setFoobar</li>
-	 *     <li>isFoobar => setFoobar</li>
-	 *     <li>foobar => foobar (in .java files)</li>
-	 *     <li>foobar => foobar_$eq (in .scala files)</li>
+	 * <li>getFoobar => setFoobar</li>
+	 * <li>isFoobar => setFoobar</li>
+	 * <li>foobar => foobar (in .java files)</li>
+	 * <li>foobar => foobar_$eq (in .scala files)</li>
 	 * </ul>
-	 * @param clazz the class containing the getter
+	 *
+	 * @param clazz  the class containing the getter
 	 * @param getter the getter method
 	 * @return the setter corresponding to the given getter, or null if no setter was found
 	 */
@@ -441,8 +465,9 @@ public final class ASMUtils {
 
 	/**
 	 * Walks {@code n} steps forwards in the InsnList of the given instruction.
+	 *
 	 * @param insn the starting point
-	 * @param n how many steps to move forwards
+	 * @param n    how many steps to move forwards
 	 * @return the instruction {@code n} steps forwards
 	 * @throws java.lang.IndexOutOfBoundsException if the list ends before n steps have been walked
 	 */
@@ -458,8 +483,9 @@ public final class ASMUtils {
 
 	/**
 	 * Walks {@code n} steps backwards in the InsnList of the given instruction.
+	 *
 	 * @param insn the starting point
-	 * @param n how many steps to move backwards
+	 * @param n    how many steps to move backwards
 	 * @return the instruction {@code n} steps backwards
 	 * @throws java.lang.IndexOutOfBoundsException if the list ends before n steps have been walked
 	 */
@@ -475,9 +501,10 @@ public final class ASMUtils {
 
 	/**
 	 * Creates a new InsnList that contains clones of the instructions going from {@code from} to {@code to}.
+	 *
 	 * @param insns the InsnList
-	 * @param from the first node to clone, must be in the InsnList (inclusive)
-	 * @param to the last node to clone, must be in the InsnList (inclusive)
+	 * @param from  the first node to clone, must be in the InsnList (inclusive)
+	 * @param to    the last node to clone, must be in the InsnList (inclusive)
 	 * @return the cloned list
 	 */
 	public static InsnList clone(InsnList insns, AbstractInsnNode from, AbstractInsnNode to) {
@@ -550,6 +577,7 @@ public final class ASMUtils {
 
 	/**
 	 * convert the given binary name (e.g. {@code java.lang.Object$Subclass}) to an internal name (e.g. {@code java/lang/Object$Subclass})
+	 *
 	 * @param binaryName the binary name
 	 * @return the internal name
 	 */
@@ -559,6 +587,7 @@ public final class ASMUtils {
 
 	/**
 	 * convert the given internal name to a binary name (opposite of {@link #internalName(String)}
+	 *
 	 * @param internalName the internal name
 	 * @return the binary name
 	 */
@@ -571,6 +600,7 @@ public final class ASMUtils {
 
 	/**
 	 * get the active {@link net.minecraft.launchwrapper.IClassNameTransformer}, if any
+	 *
 	 * @return the active transformer, or null if none
 	 */
 	public static IClassNameTransformer getClassNameTransformer() {
@@ -583,6 +613,7 @@ public final class ASMUtils {
 
 	/**
 	 * transform the class name with the current {@link net.minecraft.launchwrapper.IClassNameTransformer}, if any
+	 *
 	 * @param untransformedName the un-transformed name of the class
 	 * @return the transformed name of the class
 	 */
@@ -593,6 +624,7 @@ public final class ASMUtils {
 
 	/**
 	 * un-transform the class name with the current {@link net.minecraft.launchwrapper.IClassNameTransformer}, if any
+	 *
 	 * @param transformedName the transformed name of the class
 	 * @return the un-transformed name of the class
 	 */
@@ -612,7 +644,8 @@ public final class ASMUtils {
 
 	/**
 	 * gets a {@link org.objectweb.asm.tree.ClassNode} for the given class name
-	 * @param name the class to load
+	 *
+	 * @param name        the class to load
 	 * @param readerFlags the flags to pass to the {@link org.objectweb.asm.ClassReader}
 	 * @return a ClassNode
 	 * @throws MissingClassException if the class couldn't be found or can't be loaded as raw-bytes
@@ -639,7 +672,8 @@ public final class ASMUtils {
 
 	/**
 	 * gets a {@link org.objectweb.asm.tree.ClassNode} representing the class described by the given bytes
-	 * @param bytes the raw bytes describing the class
+	 *
+	 * @param bytes       the raw bytes describing the class
 	 * @param readerFlags the the flags to pass to the {@link org.objectweb.asm.ClassReader}
 	 * @return a ClassNode
 	 */
@@ -668,6 +702,7 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Tries to determine if the given ClassNode represents a scala class.</p>
+	 *
 	 * @param clazz the ClassNode
 	 * @return true if the class is a scala class, false if it is most likely a non-scala class
 	 */
@@ -681,7 +716,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Finds the given annotation on the given Class or on any Field or Method in the class.</p>
-	 * @param clazz the class to search in
+	 *
+	 * @param clazz      the class to search in
 	 * @param annotation the annotation to find
 	 * @return true if the annotation was found on the Class or any Field or Method
 	 */
@@ -721,8 +757,9 @@ public final class ASMUtils {
 
 	/**
 	 * <p>gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given field</p>
+	 *
 	 * @param field the field
-	 * @param ann the annotation class to get
+	 * @param ann   the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
 	public static AnnotationNode getAnnotation(FieldNode field, Class<? extends Annotation> ann) {
@@ -731,8 +768,9 @@ public final class ASMUtils {
 
 	/**
 	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given class
+	 *
 	 * @param clazz the class
-	 * @param ann the annotation class to get
+	 * @param ann   the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
 	public static AnnotationNode getAnnotation(ClassNode clazz, Class<? extends Annotation> ann) {
@@ -741,8 +779,9 @@ public final class ASMUtils {
 
 	/**
 	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given method
+	 *
 	 * @param method the method
-	 * @param ann the annotation class to get
+	 * @param ann    the annotation class to get
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
 	public static AnnotationNode getAnnotation(MethodNode method, Class<? extends Annotation> ann) {
@@ -792,6 +831,7 @@ public final class ASMUtils {
 	 * <p>Retrieves the given property from the annotation or {@code null} if it is not present.</p>
 	 * <p>This method does not take the {@code default} value for this property into account.
 	 * If you need those, use {@link #getAnnotationProperty(org.objectweb.asm.tree.AnnotationNode, String, Class)} instead.</p>
+	 *
 	 * @param ann the AnnotationNode
 	 * @param key the name of the property to get
 	 * @param <T> the type of the property
@@ -805,10 +845,11 @@ public final class ASMUtils {
 	 * <p>Retrieves the given property from the annotation or {@code defaultValue} if it is not present.</p>
 	 * <p>This method does not take the {@code default} value for this property into account.
 	 * If you need those, use {@link #getAnnotationProperty(org.objectweb.asm.tree.AnnotationNode, String, Class)} instead.</p>
-	 * @param ann the AnnotationNode
-	 * @param key the name of the property to get
+	 *
+	 * @param ann          the AnnotationNode
+	 * @param key          the name of the property to get
 	 * @param defaultValue a default value, in case the property is not present.
-	 * @param <T> the type of the property
+	 * @param <T>          the type of the property
 	 * @return the value of the property or {@code defaultValue} if the property is not present
 	 */
 	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, T defaultValue) {
@@ -828,12 +869,13 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Retrieves the given property from the annotation or any default value specified in the annotation class.</p>
-	 * @param ann the AnnotationNode
-	 * @param key the name of the property to get
+	 *
+	 * @param ann      the AnnotationNode
+	 * @param key      the name of the property to get
 	 * @param annClass the class of the annotation
-	 * @param <T> the type of the property
-	 * @throws java.util.NoSuchElementException if this annotation doesn't have this property
+	 * @param <T>      the type of the property
 	 * @return the value of the property or the default value specified in the annotation class
+	 * @throws java.util.NoSuchElementException if this annotation doesn't have this property
 	 */
 	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, Class<? extends Annotation> annClass) {
 		T result = getAnnotationProperty(ann, key, (T) null);
@@ -851,7 +893,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Check if the given annotation class is present on this field.</p>
-	 * @param field the field
+	 *
+	 * @param field      the field
 	 * @param annotation the annotation
 	 * @return true if the annotation is present
 	 */
@@ -861,7 +904,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Check if the given annotation class is present on this class.</p>
-	 * @param clazz the class
+	 *
+	 * @param clazz      the class
 	 * @param annotation the annotation
 	 * @return true if the annotation is present
 	 */
@@ -871,7 +915,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Check if the given annotation class is present on this method.</p>
-	 * @param method the method
+	 *
+	 * @param method     the method
 	 * @param annotation the annotation
 	 * @return true if the annotation is present
 	 */
@@ -881,6 +926,7 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Checks if the given {@link org.objectweb.asm.Type} represents a primitive type or the void type.</p>
+	 *
 	 * @param type the type
 	 * @return true if the {@code Type} represents a primitive type or void
 	 */
@@ -891,6 +937,7 @@ public final class ASMUtils {
 	/**
 	 * <p>Counts the number of arguments that a method with the given Type needs.</p>
 	 * <p>The Type must be of Type {@link Type#METHOD}.</p>
+	 *
 	 * @param type the method type
 	 * @return the number of arguments of the method
 	 */
@@ -902,6 +949,7 @@ public final class ASMUtils {
 	/**
 	 * <p>Counts the number of arguments that a method with the given descriptor needs.</p>
 	 * <p>The descriptor must be a method descriptor.</p>
+	 *
 	 * @param methodDesc the method descriptor
 	 * @return the number of arguments of the method
 	 */
@@ -925,8 +973,9 @@ public final class ASMUtils {
 	/**
 	 * <p>Create a new {@link org.objectweb.asm.Type} that represents an array with {@code dimensions} dimensions and the
 	 * component type {@code elementType}.</p>
+	 *
 	 * @param elementType the component type of the array type to create, must not be a Method type.
-	 * @param dimensions the number of dimensions to create
+	 * @param dimensions  the number of dimensions to create
 	 * @return a new Type representing the array type.
 	 */
 	public static Type asArray(Type elementType, int dimensions) {

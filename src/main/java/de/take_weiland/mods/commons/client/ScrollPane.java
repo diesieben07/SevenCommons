@@ -16,23 +16,23 @@ import static org.lwjgl.opengl.GL11.*;
 public abstract class ScrollPane extends Gui {
 
 	private boolean clip;
-	
+
 	protected int x;
 	protected int y;
 	protected int width;
 	protected int height;
 	protected int contentHeight;
-	
+
 	protected int scrollbarWidth = 10;
 	protected int scrollbarHeight = 30;
 	private int scrollbarClickOffset = 0;
 	private int scrollbarY = 0;
 	private boolean isDragging = false;
-	
+
 	private final GuiScreen screen;
 	protected final Minecraft mc = Minecraft.getMinecraft();
 	private final List<GuiButton> buttons = Lists.newArrayList();
-	
+
 	public ScrollPane(GuiScreen screen, int x, int y, int width, int height, int contentHeight) {
 		this.screen = screen;
 		this.x = x;
@@ -41,9 +41,9 @@ public abstract class ScrollPane extends Gui {
 		this.height = height;
 		this.contentHeight = contentHeight;
 	}
-	
+
 	private int newScrollIfInside;
-	
+
 	public final void onMouseWheel(int dWheel) {
 		if (needsScrollbar() && dWheel != 0) {
 			dWheel = -Integer.signum(dWheel) * 5;
@@ -56,31 +56,31 @@ public abstract class ScrollPane extends Gui {
 			scrollbarY = newScrollIfInside;
 			newScrollIfInside = -1;
 		}
-		
+
 		float yTranslate = computeYTranslate();
 		mouseX -= x;
 		mouseY -= yTranslate;
-		
+
 		glColor3f(1, 1, 1);
 		int scale = Guis.computeGuiScale();
-		
+
 		if (clip) {
 			glScissor(0, mc.displayHeight - (y + height) * scale, (width + x) * scale, height * scale);
 			glEnable(GL_SCISSOR_TEST);
 		}
-		
+
 		glPushMatrix();
-		
+
 		glTranslatef(x, yTranslate, 0);
-		
+
 		drawInternal(mouseX, mouseY);
-		
+
 		glPopMatrix();
-		
+
 		if (clip) {
 			glDisable(GL_SCISSOR_TEST);
 		}
-		
+
 		if (needsScrollbar()) {
 			int scrollbarX = x + (width - scrollbarWidth);
 			drawScrollbar(scrollbarX, y + scrollbarY, scrollbarX + scrollbarWidth, y + scrollbarY + scrollbarHeight);
@@ -88,7 +88,7 @@ public abstract class ScrollPane extends Gui {
 	}
 
 	private float computeYTranslate() {
-		return y - ((scrollbarY) / (float)(height - scrollbarHeight)) * (contentHeight - height);
+		return y - ((scrollbarY) / (float) (height - scrollbarHeight)) * (contentHeight - height);
 	}
 
 	private void drawInternal(int mouseX, int mouseY) {
@@ -98,11 +98,11 @@ public abstract class ScrollPane extends Gui {
 			buttons.get(i).drawButton(mc, mouseX, mouseY);
 		}
 	}
-	
+
 	private boolean needsScrollbar() {
 		return height < contentHeight;
 	}
-	
+
 	public final void onMouseClick(int mouseX, int mouseY, int btn) {
 		if (btn == 0 && needsScrollbar()) {
 			if (Guis.isPointInRegion(x + (width - scrollbarWidth), y + scrollbarY, scrollbarWidth, scrollbarHeight, mouseX, mouseY)) {
@@ -110,7 +110,7 @@ public abstract class ScrollPane extends Gui {
 				scrollbarClickOffset = mouseY - (y + scrollbarY);
 			}
 		}
-		
+
 		mouseX -= x;
 		mouseY -= computeYTranslate();
 		if (isPointInRegion(0, 0, width, height, mouseX, mouseY)) {
@@ -122,22 +122,23 @@ public abstract class ScrollPane extends Gui {
 		}
 		handleMouseClick(mouseX, mouseY, btn);
 	}
-	
+
 	public final void onMouseBtnReleased(int btn) {
 		if (btn == 0) {
 			isDragging = false;
 		}
 	}
-	
+
 	public final void onMouseMoved(int mouseX, int mouseY) {
 		if (isDragging) {
 			scrollbarY = MathHelper.clamp_int(mouseY - y - scrollbarClickOffset, 0, height - scrollbarHeight);
 		}
 	}
+
 	public final void setScrollbarWidth(int scrollbarWidth) {
 		this.scrollbarWidth = scrollbarWidth;
 	}
-	
+
 	public final void setX(int x) {
 		this.x = x;
 	}
@@ -156,14 +157,14 @@ public abstract class ScrollPane extends Gui {
 		}
 		this.height = height;
 	}
-	
+
 	public final void setContentHeight(int contentHeight) {
 		if (this.contentHeight != contentHeight) {
 			recalcScrollbar();
 		}
 		this.contentHeight = contentHeight;
 	}
-	
+
 	private void recalcScrollbar() {
 		scrollbarY = 0;
 		isDragging = false;
@@ -172,11 +173,11 @@ public abstract class ScrollPane extends Gui {
 	public final void clearButtons() {
 		buttons.clear();
 	}
-	
+
 	public final void addButton(GuiButton button) {
 		buttons.add(button);
 	}
-	
+
 	public final void setClip(boolean clip) {
 		this.clip = clip;
 	}
@@ -188,13 +189,14 @@ public abstract class ScrollPane extends Gui {
 		drawRect(x, y, x2, y + 1, 0xff444444);
 		drawRect(x, y2 - 1, x2, y2, 0xff444444);
 	}
-	
+
 	protected void drawImpl(int mouseX, int mouseY) {
 		drawImpl();
 	}
-	
+
 	protected abstract void drawImpl();
-	
-	protected void handleMouseClick(int relX, int relY, int btn) { }
+
+	protected void handleMouseClick(int relX, int relY, int btn) {
+	}
 
 }

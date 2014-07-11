@@ -5,6 +5,7 @@ import org.lwjgl.input.Keyboard;
 
 /**
  * <p>Abstract base class for GuiScreens which have a parent screen that should be reopened when this screen closes.</p>
+ *
  * @author diesieben07
  */
 public abstract class GuiScreenWithParent extends GuiScreen {
@@ -13,7 +14,7 @@ public abstract class GuiScreenWithParent extends GuiScreen {
 	 * The parent screen
 	 */
 	protected final GuiScreen parent;
-	
+
 	public GuiScreenWithParent(GuiScreen parent) {
 		this.parent = parent;
 	}
@@ -31,5 +32,5 @@ public abstract class GuiScreenWithParent extends GuiScreen {
 			close();
 		}
 	}
-	
+
 }

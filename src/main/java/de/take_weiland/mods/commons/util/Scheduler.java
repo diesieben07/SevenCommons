@@ -28,7 +28,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	public static Scheduler server() {
 		return server != null ? server : (server = new Scheduler(Side.SERVER));
 	}
-	
+
 	public static Scheduler client() {
 		return client != null ? client : (client = new Scheduler(Side.CLIENT));
 	}
@@ -44,6 +44,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	/**
 	 * {@inheritDoc}
 	 * <p>This Executor executes the Runnable on the next tick.</p>
+	 *
 	 * @param task the task to run
 	 */
 	@Override
@@ -53,8 +54,9 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 
 	/**
 	 * Schedule the execution of the Runnable after {@code ticks} Ticks have occured.
-	 * @param task the task to run
-	 * @param ticks how many ticks to wait before execution
+	 *
+	 * @param task    the task to run
+	 * @param ticks   how many ticks to wait before execution
 	 * @param tickEnd whether the task should be executed on tickEnd or not
 	 */
 	public void scheduleSimple(@NotNull Runnable task, int ticks, boolean tickEnd) {
@@ -69,6 +71,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 
 	/**
 	 * Throws the given Throwable in the main Minecraft thread, to properly trigger CrashReports.
+	 *
 	 * @param t the Throwable to throw
 	 */
 	public void throwInMainThread(@NotNull final Throwable t) {
@@ -129,7 +132,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 		long when = now.get();
 		boolean immediate = isOnMainThread(side);
 		boolean failed = false;
-		List<Future<T>>	futures = Lists.newArrayListWithCapacity(tasks.size());
+		List<Future<T>> futures = Lists.newArrayListWithCapacity(tasks.size());
 		for (Callable<T> callable : tasks) {
 			ScheduledCallable<T> task = new ScheduledCallable<>(callable, when);
 			futures.add(task);
@@ -225,6 +228,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 	/**
 	 * {@inheritDoc}
 	 * Because this Executor is synchronous, this method acts exactly the same as {@link #scheduleWithFixedDelay(Runnable, long, long, java.util.concurrent.TimeUnit)}
+	 *
 	 * @param command
 	 * @param initialDelay
 	 * @param period
@@ -270,23 +274,23 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 			return Thread.currentThread().getId() == SCModContainer.clientMainThreadID;
 		}
 	}
-	
+
 	private static Scheduler server, client;
-	
+
 	final AtomicLong now;
 	private final Side side;
 	private final EnumSet<TickType> ticks;
 	private final PriorityQueue<Task> queue;
 	private final ArrayList<Task> scheduledNow;
 	long firstTickSystemNanos = -1;
-	
+
 	private Scheduler(Side side) {
 		this.side = side;
 		ticks = EnumSet.of(side.isServer() ? TickType.SERVER : TickType.CLIENT);
 		queue = new PriorityQueue<>(10, TASK_COMPARATOR);
 		now = new AtomicLong(0);
 		scheduledNow = Lists.newArrayList();
-		
+
 		TickRegistry.registerTickHandler(this, side);
 	}
 

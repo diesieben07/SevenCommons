@@ -13,7 +13,7 @@ public class PlayerStartTrackingEvent extends PlayerEvent {
 	 * the entity now being tracked
 	 */
 	public final Entity tracked;
-	
+
 	public PlayerStartTrackingEvent(EntityPlayer player, Entity tracked) {
 		super(player);
 		this.tracked = tracked;

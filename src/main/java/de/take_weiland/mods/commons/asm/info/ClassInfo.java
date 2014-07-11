@@ -17,6 +17,7 @@ import static org.objectweb.asm.Type.*;
 
 /**
  * <p>Some information about a class, obtain via {@link ClassInfo#of(String)}, {@link ClassInfo#of(Class)} or {@link ClassInfo#of(org.objectweb.asm.tree.ClassNode)}</p>
+ *
  * @author diesieben07
  */
 public abstract class ClassInfo extends HasModifiers {
@@ -25,10 +26,12 @@ public abstract class ClassInfo extends HasModifiers {
 	private ClassInfo zuper;
 
 	// limit subclasses to this package
-	ClassInfo() { }
+	ClassInfo() {
+	}
 
 	/**
 	 * <p>Create a {@code ClassInfo} representing the given class.</p>
+	 *
 	 * @param clazz the Class
 	 * @return a ClassInfo
 	 */
@@ -38,6 +41,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Create a {@code ClassInfo} representing the given ClassNode.</p>
+	 *
 	 * @param clazz the ClassNode
 	 * @return a ClassInfo
 	 */
@@ -49,6 +53,7 @@ public abstract class ClassInfo extends HasModifiers {
 	 * <p>Create a {@code ClassInfo} representing the given Type.</p>
 	 * <p>This method will try to avoid loading actual classes into the JVM, but will instead use the ASM library
 	 * to analyze the raw class bytes if possible.</p>
+	 *
 	 * @param type a Type representing the class to load, must not be a method type
 	 * @return a ClassInfo
 	 * @throws de.take_weiland.mods.commons.asm.MissingClassException if the class could not be found
@@ -72,6 +77,7 @@ public abstract class ClassInfo extends HasModifiers {
 	 * <p>Create a {@code ClassInfo} representing the given class.</p>
 	 * <p>This method will try to avoid loading actual classes into the JVM, but will instead use the ASM library
 	 * to analyze the raw class bytes if possible.</p>
+	 *
 	 * @param className the internal or binary name representing the class
 	 * @return a ClassInfo
 	 * @throws de.take_weiland.mods.commons.asm.MissingClassException if the class could not be found
@@ -114,7 +120,7 @@ public abstract class ClassInfo extends HasModifiers {
 		// first, try to get the class if it's already loaded
 		if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, className)) != null) {
 			return new ClassInfoFromClazz(clazz);
-		// didn't find it. Try with the transformed name now
+			// didn't find it. Try with the transformed name now
 		} else if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, ASMUtils.transformName(className))) != null) {
 			return new ClassInfoFromClazz(clazz);
 		} else {
@@ -146,24 +152,28 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Get all interfaces directly implemented by this class (equivalent to {@link Class#getInterfaces()}.</p>
+	 *
 	 * @return the interfaces implemented by this class
 	 */
 	public abstract List<String> interfaces();
 
 	/**
 	 * <p>Get the internal name of the superclass of this class.</p>
+	 *
 	 * @return the superclass, or null if this ClassInfo is an interface or represents {@code java/lang/Object}.
 	 */
 	public abstract String superName();
 
 	/**
 	 * <p>Get the internal name of this class (e.g. {@code java/lang/Object}.</p>
+	 *
 	 * @return the internal name
 	 */
 	public abstract String internalName();
 
 	/**
 	 * <p>Get a {@code ClassInfo} representing the superclass of this class.</p>
+	 *
 	 * @return the superclass, or null if this class has no superclass (see {@link #superName()}
 	 */
 	public ClassInfo superclass() {
@@ -179,6 +189,7 @@ public abstract class ClassInfo extends HasModifiers {
 	/**
 	 * <p>Determine if the given class can be safely casted to this class (equivalent to {@link java.lang.Class#isAssignableFrom(Class)}.</p>
 	 * <p>Like {@link #of(String)} this method will try to avoid loading actual classes.</p>
+	 *
 	 * @param child the class to check for
 	 * @return true if the given class can be casted to this class
 	 */
@@ -210,6 +221,7 @@ public abstract class ClassInfo extends HasModifiers {
 	 * <p>Get all superclasses in the hierarchy chain of this class as well as all interfaces this class
 	 * implements directly or indirectly.</p>
 	 * <p>In other words return all classes that this class can be safely casted to.</p>
+	 *
 	 * @return an immutable Set containing all superclasses and interfaces
 	 */
 	public Set<String> getSupers() {
@@ -218,12 +230,14 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Get the number of dimensions of this array class, or 0 if this ClassInfo does not represent an array class.</p>
+	 *
 	 * @return the number of dimensions
 	 */
 	public abstract int getDimensions();
 
 	/**
 	 * <p>Determine if this class is an array class (equivalent to {@link Class#isArray()}</p>
+	 *
 	 * @return true if this class is an array class
 	 */
 	public boolean isArray() {
@@ -232,6 +246,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Determine if this class is an interface.</p>
+	 *
 	 * @return true if this class is an interface
 	 */
 	public boolean isInterface() {
@@ -240,6 +255,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Determine if this class is abstract</p>
+	 *
 	 * @return true if this class is abstract
 	 */
 	public boolean isAbstract() {
@@ -248,6 +264,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Determine if this class is an annotation.</p>
+	 *
 	 * @return true if this class is an annotation
 	 */
 	public boolean isAnnotation() {
@@ -258,6 +275,7 @@ public abstract class ClassInfo extends HasModifiers {
 	 * <p>Determine if this ClassInfo represents an enum class (equivalent to {@link Class#isEnum()}.</p>
 	 * <p>Note: Like the JDK method this method will return false for the classes generated for specialized enum constants.
 	 * Use {@code hasModifier(ACC_ENUM)} to include those explicitly.</p>
+	 *
 	 * @return true if this ClassInfo represents an enum class
 	 */
 	public boolean isEnum() {
@@ -266,6 +284,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Determine if a field with the given name is present in this class.</p>
+	 *
 	 * @param name the field name to check for
 	 * @return true if this class contains a field with the given name
 	 */
@@ -273,6 +292,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Get a {@link de.take_weiland.mods.commons.asm.info.FieldInfo} that represents the field with the given name in this class.</p>
+	 *
 	 * @param name the field name
 	 * @return a FieldInfo or null if no such field was found
 	 */
@@ -280,6 +300,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Determine if a method with the given name is present in this class.</p>
+	 *
 	 * @param name the method name to check for
 	 * @return true if this class contains a method with the given name
 	 */
@@ -287,6 +308,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Determine if a method with the given name and descriptor is present in this class.</p>
+	 *
 	 * @param name the method name to check for
 	 * @param desc the method descriptor to check for
 	 * @return true if this class contains a method with the given name and descriptor
@@ -296,6 +318,7 @@ public abstract class ClassInfo extends HasModifiers {
 	/**
 	 * <p>Get a {@link MethodInfo} that represents the first method in this
 	 * class that has the given name.</p>
+	 *
 	 * @param name the method name
 	 * @return a MethodInfo or null if no such method was found
 	 */
@@ -303,6 +326,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Get a {@link MethodInfo} that represents the method with the given name and signature in this class.</p>
+	 *
 	 * @param name the method name
 	 * @param desc the method descriptor
 	 * @return a MethodInfo or null if no such method was found
@@ -311,6 +335,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Determine if a constructor with the given descriptor is present in this class.</p>
+	 *
 	 * @param desc the constructor descriptor
 	 * @return true if this class has a constructor with the given descriptor
 	 */
@@ -318,6 +343,7 @@ public abstract class ClassInfo extends HasModifiers {
 
 	/**
 	 * <p>Get a {@link de.take_weiland.mods.commons.asm.info.MethodInfo} that represents the constructor of this class with the given signature.</p>
+	 *
 	 * @param desc the constructor descriptor
 	 * @return a MethodInfo or null if no such constructor was found
 	 */

@@ -50,49 +50,79 @@ public interface SimplePacket {
 	public static final SimplePacket DUMMY = new SimplePacket() {
 
 		@Override
-		public SimplePacket sendToServer() { return this; }
+		public SimplePacket sendToServer() {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToAllTracking(Entity entity) { return this; }
+		public SimplePacket sendToAllTracking(Entity entity) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToAllNear(TileEntity tileEntity, double radius) { return this; }
+		public SimplePacket sendToAllNear(TileEntity tileEntity, double radius) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToAllNear(Entity entity, double radius) { return this; }
+		public SimplePacket sendToAllNear(Entity entity, double radius) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) { return this; }
+		public SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToAllNear(World world, double x, double y, double z, double radius) { return this; }
+		public SimplePacket sendToAllNear(World world, double x, double y, double z, double radius) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToAllInDimension(World world) { return this; }
+		public SimplePacket sendToAllInDimension(World world) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToAllInDimension(int dimension) { return this; }
+		public SimplePacket sendToAllInDimension(int dimension) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToAll() { return this; }
+		public SimplePacket sendToAll() {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendTo(Iterable<? extends EntityPlayer> players) { return this; }
+		public SimplePacket sendTo(Iterable<? extends EntityPlayer> players) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendTo(EntityPlayer player) { return this; }
+		public SimplePacket sendTo(EntityPlayer player) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendTo(PacketTarget target) { return this; }
+		public SimplePacket sendTo(PacketTarget target) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToAllTracking(TileEntity te) { return this; }
+		public SimplePacket sendToAllTracking(TileEntity te) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToAllAssociated(Entity e) { return this; }
+		public SimplePacket sendToAllAssociated(Entity e) {
+			return this;
+		}
 
 		@Override
-		public SimplePacket sendToViewing(Container c) { return this; }
+		public SimplePacket sendToViewing(Container c) {
+			return this;
+		}
 	};
-	
+
 }

@@ -31,23 +31,25 @@ public abstract class TileEntityInventory extends AbstractTileEntity implements 
 	 */
 	protected final ItemStack[] storage;
 
-    /**
-     * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
-     */
+	/**
+	 * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
+	 */
 	protected TileEntityInventory() {
 		storage = new ItemStack[getSizeInventory()];
 	}
 
-    /**
-     * <p>Alternate constructor that doesn't need {@link #getSizeInventory()} to be overridden.</p>
-     * @param size the size of this inventory
-     */
+	/**
+	 * <p>Alternate constructor that doesn't need {@link #getSizeInventory()} to be overridden.</p>
+	 *
+	 * @param size the size of this inventory
+	 */
 	protected TileEntityInventory(int size) {
 		storage = new ItemStack[size];
 	}
 
 	/**
 	 * <p>Get the unlocalized name of this inventory.</p>
+	 *
 	 * @return the unlocalized name
 	 */
 	protected abstract String unlocalizedName();
@@ -117,12 +119,14 @@ public abstract class TileEntityInventory extends AbstractTileEntity implements 
 			nbt.setString(CUSTOM_NAME_KEY, getCustomName());
 		}
 	}
-	
-	@Override
-	public void openChest() { }
 
 	@Override
-	public void closeChest() { }
+	public void openChest() {
+	}
+
+	@Override
+	public void closeChest() {
+	}
 
 	// NameableInventory
 	@Override

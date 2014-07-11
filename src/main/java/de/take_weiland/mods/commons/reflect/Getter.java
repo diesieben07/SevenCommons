@@ -18,12 +18,14 @@ public @interface Getter {
 	/**
 	 * The field to get. If it is an obfuscated field, provide the SRG name (e.g. field_123456_a)
 	 * and set {@link #srg()} to true
+	 *
 	 * @return the field to get
 	 */
 	String field();
 
 	/**
 	 * Set this to true if the field name provided by {@link #field()} is an SRG name
+	 *
 	 * @return true if it's a SRG field
 	 */
 	boolean srg() default false;

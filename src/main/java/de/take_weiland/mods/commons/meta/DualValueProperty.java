@@ -33,6 +33,7 @@ class DualValueProperty<T> extends GenericProperty<T> {
 	}
 
 	private T[] values;
+
 	@Override
 	public T[] values() {
 		return values == null ? (values = createValues()) : values;

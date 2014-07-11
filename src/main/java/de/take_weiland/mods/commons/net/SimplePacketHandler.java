@@ -32,7 +32,7 @@ final class SimplePacketHandler<TYPE extends Enum<TYPE> & SimplePacketType> impl
 			throw new RuntimeException("Invalid Packet class, this should not happen!", e);
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked") // safe, we can handle any TYPE
 	static <TYPE extends Enum<TYPE> & SimplePacketType> SimplePacketHandler<TYPE> instance() {
 		return (SimplePacketHandler<TYPE>) INSTANCE;

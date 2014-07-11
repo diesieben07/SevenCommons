@@ -11,14 +11,14 @@ import net.minecraft.network.packet.Packet;
 public class ClientProxy implements SevenCommonsProxy {
 
 	private final Minecraft mc = Minecraft.getMinecraft();
-	
+
 	@Override
 	public void preInit(FMLPreInitializationEvent event) {
 	}
-	
+
 	@Override
 	public INetworkManager getNetworkManagerFromClient(NetHandler clientHandler) {
-		return ((NetClientHandler)clientHandler).getNetManager();
+		return ((NetClientHandler) clientHandler).getNetManager();
 	}
 
 	@Override

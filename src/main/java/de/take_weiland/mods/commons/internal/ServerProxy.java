@@ -10,7 +10,7 @@ public class ServerProxy implements SevenCommonsProxy {
 	@Override
 	public void preInit(FMLPreInitializationEvent event) {
 	}
-	
+
 	@Override
 	public INetworkManager getNetworkManagerFromClient(NetHandler clientHandler) {
 		throw new IllegalStateException("NetHandler.isServerHandler() should always be true on a dedicated server!");

@@ -127,7 +127,7 @@ public final class NBTASMHooks {
 	}
 
 	public static NBTBase convert_deep_boolean(Object[] arr, int dimensions) {
-		assert(dimensions >= 2);
+		assert (dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
 			for (boolean[] subArr : (boolean[][]) arr) {
@@ -142,7 +142,7 @@ public final class NBTASMHooks {
 	}
 
 	public static NBTBase convert_deep_byte(Object[] arr, int dimensions) {
-		assert(dimensions >= 2);
+		assert (dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
 			for (byte[] subArr : (byte[][]) arr) {
@@ -157,7 +157,7 @@ public final class NBTASMHooks {
 	}
 
 	public static NBTBase convert_deep_short(Object[] arr, int dimensions) {
-		assert(dimensions >= 2);
+		assert (dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
 			for (short[] subArr : (short[][]) arr) {
@@ -172,7 +172,7 @@ public final class NBTASMHooks {
 	}
 
 	public static NBTBase convert_deep_int(Object[] arr, int dimensions) {
-		assert(dimensions >= 2);
+		assert (dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
 			for (int[] subArr : (int[][]) arr) {
@@ -187,7 +187,7 @@ public final class NBTASMHooks {
 	}
 
 	public static NBTBase convert_deep_long(Object[] arr, int dimensions) {
-		assert(dimensions >= 2);
+		assert (dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
 			for (long[] subArr : (long[][]) arr) {
@@ -202,7 +202,7 @@ public final class NBTASMHooks {
 	}
 
 	public static NBTBase convert_deep_float(Object[] arr, int dimensions) {
-		assert(dimensions >= 2);
+		assert (dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
 			for (float[] subArr : (float[][]) arr) {
@@ -217,7 +217,7 @@ public final class NBTASMHooks {
 	}
 
 	public static NBTBase convert_deep_double(Object[] arr, int dimensions) {
-		assert(dimensions >= 2);
+		assert (dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
 			for (double[] subArr : (double[][]) arr) {
@@ -232,7 +232,7 @@ public final class NBTASMHooks {
 	}
 
 	public static NBTBase convert_deep_char(Object[] arr, int dimensions) {
-		assert(dimensions >= 2);
+		assert (dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
 			for (char[] subArr : (char[][]) arr) {
@@ -247,7 +247,7 @@ public final class NBTASMHooks {
 	}
 
 	public static NBTBase convert_deep_java_lang_Enum(Object[] arr, int dimensions) {
-		assert(dimensions >= 2);
+		assert (dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
 			for (Enum<?>[] subArr : (Enum<?>[][]) arr) {
@@ -262,7 +262,7 @@ public final class NBTASMHooks {
 	}
 
 	public static NBTBase convert_deep_java_lang_String(Object[] arr, int dimensions) {
-		assert(dimensions >= 2);
+		assert (dimensions >= 2);
 		NBTTagList nbt = new NBTTagList();
 		if (dimensions == 2) {
 			for (String[] subArr : (String[][]) arr) {
@@ -289,7 +289,7 @@ public final class NBTASMHooks {
 	}
 
 	public static int get_int(NBTBase nbt) {
-		return nbt == null ? 0 :((NBTTagInt) nbt).data;
+		return nbt == null ? 0 : ((NBTTagInt) nbt).data;
 	}
 
 	public static long get_long(NBTBase nbt) {
@@ -331,7 +331,7 @@ public final class NBTASMHooks {
 	}
 
 	public static int[] get_int_arr(NBTBase nbt) {
-		return nbt == null ?null : ((NBTTagIntArray) nbt).intArray;
+		return nbt == null ? null : ((NBTTagIntArray) nbt).intArray;
 	}
 
 	public static long[] get_long_arr(NBTBase nbt) {
@@ -523,7 +523,8 @@ public final class NBTASMHooks {
 			return result;
 		} else {
 			Class<?> oneLessDim = fieldType.getComponentType();
-			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);;
+			Object[] result = (Object[]) Array.newInstance(oneLessDim, len);
+			;
 			for (int i = 0; i < len; ++i) {
 				result[i] = get_deep_double(list.tagAt(i), oneLessDim, dimensions - 1);
 			}
@@ -607,7 +608,7 @@ public final class NBTASMHooks {
 					| (off + 1 < len && value[(off + 1)] ? 2 : 0)
 					| (off + 2 < len && value[(off + 2)] ? 4 : 0)
 					| (off + 3 < len && value[(off + 3)] ? 8 : 0)
-					| (off + 4 < len && value[(off + 4)] ? 16  : 0)
+					| (off + 4 < len && value[(off + 4)] ? 16 : 0)
 					| (off + 5 < len && value[(off + 5)] ? 32 : 0)
 					| (off + 6 < len && value[(off + 6)] ? 64 : 0)
 					| (off + 7 < len && value[(off + 7)] ? 128 : 0));

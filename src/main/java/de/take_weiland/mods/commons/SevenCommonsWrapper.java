@@ -76,7 +76,8 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 	}
 
 	@Override
-	public void injectData(Map<String, Object> data) { }
+	public void injectData(Map<String, Object> data) {
+	}
 
 	// Private implementation
 
@@ -114,11 +115,11 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		final URL downloadRequestURL = new URL("http://sc-versions.take-weiland.de/request_download.php?version=" + URLEncoder.encode(version, "utf-8"));
 
 		String targetURL = CharStreams.toString(new InputSupplier<Reader>() {
-			                                        @Override
-			                                        public Reader getInput() throws IOException {
-				                                        return new InputStreamReader(downloadRequestURL.openStream());
-			                                        }
-		                                        });
+			@Override
+			public Reader getInput() throws IOException {
+				return new InputStreamReader(downloadRequestURL.openStream());
+			}
+		});
 
 		if (targetURL.toLowerCase().startsWith("error: ")) {
 			throw new IOException("Failed to get Download URL (" + targetURL + ") !");
@@ -141,7 +142,7 @@ public class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		long total = conn.getContentLengthLong();
 
 		try (WritableByteChannel out = new FileOutputStream(target).getChannel();
-		     ReadableByteChannel in = new MonitorChannel(Channels.newChannel(conn.getInputStream()), total)) {
+			 ReadableByteChannel in = new MonitorChannel(Channels.newChannel(conn.getInputStream()), total)) {
 
 			ByteStreams.copy(in, out);
 		}

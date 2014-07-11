@@ -4,12 +4,14 @@ import net.minecraft.client.Minecraft;
 
 /**
  * <p>Utilities for working with {@code GuiScreens}</p>
- * @see net.minecraft.client.gui.GuiScreen
+ *
  * @author diesieben07
+ * @see net.minecraft.client.gui.GuiScreen
  */
 public final class Guis {
 
-	private Guis() { }
+	private Guis() {
+	}
 
 	/**
 	 * <p>Close any currently open GuiScreen.</p>
@@ -21,9 +23,10 @@ public final class Guis {
 	/**
 	 * <p>Determine whether the point with given {@code pointX} and {@code pointY} coordinates is in the rectangle at position {@code x, y} and with dimensions
 	 * {@code width} and {@code height}.</p>
-	 * @param x x position of the rectangle
-	 * @param y y position of the rectangle
-	 * @param width width of the rectangle
+	 *
+	 * @param x      x position of the rectangle
+	 * @param y      y position of the rectangle
+	 * @param width  width of the rectangle
 	 * @param height height of the rectangle
 	 * @param pointX x position of the point to check
 	 * @param pointY y position of the point to check
@@ -38,6 +41,7 @@ public final class Guis {
 	 * <p><pre>{@code
 	 * Minecraft mc = Minecraft.getMinecraft();
 	 * int scale = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight).getScaleFactor(); }</pre></p>
+	 *
 	 * @return the current GUI scale
 	 */
 	public static int computeGuiScale() {

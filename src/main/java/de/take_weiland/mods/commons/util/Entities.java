@@ -18,16 +18,18 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * <p>Utilities regarding Entities.</p>
- * @see net.minecraft.entity.Entity
+ *
  * @author diesieben07
+ * @see net.minecraft.entity.Entity
  */
 public final class Entities {
 
 	/**
 	 * <p>Get an NBTTagCompound for storing custom data about the given Entity.</p>
 	 * <p>If the entity is a player, this data is not persisted through death.</p>
+	 *
 	 * @param entity the Entity
-	 * @param key a unique key for your data, your ModId is a good choice
+	 * @param key    a unique key for your data, your ModId is a good choice
 	 * @return an NBTTagCompound
 	 */
 	public static NBTTagCompound getData(Entity entity, String key) {
@@ -37,8 +39,9 @@ public final class Entities {
 	/**
 	 * <p>Get an NBTTagCompound for storing data about the given entity.</p>
 	 * <p>If the entity is a player, this data is persisted through death.</p>
+	 *
 	 * @param entity the Entity
-	 * @param key a unique key for your data, your ModId is a good choice
+	 * @param key    a unique key for your data, your ModId is a good choice
 	 * @return an NBTTagCompound
 	 */
 	public static NBTTagCompound getPersistedData(Entity entity, String key) {
@@ -48,8 +51,9 @@ public final class Entities {
 	/**
 	 * <p>Get an NBTTagCompound for storing data about the given player.</p>
 	 * <p>This data is persisted through death.</p>
+	 *
 	 * @param player the player
-	 * @param key a unique key for your data, your ModId is a good choice
+	 * @param key    a unique key for your data, your ModId is a good choice
 	 * @return an NBTTagCompound
 	 */
 	public static NBTTagCompound getPersistedData(EntityPlayer player, String key) {
@@ -63,11 +67,12 @@ public final class Entities {
 			return entity.getEntityData();
 		}
 	}
-	
+
 	/**
 	 * <p>Get all players tracking the given Entity.</p>
 	 * <p>To send a packet to all tracking players use {@link de.take_weiland.mods.commons.net.Packets#sendPacketToAllTracking(net.minecraft.network.packet.Packet, net.minecraft.entity.Entity)} instead.</p>
 	 * <p>This method must only be called on the logical server and the returned Set must not be modified.</p>
+	 *
 	 * @param entity the Entity
 	 * @return a Set of players tracking the entity
 	 */
@@ -80,6 +85,7 @@ public final class Entities {
 
 	/**
 	 * <p>Get the cardinal direction the given Entity is facing towards.</p>
+	 *
 	 * @param entity the Entity
 	 * @return a cardinal direction (one of {@link net.minecraftforge.common.ForgeDirection#NORTH},
 	 * {@link net.minecraftforge.common.ForgeDirection#WEST}, {@link net.minecraftforge.common.ForgeDirection#SOUTH},
@@ -90,6 +96,7 @@ public final class Entities {
 		return ForgeDirection.VALID_DIRECTIONS[Direction.directionToFacing[dir]];
 	}
 
-	private Entities() { }
+	private Entities() {
+	}
 
 }

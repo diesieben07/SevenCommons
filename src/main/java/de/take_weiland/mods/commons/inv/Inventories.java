@@ -24,46 +24,48 @@ import java.util.logging.Logger;
 
 /**
  * A collection of static utility methods regarding implementors of {@link IInventory}
- * @author diesieben07
  *
+ * @author diesieben07
  */
 public final class Inventories {
 
-	private Inventories() { }
+	private Inventories() {
+	}
 
 	private static final Logger logger = MiscUtil.getLogger("SC|Inventories");
-	
+
 	/**
 	 * generic implementation for {@link IInventory#decrStackSize}
+	 *
 	 * @param inventory the inventory
-	 * @param slot the slot to be decreased in size
-	 * @param count the number of items to be depleted
+	 * @param slot      the slot to be decreased in size
+	 * @param count     the number of items to be depleted
 	 * @return the stack being depleted from the inventory
 	 */
 	public static ItemStack decreaseStackSize(IInventory inventory, int slot, int count) {
 		ItemStack stack = inventory.getStackInSlot(slot);
 
 		if (stack != null) {
-            ItemStack returnStack;
+			ItemStack returnStack;
 
-            if (stack.stackSize <= count) {
-                returnStack = stack;
-                inventory.setInventorySlotContents(slot, null);
-                return returnStack;
-            } else {
-                returnStack = stack.splitStack(count);
+			if (stack.stackSize <= count) {
+				returnStack = stack;
+				inventory.setInventorySlotContents(slot, null);
+				return returnStack;
+			} else {
+				returnStack = stack.splitStack(count);
 
-                if (stack.stackSize == 0) {
-                	inventory.setInventorySlotContents(slot, null);
-                } else {
-	                inventory.onInventoryChanged();
-                }
-                
-                return returnStack;
-            }
-        } else {
-            return null;
-        }
+				if (stack.stackSize == 0) {
+					inventory.setInventorySlotContents(slot, null);
+				} else {
+					inventory.onInventoryChanged();
+				}
+
+				return returnStack;
+			}
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -72,12 +74,13 @@ public final class Inventories {
 	public static ItemStack getStackInSlotOnClosing(IInventory inventory, int slot) {
 		return getAndRemove(inventory, slot);
 	}
-	
+
 	/**
 	 * generic implementation for {@link IInventory#getStackInSlotOnClosing}<br>
 	 * gets the contents from the given slot and then empties it
+	 *
 	 * @param inventory the inventory
-	 * @param slot the slot to get the contents from
+	 * @param slot      the slot to get the contents from
 	 * @return the slots contents
 	 */
 	public static ItemStack getAndRemove(IInventory inventory, int slot) {
@@ -85,9 +88,10 @@ public final class Inventories {
 		inventory.setInventorySlotContents(slot, null);
 		return item;
 	}
-	
+
 	/**
 	 * calls {@link #spill(net.minecraft.tileentity.TileEntity)} only if the given TileEntity implements {@link IInventory}
+	 *
 	 * @param te the TileEntity
 	 */
 	public static void spillIfInventory(TileEntity te) {
@@ -95,22 +99,24 @@ public final class Inventories {
 			spill(te.worldObj, te.xCoord, te.yCoord, te.zCoord, (IInventory) te);
 		}
 	}
-	
+
 	/**
 	 * spill the contents of a {@link TileEntity} that also implements {@link IInventory} into the world.<br>
 	 * Usually used in {@link Block#breakBlock}
+	 *
 	 * @param te the TileEntity
 	 */
 	public static <T extends TileEntity & IInventory> void spill(T te) {
 		spill(te.worldObj, te.xCoord, te.yCoord, te.zCoord, te);
 	}
-	
+
 	/**
 	 * spill the contents of the given Inventory at the given coordinates
-	 * @param world the world to spill in
-	 * @param x x coordinate
-	 * @param y y coordinate
-	 * @param z z coordinate
+	 *
+	 * @param world     the world to spill in
+	 * @param x         x coordinate
+	 * @param y         y coordinate
+	 * @param z         z coordinate
 	 * @param inventory the inventory to spill
 	 */
 	public static void spill(World world, int x, int y, int z, IInventory inventory) {
@@ -120,21 +126,21 @@ public final class Inventories {
 				float randomPositionX = rand.nextFloat() * 0.8F + 0.1F;
 				float randomPositionY = rand.nextFloat() * 0.8F + 0.1F;
 				float randomPositionZ = rand.nextFloat() * 0.8F + 0.1F;
-				
+
 				while (stack.stackSize > 0) {
 					int partialStackSize = rand.nextInt(21) + 10;
-	
+
 					if (partialStackSize > stack.stackSize) {
 						partialStackSize = stack.stackSize;
 					}
 
 					stack.stackSize -= partialStackSize;
 					EntityItem itemEntity = new EntityItem(world, x + randomPositionX, y + randomPositionY, z + randomPositionZ, new ItemStack(stack.itemID, partialStackSize, stack.getItemDamage()));
-	
+
 					if (stack.hasTagCompound()) {
-						itemEntity.getEntityItem().setTagCompound((NBTTagCompound)stack.getTagCompound().copy());
+						itemEntity.getEntityItem().setTagCompound((NBTTagCompound) stack.getTagCompound().copy());
 					}
-	
+
 					float motionMultiplier = 0.05F;
 					itemEntity.motionX = rand.nextGaussian() * motionMultiplier;
 					itemEntity.motionY = rand.nextGaussian() * motionMultiplier + 0.2F;
@@ -150,16 +156,18 @@ public final class Inventories {
 	/**
 	 * <p>Write an inventory to a (consistent) subkey of the NBTTagCompound.</p>
 	 * <p>The inventory can be read back using {@link #readInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound)}</p>
+	 *
 	 * @param stacks the ItemStacks to write
-	 * @param nbt the NBTTagCompound to write to
+	 * @param nbt    the NBTTagCompound to write to
 	 */
 	public static void writeInventory(ItemStack[] stacks, NBTTagCompound nbt) {
 		nbt.setTag(INV_KEY, writeInventory(stacks));
 	}
-	
+
 	/**
 	 * Serialize an {@link IInventory} to a {@link NBTTagList}<br>
 	 * The contents may be read back with {@link #readInventory}
+	 *
 	 * @param stacks the ItemStacks to write
 	 * @return the NBTTagList containing the serialized contents of the inventory
 	 */
@@ -179,8 +187,9 @@ public final class Inventories {
 
 	/**
 	 * Read an inventory from an NBTTagCompound. The inventory should be written with {@link #writeInventory(net.minecraft.item.ItemStack[])}
+	 *
 	 * @param stacks the array to read into
-	 * @param nbt the NBTTagCompound to read from
+	 * @param nbt    the NBTTagCompound to read from
 	 */
 	public static void readInventory(ItemStack[] stacks, NBTTagCompound nbt) {
 		readInventory0(stacks, nbt.getTagList(INV_KEY));
@@ -189,7 +198,8 @@ public final class Inventories {
 	/**
 	 * Unserialize an {@link IInventory} from a {@link NBTTagList}<br>
 	 * The format of the NBT should match that produced by {@link #writeInventory}
-	 * @param stacks the array to be filled
+	 *
+	 * @param stacks  the array to be filled
 	 * @param nbtList the NBTTagList containing the serialized contents
 	 */
 	public static void readInventory(ItemStack[] stacks, NBTTagList nbtList) {
@@ -209,17 +219,18 @@ public final class Inventories {
 			}
 		}
 	}
-	
+
 	/**
 	 * Utility method, equal to {@link Inventories#iterator(IInventory, boolean) Inventories.iterator(inventory, true)}
 	 */
 	public static Iterator<ItemStack> iterator(final IInventory inventory) {
 		return iterator(inventory, true);
 	}
-	
+
 	/**
 	 * Generate an Iterator for the given {@link IInventory}
-	 * @param inventory the inventory to iterate
+	 *
+	 * @param inventory    the inventory to iterate
 	 * @param includeNulls if empty ItemStacks should be included in the iterator
 	 * @return an Iterator
 	 */
@@ -233,10 +244,10 @@ public final class Inventories {
 	}
 
 	static Iterator<ItemStack> iterator0(final IInventory inventory, boolean includeNulls) {
-		Iterator<ItemStack> it =  new AbstractIterator<ItemStack>() {
+		Iterator<ItemStack> it = new AbstractIterator<ItemStack>() {
 
 			private int next = 0;
-			
+
 			@Override
 			protected ItemStack computeNext() {
 				return next < inventory.getSizeInventory() ? inventory.getStackInSlot(next++) : endOfData();
@@ -245,14 +256,14 @@ public final class Inventories {
 		};
 		return includeNulls ? it : Iterators.filter(it, Predicates.notNull());
 	}
-	
+
 	/**
 	 * Utility method, equal to {@link Inventories#iterate(IInventory, boolean) Inventories.iterate(inventory, true)}
 	 */
 	public static Iterable<ItemStack> iterate(IInventory inventory) {
 		return iterate(inventory, true);
 	}
-	
+
 	/**
 	 * Generate an {@link Iterable} that calls {@link Inventories#iterator(IInventory, boolean) Inventories.iterator}
 	 * or the inventory itself, if it is already an Iterable (possibly filtered for nulls)
@@ -264,12 +275,12 @@ public final class Inventories {
 			return includeNulls ? it : Iterables.filter(it, Predicates.notNull());
 		}
 		return new Iterable<ItemStack>() {
-				
+
 			@Override
 			public Iterator<ItemStack> iterator() {
 				return Inventories.iterator0(inventory, includeNulls);
 			}
 		};
 	}
-	
+
 }

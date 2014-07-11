@@ -90,7 +90,7 @@ public final class MCPNames {
 				if (!map.containsKey(srg)) {
 					map.put(srg, mcp);
 				}
-			} catch(NoSuchElementException e) {
+			} catch (NoSuchElementException e) {
 				throw new IOException("Invalid Mappings file!", e);
 			}
 
@@ -130,23 +130,23 @@ public final class MCPNames {
 	public static final String F_TRACKED_ENTITY_IDS = "field_72794_c";
 
 	public static final String F_MAP_TEXTURE_OBJECTS = "field_110585_a";
-	
+
 	public static final String F_MY_ENTITY = "field_73132_a";
-	
+
 	public static final String M_TRY_START_WATCHING_THIS = "func_73117_b";
-	
+
 	public static final String M_ON_UPDATE = "func_70071_h_";
-	
+
 	public static final String M_UPDATE_ENTITY = "func_70316_g";
-	
+
 	public static final String M_DETECT_AND_SEND_CHANGES = "func_75142_b";
-	
+
 	public static final String F_IS_REMOTE = "field_72995_K";
-	
+
 	public static final String F_WORLD_OBJ_TILEENTITY = "field_70331_k";
-	
+
 	public static final String F_WORLD_OBJ_ENTITY = "field_70170_p";
-	
+
 	public static final String F_TIMER = "field_71428_T";
 
 	public static final String F_PACKET_CLASS_TO_ID_MAP = "field_73291_a";
@@ -201,8 +201,9 @@ public final class MCPNames {
 
 	public static final String F_CRAFTERS = "field_75149_d";
 
-    public static final String F_GET_ICON_STRING = "func_111208_A";
+	public static final String F_GET_ICON_STRING = "func_111208_A";
 
-	private MCPNames() { }
-	
+	private MCPNames() {
+	}
+
 }

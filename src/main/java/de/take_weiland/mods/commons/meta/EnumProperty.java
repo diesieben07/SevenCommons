@@ -19,8 +19,8 @@ class EnumProperty<T extends Enum<T>> extends AbstractArrayProperty<T> {
 		return value.ordinal();
 	}
 
-    @Override
-    public <V> Map<T, V> createMap() {
-        return Maps.newEnumMap(values[0].getDeclaringClass());
-    }
+	@Override
+	public <V> Map<T, V> createMap() {
+		return Maps.newEnumMap(values[0].getDeclaringClass());
+	}
 }

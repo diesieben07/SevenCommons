@@ -16,12 +16,14 @@ public abstract class ModPacketBase implements SimplePacket {
 
 	/**
 	 * Writes this packet's data to the given buffer
+	 *
 	 * @param buffer a buffer for this packet's data
 	 */
 	protected abstract void write(WritableDataBuf buffer);
 
 	/**
 	 * whether the given (logical) side can receive this packet
+	 *
 	 * @param side the receiving side to check
 	 * @return true whether Packet is valid to be received on the given side
 	 */
@@ -29,6 +31,7 @@ public abstract class ModPacketBase implements SimplePacket {
 
 	/**
 	 * Determine an expected size for this packet to accurately size the {@link de.take_weiland.mods.commons.net.WritableDataBuf} passed to {@link #write(WritableDataBuf)}
+	 *
 	 * @return an expected size in bytes
 	 */
 	protected int expectedSize() {

@@ -7,19 +7,19 @@ import org.lwjgl.opengl.GL11;
 public abstract class SliderButton extends GuiButton {
 
 	private boolean dragging;
-	
+
 	private float value;
-	
+
 	public SliderButton(int id, int x, int y, String text, float value) {
 		this(id, x, y, 150, 20, text, value);
 	}
-	
+
 
 	public SliderButton(int id, int x, int y, int width, int height, String text, float value) {
 		super(id, x, y, width, height, text);
 		this.value = value;
 	}
-	
+
 	@Override
 	protected void mouseDragged(Minecraft mc, int mouseX, int mouseY) {
 		if (drawButton) {
@@ -56,17 +56,17 @@ public abstract class SliderButton extends GuiButton {
 		if (value > 1) {
 			value = 1;
 		}
-		
+
 		newValue(value);
 	}
-	
+
 	protected abstract void newValue(float value);
 
 	@Override
 	public void mouseReleased(int par1, int par2) {
 		this.dragging = false;
 	}
-	
+
 	@Override
 	protected int getHoverState(boolean whatever) {
 		return 0;

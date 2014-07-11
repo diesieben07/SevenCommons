@@ -13,9 +13,9 @@ final class NativeJavaStrategy extends AbstractStrategy {
 	@Override
 	public <T> T createAccessor(Class<T> iface) {
 		final InterfaceInfo info = analyze(iface);
-		
+
 		return Reflection.newProxy(iface, new InvocationHandler() {
-			
+
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 				Field toGet = info.getters.get(method);
@@ -31,7 +31,7 @@ final class NativeJavaStrategy extends AbstractStrategy {
 					}
 					return null;
 				}
-				
+
 				Method toInvoke = info.invokers.get(method);
 				if (toInvoke != null) {
 					Object[] invokeParams = Arrays.copyOfRange(args, 1, args.length);
@@ -46,9 +46,9 @@ final class NativeJavaStrategy extends AbstractStrategy {
 	public Class<?> defineDynClass(byte[] clazz, Class<?> context) {
 		return new AnonClassLoader(context.getClassLoader()).define(clazz);
 	}
-	
+
 	private static class AnonClassLoader extends ClassLoader {
-		
+
 		AnonClassLoader(ClassLoader parent) {
 			super(parent);
 		}
@@ -56,7 +56,7 @@ final class NativeJavaStrategy extends AbstractStrategy {
 		Class<?> define(byte[] clazz) {
 			return defineClass(null, clazz, 0, clazz.length);
 		}
-		
+
 	}
 
 }

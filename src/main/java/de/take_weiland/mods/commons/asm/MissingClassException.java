@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.asm;
 
 /**
-* @author diesieben07
-*/
+ * @author diesieben07
+ */
 public class MissingClassException extends RuntimeException {
 
 	private static final long serialVersionUID = 6600743760854228837L;

@@ -17,14 +17,14 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 			throw new IllegalArgumentException("Interface expected!");
 		}
 	}
-	
+
 	InterfaceInfo analyze(Class<?> iface) {
 		validateInterface(iface);
 
 		ImmutableMap.Builder<Method, Field> getters = ImmutableMap.builder();
 		ImmutableMap.Builder<Method, Field> setters = ImmutableMap.builder();
 		ImmutableMap.Builder<Method, Method> invokers = ImmutableMap.builder();
-		
+
 		for (Method method : iface.getMethods()) {
 			if (method.isAnnotationPresent(Getter.class)) {
 				getters.put(method, findGetterTarget(iface, method));
@@ -38,7 +38,7 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 		}
 		return new InterfaceInfo(getters.build(), setters.build(), invokers.build());
 	}
-	
+
 	Field findGetterTarget(Class<?> iface, Method getter) {
 		Class<?>[] params = getter.getParameterTypes();
 		if (params.length != 1 || params[0].isPrimitive()) {
@@ -51,7 +51,7 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 		}
 		return f;
 	}
-	
+
 	Field findSetterTarget(Class<?> iface, Method setter) {
 		Class<?>[] params = setter.getParameterTypes();
 		if (params.length != 2 || params[0].isPrimitive() || setter.getReturnType() != void.class) {
@@ -64,7 +64,7 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 		}
 		return f;
 	}
-	
+
 	Method findInvokerTarget(Class<?> iface, Method invoker) {
 		Class<?>[] params = invoker.getParameterTypes();
 		if (params.length == 0 || params[0].isPrimitive()) {
@@ -77,7 +77,7 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 		}
 		return m;
 	}
-	
+
 	// copied and fixed from FMLs helper
 	Method findMethod(Class<?> clazz, String methodName, Class<?>... methodTypes) {
 		Exception failed;
@@ -88,21 +88,21 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 		} catch (Exception e) {
 			failed = e;
 		}
-		throw new UnableToFindMethodException(new String[] {methodName}, failed);
+		throw new UnableToFindMethodException(new String[] { methodName }, failed);
 	}
-	
+
 	static class InterfaceInfo {
-		
+
 		final Map<Method, Field> getters;
 		final Map<Method, Field> setters;
 		final Map<Method, Method> invokers;
-		
+
 		InterfaceInfo(Map<Method, Field> getters, Map<Method, Field> setters, Map<Method, Method> invokers) {
 			this.setters = setters;
 			this.getters = getters;
 			this.invokers = invokers;
 		}
-		
+
 	}
-	
+
 }
