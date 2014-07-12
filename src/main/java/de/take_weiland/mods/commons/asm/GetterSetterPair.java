@@ -100,11 +100,26 @@ class GetterSetterPair extends ClassBoundASMVariable {
 	}
 
 	@Override
+	public String rawName() {
+		return getter.name;
+	}
+
+	@Override
 	public String toString() {
 		if (isWritable()) {
 			return String.format("Getter/Setter Pair (getter=\"%s\", setter=\"%s\"", getter.name, setter.name);
 		} else {
 			return "Getter \"" + getter.name + "\"";
 		}
+	}
+
+	@Override
+	public boolean isField() {
+		return false;
+	}
+
+	@Override
+	public boolean isMethod() {
+		return true;
 	}
 }

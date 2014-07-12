@@ -798,7 +798,7 @@ public final class CodePieces {
 	}
 
 	private static CodePiece arrayConstant(Object arr) {
-		Type compType = Type.getType(arr.getClass().getComponentType());
+		Type compType = findCorrespondingType(Type.getType(arr.getClass().getComponentType()));
 
 		int len = Array.getLength(arr);
 
@@ -821,6 +821,14 @@ public final class CodePieces {
 		}
 
 		return builder.build();
+	}
+
+	private static Type findCorrespondingType(Type type) {
+		String internalName = type.getInternalName();
+		if (internalName.equals(Type.getInternalName(Type.class))) {
+			return Type.getType(Class.class);
+		}
+		return type;
 	}
 
 	private static int toArrayType(Type type) {

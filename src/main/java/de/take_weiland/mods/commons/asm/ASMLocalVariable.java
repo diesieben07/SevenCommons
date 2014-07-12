@@ -83,4 +83,13 @@ class ASMLocalVariable extends AbstractASMVariable {
 		return true;
 	}
 
+	@Override
+	public boolean isField() {
+		return false;
+	}
+
+	@Override
+	public boolean isMethod() {
+		return false;
+	}
 }

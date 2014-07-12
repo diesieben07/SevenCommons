@@ -89,4 +89,14 @@ class ASMField extends ClassBoundASMVariable {
 	public String toString() {
 		return "Field \"" + field.name + "\"";
 	}
+
+	@Override
+	public boolean isField() {
+		return true;
+	}
+
+	@Override
+	public boolean isMethod() {
+		return false;
+	}
 }

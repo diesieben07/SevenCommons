@@ -11,9 +11,12 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.objectweb.asm.Opcodes.*;
 
 /**
@@ -83,11 +86,14 @@ public class SyncingTransformer implements ASMClassTransformer {
 				FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_FINAL | ACC_TRANSIENT, name, desc, null, null);
 				clazz.fields.add(field);
 
-				// TODO: support Collections
+				boolean isField = var.isField();
+				checkState(isField || var.isMethod(), "ASMVariable is neither field nor method?!?");
+				CodePiece getReflectElement = getReflectElement(var);
 				String owner = SyncAdapter.CLASS_NAME;
 				name = SyncAdapter.CREATOR;
-				desc = ASMUtils.getMethodDescriptor(InstanceCreator.class, Class.class);
-				CodePiece fetchAdapter = CodePieces.invokeStatic(owner, name, desc, CodePieces.constant(type));
+				desc = ASMUtils.getMethodDescriptor(InstanceCreator.class, Object.class, boolean.class);
+
+				CodePiece fetchAdapter = CodePieces.invokeStatic(owner, name, desc, getReflectElement, CodePieces.constant(isField));
 				CodePiece storeAdapter = CodePieces.setField(clazz, field, fetchAdapter);
 				ASMUtils.initializeStatic(clazz, storeAdapter);
 
@@ -109,6 +115,22 @@ public class SyncingTransformer implements ASMClassTransformer {
 			CodePiece adapterInit = adapterInstanceVar.set(CodePieces.castTo(SyncAdapter.class, newAdapter));
 			ASMUtils.initialize(clazz, adapterInit);
 			return adapterInstanceVar;
+		}
+
+		private CodePiece getReflectElement(ASMVariable var) {
+			if (var.isField()) {
+				String owner = Type.getInternalName(Class.class);
+				String name = "getDeclaredField";
+				String desc = ASMUtils.getMethodDescriptor(Field.class, String.class);
+				return CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, CodePieces.constant(Type.getObjectType(clazz.name)), CodePieces.constant(var.rawName()));
+			} else {
+				String owner = Type.getInternalName(Class.class);
+				String name = "getDeclaredMethod";
+				String desc = ASMUtils.getMethodDescriptor(Method.class, String.class, Class[].class);
+				return CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, CodePieces.constant(Type.getObjectType(clazz.name)),
+						CodePieces.constant(var.rawName()),
+						CodePieces.constant(new Type[0]));
+			}
 		}
 	}
 }

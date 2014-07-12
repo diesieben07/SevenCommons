@@ -15,6 +15,11 @@ public class testmod_sc {
 	@Sync
 	private String foo;
 
+	@Sync
+	private Integer bar() {
+		return null;
+	}
+
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		Blocks.init(new Block(3000, Material.rock), "foobar", MyItemBlock.class);

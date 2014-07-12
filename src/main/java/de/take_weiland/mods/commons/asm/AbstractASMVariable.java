@@ -42,6 +42,11 @@ abstract class AbstractASMVariable implements ASMVariable {
 		return hasGetterModifier(Opcodes.ACC_STATIC);
 	}
 
+	@Override
+	public String rawName() {
+		return name();
+	}
+
 	abstract List<AnnotationNode> getterAnns(boolean visible);
 
 	abstract List<AnnotationNode> setterAnns(boolean visible);

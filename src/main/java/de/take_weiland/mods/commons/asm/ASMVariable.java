@@ -86,6 +86,8 @@ public interface ASMVariable {
 	 */
 	String name();
 
+	String rawName();
+
 	/**
 	 * <p>Check if this variable has a static modifier.</p>
 	 *
@@ -99,5 +101,9 @@ public interface ASMVariable {
 	 * @return true if writing to this variable is allowed
 	 */
 	boolean isWritable();
+
+	boolean isField();
+
+	boolean isMethod();
 
 }

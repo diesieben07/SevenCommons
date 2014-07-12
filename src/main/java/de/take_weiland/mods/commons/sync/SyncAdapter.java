@@ -1,9 +1,13 @@
 package de.take_weiland.mods.commons.sync;
 
+import com.google.common.primitives.Primitives;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 import java.util.RandomAccess;
 import java.util.UUID;
 
@@ -16,7 +20,25 @@ public abstract class SyncAdapter<T> {
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/sync/SyncAdapter";
 	public static final String CHECK_AND_UPDATE = "checkAndUpdate";
-	public static final String CREATOR = "creator";
+	public static final String CREATOR = "creatorASMHook";
+
+	public static InstanceCreator<SyncAdapter<?>> creatorASMHook(Object reflElement, boolean isField) {
+		Class<?> syncClass;
+		if (isField) {
+			syncClass = ((Field) reflElement).getType();
+		} else {
+			syncClass = ((Method) reflElement).getReturnType();
+		}
+
+		if (Iterable.class.isAssignableFrom(syncClass)) {
+			// TODO
+		} else if (Map.class.isAssignableFrom(syncClass)) {
+			// TODO
+		} else {
+			return ((InstanceCreator<SyncAdapter<?>>) creator(syncClass));
+		}
+		throw new RuntimeException("NYI");
+	}
 
 	@SuppressWarnings("unchecked")
 	public static <T> InstanceCreator<SyncAdapter<? super T>> creator(Class<T> clazz) {
@@ -44,7 +66,7 @@ public abstract class SyncAdapter<T> {
 	}
 
 	private static Object create0(Class<?> clazz) {
-		if (clazz == String.class || clazz == UUID.class) {
+		if (clazz == String.class || clazz == UUID.class || Primitives.isWrapperType(clazz)) {
 			return InstanceCreator.forImmutable();
 		} else if (clazz.isEnum()) {
 			return InstanceCreator.forEnum();
