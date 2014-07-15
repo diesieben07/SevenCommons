@@ -11,12 +11,12 @@ public abstract class InstanceCreator<T> {
 	public static String CLASS_NAME = "de/take_weiland/mods/commons/sync/InstanceCreator";
 	public static String NEW_INSTANCE = "newInstance";
 
-	public abstract T newInstance();
+	public abstract SyncAdapter<T> newInstance();
 
-	private static InstanceCreator<SyncAdapter<Object>> immutableCreator;
-	static InstanceCreator<SyncAdapter<Object>> forImmutable() {
+	private static InstanceCreator<Object> immutableCreator;
+	static <T> InstanceCreator<? super T> forImmutable() {
 		if (immutableCreator == null) {
-			immutableCreator = new InstanceCreator<SyncAdapter<Object>>() {
+			immutableCreator = new InstanceCreator<Object>() {
 				@Override
 				public SyncAdapter<Object> newInstance() {
 					return new ImmutableAdapter<>();
@@ -26,10 +26,11 @@ public abstract class InstanceCreator<T> {
 		return immutableCreator;
 	}
 
-	private static InstanceCreator<SyncAdapter<Enum<?>>> enumCreator;
-	static InstanceCreator<SyncAdapter<Enum<?>>> forEnum() {
+	private static InstanceCreator<Enum<?>> enumCreator;
+	@SuppressWarnings("rawtypes")
+	static <E extends Enum<E>> InstanceCreator forEnum() {
 		if (enumCreator == null) {
-			enumCreator = new InstanceCreator<SyncAdapter<Enum<?>>>() {
+			enumCreator = new InstanceCreator<Enum<?>>() {
 				@Override
 				public SyncAdapter<Enum<?>> newInstance() {
 					return new EnumAdapter();
@@ -39,10 +40,11 @@ public abstract class InstanceCreator<T> {
 		return enumCreator;
 	}
 
-	private static InstanceCreator<SyncAdapter<ItemStack>> itemStackCreator;
-	static InstanceCreator<SyncAdapter<ItemStack>> forItemStack() {
+	private static InstanceCreator<ItemStack> itemStackCreator;
+	@SuppressWarnings("rawtypes")
+	static InstanceCreator forItemStack() {
 		if (itemStackCreator == null) {
-			itemStackCreator = new InstanceCreator<SyncAdapter<ItemStack>>() {
+			itemStackCreator = new InstanceCreator<ItemStack>() {
 				@Override
 				public SyncAdapter<ItemStack> newInstance() {
 					return new ItemStackAdapter();
@@ -52,10 +54,11 @@ public abstract class InstanceCreator<T> {
 		return itemStackCreator;
 	}
 
-	private static InstanceCreator<SyncAdapter<FluidStack>> fluidStackCreator;
-	static InstanceCreator<SyncAdapter<FluidStack>> forFluidStack() {
+	private static InstanceCreator<FluidStack> fluidStackCreator;
+	@SuppressWarnings("rawtypes")
+	static InstanceCreator forFluidStack() {
 		if (fluidStackCreator == null) {
-			fluidStackCreator = new InstanceCreator<SyncAdapter<FluidStack>>() {
+			fluidStackCreator = new InstanceCreator<FluidStack>() {
 				@Override
 				public SyncAdapter<FluidStack> newInstance() {
 					return new FluidStackAdapter();

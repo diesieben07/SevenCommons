@@ -9,31 +9,45 @@ import java.util.List;
  */
 abstract class ListAdapter<V, LIST extends List<V>> extends SyncAdapter<LIST> {
 
-	private final InstanceCreator<SyncAdapter<? super V>> valueAdapter;
+	private final InstanceCreator<? super V> valueAdapter;
 
-	ListAdapter(InstanceCreator<SyncAdapter<? super V>> valueAdapter) {
+	ListAdapter(InstanceCreator<? super V> valueAdapter) {
 		this.valueAdapter = valueAdapter;
 	}
 
 	SyncAdapter<? super V>[] adapters;
-	private int actualLength;
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean checkAndUpdate(LIST newValue) {
 		if (newValue == null) {
-			return actualLength != -1;
+			if (adapters == null) {
+				return false;
+			} else {
+				adapters = null;
+				return true;
+			}
 		} else {
 			int newLen = newValue.size();
-			int myLen = actualLength;
-			if (newLen < myLen) {
-				adapters = Arrays.copyOf(adapters, newLen);
-			} else if (newLen > myLen) {
-				SyncAdapter<? super V>[] adapters = this.adapters = Arrays.copyOf(this.adapters, newLen);
-				InstanceCreator<SyncAdapter<? super V>> valueAdapter = this.valueAdapter;
-				for (int i = myLen; i < newLen; ++i) {
+			if (adapters == null) {
+				SyncAdapter<? super V>[] adapters;
+				adapters = this.adapters = new SyncAdapter[newLen];
+				for (int i = 0; i < newLen; ++i) {
 					adapters[i] = valueAdapter.newInstance();
 				}
+			} else {
+				int myLen = adapters.length;
+				if (newLen < myLen) {
+					adapters = Arrays.copyOf(adapters, newLen);
+				} else if (newLen > myLen) {
+					SyncAdapter<? super V>[] adapters = this.adapters = Arrays.copyOf(this.adapters, newLen);
+					InstanceCreator<? super V> valueAdapter = this.valueAdapter;
+					for (int i = myLen; i < newLen; ++i) {
+						adapters[i] = valueAdapter.newInstance();
+					}
+				}
 			}
+
 
 			return iterativeCheck(newValue);
 		}
@@ -42,7 +56,7 @@ abstract class ListAdapter<V, LIST extends List<V>> extends SyncAdapter<LIST> {
 	abstract boolean iterativeCheck(List<V> list);
 
 	static class ForLinked<V, LIST extends List<V>> extends ListAdapter<V, LIST> {
-		ForLinked(InstanceCreator<SyncAdapter<? super V>> valueAdapter) {
+		ForLinked(InstanceCreator<? super V> valueAdapter) {
 			super(valueAdapter);
 		}
 
@@ -62,7 +76,7 @@ abstract class ListAdapter<V, LIST extends List<V>> extends SyncAdapter<LIST> {
 	// specialized for RandomAccess lists to avoid iterators
 	static class ForRandomAccess<V, LIST extends List<V>> extends ListAdapter<V, LIST> {
 
-		ForRandomAccess(InstanceCreator<SyncAdapter<? super V>> valueAdapter) {
+		ForRandomAccess(InstanceCreator<? super V> valueAdapter) {
 			super(valueAdapter);
 		}
 

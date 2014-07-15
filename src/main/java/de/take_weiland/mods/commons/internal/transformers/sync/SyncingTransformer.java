@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.sync.InstanceCreator;
@@ -14,7 +13,6 @@ import org.objectweb.asm.tree.FieldNode;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.objectweb.asm.Opcodes.*;
@@ -46,7 +44,6 @@ public class SyncingTransformer implements ASMClassTransformer {
 	static class Impl {
 
 		private final ClassNode clazz;
-		private final Map<Type, ASMVariable> adapterCache = Maps.newHashMap();
 		private int adapterCount;
 
 		Impl(ClassNode clazz) {
@@ -78,37 +75,32 @@ public class SyncingTransformer implements ASMClassTransformer {
 		}
 
 		private ASMVariable getAdapter(ASMVariable var) {
-			Type type = var.getType();
-			ASMVariable adapterCreator = adapterCache.get(type);
-			if (adapterCreator == null) {
-				String name = "_sc$adapterCreator" + adapterCount++;
-				String desc = Type.getDescriptor(InstanceCreator.class);
-				FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_FINAL | ACC_TRANSIENT, name, desc, null, null);
-				clazz.fields.add(field);
+			String name = "_sc$adapterCreator" + adapterCount++;
+			String desc = Type.getDescriptor(InstanceCreator.class);
+			FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_FINAL | ACC_TRANSIENT, name, desc, null, null);
+			clazz.fields.add(field);
 
-				boolean isField = var.isField();
-				checkState(isField || var.isMethod(), "ASMVariable is neither field nor method?!?");
-				CodePiece getReflectElement = getReflectElement(var);
-				String owner = SyncAdapter.CLASS_NAME;
-				name = SyncAdapter.CREATOR;
-				desc = ASMUtils.getMethodDescriptor(InstanceCreator.class, Object.class, boolean.class);
+			boolean isField = var.isField();
+			checkState(isField || var.isMethod(), "ASMVariable is neither field nor method?!?");
+			CodePiece getReflectElement = getReflectElement(var);
+			String owner = SyncAdapter.CLASS_NAME;
+			name = SyncAdapter.CREATOR;
+			desc = ASMUtils.getMethodDescriptor(InstanceCreator.class, Object.class, boolean.class);
 
-				CodePiece fetchAdapter = CodePieces.invokeStatic(owner, name, desc, getReflectElement, CodePieces.constant(isField));
-				CodePiece storeAdapter = CodePieces.setField(clazz, field, fetchAdapter);
-				ASMUtils.initializeStatic(clazz, storeAdapter);
+			CodePiece fetchAdapter = CodePieces.invokeStatic(owner, name, desc, getReflectElement, CodePieces.constant(isField));
+			CodePiece storeAdapter = CodePieces.setField(clazz, field, fetchAdapter);
+			ASMUtils.initializeStatic(clazz, storeAdapter);
 
-				adapterCreator = ASMVariables.of(clazz, field);
-				adapterCache.put(type, adapterCreator);
-			}
+			ASMVariable adapterCreator = ASMVariables.of(clazz, field);
 
-			String name = var.name() + "_sc$syncAdapter";
-			String desc = Type.getDescriptor(SyncAdapter.class);
+			name = var.name() + "_sc$syncAdapter";
+			desc = Type.getDescriptor(SyncAdapter.class);
 			FieldNode adapterInstance = new FieldNode(ACC_PRIVATE | ACC_FINAL | ACC_TRANSIENT, name, desc, null, null);
 			clazz.fields.add(adapterInstance);
 
 			ASMVariable adapterInstanceVar = ASMVariables.of(clazz, adapterInstance, CodePieces.getThis());
 
-			String owner = InstanceCreator.CLASS_NAME;
+			owner = InstanceCreator.CLASS_NAME;
 			name = InstanceCreator.NEW_INSTANCE;
 			desc = ASMUtils.getMethodDescriptor(Object.class);
 			CodePiece newAdapter = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, adapterCreator.get());

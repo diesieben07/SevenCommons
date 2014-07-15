@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
 import com.google.common.primitives.Primitives;
+import com.google.common.reflect.TypeToken;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -11,8 +12,6 @@ import java.util.Map;
 import java.util.RandomAccess;
 import java.util.UUID;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /**
  * @author diesieben07
  */
@@ -22,50 +21,65 @@ public abstract class SyncAdapter<T> {
 	public static final String CHECK_AND_UPDATE = "checkAndUpdate";
 	public static final String CREATOR = "creatorASMHook";
 
-	public static InstanceCreator<SyncAdapter<?>> creatorASMHook(Object reflElement, boolean isField) {
-		Class<?> syncClass;
+	public static InstanceCreator<?> creatorASMHook(Object reflElement, boolean isField) throws Exception {
+		TypeToken<?> tt;
 		if (isField) {
-			syncClass = ((Field) reflElement).getType();
+			tt = TypeToken.of(((Field) reflElement).getGenericType());
 		} else {
-			syncClass = ((Method) reflElement).getReturnType();
+			tt = TypeToken.of(((Method) reflElement).getGenericReturnType());
 		}
 
-		if (Iterable.class.isAssignableFrom(syncClass)) {
+		return creatorFor(tt);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> InstanceCreator<? super T> creatorFor(TypeToken<T> tt) throws Exception {
+		Class<? super T> rawType = tt.getRawType();
+		if (List.class.isAssignableFrom(rawType)) {
+			TypeToken<?> listValues = tt.resolveType(List.class.getDeclaredMethod("get", int.class).getGenericReturnType());
+			return creatorForLists(rawType, listValues);
+		} else if (Iterable.class.isAssignableFrom(rawType)) {
 			// TODO
-		} else if (Map.class.isAssignableFrom(syncClass)) {
+		} else if (Map.class.isAssignableFrom(rawType)) {
 			// TODO
 		} else {
-			return ((InstanceCreator<SyncAdapter<?>>) creator(syncClass));
+			return creatorForSimpleClass(rawType);
 		}
 		throw new RuntimeException("NYI");
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <T> InstanceCreator<SyncAdapter<? super T>> creator(Class<T> clazz) {
-		checkArgument(!Iterable.class.isAssignableFrom(clazz), "Use specialized methods for Iterable-Adapters.");
-		return (InstanceCreator<SyncAdapter<? super T>>) create0(clazz);
-	}
-
-	public static <LIST extends List<V>, V> InstanceCreator<SyncAdapter<? super LIST>> creator(Class<LIST> list, Class<V> values) {
-		final InstanceCreator<SyncAdapter<? super V>> valueAdapter = creator(values);
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static InstanceCreator creatorForLists(Class<?> list, TypeToken<?> values) throws Exception {
+		final InstanceCreator<?> valueAdapter = creatorFor(values);
 		if (RandomAccess.class.isAssignableFrom(list)) {
-			return new InstanceCreator<SyncAdapter<? super LIST>>() {
+			return new InstanceCreator() {
 				@Override
-				public SyncAdapter<? super LIST> newInstance() {
+				public SyncAdapter newInstance() {
 					return new ListAdapter.ForRandomAccess<>(valueAdapter);
 				}
 			};
 		} else {
-			return new InstanceCreator<SyncAdapter<? super LIST>>() {
+			return new InstanceCreator() {
 				@Override
-				public SyncAdapter<? super LIST> newInstance() {
+				public SyncAdapter newInstance() {
 					return new ListAdapter.ForLinked<>(valueAdapter);
 				}
 			};
 		}
 	}
 
-	private static Object create0(Class<?> clazz) {
+	public static InstanceCreator creatorForIterable(Class<?> iterable, TypeToken<?> values) throws Exception {
+		final InstanceCreator<?> valueAdapter = creatorFor(values);
+		return new InstanceCreator() {
+			@Override
+			public SyncAdapter newInstance() {
+				return new SetAdapter(valueAdapter);
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> InstanceCreator<? super T> creatorForSimpleClass(Class<T> clazz) {
 		if (clazz == String.class || clazz == UUID.class || Primitives.isWrapperType(clazz)) {
 			return InstanceCreator.forImmutable();
 		} else if (clazz.isEnum()) {
