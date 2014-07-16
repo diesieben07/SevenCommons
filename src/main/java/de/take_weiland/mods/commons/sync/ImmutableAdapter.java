@@ -5,7 +5,7 @@ import com.google.common.base.Objects;
 /**
  * @author diesieben07
  */
-class ImmutableAdapter<T> extends SyncAdapter<T> {
+abstract class ImmutableAdapter<T> extends SyncAdapter<T> {
 
 	private T value;
 

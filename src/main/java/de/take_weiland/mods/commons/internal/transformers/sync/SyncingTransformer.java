@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers.sync;
 import com.google.common.collect.Lists;
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
-import de.take_weiland.mods.commons.sync.InstanceCreator;
+import de.take_weiland.mods.commons.sync.AdapterCreator;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.SyncAdapter;
 import org.objectweb.asm.Type;
@@ -76,7 +76,7 @@ public class SyncingTransformer implements ASMClassTransformer {
 
 		private ASMVariable getAdapter(ASMVariable var) {
 			String name = "_sc$adapterCreator" + adapterCount++;
-			String desc = Type.getDescriptor(InstanceCreator.class);
+			String desc = Type.getDescriptor(AdapterCreator.class);
 			FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_FINAL | ACC_TRANSIENT, name, desc, null, null);
 			clazz.fields.add(field);
 
@@ -85,7 +85,7 @@ public class SyncingTransformer implements ASMClassTransformer {
 			CodePiece getReflectElement = getReflectElement(var);
 			String owner = SyncAdapter.CLASS_NAME;
 			name = SyncAdapter.CREATOR;
-			desc = ASMUtils.getMethodDescriptor(InstanceCreator.class, Object.class, boolean.class);
+			desc = ASMUtils.getMethodDescriptor(AdapterCreator.class, Object.class, boolean.class);
 
 			CodePiece fetchAdapter = CodePieces.invokeStatic(owner, name, desc, getReflectElement, CodePieces.constant(isField));
 			CodePiece storeAdapter = CodePieces.setField(clazz, field, fetchAdapter);
@@ -100,11 +100,11 @@ public class SyncingTransformer implements ASMClassTransformer {
 
 			ASMVariable adapterInstanceVar = ASMVariables.of(clazz, adapterInstance, CodePieces.getThis());
 
-			owner = InstanceCreator.CLASS_NAME;
-			name = InstanceCreator.NEW_INSTANCE;
-			desc = ASMUtils.getMethodDescriptor(Object.class);
+			owner = AdapterCreator.CLASS_NAME;
+			name = AdapterCreator.NEW_INSTANCE;
+			desc = ASMUtils.getMethodDescriptor(SyncAdapter.class);
 			CodePiece newAdapter = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, adapterCreator.get());
-			CodePiece adapterInit = adapterInstanceVar.set(CodePieces.castTo(SyncAdapter.class, newAdapter));
+			CodePiece adapterInit = adapterInstanceVar.set(newAdapter);
 			ASMUtils.initialize(clazz, adapterInit);
 			return adapterInstanceVar;
 		}
