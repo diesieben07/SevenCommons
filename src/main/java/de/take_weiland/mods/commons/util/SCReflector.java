@@ -29,6 +29,9 @@ import net.minecraft.util.IntHashMap;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Timer;
 
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -130,5 +133,8 @@ public interface SCReflector {
 
 	@Getter(field = F_CRAFTERS, srg = true)
 	List<ICrafting> getCrafters(Container container);
+
+	@Invoke(method = "writeUTF")
+	int writeUTF(DataOutputStream dummy, String s, DataOutput out) throws IOException;
 
 }
