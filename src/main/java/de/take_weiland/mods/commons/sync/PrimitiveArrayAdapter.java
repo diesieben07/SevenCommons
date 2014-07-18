@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.net.PacketBuilder;
+
 import java.util.Arrays;
 
 /**
@@ -23,6 +25,11 @@ abstract class PrimitiveArrayAdapter<T> extends SyncAdapter<T> {
 				System.arraycopy(newValue, 0, array, 0, len);
 				return false;
 			}
+		}
+
+		@Override
+		public void write(boolean[] value, PacketBuilder builder) {
+			builder.writeBytes(value);
 		}
 	}
 
