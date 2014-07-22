@@ -3,10 +3,7 @@ package de.take_weiland.mods.commons.util;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.reflect.Getter;
-import de.take_weiland.mods.commons.reflect.Invoke;
-import de.take_weiland.mods.commons.reflect.SCReflection;
-import de.take_weiland.mods.commons.reflect.Setter;
+import de.take_weiland.mods.commons.reflect.*;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -29,6 +26,7 @@ import net.minecraft.util.IntHashMap;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Timer;
 
+import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -136,5 +134,15 @@ public interface SCReflector {
 
 	@Invoke(method = "writeUTF")
 	int writeUTF(DataOutputStream dummy, String s, DataOutput out) throws IOException;
+
+	@Invoke(method = M_NBT_WRITE, srg = true)
+	void write(NBTBase nbt, DataOutput out) throws IOException;
+
+	@Invoke(method = M_NBT_LOAD, srg = true)
+	void load(NBTBase nbt, DataInput in, int depth) throws IOException;
+
+	@Unsafe
+	@Construct
+	String createStringShared(char[] arr, boolean dummy);
 
 }

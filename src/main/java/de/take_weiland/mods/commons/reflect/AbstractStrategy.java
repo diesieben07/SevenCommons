@@ -5,6 +5,7 @@ import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.ReflectionHelper.UnableToFindMethodException;
 import de.take_weiland.mods.commons.asm.MCPNames;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -24,6 +25,7 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 		ImmutableMap.Builder<Method, Field> getters = ImmutableMap.builder();
 		ImmutableMap.Builder<Method, Field> setters = ImmutableMap.builder();
 		ImmutableMap.Builder<Method, Method> invokers = ImmutableMap.builder();
+		ImmutableMap.Builder<Method, Constructor<?>> cstrs = ImmutableMap.builder();
 
 		for (Method method : iface.getMethods()) {
 			if (method.isAnnotationPresent(Getter.class)) {
@@ -32,11 +34,13 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 				setters.put(method, findSetterTarget(iface, method));
 			} else if (method.isAnnotationPresent(Invoke.class)) {
 				invokers.put(method, findInvokerTarget(iface, method));
+			} else if (method.isAnnotationPresent(Construct.class)) {
+				cstrs.put(method, findConstructor(method, method.getAnnotation(Construct.class)));
 			} else {
 				throw new IllegalArgumentException(String.format("Don't know what to do with method %s in interface %s", method.getName(), iface.getName()));
 			}
 		}
-		return new InterfaceInfo(getters.build(), setters.build(), invokers.build());
+		return new InterfaceInfo(getters.build(), setters.build(), invokers.build(), cstrs.build());
 	}
 
 	Field findGetterTarget(Class<?> iface, Method getter) {
@@ -78,6 +82,17 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 		return m;
 	}
 
+	Constructor<?> findConstructor(Method bouncer, Construct annotation) {
+		Class<?> target = bouncer.getReturnType();
+		try {
+			Constructor<?> cstr = target.getDeclaredConstructor(bouncer.getParameterTypes());
+			cstr.setAccessible(true);
+			return cstr;
+		} catch (NoSuchMethodException e) {
+			throw new IllegalArgumentException(String.format("Failed to find constructor with matching parameters for method %s in %s", bouncer.getName(), bouncer.getDeclaringClass().getName()));
+		}
+	}
+
 	// copied and fixed from FMLs helper
 	Method findMethod(Class<?> clazz, String methodName, Class<?>... methodTypes) {
 		Exception failed;
@@ -96,11 +111,13 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 		final Map<Method, Field> getters;
 		final Map<Method, Field> setters;
 		final Map<Method, Method> invokers;
+		final Map<Method, Constructor<?>> cstrs;
 
-		InterfaceInfo(Map<Method, Field> getters, Map<Method, Field> setters, Map<Method, Method> invokers) {
+		InterfaceInfo(Map<Method, Field> getters, Map<Method, Field> setters, Map<Method, Method> invokers, Map<Method, Constructor<?>> cstrs) {
 			this.setters = setters;
 			this.getters = getters;
 			this.invokers = invokers;
+			this.cstrs = cstrs;
 		}
 
 	}

@@ -5,6 +5,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.UUID;
 
 /**
@@ -41,5 +44,9 @@ public interface MCDataOuput extends ByteArrayDataOutput {
 	void writeFloats(float[] floats);
 
 	void writeDoubles(double[] doubles);
+
+	void writeTo(OutputStream stream) throws IOException;
+
+	void writeTo(DataOutput out) throws IOException;
 
 }

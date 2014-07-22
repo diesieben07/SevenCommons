@@ -2,10 +2,7 @@ package de.take_weiland.mods.commons.reflect;
 
 import com.google.common.reflect.Reflection;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.Arrays;
 
 final class NativeJavaStrategy extends AbstractStrategy {
@@ -37,6 +34,12 @@ final class NativeJavaStrategy extends AbstractStrategy {
 					Object[] invokeParams = Arrays.copyOfRange(args, 1, args.length);
 					return Modifier.isStatic(toInvoke.getModifiers()) ? toInvoke.invoke(null, invokeParams) : toInvoke.invoke(args[0], invokeParams);
 				}
+
+				Constructor<?> cstr = info.cstrs.get(method);
+				if (cstr != null) {
+					return cstr.newInstance(args);
+				}
+
 				throw new IllegalStateException(String.format("Something somewhere went wrong, don't know how to handle method %s", method.getName()));
 			}
 		});
