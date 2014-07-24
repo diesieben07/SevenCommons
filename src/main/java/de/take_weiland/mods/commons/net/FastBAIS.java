@@ -163,14 +163,14 @@ abstract class FastBAIS extends InputStream implements MCDataInput {
 		byte[] buf = this.buf;
 		int pos = this.pos;
 		this.pos = pos + 8;
-		return ((long) buf[pos])
-				| ((long) buf[pos + 1] << 8)
-				| ((long) buf[pos + 2] << 16)
-				| ((long) buf[pos + 3] << 24)
-				| ((long) buf[pos + 4] << 32)
-				| ((long) buf[pos + 5] << 40)
-				| ((long) buf[pos + 6] << 48)
-				| ((long) buf[pos + 7] << 56);
+		return (long) buf[pos] & 0xFF
+				| (long) (buf[pos + 1] & 0xFF) << 8
+				| (long) (buf[pos + 2] & 0xFF) << 16
+				| (long) (buf[pos + 3] & 0xFF) << 24
+				| (long) (buf[pos + 4] & 0xFF) << 32
+				| (long) (buf[pos + 5] & 0xFF) << 40
+				| (long) (buf[pos + 6] & 0xFF) << 48
+				| (long) (buf[pos + 7] & 0xFF) << 56;
 
 	}
 
@@ -180,10 +180,10 @@ abstract class FastBAIS extends InputStream implements MCDataInput {
 		byte[] buf = this.buf;
 		int pos = this.pos;
 		this.pos = pos + 4;
-		return buf[pos]
-				| buf[pos + 1] << 8
-				| buf[pos + 2] << 16
-				| buf[pos + 3] << 24;
+		return (buf[pos] & 0xFF)
+				| (buf[pos + 1] & 0xFF) << 8
+				| (buf[pos + 2] & 0xFF) << 16
+				| (buf[pos + 3] & 0xFF) << 24;
 	}
 
 	@Override
@@ -192,7 +192,7 @@ abstract class FastBAIS extends InputStream implements MCDataInput {
 		byte[] buf = this.buf;
 		int pos = this.pos;
 		this.pos = pos + 2;
-		return (char) (buf[pos] | buf[pos + 1] << 8);
+		return (char) ((buf[pos] & 0xFF) | (buf[pos + 1] & 0xFF) << 8);
 	}
 
 	@Override
@@ -206,7 +206,7 @@ abstract class FastBAIS extends InputStream implements MCDataInput {
 		byte[] buf = this.buf;
 		int pos = this.pos;
 		this.pos = pos + 2;
-		return (short) (buf[pos] | buf[pos + 1] << 8);
+		return (short) (buf[pos] & 0xFF | buf[pos + 1] << 8);
 	}
 
 	@Override
