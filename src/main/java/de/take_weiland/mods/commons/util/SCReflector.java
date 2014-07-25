@@ -30,6 +30,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 
@@ -144,5 +145,17 @@ public interface SCReflector {
 	@Unsafe
 	@Construct
 	String createStringShared(char[] arr, boolean dummy);
+
+	@Unsafe
+	@Getter(field = "wordsInUse")
+	int getWordsInUse(BitSet bitSet);
+
+	@Unsafe
+	@Getter(field = "words")
+	long[] getWords(BitSet bitSet);
+
+	@Unsafe
+	@Construct
+	BitSet createBitsetShared(long[] arr);
 
 }

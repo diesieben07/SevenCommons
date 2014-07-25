@@ -10,16 +10,18 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.UUID;
+
+import static com.google.common.base.Preconditions.checkPositionIndexes;
 
 /**
  * @author diesieben07
  */
-class FastBAOS extends OutputStream implements MCDataOuput {
+abstract class FastBAOS extends OutputStream implements MCDataOuput {
 
-	private byte[] buf;
-	private int count;
-	private OutputStream compressor;
+	byte[] buf;
+	int count;
 
 	FastBAOS() {
 		this(64);
@@ -29,7 +31,7 @@ class FastBAOS extends OutputStream implements MCDataOuput {
 		buf = new byte[initialCap];
 	}
 
-	private void ensureCapacity(int bytesToWrite) {
+	final void ensureCapacity(int bytesToWrite) {
 		if ((count + bytesToWrite) - buf.length > 0) {
 			grow(bytesToWrite + count);
 		}
@@ -85,8 +87,8 @@ class FastBAOS extends OutputStream implements MCDataOuput {
 	@Override
 	public void writeShort(int v) {
 		ensureCapacity(2);
-		buf[count++] = (byte) (v >> 8);
 		buf[count++] = (byte) (v);
+		buf[count++] = (byte) (v >> 8);
 	}
 
 	@Override
@@ -99,10 +101,10 @@ class FastBAOS extends OutputStream implements MCDataOuput {
 		ensureCapacity(4);
 		byte[] buf = this.buf;
 		int count = this.count;
-		buf[count++] = (byte) (v >> 24);
-		buf[count++] = (byte) (v >> 16);
+		buf[count++] = (byte) (v);
 		buf[count++] = (byte) (v >> 8);
-		buf[count] = (byte) (v);
+		buf[count++] = (byte) (v >> 16);
+		buf[count] = (byte) (v >> 24);
 		this.count = count + 1;
 
 	}
@@ -112,14 +114,14 @@ class FastBAOS extends OutputStream implements MCDataOuput {
 		ensureCapacity(8);
 		byte[] buf = this.buf;
 		int count = this.count;
-		buf[count++] = (byte) (v >> 56);
-		buf[count++] = (byte) (v >> 48);
-		buf[count++] = (byte) (v >> 40);
-		buf[count++] = (byte) (v >> 32);
-		buf[count++] = (byte) (v >> 24);
-		buf[count++] = (byte) (v >> 16);
+		buf[count++] = (byte) (v);
 		buf[count++] = (byte) (v >> 8);
-		buf[count] = (byte) (v);
+		buf[count++] = (byte) (v >> 16);
+		buf[count++] = (byte) (v >> 24);
+		buf[count++] = (byte) (v >> 32);
+		buf[count++] = (byte) (v >> 40);
+		buf[count++] = (byte) (v >> 48);
+		buf[count] = (byte) (v >> 56);
 		this.count = count + 1;
 	}
 
@@ -141,8 +143,8 @@ class FastBAOS extends OutputStream implements MCDataOuput {
 		byte[] buf = this.buf;
 		for (int i = 0; i < len; ++i) {
 			char c = s.charAt(i);
-			buf[count++] = (byte) (c >> 8);
 			buf[count++] = (byte) (c);
+			buf[count++] = (byte) (c >> 8);
 		}
 		this.count = count;
 	}
@@ -157,6 +159,7 @@ class FastBAOS extends OutputStream implements MCDataOuput {
 	}
 
 	@Override
+	@Deprecated
 	public void writeBytes(@NotNull String s) {
 		int len = s.length();
 		ensureCapacity(len);
@@ -235,92 +238,56 @@ class FastBAOS extends OutputStream implements MCDataOuput {
 	}
 
 	@Override
-	public void writeBooleans(boolean[] booleans) {
-		if (booleans == null) {
-			writeVarInt(-1);
-		} else {
-			int len = booleans.length;
-			writeVarInt(len);
+	public void writeBitSet(BitSet bitSet) {
+		writeLongs(SCReflector.instance.getWords(bitSet), 0, SCReflector.instance.getWordsInUse(bitSet));
+	}
 
-			int numBytes = len % 8 + 1;
-			ensureCapacity(numBytes);
-			byte[] buf = this.buf;
-			int count = this.count;
+	@Override
+	public void writeBooleans(boolean[] booleans, int off, int len) {
+		checkPositionIndexes(off, off + len, booleans.length);
+		writeVarInt(len);
 
-			int idx = 0;
-			// write 8 booleans per byte
-			// as long as we still have at least 8 elements left
-			while (len - idx >= 8) {
-				buf[count++] = (byte) ((booleans[idx] ? 0b0000_0001 : 0)
-						| (booleans[idx + 1] ? 0b0000_0010 : 0)
-						| (booleans[idx + 2] ? 0b0000_0100 : 0)
-						| (booleans[idx + 3] ? 0b0000_1000 : 0)
-						| (booleans[idx + 4] ? 0b0001_0000 : 0)
-						| (booleans[idx + 5] ? 0b0010_0000 : 0)
-						| (booleans[idx + 6] ? 0b0100_0000 : 0)
-						| (booleans[idx + 7] ? 0b1000_0000 : 0));
-				idx += 8;
-			}
-			// write any leftover elements in the array
-			if (idx != len) {
-				buf[count++] = (byte) ((booleans[idx] ? 0b0000_0001 : 0)
-						| (idx + 1 < len && booleans[idx + 1] ? 0b0000_0010 : 0)
-						| (idx + 2 < len && booleans[idx + 2] ? 0b0000_0100 : 0)
-						| (idx + 3 < len && booleans[idx + 3] ? 0b0000_1000 : 0)
-						| (idx + 4 < len && booleans[idx + 4] ? 0b0001_0000 : 0)
-						| (idx + 5 < len && booleans[idx + 5] ? 0b0010_0000 : 0)
-						| (idx + 6 < len && booleans[idx + 6] ? 0b0100_0000 : 0)
-						| (idx + 7 < len && booleans[idx + 7] ? 0b1000_0000 : 0));
-			}
-			this.count = count;
+		int numBytes = len % 8 + 1;
+		ensureCapacity(numBytes);
+		byte[] buf = this.buf;
+		int count = this.count;
+
+		int idx = off;
+		// write 8 booleans per byte
+		// as long as we still have at least 8 elements left
+		while (len - idx >= 8) {
+			buf[count++] = (byte) ((booleans[idx] ? 0b0000_0001 : 0)
+					| (booleans[idx + 1] ? 0b0000_0010 : 0)
+					| (booleans[idx + 2] ? 0b0000_0100 : 0)
+					| (booleans[idx + 3] ? 0b0000_1000 : 0)
+					| (booleans[idx + 4] ? 0b0001_0000 : 0)
+					| (booleans[idx + 5] ? 0b0010_0000 : 0)
+					| (booleans[idx + 6] ? 0b0100_0000 : 0)
+					| (booleans[idx + 7] ? 0b1000_0000 : 0));
+			idx += 8;
 		}
-	}
-
-	@Override
-	public void writeBytes(byte[] bytes) {
-		if (bytes == null) {
-			writeVarInt(-1);
-		} else {
-			int len = bytes.length;
-			writeVarInt(len);
-			ensureCapacity(len);
-			System.arraycopy(bytes, 0, buf, count, len);
-			count += len;
+		// write any leftover elements in the array
+		if ((idx - off) != len) {
+			buf[count++] = (byte) ((booleans[idx] ? 0b0000_0001 : 0)
+					| (idx + 1 < len && booleans[idx + 1] ? 0b0000_0010 : 0)
+					| (idx + 2 < len && booleans[idx + 2] ? 0b0000_0100 : 0)
+					| (idx + 3 < len && booleans[idx + 3] ? 0b0000_1000 : 0)
+					| (idx + 4 < len && booleans[idx + 4] ? 0b0001_0000 : 0)
+					| (idx + 5 < len && booleans[idx + 5] ? 0b0010_0000 : 0)
+					| (idx + 6 < len && booleans[idx + 6] ? 0b0100_0000 : 0)
+					| (idx + 7 < len && booleans[idx + 7] ? 0b1000_0000 : 0));
 		}
+		this.count = count;
 	}
 
 	@Override
-	public void writeShorts(short[] shorts) {
-		if (shorts == null) {
-			writeVarInt(-1);
-		} else {
-			// TODO make this fast!
-		}
-	}
+	public void writeBytes(byte[] bytes, int off, int len) {
+		checkPositionIndexes(off, off + len, bytes.length);
 
-	@Override
-	public void writeInts(int[] ints) {
-
-	}
-
-	@Override
-	public void writeLongs(long[] longs) {
-
-	}
-
-	@Override
-	public void writeChars(char[] chars) {
-
-	}
-
-	@Override
-	public void writeFloats(float[] floats) {
-
-	}
-
-	@Override
-	public void writeDoubles(double[] doubles) {
-
+		writeVarInt(len);
+		ensureCapacity(len);
+		System.arraycopy(bytes, off, buf, count, len);
+		count += len;
 	}
 
 	@Override
@@ -337,4 +304,57 @@ class FastBAOS extends OutputStream implements MCDataOuput {
 	public void writeTo(DataOutput out) throws IOException {
 		out.write(buf, 0, count);
 	}
+
+	@Override
+	public byte[] rawBackingArray() {
+		return buf;
+	}
+
+	@Override
+	public int length() {
+		return count;
+	}
+
+	// bouncer methods
+
+	@Override
+	public void writeBooleans(boolean[] booleans) {
+		writeBooleans(booleans, 0, booleans.length);
+	}
+
+	@Override
+	public void writeBytes(byte[] bytes) {
+		writeBytes(bytes, 0, bytes.length);
+	}
+
+	@Override
+	public void writeShorts(short[] shorts) {
+		writeShorts(shorts, 0, shorts.length);
+	}
+
+	@Override
+	public void writeInts(int[] ints) {
+		writeInts(ints, 0, ints.length);
+	}
+
+	@Override
+	public void writeLongs(long[] longs) {
+		writeLongs(longs, 0, longs.length);
+	}
+
+	@Override
+	public void writeChars(char[] chars) {
+		writeChars(chars, 0, chars.length);
+	}
+
+	@Override
+	public void writeFloats(float[] floats) {
+		writeFloats(floats, 0, floats.length);
+	}
+
+	@Override
+	public void writeDoubles(double[] doubles) {
+		writeDoubles(doubles, 0, doubles.length);
+	}
+
 }

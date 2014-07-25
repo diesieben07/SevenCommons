@@ -10,14 +10,15 @@ import sun.misc.Unsafe;
  */
 class FastBAISUnsafe extends FastBAIS {
 
-	private static final Unsafe unsafe = (Unsafe) JavaUtils.getUnsafe();
-	private static final long BYTE_BASE_OFF = unsafe.arrayBaseOffset(byte[].class);
-	private static final long SHORT_BASE_OFF = unsafe.arrayBaseOffset(short[].class);
-	private static final long CHAR_BASE_OFF = unsafe.arrayBaseOffset(char[].class);
-	private static final long INT_BASE_OFF = unsafe.arrayBaseOffset(int[].class);
-	private static final long LONG_BASE_OFF = unsafe.arrayBaseOffset(long[].class);
-	private static final long FLOAT_BASE_OFF = unsafe.arrayBaseOffset(float[].class);
-	private static final long DOUBLE_BASE_OFF = unsafe.arrayBaseOffset(double[].class);
+	// arbitrary, could be in the OutputStream as well
+	static final Unsafe unsafe = (Unsafe) JavaUtils.getUnsafe();
+	static final long BYTE_BASE_OFF = unsafe.arrayBaseOffset(byte[].class);
+	static final long SHORT_BASE_OFF = unsafe.arrayBaseOffset(short[].class);
+	static final long CHAR_BASE_OFF = unsafe.arrayBaseOffset(char[].class);
+	static final long INT_BASE_OFF = unsafe.arrayBaseOffset(int[].class);
+	static final long LONG_BASE_OFF = unsafe.arrayBaseOffset(long[].class);
+	static final long FLOAT_BASE_OFF = unsafe.arrayBaseOffset(float[].class);
+	static final long DOUBLE_BASE_OFF = unsafe.arrayBaseOffset(double[].class);
 
 	public FastBAISUnsafe(byte[] buf, int off, int len) {
 		super(buf, off, len);
