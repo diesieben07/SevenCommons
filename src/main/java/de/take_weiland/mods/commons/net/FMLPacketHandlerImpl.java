@@ -1,109 +1,91 @@
 package de.take_weiland.mods.commons.net;
 
+import com.google.common.collect.BiMap;
+import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.network.IPacketHandler;
-import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.internal.ModPacketProxy;
+import de.take_weiland.mods.commons.internal.PacketHandlerProxy;
+import de.take_weiland.mods.commons.util.SCReflector;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.INetworkManager;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.Packet250CustomPayload;
 
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static de.take_weiland.mods.commons.net.Network.logger;
+final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandlerProxy {
 
-final class FMLPacketHandlerImpl<TYPE extends Enum<TYPE>> implements IPacketHandler, PacketFactory<TYPE>, PacketFactoryInternal<TYPE> {
+	private final String channel;
+	private final Logger logger;
+	private final BiMap<Integer, Class<? extends ModPacket>> packets;
 
-	private static final int MAX_PACKETS = Integer.MAX_VALUE;
-
-	final String channel;
-	final PacketHandler<TYPE> handler;
-	private final Class<TYPE> typeClass;
-	final int idSize;
-
-	FMLPacketHandlerImpl(String channel, PacketHandler<TYPE> handler, Class<TYPE> typeClass) {
-		this.channel = checkNotNull(channel);
-		this.handler = checkNotNull(handler);
-		this.typeClass = checkNotNull(typeClass);
-		int len = JavaUtils.getEnumConstantsShared(typeClass).length;
-		checkArgument(len > 0, "Must have at least one packet type!");
-		checkArgument(len < MAX_PACKETS, "Too many packets, can handle at most %d", MAX_PACKETS);
-
-		int highestOneBit = Integer.highestOneBit(len - 1) << 1;
-		int bitsUsed = Integer.numberOfTrailingZeros(highestOneBit);
-		this.idSize = (bitsUsed >> 3) + 1;
-
-		NetworkRegistry.instance().registerChannel(this, channel);
-		if (logger.isLoggable(Level.FINE)) {
-			logger.fine(String.format("Setup channel %s with %d packets and IdSize %d.", channel, len, idSize));
-		}
+	FMLPacketHandlerImpl(String channel, BiMap<Integer, Class<? extends ModPacket>> packets) {
+		this.channel = channel;
+		this.packets = packets;
+		String logChannel = "SCNet|" + channel;
+		FMLLog.makeLog(logChannel);
+		logger = Logger.getLogger(logChannel);
 	}
 
 	@Override
 	public void onPacketData(INetworkManager manager, Packet250CustomPayload packet, Player fmlPlayer) {
-		byte[] buf = packet.data;
+		MCDataInputStream in = MCDataInputStream.create(packet.data, 0, packet.length); // explicitly refer to the size, for memory connections that pass the fake packets
 		EntityPlayer player = (EntityPlayer) fmlPlayer;
 
-		int id = readId(buf);
+		int id = in.readVarInt();
 
-		PacketBufferImpl<TYPE> dataBuf = new PacketBufferImpl<>(buf, this, id);
-		dataBuf.seek(idSize);
-		handle0(dataBuf, id, player);
+		ModPacket modPacket = newPacket(id);
+		handlePacket(in, player, modPacket);
 	}
 
-	private int readId(byte[] buf) {
-		int result = 0;
-		for (int i = 0; i < idSize; ++i) {
-			result |= buf[i] << (i << 3);
-		}
-		return result;
-	}
-
-
-	void writePacketId(DataOutput out, int id) throws IOException {
-		for (int i = 0; i < idSize; ++i) {
-			int shift = i << 3;
-			out.writeByte((id & (0xFF << shift)) >> shift);
-		}
-	}
-
-	void handle0(PacketBufferImpl<TYPE> buf, int id, EntityPlayer player) {
+	@Override
+	public void handlePacket(MCDataInputStream in, EntityPlayer player, ModPacket modPacket) {
 		Side side = Sides.logical(player);
-		buf.sender = side.isClient() ? null : player;
-		handler.handle(JavaUtils.byOrdinal(typeClass, id), buf, player, side);
+		try {
+			if (!((ModPacketProxy) modPacket)._sc$canSideReceive(side)) {
+				throw new ProtocolException(String.format("Packet received on wrong Side!"));
+			}
+			modPacket.read(in, player, side);
+			modPacket.execute(player, side);
+		} catch (ProtocolException pe) {
+			if (pe.playerKickMsg != null && side.isServer()) {
+				((EntityPlayerMP) player).playerNetServerHandler.kickPlayerFromServer(pe.playerKickMsg);
+			}
+			logException(modPacket, pe, player);
+		} catch (IOException e) {
+			logException(modPacket, e, player);
+		}
 	}
 
 	@Override
-	public PacketBuilder builder(TYPE t) {
-		return builder0(t.ordinal(), -1); // -1 will pick the default capacity
+	public Packet buildPacket(ModPacket mp) {
+		int id = packets.inverse().get(mp.getClass());
+		MCDataOutputStream out = MCDataOutputStream.create(mp.expectedSize() + 1); // packetID should rarely take more than one byte (more than 127)
+		out.writeVarInt(id);
+		mp.write(out);
+		out.lock();
+		return new Packet250Fake(mp, channel, out.backingArray(), 0, out.length());
 	}
 
-	@Override
-	public PacketBuilder builder(TYPE t, int capacity) {
-		checkArgument(capacity > 0, "capacity must be > 0");
-		return builder0(t.ordinal(), capacity);
+	private void logException(ModPacket packet, Exception e, EntityPlayer player) {
+		logger.log(Level.WARNING, String.format("Unhandled %s during Packet read of Packet %s for player %s", e.getClass().getSimpleName(), packet.getClass().getSimpleName(), player.username), e);
 	}
 
-	private PacketBufferImpl<TYPE> builder0(int id, int capacity) {
-		return new PacketBufferImpl<>(capacity, this, id);
+	private ModPacket newPacket(int id) {
+		try {
+			return packets.get(id).newInstance();
+		} catch (ReflectiveOperationException e) {
+			throw new RuntimeException("Failed to instantiate Packet class, Packet transformer failed?", e);
+		}
 	}
 
-	// PacketFactoryInternal
-
-	@Override
-	public SimplePacket build(PacketBufferImpl<TYPE> buf) {
-		buf.seek(0);
-		return new Packet250Fake<>(buf, this, buf.id);
-	}
-
-	@Override
-	public void registerCallback(SimplePacket wrapper, ModPacket.WithResponse<?> packet) {
-		((Packet250Fake<?>) wrapper).writeCallback = packet;
+	static {
+		SCReflector.instance.getClassToIdMap(null).put(Packet250Fake.class, 250);
 	}
 }

@@ -7,39 +7,70 @@ import com.google.common.primitives.Shorts;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import java.util.Arrays;
+
+import static org.junit.Assert.*;
 
 /**
  * @author diesieben07
  */
 public abstract class MCDataInputTest {
 
-	abstract FastBAIS createStream(byte[] buf);
+	abstract MCDataInputImpl createStream(byte... buf);
 
 	public static class ForUnsafe extends MCDataInputTest {
 
 		@Override
-		FastBAIS createStream(byte[] buf) {
-			return new FastBAISUnsafe(buf, 0, buf.length);
+		MCDataInputImpl createStream(byte[] buf) {
+			return new MCDataInputImplUnsafe(buf, 0, buf.length);
 		}
 	}
 
 	public static class NonUnsafe extends MCDataInputTest {
 
 		@Override
-		FastBAIS createStream(byte[] buf) {
-			return new FastBAISNonUnsafe(buf, 0, buf.length);
+		MCDataInputImpl createStream(byte[] buf) {
+			return new MCDataInputImplNonUnsafe(buf, 0, buf.length);
 		}
 	}
 
-	private static byte[] leArr(long l) {
+	@Test(expected = NullPointerException.class)
+	public void testNullArray() {
+		MCDataInputStream.create(null);
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void testNullArray2() {
+		MCDataInputStream.create(null, 0, 0);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testNegativeLength() {
+		MCDataInputStream.create(new byte[0], 0, -3);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testNegativeOffset() {
+		MCDataInputStream.create(new byte[2], -1, 2);
+	}
+
+	@Test(expected = IndexOutOfBoundsException.class)
+	public void testOutOfRangeOffset() {
+		MCDataInputStream.create(new byte[2], 3, 2);
+	}
+
+	@Test(expected = IndexOutOfBoundsException.class)
+	public void testOutOfRangeLength() {
+		MCDataInputStream.create(new byte[2], 0, 4);
+	}
+
+	static byte[] leArr(long l) {
 		byte[] arr = Longs.toByteArray(l);
 		ArrayUtils.reverse(arr);
 		return arr;
 	}
 
-	private static byte[] leArr(int l) {
+	static byte[] leArr(int l) {
 		byte[] arr = Ints.toByteArray(l);
 		ArrayUtils.reverse(arr);
 		return arr;
@@ -59,11 +90,10 @@ public abstract class MCDataInputTest {
 
 	@Test
 	public void testByte() {
-		FastBAIS stream = createStream(new byte[] {
+		MCDataInputImpl stream = createStream(
 				(byte) 0b0011_0111,
 				(byte) 0b1010_0101,
-				(byte) 0b1111_0001
-		});
+				(byte) 0b1111_0001);
 
 		assertEquals((byte) 0b0011_0111, stream.readByte());
 		assertEquals((byte) 0b1010_0101, stream.readByte());
@@ -161,14 +191,51 @@ public abstract class MCDataInputTest {
 	}
 
 	@Test
+	public void testBooleans() {
+		assertTrue(Arrays.equals(new boolean[]{
+						true, false, true, true
+				},
+				createStream(
+						(byte) 0b1000_0100,
+						(byte) 0b0000_1101
+				).readBooleans()));
+
+		assertTrue(Arrays.equals(new boolean[]{
+				true, false, true, true, false, false, true, true,
+				false, true, false, true, false, false
+		}, createStream(
+				(byte) 0b1000_1110,
+				(byte) 0b11001101,
+				(byte) 0b00001010
+		).readBooleans()));
+
+		assertNull(createStream(
+				(byte) 0b0111_1111, // VarInt: -1
+				(byte) 0b0111_1111,
+				(byte) 0b0111_1111,
+				(byte) 0b0111_1111,
+				(byte) 0b1000_1111
+		).readBooleans());
+	}
+
+	@Test
 	public void testBytes() {
 		assertArrayEquals(
 				new byte[] { (byte) 0b0101_1010, (byte) 0b1010_0101 },
-				createStream(new byte[] {
+				createStream(
 						(byte) 0b1000_0010, // varInt: 2
-						(byte) 0b0101_1010, (byte) 0b1010_0101
-				}).readBytes()
+						(byte) 0b0101_1010,
+						(byte) 0b1010_0101
+				).readBytes()
 		);
+
+		assertNull(createStream(
+				(byte) 0b0111_1111, // VarInt: -1
+				(byte) 0b0111_1111,
+				(byte) 0b0111_1111,
+				(byte) 0b0111_1111,
+				(byte) 0b1000_1111
+		).readBytes());
 	}
 
 	@Test
@@ -176,15 +243,20 @@ public abstract class MCDataInputTest {
 		assertArrayEquals(
 				new short[] { (short) 0xEA40, (short) 0x21F0 },
 				createStream(
-						new byte[] {
-								(byte) 0b1000_0010, // varInt: 2
-								(byte) 0x40, // shorts in little endian
-								(byte) 0xEA,
-								(byte) 0xF0,
-								(byte) 0x21,
-						}
-				).readShorts()
+						(byte) 0b1000_0010, // varInt: 2
+						(byte) 0x40, // shorts in little endian
+						(byte) 0xEA,
+						(byte) 0xF0,
+						(byte) 0x21).readShorts()
 		);
+
+		assertNull(createStream(
+				(byte) 0b0111_1111, // VarInt: -1
+				(byte) 0b0111_1111,
+				(byte) 0b0111_1111,
+				(byte) 0b0111_1111,
+				(byte) 0b1000_1111
+		).readShorts());
 	}
 
 	@Test
@@ -192,20 +264,25 @@ public abstract class MCDataInputTest {
 		assertArrayEquals(
 				new int[] { 0xEA4021F0, 0x0F3407F8 },
 				createStream(
-						new byte[] {
-								(byte) 0b1000_0010, // varInt: 2
-								(byte) 0xF0,
-								(byte) 0x21,
-								(byte) 0x40,
-								(byte) 0xEA,
+						(byte) 0b1000_0010, // varInt: 2
+						(byte) 0xF0,
+						(byte) 0x21,
+						(byte) 0x40,
+						(byte) 0xEA,
 
-								(byte) 0xF8,
-								(byte) 0x07,
-								(byte) 0x34,
-								(byte) 0x0F,
-						}
-				).readInts()
+						(byte) 0xF8,
+						(byte) 0x07,
+						(byte) 0x34,
+						(byte) 0x0F).readInts()
 		);
+
+		assertNull(createStream(
+				(byte) 0b0111_1111, // VarInt: -1
+				(byte) 0b0111_1111,
+				(byte) 0b0111_1111,
+				(byte) 0b0111_1111,
+				(byte) 0b1000_1111
+		).readInts());
 	}
 
 	@Test
@@ -213,29 +290,34 @@ public abstract class MCDataInputTest {
 		assertArrayEquals(
 				new long[] { 0x12_34_56_78_9A_BC_DE_F0L, 0x0F_ED_CB_A9_87_65_43_21L },
 				createStream(
-						new byte[] {
-								(byte) 0b1000_0010, // varInt: 2
+						(byte) 0b1000_0010, // varInt: 2
 
-								(byte) 0xF0,
-								(byte) 0xDE,
-								(byte) 0xBC,
-								(byte) 0x9A,
-								(byte) 0x78,
-								(byte) 0x56,
-								(byte) 0x34,
-								(byte) 0x12,
+						(byte) 0xF0,
+						(byte) 0xDE,
+						(byte) 0xBC,
+						(byte) 0x9A,
+						(byte) 0x78,
+						(byte) 0x56,
+						(byte) 0x34,
+						(byte) 0x12,
 
-								(byte) 0x21,
-								(byte) 0x43,
-								(byte) 0x65,
-								(byte) 0x87,
-								(byte) 0xA9,
-								(byte) 0xCB,
-								(byte) 0xED,
-								(byte) 0x0F,
-						}
-				).readLongs()
+						(byte) 0x21,
+						(byte) 0x43,
+						(byte) 0x65,
+						(byte) 0x87,
+						(byte) 0xA9,
+						(byte) 0xCB,
+						(byte) 0xED,
+						(byte) 0x0F).readLongs()
 		);
+
+		assertNull(createStream(
+				(byte) 0b0111_1111, // VarInt: -1
+				(byte) 0b0111_1111,
+				(byte) 0b0111_1111,
+				(byte) 0b0111_1111,
+				(byte) 0b1000_1111
+		).readLongs());
 	}
 
 }

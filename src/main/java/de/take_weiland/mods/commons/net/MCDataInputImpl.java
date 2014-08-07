@@ -12,37 +12,22 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.UUID;
 
-import static com.google.common.base.Preconditions.checkPositionIndexes;
+import static com.google.common.base.Preconditions.*;
+import static de.take_weiland.mods.commons.net.MCDataOutputImpl.UUID_FAKE_NULL_VERSION;
+import static de.take_weiland.mods.commons.net.MCDataOutputImpl.UUID_VERSION_MASK;
 
 /**
  * @author diesieben07
  */
-abstract class FastBAIS extends InputStream implements MCDataInput {
-
-	// arbitrary, could be in the OutputStream as well
-	static final boolean useUnsafe = JavaUtils.hasUnsafe() && BufferUnsafeChecks.checkUseable();
+abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput {
 
 	final byte[] buf;
 	private final int maxLen;
 	int pos;
 
-	static FastBAIS create(byte[] buf) {
-		return create(buf, 0, buf.length);
-	}
-
-	static FastBAIS create(byte[] buf, int off, int len) {
-		checkPositionIndexes(off, off + len, buf.length);
-		if (useUnsafe) {
-			return new FastBAISUnsafe(buf, off, len);
-		} else {
-			return new FastBAISNonUnsafe(buf, off, len);
-		}
-	}
-
-	FastBAIS(byte[] buf, int off, int len) {
+	MCDataInputImpl(byte[] buf, int off, int len) {
 		this.buf = buf;
 		this.pos = off;
 		this.maxLen = len;
@@ -284,9 +269,36 @@ abstract class FastBAIS extends InputStream implements MCDataInput {
 		}
 	}
 
+
+
 	@Override
 	public UUID readUUID() {
-		return new UUID(readLong(), readLong());
+		checkAvailable(2);
+		byte[] buf = this.buf;
+		int pos = this.pos;
+		short short0 = (short) ((buf[pos++] & 0xFF) | buf[pos++] << 8);
+		if ((short0 & UUID_VERSION_MASK) == UUID_FAKE_NULL_VERSION) {
+			this.pos = pos;
+			return null;
+		} else {
+			long msb = (long) (short0 & 0xFFFF)
+					| (long) (buf[pos++] & 0xFF) << 16
+					| (long) (buf[pos++] & 0xFF) << 24
+					| (long) (buf[pos++] & 0xFF) << 32
+					| (long) (buf[pos++] & 0xFF) << 40
+					| (long) (buf[pos++] & 0xFF) << 48
+					| (long) (buf[pos++] & 0xFF) << 56;
+			long lsb = (long) (buf[pos++] & 0xFF)
+					| (long) (buf[pos++] & 0xFF) << 8
+					| (long) (buf[pos++] & 0xFF) << 16
+					| (long) (buf[pos++] & 0xFF) << 24
+					| (long) (buf[pos++] & 0xFF) << 32
+					| (long) (buf[pos++] & 0xFF) << 40
+					| (long) (buf[pos++] & 0xFF) << 48
+					| (long) (buf[pos] & 0xFF) << 56;
+			this.pos = pos + 1;
+			return new UUID(msb, lsb);
+		}
 	}
 
 	@Override

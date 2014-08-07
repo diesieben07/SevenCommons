@@ -8,7 +8,7 @@ import sun.misc.Unsafe;
 /**
  * @author diesieben07
  */
-class FastBAISUnsafe extends FastBAIS {
+class MCDataInputImplUnsafe extends MCDataInputImpl {
 
 	// arbitrary, could be in the OutputStream as well
 	static final Unsafe unsafe = (Unsafe) JavaUtils.getUnsafe();
@@ -20,7 +20,7 @@ class FastBAISUnsafe extends FastBAIS {
 	static final long FLOAT_BASE_OFF = unsafe.arrayBaseOffset(float[].class);
 	static final long DOUBLE_BASE_OFF = unsafe.arrayBaseOffset(double[].class);
 
-	public FastBAISUnsafe(byte[] buf, int off, int len) {
+	public MCDataInputImplUnsafe(byte[] buf, int off, int len) {
 		super(buf, off, len);
 	}
 

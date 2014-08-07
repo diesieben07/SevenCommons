@@ -5,9 +5,9 @@ import org.apache.commons.lang3.ArrayUtils;
 /**
  * @author diesieben07
  */
-class FastBAISNonUnsafe extends FastBAIS {
+class MCDataInputImplNonUnsafe extends MCDataInputImpl {
 
-	public FastBAISNonUnsafe(byte[] buf, int off, int len) {
+	public MCDataInputImplNonUnsafe(byte[] buf, int off, int len) {
 		super(buf, off, len);
 	}
 

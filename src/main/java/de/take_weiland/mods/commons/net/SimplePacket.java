@@ -5,6 +5,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 /**
  * A Packet which can be send around. The methods correspond to the methods in the {@link net.minecraft.network.packet.Packet} class
@@ -39,6 +40,10 @@ public interface SimplePacket {
 	SimplePacket sendToAllTracking(Entity entity);
 
 	SimplePacket sendToAllTracking(TileEntity te);
+
+	SimplePacket sendToAllTrackingChunk(World world, int chunkX, int chunkZ);
+
+	SimplePacket sendToAllTracking(Chunk chunk);
 
 	SimplePacket sendToAllAssociated(Entity e);
 
@@ -121,6 +126,16 @@ public interface SimplePacket {
 
 		@Override
 		public SimplePacket sendToViewing(Container c) {
+			return this;
+		}
+
+		@Override
+		public SimplePacket sendToAllTrackingChunk(World world, int chunkX, int chunkZ) {
+			return this;
+		}
+
+		@Override
+		public SimplePacket sendToAllTracking(Chunk chunk) {
 			return this;
 		}
 	};

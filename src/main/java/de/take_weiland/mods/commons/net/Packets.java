@@ -11,20 +11,12 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.INetworkManager;
-import net.minecraft.network.packet.NetHandler;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.server.management.PlayerInstance;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fluids.FluidStack;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -131,125 +123,4 @@ public final class Packets {
 			}
 		}
 	}
-
-	/**
-	 * @deprecated use {@link de.take_weiland.mods.commons.net.Network#getNetworkManager(net.minecraft.network.packet.NetHandler)}
-	 */
-	@Deprecated
-	public static INetworkManager getNetworkManager(NetHandler netHandler) {
-		return Network.getNetworkManager(netHandler);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static void writeEnum(DataOutput out, Enum<?> e) throws IOException {
-		DataBuffers.writeEnum(out, e);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static <E extends Enum<E>> E readEnum(DataInput in, Class<E> clazz) throws IOException {
-		return DataBuffers.readEnum(in, clazz);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static void writeNbt(DataOutput out, NBTTagCompound nbt) throws IOException {
-		DataBuffers.writeNbt(out, nbt);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static NBTTagCompound readNbt(DataInput in) throws IOException {
-		return DataBuffers.readNbt(in);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static void writeFluidStack(DataOutput out, FluidStack stack) throws IOException {
-		DataBuffers.writeFluidStack(out, stack);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static FluidStack readFluidStack(DataInput in) throws IOException {
-		return DataBuffers.readFluidStack(in);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static void writeEnum(WritableDataBuf out, Enum<?> e) {
-		DataBuffers.writeEnum(out, e);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static <E extends Enum<E>> E readEnum(DataBuf in, Class<E> clazz) {
-		return DataBuffers.readEnum(in, clazz);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static void writeNbt(WritableDataBuf out, NBTTagCompound nbt) {
-		DataBuffers.writeNbt(out, nbt);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static NBTTagCompound readNbt(DataBuf in) {
-		return DataBuffers.readNbt(in);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static void writeFluidStack(WritableDataBuf out, FluidStack stack) {
-		DataBuffers.writeFluidStack(out, stack);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static FluidStack readFluidStack(DataBuf in) {
-		return DataBuffers.readFluidStack(in);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static void writeItemStack(WritableDataBuf out, ItemStack stack) {
-		DataBuffers.writeItemStack(out, stack);
-	}
-
-	/**
-	 * @deprecated use the method in {@link de.take_weiland.mods.commons.net.DataBuffers}
-	 */
-	@Deprecated
-	public static ItemStack readItemStack(DataBuf in) {
-		return DataBuffers.readItemStack(in);
-	}
-
 }

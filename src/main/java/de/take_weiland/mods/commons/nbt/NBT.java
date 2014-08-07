@@ -9,6 +9,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +49,32 @@ public final class NBT {
 		return parent.getTagList(key);
 	}
 
+	public static void nullableWrite(NBTTagCompound nbt, DataOutput out) throws IOException {
+		if (nbt == null) {
+			out.writeByte(-1);
+		} else {
+			for (NBTBase tag : asMap(nbt).values()) {
+				NBTBase.writeNamedTag(tag, out);
+			}
+			out.writeByte(0);
+		}
+	}
+
+	public static NBTTagCompound nullableRead(DataInput in) throws IOException {
+		int id = in.readByte();
+		if (id == -1) {
+			return null;
+		} else {
+			NBTTagCompound nbt = new NBTTagCompound();
+			Map<String, NBTBase> map = asMap(nbt);
+			while (id != 0) {
+				NBTBase tag = NBTBase.func_130104_b(in, 1);
+				map.put(tag.getName(), tag);
+				id = in.readByte();
+			}
+			return nbt;
+		}
+	}
 
 	public static Function<NBTTagString, String> getStringFunction() {
 		return NbtStringDataFunction.INSTANCE;

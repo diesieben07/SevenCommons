@@ -5,8 +5,6 @@ import cpw.mods.fml.relauncher.Side;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
-import net.minecraftforge.event.entity.EntityEvent;
-import net.minecraftforge.event.world.WorldEvent;
 
 public final class Sides {
 
@@ -35,20 +33,6 @@ public final class Sides {
 	 */
 	public static Side logical(TileEntity tileEntity) {
 		return logical(tileEntity.worldObj);
-	}
-
-	/**
-	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(event.entity.worldObj)}
-	 */
-	public static Side logical(EntityEvent event) {
-		return logical(event.entity.worldObj);
-	}
-
-	/**
-	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(event.world)}
-	 */
-	public static Side logical(WorldEvent event) {
-		return logical(event.world);
 	}
 
 	/**

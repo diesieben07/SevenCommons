@@ -15,15 +15,10 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		builder.add(new GuiScreenTransformer());
 		builder.add(new EntityPlayerTransformer());
 		builder.add(new EntityTrackerEntryTransformer());
-		builder.add(new Packet250Transformer());
-
 
 		// packets
-		builder.add(new SimplePacketTypeTransformer());
-		builder.add(new PacketTransformer());
-
-		// @ToNbt
-		builder.add(new NBTTransformer());
+		builder.add(new Packet250Transformer());
+		builder.add(new ModPacketTransformer());
 
 		builder.add(new ListenableTransformer());
 	}

@@ -1,5 +1,8 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.collect.Multimap;
+import cpw.mods.fml.common.network.IPacketHandler;
+import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.Unsafe;
@@ -158,4 +161,15 @@ public interface SCReflector {
 	@Construct
 	BitSet createBitsetShared(long[] arr);
 
+	@Unsafe
+	@Getter(field = "clientPacketHandlers")
+	Multimap<String, IPacketHandler> getClientPacketHandlers(NetworkRegistry instance);
+
+	@Unsafe
+	@Getter(field = "serverPacketHandlers")
+	Multimap<String, IPacketHandler> getServerPacketHandlers(NetworkRegistry instance);
+
+	@Unsafe
+	@Getter(field = "universalPacketHandlers")
+	Multimap<String, IPacketHandler> getUniversalPacketHandlers(NetworkRegistry instance);
 }

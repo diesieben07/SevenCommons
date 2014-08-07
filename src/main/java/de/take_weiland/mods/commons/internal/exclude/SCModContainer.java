@@ -11,11 +11,10 @@ import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import de.take_weiland.mods.commons.config.ConfigInjector;
 import de.take_weiland.mods.commons.config.GetProperty;
-import de.take_weiland.mods.commons.internal.SCPackets;
+import de.take_weiland.mods.commons.internal.PacketInventoryName;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
 import de.take_weiland.mods.commons.net.Network;
-import de.take_weiland.mods.commons.net.PacketFactory;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraftforge.common.Configuration;
 
@@ -27,7 +26,6 @@ public final class SCModContainer extends DummyModContainer {
 
 	public static SevenCommonsProxy proxy;
 	public static SCModContainer instance;
-	public static PacketFactory<SCPackets> packets;
 
 	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
 	public static boolean updaterEnabled = true;
@@ -73,7 +71,7 @@ public final class SCModContainer extends DummyModContainer {
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 		ConfigInjector.inject(config, getClass());
 
-		packets = Network.simplePacketHandler("SevenCommons", SCPackets.class);
+		Network.newChannel("SevenCommons").register(PacketInventoryName.class);
 		ClassInfoUtil.preInit();
 
 		proxy.preInit(event);

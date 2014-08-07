@@ -1,11 +1,18 @@
 package de.take_weiland.mods.commons.internal;
 
-import de.take_weiland.mods.commons.net.SimplePacketType;
+import cpw.mods.fml.relauncher.Side;
 
-public interface ModPacketProxy<TYPE extends Enum<TYPE> & SimplePacketType & SimplePacketTypeProxy> {
+public interface ModPacketProxy {
 
-	public static final String GET_TYPE = "_sc$getPacketType";
+	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/ModPacketProxy";
+	public static final String GET_HANDLER = "_sc$handler";
+	public static final String SET_HANDLER = "_sc$setHandler";
+	public static final String CAN_SIDE_RECEIVE = "_sc$canSideReceive";
 
-	TYPE _sc$getPacketType();
+	void _sc$handler(PacketHandlerProxy handler);
+
+	PacketHandlerProxy _sc$handler();
+
+	boolean _sc$canSideReceive(Side side);
 
 }
