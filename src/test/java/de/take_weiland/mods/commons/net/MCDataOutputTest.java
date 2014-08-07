@@ -183,6 +183,17 @@ public abstract class MCDataOutputTest {
 	}
 
 	@Test
+	public void testBooleans() {
+		MCDataOutputImpl stream = newStream();
+		stream.writeBooleans(new boolean[] { true, false, true, true, false, true, false, false, false, true }, 1, 9);
+		assertArrayEquals(new byte[] {
+				(byte) 0b1000_1001,
+				(byte) 0b00010110,
+				(byte) 0b00000001
+		}, stream.toByteArray());
+	}
+
+	@Test
 	public void testVarInt() {
 		assertArrayEquals(new byte[] {
 				(byte) 0b1000_0000

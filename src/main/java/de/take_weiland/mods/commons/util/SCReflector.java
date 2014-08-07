@@ -162,6 +162,18 @@ public interface SCReflector {
 	BitSet createBitsetShared(long[] arr);
 
 	@Unsafe
+	@Setter(field = "wordsInUse")
+	void setWordsInUse(BitSet set, int wordsInUse);
+
+	@Unsafe
+	@Setter(field = "words")
+	void setWords(BitSet set, long[] words);
+
+	@Unsafe
+	@Setter(field = "sizeIsSticky")
+	void setSizeIsSticky(BitSet set, boolean sizeIsSticky);
+
+	@Unsafe
 	@Getter(field = "clientPacketHandlers")
 	Multimap<String, IPacketHandler> getClientPacketHandlers(NetworkRegistry instance);
 

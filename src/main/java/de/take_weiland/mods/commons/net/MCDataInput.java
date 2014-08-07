@@ -5,49 +5,225 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
+import java.util.BitSet;
 import java.util.UUID;
 
 /**
+ * <p>An extension to the DataInput interface which adds methods useful in the Minecraft environment.</p>
+ * <p>This interface is intended to read from a memory-based buffer and thus does not throw IOExceptions.</p>
+ * <p>This interface is mostly intended for network communication purposes and <i>not</i> for reading data from disk.
+ * Additionally this interface specifies <b>Little Endian</b> byte order, violating the contract of the DataInput interface,
+ * to offer better performance on most systems.</p>
+ * <p>An implementation is offered by {@link de.take_weiland.mods.commons.net.MCDataInputStream}.</p>
+ *
  * @author diesieben07
  */
 public interface MCDataInput extends ByteArrayDataInput {
 
+	/**
+	 * <p>Read a VarInt from the buffer.</p>
+	 * @see de.take_weiland.mods.commons.net.MCDataOuput#writeVarInt(int)
+	 * @return
+	 */
 	int readVarInt();
 
+	/**
+	 * <p>Read a String from the buffer.</p>
+	 * <p>This method first reads a VarInt specifying the length of the String. If the length is -1, null is returned.
+	 * Otherwise length characters are read from the stream as if by the {@link #readChar()} method.</p>
+	 * @return a String containing all the characters read in order or null
+	 */
 	String readString();
 
+	/**
+	 * <p>Read an ItemStack from the buffer.</p>
+	 * <p>This method first reads a short, specifying the ItemID of the ItemStack. If the ItemID is -1, null is returned.
+	 * Otherwise a short and a byte are read, specifying the damage value and stack size respectively. After that the
+	 * NBTTagCompound associated with the ItemStack is read as if by the {@link #readNbt()} method.</p>
+	 * @return an ItemStack or null
+	 */
 	ItemStack readItemStack();
 
+	/**
+	 * <p>Read a FluidStack from the buffer.</p>
+	 * <p>This method first reads a VarInt, specifying the FluidID of the FluidStack. If the FluidID is -1, null is returned.
+	 * Otherwise a VarInt is read, specifying the amount of the FluidStack and then the NBTTagCompound associated with
+	 * the FluidStack as if by the {@link #readNbt()} method.</p>
+	 * @return a FluidStack or null
+	 */
 	FluidStack readFluidStack();
 
+	/**
+	 * <p>Read an NBTTagCompound from the buffer.</p>
+	 * <p>This method first reads a byte, specifying the type of the next tag ({@link net.minecraft.nbt.NBTBase#getId()}).
+	 * If the first ID is -1, null is returned. If the ID is 0, the method returns the NBTTagCompound. Otherwise a String
+	 * is read as if by the {@link #readString()} method and then tag's data is read, via the
+	 * {@link net.minecraft.nbt.NBTBase#load(java.io.DataInput, int)} method.</p>
+	 * @return an NBTTagCompound or null
+	 */
 	NBTTagCompound readNbt();
 
+	/**
+	 * <p>Read a UUID from the buffer.</p>
+	 * <p>This method first reads a short, containing the least significant 2 bytes of the UUIDs most significant bits.
+	 * If this short equals {@code 0xF000}, null is returned. That value specifies a fake UUID version used for null here.
+	 * Otherwise the rest of the UUIDs most significant bits are read and after that the UUIDs least significant bits are read.</p>
+	 * @return a UUID or null
+	 */
 	UUID readUUID();
 
+	/**
+	 * <p>Read an Enum from the buffer.</p>
+	 * <p>This method reads a VarInt from the buffer. If the VarInt is -1, null is returned. Otherwise the Enum value with
+	 * the ordinal value specified by the VarInt is returned.</p>
+	 * @param clazz the Enum class
+	 * @return an Enum or null
+	 */
 	<E extends Enum<E>> E readEnum(Class<E> clazz);
 
+	/**
+	 * <p>Read a BitSet from the buffer.</p>
+	 * <p>This method reads a long array from the buffer, as if by the {@link #readLongs()} method. If the array is null,
+	 * null is returned. Otherwise a BitSet is returned, created as if by the {@link java.util.BitSet#valueOf(long[])} method.</p>
+	 * @return a BitSet or null
+	 */
+	BitSet readBitSet();
+
+	/**
+	 * <p>Read a BitSet from the buffer.</p>
+	 * <p>This method acts similar to {@link #readBitSet()}, but uses the given BitSet if possible.</p>
+	 * @param set a BitSet to use if possible
+	 * @return a BitSet or null
+	 */
+	BitSet readBitSet(BitSet set);
+
+	/**
+	 * <p>Read an array of booleans from the stream.</p>
+	 * <p>This method first reads a VarInt {@code length} from the buffer. If the VarInt is -1, null is returned. Otherwise
+	 * {@code ceil(length / 8)} bytes are read. Every byte specifies 8 elements in the array, from least significant to
+	 * most significant bit. A set bit represents true, an unset bit represents false.</p>
+	 * @return a boolean array or null
+	 */
 	boolean[] readBooleans();
+
+	/**
+	 * <p>Read an array of booleans from the stream.</p>
+	 * <p>This method acts similar to {@link #readBooleans()}, but uses the given buffer if possible.</p>
+	 * @param buf an existing array to use
+	 * @return a boolean array or null
+	 */
 	boolean[] readBooleans(boolean[] buf);
 
+	/**
+	 * <p>Read an array of bytes from the stream.</p>
+	 * <p>This method first reads a VarInt {@code length} from the buffer. If the VarInt is -1, null is returned. Otherwise
+	 * {@code length} bytes are read and an array containing those bytes in order is returned.</p>
+	 * @return a byte array or null
+	 */
 	byte[] readBytes();
+
+	/**
+	 * <p>Read an array of bytes from the stream.</p>
+	 * <p>This method acts similar to {@link #readBytes()}, but uses the given buffer if possible.</p>
+	 * @param buf an existing array to use
+	 * @return a byte array or null
+	 */
 	byte[] readBytes(byte[] buf);
 
+	/**
+	 * <p>Read an array of shorts from the stream.</p>
+	 * <p>This method first reads a VarInt {@code length} from the buffer. If the VarInt is -1, null is returned. Otherwise
+	 * {@code length} shorts are read as if by the {@link #readShort()} method.</p>
+	 * @return a short array or null
+	 */
 	short[] readShorts();
+
+	/**
+	 * <p>Read an array of shorts from the stream.</p>
+	 * <p>This method acts similar to {@link #readShorts()}, but uses the given buffer if possible.</p>
+	 * @param buf an existing array to use
+	 * @return a short array or null
+	 */
 	short[] readShorts(short[] buf);
 
+	/**
+	 * <p>Read an array of ints from the stream.</p>
+	 * <p>This method first reads a VarInt {@code length} from the buffer. If the VarInt is -1, null is returned. Otherwise
+	 * {@code length} ints are read as if by the {@link #readInt()} method.</p>
+	 * @return an int array or null
+	 */
 	int[] readInts();
+
+	/**
+	 * <p>Read an array of ints from the stream.</p>
+	 * <p>This method acts similar to {@link #readInts()}, but uses the given buffer if possible.</p>
+	 * @param buf an existing array to use
+	 * @return an int array or null
+	 */
 	int[] readInts(int[] buf);
 
+	/**
+	 * <p>Read an array of longs from the stream.</p>
+	 * <p>This method first reads a VarInt {@code length} from the buffer. If the VarInt is -1, null is returned. Otherwise
+	 * {@code length} longs are read as if by the {@link #readLong()} method.</p>
+	 * @return a long array or null
+	 */
 	long[] readLongs();
+
+	/**
+	 * <p>Read an array of longs from the stream.</p>
+	 * <p>This method acts similar to {@link #readLongs()}, but uses the given buffer if possible.</p>
+	 * @param buf an existing array to use
+	 * @return a long array or null
+	 */
 	long[] readLongs(long[] buf);
 
+	/**
+	 * <p>Read an array of chars from the stream.</p>
+	 * <p>This method first reads a VarInt {@code length} from the buffer. If the VarInt is -1, null is returned. Otherwise
+	 * {@code length} chars are read as if by the {@link #readChar()} method.</p>
+	 * @return a char array or null
+	 */
 	char[] readChars();
+
+	/**
+	 * <p>Read an array of shorts from the stream.</p>
+	 * <p>This method acts similar to {@link #readChars()}, but uses the given buffer if possible.</p>
+	 * @param buf an existing array to use
+	 * @return a char array or null
+	 */
 	char[] readChars(char[] buf);
 
+	/**
+	 * <p>Read an array of floats from the stream.</p>
+	 * <p>This method first reads a VarInt {@code length} from the buffer. If the VarInt is -1, null is returned. Otherwise
+	 * {@code length} floats are read as if by the {@link #readFloat()} method.</p>
+	 * @return a float array or null
+	 */
 	float[] readFloats();
+
+	/**
+	 * <p>Read an array of floats from the stream.</p>
+	 * <p>This method acts similar to {@link #readFloats()}, but uses the given buffer if possible.</p>
+	 * @param buf an existing array to use
+	 * @return a float array or null
+	 */
 	float[] readFloats(float[] buf);
 
+	/**
+	 * <p>Read an array of doubles from the stream.</p>
+	 * <p>This method first reads a VarInt {@code length} from the buffer. If the VarInt is -1, null is returned. Otherwise
+	 * {@code length} doubles are read as if by the {@link #readDoubles()} method.</p>
+	 * @return a double array or null
+	 */
 	double[] readDoubles();
+
+	/**
+	 * <p>Read an array of doubles from the stream.</p>
+	 * <p>This method acts similar to {@link #readDoubles()}, but uses the given buffer if possible.</p>
+	 * @param buf an existing array to use
+	 * @return a double array or null
+	 */
 	double[] readDoubles(double[] buf);
 
 }

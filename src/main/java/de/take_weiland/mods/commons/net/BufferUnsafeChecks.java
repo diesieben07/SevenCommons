@@ -15,12 +15,20 @@ final class BufferUnsafeChecks {
 		Unsafe unsafe = (Unsafe) JavaUtils.getUnsafe();
 		// sanity checks to see if the native memory layout allows us to use the fast array copying
 		if (ByteOrder.nativeOrder() != ByteOrder.LITTLE_ENDIAN
+			|| unsafe.arrayIndexScale(boolean[].class) != 1
 			|| unsafe.arrayIndexScale(byte[].class) != 1
 			|| unsafe.arrayIndexScale(short[].class) != 2
 			|| unsafe.arrayIndexScale(int[].class) != 4
 			|| unsafe.arrayIndexScale(long[].class) != 8
 			|| unsafe.arrayIndexScale(float[].class) != 4
 			|| unsafe.arrayIndexScale(double[].class) != 8) {
+			return false;
+		}
+
+		long bits0 = 0b0000_0001_0000_0000_0000_0001L;
+		boolean[] b = new boolean[8];
+		unsafe.putLong(b, (long) unsafe.arrayBaseOffset(boolean[].class), bits0);
+		if (!b[0] || b[1] || !b[2]) {
 			return false;
 		}
 

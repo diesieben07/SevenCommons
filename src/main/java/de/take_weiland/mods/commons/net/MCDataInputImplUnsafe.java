@@ -12,6 +12,7 @@ class MCDataInputImplUnsafe extends MCDataInputImpl {
 
 	// arbitrary, could be in the OutputStream as well
 	static final Unsafe unsafe = (Unsafe) JavaUtils.getUnsafe();
+	static final long BOOLEAN_BASE_OFF = unsafe.arrayBaseOffset(boolean[].class);
 	static final long BYTE_BASE_OFF = unsafe.arrayBaseOffset(byte[].class);
 	static final long SHORT_BASE_OFF = unsafe.arrayBaseOffset(short[].class);
 	static final long CHAR_BASE_OFF = unsafe.arrayBaseOffset(char[].class);

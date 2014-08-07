@@ -10,6 +10,37 @@ class MCDataOutputImplNonUnsafe extends MCDataOutputImpl {
 	}
 
 	@Override
+	void writeBooleans00(boolean[] booleans, int off, int len) {
+		int idx = off;
+		byte[] buf = this.buf;
+		int count = this.count;
+		// write 8 booleans per byte
+		// as long as we still have at least 8 elements left
+		while (len - idx >= 8) {
+			buf[count++] = (byte) ((booleans[idx] ? 0b0000_0001 : 0)
+					| (booleans[idx + 1] ? 0b0000_0010 : 0)
+					| (booleans[idx + 2] ? 0b0000_0100 : 0)
+					| (booleans[idx + 3] ? 0b0000_1000 : 0)
+					| (booleans[idx + 4] ? 0b0001_0000 : 0)
+					| (booleans[idx + 5] ? 0b0010_0000 : 0)
+					| (booleans[idx + 6] ? 0b0100_0000 : 0)
+					| (booleans[idx + 7] ? 0b1000_0000 : 0));
+			idx += 8;
+		}
+		// write any leftover elements in the array
+		if ((idx - off) != len) {
+			buf[count] = (byte) ((booleans[idx] ? 0b0000_0001 : 0)
+					| (idx + 1 < len && booleans[idx + 1] ? 0b0000_0010 : 0)
+					| (idx + 2 < len && booleans[idx + 2] ? 0b0000_0100 : 0)
+					| (idx + 3 < len && booleans[idx + 3] ? 0b0000_1000 : 0)
+					| (idx + 4 < len && booleans[idx + 4] ? 0b0001_0000 : 0)
+					| (idx + 5 < len && booleans[idx + 5] ? 0b0010_0000 : 0)
+					| (idx + 6 < len && booleans[idx + 6] ? 0b0100_0000 : 0)
+					| (idx + 7 < len && booleans[idx + 7] ? 0b1000_0000 : 0));
+		}
+	}
+
+	@Override
 	void writeShorts00(short[] shorts, int off, int len) {
 		byte[] buf = this.buf;
 		int count = this.count;

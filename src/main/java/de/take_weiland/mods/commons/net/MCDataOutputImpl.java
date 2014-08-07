@@ -1,7 +1,9 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 import org.jetbrains.annotations.NotNull;
@@ -9,6 +11,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.UUID;
@@ -43,6 +47,16 @@ abstract class MCDataOutputImpl extends MCDataOutputStream implements MCDataOupu
 	@Override
 	public void writeTo(DataOutput out) throws IOException {
 		out.write(buf, 0, count);
+	}
+
+	@Override
+	public void writeTo(ByteBuffer buf) {
+		buf.put(this.buf, 0, count);
+	}
+
+	@Override
+	public void writeTo(WritableByteChannel channel) throws IOException {
+		channel.write(ByteBuffer.wrap(buf, 0, count));
 	}
 
 	@Override
@@ -251,10 +265,18 @@ abstract class MCDataOutputImpl extends MCDataOutputStream implements MCDataOupu
 
 	@Override
 	public void writeNBT(NBTTagCompound nbt) {
-		try {
-			SCReflector.instance.write(nbt, this);
-		} catch (IOException e) {
-			throw new AssertionError(e);
+		if (nbt == null) {
+			writeByte(-1);
+		} else {
+			try {
+				for (NBTBase tag : NBT.asMap(nbt).values()) {
+					writeByte(tag.getId());
+					writeString(tag.getName());
+					SCReflector.instance.write(tag, this);
+				}
+			} catch (IOException e) {
+				throw new IllegalStateException(e);
+			}
 		}
 	}
 
@@ -278,7 +300,11 @@ abstract class MCDataOutputImpl extends MCDataOutputStream implements MCDataOupu
 
 	@Override
 	public void writeBitSet(BitSet bitSet) {
-		writeLongs(SCReflector.instance.getWords(bitSet), 0, SCReflector.instance.getWordsInUse(bitSet));
+		if (bitSet == null) {
+			writeLongs(null);
+		} else {
+			writeLongs(SCReflector.instance.getWords(bitSet), 0, SCReflector.instance.getWordsInUse(bitSet));
+		}
 	}
 
 	@Override
@@ -298,38 +324,12 @@ abstract class MCDataOutputImpl extends MCDataOutputStream implements MCDataOupu
 
 	private void writeBooleans0(boolean[] booleans, int off, int len) {
 		writeVarInt(len);
-		int numBytes = len % 8 + 1;
-		ensureWritable(numBytes);
-		byte[] buf = this.buf;
-		int count = this.count;
-
-		int idx = off;
-		// write 8 booleans per byte
-		// as long as we still have at least 8 elements left
-		while (len - idx >= 8) {
-			buf[count++] = (byte) ((booleans[idx] ? 0b0000_0001 : 0)
-					| (booleans[idx + 1] ? 0b0000_0010 : 0)
-					| (booleans[idx + 2] ? 0b0000_0100 : 0)
-					| (booleans[idx + 3] ? 0b0000_1000 : 0)
-					| (booleans[idx + 4] ? 0b0001_0000 : 0)
-					| (booleans[idx + 5] ? 0b0010_0000 : 0)
-					| (booleans[idx + 6] ? 0b0100_0000 : 0)
-					| (booleans[idx + 7] ? 0b1000_0000 : 0));
-			idx += 8;
-		}
-		// write any leftover elements in the array
-		if ((idx - off) != len) {
-			buf[count++] = (byte) ((booleans[idx] ? 0b0000_0001 : 0)
-					| (idx + 1 < len && booleans[idx + 1] ? 0b0000_0010 : 0)
-					| (idx + 2 < len && booleans[idx + 2] ? 0b0000_0100 : 0)
-					| (idx + 3 < len && booleans[idx + 3] ? 0b0000_1000 : 0)
-					| (idx + 4 < len && booleans[idx + 4] ? 0b0001_0000 : 0)
-					| (idx + 5 < len && booleans[idx + 5] ? 0b0010_0000 : 0)
-					| (idx + 6 < len && booleans[idx + 6] ? 0b0100_0000 : 0)
-					| (idx + 7 < len && booleans[idx + 7] ? 0b1000_0000 : 0));
-		}
-		this.count = count;
+		ensureWritable(len % 8 + 1);
+		writeBooleans00(booleans, off, len);
+		count += len % 8 + 1;
 	}
+
+	abstract void writeBooleans00(boolean[] booleans, int off, int len);
 
 	@Override
 	public void writeBytes(byte[] bytes, int off, int len) {

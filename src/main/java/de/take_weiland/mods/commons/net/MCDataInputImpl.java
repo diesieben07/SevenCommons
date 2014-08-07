@@ -1,10 +1,12 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.primitives.UnsignedBytes;
+import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 import org.apache.commons.lang3.ArrayUtils;
@@ -12,9 +14,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.BitSet;
+import java.util.Map;
 import java.util.UUID;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkPositionIndexes;
 import static de.take_weiland.mods.commons.net.MCDataOutputImpl.UUID_FAKE_NULL_VERSION;
 import static de.take_weiland.mods.commons.net.MCDataOutputImpl.UUID_VERSION_MASK;
 
@@ -207,6 +211,30 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		return e < 0 ? null : JavaUtils.byOrdinal(clazz, e);
 	}
 
+	@Override
+	public BitSet readBitSet(BitSet set) {
+		if (set == null) {
+			long[] words = readLongs();
+			if (words == null) {
+				return null;
+			}
+			return SCReflector.instance.createBitsetShared(words);
+		} else {
+			SCReflector r = SCReflector.instance;
+			long[] words = readLongs(r.getWords(set));
+
+			r.setWords(set, words);
+			r.setWordsInUse(set, words.length);
+			r.setSizeIsSticky(set, false);
+			return set;
+		}
+	}
+
+	@Override
+	public BitSet readBitSet() {
+		return readBitSet(null);
+	}
+
 	private static final int BYTE_MSB = 0b1000_0000;
 	private static final int SEVEN_BITS = 0b0111_1111;
 
@@ -281,6 +309,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 			this.pos = pos;
 			return null;
 		} else {
+			checkAvailable(14);
 			long msb = (long) (short0 & 0xFFFF)
 					| (long) (buf[pos++] & 0xFF) << 16
 					| (long) (buf[pos++] & 0xFF) << 24
@@ -303,13 +332,21 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 
 	@Override
 	public NBTTagCompound readNbt() {
-		int isNull = readByte();
-		if (isNull == 0) {
+		int id = readByte();
+		if (id == -1) {
 			return null;
 		} else {
 			NBTTagCompound nbt = new NBTTagCompound();
+			Map<String, NBTBase> map = NBT.asMap(nbt);
 			try {
-				SCReflector.instance.load(nbt, this, 0);
+				while (id != 0) {
+					String name = readString();
+					NBTBase tag = NBTBase.newTag((byte) id, name);
+					SCReflector.instance.load(nbt, this, 1);
+
+					map.put(tag.getName(), tag);
+					id = readByte();
+				}
 			} catch (IOException e) {
 				throw new IllegalStateException(e);
 			}
@@ -325,7 +362,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		} else if (len == 0) {
 			return ArrayUtils.nullToEmpty(b);
 		} else {
-			if (b == null || b.length < len) {
+			if (b == null || b.length != len) {
 				b = new boolean[len];
 			}
 			int byteLen = (len - 1) / 8 + 1; // works for len > 0
@@ -333,7 +370,6 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 
 			byte[] buf = this.buf;
 			int pos = this.pos;
-			this.pos = pos + byteLen;
 
 			int read = 0;
 			int mask = 0;
@@ -345,6 +381,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 				b[idx] = (read & mask) != 0;
 				mask <<= 1;
 			}
+			this.pos = pos;
 
 			return b;
 		}
@@ -358,7 +395,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		} else if (len == 0) {
 			return ArrayUtils.nullToEmpty(b);
 		} else {
-			if (b == null || b.length < len) {
+			if (b == null || b.length != len) {
 				b = new byte[len];
 			}
 			checkAvailable(len);
