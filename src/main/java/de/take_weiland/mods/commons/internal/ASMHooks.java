@@ -43,23 +43,27 @@ public final class ASMHooks {
 		MinecraftForge.EVENT_BUS.post(new PlayerStartTrackingEvent(player, tracked));
 	}
 
-	public static void writeVarShort(DataOutput out, int i) throws IOException {
-		int low = i & 0b0000_0000_0111_1111_1111_1111;
-		int high = (i & 0b0111_1111_1000_0000_0000_0000) >> 15;
-		if (high != 0) {
-			low |= 0b1000_0000_0000_0000;
-		}
-		out.writeShort(low);
-		if (high != 0) {
-			out.writeByte(high);
+	private static final int SIGNED_SHORT_BITS = 0b0111_1111_1111_1111;
+	private static final int SHORT_MS_BIT = 0b1000_0000_0000_0000;
+
+	public static void writeExtPacketLen(DataOutput out, int len) throws IOException {
+		int leftover = (len & ~SIGNED_SHORT_BITS) >>> 15;
+		if (leftover != 0) {
+			out.writeShort(len & SIGNED_SHORT_BITS | SHORT_MS_BIT);
+			out.writeByte(leftover);
+		} else {
+			out.writeShort(len & SIGNED_SHORT_BITS);
 		}
 	}
 
-	public static int readVarShort(DataInput in) throws IOException {
+	public static int readExtPacketLen(DataInput in) throws IOException {
 		int low = in.readUnsignedShort();
-		int high = (low & 0b1000_0000_0000_0000) != 0 ? in.readUnsignedByte() : 0;
-
-		return ((high & 0b1111_1111) << 15) | (low & 0b0111_1111_1111_1111);
+		if ((low & SHORT_MS_BIT) != 0) {
+			int hi = in.readUnsignedByte();
+			return (low & SIGNED_SHORT_BITS) | (hi << 15);
+		} else {
+			return low;
+		}
 	}
 
 	public static int additionalPacketSize(Packet250CustomPayload packet) {

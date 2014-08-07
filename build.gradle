@@ -78,6 +78,7 @@ repositories {
 dependencies {
     compile "org.jetbrains:annotations:13.0"
     deployerJars "org.apache.maven.wagon:wagon-ftp:2.2"
+    testCompile "junit:junit:4.11"
 }
 
 if (ENV.SC_MAVEN_URL) {

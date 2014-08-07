@@ -205,6 +205,10 @@ public final class MCPNames {
 
 	public static final String M_GET_TEXTURE_NAME = "func_111023_E";
 
+	public static final String M_NBT_WRITE = "func_74734_a";
+
+	public static final String M_NBT_LOAD = "func_74735_a";
+
 	private MCPNames() {
 	}
 

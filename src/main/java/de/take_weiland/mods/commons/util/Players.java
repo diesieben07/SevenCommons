@@ -76,6 +76,16 @@ public final class Players {
 		return world.playerEntities;
 	}
 
+	@SuppressWarnings("unchecked")
+	public static List<EntityPlayer> allIn(World world) {
+		return world.playerEntities;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static List<EntityPlayerMP> allIn(WorldServer world) {
+		return world.playerEntities;
+	}
+
 	public static EntityPlayerMP forName(String name) {
 		return MinecraftServer.getServer().getConfigurationManager().getPlayerForUsername(name);
 	}

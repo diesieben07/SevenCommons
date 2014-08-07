@@ -9,6 +9,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.Launch;
 import org.apache.commons.lang3.ArrayUtils;
@@ -861,10 +862,24 @@ public final class ASMUtils {
 		for (int i = 0; i < len; i += 2) {
 			if (data.get(i).equals(key)) {
 				//noinspection unchecked
-				return (T) data.get(i + 1);
+				return (T) unwrapAnnotationValue(data.get(i + 1));
 			}
 		}
 		return defaultValue;
+	}
+
+	private static Object unwrapAnnotationValue(Object v) {
+		if (v instanceof String[]) {
+			String[] data = (String[]) v;
+			String className = Type.getType(data[0]).getClassName();
+			try {
+				return Enum.valueOf(Class.forName(className).asSubclass(Enum.class), data[1]);
+			} catch (ClassNotFoundException e) {
+				throw JavaUtils.throwUnchecked(e);
+			}
+		} else {
+			return v;
+		}
 	}
 
 	/**

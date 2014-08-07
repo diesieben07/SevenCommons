@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
-import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.reflect.Invoke;
+import de.take_weiland.mods.commons.reflect.SCReflection;
 
 /**
  * @author diesieben07

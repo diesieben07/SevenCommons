@@ -86,11 +86,11 @@ public class Packet250Transformer implements ASMClassTransformer {
 	}
 
 	private void replaceRead(MethodNode method) {
-		replaceCall(method, DATA_INPUT_NAME, READ_SHORT, "readVarShort", getMethodDescriptor(INT_TYPE, DATA_INPUT));
+		replaceCall(method, DATA_INPUT_NAME, READ_SHORT, "readExtPacketLen", getMethodDescriptor(INT_TYPE, DATA_INPUT));
 	}
 
 	private void replaceWrite(MethodNode method) {
-		AbstractInsnNode loc = replaceCall(method, DATA_OUTPUT_NAME, WRITE_SHORT, "writeVarShort", getMethodDescriptor(VOID_TYPE, DATA_OUTPUT, INT_TYPE));
+		AbstractInsnNode loc = replaceCall(method, DATA_OUTPUT_NAME, WRITE_SHORT, "writeExtPacketLen", getMethodDescriptor(VOID_TYPE, DATA_OUTPUT, INT_TYPE));
 		do {
 			loc = loc.getPrevious();
 			if (loc == null) {

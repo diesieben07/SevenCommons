@@ -6,6 +6,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import sun.misc.Unsafe;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -40,6 +41,10 @@ class SunProprietaryStrategy extends AbstractStrategy {
 			makeInvoker(cw, entry.getKey(), entry.getValue());
 		}
 
+		for (Map.Entry<Method, Constructor<?>> entry : info.cstrs.entrySet()) {
+			makeConstructorBouncer(cw, entry.getKey(), entry.getValue());
+		}
+
 		cw.visitEnd();
 
 		Class<?> clazz = SCReflection.defineDynamicClass(cw.toByteArray());
@@ -53,6 +58,28 @@ class SunProprietaryStrategy extends AbstractStrategy {
 	@Override
 	public Class<?> defineDynClass(byte[] clazz, Class<?> context) {
 		return unsafe.defineAnonymousClass(context, clazz, null);
+	}
+
+	private void makeConstructorBouncer(ClassWriter cw, Method boncer, Constructor<?> cstr) {
+		String name = boncer.getName();
+		String desc = Type.getMethodDescriptor(boncer);
+
+		MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, name, desc, null, null);
+		mv.visitCode();
+
+		mv.visitTypeInsn(NEW, Type.getInternalName(cstr.getDeclaringClass()));
+		mv.visitInsn(DUP);
+
+		Class<?>[] params = cstr.getParameterTypes();
+		for (int i = 0; i < params.length; i++) {
+			 mv.visitVarInsn(Type.getType(params[i]).getOpcode(ILOAD), i + 1);
+		}
+
+		mv.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(cstr.getDeclaringClass()), "<init>", Type.getConstructorDescriptor(cstr));
+		mv.visitInsn(ARETURN);
+
+		mv.visitMaxs(2 + params.length, 1 + params.length);
+		mv.visitEnd();
 	}
 
 	private void makeConstructor(ClassWriter cw) {

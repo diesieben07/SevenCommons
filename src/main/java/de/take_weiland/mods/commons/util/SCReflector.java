@@ -1,12 +1,12 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.collect.Multimap;
+import cpw.mods.fml.common.network.IPacketHandler;
+import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.reflect.Getter;
-import de.take_weiland.mods.commons.reflect.Invoke;
-import de.take_weiland.mods.commons.reflect.SCReflection;
-import de.take_weiland.mods.commons.reflect.Setter;
+import de.take_weiland.mods.commons.reflect.*;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -29,6 +29,11 @@ import net.minecraft.util.IntHashMap;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Timer;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 
@@ -131,4 +136,52 @@ public interface SCReflector {
 	@Getter(field = F_CRAFTERS, srg = true)
 	List<ICrafting> getCrafters(Container container);
 
+	@Invoke(method = "writeUTF")
+	int writeUTF(DataOutputStream dummy, String s, DataOutput out) throws IOException;
+
+	@Invoke(method = M_NBT_WRITE, srg = true)
+	void write(NBTBase nbt, DataOutput out) throws IOException;
+
+	@Invoke(method = M_NBT_LOAD, srg = true)
+	void load(NBTBase nbt, DataInput in, int depth) throws IOException;
+
+	@Unsafe
+	@Construct
+	String createStringShared(char[] arr, boolean dummy);
+
+	@Unsafe
+	@Getter(field = "wordsInUse")
+	int getWordsInUse(BitSet bitSet);
+
+	@Unsafe
+	@Getter(field = "words")
+	long[] getWords(BitSet bitSet);
+
+	@Unsafe
+	@Construct
+	BitSet createBitsetShared(long[] arr);
+
+	@Unsafe
+	@Setter(field = "wordsInUse")
+	void setWordsInUse(BitSet set, int wordsInUse);
+
+	@Unsafe
+	@Setter(field = "words")
+	void setWords(BitSet set, long[] words);
+
+	@Unsafe
+	@Setter(field = "sizeIsSticky")
+	void setSizeIsSticky(BitSet set, boolean sizeIsSticky);
+
+	@Unsafe
+	@Getter(field = "clientPacketHandlers")
+	Multimap<String, IPacketHandler> getClientPacketHandlers(NetworkRegistry instance);
+
+	@Unsafe
+	@Getter(field = "serverPacketHandlers")
+	Multimap<String, IPacketHandler> getServerPacketHandlers(NetworkRegistry instance);
+
+	@Unsafe
+	@Getter(field = "universalPacketHandlers")
+	Multimap<String, IPacketHandler> getUniversalPacketHandlers(NetworkRegistry instance);
 }

@@ -1,70 +1,25 @@
 package de.take_weiland.mods.commons.net;
 
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.ModContainer;
+import cpw.mods.fml.common.network.NetworkRegistry;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.internal.SimplePacketTypeProxy;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
-import de.take_weiland.mods.commons.internal.transformers.PacketTransformer;
-import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.NetLoginHandler;
 import net.minecraft.network.NetServerHandler;
 import net.minecraft.network.packet.NetHandler;
 
-import java.lang.reflect.Field;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Utilities for Network related stuff.
  */
 public final class Network {
-
-	private Network() {
-	}
-
-	/**
-	 * create a {@link de.take_weiland.mods.commons.net.PacketFactory} that uses the given Channel to send Packets of type {@code TYPE} and dispatches handling off to the given PacketHandler.
-	 *
-	 * @param channel   the Packet channel to send on
-	 * @param typeClass the Enum class holding the possible Packet types
-	 * @param handler   the handler to handle the packets
-	 * @return a new PacketFactory
-	 */
-	public static <TYPE extends Enum<TYPE>> PacketFactory<TYPE> makeFactory(String channel, Class<TYPE> typeClass, PacketHandler<TYPE> handler) {
-		return new FMLPacketHandlerImpl<>(channel, handler, typeClass);
-	}
-
-	/**
-	 * <p>create a {@link PacketFactory} that uses the given Channel to send Packets of type {@code TYPE} and dispatches handling off to the corresponding
-	 * {@link ModPacket} class of the respective TYPE.</p>
-	 *
-	 * @param channel   the Packet channel to send on
-	 * @param typeClass the Enum class holding the possible Packet types
-	 * @return a new PacketFactory
-	 */
-	public static <TYPE extends Enum<TYPE> & SimplePacketType> PacketFactory<TYPE> simplePacketHandler(String channel, Class<TYPE> typeClass) {
-		PacketFactory<TYPE> factory = makeFactory(channel, typeClass, SimplePacketHandler.<TYPE>instance());
-		injectTypesAndFactory(JavaUtils.getEnumConstantsShared(typeClass), factory);
-		return factory;
-	}
-
-	private static <TYPE extends Enum<TYPE> & SimplePacketType> void injectTypesAndFactory(TYPE[] values, PacketFactory<TYPE> factory) {
-		SimplePacketTypeProxy proxy = (SimplePacketTypeProxy) values[0];
-		checkArgument(proxy._sc$getPacketFactory() == null, "Cannot re-use SimplePacketType classes!");
-		proxy._sc$setPacketFactory(factory); // sets a static field, so handles all
-
-		for (TYPE type : values) {
-			try {
-				Class<?> packetClass = type.packet();
-				Field field = packetClass.getDeclaredField(PacketTransformer.TYPE_FIELD);
-				field.setAccessible(true);
-				field.set(null, type);
-			} catch (Exception e) {
-				throw new IllegalStateException(String.format("PacketTransformer failed on class %s! SevenCommons was probably installed wrongly!", type.packet().getName()));
-			}
-		}
-	}
 
 	/**
 	 * gets the INetworkManager associated with the given NetHandler
@@ -82,6 +37,45 @@ public final class Network {
 		}
 	}
 
+	/**
+	 * <p>Create a new network channel that uses the custom payload packet to send packets.</p>
+	 * <p>Each of your packet types has to extend {@link de.take_weiland.mods.commons.net.ModPacket} to use this system.</p>
+	 * <p>This method must only be used during mod loading (PreInit, Init, etc. phases).</p>
+	 * @param channel the channel to use
+	 * @return a new PacketHandlerBuilder for registering your Packet classes
+	 */
+	public static PacketHandlerBuilder newChannel(String channel) {
+		ModContainer mc = Loader.instance().activeModContainer();
+		if (mc == null) {
+			throw new IllegalStateException("Tried to register a packet channel outside of mod-loading!");
+		}
+		return new PacketHandlerBuilder(checkChannel(mc.getModId(), channel));
+	}
+
+	private static String checkChannel(String activeMod, String channel) {
+		checkNotNull(channel, "Channel cannot be null");
+		checkArgument(!channel.isEmpty() && channel.length() <= 16, "Invalid channel name");
+		checkArgument(!isReserved(channel), "Reserved channel");
+		if (isRegistered(channel)) {
+			logger.warning(String.format("Channel %s is already registered while registering it for %s!", channel, activeMod));
+		}
+		return channel;
+	}
+
+	private static boolean isRegistered(String channel) {
+		NetworkRegistry nr = NetworkRegistry.instance();
+		SCReflector r = SCReflector.instance;
+		return r.getUniversalPacketHandlers(nr).containsKey(channel)
+				|| r.getClientPacketHandlers(nr).containsKey(channel)
+				|| r.getServerPacketHandlers(nr).containsKey(channel);
+	}
+
+	private static boolean isReserved(String channel) {
+		return channel.equals("REGISTER") || channel.equals("UNREGISTER") || channel.startsWith("MC|");
+	}
+
 	static final Logger logger = SevenCommons.scLogger("Packet System");
+
+	private Network() { }
 
 }
