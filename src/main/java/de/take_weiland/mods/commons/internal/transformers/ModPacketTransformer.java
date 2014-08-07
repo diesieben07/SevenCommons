@@ -15,6 +15,7 @@ import static org.objectweb.asm.Type.*;
 
 public final class ModPacketTransformer extends AbstractAnalyzingTransformer {
 
+	private static final int DEFAULT_EXPECTED_SIZE = 32;
 	public static final String MOD_PACKET_CLASS = "de/take_weiland/mods/commons/net/ModPacket";
 	private static final ClassInfo modPacketCI = ClassInfo.of(MOD_PACKET_CLASS);
 

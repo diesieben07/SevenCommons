@@ -37,6 +37,13 @@ public final class Network {
 		}
 	}
 
+	/**
+	 * <p>Create a new network channel that uses the custom payload packet to send packets.</p>
+	 * <p>Each of your packet types has to extend {@link de.take_weiland.mods.commons.net.ModPacket} to use this system.</p>
+	 * <p>This method must only be used during mod loading (PreInit, Init, etc. phases).</p>
+	 * @param channel the channel to use
+	 * @return a new PacketHandlerBuilder for registering your Packet classes
+	 */
 	public static PacketHandlerBuilder newChannel(String channel) {
 		ModContainer mc = Loader.instance().activeModContainer();
 		if (mc == null) {

@@ -22,25 +22,53 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * <p>An abstract base class for simpler Packet handling. Make a subclass of this for every PacketType.
- * Register your Types with {@link de.take_weiland.mods.commons.net.Network#newChannel(String)}
- * <p>To send this packet, use the Methods implemented from {@link de.take_weiland.mods.commons.net.SimplePacket}. Example:
- * <pre>{@code
- * new ExamplePacket(someData, "moreData").sendToServer();
- * new DifferentPacket(evenMoreData).sendToPlayer(somePlayer);
- * }</pre></p>
+ * <p>An abstract base class for simpler Packet handling. Make a subclass of this for every type of Packet you have.</p>
+ * <p>Register your packet classes with {@link de.take_weiland.mods.commons.net.Network#newChannel(String)}.</p>
+ * <p>To send a packet, use the Methods implemented from {@link de.take_weiland.mods.commons.net.SimplePacket} like this:<br />
+ * {@code new ExamplePacket("whatever").sendToServer();}<br />
+ * {@code new OtherPacket(someObject).sendToPlayer(somePlayer).sendToPlayer(otherPlayer);}</p>
+ * <p>Use {@link de.take_weiland.mods.commons.net.PacketDirection} to specify a valid direction this packet can be send.</p>
  */
 public abstract class ModPacket implements SimplePacket {
 
+	/**
+	 * <p>Write your packet data to the stream. A stream containing the same data will be passed to
+	 * {@link #read(MCDataInputStream, net.minecraft.entity.player.EntityPlayer, cpw.mods.fml.relauncher.Side)} when the
+	 * packet is received.</p>
+	 * @param out the stream
+	 */
 	protected abstract void write(MCDataOutputStream out);
 
+	/**
+	 * <p>Read your packet data from the stream. The stream contains the data written in {@link #write(MCDataOutputStream)}.</p>
+	 * <p>On the server, the player is the player sending the packet, on the client it is the client player (receiving the packet).</p>
+	 * @param in the stream
+	 * @param player the context player
+	 * @param side the logical side receiving the packet
+	 * @throws IOException if an IOException occurs while reading the data
+	 * @throws ProtocolException if the data received violates the protocol
+	 */
 	protected abstract void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException;
 
+	/**
+	 * <p>Execute this packet's action. This method is called when the packet is received, after the data has been read
+	 * with {@link #read(MCDataInputStream, net.minecraft.entity.player.EntityPlayer, cpw.mods.fml.relauncher.Side)}.</p>
+	 * @param player the context player (see {@link #read(MCDataInputStream, net.minecraft.entity.player.EntityPlayer, cpw.mods.fml.relauncher.Side)}
+	 * @param side the logical side receiving the packet
+	 * @throws ProtocolException if the data received violates the protocol
+	 */
 	protected abstract void execute(EntityPlayer player, Side side) throws ProtocolException;
 
+	/**
+	 * <p>An estimate of the size of this packet's data in bytes. Used to pre-size the byte buffer that this packet is
+	 * written to.</p>
+	 * @return an estimated size
+	 */
 	protected int expectedSize() {
 		return 32;
 	}
+
+	// private implementation
 
 	private Packet mcPacket;
 	private Packet build() {
