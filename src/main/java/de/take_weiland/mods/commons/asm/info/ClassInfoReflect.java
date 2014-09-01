@@ -1,32 +1,35 @@
 package de.take_weiland.mods.commons.asm.info;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * @author diesieben07
  */
-final class ClassInfoFromClazz extends ClassInfo {
+final class ClassInfoReflect extends ClassInfo {
 
 	private final Class<?> clazz;
 	private List<String> interfaces;
 
-	ClassInfoFromClazz(Class<?> clazz) {
+	ClassInfoReflect(Class<?> clazz) {
 		this.clazz = clazz;
 	}
 
 	@Override
 	public List<String> interfaces() {
 		if (interfaces == null) {
-			interfaces = Lists.transform(Arrays.asList(clazz.getInterfaces()), ClassToNameFunc.INSTANCE);
+			ImmutableList.Builder<String> builder = ImmutableList.builder();
+			for (Class<?> iface : clazz.getInterfaces()) {
+				builder.add(Type.getInternalName(iface));
+			}
+			interfaces = builder.build();
 		}
 		return interfaces;
 	}
@@ -48,12 +51,30 @@ final class ClassInfoFromClazz extends ClassInfo {
 	}
 
 	@Override
-	public boolean isAssignableFrom(ClassInfo child) {
-		if (child instanceof ClassInfoFromClazz) {
-			return this.clazz.isAssignableFrom(((ClassInfoFromClazz) child).clazz);
-		} else {
-			return super.isAssignableFrom(child);
+	public boolean hasAnnotation(Class<? extends Annotation> annotation) {
+		return clazz.isAnnotationPresent(annotation);
+	}
+
+	@Override
+	public AnnotationInfo getAnnotation(Class<? extends Annotation> annotation) {
+		Annotation ann = clazz.getAnnotation(annotation);
+		return ann == null ? null : new AnnotationInfoReflect(ann);
+	}
+
+	@Override
+	public boolean hasMemberAnnotation(Class<? extends Annotation> annotation) {
+		for (Field field : clazz.getFields()) {
+			if (field.isAnnotationPresent(annotation)) {
+				return true;
+			}
 		}
+
+		for (Method method : clazz.getMethods()) {
+			if (method.isAnnotationPresent(annotation)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -145,12 +166,53 @@ final class ClassInfoFromClazz extends ClassInfo {
 		return null;
 	}
 
-	private static enum ClassToNameFunc implements Function<Class<?>, String> {
-		INSTANCE;
-
-		@Override
-		public String apply(Class<?> input) {
-			return Type.getInternalName(input);
+	private List<MethodInfo> methods;
+	@Override
+	public List<MethodInfo> getMethods() {
+		if (methods == null) {
+			ImmutableList.Builder<MethodInfo> builder = ImmutableList.builder();
+			for (Method method : clazz.getDeclaredMethods()) {
+				builder.add(new MethodInfoReflect(this, method));
+			}
+			methods = builder.build();
 		}
+		return methods;
 	}
+
+	private List<MethodInfo> constructors;
+	@Override
+	public List<MethodInfo> getConstructors() {
+		if (constructors == null) {
+			ImmutableList.Builder<MethodInfo> builder = ImmutableList.builder();
+			for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
+				builder.add(new MethodInfoReflectCstr(this, constructor));
+			}
+			constructors = builder.build();
+		}
+		return constructors;
+	}
+
+	private List<FieldInfo> fields;
+	@Override
+	public List<FieldInfo> getFields() {
+		if (fields == null) {
+			ImmutableList.Builder<FieldInfo> builder = ImmutableList.builder();
+			for (Field field : clazz.getDeclaredFields()) {
+				builder.add(new FieldInfoReflect(this, field));
+			}
+			fields = builder.build();
+		}
+		return fields;
+	}
+
+	@Override
+	boolean callRightAssignableFrom(ClassInfo parent) {
+		return parent.isAssignableFromReflect(this);
+	}
+
+	@Override
+	boolean isAssignableFromReflect(ClassInfoReflect child) {
+		return this.clazz.isAssignableFrom(child.clazz);
+	}
+
 }

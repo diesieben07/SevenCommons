@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.asm.info;
 
 import org.objectweb.asm.Type;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 
 /**
@@ -34,5 +35,16 @@ class MethodInfoReflectCstr extends MethodInfo {
 	@Override
 	public boolean isConstructor() {
 		return true;
+	}
+
+	@Override
+	public AnnotationInfo getAnnotation(Class<? extends Annotation> annotation) {
+		Annotation ann = constructor.getAnnotation(annotation);
+		return ann == null ? null : new AnnotationInfoReflect(ann);
+	}
+
+	@Override
+	public boolean hasAnnotation(Class<? extends Annotation> annotation) {
+		return constructor.isAnnotationPresent(annotation);
 	}
 }

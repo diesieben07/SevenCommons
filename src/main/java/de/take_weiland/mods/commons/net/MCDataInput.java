@@ -1,11 +1,13 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataInput;
+import de.take_weiland.mods.commons.util.BlockCoordinates;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
 import java.util.BitSet;
+import java.util.EnumSet;
 import java.util.UUID;
 
 /**
@@ -21,9 +23,35 @@ import java.util.UUID;
 public interface MCDataInput extends ByteArrayDataInput {
 
 	/**
+	 * <p>Set the byte position pointer of this stream.</p>
+	 * <p>Valid positions reach from 0 through {@link #len()}. A position equal to {@code len()} defines that no further
+	 * bytes can be read from this stream.</p>
+	 * @param pos the new position
+	 * @throws java.lang.IllegalArgumentException if the argument is negative
+	 * @throws java.lang.IndexOutOfBoundsException if the argument is not a valid position
+	 * @see #skipBytes(int)
+	 */
+	void seek(int pos);
+
+	/**
+	 * <p>Get the current byte position pointer of this stream.</p>
+	 * <p>Valid positions reach from 0 through {@link #len()}. A position equal to {@code len()} defines that no further
+	 * bytes can be read from this stream.</p>
+	 * @return the current position
+	 */
+	int pos();
+
+	/**
+	 * <p>Get the maximum number of bytes that can be read from this stream. This value is not affected by the current
+	 * position pointer.</p>
+	 * @return the total length of this stream
+	 */
+	int len();
+
+	/**
 	 * <p>Read a VarInt from the buffer.</p>
-	 * @see de.take_weiland.mods.commons.net.MCDataOuput#writeVarInt(int)
-	 * @return
+	 * @see MCDataOutput#writeVarInt(int)
+	 * @return an int
 	 */
 	int readVarInt();
 
@@ -96,6 +124,50 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @return a BitSet or null
 	 */
 	BitSet readBitSet(BitSet set);
+
+	/**
+	 * <p>Read an EnumSet from the buffer.</p>
+	 * <p>This method reads a long value from the buffer, as if by the {@link #readLong()} method. If that long value is
+	 * equal to {@code 1L << 63L}, null is returned. Otherwise a new EnumSet is returned. If the bit {@code 1 << i} the
+	 * Enum constant with ordinal value {@code i} is present in the set.</p>
+	 * <p>Resulting from this representation, this method only supports Enum types with at most 63 constants, which should
+	 * be plenty for any reasonable use of enums.</p>
+	 * @param enumClass the type of enum in the EnumSet to be read
+	 * @return an EnumSet or null
+	 */
+	<E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass);
+
+	/**
+	 * <p>Read an EnumSet from the buffer.</p>
+	 * @param set an EnumSet to use if possible
+	 * @param enumClass the type of enum in the EnumSet to be read
+	 * @return an EnumSet or null
+	 */
+	<E extends Enum<E>> EnumSet<E> readEnumSet(EnumSet<E> set, Class<E> enumClass);
+
+	/**
+	 * <p>Read a set of coordinates from the buffer.</p>
+	 * <p>This method reads a long from the buffer, as if by the {@link #readLong()} method and then uses
+	 * {@link de.take_weiland.mods.commons.util.BlockCoordinates#decode(long)} to create the coordinates.</p>
+	 * @return BlockCoordinates
+	 */
+	BlockCoordinates readCoords();
+
+	Boolean readBooleanBox();
+
+	Byte readByteBox();
+
+	Short readShortBox();
+
+	Character readCharBox();
+
+	Integer readIntBox();
+
+	Long readLongBox();
+
+	Float readFloatBox();
+
+	Double readDoubleBox();
 
 	/**
 	 * <p>Read an array of booleans from the stream.</p>

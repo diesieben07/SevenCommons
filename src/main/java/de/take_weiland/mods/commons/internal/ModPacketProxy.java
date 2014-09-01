@@ -9,7 +9,7 @@ public interface ModPacketProxy {
 	public static final String SET_HANDLER = "_sc$setHandler";
 	public static final String CAN_SIDE_RECEIVE = "_sc$canSideReceive";
 
-	void _sc$handler(PacketHandlerProxy handler);
+	void _sc$setHandler(PacketHandlerProxy handler);
 
 	PacketHandlerProxy _sc$handler();
 

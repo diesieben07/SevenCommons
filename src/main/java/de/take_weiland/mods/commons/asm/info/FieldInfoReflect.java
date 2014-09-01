@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.asm.info;
 
 import org.objectweb.asm.Type;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
 /**
@@ -29,5 +30,16 @@ class FieldInfoReflect extends FieldInfo {
 	@Override
 	public int modifiers() {
 		return field.getModifiers();
+	}
+
+	@Override
+	public AnnotationInfo getAnnotation(Class<? extends Annotation> annotation) {
+		Annotation ann = field.getAnnotation(annotation);
+		return ann == null ? null : new AnnotationInfoReflect(ann);
+	}
+
+	@Override
+	public boolean hasAnnotation(Class<? extends Annotation> annotation) {
+		return field.isAnnotationPresent(annotation);
 	}
 }

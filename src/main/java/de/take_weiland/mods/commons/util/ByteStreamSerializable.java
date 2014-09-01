@@ -1,15 +1,23 @@
 package de.take_weiland.mods.commons.util;
 
-import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author diesieben07
  */
 public interface ByteStreamSerializable {
 
-	void write(MCDataOutputStream buf);
+	void writeTo(MCDataOutputStream out);
 
-	void read(MCDataInputStream buf);
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	public @interface Deserializer {
+
+	}
 
 }

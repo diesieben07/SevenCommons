@@ -28,14 +28,17 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 		ImmutableMap.Builder<Method, Constructor<?>> cstrs = ImmutableMap.builder();
 
 		for (Method method : iface.getMethods()) {
+			OverrideTarget oc = method.getAnnotation(OverrideTarget.class);
+			String overrideClass = oc == null ? null : oc.value();
+
 			if (method.isAnnotationPresent(Getter.class)) {
-				getters.put(method, findGetterTarget(iface, method));
+				getters.put(method, findGetterTarget(method, overrideClass));
 			} else if (method.isAnnotationPresent(Setter.class)) {
-				setters.put(method, findSetterTarget(iface, method));
+				setters.put(method, findSetterTarget(method, overrideClass));
 			} else if (method.isAnnotationPresent(Invoke.class)) {
-				invokers.put(method, findInvokerTarget(iface, method));
+				invokers.put(method, findInvokerTarget(method, overrideClass));
 			} else if (method.isAnnotationPresent(Construct.class)) {
-				cstrs.put(method, findConstructor(method, method.getAnnotation(Construct.class)));
+				cstrs.put(method, findConstructor(method, overrideClass));
 			} else {
 				throw new IllegalArgumentException(String.format("Don't know what to do with method %s in interface %s", method.getName(), iface.getName()));
 			}
@@ -43,53 +46,82 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 		return new InterfaceInfo(getters.build(), setters.build(), invokers.build(), cstrs.build());
 	}
 
-	Field findGetterTarget(Class<?> iface, Method getter) {
-		Class<?>[] params = getter.getParameterTypes();
-		if (params.length != 1 || params[0].isPrimitive()) {
-			throw new IllegalArgumentException(String.format("Invalid getter %s in interface %s", getter.getName(), iface.getName()));
+	Field findGetterTarget(Method ifaceMethod, String overrideClassName) {
+		Class<?>[] params = ifaceMethod.getParameterTypes();
+		if (params.length != 1) {
+			throw invalidGetter(ifaceMethod, "Getters have exactly one parameter");
 		}
-		Getter ann = getter.getAnnotation(Getter.class);
-		Field f = ReflectionHelper.findField(params[0], ann.srg() ? MCPNames.field(ann.field()) : ann.field());
-		if (f.getType() != getter.getReturnType()) {
-			throw new IllegalArgumentException(String.format("Wrong return type for getter %s in %s", getter.getName(), iface.getName()));
+
+		Getter ann = ifaceMethod.getAnnotation(Getter.class);
+		Class<?> target = selectTarget(params[0], overrideClassName, ifaceMethod, "getter");
+
+		Field f = ReflectionHelper.findField(target, ann.srg() ? MCPNames.field(ann.field()) : ann.field());
+		if (!ifaceMethod.getReturnType().isAssignableFrom(f.getType())) {
+			throw invalidGetter(ifaceMethod, "Field type is not assignable to return type");
 		}
 		return f;
 	}
 
-	Field findSetterTarget(Class<?> iface, Method setter) {
-		Class<?>[] params = setter.getParameterTypes();
-		if (params.length != 2 || params[0].isPrimitive() || setter.getReturnType() != void.class) {
-			throw new IllegalArgumentException(String.format("Invalid setter %s in interface %s", setter.getName(), iface.getName()));
+	private RuntimeException invalidGetter(Method ifaceMethod, String cause) {
+		return invalid(ifaceMethod, "getter", cause);
+	}
+
+	Field findSetterTarget(Method ifaceMethod, String overrideClass) {
+		Class<?>[] params = ifaceMethod.getParameterTypes();
+		if (params.length != 2) {
+			throw invalidSetter(ifaceMethod, "Need exactly 2 parameters");
 		}
-		Setter ann = setter.getAnnotation(Setter.class);
-		Field f = ReflectionHelper.findField(params[0], ann.srg() ? MCPNames.field(ann.field()) : ann.field());
-		if (f.getType() != params[1]) {
-			throw new IllegalArgumentException(String.format("Parameter does not match field type for setter %s in %s", setter.getName(), iface.getName()));
+		if (ifaceMethod.getReturnType() != void.class) {
+			throw invalidSetter(ifaceMethod, "Setters return nothing");
+		}
+
+		Class<?> targetClass = selectTarget(params[0], overrideClass, ifaceMethod, "setter");
+
+		Setter ann = ifaceMethod.getAnnotation(Setter.class);
+		Field f = ReflectionHelper.findField(targetClass, ann.srg() ? MCPNames.field(ann.field()) : ann.field());
+		if (!f.getType().isAssignableFrom(params[1])) {
+			throw invalidSetter(ifaceMethod, "Specified type is not assignable to field type");
 		}
 		return f;
 	}
 
-	Method findInvokerTarget(Class<?> iface, Method invoker) {
-		Class<?>[] params = invoker.getParameterTypes();
-		if (params.length == 0 || params[0].isPrimitive()) {
-			throw new IllegalArgumentException(String.format("Invalid invoker %s in %s", invoker.getName(), iface.getName()));
+
+	private RuntimeException invalidSetter(Method ifaceMethod, String cause) {
+		return invalid(ifaceMethod, "setter", cause);
+	}
+
+	Method findInvokerTarget(Method ifaceMethod, String overrideClass) {
+		Class<?>[] params = ifaceMethod.getParameterTypes();
+		Invoke ann = ifaceMethod.getAnnotation(Invoke.class);
+
+		if (params.length == 0) {
+			throw invalidInvoker(ifaceMethod, "Missing parameter");
 		}
-		Invoke ann = invoker.getAnnotation(Invoke.class);
-		Method m = findMethod(params[0], ann.srg() ? MCPNames.method(ann.method()) : ann.method(), Arrays.copyOfRange(params, 1, params.length));
-		if (m.getReturnType() != invoker.getReturnType()) {
-			throw new IllegalArgumentException(String.format("Mismatched return type on %s in %s", invoker.getName(), iface.getName()));
+
+		Class<?> targetClass = selectTarget(params[0], overrideClass, ifaceMethod, "invoker");
+
+		Method m = findMethod(targetClass, ann.srg() ? MCPNames.method(ann.method()) : ann.method(), Arrays.copyOfRange(params, 1, params.length));
+		if (!ifaceMethod.getReturnType().isAssignableFrom(m.getReturnType())) {
+			throw invalidInvoker(ifaceMethod, "Target method's return type not assignable to specified return type");
 		}
 		return m;
 	}
 
-	Constructor<?> findConstructor(Method bouncer, Construct annotation) {
-		Class<?> target = bouncer.getReturnType();
+	private RuntimeException invalidInvoker(Method ifaceMethod, String cause) {
+		return invalid(ifaceMethod, "invoker", cause);
+	}
+
+	Constructor<?> findConstructor(Method ifaceMethod, String overrideClass) {
+		Class<?> target = selectTarget(ifaceMethod.getReturnType(), overrideClass, ifaceMethod, overrideClass);
+		if (!ifaceMethod.getReturnType().isAssignableFrom(target)) {
+			throw invalid(ifaceMethod, "constructor", "Selected target is not assignable to return type");
+		}
 		try {
-			Constructor<?> cstr = target.getDeclaredConstructor(bouncer.getParameterTypes());
+			Constructor<?> cstr = target.getDeclaredConstructor(ifaceMethod.getParameterTypes());
 			cstr.setAccessible(true);
 			return cstr;
 		} catch (NoSuchMethodException e) {
-			throw new IllegalArgumentException(String.format("Failed to find constructor with matching parameters for method %s in %s", bouncer.getName(), bouncer.getDeclaringClass().getName()));
+			throw invalid(ifaceMethod, "constructor", "No matching constructor found");
 		}
 	}
 
@@ -104,6 +136,30 @@ abstract class AbstractStrategy implements ReflectionStrategy {
 			failed = e;
 		}
 		throw new UnableToFindMethodException(new String[] { methodName }, failed);
+	}
+
+	private Class<?> selectTarget(Class<?> def, String override, Method ifaceMethod, String type) {
+		Class<?> target;
+		if (override == null) {
+			target = def;
+		} else {
+			try {
+				target = Class.forName(override);
+				if (!def.isAssignableFrom(target)) {
+					throw invalid(ifaceMethod, type, "Override class is not assignable to specified target");
+				}
+			} catch (ClassNotFoundException e) {
+				throw invalid(ifaceMethod, type, "Override class not found");
+			}
+		}
+		if (target.isPrimitive()) {
+			throw invalid(ifaceMethod, type, "Selected target class is a primitive type");
+		}
+		return target;
+	}
+
+	private RuntimeException invalid(Method ifaceMethod, String type, String cause) {
+		throw new IllegalArgumentException(String.format("Illegal %s %s in %s (%s)", type, ifaceMethod.getName(), ifaceMethod.getDeclaringClass().getName(), cause));
 	}
 
 	static class InterfaceInfo {

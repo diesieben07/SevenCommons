@@ -12,6 +12,8 @@ public interface PacketHandlerProxy {
 
 	Packet buildPacket(ModPacket packet);
 
-	void handlePacket(MCDataInputStream stream, EntityPlayer player, ModPacket packet);
+	void handlePacket(MCDataInputStream in, EntityPlayer player, ModPacket packet);
+
+	void handlePacket(MCDataInputStream in, EntityPlayer player);
 
 }

@@ -2,6 +2,8 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataOutput;
 import de.take_weiland.mods.commons.Unsafe;
+import de.take_weiland.mods.commons.util.BlockCoordinates;
+import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -12,6 +14,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.BitSet;
+import java.util.EnumSet;
 import java.util.UUID;
 
 /**
@@ -24,7 +27,7 @@ import java.util.UUID;
  *
  * @author diesieben07
  */
-public interface MCDataOuput extends ByteArrayDataOutput {
+public interface MCDataOutput extends ByteArrayDataOutput {
 
 	/**
 	 * <p>Write the given String to this stream.</p>
@@ -76,6 +79,26 @@ public interface MCDataOuput extends ByteArrayDataOutput {
 	void writeNBT(NBTTagCompound nbt);
 
 	/**
+	 * <p>Writes the coordinates to this stream.</p>
+	 * <p>This method writes the coordinates in the order x, y, z. The x and z coordinates are written as if by the
+	 * {@link #writeInt(int)} method. The y coordinate is written as if by the {@link #writeByte(int)} method.</p>
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 * @param z the z coordinate
+	 */
+	void writeCoords(int x, int y, int z);
+
+	/**
+	 * <p>Writes the coordinates to this stream.</p>
+	 * <p>This method writes the x, y, z coordinates represented by the {@code BlockCoordinates} instance in the same
+	 * manner as {@link #writeCoords(int, int, int)}.</p>
+	 * @param coords the coordinates
+	 */
+	void writeCoords(BlockCoordinates coords);
+
+	void write(ByteStreamSerializable obj);
+
+	/**
 	 * <p>Write the given UUID to this stream.</p>
 	 * <p>If the given UUID is null, a short 0xF000 is written (a fake UUID version which does not exist). Otherwise two
 	 * long values are written, first the most significant bits of the UUID and then the least significant bits.</p>
@@ -98,6 +121,15 @@ public interface MCDataOuput extends ByteArrayDataOutput {
 	 * @param bitSet the BitSet to write, may be null
 	 */
 	void writeBitSet(BitSet bitSet);
+
+	/**
+	 * <p>Write the given EnumSet to this stream.</p>
+	 * <p>If the EnumSet is null, the long value {@code 1L << 63L} is written. Otherwise a long value is written where the
+	 * ith bit represents if the enum constant with ordinal value i is present in the Set.</p>
+	 * <p>This method only supports Enum types with at most 63 constants.</p>
+	 * @param enumSet the EnumSet to write, may be null
+	 */
+	<E extends Enum<E>> void writeEnumSet(EnumSet<E> enumSet);
 
 	/**
 	 * <p>Write a VarInt to the stream.</p>
@@ -182,14 +214,14 @@ public interface MCDataOuput extends ByteArrayDataOutput {
 	 * <p>Write the given long array to the stream.</p>
 	 * <p>If the array is null, this method writes a VarInt -1. Otherwise this method first writes the length of the array
 	 * as a VarInt and then each long as if by the {@link #writeLong(long)} method.</p>
-	 * @param bytes the array to write
+	 * @param longs the array to write
 	 */
 	void writeLongs(long[] longs);
 
 	/**
 	 * <p>Write the specified portion of the given long array to the stream.</p>
 	 * <p>This method writes the longs in the same manner as the {@link #writeLongs(long[])} method.</p>
-	 * @param booleans the array to write
+	 * @param longs the array to write
 	 * @param off the offset of the first element to write
 	 * @param len the number of elements to write
 	 */
@@ -199,7 +231,7 @@ public interface MCDataOuput extends ByteArrayDataOutput {
 	 * <p>Write the given char array to the stream.</p>
 	 * <p>If the array is null, this method writes a VarInt -1. Otherwise this method first writes the length of the array
 	 * as a VarInt and then each char as if by the {@link #writeChar(int)} method.</p>
-	 * @param bytes the array to write
+	 * @param chars the array to write
 	 */
 	void writeChars(char[] chars);
 
@@ -245,6 +277,22 @@ public interface MCDataOuput extends ByteArrayDataOutput {
 	 * @param len the number of elements to write
 	 */
 	void writeDoubles(double[] doubles, int off, int len);
+
+	void writeBooleanBox(Boolean b);
+
+	void writeByteBox(Byte b);
+
+	void writeShortBox(Short s);
+
+	void writeCharBox(Character c);
+
+	void writeIntBox(Integer i);
+
+	void writeLongBox(Long l);
+
+	void writeFloatBox(Float f);
+
+	void writeDoubleBox(Double d);
 
 	/**
 	 * <p>Write the contents of this stream to the given OutputStream as a series of bytes.</p>

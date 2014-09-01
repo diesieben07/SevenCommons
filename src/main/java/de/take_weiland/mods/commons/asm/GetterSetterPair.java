@@ -51,8 +51,40 @@ class GetterSetterPair extends ClassBoundASMVariable {
 	}
 
 	@Override
-	public CodePiece set(CodePiece loadValue) {
-		return CodePieces.invoke(clazz, setter, isStatic() ? loadValue : instance.append(loadValue));
+	public CodePiece set(CodePiece newValue) {
+		checkWritable();
+		if (isStatic()) {
+			return CodePieces.invoke(clazz, setter, newValue);
+		} else {
+			return CodePieces.invoke(clazz, setter, instance, newValue);
+		}
+	}
+
+	@Override
+	public CodePiece setAndGet(CodePiece newValue) {
+		checkWritable();
+		CodeBuilder cb = new CodeBuilder();
+		if (isStatic()) {
+			cb.add(newValue);
+			cb.add(new InsnNode(DUP));
+			cb.add(new MethodInsnNode(INVOKESTATIC, clazz.name, setter.name, setter.desc));
+		} else {
+			cb.add(instance);
+			cb.add(newValue);
+			cb.add(new InsnNode(DUP_X1));
+
+			int invokeOpcode;
+			if (hasSetterModifier(ACC_PRIVATE)) {
+				invokeOpcode = INVOKESPECIAL;
+			} else if ((clazz.access & ACC_INTERFACE) != 0) {
+				invokeOpcode = INVOKEINTERFACE;
+			} else {
+				invokeOpcode = INVOKEVIRTUAL;
+			}
+
+			cb.add(new MethodInsnNode(invokeOpcode, clazz.name, setter.name, setter.desc));
+		}
+		return cb.build();
 	}
 
 	@Override

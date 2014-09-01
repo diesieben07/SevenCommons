@@ -11,6 +11,7 @@ public abstract class AbstractAnalyzingTransformer implements ASMClassTransforme
 	public boolean transforms(String internalName) {
 		return !internalName.startsWith("net/minecraft/")
 				&& !internalName.startsWith("net/minecraftforge/")
-				&& !internalName.startsWith("cpw/mods/");
+				&& !internalName.startsWith("cpw/mods/")
+				&& !internalName.startsWith("org/apache/");
 	}
 }

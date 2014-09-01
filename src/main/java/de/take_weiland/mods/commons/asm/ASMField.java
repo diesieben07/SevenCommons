@@ -1,9 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.*;
 
 import java.lang.annotation.ElementType;
 import java.util.List;
@@ -37,12 +35,30 @@ class ASMField extends ClassBoundASMVariable {
 	}
 
 	@Override
-	public CodePiece set(CodePiece loadValue) {
+	public CodePiece set(CodePiece newValue) {
 		if (isStatic()) {
-			return CodePieces.setField(clazz, field, loadValue);
+			return CodePieces.setField(clazz, field, newValue);
 		} else {
-			return CodePieces.setField(clazz, field, instance, loadValue);
+			return CodePieces.setField(clazz, field, instance, newValue);
 		}
+	}
+
+	@Override
+	public CodePiece setAndGet(CodePiece newValue) {
+		CodeBuilder cb = new CodeBuilder();
+
+		if (isStatic()) {
+			cb.add(newValue);
+			cb.add(new InsnNode(DUP));
+			cb.add(new FieldInsnNode(PUTSTATIC, clazz.name, field.name, field.desc));
+		} else {
+			cb.add(instance);
+			cb.add(newValue);
+			cb.add(new InsnNode(DUP_X1));
+			cb.add(new FieldInsnNode(PUTFIELD, clazz.name, field.name, field.desc));
+		}
+
+		return cb.build();
 	}
 
 	@Override

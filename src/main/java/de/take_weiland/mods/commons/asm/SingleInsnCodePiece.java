@@ -2,13 +2,16 @@ package de.take_weiland.mods.commons.asm;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LabelNode;
+
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author diesieben07
  */
-class SingleInsnCodePiece extends AbstractCodePiece {
+class SingleInsnCodePiece extends CodePiece {
 
 	private final AbstractInsnNode insn;
 
@@ -17,26 +20,27 @@ class SingleInsnCodePiece extends AbstractCodePiece {
 	}
 
 	@Override
-	public void insertAfter(InsnList into, AbstractInsnNode location) {
-		if (location == into.getLast()) {
-			into.add(insn.clone(newContext()));
+	void insertBefore0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
+		AbstractInsnNode clone = insn.clone(context.get(contextKey));
+		if (location == insns.getFirst()) {
+			insns.insert(clone);
 		} else {
-			into.insert(location, insn.clone(newContext()));
+			insns.insertBefore(location, clone);
 		}
 	}
 
 	@Override
-	public void insertBefore(InsnList into, AbstractInsnNode location) {
-		if (location == into.getFirst()) {
-			into.insert(insn.clone(newContext()));
+	void insertAfter0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
+		AbstractInsnNode clone = insn.clone(context.get(contextKey));
+		if (location == insns.getLast()) {
+			insns.add(clone);
 		} else {
-			into.insertBefore(location, insn.clone(newContext()));
+			insns.insert(location, clone);
 		}
 	}
 
 	@Override
-	public int size() {
-		return 1;
+	boolean isEmpty() {
+		return false;
 	}
-
 }

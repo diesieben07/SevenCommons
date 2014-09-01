@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.net;
 
-import com.google.common.primitives.UnsignedBytes;
+import com.google.common.primitives.Ints;
 import de.take_weiland.mods.commons.nbt.NBT;
+import de.take_weiland.mods.commons.util.BlockCoordinates;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
-import de.take_weiland.mods.commons.util.UnsignedShorts;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -15,31 +15,34 @@ import org.jetbrains.annotations.NotNull;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkPositionIndexes;
-import static de.take_weiland.mods.commons.net.MCDataOutputImpl.UUID_FAKE_NULL_VERSION;
-import static de.take_weiland.mods.commons.net.MCDataOutputImpl.UUID_VERSION_MASK;
+import static de.take_weiland.mods.commons.net.MCDataOutputImpl.*;
 
 /**
  * @author diesieben07
  */
 abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput {
 
+	private static final int NO_MARK = -1;
+
 	final byte[] buf;
 	private final int maxLen;
+	private final int initialPos;
 	int pos;
 
 	MCDataInputImpl(byte[] buf, int off, int len) {
 		this.buf = buf;
-		this.pos = off;
+		this.pos = this.initialPos = off;
 		this.maxLen = len;
 	}
 
 	@Override
 	public int read() {
-		return pos < maxLen ? buf[pos++] : -1;
+		return (pos + initialPos) < maxLen ? buf[pos++] & 0xFF : -1;
 	}
 
 	@Override
@@ -60,6 +63,61 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	@Override
 	public int read(@NotNull byte[] b) {
 		return read(b, 0, b.length);
+	}
+
+	@Override
+	public void seek(int pos) {
+		if (pos < 0) {
+			throw new IllegalArgumentException("pos must be >= 0");
+		} else if (pos > maxLen) {
+			throw new IndexOutOfBoundsException("pos must be < length");
+		} else {
+			this.pos = (pos + initialPos);
+		}
+	}
+
+	@Override
+	public int pos() {
+		return pos - initialPos;
+	}
+
+	@Override
+	public int len() {
+		return maxLen;
+	}
+
+	@Override
+	public long skip(long n) {
+		return skipBytes(Ints.saturatedCast(n));
+	}
+
+	@Override
+	public int available() {
+		return maxLen - pos;
+	}
+
+	@Override
+	public void close() { }
+
+	private int markedPos = NO_MARK;
+
+	@Override
+	public void mark(int readlimit) {
+		markedPos = pos;
+	}
+
+	@Override
+	public void reset() throws IOException {
+		if (markedPos == NO_MARK) {
+			markedPos = initialPos;
+		} else {
+			pos = markedPos;
+		}
+	}
+
+	@Override
+	public boolean markSupported() {
+		return true;
 	}
 
 	final void checkAvailable(int bytes) {
@@ -156,7 +214,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 
 	@Override
 	public int readUnsignedShort() {
-		return UnsignedShorts.toInt(readShort());
+		return readShort() & 0xFFFF;
 	}
 
 	@Override
@@ -170,7 +228,8 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 
 	@Override
 	public int readUnsignedByte() {
-		return UnsignedBytes.toInt(readByte());
+		checkAvailable(1);
+		return buf[pos++] & 0xFF;
 	}
 
 	@Override
@@ -181,11 +240,14 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 
 	@Override
 	public boolean readBoolean() {
-		return readByte() == 1;
+		return readByte() != BOOLEAN_FALSE;
 	}
 
 	@Override
 	public int skipBytes(int n) {
+		if (n <= 0) {
+			return 0;
+		}
 		int avail = maxLen - pos;
 		if (n > avail) n = avail;
 		pos += n;
@@ -233,6 +295,16 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	@Override
 	public BitSet readBitSet() {
 		return readBitSet(null);
+	}
+
+	@Override
+	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass) {
+		return readEnumSet(null, enumClass);
+	}
+
+	@Override
+	public <E extends Enum<E>> EnumSet<E> readEnumSet(EnumSet<E> set, Class<E> enumClass) {
+		return JavaUtils.decodeEnumSet(readLong(), enumClass, set);
 	}
 
 	private static final int BYTE_MSB = 0b1000_0000;
@@ -352,6 +424,110 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 			}
 			return nbt;
 		}
+	}
+
+	@Override
+	public BlockCoordinates readCoords() {
+		return BlockCoordinates.fromByteStream(this);
+	}
+
+	@Override
+	public Boolean readBooleanBox() {
+		int b = readByte();
+		return b == BOOLEAN_NULL ? null : b != BOOLEAN_FALSE;
+	}
+
+	@Override
+	public Byte readByteBox() {
+		if (readByte() == BOX_NULL) {
+			return null;
+		} else {
+			return readByte();
+		}
+	}
+
+	@Override
+	public Short readShortBox() {
+		if (readByte() == BOX_NULL) {
+			return null;
+		} else {
+			return readShort();
+		}
+	}
+
+	@Override
+	public Character readCharBox() {
+		if (readByte() == BOX_NULL) {
+			return null;
+		} else {
+			return readChar();
+		}
+	}
+
+	@Override
+	public Integer readIntBox() {
+		if (readByte() == BOX_NULL) {
+			return null;
+		} else {
+			return readInt();
+		}
+	}
+
+	@Override
+	public Long readLongBox() {
+		if (readByte() == BOX_NULL) {
+			return null;
+		} else {
+			return readLong();
+		}
+	}
+
+	@Override
+	public Float readFloatBox() {
+		if (readByte() == BOX_NULL) {
+			return null;
+		} else {
+			return readFloat();
+		}
+	}
+
+	@Override
+	public Double readDoubleBox() {
+		if (readByte() == BOX_NULL) {
+			return null;
+		} else {
+			return readDouble();
+		}
+	}
+
+	@Override
+	public short[] readShorts(short[] buf) {
+		return new short[0];
+	}
+
+	@Override
+	public int[] readInts(int[] buf) {
+		return new int[0];
+	}
+
+	@Override
+	public long[] readLongs(long[] buf) {
+		return new long[0];
+	}
+
+	@Override
+	public char[] readChars(char[] buf) {
+		return new char[0];
+	}
+
+	@Override
+	public float[] readFloats(float[] buf) {
+		return new float[0];
+	}
+
+	@Override
+	public double[] readDoubles(double[] buf) {
+		return new double[0];
 	}
 
 	@Override

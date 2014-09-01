@@ -2,13 +2,18 @@ package de.take_weiland.mods.commons.asm;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LabelNode;
+
+import java.util.Map;
 
 /**
  * @author diesieben07
  */
-enum EmptyCodePiece implements CodePiece {
+final class EmptyCodePiece extends CodePiece {
 
-	INSTANCE;
+	public static final EmptyCodePiece INSTANCE = new EmptyCodePiece();
+
+	private EmptyCodePiece() { }
 
 	@Override
 	public InsnList build() {
@@ -16,54 +21,24 @@ enum EmptyCodePiece implements CodePiece {
 	}
 
 	@Override
-	public void appendTo(InsnList to) {
+	public void insertAfter(InsnList to, AbstractInsnNode location) { }
+
+	@Override
+	public void insertBefore(InsnList to, AbstractInsnNode location) { }
+
+	@Override
+	void insertBefore0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) { }
+
+	@Override
+	void insertAfter0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) { }
+
+	@Override
+	CodePiece callRightAppend(CodePiece self) {
+		return self;
 	}
 
 	@Override
-	public void prependTo(InsnList to) {
+	boolean isEmpty() {
+		return true;
 	}
-
-	@Override
-	public void insertAfter(InsnList to, AbstractInsnNode location) {
-	}
-
-	@Override
-	public void insertBefore(InsnList to, AbstractInsnNode location) {
-	}
-
-	@Override
-	public CodePiece append(AbstractInsnNode node) {
-		return CodePieces.of(node);
-	}
-
-	@Override
-	public CodePiece append(InsnList insns) {
-		return CodePieces.of(insns);
-	}
-
-	@Override
-	public CodePiece append(CodePiece other) {
-		return other;
-	}
-
-	@Override
-	public CodePiece prepend(CodePiece other) {
-		return other;
-	}
-
-	@Override
-	public CodePiece prepend(AbstractInsnNode node) {
-		return CodePieces.of(node);
-	}
-
-	@Override
-	public CodePiece prepend(InsnList insns) {
-		return CodePieces.of(insns);
-	}
-
-	@Override
-	public int size() {
-		return 0;
-	}
-
 }

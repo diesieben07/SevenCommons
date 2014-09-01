@@ -70,7 +70,7 @@ public abstract class ModPacket implements SimplePacket {
 
 	// private implementation
 
-	private Packet mcPacket;
+	Packet mcPacket;
 	private Packet build() {
 		return mcPacket == null ? (mcPacket = ((ModPacketProxy) this)._sc$handler().buildPacket(this)) : mcPacket;
 	}

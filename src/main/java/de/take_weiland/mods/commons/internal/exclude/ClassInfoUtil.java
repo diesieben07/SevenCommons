@@ -15,31 +15,31 @@ import java.util.Set;
 public final class ClassInfoUtil {
 
 	public static void preInit() {
-		MinecraftForge.EVENT_BUS.register(new Object() {
-
-			@ForgeSubscribe
-			public void onWorldLoad(WorldEvent.Load event) {
-				if (event.world.isRemote) {
-					return;
-				}
-				// null out the superCache once any world is loaded
-				// ClassInfo is only really used with ASM code (class transformers)
-				// they should be done at this point and holding onto all this information
-				// is nothing but a memory hog
-				superCache = null;
-				MinecraftForge.EVENT_BUS.unregister(this);
-			}
-
-		});
+		MinecraftForge.EVENT_BUS.register(new ClassInfoUtil());
 	}
 
-	static Map<String, Set<String>> superCache = Maps.newHashMap();
+	@ForgeSubscribe
+	public void onWorldLoad(WorldEvent.Load event) {
+		if (event.world.isRemote) {
+			return;
+		}
+		// null out the superCache once any world is loaded
+		// ClassInfo is only really used with ASM code (class transformers)
+		// they should be done at this point and holding onto all this information
+		// is nothing but a memory hog
+		superCache = null;
+		MinecraftForge.EVENT_BUS.unregister(this);
+	}
+
+	public static Map<String, Set<String>> superCache = Maps.newHashMap();
 
 	public static Set<String> getSupers(ClassInfo classInfo) {
-		if (superCache != null) {
-			Set<String> supers = superCache.get(classInfo.internalName());
+		// grab a local var in case of concurrency
+		Map<String, Set<String>> superCacheLocal = superCache;
+		if (superCacheLocal != null) {
+			Set<String> supers = superCacheLocal.get(classInfo.internalName());
 			if (supers == null) {
-				superCache.put(classInfo.internalName(), (supers = buildSupers(classInfo)));
+				superCacheLocal.put(classInfo.internalName(), (supers = buildSupers(classInfo)));
 			}
 			return supers;
 		} else {

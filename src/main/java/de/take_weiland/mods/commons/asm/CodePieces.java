@@ -1,10 +1,12 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.ObjectArrays;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.objectweb.asm.Opcodes.*;
@@ -64,28 +66,6 @@ public final class CodePieces {
 		}
 	}
 
-	@Deprecated
-	public static CodePiece[] parse(Object... data) {
-		int len = data.length;
-		CodePiece[] result = new CodePiece[len];
-		for (int i = 0; i < len; ++i) {
-			result[i] = parse0(data[i]);
-		}
-		return result;
-	}
-
-	private static CodePiece parse0(Object o) {
-		if (o instanceof CodePiece) {
-			return (CodePiece) o;
-		} else if (o instanceof AbstractInsnNode) {
-			return of((AbstractInsnNode) o);
-		} else if (o instanceof InsnList) {
-			return of((InsnList) o);
-		} else {
-			return constant(o);
-		}
-	}
-
 	/**
 	 * <p>Create a CodePiece that represents all CodePieces in the given array, in order.</p>
 	 *
@@ -93,12 +73,25 @@ public final class CodePieces {
 	 * @return a CodePiece
 	 */
 	public static CodePiece concat(CodePiece... pieces) {
-		if (pieces.length == 0) {
-			return of();
-		} else if (pieces.length == 1) {
-			return pieces[0];
-		} else {
-			return new CombinedCodePiece(pieces);
+		switch (pieces.length) {
+			case 0:
+				return of();
+			case 1:
+				return pieces[0];
+			case 2:
+				return pieces[0].append(pieces[1]);
+			default:
+				for (CodePiece piece : pieces) {
+					if (piece.isCombined()) {
+						ArrayList<CodePiece> all = Lists.newArrayList();
+						for (CodePiece codePiece : pieces) {
+							codePiece.unwrapInto(all);
+						}
+						return new CombinedCodePiece(all.toArray(new CodePiece[all.size()]));
+					}
+				}
+				return new CombinedCodePiece(pieces);
+
 		}
 	}
 
@@ -328,7 +321,7 @@ public final class CodePieces {
 	 * @return a CodePiece
 	 */
 	public static CodePiece invokeStatic(String clazz, String method, String desc, CodePiece... args) {
-		checkArgument(args.length == Type.getArgumentTypes(desc).length, "argument count mismatch");
+		checkArgument(args.length == ASMUtils.argumentCount(desc), "argument count mismatch");
 		return invoke(INVOKESTATIC, clazz, method, desc, args);
 	}
 
@@ -371,7 +364,7 @@ public final class CodePieces {
 	 *
 	 * @param clazz  the class containing the method (not the super method)
 	 * @param method the method to invoke
-	 * @param args   the arguments for the method (in case of a non-static method pass the instance as the first argument)
+	 * @param args   the arguments for the method
 	 * @return a CodePiece
 	 */
 	public static CodePiece invokeSuper(ClassNode clazz, MethodNode method, CodePiece... args) {
@@ -444,10 +437,12 @@ public final class CodePieces {
 	 */
 	public static CodePiece instantiate(String internalName, Type[] argTypes, CodePiece... args) {
 		checkArgument(args.length == argTypes.length, "parameter list length mismatch");
-		return of(new TypeInsnNode(NEW, internalName))
-				.append(new InsnNode(DUP))
-				.append(concat(args))
-				.append(new MethodInsnNode(INVOKESPECIAL, internalName, "<init>", getMethodDescriptor(VOID_TYPE, argTypes)));
+		return concat(
+				of(new TypeInsnNode(NEW, internalName)),
+				ofOpcode(DUP),
+				concat(args),
+				of(new MethodInsnNode(INVOKESPECIAL, internalName, "<init>", getMethodDescriptor(VOID_TYPE, argTypes)))
+		);
 	}
 
 	/**
@@ -513,6 +508,293 @@ public final class CodePieces {
 		return value.append(new TypeInsnNode(CHECKCAST, internalName));
 	}
 
+	/**
+	 * <p>Create a CodePiece that unboxes the given primitive wrapper.</p>
+	 * @param boxed the boxed value
+	 * @param primitiveType the type of primitive boxed in the wrapper
+	 * @return a CodePiece
+	 */
+	public static CodePiece unbox(CodePiece boxed, Type primitiveType) {
+		Type boxedType = boxFor(primitiveType);
+		String owner = boxedType.getInternalName();
+		String name = primitiveType.getClassName() + "Value";
+		String desc = Type.getMethodDescriptor(primitiveType);
+		return invoke(INVOKEVIRTUAL, owner, name, desc, boxed);
+	}
+
+	/**
+	 * <p>Create a CodePiece that boxes the given primitive into it's wrapper type.</p>
+	 * @param unboxed the unboxed primitive
+	 * @param primitiveType the type of primitive boxed in the wrapper
+	 * @return a CodePiece
+	 */
+	public static CodePiece box(CodePiece unboxed, Type primitiveType) {
+		Type boxedType = boxFor(primitiveType);
+		String owner = boxedType.getInternalName();
+		String name = "valueOf";
+		String desc = Type.getMethodDescriptor(boxedType, primitiveType);
+		return invoke(INVOKESTATIC, owner, name, desc, unboxed);
+	}
+
+	private static Type boxFor(Type primitiveType) {
+		switch (primitiveType.getSort()) {
+			case BOOLEAN:
+				return Type.getType(Boolean.class);
+			case Type.BYTE:
+				return Type.getType(Byte.class);
+			case Type.SHORT:
+				return Type.getType(Short.class);
+			case Type.CHAR:
+				return Type.getType(Character.class);
+			case Type.INT:
+				return Type.getType(Integer.class);
+			case Type.LONG:
+				return Type.getType(Long.class);
+			case Type.FLOAT:
+				return Type.getType(Float.class);
+			case Type.DOUBLE:
+				return Type.getType(Double.class);
+			default:
+				throw new IllegalArgumentException(primitiveType + "is not primitive");
+		}
+	}
+
+	public static CodePiece makeLazy(ASMVariable var, CodePiece valueCreator) {
+		checkArgument(!ASMUtils.isPrimitive(var.getType()), "cannot make primitive value lazy");
+		CodeBuilder builder = new CodeBuilder();
+		ContextKey context = ContextKey.create();
+		LabelNode notNull = new LabelNode();
+
+		if (var.isField() || var.isMethod()) {
+			builder.add(var.get());
+			builder.add(new InsnNode(DUP));
+			builder.add(new JumpInsnNode(IFNONNULL, notNull), context);
+
+			builder.add(new InsnNode(POP));
+			builder.add(var.setAndGet(valueCreator));
+
+			builder.add(notNull, context);
+		} else {
+			builder.add(var.get());
+			builder.add(new JumpInsnNode(IFNONNULL, notNull), context);
+			builder.add(var.set(valueCreator));
+
+			builder.add(notNull, context);
+			builder.add(var.get());
+		}
+
+		return builder.build();
+	}
+
+	public static CodePiece doIf(int cmpOpcode, CodePiece args, CodePiece body) {
+		return doIfElse(cmpOpcode, args, body, of());
+	}
+
+	public static CodePiece doIfNot(int cmpOpcode, CodePiece args, CodePiece body) {
+		return doIf(negateJmpOpcode(cmpOpcode), args, body);
+	}
+
+	public static CodePiece doIfElse(int cmpOpcode, CodePiece args, CodePiece thenBody, CodePiece elseBody) {
+		LabelNode after = new LabelNode();
+		LabelNode notTrue = elseBody.isEmpty() ? after : new LabelNode();
+
+		CodeBuilder builder = new CodeBuilder();
+		ContextKey context = ContextKey.create();
+
+		builder.add(args);
+		builder.add(new JumpInsnNode(negateJmpOpcode(cmpOpcode), notTrue), context);
+		builder.add(thenBody);
+		if (!elseBody.isEmpty()) {
+			builder.add(new JumpInsnNode(GOTO, after), context);
+			builder.add(notTrue, context);
+			builder.add(elseBody);
+		}
+		builder.add(after, context);
+		return builder.build();
+	}
+
+	public static CodePiece doIf(CodePiece value, CodePiece body) {
+		return doIf(IFNE, value, body);
+	}
+
+	public static CodePiece doIfNot(CodePiece value, CodePiece body) {
+		return doIf(IFEQ, value, body);
+	}
+
+	public static CodePiece doIfElse(CodePiece value, CodePiece thenBody, CodePiece elseBody) {
+		return doIfElse(IFNE, value, thenBody, elseBody);
+	}
+
+	public static CodePiece doIfSame(CodePiece a, CodePiece b, CodePiece body, Type type) {
+		return doIfSame(a, b, body, of(), type);
+	}
+
+	public static CodePiece doIfNotSame(CodePiece a, CodePiece b, CodePiece body, Type type) {
+		if (ASMUtils.isPrimitive(type)) {
+			return doEqualPrimitive(true, a, b, body, of(), type);
+		} else {
+			return doIfElse(IF_ACMPNE, a.append(b), body, of());
+		}
+	}
+
+	public static CodePiece doIfSame(CodePiece a, CodePiece b, CodePiece thenBody, CodePiece elseBody, Type type) {
+		if (ASMUtils.isPrimitive(type)) {
+			return doEqualPrimitive(false, a, b, thenBody, elseBody, type);
+		} else {
+			return doIfElse(IF_ACMPEQ, a.append(b), thenBody, elseBody);
+		}
+	}
+
+	public static CodePiece doIfEqual(CodePiece a, CodePiece b, CodePiece thenBody, Type type) {
+		return doIfEqual(a, b, thenBody, type, true);
+	}
+
+	public static CodePiece doIfEqual(CodePiece a, CodePiece b, CodePiece thenBody, Type type, boolean canBeNull) {
+		return doIfEqual(a, b, thenBody, of(), type, canBeNull);
+	}
+
+	public static CodePiece doIfNotEqual(CodePiece a, CodePiece b, CodePiece thenBody, Type type) {
+		return doIfNotEqual(a, b, thenBody, type, true);
+	}
+
+	public static CodePiece doIfNotEqual(CodePiece a, CodePiece b, CodePiece thenBody, Type type, boolean canBeNull) {
+		if (ASMUtils.isPrimitive(type)) {
+			return doEqualPrimitive(true, a, b, thenBody, of(), type);
+		} else {
+			return doIfNot(invokeEquals(a, b, type, canBeNull), thenBody);
+		}
+	}
+
+	public static CodePiece doIfEqual(CodePiece a, CodePiece b, CodePiece thenBody, CodePiece elseBody, Type type) {
+		return doIfEqual(a, b, thenBody, elseBody, type, true);
+	}
+
+	public static CodePiece doIfEqual(CodePiece a, CodePiece b, CodePiece thenBody, CodePiece elseBody, Type type, boolean canBeNull) {
+		if (ASMUtils.isPrimitive(type)) {
+			return doEqualPrimitive(false, a, b, thenBody, elseBody, type);
+		} else {
+			return doIfElse(invokeEquals(a, b, type, canBeNull), thenBody, elseBody);
+		}
+	}
+
+	private static CodePiece invokeEquals(CodePiece a, CodePiece b, Type type, boolean canBeNull) {
+		String owner;
+		String name;
+		String desc;
+		if (type.getSort() == Type.ARRAY) {
+			owner = "java/util/Arrays";
+			if (type.getDimensions() == 1) {
+				name = "equals";
+				desc = Type.getMethodDescriptor(BOOLEAN_TYPE, type, type);
+			} else {
+				name = "deepEquals";
+				desc = ASMUtils.getMethodDescriptor(boolean.class, Object[].class, Object[].class);
+			}
+		} else if (canBeNull) {
+			owner = "com/google/common/base/Objects"; // use guava for Java 6
+			name = "equal";
+			desc = ASMUtils.getMethodDescriptor(boolean.class, Object.class, Object.class);
+		} else {
+			owner = "java/lang/Object";
+			name = "equals";
+			desc = ASMUtils.getMethodDescriptor(boolean.class, Object.class);
+			return invoke(INVOKEVIRTUAL, owner, name, desc, a, b);
+		}
+		return invoke(INVOKESTATIC, owner, name, desc, a, b);
+	}
+
+	private static int negateJmpOpcode(int op) {
+		switch (op) {
+			case IFEQ:
+				return IFNE;
+			case IFNE:
+				return IFEQ;
+
+			case IF_ACMPEQ:
+				return IF_ACMPNE;
+			case IF_ACMPNE:
+				return IF_ACMPEQ;
+
+			case IF_ICMPEQ:
+				return IF_ICMPNE;
+			case IF_ICMPNE:
+				return IF_ICMPEQ;
+
+			case IFNULL:
+				return IFNONNULL;
+			case IFNONNULL:
+				return IFNULL;
+
+			case IFLT:
+				return IFGE;
+			case IFGE:
+				return IFLT;
+
+			case IFLE:
+				return IFGT;
+			case IFGT:
+				return IFLE;
+
+			case IF_ICMPLT:
+				return IF_ICMPGE;
+			case IF_ICMPGE:
+				return IF_ICMPLT;
+
+			case IF_ICMPGT:
+				return IF_ICMPLE;
+			case IF_ICMPLE:
+				return IF_ICMPGT;
+
+			default:
+				throw new IllegalArgumentException("No IF-Opcode");
+		}
+	}
+
+	private static CodePiece doEqualPrimitive(boolean negate, CodePiece a, CodePiece b, CodePiece thenBody, CodePiece elseBody, Type type) {
+		CodeBuilder cb = new CodeBuilder();
+		cb.add(a).add(b);
+		ContextKey context = ContextKey.create();
+
+		LabelNode after = new LabelNode();
+		LabelNode jumpOverBody = elseBody.isEmpty() ? after : new LabelNode();
+		int op;
+		switch (type.getSort()) {
+			case Type.BOOLEAN:
+			case Type.BYTE:
+			case Type.CHAR:
+			case Type.SHORT:
+			case Type.INT:
+				op = IF_ICMPNE;
+				break;
+			case Type.LONG:
+				cb.add(new InsnNode(LCMP));
+				op = IFNE;
+				break;
+			case Type.FLOAT:
+				cb.add(new InsnNode(FCMPG));
+				op = IFNE;
+				break;
+			case Type.DOUBLE:
+				cb.add(new InsnNode(DCMPG));
+				op = IFNE;
+				break;
+			default:
+				throw new AssertionError();
+		}
+		if (negate) {
+			op = negateJmpOpcode(op);
+		}
+
+		cb.add(new JumpInsnNode(op, jumpOverBody), context);
+		cb.add(thenBody);
+		if (!elseBody.isEmpty()) {
+			cb.add(jumpOverBody, context);
+			cb.add(elseBody);
+		}
+		cb.add(after, context);
+		return cb.build();
+	}
+
 	private static CodePiece thisLoader;
 
 	/**
@@ -541,7 +823,7 @@ public final class CodePieces {
 	 * <ul>
 	 * <li>{@code null}</li>
 	 * <li>A primitive wrapper ({@code Boolean}, {@code Byte}, {@code Short}, {@code Integer}, {@code Long}, {@code Character},
-	 * {@code Float}, {@code Double})</li>
+	 * {@code Float}, {@code Double}), will be loaded as the corresponding primitive</li>
 	 * <li>A {@code String}</li>
 	 * <li>An {@code Enum}</li>
 	 * <li>A {@code Class}</li>

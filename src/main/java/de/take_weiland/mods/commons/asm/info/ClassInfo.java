@@ -9,6 +9,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 
@@ -22,7 +23,6 @@ import static org.objectweb.asm.Type.*;
  */
 public abstract class ClassInfo extends HasModifiers {
 
-	private Set<String> supers;
 	private ClassInfo zuper;
 
 	// limit subclasses to this package
@@ -36,7 +36,7 @@ public abstract class ClassInfo extends HasModifiers {
 	 * @return a ClassInfo
 	 */
 	public static ClassInfo of(Class<?> clazz) {
-		return new ClassInfoFromClazz(clazz);
+		return new ClassInfoReflect(clazz);
 	}
 
 	/**
@@ -46,7 +46,7 @@ public abstract class ClassInfo extends HasModifiers {
 	 * @return a ClassInfo
 	 */
 	public static ClassInfo of(ClassNode clazz) {
-		return new ClassInfoFromNode(clazz);
+		return new ClassInfoASM(clazz);
 	}
 
 	/**
@@ -119,10 +119,10 @@ public abstract class ClassInfo extends HasModifiers {
 		Class<?> clazz;
 		// first, try to get the class if it's already loaded
 		if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, className)) != null) {
-			return new ClassInfoFromClazz(clazz);
+			return new ClassInfoReflect(clazz);
 			// didn't find it. Try with the transformed name now
 		} else if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, ASMUtils.transformName(className))) != null) {
-			return new ClassInfoFromClazz(clazz);
+			return new ClassInfoReflect(clazz);
 		} else {
 			try {
 				// the class is definitely not loaded, get it's bytes
@@ -133,7 +133,7 @@ public abstract class ClassInfo extends HasModifiers {
 					return forceLoad(className);
 				} else {
 					// we found the bytes, lets use them
-					return new ClassInfoFromNode(ASMUtils.getThinClassNode(bytes));
+					return new ClassInfoASM(ASMUtils.getThinClassNode(bytes));
 				}
 			} catch (IOException e) {
 				// something went wrong getting the class bytes. try and load it
@@ -164,6 +164,10 @@ public abstract class ClassInfo extends HasModifiers {
 	 */
 	public abstract String superName();
 
+	public boolean hasSuper() {
+		return superName() != null;
+	}
+
 	/**
 	 * <p>Get the internal name of this class (e.g. {@code java/lang/Object}.</p>
 	 *
@@ -193,7 +197,15 @@ public abstract class ClassInfo extends HasModifiers {
 	 * @param child the class to check for
 	 * @return true if the given class can be casted to this class
 	 */
-	public boolean isAssignableFrom(ClassInfo child) {
+	public final boolean isAssignableFrom(ClassInfo child) {
+		return child.callRightAssignableFrom(this);
+	}
+
+	boolean callRightAssignableFrom(ClassInfo parent) {
+		return parent.isAssignableFromNormal(this);
+	}
+
+	boolean isAssignableFromNormal(ClassInfo child) {
 		// some cheap tests first
 		String childName = child.internalName();
 		String myName = internalName();
@@ -217,6 +229,10 @@ public abstract class ClassInfo extends HasModifiers {
 		return child.getSupers().contains(myName);
 	}
 
+	boolean isAssignableFromReflect(ClassInfoReflect child) {
+		return isAssignableFromNormal(child);
+	}
+
 	/**
 	 * <p>Get all superclasses in the hierarchy chain of this class as well as all interfaces this class
 	 * implements directly or indirectly.</p>
@@ -225,8 +241,14 @@ public abstract class ClassInfo extends HasModifiers {
 	 * @return an immutable Set containing all superclasses and interfaces
 	 */
 	public Set<String> getSupers() {
-		return supers == null ? (supers = ClassInfoUtil.getSupers(this)) : supers;
+		return ClassInfoUtil.getSupers(this);
 	}
+
+	public abstract boolean hasMemberAnnotation(Class<? extends Annotation> annotation);
+
+	public abstract boolean hasAnnotation(Class<? extends Annotation> annotation);
+
+	public abstract AnnotationInfo getAnnotation(Class<? extends Annotation> annotation);
 
 	/**
 	 * <p>Get the number of dimensions of this array class, or 0 if this ClassInfo does not represent an array class.</p>
@@ -348,6 +370,12 @@ public abstract class ClassInfo extends HasModifiers {
 	 * @return a MethodInfo or null if no such constructor was found
 	 */
 	public abstract MethodInfo getConstructor(String desc);
+
+	public abstract List<MethodInfo> getMethods();
+
+	public abstract List<MethodInfo> getConstructors();
+
+	public abstract List<FieldInfo> getFields();
 
 	@Override
 	public boolean equals(Object o) {

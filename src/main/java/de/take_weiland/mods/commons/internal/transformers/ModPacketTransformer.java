@@ -24,7 +24,6 @@ public final class ModPacketTransformer extends AbstractAnalyzingTransformer {
 		if (clazz.name.equals(MOD_PACKET_CLASS) || classInfo.isInterface() || !modPacketCI.isAssignableFrom(classInfo)) {
 			return false;
 		}
-		System.out.println("Packet transformer: " + classInfo.internalName());
 		if (!hasDefaultConstructor(clazz)) {
 			addDefaultConstructor(clazz);
 		}

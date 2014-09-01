@@ -1,11 +1,12 @@
-package de.take_weiland.mods.commons.net;
+package de.take_weiland.mods.commons.internal;
 
-import de.take_weiland.mods.commons.internal.ASMHooks;
-import de.take_weiland.mods.commons.internal.ModPacketProxy;
+import de.take_weiland.mods.commons.net.MCDataInputStream;
+import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.network.packet.NetHandler;
 import net.minecraft.network.packet.Packet250CustomPayload;
 
+import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
@@ -15,13 +16,11 @@ import java.io.IOException;
 public class Packet250Fake extends Packet250CustomPayload {
 
 	private final ModPacket modPacket;
-	private final int off;
 
-	public Packet250Fake(ModPacket modPacket, String channel, byte[] bytes, int off, int len) {
+	public Packet250Fake(ModPacket modPacket, String channel, byte[] bytes, int len) {
 		this.modPacket = modPacket;
 		this.channel = channel;
 		this.data = bytes;
-		this.off = off;
 		this.length = len;
 	}
 
@@ -30,7 +29,7 @@ public class Packet250Fake extends Packet250CustomPayload {
 		try {
 			writeString(channel, out);
 			ASMHooks.writeExtPacketLen(out, length);
-			out.write(data, off, length);
+			out.write(data, 0, length);
 		} catch (IOException e) {
 			// stupid bug
 			throw JavaUtils.throwUnchecked(e);
@@ -39,8 +38,20 @@ public class Packet250Fake extends Packet250CustomPayload {
 
 	@Override
 	public void processPacket(NetHandler nh) {
-		MCDataInputStream in = MCDataInputStream.create(data, off, length);
+		MCDataInputStream in = MCDataInputStream.create(data, 0, length);
 		in.readVarInt(); // skip packet ID
 		((ModPacketProxy) modPacket)._sc$handler().handlePacket(in, nh.getPlayer(), modPacket);
 	}
+
+	@Override
+	public int getPacketSize() {
+		return super.getPacketSize();
+		// TODO
+	}
+
+	@Override
+	public void readPacketData(DataInput in) {
+		throw new AssertionError();
+	}
+
 }

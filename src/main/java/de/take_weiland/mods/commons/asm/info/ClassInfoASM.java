@@ -1,10 +1,13 @@
 package de.take_weiland.mods.commons.asm.info;
 
+import com.google.common.collect.ImmutableList;
 import de.take_weiland.mods.commons.asm.ASMUtils;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -12,11 +15,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author diesieben07
  */
-final class ClassInfoFromNode extends ClassInfo {
+final class ClassInfoASM extends ClassInfo {
 
 	private final ClassNode clazz;
 
-	ClassInfoFromNode(ClassNode clazz) {
+	ClassInfoASM(ClassNode clazz) {
 		this.clazz = checkNotNull(clazz, "ClassNode");
 	}
 
@@ -38,6 +41,22 @@ final class ClassInfoFromNode extends ClassInfo {
 	@Override
 	public int modifiers() {
 		return clazz.access;
+	}
+
+	@Override
+	public boolean hasAnnotation(Class<? extends Annotation> annotation) {
+		return ASMUtils.hasAnnotation(clazz, annotation);
+	}
+
+	@Override
+	public AnnotationInfo getAnnotation(Class<? extends Annotation> annotation) {
+		AnnotationNode ann = ASMUtils.getAnnotation(clazz, annotation);
+		return ann == null ? null : new AnnotationInfoASM(ann);
+	}
+
+	@Override
+	public boolean hasMemberAnnotation(Class<? extends Annotation> annotation) {
+		return ASMUtils.hasMemberAnnotation(clazz, annotation);
 	}
 
 	@Override
@@ -100,4 +119,40 @@ final class ClassInfoFromNode extends ClassInfo {
 		return name.equals("<init>") || name.equals("<clinit>");
 	}
 
+	@Override
+	public List<MethodInfo> getMethods() {
+		ImmutableList.Builder<MethodInfo> builder = ImmutableList.builder();
+
+		for (MethodNode method : clazz.methods) {
+			if (!isHidden(method.name)) {
+				builder.add(new MethodInfoASM(this, method));
+			}
+		}
+
+		return builder.build();
+	}
+
+	@Override
+	public List<MethodInfo> getConstructors() {
+		ImmutableList.Builder<MethodInfo> builder = ImmutableList.builder();
+
+		for (MethodNode method : clazz.methods) {
+			if (method.name.equals("<init>")) {
+				builder.add(new MethodInfoASM(this, method));
+			}
+		}
+
+		return builder.build();
+	}
+
+	@Override
+	public List<FieldInfo> getFields() {
+		ImmutableList.Builder<FieldInfo> builder = ImmutableList.builder();
+
+		for (FieldNode field : clazz.fields) {
+			builder.add(new FieldInfoASM(this, field));
+		}
+
+		return builder.build();
+	}
 }

@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
 import net.minecraftforge.fluids.FluidStack;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * <p>Utilities regarding Fluids and FluidStacks.</p>
@@ -18,7 +19,11 @@ public final class Fluids {
 	 * @return true if the fluids are either both null or identical
 	 */
 	public static boolean identical(FluidStack a, FluidStack b) {
-		return a == null ? b == null : a.isFluidStackIdentical(b);
+		return a == b || (a != null && a.isFluidStackIdentical(b));
+	}
+
+	public static FluidStack clone(@Nullable FluidStack stack) {
+		return stack == null ? null : stack.copy();
 	}
 
 	private Fluids() {

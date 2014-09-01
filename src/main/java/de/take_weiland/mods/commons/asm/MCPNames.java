@@ -103,8 +103,6 @@ public final class MCPNames {
 		}
 	}
 
-	public static final String CLASS_ENTITY = "net/minecraft/entity/Entity";
-
 	public static final String M_SPAWN_BABY = "func_75388_i";
 
 	public static final String F_TARGET_MATE = "field_75391_e";
@@ -150,14 +148,6 @@ public final class MCPNames {
 	public static final String F_TIMER = "field_71428_T";
 
 	public static final String F_PACKET_CLASS_TO_ID_MAP = "field_73291_a";
-
-	public static final String F_IS_ENABLED = "field_73819_m";
-
-	public static final String F_DISABLED_COLOR = "field_73824_r";
-
-	public static final String F_ENABLED_COLOR = "field_73825_q";
-
-	public static final String F_CAN_LOOSE_FOCUS = "field_73821_k";
 
 	public static final String M_SEND_PACKET_TO_PLAYER = "func_72567_b";
 
@@ -209,7 +199,6 @@ public final class MCPNames {
 
 	public static final String M_NBT_LOAD = "func_74735_a";
 
-	private MCPNames() {
-	}
+	private MCPNames() { }
 
 }

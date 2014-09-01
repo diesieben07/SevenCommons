@@ -10,7 +10,7 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.util.List;
 
-import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
+import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 
 /**
  * <p>Implementation of {@link net.minecraft.launchwrapper.IClassTransformer}, which uses a number of
@@ -60,7 +60,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 		}
 
 		if (changed) {
-			ClassWriter cw = new ExtendedClassWriter(COMPUTE_MAXS);
+			ClassWriter cw = new ExtendedClassWriter(COMPUTE_FRAMES);
 			clazz.accept(cw);
 			return cw.toByteArray();
 		}

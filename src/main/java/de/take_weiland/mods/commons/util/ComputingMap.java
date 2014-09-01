@@ -56,7 +56,7 @@ public final class ComputingMap<K, V> extends ForwardingMap<K, V> implements Map
 		}
 		try {
 			//noinspection unchecked
-			delegate.put((K) key, (value = checkNotNull(function.apply(((K) key)), function + " was null for " + key)));
+			delegate.put((K) key, (value = function.apply(((K) key))));
 		} catch (ClassCastException e) {
 			return null;
 		}

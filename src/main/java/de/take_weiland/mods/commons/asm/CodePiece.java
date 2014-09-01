@@ -1,7 +1,17 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+import de.take_weiland.mods.commons.util.ComputingMap;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LabelNode;
+
+import java.util.Collection;
+import java.util.Map;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * <p>Represents a piece of Bytecode.</p>
@@ -9,9 +19,34 @@ import org.objectweb.asm.tree.InsnList;
  * @author diesieben07
  * @see de.take_weiland.mods.commons.asm.CodePieces The CodePieces class for working with CodePieces
  */
-public interface CodePiece {
+public abstract class CodePiece {
 
-	InsnList build();
+	ContextKey contextKey = ContextKey.create();
+
+	CodePiece() { } // limit subclasses to package
+
+	/**
+	 * <p>Set the ContextKey used to compute the labels for this CodePiece.</p>
+	 * <p>If a {@link org.objectweb.asm.tree.LabelNode} is shared across different CodePieces, their ContextKey must be
+	 * the same.</p>
+	 * <p>The default ContextKey for a CodePiece is newly created and unique.</p>
+	 * @param key the ContextKey
+	 * @return this CodePiece
+	 */
+	public final CodePiece setContextKey(@NotNull ContextKey key) {
+		this.contextKey = checkNotNull(key, "key");
+		return this;
+	}
+
+	/**
+	 * <p>Create a new {@link org.objectweb.asm.tree.InsnList} that contains all instructions in this CodePiece.</p>
+	 * @return a new InsnList
+	 */
+	public InsnList build() {
+		InsnList list = new InsnList();
+		appendTo(list);
+		return list;
+	}
 
 	/**
 	 * <p>Appends the instructions in this CodePiece to the given InsnList.</p>
@@ -20,7 +55,9 @@ public interface CodePiece {
 	 *
 	 * @param to the list to append to
 	 */
-	void appendTo(InsnList to);
+	public final void appendTo(InsnList to) {
+		insertAfter(to, to.getLast());
+	}
 
 	/**
 	 * <p>Prepends the instructions in this CodePiece to the given InsnList.</p>
@@ -29,7 +66,9 @@ public interface CodePiece {
 	 *
 	 * @param to the list to append to
 	 */
-	void prependTo(InsnList to);
+	public final void prependTo(InsnList to) {
+		insertBefore(to, to.getFirst());
+	}
 
 	/**
 	 * <p>Inserts the instructions in this CodePiece after the given location, which must be part of the InsnList.</p>
@@ -39,7 +78,9 @@ public interface CodePiece {
 	 * @param to       the list to append to
 	 * @param location the position where to insert the code, must be part of the InsnList
 	 */
-	void insertAfter(InsnList to, AbstractInsnNode location);
+	public void insertAfter(InsnList to, AbstractInsnNode location) {
+		insertAfter0(to, location, newSimpleContext(contextKey));
+	}
 
 	/**
 	 * <p>Inserts the instructions in this CodePiece before the given location, which must be part of the InsnList.</p>
@@ -49,7 +90,9 @@ public interface CodePiece {
 	 * @param to       the list to append to
 	 * @param location the position where to insert the code, must be part of the InsnList
 	 */
-	void insertBefore(InsnList to, AbstractInsnNode location);
+	public void insertBefore(InsnList to, AbstractInsnNode location) {
+		insertBefore0(to, location, newSimpleContext(contextKey));
+	}
 
 	/**
 	 * <p>Append the given instruction to this CodePiece.</p>
@@ -58,7 +101,9 @@ public interface CodePiece {
 	 * @param node the instruction to append
 	 * @return a new CodePiece containing first the instructions in this CodePiece and then the given instruction
 	 */
-	CodePiece append(AbstractInsnNode node);
+	public final CodePiece append(AbstractInsnNode node) {
+		return append(CodePieces.of(node));
+	}
 
 	/**
 	 * <p>Append the given InsnList to this CodePiece.</p>
@@ -67,7 +112,9 @@ public interface CodePiece {
 	 * @param insns the list to append
 	 * @return a new CodePiece containing first the instructions in this CodePiece and then the instructions in the given InsnList.
 	 */
-	CodePiece append(InsnList insns);
+	public final CodePiece append(InsnList insns) {
+		return append(CodePieces.of(insns));
+	}
 
 	/**
 	 * <p>Appends the given CodePiece to this CodePiece, leaving this and the other CodePiece intact and usable.</p>
@@ -75,7 +122,9 @@ public interface CodePiece {
 	 * @param other the CodePiece to append
 	 * @return a new CodePiece containing first the instructions in this CodePiece and then the instructions in the given CodePiece.
 	 */
-	CodePiece append(CodePiece other);
+	public final CodePiece append(CodePiece other) {
+		return other.callRightAppend(this);
+	}
 
 	/**
 	 * <p>Prepends the given CodePiece to this CodePiece, leaving this and the other CodePiece intact and usable.</p>
@@ -84,31 +133,89 @@ public interface CodePiece {
 	 * @param other the CodePiece to prepend
 	 * @return a new CodePiece containing first the instructions in the given CodePiece and then the instructions in this CodePiece
 	 */
-	CodePiece prepend(CodePiece other);
-
-	/**
-	 * <p>Append the given InsnList to this CodePiece.</p>
-	 * <p>The list must not be used elsewhere before or after this operation.</p>
-	 *
-	 * @param insns the list to append
-	 * @return a new CodePiece containing first the instructions in this CodePiece and then the instructions in the given InsnList.
-	 */
-	CodePiece prepend(AbstractInsnNode node);
+	public final CodePiece prepend(CodePiece other) {
+		return other.append(this);
+	}
 
 	/**
 	 * <p>Prepend the given instruction to this CodePiece.</p>
 	 * <p>The instruction must not be used in any InsnList before or after this operation.</p>
 	 *
-	 * @param node the instruction to append
-	 * @return a new CodePiece containing first the instructions in this CodePiece and then the given instruction
+	 * @param node the instruction to prepend
+	 * @return a new CodePiece containing first the given instruction and then the instructions in this CodePiece
 	 */
-	CodePiece prepend(InsnList insns);
+	public final CodePiece prepend(AbstractInsnNode node) {
+		return CodePieces.of(node).append(this);
+	}
 
 	/**
-	 * <p>Returns the number of instructions in this CodePiece.</p>
+	 * <p>Prepend the given InsnList to this CodePiece.</p>
+	 * <p>The list must not be used elsewhere before or after this operation.</p>
 	 *
-	 * @return the number of instructions
+	 * @param insns the list to prepend
+	 * @return a new CodePiece containing first the instructions in the given InsnList and then the instructions in this CodePiece
 	 */
-	int size();
+	public final CodePiece prepend(InsnList insns) {
+		return CodePieces.of(insns).append(this);
+	}
+
+	void unwrapInto(Collection<? super CodePiece> coll) {
+		coll.add(this);
+	}
+
+	CodePiece callRightAppend(CodePiece self) {
+		return self.appendNormal(this);
+	}
+
+	CodePiece appendNormal(CodePiece other) {
+		return new CombinedCodePiece(this, other);
+	}
+
+	CodePiece appendCombined(CombinedCodePiece other) {
+		CodePiece[] all = new CodePiece[other.pieces.length + 1];
+		all[0] = this;
+		System.arraycopy(other.pieces, 0, all, 1, other.pieces.length);
+		return new CombinedCodePiece(all);
+	}
+
+	boolean isCombined() {
+		return false;
+	}
+
+	abstract boolean isEmpty();
+
+	private static Function<LabelNode, LabelNode> labelCreator;
+	static Map<LabelNode, LabelNode> newLabelMap() {
+		if (labelCreator == null) {
+			labelCreator = new Function<LabelNode, LabelNode>() {
+				@Override
+				public LabelNode apply(LabelNode input) {
+					return new LabelNode();
+				}
+			};
+		}
+		return ComputingMap.of(labelCreator);
+	}
+
+	private static Function<ContextKey, Map<LabelNode, LabelNode>> labelMapCreator;
+	static Map<ContextKey, Map<LabelNode, LabelNode>> newContext() {
+		if (labelMapCreator == null) {
+			labelMapCreator = new Function<ContextKey, Map<LabelNode, LabelNode>>() {
+				@Override
+				public Map<LabelNode, LabelNode> apply(ContextKey input) {
+					return newLabelMap();
+				}
+			};
+		}
+		return ComputingMap.of(labelMapCreator);
+	}
+
+	static Map<ContextKey, Map<LabelNode, LabelNode>> newSimpleContext(ContextKey singleContext) {
+		return ImmutableMap.of(singleContext, newLabelMap());
+	}
+
+	abstract void insertBefore0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context);
+
+	abstract void insertAfter0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context);
 
 }

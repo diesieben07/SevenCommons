@@ -60,11 +60,11 @@ class ASMLocalVariable extends AbstractASMVariable {
 	private CodePiece setCache;
 
 	@Override
-	public CodePiece set(CodePiece loadValue) {
+	public CodePiece set(CodePiece newValue) {
 		if (setCache == null) {
 			setCache = CodePieces.of(new VarInsnNode(getType().getOpcode(ISTORE), var.index));
 		}
-		return loadValue.append(setCache);
+		return newValue.append(setCache);
 	}
 
 	@Override

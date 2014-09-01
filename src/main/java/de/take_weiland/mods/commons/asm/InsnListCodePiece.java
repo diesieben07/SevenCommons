@@ -2,13 +2,16 @@ package de.take_weiland.mods.commons.asm;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LabelNode;
+
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author diesieben07
  */
-class InsnListCodePiece extends AbstractCodePiece {
+class InsnListCodePiece extends CodePiece {
 
 	private final InsnList insns;
 
@@ -17,26 +20,27 @@ class InsnListCodePiece extends AbstractCodePiece {
 	}
 
 	@Override
-	public void insertBefore(InsnList list, AbstractInsnNode location) {
-		if (location == list.getFirst()) {
-			list.insert(ASMUtils.clone(insns, newContext()));
+	void insertBefore0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
+		InsnList clone = ASMUtils.clone(insns, context.get(contextKey));
+		if (location == insns.getFirst()) { // special case for empty list
+			insns.insert(clone);
 		} else {
-			list.insertBefore(location, ASMUtils.clone(insns, newContext()));
+			insns.insertBefore(location, clone);
 		}
 	}
 
 	@Override
-	public void insertAfter(InsnList list, AbstractInsnNode location) {
-		if (location == list.getLast()) {
-			list.add(ASMUtils.clone(insns, newContext()));
+	void insertAfter0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
+		InsnList clone = ASMUtils.clone(insns, context.get(contextKey));
+		if (location == insns.getLast()) { // special case for empty list
+			insns.add(clone);
 		} else {
-			list.insert(location, ASMUtils.clone(insns, newContext()));
+			insns.insert(location, clone);
 		}
 	}
 
 	@Override
-	public int size() {
-		return insns.size();
+	boolean isEmpty() {
+		return insns.size() == 0;
 	}
-
 }

@@ -11,6 +11,7 @@ import static com.google.common.base.Preconditions.checkPositionIndexes;
 /**
  * <p>An implementation of the {@link de.take_weiland.mods.commons.net.MCDataInput} interface that also provides
  * InputStream functionality.</p>
+ * <p>This InputStream does not throw IOExceptions. The {@link #mark(int)} functionality is supported.</p>
  * @author diesieben07
  */
 public abstract class MCDataInputStream extends InputStream implements MCDataInput {

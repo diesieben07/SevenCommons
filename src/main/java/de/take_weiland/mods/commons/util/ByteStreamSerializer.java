@@ -10,6 +10,6 @@ public interface ByteStreamSerializer<T> {
 
 	void write(T instance, MCDataOutputStream out);
 
-	T read(MCDataInputStream buf);
+	T read(MCDataInputStream in);
 
 }

@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
@@ -11,8 +12,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * <p>Utilities for ItemStacks.</p>
@@ -20,6 +20,10 @@ import java.util.Objects;
  * @see net.minecraft.item.ItemStack
  */
 public final class ItemStacks {
+
+	public static ItemStack clone(@Nullable ItemStack stack) {
+		return stack == null ? null : stack.copy();
+	}
 
 	/**
 	 * <p>Tests if the first ItemStack can be fully merged into the second one.</p>
@@ -44,17 +48,17 @@ public final class ItemStacks {
 	 * @param b an ItemStack
 	 * @return true if the ItemStack are equal
 	 */
-	public static boolean equal(ItemStack a, ItemStack b) {
-		return a == null ? b == null : (b != null && equalsImpl(a, b));
+	public static boolean equal(@Nullable ItemStack a, @Nullable ItemStack b) {
+		return a == b || (a != null && b != null && equalsImpl(a, b));
 	}
 
 	private static boolean equalsImpl(@NotNull ItemStack a, @NotNull ItemStack b) {
 		return a.itemID == b.itemID && a.getItemDamage() == b.getItemDamage()
-				&& Objects.equals(a.stackTagCompound, b.stackTagCompound);
+				&& Objects.equal(a.stackTagCompound, b.stackTagCompound);
 	}
 
 	public static boolean identical(ItemStack a, ItemStack b) {
-		return a == null ? b == null : (b != null && equalsImpl(a, b) && a.stackSize == b.stackSize);
+		return a == b || (a != null && b != null && equalsImpl(a, b) && a.stackSize == b.stackSize);
 	}
 
 	public static ItemStack merge(ItemStack from, ItemStack into) {

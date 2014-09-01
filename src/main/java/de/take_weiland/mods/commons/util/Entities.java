@@ -70,7 +70,7 @@ public final class Entities {
 
 	/**
 	 * <p>Get all players tracking the given Entity.</p>
-	 * <p>To send a packet to all tracking players use {@link de.take_weiland.mods.commons.net.Packets#sendPacketToAllTracking(net.minecraft.network.packet.Packet, net.minecraft.entity.Entity)} instead.</p>
+	 * <p>To send a packet to all tracking players use {@link de.take_weiland.mods.commons.net.Packets#sendToAllTracking(net.minecraft.network.packet.Packet, net.minecraft.entity.Entity)} instead.</p>
 	 * <p>This method must only be called on the logical server and the returned Set must not be modified.</p>
 	 *
 	 * @param entity the Entity

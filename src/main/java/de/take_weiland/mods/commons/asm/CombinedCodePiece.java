@@ -1,77 +1,94 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.collect.Iterables;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LabelNode;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * @author diesieben07
  */
-class CombinedCodePiece extends AbstractCodePiece {
+class CombinedCodePiece extends CodePiece {
 
-	final Iterable<CodePiece> pieces;
-	private int sizeCache = -1;
+	final CodePiece[] pieces;
 
 	CombinedCodePiece(CodePiece... pieces) {
-		this(Arrays.asList(pieces));
-	}
-
-	CombinedCodePiece(Iterable<CodePiece> pieces) {
 		this.pieces = pieces;
 	}
 
 	@Override
 	public void insertBefore(InsnList list, AbstractInsnNode location) {
-		if (location == null) {
-			for (CodePiece piece : pieces) {
-				piece.appendTo(list);
-			}
-		} else {
-			for (CodePiece piece : pieces) {
-				piece.insertBefore(list, location);
-			}
-		}
+		insertBefore0(list, location, newContext());
 	}
 
 	@Override
 	public void insertAfter(InsnList list, AbstractInsnNode location) {
-		if (location == list.getLast()) {
+		insertAfter0(list, location, newContext());
+	}
+
+	@Override
+	void insertBefore0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
+		for (CodePiece piece : pieces) {
+			piece.insertBefore0(insns, location, context);
+		}
+	}
+
+	@Override
+	void insertAfter0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
+		if (location == insns.getLast()) { // special case for empty list
 			for (CodePiece piece : pieces) {
-				piece.insertAfter(list, list.getLast());
+				piece.insertAfter0(insns, insns.getLast(), context);
 			}
 		} else {
 			for (CodePiece piece : pieces) {
 				AbstractInsnNode nodeAfter = location.getNext();
-				piece.insertAfter(list, location);
+				piece.insertAfter0(insns, location, context);
 				location = nodeAfter.getPrevious();
 			}
 		}
 	}
 
 	@Override
-	public int size() {
-		return sizeCache >= 0 ? sizeCache : (sizeCache = computeSize());
-	}
-
-	private int computeSize() {
-		int size = 0;
-		for (CodePiece piece : pieces) {
-			size += piece.size();
-		}
-		return size;
+	void unwrapInto(Collection<? super CodePiece> coll) {
+		Collections.addAll(coll, pieces);
 	}
 
 	@Override
-	CodePiece append0(CodePiece other) {
-		if (other instanceof CombinedCodePiece) {
-			return new CombinedCodePiece(Iterables.concat(this.pieces, ((CombinedCodePiece) other).pieces));
-		} else if (other instanceof MixedCombinedCodePiece) {
-			return new MixedCombinedCodePiece(Iterables.concat(this.pieces, ((MixedCombinedCodePiece) other).elements));
-		} else {
-			return new CombinedCodePiece(Iterables.concat(this.pieces, Collections.singleton(other)));
+	CodePiece callRightAppend(CodePiece self) {
+		return self.appendCombined(this);
+	}
+
+	@Override
+	CodePiece appendNormal(CodePiece other) {
+		CodePiece[] all = new CodePiece[pieces.length + 1];
+		System.arraycopy(pieces, 0, all, 0, pieces.length);
+		all[pieces.length] = other;
+		return new CombinedCodePiece(all);
+	}
+
+	@Override
+	CodePiece appendCombined(CombinedCodePiece other) {
+		CodePiece[] all = new CodePiece[pieces.length + other.pieces.length];
+		System.arraycopy(pieces, 0, all, 0, pieces.length);
+		System.arraycopy(other.pieces, 0, all, pieces.length, other.pieces.length);
+		return new CombinedCodePiece(all);
+	}
+
+	@Override
+	boolean isCombined() {
+		return true;
+	}
+
+	@Override
+	boolean isEmpty() {
+		for (CodePiece piece : pieces) {
+			if (!piece.isEmpty()) {
+				return false;
+			}
 		}
+		return true;
 	}
 }

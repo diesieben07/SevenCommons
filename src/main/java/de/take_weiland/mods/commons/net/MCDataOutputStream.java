@@ -7,14 +7,14 @@ import java.io.OutputStream;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * <p>An implementation of the {@link de.take_weiland.mods.commons.net.MCDataOuput} interface, that also provides
+ * <p>An implementation of the {@link MCDataOutput} interface, that also provides
  * OutputStream functionality.</p>
  * <p>This implementation writes to a byte array.</p>
  * @author diesieben07
  */
-public abstract class MCDataOutputStream extends OutputStream implements MCDataOuput {
+public abstract class MCDataOutputStream extends OutputStream implements MCDataOutput {
 
-	private static final int INITIAL_CAP = 64;
+	static final int INITIAL_CAP = 64;
 
 	/**
 	 * <p>Create a new MCDataOutputStream with a default initial capacity.</p>

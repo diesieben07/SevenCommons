@@ -6,6 +6,8 @@ import cpw.mods.fml.common.network.IPacketHandler;
 import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.ModPacketProxy;
+import de.take_weiland.mods.commons.internal.Packet250Fake;
+import de.take_weiland.mods.commons.internal.Packet250FakeNoMP;
 import de.take_weiland.mods.commons.internal.PacketHandlerProxy;
 import de.take_weiland.mods.commons.util.SCReflector;
 import de.take_weiland.mods.commons.util.Sides;
@@ -16,10 +18,11 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.Packet250CustomPayload;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandlerProxy {
+public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandlerProxy, PacketHandler {
 
 	private final String channel;
 	private final Logger logger;
@@ -42,6 +45,11 @@ final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandlerProxy {
 
 		ModPacket modPacket = newPacket(id);
 		handlePacket(in, player, modPacket);
+	}
+
+	@Override
+	public void handlePacket(MCDataInputStream in, EntityPlayer player) {
+		handlePacket(in, player, newPacket(in.readVarInt()));
 	}
 
 	@Override
@@ -70,7 +78,25 @@ final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandlerProxy {
 		out.writeVarInt(id);
 		mp.write(out);
 		out.lock();
-		return new Packet250Fake(mp, channel, out.backingArray(), 0, out.length());
+		return new Packet250Fake(mp, channel, out.backingArray(), out.length());
+	}
+
+	@Override
+	public MCDataOutputStream createStream(int packetId) {
+		return createStream(packetId, MCDataOutputStream.INITIAL_CAP);
+	}
+
+	@Override
+	public MCDataOutputStream createStream(int packetId, int initialCapacity) {
+		MCDataOutputStream stream = MCDataOutputStream.create(initialCapacity + 1);
+		stream.writeVarInt(packetId);
+		return stream;
+	}
+
+	@Override
+	public SimplePacket makePacket(MCDataOutputStream stream) {
+		stream.lock();
+		return new Packet250FakeNoMP(this, channel, stream.backingArray(), stream.length());
 	}
 
 	private void logException(ModPacket packet, Exception e, EntityPlayer player) {
@@ -81,11 +107,14 @@ final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandlerProxy {
 		try {
 			return packets.get(id).newInstance();
 		} catch (ReflectiveOperationException e) {
-			throw new RuntimeException("Failed to instantiate Packet class, Packet transformer failed?", e);
+			// should have been caught by PacketHandlerBuilder already
+			throw new AssertionError(e);
 		}
 	}
 
 	static {
-		SCReflector.instance.getClassToIdMap(null).put(Packet250Fake.class, 250);
+		Map<Class<? extends Packet>, Integer> classToIdMap = SCReflector.instance.getClassToIdMap(null);
+		classToIdMap.put(Packet250Fake.class, 250);
+		classToIdMap.put(Packet250FakeNoMP.class, 250);
 	}
 }

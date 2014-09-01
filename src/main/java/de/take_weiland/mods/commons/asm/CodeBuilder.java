@@ -6,9 +6,7 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -16,48 +14,43 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class CodeBuilder {
 
-	private boolean hasNonCodePiece = false;
-	private ArrayList<Object> objects = Lists.newArrayList();
+	private ArrayList<CodePiece> pieces = Lists.newArrayList();
+
+	public CodeBuilder add(@NotNull AbstractInsnNode insn, ContextKey key) {
+		checkNotBuilt();
+		return add(CodePieces.of(insn).setContextKey(key));
+	}
 
 	public CodeBuilder add(@NotNull AbstractInsnNode insn) {
 		checkNotBuilt();
-		objects.add(checkNotNull(insn));
-		hasNonCodePiece = true;
-		return this;
+		return add(CodePieces.of(insn));
+	}
+
+	public CodeBuilder add(@NotNull InsnList list, ContextKey key) {
+		checkNotBuilt();
+		return add(CodePieces.of(list).setContextKey(key));
 	}
 
 	public CodeBuilder add(@NotNull InsnList list) {
 		checkNotBuilt();
-		objects.add(checkNotNull(list));
-		hasNonCodePiece = true;
-		return this;
+		return add(CodePieces.of(list));
 	}
 
 	public CodeBuilder add(@NotNull CodePiece piece) {
 		checkNotBuilt();
-		objects.add(checkNotNull(piece));
+		piece.unwrapInto(pieces);
 		return this;
 	}
 
 	private void checkNotBuilt() {
-		checkState(objects != null, "Already built");
+		checkState(pieces != null, "Already built");
 	}
 
 	public CodePiece build() {
-		ArrayList<Object> list = objects;
-		objects = null;
-
+		ArrayList<CodePiece> list = pieces;
+		pieces = null;
 		list.trimToSize();
-		if (hasNonCodePiece) {
-			return new MixedCombinedCodePiece(list);
-		} else {
-			// this cast is safe because:
-			// a) CombinedCodePiece never puts anything in the list
-			// b) we never write to this list after this point
-			// c) this list only contains CodePieces
-			//noinspection unchecked,rawtypes
-			return new CombinedCodePiece((List) list);
-		}
+		return new CombinedCodePiece(list.toArray(new CodePiece[list.size()]));
 	}
 
 }

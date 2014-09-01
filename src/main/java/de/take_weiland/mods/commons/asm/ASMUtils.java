@@ -12,13 +12,12 @@ import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.Launch;
-import org.apache.commons.lang3.ArrayUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -244,7 +243,7 @@ public final class ASMUtils {
 	 */
 	public static void initialize(ClassNode clazz, CodePiece code) {
 		List<MethodNode> rootCtsrs = getRootConstructors(clazz);
-		if (rootCtsrs.size() == 0) {
+		if (rootCtsrs.isEmpty()) {
 			String name = "<init>";
 			String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
 
@@ -596,6 +595,16 @@ public final class ASMUtils {
 		return internalName.replace('/', '.');
 	}
 
+	/**
+	 * <p>Get the descriptor for the given internal name.</p>
+	 * @param internalName the internal name
+	 * @see org.objectweb.asm.Type#getDescriptor()
+	 * @return the descriptor
+	 */
+	public static String getDescriptor(String internalName) {
+		return "L" + internalName + ";";
+	}
+
 	private static IClassNameTransformer nameTransformer;
 	private static boolean nameTransChecked = false;
 
@@ -709,8 +718,8 @@ public final class ASMUtils {
 	 */
 	public static boolean isScala(ClassNode clazz) {
 		return Strings.nullToEmpty(clazz.sourceFile).toLowerCase().endsWith(".scala")
-				|| findAnnotation(clazz.visibleAnnotations, "Lscala/reflect/ScalaSignature;") != null
-				|| findAnnotation(clazz.visibleAnnotations, "Lscala/reflect/ScalaLongSignature;") != null;
+				|| hasAnnotation(clazz, "scala/reflect/ScalaSignature")
+				|| hasAnnotation(clazz, "scala/reflect/ScalaLongSignature");
 	}
 
 	// *** annotation utilities *** //
@@ -722,35 +731,23 @@ public final class ASMUtils {
 	 * @param annotation the annotation to find
 	 * @return true if the annotation was found on the Class or any Field or Method
 	 */
-	public static boolean hasAnnotationOnAnything(ClassNode clazz, Class<? extends Annotation> annotation) {
+	public static boolean hasMemberAnnotation(ClassNode clazz, Class<? extends Annotation> annotation) {
 		String desc = Type.getDescriptor(annotation);
-		boolean isVisible = isVisible(annotation);
 
-		Target target = annotation.getAnnotation(Target.class);
-		ElementType[] targets = target == null ? null : target.value();
-
-		if ((targets == null || ArrayUtils.contains(targets, ElementType.TYPE)) && findAnnotation(isVisible ? clazz.visibleAnnotations : clazz.invisibleAnnotations, desc) != null) {
-			return true;
-		}
-
-		if (targets == null || ArrayUtils.contains(targets, ElementType.FIELD)) {
-			List<FieldNode> fields = clazz.fields;
-			//noinspection ForLoopReplaceableByForEach
-			for (int i = 0, len = fields.size(); i < len; ++i) {
-				FieldNode field = fields.get(i);
-				if (findAnnotation(isVisible ? field.visibleAnnotations : field.invisibleAnnotations, desc) != null) {
-					return true;
-				}
+		List<FieldNode> fields = clazz.fields;
+		//noinspection ForLoopReplaceableByForEach
+		for (int i = 0, len = fields.size(); i < len; ++i) {
+			FieldNode field = fields.get(i);
+			if (getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, desc) != null) {
+				return true;
 			}
 		}
-		if (targets == null || ArrayUtils.contains(targets, ElementType.METHOD)) {
-			List<MethodNode> methods = clazz.methods;
-			//noinspection ForLoopReplaceableByForEach
-			for (int i = 0, len = methods.size(); i < len; ++i) {
-				MethodNode method = methods.get(i);
-				if (findAnnotation(isVisible ? method.visibleAnnotations : method.invisibleAnnotations, desc) != null) {
-					return true;
-				}
+		List<MethodNode> methods = clazz.methods;
+		//noinspection ForLoopReplaceableByForEach
+		for (int i = 0, len = methods.size(); i < len; ++i) {
+			MethodNode method = methods.get(i);
+			if (getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, desc) != null) {
+				return true;
 			}
 		}
 		return false;
@@ -764,7 +761,11 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
 	public static AnnotationNode getAnnotation(FieldNode field, Class<? extends Annotation> ann) {
-		return getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, ElementType.FIELD, ann);
+		return getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, Type.getDescriptor(ann));
+	}
+
+	public static AnnotationNode getAnnotation(FieldNode field, String annotationClass) {
+		return getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, getDescriptor(annotationClass));
 	}
 
 	/**
@@ -775,7 +776,11 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
 	public static AnnotationNode getAnnotation(ClassNode clazz, Class<? extends Annotation> ann) {
-		return getAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, ElementType.TYPE, ann);
+		return getAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, Type.getDescriptor(ann));
+	}
+
+	public static AnnotationNode getAnnotation(ClassNode clazz, String annotationClass) {
+		return getAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, getDescriptor(annotationClass));
 	}
 
 	/**
@@ -786,23 +791,16 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null if the annotation is not present
 	 */
 	public static AnnotationNode getAnnotation(MethodNode method, Class<? extends Annotation> ann) {
-		return getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, ElementType.METHOD, ann);
+		return getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, Type.getDescriptor(ann));
 	}
 
-	private static boolean canBePresentOn(Class<? extends Annotation> annotation, ElementType type) {
-		Target target = annotation.getAnnotation(Target.class);
-		return target == null || ArrayUtils.contains(target.value(), type);
+	public static AnnotationNode getAnnotation(MethodNode method, String annotationClass) {
+		return getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, getDescriptor(annotationClass));
 	}
 
-	private static boolean isVisible(Class<? extends Annotation> annotation) {
-		Retention ret = annotation.getAnnotation(Retention.class);
-		if (ret == null) {
-			// defaults to CLASS
-			return false;
-		}
-		RetentionPolicy retention = ret.value();
-		checkArgument(retention != RetentionPolicy.SOURCE, "Cannot check SOURCE annotations from class files!");
-		return retention == RetentionPolicy.RUNTIME;
+	static AnnotationNode getAnnotation(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, String desc) {
+		AnnotationNode node = findAnnotation(visAnn, desc);
+		return node == null ? findAnnotation(invisAnn, desc) : node;
 	}
 
 	private static AnnotationNode findAnnotation(List<AnnotationNode> annotations, String annotationDescriptor) {
@@ -820,12 +818,70 @@ public final class ASMUtils {
 		return null;
 	}
 
-	static AnnotationNode getAnnotation(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, ElementType reqType, Class<? extends Annotation> ann) {
-		if (!canBePresentOn(ann, reqType)) {
-			return null;
-		}
+	/**
+	 * <p>Check if the given annotation class is present on this field.</p>
+	 *
+	 * @param field      the field
+	 * @param annotation the annotation
+	 * @return true if the annotation is present
+	 */
+	public static boolean hasAnnotation(FieldNode field, Class<? extends Annotation> annotation) {
+		return getAnnotation(field, annotation) != null;
+	}
 
-		return findAnnotation(isVisible(ann) ? visAnn : invisAnn, Type.getDescriptor(ann));
+	/**
+	 * <p>Check if the given annotation class is present on this field.</p>
+	 *
+	 * @param field      the field
+	 * @param annotationClass the internal name of the annotation class
+	 * @return true if the annotation is present
+	 */
+	public static boolean hasAnnotation(FieldNode field, String annotationClass) {
+		return getAnnotation(field, annotationClass) != null;
+	}
+
+	/**
+	 * <p>Check if the given annotation class is present on this class.</p>
+	 *
+	 * @param clazz      the class
+	 * @param annotation the annotation
+	 * @return true if the annotation is present
+	 */
+	public static boolean hasAnnotation(ClassNode clazz, Class<? extends Annotation> annotation) {
+		return getAnnotation(clazz, annotation) != null;
+	}
+
+	/**
+	 * <p>Check if the given annotation class is present on this class.</p>
+	 *
+	 * @param clazz      the class
+	 * @param annotationClass the internal name of the annotation class
+	 * @return true if the annotation is present
+	 */
+	public static boolean hasAnnotation(ClassNode clazz, String annotationClass) {
+		return getAnnotation(clazz, annotationClass) != null;
+	}
+
+	/**
+	 * <p>Check if the given annotation class is present on this method.</p>
+	 *
+	 * @param method     the method
+	 * @param annotation the annotation
+	 * @return true if the annotation is present
+	 */
+	public static boolean hasAnnotation(MethodNode method, Class<? extends Annotation> annotation) {
+		return getAnnotation(method, annotation) != null;
+	}
+
+	/**
+	 * <p>Check if the given annotation class is present on this method.</p>
+	 *
+	 * @param method the method
+	 * @param annotationClass the internal name of the annotation class
+	 * @return true if the annotation is present
+	 */
+	public static boolean hasAnnotation(MethodNode method, String annotationClass) {
+		return getAnnotation(method, annotationClass) != null;
 	}
 
 	/**
@@ -868,20 +924,6 @@ public final class ASMUtils {
 		return defaultValue;
 	}
 
-	private static Object unwrapAnnotationValue(Object v) {
-		if (v instanceof String[]) {
-			String[] data = (String[]) v;
-			String className = Type.getType(data[0]).getClassName();
-			try {
-				return Enum.valueOf(Class.forName(className).asSubclass(Enum.class), data[1]);
-			} catch (ClassNotFoundException e) {
-				throw JavaUtils.throwUnchecked(e);
-			}
-		} else {
-			return v;
-		}
-	}
-
 	/**
 	 * <p>Retrieves the given property from the annotation or any default value specified in the annotation class.</p>
 	 *
@@ -906,38 +948,40 @@ public final class ASMUtils {
 		}
 	}
 
-	/**
-	 * <p>Check if the given annotation class is present on this field.</p>
-	 *
-	 * @param field      the field
-	 * @param annotation the annotation
-	 * @return true if the annotation is present
-	 */
-	public static boolean hasAnnotation(FieldNode field, Class<? extends Annotation> annotation) {
-		return getAnnotation(field, annotation) != null;
+	private static Object unwrapAnnotationValue(Object v) {
+		if (v instanceof String[]) {
+			String[] data = (String[]) v;
+			String className = Type.getType(data[0]).getClassName();
+			try {
+				return Enum.valueOf(Class.forName(className).asSubclass(Enum.class), data[1]);
+			} catch (ClassNotFoundException e) {
+				throw JavaUtils.throwUnchecked(e);
+			}
+		} else {
+			return v;
+		}
 	}
 
 	/**
-	 * <p>Check if the given annotation class is present on this class.</p>
-	 *
-	 * @param clazz      the class
-	 * @param annotation the annotation
-	 * @return true if the annotation is present
+	 * <p>Check if the given AnnotationNode has the given property.</p>
+	 * @param ann the AnnotationNode
+	 * @param key the name of the property to check
+	 * @return true if the property is present
 	 */
-	public static boolean hasAnnotation(ClassNode clazz, Class<? extends Annotation> annotation) {
-		return getAnnotation(clazz, annotation) != null;
+	public static boolean hasAnnotationProperty(AnnotationNode ann, String key) {
+		List<Object> data = ann.values;
+		int len;
+		if (data == null || (len = data.size()) == 0) {
+			return false;
+		}
+		for (int i = 0; i < len; i += 2) {
+			if (data.get(i).equals(key)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	/**
-	 * <p>Check if the given annotation class is present on this method.</p>
-	 *
-	 * @param method     the method
-	 * @param annotation the annotation
-	 * @return true if the annotation is present
-	 */
-	public static boolean hasAnnotation(MethodNode method, Class<? extends Annotation> annotation) {
-		return getAnnotation(method, annotation) != null;
-	}
 
 	/**
 	 * <p>Checks if the given {@link org.objectweb.asm.Type} represents a primitive type or the void type.</p>

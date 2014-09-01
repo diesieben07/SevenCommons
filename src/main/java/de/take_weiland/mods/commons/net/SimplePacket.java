@@ -12,9 +12,6 @@ import net.minecraft.world.chunk.Chunk;
  */
 public interface SimplePacket {
 
-	public static final String CLASS_NAME = "de/take_weiland/mods/commons/net/SimplePacket";
-	public static final String METHOD_SEND_TO = "sendTo";
-
 	SimplePacket sendTo(PacketTarget target);
 
 	SimplePacket sendToServer();

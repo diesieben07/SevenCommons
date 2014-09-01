@@ -24,7 +24,7 @@ class SunProprietaryStrategy extends AbstractStrategy {
 		InterfaceInfo info = analyze(iface);
 		ClassWriter cw = new ClassWriter(0);
 
-		cw.visit(V1_6, ACC_PUBLIC, SCReflection.nextDynamicClassName(), null, "sun/reflect/MagicAccessorImpl", new String[] { getInternalName(iface) });
+		cw.visit(V1_6, ACC_PUBLIC, SCReflection.nextDynamicClassName(iface.getPackage()), null, "sun/reflect/MagicAccessorImpl", new String[] { getInternalName(iface) });
 		cw.visitSource(".dynamic", null);
 
 		makeConstructor(cw);
@@ -113,6 +113,9 @@ class SunProprietaryStrategy extends AbstractStrategy {
 			mv.visitFieldInsn(GETSTATIC, owner, name, desc);
 		} else {
 			mv.visitVarInsn(ALOAD, 1);
+			if (getter.getParameterTypes()[0] != field.getDeclaringClass()) {
+				mv.visitTypeInsn(CHECKCAST, getInternalName(field.getDeclaringClass()));
+			}
 			mv.visitFieldInsn(GETFIELD, owner, name, desc);
 		}
 
@@ -140,6 +143,9 @@ class SunProprietaryStrategy extends AbstractStrategy {
 			mv.visitFieldInsn(PUTSTATIC, owner, name, desc);
 		} else {
 			mv.visitVarInsn(ALOAD, 1);
+			if (setter.getParameterTypes()[0] != field.getDeclaringClass()) {
+				mv.visitTypeInsn(CHECKCAST, getInternalName(field.getDeclaringClass()));
+			}
 			mv.visitVarInsn(ALOAD, 2);
 			mv.visitFieldInsn(PUTFIELD, owner, name, desc);
 		}
@@ -166,7 +172,15 @@ class SunProprietaryStrategy extends AbstractStrategy {
 		owner = getInternalName(target.getDeclaringClass());
 		name = target.getName();
 		desc = getMethodDescriptor(target);
-		for (int i = isStatic ? 1 : 0; i < len; ++i) {
+
+		if (!isStatic) {
+			mv.visitVarInsn(ALOAD, 1);
+			if (params[0] != target.getDeclaringClass()) {
+				mv.visitTypeInsn(CHECKCAST, getInternalName(target.getDeclaringClass()));
+			}
+		}
+
+		for (int i = 1; i < len; ++i) {
 			Type paramType = getType(params[i]);
 			mv.visitVarInsn(paramType.getOpcode(ILOAD), i + 1); // var 0 is this
 		}

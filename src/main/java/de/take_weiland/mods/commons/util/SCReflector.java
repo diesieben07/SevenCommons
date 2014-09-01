@@ -31,7 +31,6 @@ import net.minecraft.util.Timer;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.List;
@@ -47,7 +46,7 @@ import static de.take_weiland.mods.commons.asm.MCPNames.*;
  */
 public interface SCReflector {
 
-	public static final SCReflector instance = SCReflection.createAccessor(SCReflector.class);
+	SCReflector instance = SCReflection.createAccessor(SCReflector.class);
 
 	/**
 	 * For cleaner code use {@link de.take_weiland.mods.commons.nbt.NBT#asList(net.minecraft.nbt.NBTTagList)}
@@ -136,18 +135,35 @@ public interface SCReflector {
 	@Getter(field = F_CRAFTERS, srg = true)
 	List<ICrafting> getCrafters(Container container);
 
-	@Invoke(method = "writeUTF")
-	int writeUTF(DataOutputStream dummy, String s, DataOutput out) throws IOException;
-
 	@Invoke(method = M_NBT_WRITE, srg = true)
 	void write(NBTBase nbt, DataOutput out) throws IOException;
 
 	@Invoke(method = M_NBT_LOAD, srg = true)
 	void load(NBTBase nbt, DataInput in, int depth) throws IOException;
 
+	@Getter(field = F_ITEM_DAMAGE, srg = true)
+	int getRawItemDamage(ItemStack stack);
+
+	@Setter(field = F_ITEM_DAMAGE, srg = true)
+	void setRawDamage(ItemStack stack, int damage);
+
+	@Unsafe
+	@Getter(field = "clientPacketHandlers")
+	Multimap<String, IPacketHandler> getClientPacketHandlers(NetworkRegistry instance);
+
+	@Unsafe
+	@Getter(field = "serverPacketHandlers")
+	Multimap<String, IPacketHandler> getServerPacketHandlers(NetworkRegistry instance);
+
+	@Unsafe
+	@Getter(field = "universalPacketHandlers")
+	Multimap<String, IPacketHandler> getUniversalPacketHandlers(NetworkRegistry instance);
+
 	@Unsafe
 	@Construct
 	String createStringShared(char[] arr, boolean dummy);
+
+	// BitSet stuff //
 
 	@Unsafe
 	@Getter(field = "wordsInUse")
@@ -156,10 +172,6 @@ public interface SCReflector {
 	@Unsafe
 	@Getter(field = "words")
 	long[] getWords(BitSet bitSet);
-
-	@Unsafe
-	@Construct
-	BitSet createBitsetShared(long[] arr);
 
 	@Unsafe
 	@Setter(field = "wordsInUse")
@@ -174,14 +186,7 @@ public interface SCReflector {
 	void setSizeIsSticky(BitSet set, boolean sizeIsSticky);
 
 	@Unsafe
-	@Getter(field = "clientPacketHandlers")
-	Multimap<String, IPacketHandler> getClientPacketHandlers(NetworkRegistry instance);
+	@Construct
+	BitSet createBitsetShared(long[] arr);
 
-	@Unsafe
-	@Getter(field = "serverPacketHandlers")
-	Multimap<String, IPacketHandler> getServerPacketHandlers(NetworkRegistry instance);
-
-	@Unsafe
-	@Getter(field = "universalPacketHandlers")
-	Multimap<String, IPacketHandler> getUniversalPacketHandlers(NetworkRegistry instance);
 }

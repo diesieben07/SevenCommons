@@ -1,6 +1,9 @@
 package de.take_weiland.mods.commons.net;
 
 import de.take_weiland.mods.commons.nbt.NBT;
+import de.take_weiland.mods.commons.util.BlockCoordinates;
+import de.take_weiland.mods.commons.util.ByteStreamSerializable;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -11,10 +14,12 @@ import org.jetbrains.annotations.NotNull;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UTFDataFormatException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.EnumSet;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -23,7 +28,14 @@ import static com.google.common.base.Preconditions.checkPositionIndexes;
 /**
  * @author diesieben07
  */
-abstract class MCDataOutputImpl extends MCDataOutputStream implements MCDataOuput {
+abstract class MCDataOutputImpl extends MCDataOutputStream {
+
+	static final int BOOLEAN_NULL = -1;
+	static final int BOOLEAN_TRUE = 1;
+	static final int BOOLEAN_FALSE = 0;
+
+	static final int BOX_NULL = 0;
+	static final int BOX_NONNULL = 1;
 
 	private boolean locked = false;
 	byte[] buf;
@@ -127,7 +139,7 @@ abstract class MCDataOutputImpl extends MCDataOutputStream implements MCDataOupu
 
 	@Override
 	public void writeBoolean(boolean v) {
-		write(v ? 1 : 0);
+		write(v ? BOOLEAN_TRUE : BOOLEAN_FALSE);
 	}
 
 	@Override
@@ -202,10 +214,48 @@ abstract class MCDataOutputImpl extends MCDataOutputStream implements MCDataOupu
 
 	@Override
 	public void writeUTF(@NotNull String s) {
-		try {
-			SCReflector.instance.writeUTF(null, s, this);
-		} catch (IOException e) {
-			throw new AssertionError(e);
+		char c;
+		int i;
+		int utfLen = 0;
+		int strLen = s.length();
+		for (i = 0; i < strLen; i++) {
+			c = s.charAt(i);
+			if (c >= 0x0001 && c <= 0x007f) {
+				utfLen++;
+			} else if (c >= 0x800) {
+				utfLen += 3;
+			} else {
+				utfLen += 2;
+			}
+		}
+		if (utfLen > 65535) {
+			throw new IllegalStateException(new UTFDataFormatException("Encoded String too long. " + utfLen + " > 65535"));
+		}
+		writeShort(utfLen);
+		ensureWritable(utfLen);
+
+		byte[] buf = this.buf;
+		int count = this.count;
+
+		if (utfLen == strLen) {
+			for (i = 0; i < strLen; i++) {
+				buf[count++] = (byte) s.charAt(i);
+			}
+		} else {
+			for (i = 0; i < strLen; i++) {
+				c = s.charAt(i);
+				if (c >= 0x0001 && c <= 0x007f) {
+					buf[count++] = (byte) c;
+				} else if (c >= 0x800) {
+					buf[count++] = (byte) (0xE0 | ((c >> 12) & 0x0F));
+					buf[count++] = (byte) (0x80 | ((c >> 6) & 0x3F));
+					buf[count++] = (byte) (0x80 | (c & 0x3F));
+				} else {
+					buf[count++] = (byte) (0xC0 | ((c >> 6) & 0x1F));
+					buf[count++] = (byte) (0x80 | (c & 0x3F));
+				}
+			}
+			this.count = count;
 		}
 	}
 
@@ -280,6 +330,21 @@ abstract class MCDataOutputImpl extends MCDataOutputStream implements MCDataOupu
 		}
 	}
 
+	@Override
+	public void writeCoords(int x, int y, int z) {
+		BlockCoordinates.toByteStream(this, x, y, z);
+	}
+
+	@Override
+	public void writeCoords(BlockCoordinates coords) {
+//		writeLong(BlockCoordinates.encodeNullable(coords));
+	}
+
+	@Override
+	public void write(ByteStreamSerializable obj) {
+		obj.writeTo(this);
+	}
+
 	static final int UUID_FAKE_NULL_VERSION = 0xF000;
 	static final int UUID_VERSION_MASK = 0xF000;
 
@@ -304,6 +369,86 @@ abstract class MCDataOutputImpl extends MCDataOutputStream implements MCDataOupu
 			writeLongs(null);
 		} else {
 			writeLongs(SCReflector.instance.getWords(bitSet), 0, SCReflector.instance.getWordsInUse(bitSet));
+		}
+	}
+
+	@Override
+	public <E extends Enum<E>> void writeEnumSet(EnumSet<E> enumSet) {
+		writeLong(JavaUtils.encodeEnumSet(enumSet));
+	}
+
+	@Override
+	public void writeBooleanBox(Boolean b) {
+		writeByte(b == null ? BOOLEAN_NULL : (b ? BOOLEAN_TRUE : BOOLEAN_FALSE));
+	}
+
+	@Override
+	public void writeByteBox(Byte b) {
+		if (b == null) {
+			writeByte(BOX_NULL);
+		} else {
+			writeByte(BOX_NONNULL);
+			writeByte(b);
+		}
+	}
+
+	@Override
+	public void writeShortBox(Short s) {
+		if (s == null) {
+			writeByte(BOX_NULL);
+		} else {
+			writeByte(BOX_NONNULL);
+			writeShort(s);
+		}
+	}
+
+	@Override
+	public void writeCharBox(Character c) {
+		if (c == null) {
+			writeByte(BOX_NULL);
+		} else {
+			writeByte(BOX_NONNULL);
+			writeChar(c);
+		}
+	}
+
+	@Override
+	public void writeIntBox(Integer i) {
+		if (i == null) {
+			writeByte(BOX_NULL);
+		} else {
+			writeByte(BOX_NONNULL);
+			writeInt(i);
+		}
+	}
+
+	@Override
+	public void writeLongBox(Long l) {
+		if (l == null) {
+			writeByte(BOX_NULL);
+		} else {
+			writeByte(BOX_NONNULL);
+			writeLong(l);
+		}
+	}
+
+	@Override
+	public void writeFloatBox(Float f) {
+		if (f == null) {
+			writeByte(BOX_NULL);
+		} else {
+			writeByte(BOX_NONNULL);
+			writeFloat(f);
+		}
+	}
+
+	@Override
+	public void writeDoubleBox(Double d) {
+		if (d == null) {
+			writeByte(BOX_NULL);
+		} else {
+			writeByte(BOX_NONNULL);
+			writeDouble(d);
 		}
 	}
 

@@ -46,7 +46,8 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 				"de.take_weiland.mods.commons.internal.exclude.",
 				"de.take_weiland.mods.commons.util.JavaUtils",
 				"de.take_weiland.mods.commons.nbt.",
-				"de.take_weiland.mods.commons.reflect."
+				"de.take_weiland.mods.commons.reflect.",
+				"de.take_weiland.mods.commons.sync."
 		};
 
 		for (String e : excl) {

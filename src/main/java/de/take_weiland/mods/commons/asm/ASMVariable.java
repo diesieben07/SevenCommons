@@ -24,10 +24,14 @@ public interface ASMVariable {
 	 * <p>Create a {@code CodePiece} that will set the value of this variable to the value provided by the given
 	 * {@code CodePiece}.</p>
 	 *
-	 * @param loadValue a CodePiece that will leave the desired value on top of the stack
+	 * @param newValue a CodePiece that will leave the desired value on top of the stack
 	 * @return a CodePiece that sets the value of this variable
 	 */
-	CodePiece set(CodePiece loadValue);
+	CodePiece set(CodePiece newValue);
+
+	CodePiece getAndSet(CodePiece newValue);
+
+	CodePiece setAndGet(CodePiece newValue);
 
 	/**
 	 * <p>Get an {@code AnnotationNode} for the given annotation class,
@@ -40,6 +44,8 @@ public interface ASMVariable {
 	 */
 	AnnotationNode getterAnnotation(Class<? extends Annotation> ann);
 
+	AnnotationNode getterAnnotation(String name);
+
 	/**
 	 * <p>Get an {@code AnnotationNode} for the given annotation class,
 	 * if it is present on the setter / the field of this variable.</p>
@@ -50,6 +56,8 @@ public interface ASMVariable {
 	 * @return an AnnotationNode
 	 */
 	AnnotationNode setterAnnotation(Class<? extends Annotation> ann);
+
+	AnnotationNode setterAnnotation(String name);
 
 	/**
 	 * <p>Determine if the given modifier is present on the getter / the field of this variable.</p>

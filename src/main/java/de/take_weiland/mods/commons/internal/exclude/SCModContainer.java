@@ -9,13 +9,17 @@ import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.config.ConfigInjector;
 import de.take_weiland.mods.commons.config.GetProperty;
-import de.take_weiland.mods.commons.internal.PacketInventoryName;
-import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
+import de.take_weiland.mods.commons.internal.*;
+import de.take_weiland.mods.commons.internal.client.ClientProxy;
+import de.take_weiland.mods.commons.internal.sync.PacketSync;
+import de.take_weiland.mods.commons.internal.sync.PacketSyncProperties;
 import de.take_weiland.mods.commons.net.Network;
-import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.net.PacketHandler;
 import net.minecraftforge.common.Configuration;
 
 import java.io.File;
@@ -29,6 +33,9 @@ public final class SCModContainer extends DummyModContainer {
 
 	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
 	public static boolean updaterEnabled = true;
+
+	public static PacketHandler packets;
+	public static final int SYNC_PACKET_ID = 0;
 
 	public SCModContainer() {
 		super(new ModMetadata());
@@ -51,28 +58,33 @@ public final class SCModContainer extends DummyModContainer {
 		return true;
 	}
 
+	@SideOnly(Side.CLIENT)
 	@Subscribe
-	public void preInit(FMLPreInitializationEvent event) {
-		if (event.getSide().isClient()) {
-			clientMainThreadID = Thread.currentThread().getId();
-		}
+	public void clientPreInit(FMLPreInitializationEvent event) {
+		proxy = new ClientProxy();
+		clientMainThreadID = Thread.currentThread().getId();
+		universalPreInit(event);
+	}
 
-		try { // my version of @SidedProxy
-			if (event.getSide().isServer()) {
-				proxy = Class.forName("de.take_weiland.mods.commons.internal.ServerProxy").asSubclass(SevenCommonsProxy.class).newInstance();
-			} else {
-				proxy = Class.forName("de.take_weiland.mods.commons.internal.client.ClientProxy").asSubclass(SevenCommonsProxy.class).newInstance();
-			}
-		} catch (Throwable t) {
-			// if this fails, we can't do anything but crash
-			throw JavaUtils.throwUnchecked(t);
-		}
+	@SideOnly(Side.SERVER)
+	@Subscribe
+	public void serverPreInit(FMLPreInitializationEvent event) {
+		proxy = new ServerProxy();
+		universalPreInit(event);
+	}
 
+	public void universalPreInit(FMLPreInitializationEvent event) {
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 		ConfigInjector.inject(config, getClass());
 
-		Network.newChannel("SevenCommons").register(PacketInventoryName.class);
+		packets = Network.newChannel("SevenCommons")
+				.register(PacketSync.class, SYNC_PACKET_ID)
+				.register(PacketInventoryName.class)
+				.register(PacketSyncProperties.class)
+				.build();
+
 		ClassInfoUtil.preInit();
+		GameRegistry.registerPlayerTracker(new SCPlayerTracker());
 
 		proxy.preInit(event);
 	}

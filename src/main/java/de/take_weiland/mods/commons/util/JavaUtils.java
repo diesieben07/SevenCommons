@@ -5,14 +5,17 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.reflect.Getter;
+import de.take_weiland.mods.commons.reflect.OverrideTarget;
+import de.take_weiland.mods.commons.reflect.SCReflection;
+import de.take_weiland.mods.commons.reflect.Setter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import sun.misc.JavaLangAccess;
 import sun.misc.SharedSecrets;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public final class JavaUtils {
 
@@ -84,26 +87,6 @@ public final class JavaUtils {
 	@Deprecated
 	public static <T> T safeListAccess(List<T> list, int index) {
 		return listIndexExists(list, index) ? list.get(index) : null;
-	}
-
-	public static <T> Iterator<T> reverse(final ListIterator<T> it) {
-		return new Iterator<T>() {
-			@Override
-			public boolean hasNext() {
-				return it.hasPrevious();
-			}
-
-			@Override
-			public T next() {
-				return it.previous();
-			}
-
-			@Override
-			public void remove() {
-				it.remove();
-			}
-
-		};
 	}
 
 	public static void clear(Iterable<?> i) {
@@ -187,10 +170,73 @@ public final class JavaUtils {
 		return (int) l;
 	}
 
-	@Deprecated
 	@Unsafe
-	public static <T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
-		return getEnumConstantsShared(clazz);
+	public static void setBitSetData(@NotNull BitSet bitSet, long[] data) {
+		setBitSetData(bitSet, data, data.length);
+	}
+
+	@Unsafe
+	public static void setBitSetData(@NotNull BitSet bitSet, long[] data, int wordsInUse) {
+		SCReflector r = SCReflector.instance;
+		r.setWords(bitSet, data);
+		r.setWordsInUse(bitSet, wordsInUse);
+		r.setSizeIsSticky(bitSet, false);
+	}
+
+	private static final long ENUM_SET_NULL = 1L << 63L;
+
+	/**
+	 * <p>Encodes the given {@code EnumSet} into a single long value.</p>
+	 * <p>If the EnumSet is null, the long value {@code 1L << 63L} is returned. Otherwise a long value is returned where the
+	 * i-th bit is set if and only if the enum constant with ordinal value i is present in the Set.</p>
+	 * <p>This method only supports Enum types with at most 63 constants. <strong>This precondition must be ensured
+	 * externally. The behaviour of this method is unspecified otherwise.</strong></p>
+	 * @param set the EnumSet
+	 * @return a long value
+	 */
+	public static <E extends Enum<E>> long encodeEnumSet(@Nullable EnumSet<E> set) {
+		if (set == null) {
+			return ENUM_SET_NULL;
+		} else if (set.isEmpty()) {
+			return 0;
+		} else {
+			return ENUM_SET_CODEC.encode(set);
+		}
+	}
+
+	/**
+	 * <p>Decode the given {@code long} value into an {@code EnumSet}. The long must follow the format specified in
+	 * {@link #encodeEnumSet(java.util.EnumSet)}.</p>
+	 * <p>This method only supports Enum types with at most 63 constants. <strong>This precondition must be ensured
+	 * externally. The behaviour of this method is unspecified otherwise.</strong></p>
+	 * @param l the long value
+	 * @param enumClass the enum type
+	 * @return an EnumSet or null
+	 */
+	public static <E extends Enum<E>> EnumSet<E> decodeEnumSet(long l, Class<E> enumClass) {
+		return decodeEnumSet(l, enumClass, null);
+	}
+
+	/**
+	 * <p>Decode the given {@code long} value into an {@code EnumSet}. The long must follow the format specified in
+	 * {@link #encodeEnumSet(java.util.EnumSet)}.</p>
+	 * <p>This method only supports Enum types with at most 63 constants. <strong>This precondition must be ensured
+	 * externally. The behaviour of this method is unspecified otherwise.</strong></p>
+	 * @param l the long value
+	 * @param enumClass the enum type
+	 * @param set an EnumSet to use instead of creating a new one
+	 * @return an EnumSet or null
+	 */
+	public static <E extends Enum<E>> EnumSet<E> decodeEnumSet(long l, Class<E> enumClass, @Nullable EnumSet<E> set) {
+		if (l == ENUM_SET_NULL) {
+			return null;
+		} else {
+			if (set == null) {
+				set = EnumSet.noneOf(enumClass);
+			}
+			ENUM_SET_CODEC.decode(l, enumClass, set);
+			return set;
+		}
 	}
 
 	/**
@@ -213,61 +259,6 @@ public final class JavaUtils {
 		return get(getEnumConstantsShared(clazz), ordinal);
 	}
 
-	private static EnumValueGetter ENUM_GETTER;
-
-	static {
-		try {
-			Class.forName("sun.misc.SharedSecrets");
-			ENUM_GETTER = Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").asSubclass(EnumValueGetter.class).newInstance();
-		} catch (Exception e) {
-			SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
-			ENUM_GETTER = new EnumGetterCloned();
-		}
-	}
-
-	interface EnumValueGetter {
-
-		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz);
-
-	}
-
-	static class EnumGetterCloned implements EnumValueGetter {
-
-		@Override
-		public <T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
-			return clazz.getEnumConstants();
-		}
-
-	}
-
-	static class EnumGetterShared implements EnumValueGetter {
-
-		private JavaLangAccess langAcc = SharedSecrets.getJavaLangAccess();
-
-		@Override
-		public <T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
-			return langAcc.getEnumConstantsShared(clazz);
-		}
-
-	}
-
-	private static Object unsafe;
-	private static boolean unsafeChecked;
-
-	private static void initUnsafe() {
-		if (unsafeChecked) {
-			return;
-		}
-		unsafeChecked = true;
-		try {
-			Field field = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe");
-			field.setAccessible(true);
-			unsafe = field.get(null);
-		} catch (Exception e) {
-			// no unsafe
-		}
-	}
-
 	/**
 	 * checks if sun.misc.Unsafe is available on this JVM
 	 *
@@ -288,8 +279,127 @@ public final class JavaUtils {
 		return unsafe;
 	}
 
-	public static void println(Object o) {
-		System.out.println(o);
+	private static EnumValueGetter ENUM_GETTER;
+	private static EnumSetCodec ENUM_SET_CODEC;
+
+	static {
+		try {
+			Class.forName("sun.misc.SharedSecrets");
+			ENUM_GETTER = (EnumValueGetter) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").newInstance();
+		} catch (Exception e) {
+			SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
+			ENUM_GETTER = new EnumGetterCloned();
+		}
+		try {
+			Class<?> regEnumSet = Class.forName("java.util.RegularEnumSet");
+			regEnumSet.getDeclaredField("elements");
+			ENUM_SET_CODEC = (EnumSetCodec) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumSetCodecFast").newInstance();
+		} catch (Exception e) {
+			SevenCommons.LOGGER.info("java.util.RegularEnumSet#elements not found. Encoding EnumSets manually!");
+			ENUM_SET_CODEC = new EnumSetCodecNativeJava();
+		}
+	}
+
+	abstract static class EnumValueGetter {
+
+		abstract <T extends Enum<T>> T[] getEnumValues(Class<T> clazz);
+
+	}
+
+	static class EnumGetterCloned extends EnumValueGetter {
+
+		@Override
+		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
+			return clazz.getEnumConstants();
+		}
+
+	}
+
+	static class EnumGetterShared extends EnumValueGetter {
+
+		private static final JavaLangAccess langAcc = SharedSecrets.getJavaLangAccess();
+
+		@Override
+		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
+			return langAcc.getEnumConstantsShared(clazz);
+		}
+
+	}
+
+	abstract static class EnumSetCodec {
+
+		abstract long encode(EnumSet<?> enumSet);
+		abstract <E extends Enum<E>> void decode(long l, Class<E> enumType, EnumSet<E> set);
+
+	}
+
+	static final class EnumSetCodecNativeJava extends EnumSetCodec {
+
+		@Override
+		long encode(EnumSet<?> enumSet) {
+			long l = 0;
+			for (Enum<?> e : enumSet) {
+				l |= e.ordinal();
+			}
+			return l;
+		}
+
+		@Override
+		<E extends Enum<E>> void decode(long l, Class<E> enumType, EnumSet<E> set) {
+			E[] universe = getEnumConstantsShared(enumType);
+			set.clear();
+			for (int i = 0, len = universe.length; i < len; i++) {
+				if ((l & (1 << i)) != 0) {
+					set.add(universe[i]);
+				}
+			}
+		}
+	}
+
+	static final class EnumSetCodecFast extends EnumSetCodec {
+
+		@Override
+		long encode(EnumSet<?> enumSet) {
+			return RegularEnumSetAcc.instance.getElements(enumSet);
+		}
+
+		@Override
+		<E extends Enum<E>> void decode(long l, Class<E> enumType, EnumSet<E> set) {
+			RegularEnumSetAcc.instance.setElements(set, l);
+		}
+	}
+
+	static interface RegularEnumSetAcc {
+
+		RegularEnumSetAcc instance = SCReflection.createAccessor(RegularEnumSetAcc.class);
+
+		@Unsafe
+		@Getter(field = "elements")
+		@OverrideTarget("java.util.RegularEnumSet")
+		long getElements(EnumSet<?> enumSet);
+
+		@Unsafe
+		@Setter(field = "elements")
+		@OverrideTarget("java.util.RegularEnumSet")
+		void setElements(EnumSet<?> enumSet, long elements);
+
+	}
+
+	private static Object unsafe;
+	private static boolean unsafeChecked;
+
+	private static void initUnsafe() {
+		if (unsafeChecked) {
+			return;
+		}
+		unsafeChecked = true;
+		try {
+			Field field = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe");
+			field.setAccessible(true);
+			unsafe = field.get(null);
+		} catch (Exception e) {
+			// no unsafe
+		}
 	}
 
 }
