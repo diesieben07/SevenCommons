@@ -24,7 +24,7 @@ public interface SimplePacket {
 
 	SimplePacket sendToAllInDimension(int dimension);
 
-	SimplePacket sendToAllInDimension(World world);
+	SimplePacket sendToAllIn(World world);
 
 	SimplePacket sendToAllNear(World world, double x, double y, double z, double radius);
 
@@ -82,7 +82,7 @@ public interface SimplePacket {
 		}
 
 		@Override
-		public SimplePacket sendToAllInDimension(World world) {
+		public SimplePacket sendToAllIn(World world) {
 			return this;
 		}
 

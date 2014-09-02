@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.net;
 
-import cpw.mods.fml.common.network.PacketDispatcher;
-import cpw.mods.fml.common.network.Player;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.SCReflector;
@@ -15,6 +13,8 @@ import net.minecraft.server.management.PlayerInstance;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.DimensionManager;
 
 import java.util.List;
 
@@ -44,6 +44,25 @@ public final class Packets {
 	public static void sendTo(Packet packet, EntityPlayer... players) {
 		for (EntityPlayer player : players) {
 			checkNotClient(player).playerNetServerHandler.sendPacketToPlayer(packet);
+		}
+	}
+
+	public static void sendToAll(Packet packet) {
+		sendToList(packet, Players.getAll());
+	}
+
+	public static void sendToAllInDimension(Packet packet, int dimensionId) {
+		sendToAllIn(packet, DimensionManager.getWorld(dimensionId));
+	}
+
+	public static void sendToAllIn(Packet packet, World world) {
+		sendToList(packet, Players.allIn(checkNotClient(world)));
+	}
+
+	@SuppressWarnings("ForLoopReplaceableByForEach")
+	private static void sendToList(Packet packet, List<EntityPlayerMP> players) {
+		for (int i = 0, len = players.size(); i < len; i++) {
+			players.get(i).playerNetServerHandler.sendPacketToPlayer(packet);
 		}
 	}
 
@@ -78,32 +97,32 @@ public final class Packets {
 		}
 	}
 
+	public static void sendToAllTracking(Packet packet, Chunk chunk) {
+		sendToAllTrackingChunk(packet, chunk.worldObj, chunk.xPosition, chunk.zPosition);
+	}
+
 	/**
 	 * <p>Sends the Packet to all players viewing the given container.</p>
 	 * <p>Warning: Due to Minecraft's interal design a new Container get's created for every player, even if they are watching the same inventory.
 	 * This method does <i>not</i> check for players viewing the inventory. As in: this method usually sends the packet to only one player.</p>
 	 */
 	public static void sendToViewing(Packet packet, Container container) {
-//		Could use the shorter
-//		Packets.sendPacketToPlayers(packet, Iterators.filter(crafters.iterator(), EntityPlayerMP.class));
-//		but this version here avoids the object spam of the above
 		List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
-		int len = crafters.size();
-		for (int i = 0; i < len; ++i) {
+		for (int i = 0, len = crafters.size(); i < len; ++i) {
 			ICrafting crafter = crafters.get(i);
 			if (crafter instanceof EntityPlayerMP) {
-				PacketDispatcher.sendPacketToPlayer(packet, (Player) crafter);
+				((EntityPlayerMP) crafter).playerNetServerHandler.sendPacketToPlayer(packet);
+				break;
 			}
 		}
 	}
 
 	public static void sendToAllNear(Packet packet, World world, double x, double y, double z, double radius) {
 		List<EntityPlayerMP> players = Players.allIn(checkNotClient(world));
-		int len = players.size();
 		radius *= radius;
 
 		//noinspection ForLoopReplaceableByForEach
-		for (int i = 0; i < len; ++i) {
+		for (int i = 0, len = players.size(); i < len; ++i) {
 			EntityPlayerMP player = players.get(i);
 			double dx = x - player.posX;
 			double dy = y - player.posY;
@@ -112,6 +131,18 @@ public final class Packets {
 				player.playerNetServerHandler.sendPacketToPlayer(packet);
 			}
 		}
+	}
+
+	public static void sendToAllNear(Packet packet, int dimensionId, double x, double y, double z, double radius) {
+		sendToAllNear(packet, DimensionManager.getWorld(dimensionId), x, y, z, radius);
+	}
+
+	public static void sendToAllNear(Packet packet, Entity entity, double radius) {
+		sendToAllNear(packet, entity.worldObj, entity.posX, entity.posY, entity.posZ, radius);
+	}
+
+	public static void sendToAllNear(Packet packet, TileEntity te, double radius) {
+		sendToAllNear(packet, te.worldObj, te.xCoord, te.yCoord, te.zCoord, radius);
 	}
 
 	private static EntityPlayerMP checkNotClient(EntityPlayer player) {

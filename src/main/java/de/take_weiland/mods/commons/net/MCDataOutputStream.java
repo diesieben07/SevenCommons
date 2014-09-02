@@ -14,14 +14,12 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public abstract class MCDataOutputStream extends OutputStream implements MCDataOutput {
 
-	static final int INITIAL_CAP = 64;
-
 	/**
 	 * <p>Create a new MCDataOutputStream with a default initial capacity.</p>
 	 * @return an MCDataOutputStream
 	 */
 	public static MCDataOutputStream create() {
-		return create(INITIAL_CAP);
+		return create(FMLPacketHandlerImpl.STREAMS_INITIAL_CAP);
 	}
 
 	/**

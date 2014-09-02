@@ -7,6 +7,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class ProtocolException extends Exception {
 
+	String playerKickMsg;
+
 	public ProtocolException() {
 		super();
 	}
@@ -22,8 +24,6 @@ public class ProtocolException extends Exception {
 	public ProtocolException(Throwable cause) {
 		super(cause);
 	}
-
-	String playerKickMsg;
 
 	public final ProtocolException kickPlayer() {
 		return kickPlayer(getMessage());

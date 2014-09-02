@@ -5,10 +5,7 @@ import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.network.IPacketHandler;
 import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.ModPacketProxy;
-import de.take_weiland.mods.commons.internal.Packet250Fake;
-import de.take_weiland.mods.commons.internal.Packet250FakeNoMP;
-import de.take_weiland.mods.commons.internal.PacketHandlerProxy;
+import de.take_weiland.mods.commons.internal.*;
 import de.take_weiland.mods.commons.util.SCReflector;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,7 +19,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandlerProxy, PacketHandler {
+final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandlerProxy, PacketHandler {
+
+	public static final int STREAMS_INITIAL_CAP = 64;
 
 	private final String channel;
 	private final Logger logger;
@@ -38,7 +37,7 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
 
 	@Override
 	public void onPacketData(INetworkManager manager, Packet250CustomPayload packet, Player fmlPlayer) {
-		MCDataInputStream in = MCDataInputStream.create(packet.data, 0, packet.length); // explicitly refer to the size, for memory connections that pass the fake packets
+		MCDataInputStream in = MCDataInputStream.create(packet.data, 0, packet.length);
 		EntityPlayer player = (EntityPlayer) fmlPlayer;
 
 		int id = in.readVarInt();
@@ -83,7 +82,7 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
 
 	@Override
 	public MCDataOutputStream createStream(int packetId) {
-		return createStream(packetId, MCDataOutputStream.INITIAL_CAP);
+		return createStream(packetId, STREAMS_INITIAL_CAP);
 	}
 
 	@Override
