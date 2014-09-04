@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.asm.info;
 
 import com.google.common.collect.ImmutableList;
 import de.take_weiland.mods.commons.asm.ASMUtils;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -63,6 +64,11 @@ final class ClassInfoASM extends ClassInfo {
 	public int getDimensions() {
 		// we never load array classes as a ClassNode
 		return 0;
+	}
+
+	@Override
+	public Type getComponentType() {
+		throw new IllegalStateException("Not an array");
 	}
 
 	@Override

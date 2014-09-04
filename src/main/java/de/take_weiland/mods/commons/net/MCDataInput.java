@@ -118,14 +118,6 @@ public interface MCDataInput extends ByteArrayDataInput {
 	BitSet readBitSet();
 
 	/**
-	 * <p>Read a BitSet from the buffer.</p>
-	 * <p>This method acts similar to {@link #readBitSet()}, but uses the given BitSet if possible.</p>
-	 * @param set a BitSet to use if possible
-	 * @return a BitSet or null
-	 */
-	BitSet readBitSet(BitSet set);
-
-	/**
 	 * <p>Read an EnumSet from the buffer.</p>
 	 * <p>This method reads a long value from the buffer, as if by the {@link #readLong()} method. If that long value is
 	 * equal to {@code 1L << 63L}, null is returned. Otherwise a new EnumSet is returned. If the bit {@code 1 << i} the
@@ -136,14 +128,6 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @return an EnumSet or null
 	 */
 	<E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass);
-
-	/**
-	 * <p>Read an EnumSet from the buffer.</p>
-	 * @param set an EnumSet to use if possible
-	 * @param enumClass the type of enum in the EnumSet to be read
-	 * @return an EnumSet or null
-	 */
-	<E extends Enum<E>> EnumSet<E> readEnumSet(EnumSet<E> set, Class<E> enumClass);
 
 	/**
 	 * <p>Read a set of coordinates from the buffer.</p>

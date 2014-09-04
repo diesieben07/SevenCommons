@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.transformers.sync;
 
+import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.ASMHooks;
@@ -14,8 +15,11 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.BitSet;
 import java.util.EnumSet;
+import java.util.UUID;
 
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -44,6 +48,8 @@ abstract class SyncHandler {
 			return new ForBitSet(impl, idx, var);
 		} else if (internalName.equals("java/util/EnumSet")) {
 			return new ForEnumSet(impl, idx, var);
+		} else if (internalName.equals("java/util/UUID")) {
+			return new ForUUID(impl, idx, var);
 		} else if (unwrap(internalName) != null) {
 			return new ForPrimitiveWrapper(impl, idx, var);
 		}
@@ -366,17 +372,8 @@ abstract class SyncHandler {
 		}
 
 		@Override
-		Type companionType() {
-			return Type.getType(long[].class);
-		}
-
-		@Override
 		CodePiece doChangeCheck(CodePiece onDifference) {
-			String owner = ASMHooks.CLASS_NAME;
-			String name = canBeNull() ? ASMHooks.BITSET_DATA_EQ : ASMHooks.BITSET_DATA_EQ_NOT_NULL;
-			String desc = ASMUtils.getMethodDescriptor(boolean.class, long[].class, BitSet.class);
-			CodePiece invoke = CodePieces.invokeStatic(owner, name, desc, companion.get(), var.get());
-			return CodePieces.doIfNot(invoke, onDifference);
+			return CodePieces.doIfNotEqual(var.get(), companion.get(), onDifference, Type.getType(BitSet.class), canBeNull());
 		}
 
 		@Override
@@ -397,24 +394,30 @@ abstract class SyncHandler {
 
 		@Override
 		CodePiece updateCompanion() {
-			CodePiece setNull = companion.set(CodePieces.constantNull());
-
 			String owner = Type.getInternalName(BitSet.class);
-			String name = "toLongArray";
-			String desc = ASMUtils.getMethodDescriptor(long[].class);
-			CodePiece setNew = companion.set(CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, var.get()));
+			String name;
+			String desc;
 
-			owner = ASMHooks.CLASS_NAME;
-			name = ASMHooks.BITSET_COPY_INTO;
-			desc = ASMUtils.getMethodDescriptor(long[].class, BitSet.class, long[].class);
-			CodePiece setExisting = companion.set(CodePieces.invokeStatic(owner, name, desc, var.get(), companion.get()));
+			CodePiece newBitSet = CodePieces.instantiate(BitSet.class);
 
-			CodePiece setBitSetNotNull = CodePieces.doIfElse(IFNULL, companion.get(), setNew, setExisting);
+			name = "clear";
+			desc = Type.getMethodDescriptor(VOID_TYPE);
+			CodePiece clearComp = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, companion.get());
+
+			name = "or";
+			desc = Type.getMethodDescriptor(VOID_TYPE, getType(BitSet.class));
+			CodePiece doOr = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, companion.get(), var.get());
+
+			CodePiece copy = clearComp.append(doOr);
+
+			CodePiece checkedCopy = CodePieces.doIfElse(IFNULL, companion.get(), companion.set(newBitSet).append(doOr), copy);
+
 
 			if (canBeNull()) {
-				return CodePieces.doIfElse(IFNULL, var.get(), setNull, setBitSetNotNull);
+				CodePiece setNull = companion.set(CodePieces.constantNull());
+				return CodePieces.doIfElse(IFNULL, var.get(), setNull, checkedCopy);
 			} else {
-				return setBitSetNotNull;
+				return checkedCopy;
 			}
 		}
 	}
@@ -428,36 +431,90 @@ abstract class SyncHandler {
 		}
 
 		@Override
-		Type companionType() {
-			return Type.LONG_TYPE;
-		}
-
-		@Override
 		CodePiece updateCompanion() {
-			return companion.set(enumSetAsLong(var.get()));
+			String owner = Type.getInternalName(EnumSet.class);
+			String name = "clone";
+			String desc = ASMUtils.getMethodDescriptor(EnumSet.class);
+			CodePiece clone = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, var.get());
+			if (canBeNull()) {
+				CodePiece newValue = CodePieces.doIfElse(IFNULL, var.get(), CodePieces.constantNull(), clone);
+				return companion.set(newValue);
+			} else {
+				return companion.set(clone);
+			}
 		}
 
 		@Override
 		void initialTransform() {
 			super.initialTransform();
-			String name = impl.memberName(varNameUnique() + "$enumSetType");
-			String desc = Type.getDescriptor(Class.class);
+			String owner;
+			String name = impl.memberName(varNameUnique() + "$enumSetTypeToken");
+			String desc = Type.getDescriptor(TypeToken.class);
+			FieldNode tokenField = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_TRANSIENT | ACC_FINAL, name, desc, null, null);
+			impl.clazz.fields.add(tokenField);
+			ASMVariable token = ASMVariables.of(impl.clazz, tokenField);
+
+			CodePiece myClass = CodePieces.constant(Type.getObjectType(impl.clazz.name));
+			CodePiece getVarType;
+
+			if (var.isField()) {
+				owner = getInternalName(Class.class);
+				name = "getDeclaredField";
+				desc = Type.getMethodDescriptor(getType(Field.class), getType(String.class));
+				CodePiece theField = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, myClass, CodePieces.constant(var.rawName()));
+
+				owner = getInternalName(Field.class);
+				name = "getGenericType";
+				desc = Type.getMethodDescriptor(getType(java.lang.reflect.Type.class));
+				getVarType = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, theField);
+			} else {
+				owner = getInternalName(Class.class);
+				name = "getDeclaredMethod";
+				desc = Type.getMethodDescriptor(getType(Method.class), getType(String.class), getType(Class[].class));
+				CodePiece theMethod = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, myClass, CodePieces.constant(var.rawName()), CodePieces.constant(new Class[0]));
+
+				owner = getInternalName(Method.class);
+				name = "getGenericReturnType";
+				desc = Type.getMethodDescriptor(getType(java.lang.reflect.Type.class));
+				getVarType = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, theMethod);
+			}
+
+			owner = getInternalName(TypeToken.class);
+			name = "of";
+			desc = ASMUtils.getMethodDescriptor(TypeToken.class, java.lang.reflect.Type.class);
+			CodePiece createToken = CodePieces.invokeStatic(owner, name, desc, getVarType);
+			ASMUtils.initializeStatic(impl.clazz, token.set(createToken));
+
+			// above code initializes the TypeToken for the field/method
+			// now for every new instance we have to actually resolve the type
+
+			name = impl.memberName(varNameUnique() + "$enumSetType");
+			desc = Type.getDescriptor(Class.class);
 			FieldNode field = new FieldNode(ACC_PRIVATE | ACC_TRANSIENT | ACC_FINAL, name, desc, null, null);
 			impl.clazz.fields.add(field);
 			enumSetType = ASMVariables.of(impl.clazz, field, CodePieces.getThis());
 
-			String owner = ASMHooks.CLASS_NAME;
-			name = ASMHooks.FIND_ENUM_SET_TYPE;
-			desc = ASMUtils.getMethodDescriptor(Class.class, Class.class, String.class, boolean.class);
-			CodePiece determineType = CodePieces.invokeStatic(owner, name, desc,
-					CodePieces.constant(Type.getObjectType(impl.clazz.name)), CodePieces.constant(var.name()), CodePieces.constant(var.isMethod()));
+			owner = ASMHooks.CLASS_NAME;
+			name = ASMHooks.ITERABLE_TYPE;
+			desc = Type.getDescriptor(java.lang.reflect.Type.class);
+			CodePiece iterableType = CodePieces.getField(owner, name, desc);
 
-			ASMUtils.initialize(impl.clazz, enumSetType.set(determineType));
+			owner = getInternalName(TypeToken.class);
+			name = "resolveType";
+			desc = getMethodDescriptor(getType(TypeToken.class), getType(java.lang.reflect.Type.class));
+			CodePiece resolvedType = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, token.get(), iterableType);
+
+			owner = getInternalName(TypeToken.class);
+			name = "getRawType";
+			desc = getMethodDescriptor(getType(Class.class));
+			CodePiece rawResolvedType = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, resolvedType);
+
+			ASMUtils.initialize(impl.clazz, enumSetType.set(rawResolvedType));
 		}
 
 		@Override
 		CodePiece doChangeCheck(CodePiece onDifference) {
-			return CodePieces.doIfNotEqual(enumSetAsLong(var.get()), companion.get(), onDifference, LONG_TYPE);
+			return CodePieces.doIfNotEqual(var.get(), companion.get(), onDifference, Type.getType(EnumSet.class), canBeNull());
 		}
 
 		@Override
@@ -477,13 +534,34 @@ abstract class SyncHandler {
 			return var.set(CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, stream, var.get(), enumSetType.get()));
 		}
 
-		CodePiece enumSetAsLong(CodePiece enumSet) {
-			String owner = "de/take_weiland/mods/commons/util/JavaUtils";
-			String name = "encodeEnumSet";
-			String desc = Type.getMethodDescriptor(LONG_TYPE, getType(EnumSet.class));
-			return CodePieces.invokeStatic(owner, name, desc, enumSet);
+	}
+
+	private static class ForUUID extends WithCompanion {
+
+		ForUUID(SyncingTransformerImpl impl, int index, ASMVariable var) {
+			super(impl, index, var);
 		}
 
+		@Override
+		CodePiece doChangeCheck(CodePiece onDifference) {
+			return CodePieces.doIfNotEqual(var.get(), companion.get(), onDifference, Type.getType(UUID.class), canBeNull());
+		}
+
+		@Override
+		CodePiece writeData(CodePiece stream) {
+			String owner = Type.getInternalName(MCDataOutputStream.class);
+			String name = "writeUUID";
+			String desc = Type.getMethodDescriptor(VOID_TYPE, getType(UUID.class));
+			return CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, stream, var.get());
+		}
+
+		@Override
+		CodePiece readData(CodePiece stream) {
+			String owner = Type.getInternalName(MCDataInputStream.class);
+			String name = "readUUID";
+			String desc = Type.getMethodDescriptor(getType(UUID.class));
+			return CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, stream);
+		}
 	}
 
 	static Type unwrap(String wrapperName) {

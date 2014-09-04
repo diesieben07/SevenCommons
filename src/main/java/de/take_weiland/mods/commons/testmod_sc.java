@@ -8,6 +8,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.common.IExtendedEntityProperties;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
 
@@ -21,9 +22,6 @@ public class testmod_sc {
 	}
 
 	public static class Base implements IExtendedEntityProperties {
-
-		@Sync
-		private int bazzus;
 
 		@Override
 		public void saveNBTData(NBTTagCompound compound) {
@@ -44,12 +42,22 @@ public class testmod_sc {
 	public static class Test extends Base {
 
 		@Sync
-		EnumSet<ForgeDirection> enumSet;
+		@NotNull
+		private	EnumSet<ForgeDirection> enumSet0;
 
-		Test() {
-			System.out.println("I am here!");
+		@NotNull
+		private	EnumSet<ForgeDirection> enumSet;
+
+
+		@NotNull
+		@Sync
+		public EnumSet<ForgeDirection> getEnumSet() {
+			return enumSet;
 		}
 
+		public void setEnumSet(@NotNull EnumSet<ForgeDirection> enumSet) {
+			this.enumSet = enumSet;
+		}
 	}
 
 

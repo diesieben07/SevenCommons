@@ -267,6 +267,29 @@ public abstract class ClassInfo extends HasModifiers {
 	}
 
 	/**
+	 * <p>Get the component type of this array class.</p>
+	 * <p>The component type of {@code int[][]} is {@code int[]}.</p>
+	 * @return the component type
+	 * @throws java.lang.IllegalStateException if this class is not an array
+	 */
+	public abstract Type getComponentType();
+
+	/**
+	 * <p>Get the root component type of this array class.</p>
+	 * <p>The root component type of {@code int[][]} is {@code int}.</p>
+	 * @return the root component type
+	 * @throws java.lang.IllegalStateException if this class is not an array
+	 */
+	public Type getRootComponentType() {
+		Type t = getComponentType();
+		if (t.getSort() == Type.ARRAY) {
+			return t.getElementType();
+		} else {
+			return t;
+		}
+	}
+
+	/**
 	 * <p>Determine if this class is an interface.</p>
 	 *
 	 * @return true if this class is an interface

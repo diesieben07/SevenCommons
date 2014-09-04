@@ -274,37 +274,31 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public BitSet readBitSet(BitSet set) {
-		if (set == null) {
-			long[] words = readLongs();
-			if (words == null) {
-				return null;
-			}
-			return SCReflector.instance.createBitsetShared(words);
+	public BitSet readBitSet() {
+		long[] words = readLongs();
+		if (words == null) {
+			return null;
 		} else {
-			SCReflector r = SCReflector.instance;
-			long[] words = readLongs(r.getWords(set));
-
-			r.setWords(set, words);
-			r.setWordsInUse(set, words.length);
-			r.setSizeIsSticky(set, false);
-			return set;
+			return BitSet.valueOf(words);
 		}
 	}
 
 	@Override
-	public BitSet readBitSet() {
-		return readBitSet(null);
-	}
-
-	@Override
 	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass) {
-		return readEnumSet(null, enumClass);
-	}
-
-	@Override
-	public <E extends Enum<E>> EnumSet<E> readEnumSet(EnumSet<E> set, Class<E> enumClass) {
-		return JavaUtils.decodeEnumSet(readLong(), enumClass, set);
+		long l = readLong();
+		if (l == ENUM_SET_NULL) {
+			return null;
+		} else {
+			EnumSet<E> set = EnumSet.noneOf(enumClass);
+			if (l != 0) {
+				for (E e : JavaUtils.getEnumConstantsShared(enumClass)) {
+					if ((l & (1 << e.ordinal())) != 0) {
+						set.add(e);
+					}
+				}
+			}
+			return set;
+		}
 	}
 
 	private static final int BYTE_MSB = 0b1000_0000;

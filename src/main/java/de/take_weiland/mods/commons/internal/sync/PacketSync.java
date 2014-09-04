@@ -19,8 +19,8 @@ public class PacketSync extends ModPacket {
 
 	@Override
 	protected void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException {
-		SyncType type = in.readEnum(SyncType.class);
-		Object o = type.readData(in, player);
+		SyncMethod method = in.readEnum(SyncMethod.class);
+		Object o = method.readData(in, player);
 		if (o instanceof AutoSyncedObject) {
 			((AutoSyncedObject) o)._sc$sync$read(in, false);
 		} else {

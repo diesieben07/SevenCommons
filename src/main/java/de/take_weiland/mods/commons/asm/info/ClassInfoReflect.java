@@ -87,6 +87,15 @@ final class ClassInfoReflect extends ClassInfo {
 	}
 
 	@Override
+	public Type getComponentType() {
+		if (clazz.isArray()) {
+			return Type.getType(clazz.getComponentType());
+		} else {
+			throw new IllegalStateException("Not an array");
+		}
+	}
+
+	@Override
 	public boolean hasField(String name) {
 		for (Field field : clazz.getDeclaredFields()) {
 			if (field.getName().equals(name)) {

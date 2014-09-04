@@ -7,7 +7,7 @@ import de.take_weiland.mods.commons.asm.CodePieces;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.internal.sync.AutoSyncedObject;
-import de.take_weiland.mods.commons.internal.sync.SyncType;
+import de.take_weiland.mods.commons.internal.sync.SyncMethod;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.Sync;
 import org.objectweb.asm.Type;
@@ -27,30 +27,30 @@ public class AutoSyncImpl extends SyncingTransformerImpl {
 	private static final ClassInfo containerCI = ClassInfo.of("net/minecraft/inventory/Container");
 	static final ClassInfo entityPropsCI = ClassInfo.of("net/minecraftforge/common/IExtendedEntityProperties");
 
-	private final SyncType type;
+	private final SyncMethod method;
 
 	AutoSyncImpl(ClassNode clazz, ClassInfo classInfo) {
 		super(Sync.class, clazz, classInfo);
 
-		SyncType type0  = null;
+		SyncMethod method0  = null;
 
 		if (entityCI.isAssignableFrom(classInfo)) {
-			type0 = SyncType.ENTITY;
+			method0 = SyncMethod.ENTITY;
 		} else if (tileEntityCI.isAssignableFrom(classInfo)) {
-			type0 = SyncType.TILE_ENTITY;
+			method0 = SyncMethod.TILE_ENTITY;
 		} else if (containerCI.isAssignableFrom(classInfo)) {
-			type0 = SyncType.CONTAINER;
+			method0 = SyncMethod.CONTAINER;
 		}
 
-		if (type0 == null) {
+		if (method0 == null) {
 			if (entityPropsCI.isAssignableFrom(classInfo)) {
-				type0 = SyncType.ENTITY_PROPS;
+				method0 = SyncMethod.ENTITY_PROPS;
 			} else {
 				throw new IllegalArgumentException(String.format("Cannot @Sync on class %s", clazz.name));
 			}
 		}
 
-		type = type0;
+		method = method0;
 	}
 
 	@Override
@@ -75,10 +75,10 @@ public class AutoSyncImpl extends SyncingTransformerImpl {
 
 	@Override
 	CodePiece makeStreamLazy(ASMVariable stream) {
-		String desc = ASMUtils.getMethodDescriptor(MCDataOutputStream.class, SyncType.class, Object.class);
+		String desc = ASMUtils.getMethodDescriptor(MCDataOutputStream.class, SyncMethod.class, Object.class);
 		CodePiece streamCreator = CodePieces.invokeStatic(
 				ASMHooks.CLASS_NAME, ASMHooks.NEW_SYNC_STREAM, desc,
-				CodePieces.constant(type), CodePieces.getThis());
+				CodePieces.constant(method), CodePieces.getThis());
 		return CodePieces.makeLazy(stream, streamCreator);
 	}
 
@@ -86,13 +86,13 @@ public class AutoSyncImpl extends SyncingTransformerImpl {
 	CodePiece handleWriteFinished(CodePiece stream) {
 		String owner = ASMHooks.CLASS_NAME;
 		String name = ASMHooks.SEND_SYNC_PACKET;
-		String desc = ASMUtils.getMethodDescriptor(void.class, MCDataOutputStream.class, SyncType.class, Object.class);
-		return CodePieces.invokeStatic(owner, name, desc, stream, CodePieces.constant(type), CodePieces.getThis());
+		String desc = ASMUtils.getMethodDescriptor(void.class, MCDataOutputStream.class, SyncMethod.class, Object.class);
+		return CodePieces.invokeStatic(owner, name, desc, stream, CodePieces.constant(method), CodePieces.getThis());
 	}
 
 	@Override
 	void postTransform() {
-		type.postTransform(clazz, superIsSynced);
+		method.postTransform(clazz, superIsSynced);
 
 		clazz.interfaces.add(AutoSyncedObject.CLASS_NAME);
 
@@ -105,7 +105,7 @@ public class AutoSyncImpl extends SyncingTransformerImpl {
 		CodePiece myClass = CodePieces.constant(Type.getObjectType(clazz.name));
 		CodePiece checkedDoSync = CodePieces.doIfSame(syncClass, myClass, invokeDoSync, Type.getType(Class.class));
 
-		type.addDoSyncCall(clazz, checkedDoSync);
+		method.addDoSyncCall(clazz, checkedDoSync);
 	}
 
 	private MethodNode addSyncClass() {

@@ -1,8 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.google.common.reflect.TypeToken;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
@@ -10,7 +8,7 @@ import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
 import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
 import de.take_weiland.mods.commons.internal.sync.PacketSyncProperties;
-import de.take_weiland.mods.commons.internal.sync.SyncType;
+import de.take_weiland.mods.commons.internal.sync.SyncMethod;
 import de.take_weiland.mods.commons.internal.sync.SyncableProxyInternal;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
@@ -23,14 +21,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.Packet250CustomPayload;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -120,78 +115,8 @@ public final class ASMHooks {
 		};
 	}
 
-	private static final Type iterableType = Iterable.class.getTypeParameters()[0];
-
-	public static Class<?> findEnumSetType(Class<?> clazz, String member, boolean isMethod) {
-		try {
-			Type type;
-			if (isMethod) {
-				type = clazz.getDeclaredMethod(member).getGenericReturnType();
-			} else {
-				type = clazz.getDeclaredField(member).getGenericType();
-			}
-			// use the type parameter of Iterable, in case the Field was declared as a more generic type than EnumSet
-			Class<?> setType = TypeToken.of(type).resolveType(iterableType).getRawType();
-			if (!setType.isEnum()) {
-				throw new RuntimeException("Parameter type of EnumSet is not an Enum?!?");
-			}
-			System.out.println("Determined element type of " + member + " as " + setType.getSimpleName());
-			return setType;
-		} catch (Exception e) {
-			throw Throwables.propagate(e);
-		}
-	}
-
-	public static boolean bitSetDataEqual(@Nullable long[] a, @Nullable BitSet bitSet) {
-		if (a == null) {
-			return bitSet == null;
-		}
-		if (bitSet == null) {
-			return false;
-		}
-
-		int aLen = a.length;
-		int setLen = SCReflector.instance.getWordsInUse(bitSet);
-		if (aLen != setLen) {
-			return false;
-		}
-		long[] rawSet = SCReflector.instance.getWords(bitSet);
-		for (int i = 0; i < aLen; i++) {
-			if (a[i] != rawSet[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public static boolean bitSetDataEqualNotNull(@Nullable long[] a, @NotNull BitSet bitSet) {
-		if (a == null) {
-			return false;
-		}
-
-		int aLen = a.length;
-		int setLen = SCReflector.instance.getWordsInUse(bitSet);
-		if (aLen != setLen) {
-			return false;
-		}
-		long[] rawSet = SCReflector.instance.getWords(bitSet);
-		for (int i = 0; i < aLen; i++) {
-			if (a[i] != rawSet[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public static long[] bitSetCopyInto(BitSet from, long[] into) {
-		long[] fromData = SCReflector.instance.getWords(from);
-		int fromLen = SCReflector.instance.getWordsInUse(from);
-		if (into.length < fromLen) {
-			into = new long[fromLen];
-		}
-		System.arraycopy(fromData, 0, into, 0, fromLen);
-		return into;
-	}
+	public static final String ITERABLE_TYPE = "iterableType";
+	public static final Type iterableType = Iterable.class.getTypeParameters()[0];
 
 	public static boolean rawEquals(ItemStack a, ItemStack b) {
 		return a == b ||
@@ -202,15 +127,15 @@ public final class ASMHooks {
 					&& (a.stackTagCompound == null ? b.stackTagCompound == null : a.stackTagCompound.equals(b.stackTagCompound));
 	}
 
-	public static MCDataOutputStream newSyncStream(SyncType type, Object object) {
+	public static MCDataOutputStream newSyncStream(SyncMethod method, Object object) {
 		MCDataOutputStream stream = SCModContainer.packets.createStream(SCModContainer.SYNC_PACKET_ID);
-		stream.writeEnum(type);
-		type.writeData(stream, object);
+		stream.writeEnum(method);
+		method.writeData(stream, object);
 		return stream;
 	}
 
-	public static void sendSyncPacket(MCDataOutputStream stream, SyncType type, Object object) {
-		type.sendPacket(SCModContainer.packets.makePacket(stream), object);
+	public static void sendSyncPacket(MCDataOutputStream stream, SyncMethod method, Object object) {
+		method.sendPacket(SCModContainer.packets.makePacket(stream), object);
 	}
 
 	public static void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {

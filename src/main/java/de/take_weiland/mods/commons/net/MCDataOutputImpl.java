@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.net;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.BlockCoordinates;
 import de.take_weiland.mods.commons.util.ByteStreamSerializable;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -372,9 +371,21 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		}
 	}
 
+	static final long ENUM_SET_NULL = 1L << 63L;
+
 	@Override
 	public <E extends Enum<E>> void writeEnumSet(EnumSet<E> enumSet) {
-		writeLong(JavaUtils.encodeEnumSet(enumSet));
+		if (enumSet == null) {
+			writeLong(ENUM_SET_NULL);
+		} else if (enumSet.size() == 0) {
+			writeLong(0);
+		} else {
+			long l = 0;
+			for (E e : enumSet) {
+				l |= (1L << e.ordinal());
+			}
+			writeLong(l);
+		}
 	}
 
 	@Override
