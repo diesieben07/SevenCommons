@@ -83,6 +83,7 @@ public final class CodePieces {
 			default:
 				for (CodePiece piece : pieces) {
 					if (piece.isCombined()) {
+						// flatten hierarchy
 						ArrayList<CodePiece> all = Lists.newArrayList();
 						for (CodePiece codePiece : pieces) {
 							codePiece.unwrapInto(all);
@@ -508,6 +509,28 @@ public final class CodePieces {
 		return value.append(new TypeInsnNode(CHECKCAST, internalName));
 	}
 
+	public static CodePiece doThrow(Class<? extends Exception> ex) {
+		return doThrow(instantiate(ex));
+	}
+
+	public static CodePiece doThrow(Class<? extends Exception> ex, String msg) {
+		return doThrow(instantiate(ex, new Type[] { getType(String.class) }, constant(msg)));
+	}
+
+	public static CodePiece doThrow(CodePiece ex) {
+		return ex.append(new InsnNode(ATHROW));
+	}
+
+	/**
+	 * <p>Create a CodePiece that unboxes the given primitive wrapper.</p>
+	 * @param boxed the boxed value
+	 * @param primitiveType the type of primitive boxed in the wrapper
+	 * @return a CodePiece
+	 */
+	public static CodePiece unbox(CodePiece boxed, Class<?> primitiveType) {
+		return unbox(boxed, getType(primitiveType));
+	}
+
 	/**
 	 * <p>Create a CodePiece that unboxes the given primitive wrapper.</p>
 	 * @param boxed the boxed value
@@ -520,6 +543,16 @@ public final class CodePieces {
 		String name = primitiveType.getClassName() + "Value";
 		String desc = Type.getMethodDescriptor(primitiveType);
 		return invoke(INVOKEVIRTUAL, owner, name, desc, boxed);
+	}
+
+	/**
+	 * <p>Create a CodePiece that boxes the given primitive into it's wrapper type.</p>
+	 * @param unboxed the unboxed primitive
+	 * @param primitiveType the type of primitive boxed in the wrapper
+	 * @return a CodePiece
+	 */
+	public static CodePiece box(CodePiece unboxed, Class<?> primitiveType) {
+		return box(unboxed, getType(primitiveType));
 	}
 
 	/**
@@ -559,6 +592,14 @@ public final class CodePieces {
 		}
 	}
 
+	/**
+	 * <p>Turn the given CodePiece into a lazily-initialized variable. That is, the value is not created until first accessed.
+	 * After the first access, further accesses return the same, cached, value.</p>
+	 * <p>This method cannot be used with primitive types or null.</p>
+	 * @param var the variable to use for lazy-initialization
+	 * @param valueCreator a CodePiece providing the value
+	 * @return a CodePiece
+	 */
 	public static CodePiece makeLazy(ASMVariable var, CodePiece valueCreator) {
 		checkArgument(!ASMUtils.isPrimitive(var.getType()), "cannot make primitive value lazy");
 		CodeBuilder builder = new CodeBuilder();
@@ -586,14 +627,43 @@ public final class CodePieces {
 		return builder.build();
 	}
 
+	/**
+	 * <p>Create a CodePiece that only executes {@code body} if the given arguments evaluate to true with the given
+	 * compare-opcode.</p>
+	 * <p>The opcode must be a valid jump-opcode (see {@link org.objectweb.asm.tree.JumpInsnNode}, except {@code GOTO}
+	 * and {@code JSR}.</p>
+	 * @param cmpOpcode the comparison opcode
+	 * @param args the arguments for the comparison
+	 * @param body the body
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIf(int cmpOpcode, CodePiece args, CodePiece body) {
 		return doIfElse(cmpOpcode, args, body, of());
 	}
 
+	/**
+	 * <p>Create a CodePiece that only executes {@code body} if the given arguments evaluate to false with the given
+	 * compare-opcode.</p>
+	 * <p>The opcode must be a valid jump-opcode (see {@link org.objectweb.asm.tree.JumpInsnNode}, except {@code GOTO}
+	 * and {@code JSR}.</p>
+	 * @param cmpOpcode the comparison opcode
+	 * @param args the arguments for the comparison
+	 * @param body the body
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIfNot(int cmpOpcode, CodePiece args, CodePiece body) {
 		return doIf(negateJmpOpcode(cmpOpcode), args, body);
 	}
 
+	/**
+	 * <p>Create a CodePiece that executes {@code thenBody} if the arguments evaluate to true with the given
+	 * compare-opcode and otherwise executes {@code elseBody}.</p>
+	 * @param cmpOpcode the comparison opcode
+	 * @param args the arguments for the comparison
+	 * @param thenBody the body for true
+	 * @param elseBody the body for false
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIfElse(int cmpOpcode, CodePiece args, CodePiece thenBody, CodePiece elseBody) {
 		LabelNode after = new LabelNode();
 		LabelNode notTrue = elseBody.isEmpty() ? after : new LabelNode();
@@ -613,22 +683,60 @@ public final class CodePieces {
 		return builder.build();
 	}
 
+	/**
+	 * <p>Create a CodePiece that only executes {@code body} if the boolean {@code value} evaluates to true.</p>
+	 * @param value the condition
+	 * @param body the body
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIf(CodePiece value, CodePiece body) {
 		return doIf(IFNE, value, body);
 	}
 
+	/**
+	 * <p>Create a CodePiece that only executes {@code body} if the boolean {@code value} evaluates to false.</p>
+	 * @param value the condition
+	 * @param body the body
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIfNot(CodePiece value, CodePiece body) {
 		return doIf(IFEQ, value, body);
 	}
 
+	/**
+	 * <p>Create a CodePiece that executes {@code thenBody} if the boolean {@code value} evalutes to true and
+	 * otherwise executes {@code elseBody}.</p>
+	 * @param value the the condition
+	 * @param thenBody the body for true
+	 * @param elseBody the body for false
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIfElse(CodePiece value, CodePiece thenBody, CodePiece elseBody) {
 		return doIfElse(IFNE, value, thenBody, elseBody);
 	}
 
+	/**
+	 * <p>Create a CodePiece that only executes {@code body} if the values {@code a} and {@code b} evaluate to the same
+	 * value (==-comparison).</p>
+	 * @param a the first value
+	 * @param b the second value
+	 * @param body the body
+	 * @param type the common supertype of the values to compare
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIfSame(CodePiece a, CodePiece b, CodePiece body, Type type) {
 		return doIfSame(a, b, body, of(), type);
 	}
 
+	/**
+	 * <p>Create a CodePiece that only executes {@code body} if the values {@code a} and {@code b} evaluate to a different
+	 * value (!=-comparison).</p>
+	 * @param a the first value
+	 * @param b the second value
+	 * @param body the body
+	 * @param type the common supertype of the values to compare
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIfNotSame(CodePiece a, CodePiece b, CodePiece body, Type type) {
 		if (ASMUtils.isPrimitive(type)) {
 			return doEqualPrimitive(true, a, b, body, of(), type);
@@ -637,6 +745,16 @@ public final class CodePieces {
 		}
 	}
 
+	/**
+	 * <p>Create a CodePiece that executes {@code thenBody} if the values {@code a} and {@code b} evaluate to the same
+	 * value (==-comparison) and {@code elseBody} otherwise.</p>
+	 * @param a the first value
+	 * @param b the second value
+	 * @param thenBody the body for same value
+	 * @param elseBody the body for different value
+	 * @param type the common supertype of the values to compare
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIfSame(CodePiece a, CodePiece b, CodePiece thenBody, CodePiece elseBody, Type type) {
 		if (ASMUtils.isPrimitive(type)) {
 			return doEqualPrimitive(false, a, b, thenBody, elseBody, type);
@@ -645,30 +763,109 @@ public final class CodePieces {
 		}
 	}
 
-	public static CodePiece doIfEqual(CodePiece a, CodePiece b, CodePiece thenBody, Type type) {
-		return doIfEqual(a, b, thenBody, type, true);
+	/**
+	 * <p>Create a CodePiece that only executes {@code body} if the values {@code a} and {@code b} evaluate to an equal
+	 * value.</p>
+	 * <ul>
+	 *     <li>Primitives use == comparison</li>
+	 *     <li>Generic objects use a null-guarded call to {@link Object#equals(Object)} (null is equal to null)</li>
+	 *     <li>Arrays use the corresponding version of {@link java.util.Arrays#equals(Object[], Object[])} resp.
+	 *     {@link java.util.Arrays#deepEquals(Object[], Object[])}.</li>
+	 * </ul>
+	 * @param a the first value
+	 * @param b the second value
+	 * @param body the body
+	 * @param type the common supertype of the values to compare
+	 * @return a CodePiece
+	 */
+	public static CodePiece doIfEqual(CodePiece a, CodePiece b, CodePiece body, Type type) {
+		return doIfEqual(a, b, body, type, true);
 	}
 
-	public static CodePiece doIfEqual(CodePiece a, CodePiece b, CodePiece thenBody, Type type, boolean canBeNull) {
-		return doIfEqual(a, b, thenBody, of(), type, canBeNull);
+	/**
+	 * <p>Create a CodePiece that only executes {@code body} if the values {@code a} and {@code b} evaluate to an equal
+	 * value.</p>
+	 * <ul>
+	 *     <li>Primitives use == comparison</li>
+	 *     <li>Generic objects use a possibly null-guarded call to {@link Object#equals(Object)} (null is equal to null)</li>
+	 *     <li>Arrays use the corresponding version of {@link java.util.Arrays#equals(Object[], Object[])} resp.
+	 *     {@link java.util.Arrays#deepEquals(Object[], Object[])}.</li>
+	 * </ul>
+	 * @param a the first value
+	 * @param b the second value
+	 * @param body the body
+	 * @param type the common supertype of the values to compare
+	 * @param canBeNull if any of the values can potentially be null
+	 * @return a CodePiece
+	 */
+	public static CodePiece doIfEqual(CodePiece a, CodePiece b, CodePiece body, Type type, boolean canBeNull) {
+		return doIfEqual(a, b, body, of(), type, canBeNull);
 	}
 
-	public static CodePiece doIfNotEqual(CodePiece a, CodePiece b, CodePiece thenBody, Type type) {
-		return doIfNotEqual(a, b, thenBody, type, true);
+	/**
+	 * <p>Create a CodePiece that only executes {@code body} if the values {@code a} and {@code b} evaluate to a not-equal
+	 * value.</p>
+	 * <p>The comparison is done as if by the {@link #doIfEqual(CodePiece, CodePiece, CodePiece, org.objectweb.asm.Type)}
+	 * method, but the result inverted afterwards.</p>
+	 * @param a the first value
+	 * @param b the second value
+	 * @param body the body
+	 * @param type the common supertype of the values to compare
+	 * @return a CodePiece
+	 */
+	public static CodePiece doIfNotEqual(CodePiece a, CodePiece b, CodePiece body, Type type) {
+		return doIfNotEqual(a, b, body, type, true);
 	}
 
-	public static CodePiece doIfNotEqual(CodePiece a, CodePiece b, CodePiece thenBody, Type type, boolean canBeNull) {
+	/**
+	 * <p>Create a CodePiece that only executes {@code body} if the values {@code a} and {@code b} evaluate to an equal
+	 * value.</p>
+	 * <p>The comparison is done as if by the {@link #doIfEqual(CodePiece, CodePiece, CodePiece, org.objectweb.asm.Type, boolean)}
+	 * method, but the result inverted afterwards.</p>
+	 * @param a the first value
+	 * @param b the second value
+	 * @param body the body
+	 * @param type the common supertype of the values to compare
+	 * @param canBeNull if any of the values can potentially be null
+	 * @return a CodePiece
+	 */
+	public static CodePiece doIfNotEqual(CodePiece a, CodePiece b, CodePiece body, Type type, boolean canBeNull) {
 		if (ASMUtils.isPrimitive(type)) {
-			return doEqualPrimitive(true, a, b, thenBody, of(), type);
+			return doEqualPrimitive(true, a, b, body, of(), type);
 		} else {
-			return doIfNot(invokeEquals(a, b, type, canBeNull), thenBody);
+			return doIfNot(invokeEquals(a, b, type, canBeNull), body);
 		}
 	}
 
+	/**
+	 * <p>Create a CodePiece that executes {@code thenBody} if the values {@code a} and {@code b} evaluate to an equal
+	 * value and {@code elseBody} otherwise.</p>
+	 * <p>The comparison is done as if by the {@link #doIfEqual(CodePiece, CodePiece, CodePiece, org.objectweb.asm.Type)}
+	 * method.</p>
+	 * @param a the first value
+	 * @param b the second value
+	 * @param thenBody the body for equal value
+	 * @param elseBody the body for non-equal value
+	 * @param type the common supertype of the values to compare
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIfEqual(CodePiece a, CodePiece b, CodePiece thenBody, CodePiece elseBody, Type type) {
 		return doIfEqual(a, b, thenBody, elseBody, type, true);
 	}
 
+	/**
+	 * <p>Create a CodePiece that executes {@code thenBody} if the values {@code a} and {@code b} evaluate to an equal
+	 * value and {@code elseBody} otherwise.</p>
+	 * <p>The comparison is done as if by the {@link #doIfEqual(CodePiece, CodePiece, CodePiece, org.objectweb.asm.Type, boolean)}
+	 * method.</p>
+	 * @param a the first value
+	 * @param b the second value
+	 * @param thenBody the body for equal value
+	 * @param elseBody the body for non-equal value
+	 * @param type the common supertype of the values to compare
+	 * @param canBeNull if any of the values can potentially be null
+	 * @return a CodePiece
+	 */
 	public static CodePiece doIfEqual(CodePiece a, CodePiece b, CodePiece thenBody, CodePiece elseBody, Type type, boolean canBeNull) {
 		if (ASMUtils.isPrimitive(type)) {
 			return doEqualPrimitive(false, a, b, thenBody, elseBody, type);
@@ -684,8 +881,15 @@ public final class CodePieces {
 		if (type.getSort() == Type.ARRAY) {
 			owner = "java/util/Arrays";
 			if (type.getDimensions() == 1) {
+				Type typeForCall;
+				if (!ASMUtils.isPrimitive(type.getElementType())) {
+					typeForCall = getType(Object[].class);
+				} else {
+					typeForCall = type;
+				}
+
 				name = "equals";
-				desc = Type.getMethodDescriptor(BOOLEAN_TYPE, type, type);
+				desc = Type.getMethodDescriptor(BOOLEAN_TYPE, typeForCall, typeForCall);
 			} else {
 				name = "deepEquals";
 				desc = ASMUtils.getMethodDescriptor(boolean.class, Object[].class, Object[].class);
@@ -827,8 +1031,8 @@ public final class CodePieces {
 	 * <li>A {@code String}</li>
 	 * <li>An {@code Enum}</li>
 	 * <li>A {@code Class}</li>
-	 * <li>An ASM {@code Type}</li>
-	 * <li>An array containing only the above</li>
+	 * <li>An ASM {@code Type}, will be loaded as the corresponding {@code Class} object</li>
+	 * <li>A (possibly multi-dimensional) array with a component type of one of the above</li>
 	 * </ul>
 	 *
 	 * @param o the constant
@@ -845,7 +1049,15 @@ public final class CodePieces {
 			return constant(((short) o));
 		} else if (o instanceof Integer) {
 			return constant(((int) o));
-		} else if (o instanceof Long || o instanceof Float || o instanceof Double || o instanceof String || o instanceof Type) {
+		} else if (o instanceof Character) {
+			return constant((char) o);
+		} else if (o instanceof Long) {
+			return constant((long) o);
+		} else if (o instanceof Float) {
+			return constant((float) o);
+		} else if (o instanceof Double) {
+			return constant((double) o);
+		} else if (o instanceof String || o instanceof Type) {
 			return ldcConstant(o);
 		} else if (o instanceof Enum) {
 			return constant((Enum<?>) o);
@@ -865,26 +1077,6 @@ public final class CodePieces {
 	 */
 	public static CodePiece constant(boolean b) {
 		return constant(b ? 1 : 0);
-	}
-
-	/**
-	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
-	 *
-	 * @param b the constant
-	 * @return a CodePiece
-	 */
-	public static CodePiece constant(byte b) {
-		return constant((int) b);
-	}
-
-	/**
-	 * <p>Create a CodePiece that will load the given constant onto the stack.</p>
-	 *
-	 * @param s the constant
-	 * @return a CodePiece
-	 */
-	public static CodePiece constant(short s) {
-		return constant((int) s);
 	}
 
 	/**
@@ -984,6 +1176,9 @@ public final class CodePieces {
 	 * @return a CodePiece
 	 */
 	public static CodePiece constant(Enum<?> e) {
+		if (e == null) {
+			return constantNull();
+		}
 		Class<? extends Enum<?>> enumClass = e.getDeclaringClass();
 		return getField(Type.getInternalName(enumClass), e.name(), enumClass);
 	}

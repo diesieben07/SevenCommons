@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @see de.take_weiland.mods.commons.asm.CodePiece#setContextKey(ContextKey)
  * @author diesieben07
  */
+@SuppressWarnings({"NonFinalUtilityClass", "InstantiationOfUtilityClass"})
 public class ContextKey {
 
 	public static ContextKey create() {

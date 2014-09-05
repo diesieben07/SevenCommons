@@ -43,10 +43,9 @@ class CombinedCodePiece extends CodePiece {
 				piece.insertAfter0(insns, insns.getLast(), context);
 			}
 		} else {
+			AbstractInsnNode nodeAfter = location.getNext();
 			for (CodePiece piece : pieces) {
-				AbstractInsnNode nodeAfter = location.getNext();
-				piece.insertAfter0(insns, location, context);
-				location = nodeAfter.getPrevious();
+				piece.insertBefore0(insns, nodeAfter, context);
 			}
 		}
 	}

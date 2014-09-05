@@ -16,6 +16,7 @@ import java.util.EnumSet;
 //@NetworkMod()
 public class testmod_sc {
 
+
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		new Test();

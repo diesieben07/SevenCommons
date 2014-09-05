@@ -14,10 +14,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.InsnNode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.UUID;
 
@@ -432,15 +434,28 @@ abstract class SyncHandler {
 
 		@Override
 		CodePiece updateCompanion() {
-			String owner = Type.getInternalName(EnumSet.class);
-			String name = "clone";
-			String desc = ASMUtils.getMethodDescriptor(EnumSet.class);
-			CodePiece clone = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, var.get());
+			String owner = getInternalName(EnumSet.class);
+			String name = "noneOf";
+			String desc = Type.getMethodDescriptor(getType(EnumSet.class), getType(Class.class));
+			CodePiece setNew = companion.set(CodePieces.invokeStatic(owner, name, desc, enumSetType.get()));
+
+			owner = getInternalName(EnumSet.class);
+			name = "addAll";
+			desc = Type.getMethodDescriptor(BOOLEAN_TYPE, getType(Collection.class));
+			CodePiece addAll = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, companion.get(), var.get()).append(new InsnNode(POP));
+
+			owner = getInternalName(EnumSet.class);
+			name = "clear";
+			desc = Type.getMethodDescriptor(VOID_TYPE);
+			CodePiece clear = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, companion.get());
+
+			CodePiece copyData = CodePieces.doIfElse(IFNULL, companion.get(), setNew.append(addAll), clear.append(addAll));
+
 			if (canBeNull()) {
-				CodePiece newValue = CodePieces.doIfElse(IFNULL, var.get(), CodePieces.constantNull(), clone);
-				return companion.set(newValue);
+				CodePiece setNull = companion.set(CodePieces.constantNull());
+				return CodePieces.doIfElse(IFNULL, var.get(), setNull, copyData);
 			} else {
-				return companion.set(clone);
+				return copyData;
 			}
 		}
 
@@ -448,11 +463,8 @@ abstract class SyncHandler {
 		void initialTransform() {
 			super.initialTransform();
 			String owner;
-			String name = impl.memberName(varNameUnique() + "$enumSetTypeToken");
-			String desc = Type.getDescriptor(TypeToken.class);
-			FieldNode tokenField = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_TRANSIENT | ACC_FINAL, name, desc, null, null);
-			impl.clazz.fields.add(tokenField);
-			ASMVariable token = ASMVariables.of(impl.clazz, tokenField);
+			String name;
+			String desc;
 
 			CodePiece myClass = CodePieces.constant(Type.getObjectType(impl.clazz.name));
 			CodePiece getVarType;
@@ -483,16 +495,15 @@ abstract class SyncHandler {
 			name = "of";
 			desc = ASMUtils.getMethodDescriptor(TypeToken.class, java.lang.reflect.Type.class);
 			CodePiece createToken = CodePieces.invokeStatic(owner, name, desc, getVarType);
-			ASMUtils.initializeStatic(impl.clazz, token.set(createToken));
 
 			// above code initializes the TypeToken for the field/method
-			// now for every new instance we have to actually resolve the type
+			// now we have to actually resolve the type
 
 			name = impl.memberName(varNameUnique() + "$enumSetType");
 			desc = Type.getDescriptor(Class.class);
-			FieldNode field = new FieldNode(ACC_PRIVATE | ACC_TRANSIENT | ACC_FINAL, name, desc, null, null);
+			FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_TRANSIENT | ACC_FINAL, name, desc, null, null);
 			impl.clazz.fields.add(field);
-			enumSetType = ASMVariables.of(impl.clazz, field, CodePieces.getThis());
+			enumSetType = ASMVariables.of(impl.clazz, field);
 
 			owner = ASMHooks.CLASS_NAME;
 			name = ASMHooks.ITERABLE_TYPE;
@@ -502,14 +513,20 @@ abstract class SyncHandler {
 			owner = getInternalName(TypeToken.class);
 			name = "resolveType";
 			desc = getMethodDescriptor(getType(TypeToken.class), getType(java.lang.reflect.Type.class));
-			CodePiece resolvedType = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, token.get(), iterableType);
+			CodePiece resolvedType = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, createToken, iterableType);
 
 			owner = getInternalName(TypeToken.class);
 			name = "getRawType";
 			desc = getMethodDescriptor(getType(Class.class));
 			CodePiece rawResolvedType = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, resolvedType);
 
-			ASMUtils.initialize(impl.clazz, enumSetType.set(rawResolvedType));
+			owner = getInternalName(Class.class);
+			name = "isEnum";
+			desc = getMethodDescriptor(BOOLEAN_TYPE);
+			CodePiece isEnum = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, enumSetType.get());
+			CodePiece enumCheck = CodePieces.doIfNot(isEnum, CodePieces.doThrow(IllegalStateException.class, "Cannot resolve Type of EnumSet " + var.rawName()));
+
+			ASMUtils.initializeStatic(impl.clazz, enumSetType.set(rawResolvedType).append(enumCheck));
 		}
 
 		@Override
