@@ -11,58 +11,152 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+import static com.google.common.base.Preconditions.checkElementIndex;
+
 /**
+ * <p>A List implementation which can be used with the {@code @Sync} annotation and is based on an underlying List.</p>
+ * <p>As long as the list size is not changed, only the changed indices will be synced to the client.</p>
+ * <p>An index is marked for update whenever either {@link #set(int, Object)} or {@link java.util.ListIterator#set(Object)}
+ * is called for that index. Additionally an index can be marked as "dirty" manually by calling {@link #markDirty(int)}.</p>
+ * <p>Whenever the list size changes, a full update is sent. This can be triggered manually via {@link #markDirty()}.</p>
+ * <p>This implementation does not check for changes of it's elements! If the objects in the list are mutable, changes
+ * must be reported manually via the methods explained above.</p>
+ * <p><strong>Note:</strong> It is highly recommended that the underlying list implements {@link java.util.RandomAccess}
+ * for best performance results.</p>
+ *
  * @author diesieben07
  */
 public abstract class SyncedList<E> implements List<E>, Syncable {
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding ItemStacks, based on an empty {@link java.util.ArrayList}.</p>
+	 * @return a new, empty SyncedList
+	 */
 	public static SyncedList<ItemStack> forItemStack() {
 		return forItemStack(new ArrayList<ItemStack>());
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding ItemStacks, based the given List.</p>
+	 * <p>It is recommended that the passed in list is empty.</p>
+	 * @param delegate the underlying list to use
+	 * @return a new, empty SyncedList
+	 */
 	public static SyncedList<ItemStack> forItemStack(List<ItemStack> delegate) {
 		return new WithSerializer<>(delegate, Serializers.forItemStack());
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding FluidStacks, based on an empty {@link java.util.ArrayList}.</p>
+	 * @return a new, empty SyncedList
+	 */
 	public static SyncedList<FluidStack> forFluidStack() {
 		return forFluidStack(new ArrayList<FluidStack>());
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding FluidStacks, based the given List.</p>
+	 * <p>It is recommended that the passed in list is empty.</p>
+	 * @param delegate the underlying list to use
+	 * @return a new, empty SyncedList
+	 */
 	public static SyncedList<FluidStack> forFluidStack(List<FluidStack> delegate) {
 		return new WithSerializer<>(delegate, Serializers.forFluidStack());
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding Strings, based on an empty {@link java.util.ArrayList}.</p>
+	 * @return a new, empty SyncedList
+	 */
 	public static SyncedList<String> forString() {
 		return forString(new ArrayList<String>());
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding Strings, based the given List.</p>
+	 * <p>It is recommended that the passed in list is empty.</p>
+	 * @param delegate the underlying list to use
+	 * @return a new, empty SyncedList
+	 */
 	public static SyncedList<String> forString(List<String> delegate) {
 		return new WithSerializer<>(delegate, Serializers.forString());
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding UUIDs, based on an empty {@link java.util.ArrayList}.</p>
+	 * @return a new, empty SyncedList
+	 */
 	public static SyncedList<UUID> forUUID() {
 		return forUUID(new ArrayList<UUID>());
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding UUIDs, based the given List.</p>
+	 * <p>It is recommended that the passed in list is empty.</p>
+	 * @param delegate the underlying list to use
+	 * @return a new, empty SyncedList
+	 */
 	public static SyncedList<UUID> forUUID(List<UUID> delegate) {
 		return new WithSerializer<>(delegate, Serializers.forUUID());
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding instances of the given class, based on an empty {@link java.util.ArrayList}.</p>
+	 * @param clazz the class of the elements in this list
+	 * @return a new, empty SyncedList
+	 */
 	public static <E extends ByteStreamSerializable> SyncedList<E> create(Class<E> clazz) {
 		return withSerializer(Serializers.wrap(clazz));
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding instances of the given class, based the given List.</p>
+	 * <p>It is recommended that the passed in list is empty.</p>
+	 * @param delegate the underlying list to use
+	 * @param clazz the class of the elements in this list
+	 * @return a new, empty SyncedList
+	 */
 	public static <E extends ByteStreamSerializable> SyncedList<E> create(List<E> delegate, Class<E> clazz) {
 		return withSerializer(delegate, Serializers.wrap(clazz));
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding instances of class E, based on an empty {@link java.util.ArrayList}.</p>
+	 * @param serializer a ByteStreamSerializer for serializing the elements of this list
+	 * @return a new, empty SyncedList
+	 */
 	public static <E> SyncedList<E> withSerializer(ByteStreamSerializer<E> serializer) {
 		return withSerializer(new ArrayList<E>(), serializer);
 	}
 
+	/**
+	 * <p>Create a new {@code SyncedList} for holding instances of class E, based the given List.</p>
+	 * <p>It is recommended that the passed in list is empty.</p>
+	 * @param delegate the underlying list to use
+	 * @param serializer a ByteStreamSerializer for serializing the elements of this list
+	 * @return a new, empty SyncedList
+	 */
 	public static <E> SyncedList<E> withSerializer(List<E> delegate, ByteStreamSerializer<E> serializer) {
 		return new WithSerializer<>(delegate, serializer);
 	}
+
+	/**
+	 * <p>Mark the entire List dirty, meaning it will be re-synced on next query.</p>
+	 */
+	public void markDirty() {
+		sendAll = true;
+	}
+
+	/**
+	 * <p>Mark the specified index dirty, meaning it will re-synced on next query.</p>
+	 * @param index the index
+	 */
+	public void markDirty(int index) {
+		checkElementIndex(index, delegate.size());
+		markIndexDirty0(index);
+	}
+
+	// implementation
 
 	private static final byte ALL = 0;
 	private static final byte CLEAR = 1;
@@ -70,7 +164,7 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 
 	final List<E> delegate;
 	private final BitSet dirtyIndices;
-	boolean sizeChanged = false;
+	boolean sendAll = false;
 
 	SyncedList(List<E> delegate) {
 		this.delegate = delegate;
@@ -79,12 +173,12 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 
 	@Override
 	public boolean needsSyncing() {
-		return sizeChanged || dirtyIndices.isEmpty();
+		return sendAll || !dirtyIndices.isEmpty();
 	}
 
 	@Override
 	public void writeSyncDataAndReset(MCDataOutputStream out) {
-		if (sizeChanged) {
+		if (sendAll) {
 			int len = delegate.size();
 
 			if (len == 0) {
@@ -97,7 +191,7 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 					writeElement(element, out);
 				}
 			}
-			sizeChanged = false;
+			sendAll = false;
 		} else {
 			BitSet indices = dirtyIndices;
 			int idx = 0;
@@ -141,16 +235,16 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	abstract void writeElement(E element, MCDataOutputStream out);
 	abstract E readElement(MCDataInputStream in);
 
-	final void markIndexDirty(int idx) {
-		if (!sizeChanged) {
+	final void markIndexDirty0(int idx) {
+		if (!sendAll) {
 			dirtyIndices.set(idx);
 		}
 	}
 
 	@Override
-	public void add(int index, E element) {
+	public void add(int index, @SuppressWarnings("NullableProblems") E element) { // not sure what the warning is about
 		delegate.add(index, element);
-		sizeChanged = true;
+		sendAll = true;
 	}
 
 	@Override
@@ -160,23 +254,23 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	@Override
-	public E set(int index, E element) {
+	public E set(int index, @SuppressWarnings("NullableProblems") E element) {
 		E res = delegate.set(index, element);
-		markIndexDirty(index);
+		markIndexDirty0(index);
 		return res;
 	}
 
 	@Override
 	public E remove(int index) {
 		E res = delegate.remove(index);
-		sizeChanged = true;
+		sendAll = true;
 		return res;
 	}
 
 	@Override
 	public boolean remove(Object o) {
 		if (delegate.remove(o)) {
-			sizeChanged = true;
+			sendAll = true;
 			return true;
 		}
 		return false;
@@ -218,7 +312,7 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	@Override
 	public void clear() {
 		if (delegate.size() != 0) {
-			sizeChanged = true;
+			sendAll = true;
 		}
 		delegate.clear();
 	}
@@ -229,32 +323,33 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	@Override
-	public boolean addAll(int index, Collection<? extends E> c) {
+	public boolean addAll(int index, @NotNull Collection<? extends E> c) {
 		if (delegate.addAll(index, c)) {
-			sizeChanged = true;
+			sendAll = true;
 			return true;
 		}
 		return false;
 	}
 
 	@Override
-	public boolean removeAll(Collection<?> c) {
+	public boolean removeAll(@NotNull Collection<?> c) {
 		if (delegate.removeAll(c)) {
-			sizeChanged = true;
+			sendAll = true;
 			return true;
 		}
 		return false;
 	}
 
 	@Override
-	public boolean retainAll(Collection<?> c) {
+	public boolean retainAll(@NotNull Collection<?> c) {
 		if (delegate.retainAll(c)) {
-			sizeChanged = true;
+			sendAll = true;
 			return true;
 		}
 		return false;
 	}
 
+	@SuppressWarnings("NullableProblems")
 	@Override
 	public E get(int index) {
 		return delegate.get(index);
@@ -333,27 +428,43 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 		@Override
 		public void remove() {
 			delegate.remove();
-			sizeChanged = true;
+			sendAll = true;
 		}
 
 		@Override
 		public void set(E e) {
 			int idx = !forward ? delegate.previousIndex() + 1 : delegate.nextIndex() - 1;
 			delegate.set(e);
-			markIndexDirty(idx);
+			markIndexDirty0(idx);
 		}
 
 		@Override
-		public void add(E e) {
+		public void add(@SuppressWarnings("NullableProblems") E e) {
 			delegate.add(e);
-			sizeChanged = true;
+			sendAll = true;
 		}
 	}
 
 	@NotNull
 	@Override
 	public List<E> subList(int fromIndex, int toIndex) {
-		return new SubList<E>(this, fromIndex, toIndex);
+		return new SubList<>(this, fromIndex, toIndex);
+	}
+
+	@Override
+	public int hashCode() {
+		return delegate.hashCode();
+	}
+
+	@SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
+	@Override
+	public boolean equals(Object obj) {
+		return delegate.equals(obj);
+	}
+
+	@Override
+	public String toString() {
+		return delegate.toString();
 	}
 
 	private static class SubList<E> extends SyncedList<E> {
