@@ -29,7 +29,8 @@ import static com.google.common.base.Preconditions.checkElementIndex;
 public abstract class SyncedList<E> implements List<E>, Syncable {
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding ItemStacks, based on an empty {@link java.util.ArrayList}.</p>
+	 * <p>Create a new {@code SyncedList} for holding ItemStacks, based on an empty {@link java.util.ArrayList}.
+	 * The returned List supports null values.</p>
 	 * @return a new, empty SyncedList
 	 */
 	public static SyncedList<ItemStack> forItemStack() {
@@ -37,9 +38,10 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding ItemStacks, based the given List.</p>
-	 * <p>It is recommended that the passed in list is empty.</p>
-	 * @param delegate the underlying list to use
+	 * <p>Create a new {@code SyncedList} for holding ItemStacks, based the given List.
+	 * The returned List supports null values if the delegate does.</p>
+	 * <p>It is recommended that the passed in List is empty.</p>
+	 * @param delegate the underlying List
 	 * @return a new, empty SyncedList
 	 */
 	public static SyncedList<ItemStack> forItemStack(List<ItemStack> delegate) {
@@ -47,7 +49,8 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding FluidStacks, based on an empty {@link java.util.ArrayList}.</p>
+	 * <p>Create a new {@code SyncedList} for holding FluidStacks, based on an empty {@link java.util.ArrayList}.
+	 * The returned List supports null values.</p>
 	 * @return a new, empty SyncedList
 	 */
 	public static SyncedList<FluidStack> forFluidStack() {
@@ -55,9 +58,10 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding FluidStacks, based the given List.</p>
-	 * <p>It is recommended that the passed in list is empty.</p>
-	 * @param delegate the underlying list to use
+	 * <p>Create a new {@code SyncedList} for holding FluidStacks, based the given List.
+	 * The returned List supports null values if the delegate does.</p>
+	 * <p>It is recommended that the passed in List is empty.</p>
+	 * @param delegate the underlying List
 	 * @return a new, empty SyncedList
 	 */
 	public static SyncedList<FluidStack> forFluidStack(List<FluidStack> delegate) {
@@ -65,7 +69,8 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding Strings, based on an empty {@link java.util.ArrayList}.</p>
+	 * <p>Create a new {@code SyncedList} for holding Strings, based on an empty {@link java.util.ArrayList}.
+	 * The returned List supports null values.</p>
 	 * @return a new, empty SyncedList
 	 */
 	public static SyncedList<String> forString() {
@@ -73,9 +78,10 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding Strings, based the given List.</p>
-	 * <p>It is recommended that the passed in list is empty.</p>
-	 * @param delegate the underlying list to use
+	 * <p>Create a new {@code SyncedList} for holding Strings, based the given List.
+	 * The returned List supports null values if the delegate does.</p>
+	 * <p>It is recommended that the passed in List is empty.</p>
+	 * @param delegate the underlying List
 	 * @return a new, empty SyncedList
 	 */
 	public static SyncedList<String> forString(List<String> delegate) {
@@ -83,7 +89,8 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding UUIDs, based on an empty {@link java.util.ArrayList}.</p>
+	 * <p>Create a new {@code SyncedList} for holding UUIDs, based on an empty {@link java.util.ArrayList}.
+	 * The returned List supports null values.</p>
 	 * @return a new, empty SyncedList
 	 */
 	public static SyncedList<UUID> forUUID() {
@@ -91,9 +98,10 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding UUIDs, based the given List.</p>
-	 * <p>It is recommended that the passed in list is empty.</p>
-	 * @param delegate the underlying list to use
+	 * <p>Create a new {@code SyncedList} for holding UUIDs, based the given List.
+	 * The returned List supports null values if the delegate does.</p>
+	 * <p>It is recommended that the passed in List is empty.</p>
+	 * @param delegate the underlying List
 	 * @return a new, empty SyncedList
 	 */
 	public static SyncedList<UUID> forUUID(List<UUID> delegate) {
@@ -101,28 +109,54 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding instances of the given class, based on an empty {@link java.util.ArrayList}.</p>
-	 * @param clazz the class of the elements in this list
-	 * @return a new, empty SyncedList
+	 * <p>Create a new {@code SyncedList} for holding instances of the given class, based on an empty {@link java.util.ArrayList}.
+	 * The returned List supports null values.</p>
+	 * @param clazz the class of the elements in this List
+	 * @return a new SyncedList
 	 */
 	public static <E extends ByteStreamSerializable> SyncedList<E> create(Class<E> clazz) {
-		return withSerializer(Serializers.wrap(clazz));
+		return create(new ArrayList<E>(), clazz, true);
+	}
+
+	/**
+	 * <p>Create a new {@code SyncedList} for holding instances of the given class, based on an empty {@link java.util.ArrayList}.</p>
+	 * @param clazz the class of the elements in this List
+	 * @param supportNull if the returned collection should support null values
+	 * @return a new SyncedList
+	 */
+	public static <E extends ByteStreamSerializable> SyncedList<E> create(Class<E> clazz, boolean supportNull) {
+		return create(new ArrayList<E>(), clazz, supportNull);
+	}
+
+	/**
+	 * <p>Create a new {@code SyncedList} for holding instances of the given class, based the given List.
+	 * The returned List supports null values if the delegate does.</p>
+	 * @param delegate the underlying List
+	 * @param clazz the class of the elements in this List
+	 * @return a new SyncedList
+	 */
+	public static <E extends ByteStreamSerializable> SyncedList<E> create(List<E> delegate, Class<E> clazz) {
+		return create(delegate, clazz, true);
 	}
 
 	/**
 	 * <p>Create a new {@code SyncedList} for holding instances of the given class, based the given List.</p>
+	 * <p><strong>Note:</strong> the returned List only supports null values if both {@code supportNull} is true and
+	 * the delegate supports null values.</p>
 	 * <p>It is recommended that the passed in list is empty.</p>
-	 * @param delegate the underlying list to use
-	 * @param clazz the class of the elements in this list
-	 * @return a new, empty SyncedList
+	 * @param delegate the underlying List
+	 * @param clazz the class of the elements in this List
+	 * @param supportNull if the returned collection should support null values
+	 * @return a new SyncedList
 	 */
-	public static <E extends ByteStreamSerializable> SyncedList<E> create(List<E> delegate, Class<E> clazz) {
-		return withSerializer(delegate, Serializers.wrap(clazz));
+	public static <E extends ByteStreamSerializable> SyncedList<E> create(List<E> delegate, Class<E> clazz, boolean supportNull) {
+		return new WithSerializer<>(delegate, Serializers.wrap(clazz, supportNull));
 	}
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding instances of class E, based on an empty {@link java.util.ArrayList}.</p>
-	 * @param serializer a ByteStreamSerializer for serializing the elements of this list
+	 * <p>Create a new {@code SyncedList} for holding instances of class E, based on an empty {@link java.util.ArrayList}.
+	 * The returned List supports null values if the serializer does.</p>
+	 * @param serializer a ByteStreamSerializer for serializing the elements
 	 * @return a new, empty SyncedList
 	 */
 	public static <E> SyncedList<E> withSerializer(ByteStreamSerializer<E> serializer) {
@@ -130,10 +164,11 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	/**
-	 * <p>Create a new {@code SyncedList} for holding instances of class E, based the given List.</p>
-	 * <p>It is recommended that the passed in list is empty.</p>
-	 * @param delegate the underlying list to use
-	 * @param serializer a ByteStreamSerializer for serializing the elements of this list
+	 * <p>Create a new {@code SyncedList} for holding instances of class E, based the given List.
+	 * The returned List supports null values if the serializer and the delegate do.</p>
+	 * <p>It is recommended that the passed in List is empty.</p>
+	 * @param delegate the underlying List
+	 * @param serializer a ByteStreamSerializer for serializing the elements
 	 * @return a new, empty SyncedList
 	 */
 	public static <E> SyncedList<E> withSerializer(List<E> delegate, ByteStreamSerializer<E> serializer) {
@@ -141,7 +176,7 @@ public abstract class SyncedList<E> implements List<E>, Syncable {
 	}
 
 	/**
-	 * <p>Mark the entire List dirty, meaning it will be re-synced on next query.</p>
+	 * <p>Mark the entire List dirty, meaning it will synchronize on next query.</p>
 	 */
 	public void markDirty() {
 		sendAll = true;
