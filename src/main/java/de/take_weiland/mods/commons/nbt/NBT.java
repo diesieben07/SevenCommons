@@ -1,24 +1,20 @@
 package de.take_weiland.mods.commons.nbt;
 
-import com.google.common.base.Function;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
-import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.internal.SerializerUtil;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
 public final class NBT {
-
-	private NBT() {
-	}
 
 	/**
 	 * view the given NBTTagList as a {@link List}<br>
@@ -54,81 +50,70 @@ public final class NBT {
 		return nbt == null ? null : (T) nbt.copy();
 	}
 
-	public static Function<NBTTagString, String> getStringFunction() {
-		return NbtStringDataFunction.INSTANCE;
+	private static final byte NULL = -1;
+	private static final int NBT_COMPOUND_ID = 10;
+	private static final String NULL_KEY = "_sc$null";
+
+	public static NBTBase serialize(@Nullable NBTSerializable serializable) {
+		if (serializable == null) {
+			NBTTagCompound result = new NBTTagCompound();
+			result.setByte(NULL_KEY, NULL);
+			return result;
+		} else {
+			return serializable.serialize();
+		}
 	}
 
-	private static final Map<Class<?>, NBTSerializer<?>> serializers = Maps.newHashMap();
-
-	public static <T> void registerSerializer(Class<T> toSerialize, NBTSerializer<? super T> serializer) {
-		serializers.put(toSerialize, serializer);
+	public static <T extends NBTSerializable> T deserialize(@NotNull Class<T> clazz, @NotNull NBTBase nbt) {
+		return serializer(clazz).deserialize(nbt);
 	}
 
-	public static <T> NBTSerializer<? super T> getSerializer(T toSerialize) {
-		return (NBTSerializer<? super T>) getSerializer(toSerialize.getClass());
-	}
+	private static Map<Class<?>, NBTSerializer<?>> serializers;
 
-	public static <T> NBTSerializer<? super T> getSerializer(Class<T> toSerialize) {
+	public static <T extends NBTSerializable> NBTSerializer<T> serializer(@NotNull Class<T> clazz) {
+		if (serializers == null) {
+			serializers = Maps.newHashMap();
+		}
 		@SuppressWarnings("unchecked")
-		NBTSerializer<? super T> instance = (NBTSerializer<? super T>) serializers.get(toSerialize);
-		if (instance == null) {
-			return DefaultSerializer.INSTANCE;
+		NBTSerializer<T> serializer = (NBTSerializer<T>) serializers.get(clazz);
+		if (serializer == null) {
+			serializers.put(clazz, (serializer = compileSerializer(clazz)));
 		}
-		return instance;
+		return serializer;
 	}
 
-	public static <T> NBTTagCompound serialize(T toSerialize) {
-		return getSerializer(toSerialize).serialize(toSerialize);
+	private static <T extends NBTSerializable> NBTSerializer<T> compileSerializer(Class<T> clazz) {
+		return new SerializerWrapper<>(SerializerUtil.findDeserializer(clazz, NBTSerializable.Deserializer.class, NBTBase.class));
 	}
 
-	private static enum DefaultSerializer implements NBTSerializer<Object> {
-		INSTANCE;
+	private static final class SerializerWrapper<T extends NBTSerializable> implements NBTSerializer<T> {
 
-		@Override
-		public NBTTagCompound serialize(Object instance) {
-			NBTTagCompound nbt = new NBTTagCompound();
+		private final Method deserializer;
 
-
-			return nbt;
+		SerializerWrapper(Method deserializer) {
+			this.deserializer = deserializer;
 		}
 
 		@Override
-		public Object deserialize(NBTTagCompound nbt) {
-			return null;
+		public NBTBase serialize(T instance) {
+			return NBT.serialize(instance);
 		}
-	}
 
-	private static enum NbtStringDataFunction implements Function<NBTTagString, String> {
-
-		INSTANCE;
-
+		@SuppressWarnings("unchecked")
 		@Override
-		public String apply(NBTTagString input) {
-			return input.data;
-		}
-
-	}
-
-	static {
-		registerSerializer(Class.class, new NBTSerializer<Class>() {
-			@Override
-			public NBTTagCompound serialize(Class instance) {
-				NBTTagCompound nbt = new NBTTagCompound();
-				nbt.setString("class", instance.getName());
-				return nbt;
-			}
-
-			@Override
-			public Class deserialize(NBTTagCompound nbt) {
-				String name = nbt.getString("class");
+		public T deserialize(NBTBase nbt) {
+			if (nbt.getId() == NBT_COMPOUND_ID && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL) {
+				return null;
+			} else {
 				try {
-					return name.isEmpty() ? null : Class.forName(name);
-				} catch (ClassNotFoundException e) {
-					throw JavaUtils.throwUnchecked(e);
+					return (T) deserializer.invoke(null, nbt);
+				} catch (Exception e) {
+					throw Throwables.propagate(e);
 				}
 			}
-		});
-
+		}
 	}
+
+	private NBT() { }
 
 }

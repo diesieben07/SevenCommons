@@ -27,10 +27,14 @@ import java.lang.annotation.Target;
  */
 public interface ByteStreamSerializable {
 
+	/**
+	 * <p>Write this object to the stream.</p>
+	 * @param out the stream
+	 */
 	void writeTo(MCDataOutputStream out);
 
 	/**
-	 * <p>Used to mark the deserialization method of this class. See {@link de.take_weiland.mods.commons.util.ByteStreamSerializable}.</p>
+	 * <p>Marker for the deserialization method. See {@link de.take_weiland.mods.commons.util.ByteStreamSerializable}.</p>
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
