@@ -30,8 +30,19 @@ public @interface ToNbt {
 	/**
 	 * the key to use for this field. Empty String (default) uses the field/method name
 	 */
-	String value() default "";
+	String key() default "";
 
 	Class<? extends NBTSerializer<?>> serializer() default AnnotationNull.class;
+
+	boolean nullable() default true;
+
+	ValueMissingAction onMissing() default ValueMissingAction.USE_DEFAULT;
+
+	enum ValueMissingAction {
+
+		USE_DEFAULT,
+		THROW
+
+	}
 
 }

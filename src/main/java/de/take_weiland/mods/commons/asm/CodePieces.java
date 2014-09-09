@@ -502,11 +502,91 @@ public final class CodePieces {
 	 * <p>Create a CodePiece that represents the given value, casted to the given class.</p>
 	 *
 	 * @param internalName the internal name of the class class to cast to
-	 * @param value        a CodePiece representing the value
+	 * @param value a CodePiece representing the value
 	 * @return a CodePiece
 	 */
 	public static CodePiece castTo(String internalName, CodePiece value) {
 		return value.append(new TypeInsnNode(CHECKCAST, internalName));
+	}
+
+	/**
+	 * <p>Create a CodePieces that converts the primitive value to another type of primitive.</p>
+	 * @param value the value
+	 * @param from the original type of the value
+	 * @param to the type to be converted to
+	 * @return a CodePiece
+	 */
+	public static CodePiece castPrimitive(CodePiece value, Type from, Type to) {
+		checkArgument(ASMUtils.isPrimitive(from) && ASMUtils.isPrimitive(to), "Types must be primivites");
+
+		int from0 = from.getSort();
+		int to0 = to.getSort();
+
+		if (from0 == to0) {
+			return value;
+		}
+
+		if (to0 == Type.BOOLEAN || from0 == Type.BOOLEAN) {
+			throw new IllegalArgumentException("Cannot cast from " + from + " to " + to);
+		}
+
+		switch (to0) {
+			case Type.BYTE:
+				return toInt(value, from0).append(new InsnNode(I2B));
+			case Type.SHORT:
+				return toInt(value, from0).append(new InsnNode(I2S));
+			case Type.CHAR:
+				return toInt(value, from0).append(new InsnNode(I2C));
+			case Type.INT:
+				return toInt(value, from0);
+			case Type.LONG:
+				switch (from0) {
+					case Type.FLOAT:
+						return value.append(new InsnNode(F2L));
+					case Type.DOUBLE:
+						return value.append(new InsnNode(D2L));
+					default:
+						return value.append(new InsnNode(I2L));
+				}
+			case Type.FLOAT:
+				switch (from0) {
+					case Type.LONG:
+						return value.append(new InsnNode(L2F));
+					case Type.DOUBLE:
+						return value.append(new InsnNode(D2F));
+					default:
+						return value.append(new InsnNode(I2F));
+				}
+			case Type.DOUBLE:
+				switch (from0) {
+					case Type.LONG:
+						return value.append(new InsnNode(L2D));
+					case Type.FLOAT:
+						return value.append(new InsnNode(F2D));
+					default:
+						return value.append(new InsnNode(I2D));
+				}
+			default:
+				throw new AssertionError();
+		}
+	}
+
+	private static CodePiece toInt(CodePiece value, int fromType) {
+		CodePiece intVal;
+		switch (fromType) {
+			case Type.LONG:
+				intVal = value.append(new InsnNode(L2I));
+				break;
+			case Type.FLOAT:
+				intVal = value.append(new InsnNode(F2I));
+				break;
+			case Type.DOUBLE:
+				intVal = value.append(new InsnNode(D2I));
+				break;
+			default:
+				intVal = value;
+		}
+		return intVal;
 	}
 
 	public static CodePiece doThrow(Class<? extends Exception> ex) {
@@ -907,7 +987,7 @@ public final class CodePieces {
 		return invoke(INVOKESTATIC, owner, name, desc, a, b);
 	}
 
-	private static int negateJmpOpcode(int op) {
+	static int negateJmpOpcode(int op) {
 		switch (op) {
 			case IFEQ:
 				return IFNE;

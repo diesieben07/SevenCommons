@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,17 +43,25 @@ public final class MCPNames {
 		return SevenCommons.MCP_ENVIRONMENT;
 	}
 
-	public static String field(String srg) {
+	public static String field(@NotNull String srg) {
 		if (use()) {
-			return fields.get(srg);
+			String mcp = fields.get(srg);
+			if (mcp == null) {
+				throw new RuntimeException("Unknown SRG field " + srg);
+			}
+			return mcp;
 		} else {
 			return srg;
 		}
 	}
 
-	public static String method(String srg) {
+	public static String method(@NotNull String srg) {
 		if (use()) {
-			return methods.get(srg);
+			String mcp = methods.get(srg);
+			if (mcp == null) {
+				throw new RuntimeException("Unknown SRG method " + srg);
+			}
+			return mcp;
 		} else {
 			return srg;
 		}
@@ -198,6 +207,18 @@ public final class MCPNames {
 	public static final String M_NBT_WRITE = "func_74734_a";
 
 	public static final String M_NBT_LOAD = "func_74735_a";
+
+	public static final String F_NBT_STRING_DATA = "field_74751_a";
+	public static final String F_NBT_BYTE_DATA = "field_74756_a";
+	public static final String F_NBT_SHORT_DATA = "field_74752_a";
+	public static final String F_NBT_INT_DATA = "field_74748_a";
+	public static final String F_NBT_LONG_DATA = "field_74753_a";
+	public static final String F_NBT_FLOAT_DATA = "field_74750_a";
+	public static final String F_NBT_DOUBLE_DATA = "field_74755_a";
+
+	public static final String M_SET_TAG = "func_74782_a";
+
+	public static final String M_NBT_GET_ID = "func_74732_a";
 
 	private MCPNames() { }
 

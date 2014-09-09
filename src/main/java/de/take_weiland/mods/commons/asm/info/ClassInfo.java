@@ -225,6 +225,12 @@ public abstract class ClassInfo extends HasModifiers {
 		if (!isInterface() && child.isInterface()) {
 			return false;
 		}
+
+		// final classes cannot be subclassed
+		if (isFinal()) {
+			return false;
+		}
+
 		// need to compute supers now
 		return child.getSupers().contains(myName);
 	}
@@ -403,7 +409,6 @@ public abstract class ClassInfo extends HasModifiers {
 	@Override
 	public boolean equals(Object o) {
 		return this == o || o instanceof ClassInfo && internalName().equals(((ClassInfo) o).internalName());
-
 	}
 
 	@Override

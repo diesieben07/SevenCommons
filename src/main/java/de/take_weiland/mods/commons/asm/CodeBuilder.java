@@ -49,7 +49,6 @@ public final class CodeBuilder {
 	public CodePiece build() {
 		ArrayList<CodePiece> list = pieces;
 		pieces = null;
-		list.trimToSize();
 		return new CombinedCodePiece(list.toArray(new CodePiece[list.size()]));
 	}
 

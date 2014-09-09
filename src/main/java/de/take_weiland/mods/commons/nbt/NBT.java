@@ -2,19 +2,32 @@ package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
+import de.take_weiland.mods.commons.internal.NBTSerialization;
 import de.take_weiland.mods.commons.internal.SerializerUtil;
 import de.take_weiland.mods.commons.util.SCReflector;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class NBT {
+
+	public static final int TAG_END = 0;
+	public static final int TAG_BYTE = 1;
+	public static final int TAG_SHORT = 2;
+	public static final int TAG_INT = 3;
+	public static final int TAG_LONG = 4;
+	public static final int TAG_FLOAT = 5;
+	public static final int TAG_DOUBLE = 6;
+	public static final int TAG_BYTE_ARR = 7;
+	public static final int TAG_STRING = 8;
+	public static final int TAG_LIST = 9;
+	public static final int TAG_COMPOUND = 10;
+	public static final int TAG_INT_ARR = 11;
 
 	/**
 	 * view the given NBTTagList as a {@link List}<br>
@@ -50,15 +63,33 @@ public final class NBT {
 		return nbt == null ? null : (T) nbt.copy();
 	}
 
-	private static final byte NULL = -1;
-	private static final int NBT_COMPOUND_ID = 10;
-	private static final String NULL_KEY = "_sc$null";
+	public static NBTBase writeUUID(UUID uuid) {
+		if (uuid == null) {
+			return NBTSerialization.serializedNull();
+		} else {
+			return NBTSerialization.writeUUID(uuid);
+		}
+	}
+
+	public static void writeUUID(UUID uuid, @NotNull NBTTagCompound nbt, @NotNull String key) {
+		nbt.setTag(key, writeUUID(uuid));
+	}
+
+	public static UUID readUUID(NBTBase nbt) {
+		if (NBTSerialization.isSerializedNull(nbt) || nbt.getId() != TAG_LIST) {
+			return null;
+		} else {
+			return NBTSerialization.readUUID(nbt);
+		}
+	}
+
+	public static UUID readUUID(@NotNull NBTTagCompound nbt, @NotNull String key) {
+		return readUUID(nbt.getTag(key));
+	}
 
 	public static NBTBase serialize(@Nullable NBTSerializable serializable) {
 		if (serializable == null) {
-			NBTTagCompound result = new NBTTagCompound();
-			result.setByte(NULL_KEY, NULL);
-			return result;
+			return NBTSerialization.serializedNull();
 		} else {
 			return serializable.serialize();
 		}
@@ -102,7 +133,7 @@ public final class NBT {
 		@SuppressWarnings("unchecked")
 		@Override
 		public T deserialize(NBTBase nbt) {
-			if (nbt.getId() == NBT_COMPOUND_ID && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL) {
+			if (NBTSerialization.isSerializedNull(nbt)) {
 				return null;
 			} else {
 				try {
