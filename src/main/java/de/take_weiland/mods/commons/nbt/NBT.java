@@ -95,6 +95,30 @@ public final class NBT {
 		}
 	}
 
+	public static <E extends Enum<E>> NBTBase writeEnum(E e) {
+		if (e == null) {
+			return NBTSerialization.serializedNull();
+		} else {
+			return NBTSerialization.writeEnum(e);
+		}
+	}
+
+	public static <E extends Enum<E>> void writeEnum(@NotNull NBTTagCompound nbt, @NotNull String key, @Nullable E e) {
+		nbt.setTag(key, writeEnum(e));
+	}
+
+	public static <E extends Enum<E>> E readEnum(@NotNull NBTBase nbt, @NotNull Class<E> clazz) {
+		if (NBTSerialization.isSerializedNull(nbt)) {
+			return null;
+		} else {
+			return NBTSerialization.readEnum(nbt, clazz);
+		}
+	}
+
+	public static <E extends Enum<E>> E readEnum(@NotNull NBTTagCompound nbt, @NotNull String key, @NotNull Class<E> clazz) {
+		return readEnum(nbt.getTag(key), clazz);
+	}
+
 	public static <T extends NBTSerializable> T deserialize(@NotNull Class<T> clazz, @NotNull NBTBase nbt) {
 		return serializer(clazz).deserialize(nbt);
 	}

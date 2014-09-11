@@ -45,4 +45,11 @@ public final class NBTSerialization {
 
 	private NBTSerialization() { }
 
+	public static <E extends Enum<E>> E readEnum(NBTBase nbt, Class<E> clazz) {
+		return nbt.getId() == NBT.TAG_STRING ? Enum.valueOf(clazz, ((NBTTagString) nbt).data) : null;
+	}
+
+	public static <E extends Enum<E>> NBTBase writeEnum(E e) {
+		return new NBTTagString("", e.name());
+	}
 }

@@ -146,9 +146,10 @@ abstract class SyncingTransformerImpl {
 
 		CodePiece writeTerm = doWriteIndex(directStream, CodePieces.constant(TERMINATOR));
 		CodePiece streamFinished = writeTerm.append(handleWriteFinished(directStream));
-		CodePiece checkStreamNull = CodePieces.doIf(IFNONNULL, directStream, streamFinished);
+		CodePiece checkStreamNull = ASMCondition.ifNotNull(directStream).doIfTrue(streamFinished);
 
-		CodePieces.doIfNot(isSuperCall, isOutStreamLazy() ? checkStreamNull : streamFinished).appendTo(insns);
+		CodePiece body = isOutStreamLazy() ? checkStreamNull : streamFinished;
+		ASMCondition.ifFalse(isSuperCall).doIfTrue(body).appendTo(insns);
 	}
 
 	private void addSyncRead() {
@@ -191,7 +192,7 @@ abstract class SyncingTransformerImpl {
 		switchBuilder.add(TERMINATOR, CodePieces.constant(TERMINATOR).append(new InsnNode(IRETURN)));
 
 		CodePiece returnIndex = index.get().append(new InsnNode(IRETURN));
-		CodePiece defaultHandler = CodePieces.doIfElse(isSuperCall.get(), returnIndex, throwInvalidIdx());
+		CodePiece defaultHandler = ASMCondition.ifTrue(isSuperCall.get()).doIfElse(returnIndex, throwInvalidIdx());
 
 		switchBuilder.onDefault(defaultHandler);
 		switchBuilder.build().appendTo(insns);

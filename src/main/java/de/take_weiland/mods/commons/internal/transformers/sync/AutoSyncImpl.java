@@ -1,9 +1,6 @@
 package de.take_weiland.mods.commons.internal.transformers.sync;
 
-import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.ASMVariable;
-import de.take_weiland.mods.commons.asm.CodePiece;
-import de.take_weiland.mods.commons.asm.CodePieces;
+import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.internal.sync.AutoSyncedObject;
@@ -103,7 +100,7 @@ public class AutoSyncImpl extends SyncingTransformerImpl {
 				.append(new InsnNode(POP));
 
 		CodePiece myClass = CodePieces.constant(Type.getObjectType(clazz.name));
-		CodePiece checkedDoSync = CodePieces.doIfSame(syncClass, myClass, invokeDoSync, Type.getType(Class.class));
+		CodePiece checkedDoSync = ASMCondition.ifSame(syncClass, myClass, Type.getType(Class.class)).doIfTrue(invokeDoSync);
 
 		method.addDoSyncCall(clazz, checkedDoSync);
 	}

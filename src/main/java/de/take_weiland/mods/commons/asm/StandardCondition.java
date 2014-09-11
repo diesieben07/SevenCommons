@@ -3,6 +3,8 @@ package de.take_weiland.mods.commons.asm;
 import org.objectweb.asm.tree.JumpInsnNode;
 import org.objectweb.asm.tree.LabelNode;
 
+import java.util.List;
+
 /**
  * @author diesieben07
  */
@@ -18,7 +20,7 @@ class StandardCondition extends ASMCondition {
 
 	@Override
 	public ASMCondition negate() {
-		return new StandardCondition(args, CodePieces.negateJmpOpcode(cmpOpcode));
+		return new StandardCondition(args, negateJmpOpcode(cmpOpcode));
 	}
 
 	@Override
@@ -30,7 +32,7 @@ class StandardCondition extends ASMCondition {
 	@Override
 	void jumpToIfFalse(CodeBuilder cb, LabelNode lbl, ContextKey context) {
 		cb.add(args);
-		cb.add(new JumpInsnNode(CodePieces.negateJmpOpcode(cmpOpcode), lbl), context);
+		cb.add(new JumpInsnNode(negateJmpOpcode(cmpOpcode), lbl), context);
 	}
 
 	@Override
@@ -39,48 +41,13 @@ class StandardCondition extends ASMCondition {
 	}
 
 	@Override
-	ASMCondition invokeOrCombination(ASMCondition self) {
-		return self.orFromNormal(this);
+	void unwrapIntoOr(List<ASMCondition> list) {
+		list.add(this);
 	}
 
 	@Override
-	ASMCondition invokeAndCombination(ASMCondition self) {
-		return self.andFromNormal(this);
+	void unwrapIntoAnd(List<ASMCondition> list) {
+		list.add(this);
 	}
 
-	@Override
-	ASMCondition orFromNormal(StandardCondition other) {
-		return new OrCondition(this, other);
-	}
-
-	@Override
-	ASMCondition orFromOr(OrCondition other) {
-		ASMCondition[] all = new ASMCondition[other.conditions.length + 1];
-		all[0] = this;
-		System.arraycopy(other.conditions, 0, all, 1, other.conditions.length);
-		return new OrCondition(all);
-	}
-
-	@Override
-	ASMCondition orFromAnd(AndCondition other) {
-		return new OrCondition(this, other);
-	}
-
-	@Override
-	ASMCondition andFromNormal(StandardCondition other) {
-		return new AndCondition(this, other);
-	}
-
-	@Override
-	ASMCondition andFromOr(OrCondition other) {
-		return new AndCondition(this, other);
-	}
-
-	@Override
-	ASMCondition andFromAnd(AndCondition other) {
-		ASMCondition[] all = new ASMCondition[other.conditions.length + 1];
-		all[0] = this;
-		System.arraycopy(other.conditions, 0, all, 1, other.conditions.length);
-		return new AndCondition(all);
-	}
 }

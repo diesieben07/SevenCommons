@@ -59,7 +59,7 @@ abstract class NBTPropHandler {
 			String desc = Type.getMethodDescriptor(getType(NBTBase.class));
 			CodePiece nullSer = CodePieces.invokeStatic(owner, name, desc);
 
-			return CodePieces.doIfElse(IFNULL, var.get(), nullSer, nonNullSer);
+			return ASMCondition.custom(IFNULL, var.get()).doIfElse(nullSer, nonNullSer);
 		} else {
 			return toNbt0(var.get());
 		}
@@ -241,7 +241,7 @@ abstract class NBTPropHandler {
 			switch (var.getType().getSort()) {
 				case Type.BOOLEAN:
 					owner = getInternalName(NBTTagByte.class);
-					transValue = CodePieces.doIfElse(value, constant(1), constant(0));
+					transValue = ifTrue(value).doIfElse(constant(1), constant(0));
 					targetType = Type.BYTE_TYPE;
 					break;
 				case Type.BYTE:
@@ -279,7 +279,7 @@ abstract class NBTPropHandler {
 		CodePiece fromNbt(CodePiece nbt) {
 			switch (var.getType().getSort()) {
 				case Type.BOOLEAN:
-					return doIfElse(IFEQ, getByte(nbt), constant(false), constant(true));
+					return ASMCondition.custom(IFEQ, getByte(nbt)).doIfElse(constant(false), constant(true));
 				case Type.BYTE:
 					return getByte(nbt);
 				case Type.SHORT:
@@ -364,29 +364,19 @@ abstract class NBTPropHandler {
 
 		@Override
 		CodePiece toNbt0(CodePiece value) {
-			String owner = getInternalName(Enum.class);
-			String name = "name";
-			String desc = getMethodDescriptor(getType(String.class));
-			CodePiece enumName = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, value);
-
-			Type[] argTypes = {getType(String.class), getType(String.class)};
-			return CodePieces.instantiate(NBTTagString.class, argTypes, constant(""), enumName);
+			String owner = getInternalName(NBTSerialization.class);
+			String name = "writeEnum";
+			String desc = getMethodDescriptor(getType(NBTBase.class), getType(Enum.class));
+			return CodePieces.invoke(INVOKESTATIC, owner, name, desc, value);
 		}
 
 		@Override
 		CodePiece fromNbt(CodePiece nbt) {
-			String owner = getInternalName(NBTTagString.class);
-			String name = MCPNames.field(F_NBT_STRING_DATA);
-			String desc = getDescriptor(String.class);
+			String owner = getInternalName(NBTSerialization.class);
+			String name = "readEnum";
+			String desc = getMethodDescriptor(getType(Enum.class), getType(NBTBase.class), getType(Class.class));
 
-			CodePiece enumName = CodePieces.getField(owner, name, desc, castTo(NBTTagString.class, nbt));
-
-			owner = getInternalName(Enum.class);
-			name = "valueOf";
-			desc = getMethodDescriptor(getType(Enum.class), getType(Class.class), getType(String.class));
-
-			CodePiece value = CodePieces.invokeStatic(owner, name, desc, constant(var.getType()), enumName);
-			return castTo(var.getType(), value);
+			return CodePieces.invokeStatic(owner, name, desc, nbt, constant(var.getType()));
 		}
 	}
 

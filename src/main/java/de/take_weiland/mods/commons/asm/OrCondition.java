@@ -2,6 +2,9 @@ package de.take_weiland.mods.commons.asm;
 
 import org.objectweb.asm.tree.LabelNode;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author diesieben07
  */
@@ -50,23 +53,13 @@ class OrCondition extends ASMCondition {
 	}
 
 	@Override
-	ASMCondition invokeOrCombination(ASMCondition self) {
-		return self.orFromOr(this);
+	void unwrapIntoOr(List<ASMCondition> list) {
+		Collections.addAll(list, conditions);
 	}
 
 	@Override
-	ASMCondition invokeAndCombination(ASMCondition self) {
-		return null;
-	}
-
-	@Override
-	ASMCondition orFromNormal(StandardCondition other) {
-		return standardOr(other);
-	}
-
-	@Override
-	ASMCondition orFromAnd(AndCondition other) {
-		return standardOr(other);
+	void unwrapIntoAnd(List<ASMCondition> list) {
+		list.add(this);
 	}
 
 	private ASMCondition standardOr(ASMCondition other) {
@@ -76,29 +69,4 @@ class OrCondition extends ASMCondition {
 		return new OrCondition(all);
 	}
 
-	@Override
-	ASMCondition orFromOr(OrCondition other) {
-		ASMCondition[] all = new ASMCondition[other.conditions.length + this.conditions.length];
-		System.arraycopy(this.conditions, 0, all, 0, this.conditions.length);
-		System.arraycopy(other.conditions, 0, all, this.conditions.length, other.conditions.length);
-		return new OrCondition(all);
-	}
-
-	@Override
-	ASMCondition andFromNormal(StandardCondition other) {
-		return new AndCondition(this, other);
-	}
-
-	@Override
-	ASMCondition andFromOr(OrCondition other) {
-		return new AndCondition(this, other);
-	}
-
-	@Override
-	ASMCondition andFromAnd(AndCondition other) {
-		ASMCondition[] all = new ASMCondition[other.conditions.length + 1];
-		all[0] = this;
-		System.arraycopy(other.conditions, 0, all, 1, other.conditions.length);
-		return new AndCondition(all);
-	}
 }

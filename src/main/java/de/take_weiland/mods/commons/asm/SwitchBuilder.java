@@ -4,6 +4,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.util.Arrays;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static de.take_weiland.mods.commons.asm.CodePieces.constant;
 import static org.objectweb.asm.Opcodes.*;
 
 /**
@@ -60,9 +62,9 @@ public final class SwitchBuilder {
 			return CodePieces.concat(value, CodePieces.ofOpcode(POP), bodies.get(null));
 		} else if (size == 2) {
 			CodePiece defaultBody = bodies.remove(null);
-			return CodePieces.doIfElse(IF_ICMPEQ,
-					CodePieces.constant(Iterables.getOnlyElement(bodies.keySet()).intValue()).append(value),
-					Iterables.getOnlyElement(bodies.values()), defaultBody);
+			CodePiece onlyKey = constant((int) Iterables.getOnlyElement(bodies.keySet()));
+
+			return ASMCondition.ifEqual(onlyKey, value, Type.INT_TYPE).doIfElse(Iterables.getOnlyElement(bodies.values()), defaultBody);
 		} else {
 			CodeBuilder builder = new CodeBuilder();
 

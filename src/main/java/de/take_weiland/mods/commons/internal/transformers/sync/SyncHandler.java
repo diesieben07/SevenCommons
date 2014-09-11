@@ -143,7 +143,7 @@ abstract class SyncHandler {
 
 		@Override
 		CodePiece doChangeCheck(CodePiece onDifference) {
-			return CodePieces.doIfSame(var.get(), companion.get(), onDifference, var.getType());
+			return ASMCondition.ifSame(var.get(), companion.get(), var.getType()).doIfTrue(onDifference);
 		}
 
 		@Override
@@ -171,7 +171,7 @@ abstract class SyncHandler {
 			String desc = Type.getMethodDescriptor(BOOLEAN_TYPE, itemStackType, itemStackType);
 
 			CodePiece stacksIdentical = CodePieces.invokeStatic(owner, name, desc, var.get(), companion.get());
-			return CodePieces.doIfNot(stacksIdentical, onDifference);
+			return ASMCondition.ifFalse(stacksIdentical).doIfTrue(onDifference);
 		}
 
 		@Override
@@ -209,7 +209,7 @@ abstract class SyncHandler {
 
 		@Override
 		CodePiece doChangeCheck(CodePiece onDifference) {
-			return CodePieces.doIfNotEqual(var.get(), companion.get(), onDifference, var.getType(), canBeNull());
+			return ASMCondition.ifEqual(var.get(), companion.get(), var.getType()).doIfFalse(onDifference);
 		}
 
 		@Override
@@ -247,7 +247,7 @@ abstract class SyncHandler {
 
 		@Override
 		CodePiece doChangeCheck(CodePiece onDifference) {
-			return CodePieces.doIfNotSame(var.get(), companion.get(), onDifference, var.getType());
+			return ASMCondition.ifSame(var.get(), companion.get(), var.getType()).doIfFalse(onDifference);
 		}
 
 		@Override
@@ -279,7 +279,7 @@ abstract class SyncHandler {
 			String owner = SyncableProxyInternal.CLASS_NAME;
 			String name = SyncableProxyInternal.NEEDS_SYNCING;
 			String desc = Type.getMethodDescriptor(BOOLEAN_TYPE);
-			return CodePieces.doIf(CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, var.get()), onDifference);
+			return ASMCondition.ifTrue(CodePieces.invoke(INVOKEINTERFACE, owner, name, desc, var.get())).doIfTrue(onDifference);
 		}
 
 		@Override
@@ -311,7 +311,7 @@ abstract class SyncHandler {
 			String name = "identical";
 			String desc = ASMUtils.getMethodDescriptor(boolean.class, FluidStack.class, FluidStack.class);
 			CodePiece equal = CodePieces.invokeStatic(owner, name, desc, var.get(), companion.get());
-			return CodePieces.doIfNot(equal, onDifference);
+			return ASMCondition.ifFalse(equal).doIfTrue(onDifference);
 		}
 
 		@Override
@@ -347,7 +347,7 @@ abstract class SyncHandler {
 
 		@Override
 		CodePiece doChangeCheck(CodePiece onDifference) {
-			return CodePieces.doIfNotEqual(var.get(), companion.get(), onDifference, Type.getType(String.class), canBeNull());
+			return ASMCondition.ifEqual(var.get(), companion.get(), Type.getType(String.class)).doIfFalse(onDifference);
 		}
 
 		@Override
@@ -375,7 +375,7 @@ abstract class SyncHandler {
 
 		@Override
 		CodePiece doChangeCheck(CodePiece onDifference) {
-			return CodePieces.doIfNotEqual(var.get(), companion.get(), onDifference, Type.getType(BitSet.class), canBeNull());
+			return ASMCondition.ifEqual(var.get(), companion.get(), Type.getType(BitSet.class)).doIfFalse(onDifference);
 		}
 
 		@Override
@@ -412,12 +412,12 @@ abstract class SyncHandler {
 
 			CodePiece copy = clearComp.append(doOr);
 
-			CodePiece checkedCopy = CodePieces.doIfElse(IFNULL, companion.get(), companion.set(newBitSet).append(doOr), copy);
+			CodePiece checkedCopy = ASMCondition.ifNull(companion.get()).doIfElse(companion.set(newBitSet).append(doOr), copy);
 
 
 			if (canBeNull()) {
 				CodePiece setNull = companion.set(CodePieces.constantNull());
-				return CodePieces.doIfElse(IFNULL, var.get(), setNull, checkedCopy);
+				return ASMCondition.ifNull(var.get()).doIfElse(setNull, checkedCopy);
 			} else {
 				return checkedCopy;
 			}
@@ -449,11 +449,11 @@ abstract class SyncHandler {
 			desc = Type.getMethodDescriptor(VOID_TYPE);
 			CodePiece clear = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, companion.get());
 
-			CodePiece copyData = CodePieces.doIfElse(IFNULL, companion.get(), setNew.append(addAll), clear.append(addAll));
+			CodePiece copyData = ASMCondition.custom(IFNULL, companion.get()).doIfElse(setNew.append(addAll), clear.append(addAll));
 
 			if (canBeNull()) {
 				CodePiece setNull = companion.set(CodePieces.constantNull());
-				return CodePieces.doIfElse(IFNULL, var.get(), setNull, copyData);
+				return ASMCondition.custom(IFNULL, var.get()).doIfElse(setNull, copyData);
 			} else {
 				return copyData;
 			}
@@ -524,14 +524,14 @@ abstract class SyncHandler {
 			name = "isEnum";
 			desc = getMethodDescriptor(BOOLEAN_TYPE);
 			CodePiece isEnum = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, enumSetType.get());
-			CodePiece enumCheck = CodePieces.doIfNot(isEnum, CodePieces.doThrow(IllegalStateException.class, "Cannot resolve Type of EnumSet " + var.rawName()));
+			CodePiece enumCheck = ASMCondition.ifFalse(isEnum).doIfTrue(CodePieces.doThrow(IllegalStateException.class, "Cannot resolve Type of EnumSet " + var.rawName()));
 
 			ASMUtils.initializeStatic(impl.clazz, enumSetType.set(rawResolvedType).append(enumCheck));
 		}
 
 		@Override
 		CodePiece doChangeCheck(CodePiece onDifference) {
-			return CodePieces.doIfNotEqual(var.get(), companion.get(), onDifference, Type.getType(EnumSet.class), canBeNull());
+			return ASMCondition.ifEqual(var.get(), companion.get(), Type.getType(EnumSet.class)).doIfFalse(onDifference);
 		}
 
 		@Override
@@ -561,7 +561,7 @@ abstract class SyncHandler {
 
 		@Override
 		CodePiece doChangeCheck(CodePiece onDifference) {
-			return CodePieces.doIfNotEqual(var.get(), companion.get(), onDifference, Type.getType(UUID.class), canBeNull());
+			return ASMCondition.ifEqual(var.get(), companion.get(), Type.getType(UUID.class)).doIfFalse(onDifference);
 		}
 
 		@Override
