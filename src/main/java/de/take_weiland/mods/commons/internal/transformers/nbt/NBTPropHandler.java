@@ -5,7 +5,10 @@ import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.NBTSerialization;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.nbt.ToNbt;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidTank;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 
@@ -32,6 +35,10 @@ abstract class NBTPropHandler {
 			return new ForString(var);
 		} else if (type.getInternalName().equals("java/util/UUID")) {
 			return new ForUUID(var);
+		} else if (type.getInternalName().equals("net/minecraft/item/ItemStack")) {
+			return new ForItemStack(var);
+		} else if (type.getInternalName().equals("net/minecraftforge/fluids/FluidStack")) {
+			return new ForFluidStack(var);
 		}
 
 		ClassInfo ci = ClassInfo.of(type);
@@ -39,6 +46,8 @@ abstract class NBTPropHandler {
 			return new ForEnum(var);
 		} else if (ClassInfo.of(NBTBase.class).isAssignableFrom(ci) && !ClassInfo.of(NBTTagEnd.class).isAssignableFrom(ci)) {
 			return new ForNBT(var);
+		} else if (ClassInfo.of(FluidTank.class).isAssignableFrom(ci)) {
+			return new ForFluidTank(var);
 		} else {
 			throw new UnsupportedOperationException("Don't know how to save clazz " + type.getInternalName() + " to NBT");
 		}
@@ -50,58 +59,8 @@ abstract class NBTPropHandler {
 		this.var = var;
 	}
 
-	final CodePiece toNbt() {
-		if (canBeNull()) {
-			CodePiece nonNullSer = toNbt0(var.get());
-
-			String owner = getInternalName(NBTSerialization.class);
-			String name = NBTSerialization.SERIALIZED_NULL;
-			String desc = Type.getMethodDescriptor(getType(NBTBase.class));
-			CodePiece nullSer = CodePieces.invokeStatic(owner, name, desc);
-
-			return ASMCondition.custom(IFNULL, var.get()).doIfElse(nullSer, nonNullSer);
-		} else {
-			return toNbt0(var.get());
-		}
-	}
-
-	final CodePiece readFromNbt(CodePiece nbt) {
-		CodePiece readValue;
-		if (canBeNull()) {
-			String owner = getInternalName(NBTSerialization.class);
-			String name = NBTSerialization.IS_SERIALIZED_NULL;
-			String desc = Type.getMethodDescriptor(BOOLEAN_TYPE, getType(NBTBase.class));
-
-			CodePiece isNull = CodePieces.invokeStatic(owner, name, desc, nbt);
-			readValue = ifTrue(isNull).doIfElse(constantNull(), fromNbt(nbt));
-		} else {
-			readValue = fromNbt(nbt);
-		}
-
-		AnnotationNode ann = var.getterAnnotation(ToNbt.class);
-		ToNbt.ValueMissingAction missAction = ASMUtils.getAnnotationProperty(ann, "onMissing", ToNbt.ValueMissingAction.USE_DEFAULT);
-		CodePiece onMissing;
-		switch (missAction) {
-			case USE_DEFAULT:
-				onMissing = var.set(defaultValueForType());
-				break;
-			case THROW:
-				onMissing = CodePieces.doThrow(IOException.class, "Missing NBT value " + getKey());
-				break;
-			default:
-				throw new AssertionError();
-		}
-
-		ASMCondition validTag;
-
-		if (knowsTagType()) {
-			validTag = ifNotNull(nbt).and(nbtIdMatches(nbt, requiredTagType()));
-		} else {
-			validTag = ifNotNull(nbt);
-		}
-
-		return validTag.doIfElse(var.set(readValue), onMissing);
-	}
+	abstract CodePiece toNbt();
+	abstract CodePiece fromNbt(CodePiece nbt);
 
 	private String nbtKey;
 	final String getKey() {
@@ -120,12 +79,75 @@ abstract class NBTPropHandler {
 		return -1;
 	}
 
-	abstract CodePiece defaultValueForType();
-	abstract boolean canBeNull();
-	abstract CodePiece toNbt0(CodePiece value);
-	abstract CodePiece fromNbt(CodePiece nbt);
 
-	private static abstract class ForReference extends NBTPropHandler {
+	private static abstract class ForValue extends NBTPropHandler {
+
+		ForValue(ASMVariable var) {
+			super(var);
+		}
+
+		@Override
+		final CodePiece toNbt() {
+			if (canBeNull()) {
+				CodePiece nonNullSer = varToNbt(var.get());
+
+				String owner = getInternalName(NBTSerialization.class);
+				String name = NBTSerialization.SERIALIZED_NULL;
+				String desc = Type.getMethodDescriptor(getType(NBTBase.class));
+				CodePiece nullSer = CodePieces.invokeStatic(owner, name, desc);
+
+				return ASMCondition.custom(IFNULL, var.get()).doIfElse(nullSer, nonNullSer);
+			} else {
+				return varToNbt(var.get());
+			}
+		}
+
+		@Override
+		final CodePiece fromNbt(CodePiece nbt) {
+			CodePiece readValue;
+			if (canBeNull()) {
+				String owner = getInternalName(NBTSerialization.class);
+				String name = NBTSerialization.IS_SERIALIZED_NULL;
+				String desc = Type.getMethodDescriptor(BOOLEAN_TYPE, getType(NBTBase.class));
+
+				CodePiece isNull = CodePieces.invokeStatic(owner, name, desc, nbt);
+				readValue = ifTrue(isNull).doIfElse(constantNull(), varFromNbt(nbt));
+			} else {
+				readValue = varFromNbt(nbt);
+			}
+
+			AnnotationNode ann = var.getterAnnotation(ToNbt.class);
+			ToNbt.ValueMissingAction missAction = ASMUtils.getAnnotationProperty(ann, "onMissing", ToNbt.ValueMissingAction.DEFAULT);
+			CodePiece onMissing;
+			switch (missAction) {
+				case DEFAULT:
+					onMissing = var.set(defaultValueForType());
+					break;
+				case THROW:
+					onMissing = CodePieces.doThrow(IOException.class, "Missing NBT value " + getKey());
+					break;
+				default:
+					throw new AssertionError();
+			}
+
+			ASMCondition validTag;
+
+			if (knowsTagType()) {
+				validTag = ifNotNull(nbt).and(nbtIdMatches(nbt, requiredTagType()));
+			} else {
+				validTag = ifNotNull(nbt);
+			}
+
+			return validTag.doIfElse(var.set(readValue), onMissing);
+		}
+
+		abstract CodePiece defaultValueForType();
+		abstract boolean canBeNull();
+		abstract CodePiece varToNbt(CodePiece value);
+		abstract CodePiece varFromNbt(CodePiece nbt);
+	}
+
+	private static abstract class ForReference extends ForValue {
 
 		ForReference(ASMVariable var) {
 			super(var);
@@ -159,14 +181,14 @@ abstract class NBTPropHandler {
 		}
 
 		@Override
-		CodePiece toNbt0(CodePiece value) {
+		CodePiece varToNbt(CodePiece value) {
 			return CodePieces.instantiate(NBTTagString.class,
 					new Type[] { getType(String.class), getType(String.class) },
 					CodePieces.constant(""), var.get());
 		}
 
 		@Override
-		CodePiece fromNbt(CodePiece nbt) {
+		CodePiece varFromNbt(CodePiece nbt) {
 			String owner = getInternalName(NBTTagString.class);
 			String name = MCPNames.field(F_NBT_STRING_DATA);
 			String desc = Type.getDescriptor(String.class);
@@ -178,7 +200,7 @@ abstract class NBTPropHandler {
 		}
 	}
 
-	private static final class ForPrimitive extends NBTPropHandler {
+	private static final class ForPrimitive extends ForValue {
 
 		ForPrimitive(ASMVariable var) {
 			super(var);
@@ -233,7 +255,7 @@ abstract class NBTPropHandler {
 		}
 
 		@Override
-		CodePiece toNbt0(CodePiece value) {
+		CodePiece varToNbt(CodePiece value) {
 			String owner;
 			CodePiece transValue = value;
 			Type targetType = var.getType();
@@ -276,7 +298,7 @@ abstract class NBTPropHandler {
 		}
 
 		@Override
-		CodePiece fromNbt(CodePiece nbt) {
+		CodePiece varFromNbt(CodePiece nbt) {
 			switch (var.getType().getSort()) {
 				case Type.BOOLEAN:
 					return ASMCondition.custom(IFEQ, getByte(nbt)).doIfElse(constant(false), constant(true));
@@ -333,7 +355,7 @@ abstract class NBTPropHandler {
 		}
 
 		@Override
-		CodePiece toNbt0(CodePiece value) {
+		CodePiece varToNbt(CodePiece value) {
 			String owner = getInternalName(NBTSerialization.class);
 			String name = "writeUUID";
 			String desc = getMethodDescriptor(getType(NBTBase.class), getType(UUID.class));
@@ -342,7 +364,7 @@ abstract class NBTPropHandler {
 		}
 
 		@Override
-		CodePiece fromNbt(CodePiece nbt) {
+		CodePiece varFromNbt(CodePiece nbt) {
 			String owner = getInternalName(NBTSerialization.class);
 			String name = "readUUID";
 			String desc = getMethodDescriptor(getType(UUID.class), getType(NBTBase.class));
@@ -363,7 +385,7 @@ abstract class NBTPropHandler {
 		}
 
 		@Override
-		CodePiece toNbt0(CodePiece value) {
+		CodePiece varToNbt(CodePiece value) {
 			String owner = getInternalName(NBTSerialization.class);
 			String name = "writeEnum";
 			String desc = getMethodDescriptor(getType(NBTBase.class), getType(Enum.class));
@@ -371,7 +393,7 @@ abstract class NBTPropHandler {
 		}
 
 		@Override
-		CodePiece fromNbt(CodePiece nbt) {
+		CodePiece varFromNbt(CodePiece nbt) {
 			String owner = getInternalName(NBTSerialization.class);
 			String name = "readEnum";
 			String desc = getMethodDescriptor(getType(Enum.class), getType(NBTBase.class), getType(Class.class));
@@ -392,18 +414,89 @@ abstract class NBTPropHandler {
 		}
 
 		@Override
-		CodePiece toNbt0(CodePiece value) {
+		CodePiece varToNbt(CodePiece value) {
 			return value;
 		}
 
 		@Override
-		CodePiece fromNbt(CodePiece nbt) {
+		CodePiece varFromNbt(CodePiece nbt) {
 			if (var.getType().getInternalName().equals("net/minecraft/nbt/NBTBase")) {
 				return nbt;
 			} else {
 				return castTo(var.getType(), nbt);
 			}
 		}
+	}
+
+	private static class ForItemStack extends ForReference {
+
+		ForItemStack(ASMVariable var) {
+			super(var);
+		}
+
+		@Override
+		int requiredTagType() {
+			return NBT.TAG_COMPOUND;
+		}
+
+		@Override
+		CodePiece varToNbt(CodePiece value) {
+			CodePiece newCompound = CodePieces.instantiate(NBTTagCompound.class);
+			String owner = getInternalName(ItemStack.class);
+			String name = MCPNames.method(M_ITEMSTACK_WRITE_NBT);
+			String desc = Type.getMethodDescriptor(getType(NBTTagCompound.class), getType(NBTTagCompound.class));
+			return CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, value, newCompound);
+		}
+
+		@Override
+		CodePiece varFromNbt(CodePiece nbt) {
+			String owner = getInternalName(ItemStack.class);
+			String name = MCPNames.method(M_LOAD_ITEMSTACK_FROM_NBT);
+			String desc = Type.getMethodDescriptor(getMethodType(getType(ItemStack.class), getType(NBTTagCompound.class)));
+
+			return CodePieces.invokeStatic(owner, name, desc, castTo(NBTTagCompound.class, nbt));
+		}
+	}
+
+	private static class ForFluidStack extends ForReference {
+
+		ForFluidStack(ASMVariable var) {
+			super(var);
+		}
+
+		@Override
+		int requiredTagType() {
+			return NBT.TAG_COMPOUND;
+		}
+
+		@Override
+		CodePiece varToNbt(CodePiece value) {
+			String owner = getInternalName(FluidStack.class);
+			String name = "writeToNBT";
+			String desc = getMethodDescriptor(getType(NBTTagCompound.class), getType(NBTTagCompound.class));
+			return CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, instantiate(NBTTagCompound.class));
+		}
+
+		@Override
+		CodePiece varFromNbt(CodePiece nbt) {
+			String owner = getInternalName(FluidStack.class);
+			String name = "loadFluidStackFromNBT";
+			String desc = getMethodDescriptor(getType(FluidStack.class), getType(NBTTagCompound.class));
+			return CodePieces.invokeStatic(owner, name, desc, castTo(NBTTagCompound.class, nbt));
+		}
+	}
+
+	private static class ForFluidTank extends NBTPropHandler {
+
+		ForFluidTank(ASMVariable var) {
+			super(var);
+		}
+
+		@Override
+		int requiredTagType() {
+			return NBT.TAG_COMPOUND;
+		}
+
 	}
 
 	private static ASMCondition nbtIdMatches(CodePiece nbt, int id) {

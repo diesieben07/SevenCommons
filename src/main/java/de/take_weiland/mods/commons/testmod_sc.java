@@ -27,7 +27,7 @@ public class testmod_sc {
 		@ToNbt
 		private int foobar;
 
-		@ToNbt(onMissing = ToNbt.ValueMissingAction.USE_DEFAULT)
+		@ToNbt(onMissing = ToNbt.ValueMissingAction.DEFAULT)
 		private String ggogo = "hello";
 
 		@ToNbt

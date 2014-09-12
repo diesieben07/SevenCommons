@@ -36,11 +36,11 @@ public @interface ToNbt {
 
 	boolean nullable() default true;
 
-	ValueMissingAction onMissing() default ValueMissingAction.USE_DEFAULT;
+	ValueMissingAction onMissing() default ValueMissingAction.DEFAULT;
 
 	enum ValueMissingAction {
 
-		USE_DEFAULT,
+		DEFAULT,
 		THROW
 
 	}

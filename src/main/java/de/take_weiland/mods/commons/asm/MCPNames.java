@@ -220,6 +220,9 @@ public final class MCPNames {
 
 	public static final String M_NBT_GET_ID = "func_74732_a";
 
+	public static final String M_ITEMSTACK_WRITE_NBT = "func_77955_b";
+	public static final String M_LOAD_ITEMSTACK_FROM_NBT = "func_77949_a";
+
 	private MCPNames() { }
 
 }

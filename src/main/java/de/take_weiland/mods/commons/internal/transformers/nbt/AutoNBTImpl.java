@@ -64,7 +64,7 @@ class AutoNBTImpl {
 
 			tagVar.set(tag).appendTo(method.instructions);
 
-			handler.readFromNbt(tagVar.get()).appendTo(method.instructions);
+			handler.fromNbt(tagVar.get()).appendTo(method.instructions);
 		}
 
 		method.instructions.add(new InsnNode(RETURN));
