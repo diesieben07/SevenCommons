@@ -367,7 +367,7 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		if (bitSet == null) {
 			writeLongs(null);
 		} else {
-			writeLongs(SCReflector.instance.getWords(bitSet), 0, SCReflector.instance.getWordsInUse(bitSet));
+			BufferUtils.bitSetHandler.writeTo(bitSet, this);
 		}
 	}
 

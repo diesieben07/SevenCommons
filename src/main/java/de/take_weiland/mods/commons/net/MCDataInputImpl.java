@@ -107,17 +107,12 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public void reset() throws IOException {
+	public void reset() {
 		if (markedPos == NO_MARK) {
 			markedPos = initialPos;
 		} else {
 			pos = markedPos;
 		}
-	}
-
-	@Override
-	public boolean markSupported() {
-		return true;
 	}
 
 	final void checkAvailable(int bytes) {
@@ -279,7 +274,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		if (words == null) {
 			return null;
 		} else {
-			return BitSet.valueOf(words);
+			return BufferUtils.bitSetHandler.createShared(words);
 		}
 	}
 
@@ -492,36 +487,6 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		} else {
 			return readDouble();
 		}
-	}
-
-	@Override
-	public short[] readShorts(short[] buf) {
-		return new short[0];
-	}
-
-	@Override
-	public int[] readInts(int[] buf) {
-		return new int[0];
-	}
-
-	@Override
-	public long[] readLongs(long[] buf) {
-		return new long[0];
-	}
-
-	@Override
-	public char[] readChars(char[] buf) {
-		return new char[0];
-	}
-
-	@Override
-	public float[] readFloats(float[] buf) {
-		return new float[0];
-	}
-
-	@Override
-	public double[] readDoubles(double[] buf) {
-		return new double[0];
 	}
 
 	@Override

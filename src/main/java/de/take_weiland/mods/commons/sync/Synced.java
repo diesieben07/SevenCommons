@@ -4,17 +4,9 @@ import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 
 /**
- * <p>Implement this to make your class usable with the
- * {@link de.take_weiland.mods.commons.sync.Sync @Sync} annotation.</p>
- * <p>Properties of a type implementing this interface can have the {@code @Sync} annotation.</p>
- * <p>Usually it is not required to refer to this interface other than by implementing it, but if you do,
- * use {@link de.take_weiland.mods.commons.sync.SyncableProxy} with
- * {@link de.take_weiland.mods.commons.sync.Syncing#asSyncable(SyncableProxy)} instead to also support classes that
- * implement {@link de.take_weiland.mods.commons.sync.MakeSyncable}.</p>
- *
  * @author diesieben07
  */
-public interface Syncable extends SyncableProxy {
+public interface Synced {
 
 	/**
 	 * <p>If this object's state has changed since the last call to {@link #writeSyncDataAndReset(de.take_weiland.mods.commons.net.MCDataOutputStream)}

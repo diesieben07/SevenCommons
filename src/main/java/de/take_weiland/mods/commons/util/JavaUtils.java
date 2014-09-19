@@ -206,6 +206,23 @@ public final class JavaUtils {
 		return unsafe;
 	}
 
+	private static Object unsafe;
+	private static boolean unsafeChecked;
+
+	private static void initUnsafe() {
+		if (unsafeChecked) {
+			return;
+		}
+		unsafeChecked = true;
+		try {
+			Field field = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe");
+			field.setAccessible(true);
+			unsafe = field.get(null);
+		} catch (Exception e) {
+			// no unsafe
+		}
+	}
+
 	private static EnumValueGetter ENUM_GETTER;
 
 	static {
@@ -242,23 +259,6 @@ public final class JavaUtils {
 			return langAcc.getEnumConstantsShared(clazz);
 		}
 
-	}
-
-	private static Object unsafe;
-	private static boolean unsafeChecked;
-
-	private static void initUnsafe() {
-		if (unsafeChecked) {
-			return;
-		}
-		unsafeChecked = true;
-		try {
-			Field field = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe");
-			field.setAccessible(true);
-			unsafe = field.get(null);
-		} catch (Exception e) {
-			// no unsafe
-		}
 	}
 
 }

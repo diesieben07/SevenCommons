@@ -9,15 +9,15 @@ import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.config.ConfigInjector;
 import de.take_weiland.mods.commons.config.GetProperty;
-import de.take_weiland.mods.commons.internal.*;
+import de.take_weiland.mods.commons.internal.PacketInventoryName;
+import de.take_weiland.mods.commons.internal.ServerProxy;
+import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
-import de.take_weiland.mods.commons.internal.sync.PacketSync;
-import de.take_weiland.mods.commons.internal.sync.PacketSyncProperties;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
 import net.minecraftforge.common.Configuration;
@@ -78,13 +78,10 @@ public final class SCModContainer extends DummyModContainer {
 		ConfigInjector.inject(config, getClass());
 
 		packets = Network.newChannel("SevenCommons")
-				.register(PacketSync.class, SYNC_PACKET_ID)
 				.register(PacketInventoryName.class)
-				.register(PacketSyncProperties.class)
 				.build();
 
 		ClassInfoUtil.preInit();
-		GameRegistry.registerPlayerTracker(new SCPlayerTracker());
 
 		proxy.preInit(event);
 	}

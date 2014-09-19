@@ -26,7 +26,6 @@ public final class Fluids {
 		return stack == null ? null : stack.copy();
 	}
 
-	private Fluids() {
-	}
+	private Fluids() { }
 
 }

@@ -32,7 +32,6 @@ import net.minecraft.util.Timer;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 
@@ -162,31 +161,5 @@ public interface SCReflector {
 	@Unsafe
 	@Construct
 	String createStringShared(char[] arr, boolean dummy);
-
-	// BitSet stuff //
-
-	@Unsafe
-	@Getter(field = "wordsInUse")
-	int getWordsInUse(BitSet bitSet);
-
-	@Unsafe
-	@Getter(field = "words")
-	long[] getWords(BitSet bitSet);
-
-	@Unsafe
-	@Setter(field = "wordsInUse")
-	void setWordsInUse(BitSet set, int wordsInUse);
-
-	@Unsafe
-	@Setter(field = "words")
-	void setWords(BitSet set, long[] words);
-
-	@Unsafe
-	@Setter(field = "sizeIsSticky")
-	void setSizeIsSticky(BitSet set, boolean sizeIsSticky);
-
-	@Unsafe
-	@Construct
-	BitSet createBitsetShared(long[] arr);
 
 }

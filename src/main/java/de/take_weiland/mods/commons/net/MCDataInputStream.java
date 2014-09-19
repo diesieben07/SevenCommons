@@ -1,12 +1,11 @@
 package de.take_weiland.mods.commons.net;
 
 import de.take_weiland.mods.commons.util.JavaUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkPositionIndexes;
+import static com.google.common.base.Preconditions.*;
 
 /**
  * <p>An implementation of the {@link de.take_weiland.mods.commons.net.MCDataInput} interface that also provides
@@ -16,7 +15,7 @@ import static com.google.common.base.Preconditions.checkPositionIndexes;
  */
 public abstract class MCDataInputStream extends InputStream implements MCDataInput {
 
-	static final boolean useUnsafe = JavaUtils.hasUnsafe() && BufferUnsafeChecks.checkUseable();
+	static final boolean useUnsafe = JavaUtils.hasUnsafe() && BufferUtils.canUseUnsafe();
 
 	/**
 	 * <p>Create a new MCDataInputStream that reads from the given byte array.</p>
@@ -44,6 +43,35 @@ public abstract class MCDataInputStream extends InputStream implements MCDataInp
 		} else {
 			return new MCDataInputImplNonUnsafe(buf, off, len);
 		}
+	}
+
+	@Override
+	public abstract int read();
+
+	@Override
+	public abstract int read(@NotNull byte[] b);
+
+	@Override
+	public abstract int read(@NotNull byte[] b, int off, int len);
+
+	@Override
+	public abstract long skip(long n);
+
+	@Override
+	public abstract int available();
+
+	@Override
+	public abstract void close();
+
+	@Override
+	public abstract void mark(int readlimit);
+
+	@Override
+	public abstract void reset();
+
+	@Override
+	public final boolean markSupported() {
+		return true;
 	}
 
 	MCDataInputStream() { }

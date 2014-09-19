@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
-import de.take_weiland.mods.commons.internal.NBTSerialization;
 import de.take_weiland.mods.commons.internal.SerializerUtil;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.nbt.*;
@@ -28,6 +27,8 @@ public final class NBT {
 	public static final int TAG_LIST = 9;
 	public static final int TAG_COMPOUND = 10;
 	public static final int TAG_INT_ARR = 11;
+	private static final byte NULL = -1;
+	private static final String NULL_KEY = "_sc$null";
 
 	/**
 	 * view the given NBTTagList as a {@link List}<br>
@@ -65,9 +66,12 @@ public final class NBT {
 
 	public static NBTBase writeUUID(UUID uuid) {
 		if (uuid == null) {
-			return NBTSerialization.serializedNull();
+			return serializedNull();
 		} else {
-			return NBTSerialization.writeUUID(uuid);
+			NBTTagList nbt = new NBTTagList();
+			nbt.appendTag(new NBTTagLong("", uuid.getMostSignificantBits()));
+			nbt.appendTag(new NBTTagLong("", uuid.getLeastSignificantBits()));
+			return nbt;
 		}
 	}
 
@@ -76,10 +80,11 @@ public final class NBT {
 	}
 
 	public static UUID readUUID(NBTBase nbt) {
-		if (NBTSerialization.isSerializedNull(nbt) || nbt.getId() != TAG_LIST) {
+		if (isSerializedNull(nbt) || nbt.getId() != TAG_LIST) {
 			return null;
 		} else {
-			return NBTSerialization.readUUID(nbt);
+			NBTTagList list = (NBTTagList) nbt;
+			return new UUID(((NBTTagLong) list.tagAt(0)).data, ((NBTTagLong) list.tagAt(1)).data);
 		}
 	}
 
@@ -89,7 +94,7 @@ public final class NBT {
 
 	public static NBTBase serialize(@Nullable NBTSerializable serializable) {
 		if (serializable == null) {
-			return NBTSerialization.serializedNull();
+			return serializedNull();
 		} else {
 			return serializable.serialize();
 		}
@@ -97,9 +102,9 @@ public final class NBT {
 
 	public static <E extends Enum<E>> NBTBase writeEnum(E e) {
 		if (e == null) {
-			return NBTSerialization.serializedNull();
+			return serializedNull();
 		} else {
-			return NBTSerialization.writeEnum(e);
+			return new NBTTagString("", e.name());
 		}
 	}
 
@@ -108,15 +113,25 @@ public final class NBT {
 	}
 
 	public static <E extends Enum<E>> E readEnum(@NotNull NBTBase nbt, @NotNull Class<E> clazz) {
-		if (NBTSerialization.isSerializedNull(nbt)) {
+		if (isSerializedNull(nbt) || nbt.getId() != TAG_STRING) {
 			return null;
 		} else {
-			return NBTSerialization.readEnum(nbt, clazz);
+			return Enum.valueOf(clazz, ((NBTTagString) nbt).data);
 		}
 	}
 
 	public static <E extends Enum<E>> E readEnum(@NotNull NBTTagCompound nbt, @NotNull String key, @NotNull Class<E> clazz) {
 		return readEnum(nbt.getTag(key), clazz);
+	}
+
+	public static NBTBase serializedNull() {
+		NBTTagCompound nbt = new NBTTagCompound();
+		nbt.setByte(NULL_KEY, NULL);
+		return nbt;
+	}
+
+	public static boolean isSerializedNull(NBTBase nbt) {
+		return nbt.getId() == TAG_COMPOUND && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL;
 	}
 
 	public static <T extends NBTSerializable> T deserialize(@NotNull Class<T> clazz, @NotNull NBTBase nbt) {
@@ -157,7 +172,7 @@ public final class NBT {
 		@SuppressWarnings("unchecked")
 		@Override
 		public T deserialize(NBTBase nbt) {
-			if (NBTSerialization.isSerializedNull(nbt)) {
+			if (isSerializedNull(nbt)) {
 				return null;
 			} else {
 				try {
