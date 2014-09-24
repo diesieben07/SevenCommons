@@ -5,7 +5,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LookupSwitchInsnNode;
+import org.objectweb.asm.tree.TableSwitchInsnNode;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -22,7 +25,7 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public final class SwitchBuilder {
 
-	private static final int LOOKUPSWITCH_THRESHOLD = 6;
+	private static final int LOOKUPSWITCH_THRESHOLD = 3;
 	private final CodePiece value;
 	private final Map<Integer, CodePiece> bodies = Maps.newHashMap();
 	private final List<Integer> keysInOrder = Lists.newArrayList();
@@ -58,13 +61,14 @@ public final class SwitchBuilder {
 	public CodePiece build() {
 		checkState(bodies.containsKey(null), "switch without default");
 		int size = bodies.size();
-		if (size == 1) {
+		if (size == 1) { // we only have a "default" branch
 			return CodePieces.concat(value, CodePieces.ofOpcode(POP), bodies.get(null));
-		} else if (size == 2) {
+		} else if (size == 2) { // we only have one key + default
 			CodePiece defaultBody = bodies.remove(null);
 			CodePiece onlyKey = constant((int) Iterables.getOnlyElement(bodies.keySet()));
+			CodePiece onlyBody = Iterables.getOnlyElement(bodies.values());
 
-			return ASMCondition.ifEqual(onlyKey, value, Type.INT_TYPE).doIfElse(Iterables.getOnlyElement(bodies.values()), defaultBody);
+			return ASMCondition.ifEqual(onlyKey, value, Type.INT_TYPE).doIfElse(onlyBody, defaultBody);
 		} else {
 			CodeBuilder builder = new CodeBuilder();
 

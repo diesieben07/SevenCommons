@@ -4,7 +4,7 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
+import de.take_weiland.mods.commons.internal.SCModContainer;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.NetLoginHandler;

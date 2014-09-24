@@ -62,11 +62,4 @@ class OrCondition extends ASMCondition {
 		list.add(this);
 	}
 
-	private ASMCondition standardOr(ASMCondition other) {
-		ASMCondition[] all = new ASMCondition[conditions.length + 1];
-		System.arraycopy(conditions, 0, all, 0, conditions.length);
-		all[conditions.length] = other;
-		return new OrCondition(all);
-	}
-
 }

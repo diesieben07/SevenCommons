@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.net;
 
-import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
+import de.take_weiland.mods.commons.internal.SCModContainer;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.entity.Entity;

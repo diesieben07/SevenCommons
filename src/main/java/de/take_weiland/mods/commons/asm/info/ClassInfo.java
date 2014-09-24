@@ -178,7 +178,7 @@ public abstract class ClassInfo extends HasModifiers {
 	/**
 	 * <p>Get a {@code ClassInfo} representing the superclass of this class.</p>
 	 *
-	 * @return the superclass, or null if this class has no superclass (see {@link #superName()}
+	 * @return the superclass, or null if this class has no superclass (see {@link #superName()})
 	 */
 	public ClassInfo superclass() {
 		if (zuper != null) {

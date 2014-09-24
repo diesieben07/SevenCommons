@@ -11,7 +11,7 @@ import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.TickType;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.exclude.SCModContainer;
+import de.take_weiland.mods.commons.internal.SCModContainer;
 import net.minecraft.server.ThreadMinecraftServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

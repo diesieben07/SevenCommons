@@ -6,6 +6,7 @@ import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 /**
@@ -45,6 +46,10 @@ public final class BlockCoordinates implements ByteStreamSerializable, NBTSerial
 
 	public int getMetadata(World world) {
 		return world.getBlockMetadata(x, y, z);
+	}
+
+	public TileEntity getTileEntity(World world) {
+		return world.getBlockTileEntity(x, y, z);
 	}
 
 	public float distanceTo(int x, int y, int z) {

@@ -7,7 +7,6 @@ import de.take_weiland.mods.commons.SevenCommonsWrapper;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.launchwrapper.Launch;
-import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -25,8 +24,6 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 
 	public static final Logger LOGGER;
 	public static File MINECRAFT_DIR;
-
-	public static LaunchClassLoader CLASSLOADER = Launch.classLoader;
 
 	public static File source;
 
@@ -64,7 +61,7 @@ public final class SevenCommons implements IFMLLoadingPlugin {
 
 	@Override
 	public String getModContainerClass() {
-		return "de.take_weiland.mods.commons.internal.exclude.SCModContainer";
+		return "de.take_weiland.mods.commons.internal.SCModContainer";
 	}
 
 	@Override

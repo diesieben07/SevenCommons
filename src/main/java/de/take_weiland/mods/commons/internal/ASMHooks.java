@@ -5,6 +5,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
+import de.take_weiland.mods.commons.internal.sync.SyncType;
+import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
@@ -26,8 +28,21 @@ public final class ASMHooks {
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/ASMHooks";
 	public static final String ON_START_TRACKING = "onStartTracking";
 	public static final String ON_PLAYER_CLONE = "onPlayerClone";
+	public static final String NEW_SYNC_STREAM = "newSyncStream";
+	public static final String SEND_SYNC_STREAM = "sendSyncStream";
 
 	private ASMHooks() { }
+
+	public static MCDataOutputStream newSyncStream(Object object, SyncType type) {
+		MCDataOutputStream out = SCModContainer.packets.createStream(SCModContainer.SYNC_PACKET_ID);
+		out.writeEnum(type);
+		type.writeObject(object, out);
+		return out;
+	}
+
+	public static void sendSyncStream(Object object, SyncType type, MCDataOutputStream out) {
+		type.sendPacket(object, SCModContainer.packets.makePacket(out));
+	}
 
 	public static void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {
 		MinecraftForge.EVENT_BUS.post(new PlayerCloneEvent(oldPlayer, newPlayer));

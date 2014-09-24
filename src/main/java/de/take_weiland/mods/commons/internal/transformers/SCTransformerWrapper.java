@@ -20,6 +20,8 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		builder.add(new Packet250Transformer());
 		builder.add(new ModPacketTransformer());
 
+		builder.add(new SyncTransformer());
+
 		builder.add(new ListenableTransformer());
 
 	}

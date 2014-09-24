@@ -2,11 +2,13 @@ package de.take_weiland.mods.commons;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import de.take_weiland.mods.commons.nbt.ToNbt;
-import net.minecraft.nbt.NBTTagCompound;
+import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.sync.Sync;
+import de.take_weiland.mods.commons.util.Sides;
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.common.ForgeDirection;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.world.World;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 //@NetworkMod()
@@ -16,28 +18,46 @@ public class testmod_sc {
 
 	}
 
+	private static Block myBlock;
 
 	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent event) {
-		new Base();
+	public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, NoSuchFieldException {
+		myBlock = new Block(4000, Material.rock) {
+
+			@Override
+			public boolean hasTileEntity(int metadata) {
+				return true;
+			}
+
+			@Override
+			public TileEntity createTileEntity(World world, int metadata) {
+				return new TestTE();
+			}
+		};
+		GameRegistry.registerBlock(myBlock, "testblock");
 	}
 
-	public static class Base extends TileEntity {
+	private static class BaseTE extends TileEntity {
 
-		@ToNbt
-		private int foobar;
-
-		@ToNbt(onMissing = ToNbt.ValueMissingAction.DEFAULT)
-		private String ggogo = "hello";
-
-		@ToNbt
-		@NotNull
-		private NBTTagCompound nbt = new NBTTagCompound();
-
-		@ToNbt
-		@NotNull
-		private ForgeDirection dir = ForgeDirection.DOWN;
+		@Sync
+		private int bla;
 
 	}
+
+	private static class TestTE extends BaseTE {
+
+		@Sync
+		public String bla;
+
+		private int ticks = 0;
+		@Override
+		public void updateEntity() {
+			System.out.println("bla = " + bla + " on " + Sides.logical(this));
+			if (!worldObj.isRemote && ticks++ % 20 == 0) {
+				bla = String.valueOf(Math.random());
+			}
+		}
+	}
+
 
 }
