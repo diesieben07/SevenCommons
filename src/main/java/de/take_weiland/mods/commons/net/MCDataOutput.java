@@ -4,6 +4,8 @@ import com.google.common.io.ByteArrayDataOutput;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.util.BlockCoordinates;
 import de.take_weiland.mods.commons.util.ByteStreamSerializable;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -77,6 +79,20 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 	 * @param nbt the NBTTagCompound to write, may be null
 	 */
 	void writeNBT(NBTTagCompound nbt);
+
+	/**
+	 * <p>Writes an Item reference to the buffer.</p>
+	 * <p>If the Item is null, a VarInt {@code 32000} is written, otherwise the ID of the Item is written as a VarInt.</p>
+	 * @param item the Item
+	 */
+	void writeItem(Item item);
+
+	/**
+	 * <p>Writes a Block reference to the buffer.</p>
+	 * <p>If the Block is null, a VarInt {@code 4096} is written, otherwise the ID of the Block is written as a VarInt.</p>
+	 * @param block
+	 */
+	void writeBlock(Block block);
 
 	/**
 	 * <p>Writes the coordinates to this stream.</p>

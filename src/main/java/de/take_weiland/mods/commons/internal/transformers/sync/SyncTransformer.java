@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.transformers;
+package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -8,21 +8,17 @@ import de.take_weiland.mods.commons.asm.info.MemberInfo;
 import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.internal.sync.SyncType;
 import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
+import de.take_weiland.mods.commons.internal.transformers.AbstractAnalyzingTransformer;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
-import de.take_weiland.mods.commons.sync.PropertyWatcher;
 import de.take_weiland.mods.commons.sync.Sync;
-import de.take_weiland.mods.commons.sync.Watchers;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import java.lang.reflect.Constructor;
 import java.util.List;
 
 import static de.take_weiland.mods.commons.asm.CodePieces.*;
@@ -60,11 +56,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		int idx = state.superSyncCount;
 
 		for (ASMVariable var : vars) {
-			if (ASMUtils.isPrimitive(var.getType())) {
-				handlers.add(new PrimitiveHandler(var, ++idx));
-			} else {
-				handlers.add(new HandlerWithWatcher(var, ++idx));
-			}
+			handlers.add(PropertyHandler.create(var, ++idx));
 		}
 
 		for (PropertyHandler handler : handlers) {
@@ -319,174 +311,8 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		return (var.isField() ? "f" : "m") + "$" + var.rawName();
 	}
 
-	private static class TransformState {
-
-		List<PropertyHandler> handlers;
-		final ClassNode clazz;
-		int superSyncCount;
-		int level;
-		final SyncType type;
-
-		final List<CodePiece> firstConstructInit = Lists.newArrayList();
-		final List<CodePiece> constructorInit = Lists.newArrayList();
-
-		MethodNode readIdx;
-		MethodNode writeIdx;
-
-		MethodNode syncRead;
-		MethodNode syncWrite;
-
-		TransformState(ClassNode clazz, SyncType type) {
-			this.clazz = clazz;
-			this.type = type;
-		}
-
-		boolean isSuperSynced() {
-			return superSyncCount > 0;
-		}
+	static String companionName(ASMVariable var) {
+		return "_sc$sync$comp$" + uniqueSuffix(var);
 	}
 
-	private static abstract class PropertyHandler {
-
-		final ASMVariable var;
-		final int idx;
-
-		PropertyHandler(ASMVariable var, int idx) {
-			this.var = var;
-			this.idx = idx;
-		}
-
-		abstract void initialTransform(TransformState state);
-
-		abstract ASMCondition hasChanged();
-
-		abstract CodePiece writeAndUpdate(CodePiece stream);
-
-		abstract CodePiece read(CodePiece stream);
-	}
-
-	private static class PrimitiveHandler extends PropertyHandler {
-
-		private ASMVariable companion;
-
-		PrimitiveHandler(ASMVariable var, int idx) {
-			super(var, idx);
-		}
-
-		@Override
-		void initialTransform(TransformState state) {
-			String name = "_sc$sync$comp$" + uniqueSuffix(var);
-			String desc = var.getType().getDescriptor();
-
-			FieldNode companion = new FieldNode(ACC_PRIVATE, name, desc, null, null);
-			state.clazz.fields.add(companion);
-			this.companion = ASMVariables.of(state.clazz, companion, CodePieces.getThis());
-		}
-
-		@Override
-		ASMCondition hasChanged() {
-			return ASMCondition.ifSame(var.get(), companion.get(), var.getType()).negate();
-		}
-
-		@Override
-		CodePiece writeAndUpdate(CodePiece stream) {
-			String owner = Type.getInternalName(MCDataOutputStream.class);
-			String name = "write" + StringUtils.capitalize(var.getType().getClassName());
-			String desc = Type.getMethodDescriptor(VOID_TYPE, var.getType());
-			return CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, stream, var.get())
-					.append(companion.set(var.get()));
-		}
-
-		@Override
-		CodePiece read(CodePiece stream) {
-			String owner = Type.getInternalName(MCDataInputStream.class);
-			String name = "read" + StringUtils.capitalize(var.getType().getClassName());
-			String desc = Type.getMethodDescriptor(var.getType());
-			return var.set(CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, stream));
-		}
-	}
-
-	private static class HandlerWithWatcher extends PropertyHandler {
-
-		private ASMVariable watcherCstr;
-		private ASMVariable watcher;
-
-		HandlerWithWatcher(ASMVariable var, int idx) {
-			super(var, idx);
-		}
-
-		@Override
-		void initialTransform(TransformState state) {
-			createWatcherField(state.clazz);
-			createWatcherCstrField(state.clazz);
-
-			String owner = Type.getInternalName(Watchers.class);
-			String name = "getWatcherConstructor";
-			String desc = Type.getMethodDescriptor(getType(Constructor.class), getType(Class.class));
-			CodePiece getCstr = CodePieces.invokeStatic(owner, name, desc, CodePieces.constant(var.getType()));
-			CodePiece putCstr = watcherCstr.set(getCstr);
-
-			state.firstConstructInit.add(putCstr);
-
-			owner = Type.getInternalName(ArrayUtils.class);
-			name = "EMPTY_OBJECT_ARRAY";
-			desc = Type.getDescriptor(Object[].class);
-			CodePiece emptyArray = CodePieces.getField(owner, name, desc);
-
-			owner = Type.getInternalName(Constructor.class);
-			name = "newInstance";
-			desc = Type.getMethodDescriptor(getType(Object.class), getType(Object[].class));
-			CodePiece newInstance = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, watcherCstr.get(), emptyArray);
-			CodePiece casted = CodePieces.castTo(PropertyWatcher.class, newInstance);
-
-			CodePiece putInstance = watcher.set(casted);
-
-			state.constructorInit.add(putInstance);
-		}
-
-		private void createWatcherField(ClassNode clazz) {
-			String name = "_sc$sync$watcher$" + uniqueSuffix(var);
-			String desc = Type.getDescriptor(PropertyWatcher.class);
-			FieldNode field = new FieldNode(ACC_PRIVATE  | ACC_FINAL, name, desc, null, null);
-			clazz.fields.add(field);
-			watcher = ASMVariables.of(clazz, field, CodePieces.getThis());
-		}
-
-		private void createWatcherCstrField(ClassNode clazz) {
-			String name = "_sc$sync$watcherCstr$" + uniqueSuffix(var);
-			String desc = Type.getDescriptor(Constructor.class);
-			FieldNode field = new FieldNode(ACC_PRIVATE | ACC_STATIC, name, desc, null, null);
-			clazz.fields.add(field);
-			watcherCstr = ASMVariables.of(clazz, field);
-		}
-
-		@Override
-		ASMCondition hasChanged() {
-			String owner = Type.getInternalName(PropertyWatcher.class);
-			String name = "hasChanged";
-			String desc = Type.getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class));
-			return ASMCondition.ifTrue(CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, watcher.get(), var.get()));
-		}
-
-		@Override
-		CodePiece writeAndUpdate(CodePiece stream) {
-			String owner = Type.getInternalName(PropertyWatcher.class);
-			String name = "writeAndUpdate";
-			String desc = Type.getMethodDescriptor(VOID_TYPE, getType(Object.class), getType(MCDataOutputStream.class));
-			return CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, watcher.get(), var.get(), stream);
-		}
-
-		@Override
-		CodePiece read(CodePiece stream) {
-			String owner = Type.getInternalName(PropertyWatcher.class);
-			String name = "readBase";
-			String desc = Type.getMethodDescriptor(getType(Object.class), getType(Object.class), getType(MCDataInputStream.class));
-			CodePiece read = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, watcher.get(), var.get(), stream);
-			if (var.isWritable()) {
-				return var.set(CodePieces.castTo(var.getType(), read));
-			} else {
-				return read.append(new InsnNode(POP));
-			}
-		}
-	}
 }

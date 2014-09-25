@@ -2,6 +2,8 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataInput;
 import de.take_weiland.mods.commons.util.BlockCoordinates;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -92,6 +94,24 @@ public interface MCDataInput extends ByteArrayDataInput {
 	NBTTagCompound readNbt();
 
 	/**
+	 * <p>Read an Item reference from the buffer.</p>
+	 * <p>This method reads a VarInt from the buffer. If the value is equal to {@code 32001}, null is returned.
+	 * Otherwise the Item with the given ID returned.</p>
+	 * @return an Item
+	 * @throws java.lang.IllegalStateException if an invalid ID is read
+	 */
+	Item readItem();
+
+	/**
+	 * <p>Read a Block reference from the buffer.</p>
+	 * <p>This method reads a VarInt from the buffer. If the value is equal to {@code 4096}, null is returned.
+	 * Otherwise the Block with the given ID is returned.</p>
+	 * @return a Block
+	 * @throws java.lang.IllegalStateException if an invalid ID is read
+	 */
+	Block readBlock();
+
+	/**
 	 * <p>Read a UUID from the buffer.</p>
 	 * <p>This method first reads a short, containing the least significant 2 bytes of the UUIDs most significant bits.
 	 * If this short equals {@code 0xF000}, null is returned. That value specifies a fake UUID version used for null here.
@@ -116,6 +136,8 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @return a BitSet or null
 	 */
 	BitSet readBitSet();
+
+	BitSet readBitSet(BitSet bitSet);
 
 	/**
 	 * <p>Read an EnumSet from the buffer.</p>

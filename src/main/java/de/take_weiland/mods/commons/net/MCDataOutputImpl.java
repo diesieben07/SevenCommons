@@ -4,6 +4,8 @@ import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.BlockCoordinates;
 import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import de.take_weiland.mods.commons.util.SCReflector;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -327,6 +329,16 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 				throw new IllegalStateException(e);
 			}
 		}
+	}
+
+	@Override
+	public void writeItem(Item item) {
+		writeVarInt(item == null ? BufferUtils.ITEM_NULL_ID : item.itemID);
+	}
+
+	@Override
+	public void writeBlock(Block block) {
+		writeVarInt(block == null ? BufferUtils.BLOCK_NULL_ID : block.blockID);
 	}
 
 	@Override

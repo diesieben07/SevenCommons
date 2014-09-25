@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.net;
 import de.take_weiland.mods.commons.reflect.Construct;
 import de.take_weiland.mods.commons.reflect.Getter;
 import de.take_weiland.mods.commons.reflect.SCReflection;
+import de.take_weiland.mods.commons.reflect.Setter;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import sun.misc.Unsafe;
 
@@ -14,11 +15,14 @@ import java.util.BitSet;
 */
 final class BufferUtils {
 
+	static final int ITEM_NULL_ID = 32000;
+	static final int BLOCK_NULL_ID = 4096;
+
 	static boolean canUseUnsafe() {
 		return UnsafeChecks.checkUseable();
 	}
 
-	private static class UnsafeChecks {
+	private static final class UnsafeChecks {
 
 		// factored out to avoid loading sun.misc.Unsafe class if it's not available
 		static boolean checkUseable() {
@@ -54,6 +58,8 @@ final class BufferUtils {
 			unsafe.putInt(f, (long) unsafe.arrayBaseOffset(float[].class), bits2);
 			return f[0] == 3.4f;
 		}
+
+		private UnsafeChecks() { }
 	}
 
 	static final BitSetHandler bitSetHandler;
@@ -80,6 +86,8 @@ final class BufferUtils {
 
 		abstract BitSet createShared(long[] longs);
 
+		abstract BitSet updateInPlace(long[] longs, BitSet bitSet);
+
 		abstract void writeTo(BitSet bitSet, MCDataOutputStream stream);
 
 	}
@@ -88,6 +96,11 @@ final class BufferUtils {
 
 		@Override
 		BitSet createShared(long[] longs) {
+			return BitSet.valueOf(longs);
+		}
+
+		@Override
+		BitSet updateInPlace(long[] longs, BitSet bitSet) {
 			return BitSet.valueOf(longs);
 		}
 
@@ -102,6 +115,13 @@ final class BufferUtils {
 		@Override
 		BitSet createShared(long[] longs) {
 			return BitSetAccessor.instance.createBitsetShared(longs);
+		}
+
+		@Override
+		BitSet updateInPlace(long[] longs, BitSet bitSet) {
+			BitSetAccessor.instance.setWords(bitSet, longs);
+			BitSetAccessor.instance.setWordsInUse(bitSet, longs.length);
+			return bitSet;
 		}
 
 		@Override
@@ -120,8 +140,16 @@ final class BufferUtils {
 		@Getter(field = "words")
 		long[] getWords(BitSet bitSet);
 
+		@Setter(field = "words")
+		void setWords(BitSet bitSet, long[] words);
+
+		@Setter(field = "wordsInUse")
+		void setWordsInUse(BitSet bitSet, int wordsInUse);
+
 		@Construct
 		BitSet createBitsetShared(long[] arr);
 
 	}
+
+	private BufferUtils() { }
 }

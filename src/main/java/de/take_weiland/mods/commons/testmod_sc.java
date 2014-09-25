@@ -1,14 +1,16 @@
 package de.take_weiland.mods.commons;
 
+import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.sync.Sync;
-import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+
+import java.util.BitSet;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 //@NetworkMod()
@@ -35,27 +37,26 @@ public class testmod_sc {
 			}
 		};
 		GameRegistry.registerBlock(myBlock, "testblock");
+
+		Reflection.initialize(TestTE.class);
+		System.exit(0);
 	}
 
 	private static class BaseTE extends TileEntity {
-
-		@Sync
-		private int bla;
 
 	}
 
 	private static class TestTE extends BaseTE {
 
 		@Sync
-		public String bla;
+		private BitSet set;
+
+		@Sync
+		private Boolean foobar;
 
 		private int ticks = 0;
 		@Override
 		public void updateEntity() {
-			System.out.println("bla = " + bla + " on " + Sides.logical(this));
-			if (!worldObj.isRemote && ticks++ % 20 == 0) {
-				bla = String.valueOf(Math.random());
-			}
 		}
 	}
 

@@ -63,4 +63,15 @@ public final class Items {
 		GameRegistry.registerItem(item, baseName);
 	}
 
+	public static Item byId(int id) {
+		if (id >= 0 && id <= 32000) {
+			Item item = Item.itemsList[id];
+			if (item == null) {
+				throw new IllegalArgumentException("Unknown ItemID " + id);
+			}
+			return item;
+		}
+		throw new IllegalArgumentException("Invalid ItemID " + id);
+	}
+
 }

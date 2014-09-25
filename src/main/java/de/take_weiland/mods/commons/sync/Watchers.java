@@ -12,9 +12,7 @@ import net.minecraftforge.fluids.FluidTank;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.lang.reflect.Constructor;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -204,6 +202,53 @@ public final class Watchers {
 		@Override
 		public void readInPlace(FluidTank value, MCDataInputStream in) {
 			value.setFluid(in.readFluidStack());
+		}
+	}
+
+	private static class ForBitSet extends PropertyWatcher.Standard<BitSet> {
+
+		private BitSet companion;
+
+		@Override
+		public BitSet read(BitSet value, MCDataInputStream in) {
+			return in.readBitSet(value);
+		}
+
+		@Override
+		public boolean hasChanged(BitSet value) {
+			return !Objects.equals(value, companion);
+		}
+
+		@Override
+		public void writeAndUpdate(BitSet value, MCDataOutputStream out) {
+			out.writeBitSet(value);
+			if (value == null) {
+				companion = null;
+			} else if (companion == null) {
+				companion = (BitSet) value.clone();
+			} else {
+				companion.clear();
+				companion.or(value);
+			}
+		}
+	}
+
+	private static class ForEnumSet extends PropertyWatcher.Standard<EnumSet<?>> {
+
+
+		@Override
+		public EnumSet<?> read(EnumSet<?> value, MCDataInputStream in) {
+			return null;
+		}
+
+		@Override
+		public boolean hasChanged(EnumSet<?> value) {
+			return false;
+		}
+
+		@Override
+		public void writeAndUpdate(EnumSet<?> value, MCDataOutputStream out) {
+
 		}
 	}
 

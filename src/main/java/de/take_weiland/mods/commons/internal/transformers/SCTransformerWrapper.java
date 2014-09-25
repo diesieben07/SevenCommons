@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 import com.google.common.collect.ImmutableList;
 import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ASMClassTransformerWrapper;
+import de.take_weiland.mods.commons.internal.transformers.sync.SyncTransformer;
 
 /**
  * @author diesieben07

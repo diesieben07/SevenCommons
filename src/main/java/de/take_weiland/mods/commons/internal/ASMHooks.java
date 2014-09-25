@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
+import com.google.common.reflect.TypeToken;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
@@ -17,6 +18,7 @@ import net.minecraftforge.common.MinecraftForge;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.lang.reflect.Type;
 
 /**
  * A class containing methods called from ASM generated code.
@@ -30,6 +32,7 @@ public final class ASMHooks {
 	public static final String ON_PLAYER_CLONE = "onPlayerClone";
 	public static final String NEW_SYNC_STREAM = "newSyncStream";
 	public static final String SEND_SYNC_STREAM = "sendSyncStream";
+	public static final String FIND_ENUM_SET_TYPE = "findEnumSetType";
 
 	private ASMHooks() { }
 
@@ -42,6 +45,11 @@ public final class ASMHooks {
 
 	public static void sendSyncStream(Object object, SyncType type, MCDataOutputStream out) {
 		type.sendPacket(object, SCModContainer.packets.makePacket(out));
+	}
+
+	private static final Type iterableComponent = Iterable.class.getTypeParameters()[0];
+	public static Class<?> findEnumSetType(Type genericType) {
+		return TypeToken.of(genericType).resolveType(iterableComponent).getRawType();
 	}
 
 	public static void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {

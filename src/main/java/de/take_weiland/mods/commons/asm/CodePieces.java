@@ -322,8 +322,19 @@ public final class CodePieces {
 	 * @return a CodePiece
 	 */
 	public static CodePiece invokeStatic(String clazz, String method, String desc, CodePiece... args) {
-		checkArgument(args.length == ASMUtils.argumentCount(desc), "argument count mismatch");
 		return invoke(INVOKESTATIC, clazz, method, desc, args);
+	}
+
+	public static CodePiece invokeVirtual(String clazz, String method, String desc, CodePiece... args) {
+		return invoke(INVOKEVIRTUAL, clazz, method, desc, args);
+	}
+
+	public static CodePiece invokeInterface(String clazz, String method, String desc, CodePiece... args) {
+		return invoke(INVOKEINTERFACE, clazz, method, desc, args);
+	}
+
+	public static CodePiece invokeSpecial(String clazz, String method, String desc, CodePiece... args) {
+		return invoke(INVOKESPECIAL, clazz, method, desc, args);
 	}
 
 	/**
@@ -618,7 +629,8 @@ public final class CodePieces {
 	 * @return a CodePiece
 	 */
 	public static CodePiece unbox(CodePiece boxed, Type primitiveType) {
-		Type boxedType = boxFor(primitiveType);
+		Type boxedType = ASMUtils.boxedType(primitiveType);
+		checkArgument(boxedType != primitiveType, "Not a primitive");
 		String owner = boxedType.getInternalName();
 		String name = primitiveType.getClassName() + "Value";
 		String desc = Type.getMethodDescriptor(primitiveType);
@@ -642,34 +654,51 @@ public final class CodePieces {
 	 * @return a CodePiece
 	 */
 	public static CodePiece box(CodePiece unboxed, Type primitiveType) {
-		Type boxedType = boxFor(primitiveType);
+		Type boxedType = ASMUtils.boxedType(primitiveType);
+		checkArgument(boxedType != primitiveType, "Not a primitive");
 		String owner = boxedType.getInternalName();
 		String name = "valueOf";
 		String desc = Type.getMethodDescriptor(boxedType, primitiveType);
 		return invoke(INVOKESTATIC, owner, name, desc, unboxed);
 	}
 
-	private static Type boxFor(Type primitiveType) {
-		switch (primitiveType.getSort()) {
-			case BOOLEAN:
-				return Type.getType(Boolean.class);
+	public static CodePiece arrayGet(CodePiece array, int index, Type component) {
+		return arrayGet(array, constant(index), component);
+	}
+
+	public static CodePiece arrayGet(CodePiece array, CodePiece index, Type component) {
+		int opcode;
+		switch (component.getSort()) {
+			case Type.BOOLEAN:
 			case Type.BYTE:
-				return Type.getType(Byte.class);
-			case Type.SHORT:
-				return Type.getType(Short.class);
+				opcode = BALOAD;
+				break;
 			case Type.CHAR:
-				return Type.getType(Character.class);
+				opcode = CALOAD;
+				break;
+			case Type.SHORT:
+				opcode = SALOAD;
+				break;
 			case Type.INT:
-				return Type.getType(Integer.class);
+				opcode = IALOAD;
+				break;
 			case Type.LONG:
-				return Type.getType(Long.class);
+				opcode = LALOAD;
+				break;
 			case Type.FLOAT:
-				return Type.getType(Float.class);
+				opcode = FALOAD;
+				break;
 			case Type.DOUBLE:
-				return Type.getType(Double.class);
+				opcode = DALOAD;
+				break;
+			case Type.OBJECT:
+			case Type.ARRAY:
+				opcode = AALOAD;
+				break;
 			default:
-				throw new IllegalArgumentException(primitiveType + "is not primitive");
+				throw new IllegalArgumentException("Invalid type");
 		}
+		return array.append(index).append(new InsnNode(opcode));
 	}
 
 	/**

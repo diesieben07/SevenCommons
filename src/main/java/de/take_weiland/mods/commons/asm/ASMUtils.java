@@ -993,6 +993,56 @@ public final class ASMUtils {
 		return type.getSort() != Type.ARRAY && type.getSort() != Type.OBJECT && type.getSort() != Type.METHOD;
 	}
 
+	public static boolean isPrimitiveWrapper(Type type) {
+		return unboxedType(type) != type;
+	}
+
+	public static Type unboxedType(Type wrapper) {
+		switch (wrapper.getInternalName()) {
+			case "java/lang/Boolean":
+				return Type.BOOLEAN_TYPE;
+			case "java/lang/Byte":
+				return Type.BYTE_TYPE;
+			case "java/lang/Short":
+				return Type.SHORT_TYPE;
+			case "java/lang/Character":
+				return Type.CHAR_TYPE;
+			case "java/lang/Integer":
+				return Type.INT_TYPE;
+			case "java/lang/Long":
+				return Type.LONG_TYPE;
+			case "java/lang/Float":
+				return Type.FLOAT_TYPE;
+			case "java/lang/Double":
+				return Type.DOUBLE_TYPE;
+			default:
+				return wrapper;
+		}
+	}
+
+	public static Type boxedType(Type primitive) {
+		switch (primitive.getSort()) {
+			case Type.BOOLEAN:
+				return Type.getType(Boolean.class);
+			case Type.BYTE:
+				return Type.getType(Byte.class);
+			case Type.SHORT:
+				return Type.getType(Short.class);
+			case Type.CHAR:
+				return Type.getType(Character.class);
+			case Type.INT:
+				return Type.getType(Integer.class);
+			case Type.LONG:
+				return Type.getType(Long.class);
+			case Type.FLOAT:
+				return Type.getType(Float.class);
+			case Type.DOUBLE:
+				return Type.getType(Double.class);
+			default:
+				return primitive;
+		}
+	}
+
 	/**
 	 * <p>Counts the number of arguments that a method with the given Type needs.</p>
 	 * <p>The Type must be of Type {@link Type#METHOD}.</p>

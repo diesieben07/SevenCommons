@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.collect.Lists;
 import org.objectweb.asm.tree.LabelNode;
 
 import java.util.Collections;
@@ -19,11 +20,11 @@ class AndCondition extends ASMCondition {
 	@Override
 	public ASMCondition negate() {
 		// de morgan
-		ASMCondition[] inv = new ASMCondition[conditions.length];
+		List<ASMCondition> inv = Lists.newArrayListWithExpectedSize(conditions.length);
 		for (int i = 0; i < conditions.length; i++) {
-			inv[i] = conditions[i].negate();
+			conditions[i].negate().unwrapIntoOr(inv);
 		}
-		return new OrCondition(inv);
+		return new OrCondition(inv.toArray(new ASMCondition[inv.size()]));
 	}
 
 	@Override
@@ -61,13 +62,6 @@ class AndCondition extends ASMCondition {
 	@Override
 	void unwrapIntoAnd(List<ASMCondition> list) {
 		Collections.addAll(list, conditions);
-	}
-
-	private ASMCondition standardAnd(ASMCondition other) {
-		ASMCondition[] all = new ASMCondition[conditions.length + 1];
-		System.arraycopy(conditions, 0, all, 0, conditions.length);
-		all[conditions.length] = other;
-		return new AndCondition(all);
 	}
 
 }

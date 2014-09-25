@@ -74,8 +74,15 @@ public abstract class ASMCondition {
 			}
 			return ifTrue(CodePieces.invokeStatic(owner, name, desc, a, b));
 		} else if (type.getSort() == Type.OBJECT) {
-			CodePiece equal = CodePieces.invoke(INVOKEVIRTUAL, "java/lang/Object", "equals", getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class)), a, b);
-			return ifNotNull(a).and(ifTrue(equal));
+			Type unboxedType = ASMUtils.unboxedType(type);
+			if (unboxedType != type) {
+				CodePiece aUnboxed = CodePieces.unbox(a, unboxedType);
+				CodePiece bUnboxed = CodePieces.unbox(b, unboxedType);
+				return ifSame(a, b, type).or(ifNotNull(a).and(ifSame(aUnboxed, bUnboxed, unboxedType)));
+			} else {
+				CodePiece equal = CodePieces.invoke(INVOKEVIRTUAL, "java/lang/Object", "equals", getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class)), a, b);
+				return ifSame(a, b, type).or(ifNotNull(a).and(ifTrue(equal)));
+			}
 		} else {
 			// primitives, or invalid
 			return ifSame(a, b, type);

@@ -5,6 +5,8 @@ import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.BlockCoordinates;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -270,11 +272,18 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 
 	@Override
 	public BitSet readBitSet() {
+		return readBitSet(null);
+	}
+
+	@Override
+	public BitSet readBitSet(BitSet bitSet) {
 		long[] words = readLongs();
 		if (words == null) {
 			return null;
-		} else {
+		} else if (bitSet == null) {
 			return BufferUtils.bitSetHandler.createShared(words);
+		} else {
+			return BufferUtils.bitSetHandler.updateInPlace(words, bitSet);
 		}
 	}
 
@@ -412,6 +421,26 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 				throw new IllegalStateException(e);
 			}
 			return nbt;
+		}
+	}
+
+	@Override
+	public Item readItem() {
+		int id = readVarInt();
+		try {
+			return id == BufferUtils.ITEM_NULL_ID ? null : Item.itemsList[id];
+		} catch (ArrayIndexOutOfBoundsException e) {
+			throw new IllegalStateException("Invalid ItemID " + id);
+		}
+	}
+
+	@Override
+	public Block readBlock() {
+		int id = readVarInt();
+		try {
+			return id == BufferUtils.BLOCK_NULL_ID ? null : Block.blocksList[id];
+		} catch (ArrayIndexOutOfBoundsException e) {
+			throw new IllegalStateException("Invalid BlockID " + id);
 		}
 	}
 
