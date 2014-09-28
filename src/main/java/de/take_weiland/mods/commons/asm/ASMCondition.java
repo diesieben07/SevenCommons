@@ -47,6 +47,10 @@ public abstract class ASMCondition {
 		}
 	}
 
+	public static ASMCondition ifEqual(CodePiece a, CodePiece b, Type type) {
+		return ifEqual(a, b, type, true);
+	}
+
 	/**
 	 * <p>Create an ASMCondition that checks if the two values are equal.</p>
 	 * <p>For primitives == comparison is used. For Objects a null-guarded check to {@link Object#equals(Object)} is used. Arrays of single-dimension use the appropriate version of
@@ -56,7 +60,7 @@ public abstract class ASMCondition {
 	 * @param type the common supertype of the values
 	 * @return an ASMCondition
 	 */
-	public static ASMCondition ifEqual(CodePiece a, CodePiece b, Type type) {
+	public static ASMCondition ifEqual(CodePiece a, CodePiece b, Type type, boolean nullable) {
 		if (type.getSort() == Type.ARRAY) {
 			String owner = "java/util/Arrays";
 			String name;
@@ -74,14 +78,19 @@ public abstract class ASMCondition {
 			}
 			return ifTrue(CodePieces.invokeStatic(owner, name, desc, a, b));
 		} else if (type.getSort() == Type.OBJECT) {
+			ASMCondition nonNullComparison;
 			Type unboxedType = ASMUtils.unboxedType(type);
 			if (unboxedType != type) {
 				CodePiece aUnboxed = CodePieces.unbox(a, unboxedType);
 				CodePiece bUnboxed = CodePieces.unbox(b, unboxedType);
-				return ifSame(a, b, type).or(ifNotNull(a).and(ifSame(aUnboxed, bUnboxed, unboxedType)));
+				nonNullComparison = ifSame(aUnboxed, bUnboxed, unboxedType);
 			} else {
-				CodePiece equal = CodePieces.invoke(INVOKEVIRTUAL, "java/lang/Object", "equals", getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class)), a, b);
-				return ifSame(a, b, type).or(ifNotNull(a).and(ifTrue(equal)));
+				nonNullComparison = ifTrue(CodePieces.invoke(INVOKEVIRTUAL, "java/lang/Object", "equals", getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class)), a, b));
+			}
+			if (nullable) {
+				return ifSame(a, b, type).or(ifNotNull(a).and(nonNullComparison));
+			} else {
+				return nonNullComparison;
 			}
 		} else {
 			// primitives, or invalid

@@ -4,6 +4,7 @@ import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 
@@ -16,10 +17,12 @@ abstract class PropertyHandler {
 
 	final ASMVariable var;
 	final int idx;
+	final boolean canBeNull;
 
 	PropertyHandler(ASMVariable var, int idx) {
 		this.var = var;
 		this.idx = idx;
+		this.canBeNull = !ASMUtils.isPrimitive(var.getType()) && !isNotNull(var);
 	}
 
 	public static PropertyHandler create(ASMVariable var, int idx) {
@@ -68,6 +71,12 @@ abstract class PropertyHandler {
 		} else {
 			return new HandlerWithWatcher(var, idx);
 		}
+	}
+
+	private static boolean isNotNull(ASMVariable var) {
+		return var.getterAnnotation(NotNull.class) != null
+				|| var.getterAnnotation(de.take_weiland.mods.commons.sync.NotNull.class) != null
+				|| var.getterAnnotation("javax/annotation/Nonnull") != null;
 	}
 
 	abstract void initialTransform(TransformState state);

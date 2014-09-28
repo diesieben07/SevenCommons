@@ -38,16 +38,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({ FIELD, METHOD })
 public @interface Sync {
 
-	/**
-	 * <p>Set this to false if this property can never be null.</p>
-	 * @return if this property can be null
-	 */
-	boolean nullable() default true;
-
-	/**
-	 * <p>Define the actual type to sync this property as.</p>
-	 * @return the actual type
-	 */
-	Class<?> syncAs() default AnnotationNull.class;
-
 }

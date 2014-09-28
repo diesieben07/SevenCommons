@@ -6,12 +6,12 @@ import de.take_weiland.mods.commons.net.MCDataOutputStream;
 /**
  * @author diesieben07
  */
-public interface PropertyWatcher<T> {
+public interface PropertySyncer<T> {
 
 	boolean hasChanged(T value);
 
 	void writeAndUpdate(T value, MCDataOutputStream out);
 
-	void read(T value, MCDataInputStream in);
+	T read(T currentValue, MCDataInputStream in);
 
 }

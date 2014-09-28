@@ -24,7 +24,7 @@ public final class Watchers {
 
 	private static final Map<Class<?>, WatcherHolder> watchers = Maps.newHashMap();
 
-	public static <T> void register(Class<T> clazz, Class<? extends PropertyWatcher<T>> watcher) {
+	public static <T> void register(Class<T> clazz, Class<? extends PropertySyncer<T>> watcher) {
 		checkNotNull(clazz, "class");
 		checkNotNull(watcher, "watcher");
 		checkArgument(!watchers.containsKey(clazz), "Watcher for class %s already registered", clazz.getName());
@@ -32,7 +32,7 @@ public final class Watchers {
 	}
 
 	private static WatcherHolder getHolder(Class<?> watcher) {
-		return new WatcherHolder(getConstructor(watcher), PropertyWatcher.WithSubclasses.class.isAssignableFrom(watcher));
+		return new WatcherHolder(getConstructor(watcher), PropertySyncer.WithSubclasses.class.isAssignableFrom(watcher));
 	}
 
 	private static <T> Constructor<T> getConstructor(Class<T> watcher) {
@@ -46,7 +46,7 @@ public final class Watchers {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> PropertyWatcher<T> createWatcher(Class<T> clazz) {
+	public static <T> PropertySyncer<T> createWatcher(Class<T> clazz) {
 		try {
 			return getWatcherConstructor(clazz).newInstance(ArrayUtils.EMPTY_OBJECT_ARRAY); // re-use empty array
 		} catch (ReflectiveOperationException e) {
@@ -55,12 +55,12 @@ public final class Watchers {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> Constructor<? extends PropertyWatcher<T>> getWatcherConstructor(Class<T> clazz) {
+	public static <T> Constructor<? extends PropertySyncer<T>> getWatcherConstructor(Class<T> clazz) {
 		WatcherHolder holder = watchers.get(clazz);
 		if (holder == null) {
 			holder = lookupSupers(clazz);
 		}
-		return (Constructor<? extends PropertyWatcher<T>>) holder.cstr;
+		return (Constructor<? extends PropertySyncer<T>>) holder.cstr;
 	}
 
 	private static WatcherHolder lookupSupers(Class<?> clazz) {
@@ -99,7 +99,7 @@ public final class Watchers {
 		register(FluidTank.class, ForFluidTank.class);
 	}
 
-	private static class ForItemStack extends PropertyWatcher.Standard<ItemStack> {
+	private static class ForItemStack extends PropertySyncer.Standard<ItemStack> {
 
 		private ItemStack companion;
 
@@ -120,7 +120,7 @@ public final class Watchers {
 		}
 	}
 
-	private static class ForFluidStack extends PropertyWatcher.Standard<FluidStack> {
+	private static class ForFluidStack extends PropertySyncer.Standard<FluidStack> {
 
 		private FluidStack companion;
 
@@ -141,7 +141,7 @@ public final class Watchers {
 		}
 	}
 
-	private static class ForString extends PropertyWatcher.Standard<String> {
+	private static class ForString extends PropertySyncer.Standard<String> {
 
 		private String companion;
 
@@ -162,7 +162,7 @@ public final class Watchers {
 		}
 	}
 
-	private static class ForUUID extends PropertyWatcher.Standard<UUID> {
+	private static class ForUUID extends PropertySyncer.Standard<UUID> {
 
 		private UUID companion;
 
@@ -183,7 +183,7 @@ public final class Watchers {
 		}
 	}
 
-	private static class ForFluidTank extends PropertyWatcher.WithSubclasses<FluidTank> {
+	private static class ForFluidTank extends PropertySyncer.WithSubclasses<FluidTank> {
 
 		private FluidStack companion;
 
@@ -205,7 +205,7 @@ public final class Watchers {
 		}
 	}
 
-	private static class ForBitSet extends PropertyWatcher.Standard<BitSet> {
+	private static class ForBitSet extends PropertySyncer.Standard<BitSet> {
 
 		private BitSet companion;
 
@@ -233,7 +233,7 @@ public final class Watchers {
 		}
 	}
 
-	private static class ForEnumSet extends PropertyWatcher.Standard<EnumSet<?>> {
+	private static class ForEnumSet extends PropertySyncer.Standard<EnumSet<?>> {
 
 
 		@Override

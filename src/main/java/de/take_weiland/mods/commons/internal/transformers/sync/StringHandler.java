@@ -33,7 +33,7 @@ class StringHandler extends PropertyHandler {
 
 	@Override
 	ASMCondition hasChanged() {
-		return ASMCondition.ifEqual(var.get(), companion.get(), Type.getType(String.class)).negate();
+		return ASMCondition.ifEqual(var.get(), companion.get(), Type.getType(String.class), canBeNull).negate();
 	}
 
 	@Override

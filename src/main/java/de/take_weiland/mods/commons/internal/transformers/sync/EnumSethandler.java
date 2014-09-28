@@ -6,7 +6,6 @@ import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InsnNode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -71,7 +70,7 @@ class EnumSetHandler extends PropertyHandler {
 
 	@Override
 	ASMCondition hasChanged() {
-		return ASMCondition.ifEqual(var.get(), companion.get(), Type.getType(EnumSet.class)).negate();
+		return ASMCondition.ifEqual(var.get(), companion.get(), Type.getType(EnumSet.class), canBeNull).negate();
 	}
 
 	@Override
@@ -81,32 +80,41 @@ class EnumSetHandler extends PropertyHandler {
 		String desc = Type.getMethodDescriptor(VOID_TYPE, getType(EnumSet.class));
 		CodePiece write = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, stream, var.get());
 
+		CodePiece update = updateNullable();
+		return write.append(update);
+	}
+
+	private CodePiece updateNullable() {
 		ASMCondition companionNull = ASMCondition.ifNull(companion.get());
 		ASMCondition varNull = ASMCondition.ifNull(var.get());
 
 		CodePiece setCompanionNull = companion.set(CodePieces.constantNull());
 
-		owner = Type.getInternalName(EnumSet.class);
-		name = "clone";
-		desc = Type.getMethodDescriptor(getType(EnumSet.class));
-		CodePiece setCompanionNew = companion.set(CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, var.get()));
+		CodePiece setCompanionNew = setCompanionClone();
+		CodePiece updateNonNull = updateNonNull();
 
-		owner = Type.getInternalName(EnumSet.class);
-		name = "clear";
-		desc = Type.getMethodDescriptor(VOID_TYPE);
-		CodePiece clearComp = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, companion.get());
+		CodePiece updateNonNull = companionNull.doIfElse(setCompanionNew, updateNonNull);
 
-		owner = Type.getInternalName(EnumSet.class);
+		return varNull.doIfElse(setCompanionNull, updateNonNull);
+	}
+
+	private CodePiece updateNonNull() {
+		String owner = Type.getInternalName(EnumSet.class);
+		String name = "clear";
+		String desc = Type.getMethodDescriptor(VOID_TYPE);
+		CodePiece clear = CodePieces.invokeVirtual(owner, name, desc, companion.get());
+
 		name = "addAll";
 		desc = Type.getMethodDescriptor(BOOLEAN_TYPE, getType(Collection.class));
-		CodePiece addAll = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, companion.get(), var.get()).append(new InsnNode(POP));
+		CodePiece copy = CodePieces.invokeVirtual(owner, name, desc, companion.get(), var.get());
+		return clear.append(copy);
+	}
 
-		CodePiece copy = clearComp.append(addAll);
-
-		CodePiece updateNonNull = companionNull.doIfElse(setCompanionNew, copy);
-
-		CodePiece update = varNull.doIfElse(setCompanionNull, updateNonNull);
-		return write.append(update);
+	private CodePiece setCompanionClone() {
+		String owner = Type.getInternalName(EnumSet.class);
+		String name = "clone";
+		String desc = Type.getMethodDescriptor(getType(EnumSet.class));
+		return companion.set(CodePieces.invokeVirtual(owner, name, desc, var.get()));
 	}
 
 	@Override

@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers.sync;
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
-import de.take_weiland.mods.commons.sync.PropertyWatcher;
+import de.take_weiland.mods.commons.sync.PropertySyncer;
 import de.take_weiland.mods.commons.sync.Watchers;
 import org.apache.commons.lang3.ArrayUtils;
 import org.objectweb.asm.Type;
@@ -52,7 +52,7 @@ class HandlerWithWatcher extends PropertyHandler {
 		name = "newInstance";
 		desc = Type.getMethodDescriptor(getType(Object.class), getType(Object[].class));
 		CodePiece newInstance = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, watcherCstr.get(), emptyArray);
-		CodePiece casted = CodePieces.castTo(PropertyWatcher.class, newInstance);
+		CodePiece casted = CodePieces.castTo(PropertySyncer.class, newInstance);
 
 		CodePiece putInstance = watcher.set(casted);
 
@@ -61,7 +61,7 @@ class HandlerWithWatcher extends PropertyHandler {
 
 	private void createWatcherField(ClassNode clazz) {
 		String name = "_sc$sync$watcher$" + SyncTransformer.uniqueSuffix(var);
-		String desc = Type.getDescriptor(PropertyWatcher.class);
+		String desc = Type.getDescriptor(PropertySyncer.class);
 		FieldNode field = new FieldNode(ACC_PRIVATE  | ACC_FINAL, name, desc, null, null);
 		clazz.fields.add(field);
 		watcher = ASMVariables.of(clazz, field, CodePieces.getThis());
@@ -77,7 +77,7 @@ class HandlerWithWatcher extends PropertyHandler {
 
 	@Override
 	ASMCondition hasChanged() {
-		String owner = Type.getInternalName(PropertyWatcher.class);
+		String owner = Type.getInternalName(PropertySyncer.class);
 		String name = "hasChanged";
 		String desc = Type.getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class));
 		return ASMCondition.ifTrue(CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, watcher.get(), var.get()));
@@ -85,7 +85,7 @@ class HandlerWithWatcher extends PropertyHandler {
 
 	@Override
 	CodePiece writeAndUpdate(CodePiece stream) {
-		String owner = Type.getInternalName(PropertyWatcher.class);
+		String owner = Type.getInternalName(PropertySyncer.class);
 		String name = "writeAndUpdate";
 		String desc = Type.getMethodDescriptor(VOID_TYPE, getType(Object.class), getType(MCDataOutputStream.class));
 		return CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, watcher.get(), var.get(), stream);
@@ -93,7 +93,7 @@ class HandlerWithWatcher extends PropertyHandler {
 
 	@Override
 	CodePiece read(CodePiece stream) {
-		String owner = Type.getInternalName(PropertyWatcher.class);
+		String owner = Type.getInternalName(PropertySyncer.class);
 		String name = "readBase";
 		String desc = Type.getMethodDescriptor(getType(Object.class), getType(Object.class), getType(MCDataInputStream.class));
 		CodePiece read = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, watcher.get(), var.get(), stream);
