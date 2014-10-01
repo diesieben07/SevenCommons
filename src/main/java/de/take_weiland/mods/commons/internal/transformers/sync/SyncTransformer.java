@@ -12,6 +12,8 @@ import de.take_weiland.mods.commons.internal.transformers.AbstractAnalyzingTrans
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.Sync;
+import de.take_weiland.mods.commons.sync.Watch;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
@@ -32,7 +34,24 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 
 	@Override
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
-		if (!ASMUtils.hasMemberAnnotation(clazz, Sync.class)) {
+		boolean hasAnn = false;
+		for (FieldNode field : clazz.fields) {
+			if (ASMUtils.hasAnnotation(field, Sync.class) || ASMUtils.hasAnnotation(field, Watch.class)) {
+				hasAnn = true;
+				break;
+			}
+		}
+
+		if (!hasAnn) {
+			for (MethodNode method : clazz.methods) {
+				if (ASMUtils.hasAnnotation(method, Sync.class) || ASMUtils.hasAnnotation(method, Watch.class)) {
+					hasAnn = true;
+					break;
+				}
+			}
+		}
+
+		if (!hasAnn) {
 			return false;
 		}
 
@@ -50,13 +69,16 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		TransformState state = new TransformState(clazz, type);
 		countSupers(state, classInfo);
 
-		List<ASMVariable> vars = ASMVariables.allWith(clazz, Sync.class, CodePieces.getThis());
+		List<ASMVariable> vars = JavaUtils.concat(
+				ASMVariables.allWith(clazz, Sync.class, CodePieces.getThis()),
+				ASMVariables.allWith(clazz, Watch.class, CodePieces.getThis()));
+
 		List<PropertyHandler> handlers = state.handlers = Lists.newArrayListWithCapacity(vars.size());
 
 		int idx = state.superSyncCount;
 
 		for (ASMVariable var : vars) {
-			handlers.add(PropertyHandler.create(var, ++idx));
+			handlers.add(PropertyHandler.create(state, var, ++idx));
 		}
 
 		for (PropertyHandler handler : handlers) {
@@ -311,8 +333,12 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		return (var.isField() ? "f" : "m") + "$" + var.rawName();
 	}
 
+	static String companionPrefix() {
+		return "_sc$sync$comp$";
+	}
+
 	static String companionName(ASMVariable var) {
-		return "_sc$sync$comp$" + uniqueSuffix(var);
+		return companionPrefix() + uniqueSuffix(var);
 	}
 
 }

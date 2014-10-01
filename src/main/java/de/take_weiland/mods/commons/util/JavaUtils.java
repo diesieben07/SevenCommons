@@ -5,6 +5,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import org.jetbrains.annotations.NotNull;
 import sun.misc.JavaLangAccess;
 import sun.misc.SharedSecrets;
 
@@ -101,6 +102,10 @@ public final class JavaUtils {
 	 */
 	public static <T> List<T> nullToEmpty(List<T> nullable) {
 		return nullable == null ? Collections.<T>emptyList() : nullable;
+	}
+
+	public static <T> List<T> concat(@NotNull List<? extends T> first, @NotNull List<? extends T> second) {
+		return new ConcatList<>(first, second);
 	}
 
 	/**

@@ -2,11 +2,18 @@ package de.take_weiland.mods.commons.asm;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.ObjectArrays;
+import com.google.common.primitives.Primitives;
+import org.jetbrains.annotations.NotNull;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import java.lang.invoke.CallSite;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.objectweb.asm.Opcodes.*;
@@ -383,6 +390,49 @@ public final class CodePieces {
 		checkArgument((method.access & ACC_STATIC) != ACC_STATIC, "Cannot call super on static method");
 		checkArgument((method.access & ACC_PRIVATE) != ACC_PRIVATE, "Cannot call super on private method");
 		return invoke(INVOKESPECIAL, clazz.superName, method.name, method.desc, ObjectArrays.concat(getThis(), args));
+	}
+
+	public static InDyHelper invokeDynamic(@NotNull String name, @NotNull String desc, @NotNull CodePiece... args) {
+		checkArgument(ASMUtils.argumentCount(desc) == args.length, "Invalid number of arguments!");
+		return new InDyHelper(name, desc, args);
+	}
+
+	public static class InDyHelper {
+
+		private final String name;
+		private final String desc;
+		private final CodePiece[] args;
+
+		InDyHelper(String name, String desc, CodePiece[] args) {
+			this.name = name;
+			this.desc = desc;
+			this.args = args;
+		}
+
+		public CodePiece withBootstrap(@NotNull String owner, @NotNull String name, @NotNull Object... args) {
+			return withBootstrap(H_INVOKESTATIC, owner, name, args);
+		}
+
+		public CodePiece withBootstrap(int handleTag, @NotNull String owner, @NotNull String name, @NotNull Object... args) {
+			return build(handleTag, owner, name, args);
+		}
+
+		private CodePiece build(int handleTag, String bsOwner, String bsName, Object[] bsArgs) {
+			List<Type> allBsArgs = Lists.newArrayList(getType(MethodHandles.Lookup.class), getType(String.class), getType(MethodType.class));
+			for (Object bsArg : bsArgs) {
+				Class<?> cls = bsArg.getClass();
+				if (Primitives.isWrapperType(cls) || cls == String.class || cls == Class.class) {
+					allBsArgs.add(Type.getType(cls));
+				} else if (cls == Type.class) {
+					allBsArgs.add(Type.getType(Class.class));
+				} else {
+					throw new RuntimeException("Bootstrap arguments need to be constants");
+				}
+			}
+			String bsDesc = Type.getMethodDescriptor(getType(CallSite.class), allBsArgs.toArray(new Type[allBsArgs.size()]));
+			Handle handle = new Handle(handleTag, bsOwner, bsName, bsDesc);
+			return concat(args).append(new InvokeDynamicInsnNode(name, desc, handle, bsArgs));
+		}
 	}
 
 	/**

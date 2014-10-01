@@ -6,6 +6,7 @@ import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.InsnNode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -18,12 +19,12 @@ import static org.objectweb.asm.Type.*;
 /**
  * @author diesieben07
  */
-class EnumSetHandler extends PropertyHandler {
+class EnumSetHandler0 extends PropertyHandler {
 
 	private ASMVariable companion;
 	private ASMVariable enumType;
 
-	EnumSetHandler(ASMVariable var, int idx) {
+	EnumSetHandler0(ASMVariable var, int idx) {
 		super(var, idx);
 	}
 
@@ -80,25 +81,22 @@ class EnumSetHandler extends PropertyHandler {
 		String desc = Type.getMethodDescriptor(VOID_TYPE, getType(EnumSet.class));
 		CodePiece write = CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, stream, var.get());
 
-		CodePiece update = updateNullable();
-		return write.append(update);
+		return write.append(canBeNull ? updateNullable() : updateNonNull());
 	}
 
 	private CodePiece updateNullable() {
-		ASMCondition companionNull = ASMCondition.ifNull(companion.get());
-		ASMCondition varNull = ASMCondition.ifNull(var.get());
-
-		CodePiece setCompanionNull = companion.set(CodePieces.constantNull());
-
-		CodePiece setCompanionNew = setCompanionClone();
-		CodePiece updateNonNull = updateNonNull();
-
-		CodePiece updateNonNull = companionNull.doIfElse(setCompanionNew, updateNonNull);
-
-		return varNull.doIfElse(setCompanionNull, updateNonNull);
+		return ASMCondition.ifNull(var.get()).doIfElse(setCompanionNull(), updateNonNull());
 	}
 
 	private CodePiece updateNonNull() {
+		return ASMCondition.ifNull(companion.get()).doIfElse(setCompanionClone(), copySet());
+	}
+
+	private CodePiece setCompanionNull() {
+		return companion.set(CodePieces.constantNull());
+	}
+
+	private CodePiece copySet() {
 		String owner = Type.getInternalName(EnumSet.class);
 		String name = "clear";
 		String desc = Type.getMethodDescriptor(VOID_TYPE);
@@ -106,7 +104,7 @@ class EnumSetHandler extends PropertyHandler {
 
 		name = "addAll";
 		desc = Type.getMethodDescriptor(BOOLEAN_TYPE, getType(Collection.class));
-		CodePiece copy = CodePieces.invokeVirtual(owner, name, desc, companion.get(), var.get());
+		CodePiece copy = CodePieces.invokeVirtual(owner, name, desc, companion.get(), var.get()).append(new InsnNode(POP));
 		return clear.append(copy);
 	}
 

@@ -12,6 +12,6 @@ public interface PropertySyncer<T> {
 
 	void writeAndUpdate(T value, MCDataOutputStream out);
 
-	T read(T currentValue, MCDataInputStream in);
+	T read(MCDataInputStream in);
 
 }

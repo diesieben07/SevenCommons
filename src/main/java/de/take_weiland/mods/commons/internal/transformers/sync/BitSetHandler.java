@@ -41,29 +41,40 @@ class BitSetHandler extends PropertyHandler {
 		String desc = Type.getMethodDescriptor(VOID_TYPE, getType(BitSet.class));
 		CodePiece write = CodePieces.invokeVirtual(owner, name, desc, stream, var.get());
 
-		ASMCondition varNull = ASMCondition.ifNull(var.get());
-		ASMCondition compNull = ASMCondition.ifNull(companion.get());
+		return write.append(canBeNull ? updateNullable() : updateNotNull());
+	}
 
-		CodePiece setCompNull = companion.set(CodePieces.constantNull());
+	private CodePiece updateNotNull() {
+		return ASMCondition.ifNull(companion.get()).doIfElse(cloneSet(), copySet());
+	}
 
-		owner = Type.getInternalName(BitSet.class);
-		name = "clone";
-		desc = Type.getMethodDescriptor(getType(Object.class));
-		CodePiece clone = CodePieces.castTo(BitSet.class, CodePieces.invokeVirtual(owner, name, desc, var.get()));
-		CodePiece setCompNew = companion.set(clone);
+	private CodePiece updateNullable() {
+		return ASMCondition.ifNull(var.get()).doIfElse(setCompanionNull(), updateNotNull());
+	}
 
-		owner = Type.getInternalName(BitSet.class);
-		name = "clear";
-		desc = Type.getMethodDescriptor(VOID_TYPE);
+	private CodePiece copySet() {
+		String owner = Type.getInternalName(BitSet.class);
+		String name = "clear";
+		String desc = Type.getMethodDescriptor(VOID_TYPE);
 		CodePiece clear = CodePieces.invokeVirtual(owner, name, desc, companion.get());
 
-		owner = Type.getInternalName(BitSet.class);
 		name = "or";
 		desc = Type.getMethodDescriptor(VOID_TYPE, getType(BitSet.class));
-		CodePiece copy = CodePieces.invokeVirtual(owner, name, desc, companion.get(), var.get());
+		CodePiece or = CodePieces.invokeVirtual(owner, name, desc, companion.get(), var.get());
 
-		CodePiece update = varNull.doIfElse(setCompNull, compNull.doIfElse(setCompNew, clear.append(copy)));
-		return write.append(update);
+		return clear.append(or);
+	}
+
+	private CodePiece cloneSet() {
+		String owner = Type.getInternalName(BitSet.class);
+		String name = "clone";
+		String desc = Type.getMethodDescriptor(getType(Object.class));
+		CodePiece clone = CodePieces.castTo(BitSet.class, CodePieces.invokeVirtual(owner, name, desc, var.get()));
+		return companion.set(clone);
+	}
+
+	private CodePiece setCompanionNull() {
+		return companion.set(CodePieces.constantNull());
 	}
 
 	@Override

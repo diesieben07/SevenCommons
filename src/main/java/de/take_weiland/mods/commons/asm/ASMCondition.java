@@ -13,6 +13,7 @@ import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
 /**
+ * <p>Utility class for creating if-statements in bytecode.</p>
  * @author diesieben07
  */
 public abstract class ASMCondition {
@@ -47,10 +48,6 @@ public abstract class ASMCondition {
 		}
 	}
 
-	public static ASMCondition ifEqual(CodePiece a, CodePiece b, Type type) {
-		return ifEqual(a, b, type, true);
-	}
-
 	/**
 	 * <p>Create an ASMCondition that checks if the two values are equal.</p>
 	 * <p>For primitives == comparison is used. For Objects a null-guarded check to {@link Object#equals(Object)} is used. Arrays of single-dimension use the appropriate version of
@@ -58,6 +55,20 @@ public abstract class ASMCondition {
 	 * @param a the first value
 	 * @param b the second value
 	 * @param type the common supertype of the values
+	 * @return an ASMCondition
+	 */
+	public static ASMCondition ifEqual(CodePiece a, CodePiece b, Type type) {
+		return ifEqual(a, b, type, true);
+	}
+
+	/**
+	 * <p>Create an ASMCondition that checks if the two values are equal.</p>
+	 * <p>For primitives == comparison is used. For Objects a possibly null-guarded check to {@link Object#equals(Object)} is used. Arrays of single-dimension use the appropriate version of
+	 * {@link java.util.Arrays#equals(Object[], Object[])}, multi-dimensional arrays use a call to {@link java.util.Arrays#deepEquals(Object[], Object[])}.</p>
+	 * @param a the first value
+	 * @param b the second value
+	 * @param type the common supertype of the values
+	 * @param nullable whether the first value can be null
 	 * @return an ASMCondition
 	 */
 	public static ASMCondition ifEqual(CodePiece a, CodePiece b, Type type, boolean nullable) {
@@ -78,15 +89,7 @@ public abstract class ASMCondition {
 			}
 			return ifTrue(CodePieces.invokeStatic(owner, name, desc, a, b));
 		} else if (type.getSort() == Type.OBJECT) {
-			ASMCondition nonNullComparison;
-			Type unboxedType = ASMUtils.unboxedType(type);
-			if (unboxedType != type) {
-				CodePiece aUnboxed = CodePieces.unbox(a, unboxedType);
-				CodePiece bUnboxed = CodePieces.unbox(b, unboxedType);
-				nonNullComparison = ifSame(aUnboxed, bUnboxed, unboxedType);
-			} else {
-				nonNullComparison = ifTrue(CodePieces.invoke(INVOKEVIRTUAL, "java/lang/Object", "equals", getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class)), a, b));
-			}
+			ASMCondition nonNullComparison = ifTrue(CodePieces.invoke(INVOKEVIRTUAL, "java/lang/Object", "equals", getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class)), a, b));
 			if (nullable) {
 				return ifSame(a, b, type).or(ifNotNull(a).and(nonNullComparison));
 			} else {

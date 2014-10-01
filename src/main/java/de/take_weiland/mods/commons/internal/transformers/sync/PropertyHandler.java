@@ -2,11 +2,16 @@ package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
+import de.take_weiland.mods.commons.sync.Sync;
+import de.take_weiland.mods.commons.sync.Watch;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
+import net.minecraftforge.fluids.FluidTank;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
+
+import java.lang.annotation.Annotation;
 
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 
@@ -25,7 +30,15 @@ abstract class PropertyHandler {
 		this.canBeNull = !ASMUtils.isPrimitive(var.getType()) && !isNotNull(var);
 	}
 
-	public static PropertyHandler create(ASMVariable var, int idx) {
+	public static PropertyHandler create(TransformState state, ASMVariable var, int idx) {
+		PropertyHandler handler = create0(var, idx);
+		if (var.getterAnnotation(handler.getAnnotation()) == null) {
+			throw new RuntimeException("Don't know how to @Sync property \"" + var.rawName() + "\" in " + state.clazz.name);
+		}
+		return handler;
+	}
+
+	private static PropertyHandler create0(ASMVariable var, int idx) {
 		Type type = var.getType();
 		if (ASMUtils.isPrimitive(type)) {
 			return new PrimitiveHandler(var, idx);
@@ -35,7 +48,7 @@ abstract class PropertyHandler {
 			case "java/lang/String":
 				return new StringHandler(var, idx);
 			case "java/util/EnumSet":
-				return new EnumSetHandler(var, idx);
+				return new EnumSetHandler0(var, idx);
 			case "java/util/BitSet":
 				return new BitSetHandler(var, idx);
 			case "net/minecraft/item/ItemStack":
@@ -68,8 +81,12 @@ abstract class PropertyHandler {
 			return new BlockHandler(var, idx);
 		} else if (ClassInfo.of(Item.class).isAssignableFrom(classInfo)) {
 			return new ItemHandler(var, idx);
-		} else {
+		} else if (ClassInfo.of(FluidTank.class).isAssignableFrom(classInfo)) {
+			return new FluidTankHandler(var, idx);
+		} else if (var.getterAnnotation(Watch.class) != null) {
 			return new HandlerWithWatcher(var, idx);
+		} else {
+			return new HandlerWithSyncer(var, idx);
 		}
 	}
 
@@ -77,6 +94,10 @@ abstract class PropertyHandler {
 		return var.getterAnnotation(NotNull.class) != null
 				|| var.getterAnnotation(de.take_weiland.mods.commons.sync.NotNull.class) != null
 				|| var.getterAnnotation("javax/annotation/Nonnull") != null;
+	}
+
+	Class<? extends Annotation> getAnnotation() {
+		return Sync.class;
 	}
 
 	abstract void initialTransform(TransformState state);
