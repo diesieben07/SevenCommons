@@ -1,15 +1,10 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.Maps;
-import de.take_weiland.mods.commons.internal.SerializerUtil;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
-import java.lang.reflect.Method;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -20,46 +15,12 @@ import java.util.UUID;
  */
 public final class Serializers {
 
-	/**
-	 * <p>Wrap the given ByteStreamSerializable class into a ByteStreamSerializer. The generated serializer supports
-	 * null values. If that is not needed, {@link #wrap(Class, boolean)} should be used instead.</p>
-	 * @param clazz the class
-	 * @return a ByteStreamSerializer
-	 */
-	public static <T extends ByteStreamSerializable> ByteStreamSerializer<T> wrap(Class<T> clazz) {
-		return wrap(clazz, true);
-	}
+	public static final String CLASS_NAME = "de/take_weiland/mods/commons/util/Serializers";
+	public static final String DESERIALIZE = "deserialize";
 
-	private static Map<Class<?>, ByteStreamSerializer<?>> compiledSerializersNullable;
-	private static Map<Class<?>, ByteStreamSerializer<?>> compiledSerializersNonNull;
-
-	/**
-	 * <p>Wrap the given ByteStreamSerializable class into a ByteStreamSerializer.</p>
-	 * <p>If {@code nullable} is false, the returned serializer will throw a {@code NullPointerException}
-	 * when a null value is passed in and it will never return a null value.</p>
-	 * @param clazz the class
-	 * @param nullable if the generated class should support null values
-	 * @return a ByteStreamSerializer
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends ByteStreamSerializable> ByteStreamSerializer<T> wrap(Class<T> clazz, boolean nullable) {
-		Map<Class<?>, ByteStreamSerializer<?>> map;
-		if (nullable) {
-			if (compiledSerializersNullable == null) {
-				compiledSerializersNullable = Maps.newHashMap();
-			}
-			map = compiledSerializersNonNull;
-		} else {
-			if (compiledSerializersNonNull == null) {
-				compiledSerializersNonNull = Maps.newHashMap();
-			}
-			map = compiledSerializersNonNull;
-		}
-		ByteStreamSerializer<T> serializer = (ByteStreamSerializer<T>) map.get(clazz);
-		if (serializer == null) {
-			map.put(clazz, (serializer = compileSerializer(clazz, nullable)));
-		}
-		return serializer;
+	public static <T extends ByteStreamSerializable> T deserialize(Class<T> clazz, MCDataInputStream in) {
+		// Gets replaced with an InvokeDynamic call to SerializerUtil.bootstrap via SerializersTransformer
+		throw new AssertionError("ASM Transformer failed?!");
 	}
 
 	private static ByteStreamSerializer<ItemStack> itemStack;
@@ -155,67 +116,6 @@ public final class Serializers {
 		return string;
 	}
 
-	private static <T extends ByteStreamSerializable> ByteStreamSerializer<T> compileSerializer(Class<T> clazz, boolean nullable) {
-		Method method = SerializerUtil.findDeserializer(clazz, ByteStreamSerializable.Deserializer.class, MCDataInputStream.class);
-		return nullable ? new SerializerNullable<T>(method) : new SerializerNonNull<T>(method);
-	}
-
-
-	private static class SerializerNullable<T extends ByteStreamSerializable> implements ByteStreamSerializer<T> {
-
-		private final Method method;
-
-		private SerializerNullable(Method method) {
-			this.method = method;
-		}
-
-		@Override
-		public void write(T instance, MCDataOutputStream out) {
-			if (instance == null) {
-				out.writeBoolean(true);
-			} else {
-				out.writeBoolean(false);
-				instance.writeTo(out);
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public T read(MCDataInputStream in) {
-			if (in.readBoolean()) {
-				return null;
-			} else {
-				try {
-					return (T) method.invoke(null, in);
-				} catch (Exception e) {
-					throw Throwables.propagate(e);
-				}
-			}
-		}
-	}
-
-	private static class SerializerNonNull<T extends ByteStreamSerializable> implements ByteStreamSerializer<T> {
-		private final Method method;
-
-		public SerializerNonNull(Method method) {
-			this.method = method;
-		}
-
-		@Override
-		public void write(T instance, MCDataOutputStream out) {
-			instance.writeTo(out);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public T read(MCDataInputStream in) {
-			try {
-				return (T) method.invoke(null, in);
-			} catch (Exception e) {
-				throw Throwables.propagate(e);
-			}
-		}
-	}
 
 	private Serializers() { }
 

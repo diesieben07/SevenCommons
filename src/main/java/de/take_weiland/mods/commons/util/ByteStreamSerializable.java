@@ -20,9 +20,6 @@ import java.lang.annotation.Target;
  *         return new T(in.readInt());
  *     }
  * </pre></code></p>
- * <p>A class implementing {@code ByteStreamSerializable} can be turned into a {@code ByteStreamSerializer} via
- * {@link de.take_weiland.mods.commons.util.Serializers#wrap(Class, boolean)} .</p>
- *
  * @author diesieben07
  */
 public interface ByteStreamSerializable {

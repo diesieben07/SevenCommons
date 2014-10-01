@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
-import de.take_weiland.mods.commons.internal.SerializerUtil;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.nbt.*;
 import org.jetbrains.annotations.NotNull;
@@ -153,7 +152,8 @@ public final class NBT {
 	}
 
 	private static <T extends NBTSerializable> NBTSerializer<T> compileSerializer(Class<T> clazz) {
-		return new SerializerWrapper<>(SerializerUtil.findDeserializer(clazz, NBTSerializable.Deserializer.class, NBTBase.class));
+//		return new SerializerWrapper<>(SerializerUtil.findDeserializer(clazz, NBTSerializable.Deserializer.class, NBTBase.class));
+		return null;
 	}
 
 	private static final class SerializerWrapper<T extends NBTSerializable> implements NBTSerializer<T> {

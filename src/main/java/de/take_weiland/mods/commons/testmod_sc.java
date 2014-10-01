@@ -3,8 +3,11 @@ package de.take_weiland.mods.commons;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.net.MCDataInputStream;
+import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.Watch;
+import de.take_weiland.mods.commons.util.BlockCoordinates;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -43,6 +46,14 @@ public class testmod_sc {
 			}
 		};
 		GameRegistry.registerBlock(myBlock, "testblock");
+
+		BlockCoordinates coords = new BlockCoordinates(1, 2, 3);
+		MCDataOutputStream out = MCDataOutputStream.create();
+		coords.writeTo(out);
+
+		MCDataInputStream in = MCDataInputStream.create(out.toByteArray());
+		System.out.println(in.read(BlockCoordinates.class));
+		System.exit(0);
 	}
 
 	private static class BaseTE extends TileEntity {

@@ -2,9 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.primitives.Ints;
 import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.util.BlockCoordinates;
-import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.SCReflector;
+import de.take_weiland.mods.commons.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -303,6 +301,11 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 			}
 			return set;
 		}
+	}
+
+	@Override
+	public <T extends ByteStreamSerializable> T read(Class<T> clazz) {
+		return Serializers.deserialize(clazz, this);
 	}
 
 	private static final int BYTE_MSB = 0b1000_0000;

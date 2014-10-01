@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataInput;
 import de.take_weiland.mods.commons.util.BlockCoordinates;
+import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -150,6 +151,8 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @return an EnumSet or null
 	 */
 	<E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass);
+
+	<T extends ByteStreamSerializable> T read(Class<T> clazz);
 
 	/**
 	 * <p>Read a set of coordinates from the buffer.</p>

@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataOutput;
 import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.util.BlockCoordinates;
 import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -103,14 +102,6 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 	 * @param z the z coordinate
 	 */
 	void writeCoords(int x, int y, int z);
-
-	/**
-	 * <p>Writes the coordinates to this stream.</p>
-	 * <p>This method writes the x, y, z coordinates represented by the {@code BlockCoordinates} instance in the same
-	 * manner as {@link #writeCoords(int, int, int)}.</p>
-	 * @param coords the coordinates
-	 */
-	void writeCoords(BlockCoordinates coords);
 
 	void write(ByteStreamSerializable obj);
 

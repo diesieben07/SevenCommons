@@ -347,11 +347,6 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 	}
 
 	@Override
-	public void writeCoords(BlockCoordinates coords) {
-//		writeLong(BlockCoordinates.encodeNullable(coords));
-	}
-
-	@Override
 	public void write(ByteStreamSerializable obj) {
 		obj.writeTo(this);
 	}
