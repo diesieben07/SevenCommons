@@ -109,7 +109,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	@Override
 	public void reset() {
 		if (markedPos == NO_MARK) {
-			markedPos = initialPos;
+			pos = initialPos;
 		} else {
 			pos = markedPos;
 		}

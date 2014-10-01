@@ -53,6 +53,8 @@ public class testmod_sc {
 
 		MCDataInputStream in = MCDataInputStream.create(out.toByteArray());
 		System.out.println(in.read(BlockCoordinates.class));
+		in.reset();
+		System.out.println(in.read(BlockCoordinates.class));
 		System.exit(0);
 	}
 

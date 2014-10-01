@@ -100,8 +100,6 @@ public class SerializerUtil {
 			if (!params[0].isAssignableFrom(paramType)) {
 				throw new IllegalStateException("@Deserializer has invalid parameter type in " + clazz.getName());
 			}
-			method.setAccessible(true);
-
 			return method;
 		}
 		throw new IllegalStateException("Missing @Deserializer method in " + clazz.getName());
