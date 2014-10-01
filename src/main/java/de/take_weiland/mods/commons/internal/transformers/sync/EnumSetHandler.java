@@ -19,12 +19,12 @@ import static org.objectweb.asm.Type.*;
 /**
  * @author diesieben07
  */
-class EnumSetHandler0 extends PropertyHandler {
+class EnumSetHandler extends PropertyHandler {
 
 	private ASMVariable companion;
 	private ASMVariable enumType;
 
-	EnumSetHandler0(ASMVariable var, int idx) {
+	EnumSetHandler(ASMVariable var, int idx) {
 		super(var, idx);
 	}
 

@@ -48,7 +48,7 @@ abstract class PropertyHandler {
 			case "java/lang/String":
 				return new StringHandler(var, idx);
 			case "java/util/EnumSet":
-				return new EnumSetHandler0(var, idx);
+				return new EnumSetHandler(var, idx);
 			case "java/util/BitSet":
 				return new BitSetHandler(var, idx);
 			case "net/minecraft/item/ItemStack":
