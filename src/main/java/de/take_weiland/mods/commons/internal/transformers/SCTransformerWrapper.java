@@ -23,7 +23,7 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 
 		builder.add(new SyncTransformer());
 
-		builder.add(new SerializersTransformer());
+		builder.add(new InvokeDynamicTransformer());
 
 		builder.add(new ListenableTransformer());
 

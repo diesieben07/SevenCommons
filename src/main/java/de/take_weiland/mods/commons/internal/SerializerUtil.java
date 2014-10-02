@@ -1,14 +1,16 @@
 package de.take_weiland.mods.commons.internal;
 
+import com.google.common.collect.MapMaker;
+import de.take_weiland.mods.commons.nbt.NBTSerializable;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.util.ByteStreamSerializable;
+import net.minecraft.nbt.NBTBase;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.invoke.MethodType.methodType;
 
@@ -20,28 +22,81 @@ public class SerializerUtil {
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/SerializerUtil";
 	public static final String BOOTSTRAP = "inDyBootstrap";
 	public static final String BYTESTREAM = "bytestream";
+	public static final String NBT = "nbt";
 
+	private static final MethodHandle getBSDeserializer;
+	private static final MethodHandle getNBTDeserializer;
+	private static final ConcurrentMap<Class<?>, MethodHandle> bsDeserializers;
+	private static final ConcurrentMap<Class<?>, MethodHandle> nbtDeserializers;
+
+	static {
+		MapMaker mm = new MapMaker().concurrencyLevel(2);
+		bsDeserializers = mm.makeMap();
+		nbtDeserializers = mm.makeMap();
+
+		MethodHandles.Lookup lookup = MethodHandles.lookup();
+		try {
+			getBSDeserializer = lookup.findStatic(SerializerUtil.class, "getBSDeserializer", methodType(MethodHandle.class, Class.class));
+			getNBTDeserializer = lookup.findStatic(SerializerUtil.class, "getNBTDeserializer", methodType(MethodHandle.class, Class.class));
+		} catch (NoSuchMethodException | IllegalAccessException e) {
+			throw new AssertionError(e);
+		}
+	}
+
+	/**
+	 * <p>This method is the bootstrap method for the InvokeDynamic call from {@link de.take_weiland.mods.commons.util.Serializers#read(Class, de.take_weiland.mods.commons.net.MCDataInputStream)}.</p>
+	 * <p>It produces a ConstantCallSite, which is permanently linked to call a MethodHandle looked up via getBSDeserializer.</p>
+	 * <p>The MethodType must follow the following form:</p>
+	 * <ul>
+	 *     <li>For "bytestream": returntype: ByteStreamSerializable, params: Class, MCDataInputStream</li>
+	 *     <li>For "nbt": returntype: NBTSerializable, params: Class, NBTBase</li>
+	 * </ul>
+	 * @param lookup lookup
+	 * @param name type of Deserializer, can be either "bytestream" or "nbt" at this point in time.
+	 * @param callType the expected MethodHandle type
+	 * @return CallSite
+	 */
 	public static CallSite inDyBootstrap(MethodHandles.Lookup lookup, String name, MethodType callType) {
-		if (name.equals(BYTESTREAM)) {
-			if (callType.parameterCount() != 2) {
-				throw err("Parameter count mismatch");
-			}
-			if (callType.parameterType(0) != Class.class || callType.parameterType(1) != MCDataInputStream.class) {
-				throw err("Parameter type mismatch");
-			}
-			if (!ByteStreamSerializable.class.isAssignableFrom(callType.returnType())) {
-				throw err("Return type mismatch");
-			}
-			// get a MethodHandle that takes a MethodHandle and the InputStream and invokes the handle with the stream
-			MethodHandle invoker = MethodHandles.invoker(methodType(callType.returnType(), MCDataInputStream.class)); // MethodHandle<MethodHandle, MCDataInputStream>
+		switch (name) {
+			case BYTESTREAM: {
+				if (callType.parameterCount() != 2) {
+					throw err("Parameter count mismatch");
+				}
+				if (callType.parameterType(0) != Class.class || callType.parameterType(1) != MCDataInputStream.class) {
+					throw err("Parameter type mismatch");
+				}
+				if (callType.returnType() != ByteStreamSerializable.class) {
+					throw err("Return type mismatch");
+				}
+				// get a MethodHandle that takes a MethodHandle and the InputStream and invokes the handle with the stream
+				MethodHandle invoker = MethodHandles.invoker(methodType(ByteStreamSerializable.class, MCDataInputStream.class)); // MethodHandle<MethodHandle, MCDataInputStream>
 
-			// get a MethodHandle that transforms the class into a MethodHandle via getDeserializer
-			// and then invokes the above MethodHandle with that MethodHandle as the argument
-			MethodHandle filtered = MethodHandles.filterArguments(invoker, 0, getDeserializer); // MethodHandle<Class, MCDataInputStream>
 
-			return new ConstantCallSite(filtered);
-		} else {
-			throw new RuntimeException("Invalid call to SerializerUtil.inDyBootstrap!");
+				// get a MethodHandle that transforms the class into a MethodHandle via getBSDeserializer
+				// and then invokes the above MethodHandle with that MethodHandle as the argument
+				MethodHandle filtered = MethodHandles.filterArguments(invoker, 0, getBSDeserializer); // MethodHandle<Class, MCDataInputStream>
+
+
+				return new ConstantCallSite(filtered);
+			}
+			case NBT: {
+				if (callType.parameterCount() != 2) {
+					throw err("Parameter count mismatch");
+				}
+				if (callType.parameterType(0) != Class.class || callType.parameterType(1) != NBTBase.class) {
+					throw err("Parameter type mismatch");
+				}
+				if (callType.returnType() != NBTSerializable.class) {
+					throw err("Return type mismatch");
+				}
+
+				// similar to above
+				MethodHandle invoker = MethodHandles.invoker(methodType(NBTSerializable.class, NBTBase.class));
+				MethodHandle filtered = MethodHandles.filterArguments(invoker, 0, getNBTDeserializer);
+				return new ConstantCallSite(filtered);
+			}
+			default:
+				throw err("Invalid name!");
 		}
 	}
 
@@ -49,31 +104,43 @@ public class SerializerUtil {
 		return new RuntimeException("Invalid InvokeDynamic call: " + desc);
 	}
 
-	private static final MethodHandle getDeserializer;
-	private static final Map<Class<?>, MethodHandle> deserializers = new ConcurrentHashMap<>();
-	private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
-
-	static {
-		try {
-			getDeserializer = lookup.findStatic(SerializerUtil.class, "getDeserializer", methodType(MethodHandle.class, Class.class));
-		} catch (NoSuchMethodException | IllegalAccessException e) {
-			throw new AssertionError(e);
-		}
-	}
-
-	public static MethodHandle getDeserializer(Class<?> clazz) {
-		MethodHandle mh = deserializers.get(clazz);
+	private static MethodHandle getBSDeserializer(Class<?> clazz) {
+		MethodHandle mh = bsDeserializers.get(clazz);
 		if (mh == null) {
-			return lookupDeserializer(clazz);
+			return lookupBSDeserializer(clazz);
 		}
 		return mh;
 	}
 
-	public static MethodHandle lookupDeserializer(Class<?> clazz) {
+	private static MethodHandle lookupBSDeserializer(Class<?> clazz) {
 		Method method = findDeserializer(clazz, ByteStreamSerializable.Deserializer.class, MCDataInputStream.class);
 		try {
-			MethodHandle mh = lookup.unreflect(method);
-			deserializers.put(clazz, mh);
+			MethodHandle mh = MethodHandles.publicLookup().unreflect(method);
+			if (bsDeserializers.putIfAbsent(clazz, mh) != null) {
+				return bsDeserializers.get(clazz);
+			}
+			return mh;
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException("Cannot access Deserializer in " + clazz.getName(), e);
+		}
+	}
+
+	private static MethodHandle getNBTDeserializer(Class<?> clazz) {
+		MethodHandle mh = nbtDeserializers.get(clazz);
+		if (mh == null) {
+			return lookupNBTDeserializer(clazz);
+		}
+		return mh;
+	}
+
+	private static MethodHandle lookupNBTDeserializer(Class<?> clazz) {
+		Method method = findDeserializer(clazz, NBTSerializable.Deserializer.class, NBTBase.class);
+		try {
+			MethodHandle mh = MethodHandles.publicLookup().unreflect(method);
+			if (nbtDeserializers.putIfAbsent(clazz, mh) != null) {
+				return nbtDeserializers.get(clazz);
+			}
+			System.out.println("Found NBT deserializer: " + method);
 			return mh;
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException("Cannot access Deserializer in " + clazz.getName(), e);

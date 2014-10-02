@@ -305,7 +305,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 
 	@Override
 	public <T extends ByteStreamSerializable> T read(Class<T> clazz) {
-		return Serializers.deserialize(clazz, this);
+		return Serializers.read(clazz, this);
 	}
 
 	private static final int BYTE_MSB = 0b1000_0000;

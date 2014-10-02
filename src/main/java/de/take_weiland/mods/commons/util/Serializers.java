@@ -1,11 +1,16 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.collect.MapMaker;
+import de.take_weiland.mods.commons.internal.InvokeDynamic;
+import de.take_weiland.mods.commons.internal.SerializerUtil;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * <p>Utilities for working with {@link de.take_weiland.mods.commons.util.ByteStreamSerializer} and
@@ -18,20 +23,51 @@ public final class Serializers {
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/util/Serializers";
 	public static final String DESERIALIZE = "deserialize";
 
-	public static <T extends ByteStreamSerializable> T deserialize(Class<T> clazz, MCDataInputStream in) {
-		// Gets replaced with an InvokeDynamic call to SerializerUtil.bootstrap via SerializersTransformer
-		throw new AssertionError("ASM Transformer failed?!");
+
+	public static <T> T read(Class<T> clazz, MCDataInputStream in) {
+		return getSerializer(clazz).read(in);
 	}
 
-	private static ByteStreamSerializer<ItemStack> itemStack;
+	@InvokeDynamic(name = SerializerUtil.BYTESTREAM, bootstrapClass = SerializerUtil.CLASS_NAME, bootstrapMethod = SerializerUtil.BOOTSTRAP)
+	private static <T extends ByteStreamSerializable> T readViaStaticMethod(Class<T> clazz, MCDataInputStream in) {
+		throw new AssertionError("InvokeDynamic failed");
+	}
 
-	/**
-	 * <p>Get a ByteStreamSerializer for serializing ItemStacks. The serializer will support null values.</p>
-	 * @return a ByteStreamSerializer
-	 */
-	public static ByteStreamSerializer<ItemStack> forItemStack() {
-		if (itemStack == null) {
-			itemStack = new ByteStreamSerializer<ItemStack>() {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static <T> void write(T instance, MCDataOutputStream out) {
+		((ByteStreamSerializer) getSerializer(instance.getClass())).write(instance, out);
+	}
+
+	private static final ConcurrentMap<Class<?>, ByteStreamSerializer<?>> serializers = new MapMaker().concurrencyLevel(2).makeMap();
+
+	@SuppressWarnings("unchecked")
+	public static <T> ByteStreamSerializer<T> getSerializer(@NotNull Class<T> clazz) {
+		ByteStreamSerializer<T> serializer = (ByteStreamSerializer<T>) serializers.get(clazz);
+		if (serializer == null) {
+			if (serializers.putIfAbsent(clazz, (serializer = newSerializer(clazz))) != null) {
+				return (ByteStreamSerializer<T>) serializers.get(clazz);
+			}
+		}
+		return serializer;
+	}
+
+	@SuppressWarnings("unchecked")
+	@NotNull
+	public static <T extends ByteStreamSerializable> ByteStreamSerializer<T> wrap(@NotNull Class<T> clazz) {
+		ByteStreamSerializer<T> wrapper = (ByteStreamSerializer<T>) serializers.get(clazz);
+		if (wrapper == null) {
+			if (serializers.putIfAbsent(clazz, (wrapper = newWrapper(clazz))) != null) {
+				// someone got there first
+				return (ByteStreamSerializer<T>) serializers.get(clazz);
+			}
+		}
+		return wrapper;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> ByteStreamSerializer<T> newSerializer(Class<T> clazz) {
+		if (clazz == ItemStack.class) {
+			return (ByteStreamSerializer<T>) new ByteStreamSerializer<ItemStack>() {
 				@Override
 				public void write(ItemStack instance, MCDataOutputStream out) {
 					out.writeItemStack(instance);
@@ -42,19 +78,9 @@ public final class Serializers {
 					return in.readItemStack();
 				}
 			};
-		}
-		return itemStack;
-	}
+		} else if (clazz == FluidStack.class) {
+			return (ByteStreamSerializer<T>) new ByteStreamSerializer<FluidStack>() {
 
-	private static ByteStreamSerializer<FluidStack> fluidStack;
-
-	/**
-	 * <p>Get a ByteStreamSerializer for serializing FluidStacks. The serializer will support null values.</p>
-	 * @return a ByteStreamSerializer
-	 */
-	public static ByteStreamSerializer<FluidStack> forFluidStack() {
-		if (fluidStack == null) {
-			fluidStack = new ByteStreamSerializer<FluidStack>() {
 				@Override
 				public void write(FluidStack instance, MCDataOutputStream out) {
 					out.writeFluidStack(instance);
@@ -65,42 +91,8 @@ public final class Serializers {
 					return in.readFluidStack();
 				}
 			};
-		}
-		return fluidStack;
-	}
-
-	private static ByteStreamSerializer<UUID> uuid;
-
-	/**
-	 * <p>Get a ByteStreamSerializer for serializing UUIDs. The serializer will support null values.</p>
-	 * @return a ByteStreamSerializer
-	 */
-	public static ByteStreamSerializer<UUID> forUUID() {
-		if (uuid == null) {
-			uuid = new ByteStreamSerializer<UUID>() {
-				@Override
-				public void write(UUID instance, MCDataOutputStream out) {
-					out.writeUUID(instance);
-				}
-
-				@Override
-				public UUID read(MCDataInputStream in) {
-					return in.readUUID();
-				}
-			};
-		}
-		return uuid;
-	}
-
-	private static ByteStreamSerializer<String> string;
-
-	/**
-	 * <p>Get a ByteStreamSerializer for serializing Strings. The serializer will support null values.</p>
-	 * @return a ByteStreamSerializer
-	 */
-	public static ByteStreamSerializer<String> forString() {
-		if (string == null) {
-			string = new ByteStreamSerializer<String>() {
+		} else if (clazz == String.class) {
+			return (ByteStreamSerializer<T>) new ByteStreamSerializer<String>() {
 
 				@Override
 				public void write(String instance, MCDataOutputStream out) {
@@ -112,10 +104,39 @@ public final class Serializers {
 					return in.readString();
 				}
 			};
+		} else if (clazz == UUID.class) {
+			return (ByteStreamSerializer<T>) new ByteStreamSerializer<UUID>() {
+
+				@Override
+				public void write(UUID instance, MCDataOutputStream out) {
+					out.writeUUID(instance);
+				}
+
+				@Override
+				public UUID read(MCDataInputStream in) {
+					return in.readUUID();
+				}
+			};
+		} else if (ByteStreamSerializable.class.isAssignableFrom(clazz)) {
+			return (ByteStreamSerializer<T>) newWrapper((Class<ByteStreamSerializable>) clazz);
+		} else {
+			throw new RuntimeException("Cannot serialize " + clazz.getName());
 		}
-		return string;
 	}
 
+	private static <T extends ByteStreamSerializable> ByteStreamSerializer<T> newWrapper(final Class<T> clazz) {
+		return new ByteStreamSerializer<T>() {
+			@Override
+			public void write(T instance, MCDataOutputStream out) {
+				instance.writeTo(out);
+			}
+
+			@Override
+			public T read(MCDataInputStream in) {
+				return Serializers.readViaStaticMethod(clazz, in);
+			}
+		};
+	}
 
 	private Serializers() { }
 

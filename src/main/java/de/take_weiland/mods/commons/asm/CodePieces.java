@@ -786,6 +786,15 @@ public final class CodePieces {
 		return builder.build();
 	}
 
+	public static CodePiece[] allArgs(String desc, boolean isStaticMethod) {
+		Type[] args = Type.getArgumentTypes(desc);
+		CodePiece[] codes = new CodePiece[args.length];
+		for (int i = 0; i < codes.length; i++) {
+			codes[i] = of(new VarInsnNode(args[i].getOpcode(ILOAD), i + (isStaticMethod ? 0 : 1)));
+		}
+		return codes;
+	}
+
 	private static CodePiece thisLoader;
 
 	/**

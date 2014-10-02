@@ -3,14 +3,14 @@ package de.take_weiland.mods.commons;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.net.MCDataInputStream;
-import de.take_weiland.mods.commons.net.MCDataOutputStream;
+import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.Watch;
 import de.take_weiland.mods.commons.util.BlockCoordinates;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
@@ -48,13 +48,17 @@ public class testmod_sc {
 		GameRegistry.registerBlock(myBlock, "testblock");
 
 		BlockCoordinates coords = new BlockCoordinates(1, 2, 3);
-		MCDataOutputStream out = MCDataOutputStream.create();
-		coords.writeTo(out);
+//		MCDataOutputStream out = MCDataOutputStream.create();
+//		coords.writeTo(out);
+//
+//		MCDataInputStream in = MCDataInputStream.create(out.toByteArray());
+//		System.out.println(in.read(BlockCoordinates.class));
+//		in.reset();
+//		System.out.println(in.read(BlockCoordinates.class));
 
-		MCDataInputStream in = MCDataInputStream.create(out.toByteArray());
-		System.out.println(in.read(BlockCoordinates.class));
-		in.reset();
-		System.out.println(in.read(BlockCoordinates.class));
+
+		NBTBase nbt = coords.serialize();
+		System.out.println(NBT.deserialize(BlockCoordinates.class, nbt));
 		System.exit(0);
 	}
 

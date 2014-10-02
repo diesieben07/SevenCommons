@@ -1,18 +1,20 @@
 package de.take_weiland.mods.commons.nbt;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.Maps;
+import de.take_weiland.mods.commons.internal.InvokeDynamic;
+import de.take_weiland.mods.commons.internal.SerializerUtil;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.nbt.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public final class NBT {
+
+	public static final String CLASS_NAME = "de/take_weiland/mods/commons/nbt/NBT";
+	public static final String DESERIALIZE0 = "deserialize0";
 
 	public static final int TAG_END = 0;
 	public static final int TAG_BYTE = 1;
@@ -134,54 +136,12 @@ public final class NBT {
 	}
 
 	public static <T extends NBTSerializable> T deserialize(@NotNull Class<T> clazz, @NotNull NBTBase nbt) {
-		return serializer(clazz).deserialize(nbt);
+		return isSerializedNull(nbt) ? null : deserialize0(clazz, nbt);
 	}
 
-	private static Map<Class<?>, NBTSerializer<?>> serializers;
-
-	public static <T extends NBTSerializable> NBTSerializer<T> serializer(@NotNull Class<T> clazz) {
-		if (serializers == null) {
-			serializers = Maps.newHashMap();
-		}
-		@SuppressWarnings("unchecked")
-		NBTSerializer<T> serializer = (NBTSerializer<T>) serializers.get(clazz);
-		if (serializer == null) {
-			serializers.put(clazz, (serializer = compileSerializer(clazz)));
-		}
-		return serializer;
-	}
-
-	private static <T extends NBTSerializable> NBTSerializer<T> compileSerializer(Class<T> clazz) {
-//		return new SerializerWrapper<>(SerializerUtil.findDeserializer(clazz, NBTSerializable.Deserializer.class, NBTBase.class));
-		return null;
-	}
-
-	private static final class SerializerWrapper<T extends NBTSerializable> implements NBTSerializer<T> {
-
-		private final Method deserializer;
-
-		SerializerWrapper(Method deserializer) {
-			this.deserializer = deserializer;
-		}
-
-		@Override
-		public NBTBase serialize(T instance) {
-			return NBT.serialize(instance);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public T deserialize(NBTBase nbt) {
-			if (isSerializedNull(nbt)) {
-				return null;
-			} else {
-				try {
-					return (T) deserializer.invoke(null, nbt);
-				} catch (Exception e) {
-					throw Throwables.propagate(e);
-				}
-			}
-		}
+	@InvokeDynamic(name = SerializerUtil.NBT, bootstrapClass = SerializerUtil.CLASS_NAME, bootstrapMethod = SerializerUtil.BOOTSTRAP)
+	private static <T extends NBTSerializable> T deserialize0(Class<T> clazz, NBTBase nbt) {
+		throw new AssertionError("SerializationTransformer failed!");
 	}
 
 	private NBT() { }
