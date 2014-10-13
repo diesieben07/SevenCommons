@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.net;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.BlockCoordinates;
 import de.take_weiland.mods.commons.util.ByteStreamSerializable;
+import de.take_weiland.mods.commons.util.ByteStreamSerializers;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -349,6 +350,12 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 	@Override
 	public void write(ByteStreamSerializable obj) {
 		obj.writeTo(this);
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	@Override
+	public void write(Object obj) {
+		ByteStreamSerializers.getSerializer((Class) obj.getClass()).write(obj, this);
 	}
 
 	static final int UUID_FAKE_NULL_VERSION = 0xF000;

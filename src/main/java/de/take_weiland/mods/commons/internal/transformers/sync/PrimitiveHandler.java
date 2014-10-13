@@ -6,8 +6,11 @@ import de.take_weiland.mods.commons.asm.CodePiece;
 import de.take_weiland.mods.commons.asm.CodePieces;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
+import de.take_weiland.mods.commons.sync.Sync;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
+
+import java.lang.annotation.Annotation;
 
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.VOID_TYPE;
@@ -48,5 +51,10 @@ class PrimitiveHandler extends PropertyHandler {
 		String name = "read" + StringUtils.capitalize(var.getType().getClassName());
 		String desc = Type.getMethodDescriptor(var.getType());
 		return var.set(CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, stream));
+	}
+
+	@Override
+	Class<? extends Annotation> getAnnotation() {
+		return Sync.class;
 	}
 }

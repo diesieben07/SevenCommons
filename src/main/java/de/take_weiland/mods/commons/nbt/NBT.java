@@ -1,20 +1,29 @@
 package de.take_weiland.mods.commons.nbt;
 
-import de.take_weiland.mods.commons.internal.InvokeDynamic;
-import de.take_weiland.mods.commons.internal.SerializerUtil;
+import com.google.common.collect.MapMaker;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.minecraftforge.fluids.FluidStack;
+import org.jetbrains.annotations.Contract;
+
+import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+/**
+ * <p>Utility methods regarding NBT data.</p>
+ */
+@ParametersAreNonnullByDefault
 public final class NBT {
-
-	public static final String CLASS_NAME = "de/take_weiland/mods/commons/nbt/NBT";
-	public static final String DESERIALIZE0 = "deserialize0";
 
 	public static final int TAG_END = 0;
 	public static final int TAG_BYTE = 1;
@@ -28,44 +37,276 @@ public final class NBT {
 	public static final int TAG_LIST = 9;
 	public static final int TAG_COMPOUND = 10;
 	public static final int TAG_INT_ARR = 11;
+
 	private static final byte NULL = -1;
 	private static final String NULL_KEY = "_sc$null";
 
-	/**
-	 * view the given NBTTagList as a {@link List}<br>
-	 * the type parameter T can be used if you are sure that this list only contains NBT-Tags of the given type
-	 *
-	 * @param nbtList the list to view
-	 * @return a modifiable list view of the NBTTagList
-	 */
-	public static <T extends NBTBase> List<T> asList(NBTTagList nbtList) {
-		return SCReflector.instance.getWrappedList(nbtList);
+	private static final ConcurrentMap<Class<?>, NBTSerializer<?>> customSerializers;
+	private static final ConcurrentMap<Class<?>, NBTSerializer.NullSafe<?>> safeSerializers;
+
+	static {
+		MapMaker mm = new MapMaker().concurrencyLevel(2);
+		customSerializers = mm.makeMap();
+		safeSerializers = mm.makeMap();
 	}
 
+	/**
+	 * <p>Get a List view of the given NBTTagList.
+	 * The returned List is modifiable and writes through to the underlying NBTTagList.</p>
+	 * <p>The type-parameter {@code T} can be used to narrow the type of the List, if it is known. If a wrong type is
+	 * provided here, a {@code ClassCastException} may be thrown at any time in the future.</p>
+	 * <p>Care must also be taken if {@code T} is not provided and values of a wrong type are written into the List.</p>
+	 *
+	 * @param nbt the underlying NBTTagList
+	 * @return a modifiable List view
+	 */
+	@Nonnull
+	public static <T extends NBTBase> List<T> asList(NBTTagList nbt) {
+		return SCReflector.instance.getWrappedList(nbt);
+	}
+
+	/**
+	 * <p>Get a Map view of the given NBTTagCompound.
+	 * The returned Map is modifiable and writes through to teh underlying NBTTagCompound.</p>
+	 * <p>Note that the returned Map does <i>not</i> create default values of any kind, as opposed to NBTTagCompound.</p>
+	 * @param nbt the underlying NBTTagCompound
+	 * @return a modifiable Map view
+	 */
+	@Nonnull
 	public static Map<String, NBTBase> asMap(NBTTagCompound nbt) {
 		return SCReflector.instance.getWrappedMap(nbt);
 	}
 
+	/**
+	 * <p>Get the NBTTagCompound with the given key in {@code parent} or, if no entry for that key is present,
+	 * create a new NBTTagCompound and store it in {@code parent} with the given key.</p>
+	 * @param parent the parent NBTTagCompound
+	 * @param key the key
+	 * @return an NBTTagCompound
+	 */
+	@Nonnull
 	public static NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {
-		if (!parent.hasKey(key)) {
-			parent.setCompoundTag(key, new NBTTagCompound());
+		NBTTagCompound nbt = (NBTTagCompound) asMap(parent).get(key);
+		if (nbt == null) {
+			parent.setCompoundTag(key, (nbt = new NBTTagCompound()));
 		}
-		return parent.getCompoundTag(key);
+		return nbt;
 	}
 
+	/**
+	 * <p>Get the NBTTagList with the given key in {@code parent} of, if no entry for that key is present,
+	 * create a new NBTTagList and store it in {@code parent} with the given key.</p>
+	 * @param parent the parent NBTTagCompound
+	 * @param key the key
+	 * @return an NBTTagList
+	 */
+	@Nonnull
 	public static NBTTagList getOrCreateList(NBTTagCompound parent, String key) {
-		if (!parent.hasKey(key)) {
-			parent.setTag(key, new NBTTagList());
+		NBTTagList list = (NBTTagList) asMap(parent).get(key);
+		if (list == null) {
+			parent.setTag(key, (list = new NBTTagList()));
 		}
-		return parent.getTagList(key);
+		return list;
 	}
 
+	/**
+	 * <p>Create a deep copy of the given NBT-Tag.</p>
+	 * @param nbt the tag
+	 * @return a deep copy of the tag
+	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends NBTBase> T copy(T nbt) {
+	@Nullable
+	@Contract("null->null")
+	public static <T extends NBTBase> T copy(@Nullable T nbt) {
 		return nbt == null ? null : (T) nbt.copy();
 	}
 
-	public static NBTBase writeUUID(UUID uuid) {
+	/**
+	 * <p>Serializes the given Object to NBT.</p>
+	 * <p>This method supports null values.</p>
+	 * @see #read(Class, net.minecraft.nbt.NBTBase)
+	 * @see #registerSerializer(Class, NBTSerializer)
+	 * @param obj the Object
+	 * @return the NBT data
+	 */
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	@Nonnull
+	public static NBTBase write(@Nullable Object obj) {
+		return obj == null
+				? serializedNull()
+				: getNotNullSerializer((Class) obj.getClass()).serialize(obj);
+	}
+
+	/**
+	 * <p>Deserializes an Object of Class {@code T} from NBT.</p>
+	 * <p>This method supports serialized null values. The Object has to be serialized via
+	 * {@link #write(Object)} or a Serializer returned from {@link #getSerializer(Class)}.</p>
+	 * @param clazz the Class
+	 * @param nbt the NBT data
+	 * @return the deserialized Object
+	 */
+	@Nullable
+	public static <T> T read(Class<T> clazz, @Nullable NBTBase nbt) {
+		return isSerializedNull(nbt) ? null : getNotNullSerializer(clazz).deserialize(nbt);
+	}
+
+	/**
+	 * <p>Register a Serializer for the given Class. Serializers for implementers of {@link de.take_weiland.mods.commons.nbt.NBTSerializable}
+	 * must not be registered, as they are handles automatically. A Serializer for those classes can be obtained via
+	 * {@link #getSerializer(Class)}.</p>
+	 * @param clazz the Class to serialize
+	 * @param serializer the serializer
+	 */
+	public static <T> void registerSerializer(Class<T> clazz, NBTSerializer<T> serializer) {
+		checkArgument(!NBTSerializable.class.isAssignableFrom(clazz), "Don't register serializers for NBTSerializable!");
+		if (customSerializers.putIfAbsent(clazz, serializer) != null) {
+			throw new IllegalArgumentException("Serializer for " + clazz.getName() + " already registered!");
+		}
+		if (serializer instanceof NBTSerializer.NullSafe) {
+			// this is not 100% accurate, as getSerializer *might* have created a null-safe wrapper already
+			// but it is extremely unlikely, and doesn't hurt anyways
+			safeSerializers.put(clazz, (NBTSerializer.NullSafe<?>) serializer);
+		}
+	}
+
+	/**
+	 * <p>Get a {@code NBTSerializer} for the given class. The class must either implement {@code NBTSerializable}
+	 * or a Serializer must be registered manually via {@link #registerSerializer(Class, NBTSerializer)}.</p>
+	 * <p>The returned Serializer will be null-safe.</p>
+	 * <p>Classes supported by default are:</p>
+	 * <ul>
+	 *     <li>{@link java.lang.String}</li>
+	 *     <li>{@link java.util.UUID}</li>
+	 *     <li>{@link net.minecraft.item.ItemStack}</li>
+	 *     <li>{@link net.minecraftforge.fluids.FluidStack}</li>
+	 *     <li>{@link java.lang.Enum Enums}</li>
+	 * </ul>
+	 * @param clazz the class to be serialized
+	 * @return a serializer for the class
+	 */
+	@Nonnull
+	@SuppressWarnings("unchecked")
+	public static <T> NBTSerializer.NullSafe<T> getSerializer(Class<T> clazz) {
+		NBTSerializer.NullSafe<T> result = (NBTSerializer.NullSafe<T>) safeSerializers.get(clazz);
+		if (result == null) {
+			result = newNullSafeSerializer(clazz);
+			if (safeSerializers.putIfAbsent(clazz, result) != null) {
+				result = (NBTSerializer.NullSafe<T>) safeSerializers.get(clazz);
+			}
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> NBTSerializer<T> getNotNullSerializer(Class<T> clazz) {
+		NBTSerializer<T> result = (NBTSerializer<T>) safeSerializers.get(clazz);
+		if (result == null) {
+			result = (NBTSerializer<T>) customSerializers.get(clazz);
+		}
+		if (result == null) {
+			throw cannotSerialize(clazz);
+		}
+		return result;
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private static <T> NBTSerializer.NullSafe<T> newNullSafeSerializer(final Class<T> clazz) {
+		if (clazz.isEnum()) {
+			return (NBTSerializer.NullSafe<T>) new EnumSerializer(clazz);
+		} else if (clazz == String.class) {
+			return (NBTSerializer.NullSafe<T>) new StringSerializer();
+		} else if (clazz == UUID.class) {
+			return (NBTSerializer.NullSafe<T>) new UUIDSerializer();
+		} else if (clazz == ItemStack.class) {
+			return (NBTSerializer.NullSafe<T>) new ItemStackSerializer();
+		} else if (clazz == FluidStack.class) {
+			return (NBTSerializer.NullSafe<T>) new FluidStackSerializer();
+		} else if (clazz == boolean[].class) {
+			return (NBTSerializer.NullSafe<T>) new PrimitiveArraySerializers.Boolean();
+		} else if (clazz == byte[].class) {
+			return (NBTSerializer.NullSafe<T>) new PrimitiveArraySerializers.Byte();
+		} else if (clazz == short[].class) {
+			return (NBTSerializer.NullSafe<T>) new PrimitiveArraySerializers.Short();
+		} else if (clazz == char[].class) {
+			return (NBTSerializer.NullSafe<T>) new PrimitiveArraySerializers.Char();
+		} else if (clazz == int[].class) {
+			return (NBTSerializer.NullSafe<T>) new PrimitiveArraySerializers.Int();
+		} else if (clazz == long[].class) {
+			return (NBTSerializer.NullSafe<T>) new PrimitiveArraySerializers.Long();
+		} else if (clazz == float[].class) {
+			return (NBTSerializer.NullSafe<T>) new PrimitiveArraySerializers.Float();
+		} else if (clazz == double[].class) {
+			return (NBTSerializer.NullSafe<T>) new PrimitiveArraySerializers.Double();
+		} else if (clazz == String[].class) {
+			return (NBTSerializer.NullSafe<T>) new ObjectArraySerializer.StringSpecialized();
+		} else if (clazz == ItemStack[].class) {
+			return (NBTSerializer.NullSafe<T>) new ObjectArraySerializer.ItemStackSpecialized();
+		} else if (clazz.isArray() && JavaUtils.getDimensions(clazz) == 1) {
+			Class<?> comp = clazz.getComponentType();
+			return (NBTSerializer.NullSafe<T>) new ObjectArraySerializer.Simple<>(getSerializer(comp), comp);
+		} else if (NBTSerializable.class.isAssignableFrom(clazz)) {
+			return (NBTSerializer.NullSafe<T>) new NBTSerializableWrapper(clazz);
+		}
+		final NBTSerializer<T> wrapped = (NBTSerializer<T>) customSerializers.get(clazz);
+		if (wrapped == null) {
+			throw cannotSerialize(clazz);
+		} else {
+			return new NullSafeSerializerWrapper<>(wrapped);
+		}
+	}
+
+	private static RuntimeException cannotSerialize(Class<?> clazz) {
+		return new RuntimeException("Cannot serialize " + clazz.getName() + " to NBT");
+	}
+
+	/**
+	 * <p>Write the given String to NBT.</p>
+	 * @param s the String
+	 * @return NBT data
+	 */
+	@Nonnull
+	public static NBTBase writeString(@Nullable String s) {
+		return s == null ? serializedNull() : new NBTTagString("", s);
+	}
+
+	/**
+	 * <p>Stores the given String to the given key in the NBTTagCompound.</p>
+	 * @param s the String
+	 * @param nbt the NBTTagCompound
+	 * @param key the key
+	 */
+	public static void writeString(@Nullable String s, NBTTagCompound nbt, String key) {
+		nbt.setTag(key, writeString(s));
+	}
+
+	/**
+	 * <p>Read a String from NBT.</p>
+	 * @param nbt the NBT data
+	 * @return a String
+	 */
+	@Nullable
+	public static String readString(@Nullable NBTBase nbt) {
+		return isSerializedNull(nbt) ? null : ((NBTTagString) nbt).data;
+	}
+
+	/**
+	 * <p>Read a String from the given key in the NBTTagCompound.</p>
+	 * @param nbt the NBTTagCompound
+	 * @param key the key
+	 * @return a String
+	 */
+	@Nullable
+	public static String readString(NBTTagCompound nbt, String key) {
+		return readString(nbt.getTag(key));
+	}
+
+	/**
+	 * <p>Write the given UUID to NBT.</p>
+	 * @param uuid the UUID
+	 * @return NBT data
+	 */
+	@Nonnull
+	public static NBTBase writeUUID(@Nullable UUID uuid) {
 		if (uuid == null) {
 			return serializedNull();
 		} else {
@@ -76,11 +317,23 @@ public final class NBT {
 		}
 	}
 
-	public static void writeUUID(UUID uuid, @NotNull NBTTagCompound nbt, @NotNull String key) {
+	/**
+	 * <p>Stores the given UUID to the given key in the NBTTagCompound.</p>
+	 * @param uuid the UUID
+	 * @param nbt the NBTTagCompound
+	 * @param key the key
+	 */
+	public static void writeUUID(@Nullable UUID uuid, NBTTagCompound nbt, String key) {
 		nbt.setTag(key, writeUUID(uuid));
 	}
 
-	public static UUID readUUID(NBTBase nbt) {
+	/**
+	 * <p>Read an UUID from NBT.</p>
+	 * @param nbt the NBT data
+	 * @return an UUID
+	 */
+	@Nullable
+	public static UUID readUUID(@Nullable NBTBase nbt) {
 		if (isSerializedNull(nbt) || nbt.getId() != TAG_LIST) {
 			return null;
 		} else {
@@ -89,19 +342,106 @@ public final class NBT {
 		}
 	}
 
-	public static UUID readUUID(@NotNull NBTTagCompound nbt, @NotNull String key) {
+	/**
+	 * <p>Read an UUID from the given key in the NBTTagCompound.</p>
+	 * @param nbt the NBTTagCompound
+	 * @param key the key
+	 * @return an UUID
+	 */
+	@Nullable
+	public static UUID readUUID(NBTTagCompound nbt, String key) {
 		return readUUID(nbt.getTag(key));
 	}
 
-	public static NBTBase serialize(@Nullable NBTSerializable serializable) {
-		if (serializable == null) {
-			return serializedNull();
-		} else {
-			return serializable.serialize();
-		}
+	/**
+	 * <p>Write the given ItemStack to NBT.</p>
+	 * @param stack the ItemStack
+	 * @return NBT data
+	 */
+	@Nonnull
+	public static NBTBase writeItemStack(@Nullable ItemStack stack) {
+		return stack == null ? serializedNull() : stack.writeToNBT(new NBTTagCompound());
 	}
 
-	public static <E extends Enum<E>> NBTBase writeEnum(E e) {
+	/**
+	 * <p>Stores the given ItemStack to the given key in the NBTTagCompound.</p>
+	 * @param stack the ItemStack
+	 * @param nbt the NBTTagCompound
+	 * @param key the key
+	 */
+	public static void writeItemStack(@Nullable ItemStack stack, NBTTagCompound nbt, String key) {
+		nbt.setTag(key, writeItemStack(stack));
+	}
+
+	/**
+	 * <p>Read an ItemStack from NBT.</p>
+	 * @param nbt the NBT data
+	 * @return an ItemStack
+	 */
+	@Nullable
+	public static ItemStack readItemStack(@Nullable NBTBase nbt) {
+		return isSerializedNull(nbt) ? null : ItemStack.loadItemStackFromNBT((NBTTagCompound) nbt);
+	}
+
+	/**
+	 * <p>Read an ItemStack from the given key in the NBTTagCompound.</p>
+	 * @param nbt the NBTTagCompound
+	 * @param key the key
+	 * @return an ItemStack
+	 */
+	@Nullable
+	public static ItemStack readItemStack(NBTTagCompound nbt, String key) {
+		return readItemStack(nbt.getTag(key));
+	}
+
+	/**
+	 * <p>Write the given FluidStack to NBT.</p>
+	 * @param stack the FluidStack
+	 * @return NBT data
+	 */
+	@Nonnull
+	public static NBTBase writeFluidStack(@Nullable FluidStack stack) {
+		return stack == null ? serializedNull() : stack.writeToNBT(new NBTTagCompound());
+	}
+
+	/**
+	 * <p>Stores the given FluidStack to the given key in the NBTTagCompound.</p>
+	 * @param stack the FluidStack
+	 * @param nbt the NBTTagCompound
+	 * @param key the key
+	 */
+	public static void writeFluidStack(@Nullable FluidStack stack, NBTTagCompound nbt, String key) {
+		nbt.setTag(key, writeFluidStack(stack));
+	}
+
+	/**
+	 * <p>Read a FluidStack from NBT.</p>
+	 * @param nbt the NBT data
+	 * @return a FluidStack
+	 */
+	@Nullable
+	public static FluidStack readFluidStack(@Nullable NBTBase nbt) {
+		return isSerializedNull(nbt) ? null : FluidStack.loadFluidStackFromNBT((NBTTagCompound) nbt);
+	}
+
+	/**
+	 * <p>Read a FluidStack from the given key in the NBTTagCompound.</p>
+	 * @param nbt the NBTTagCompound
+	 * @param key the key
+	 * @return a FluidStack
+	 */
+	@Nullable
+	public static FluidStack readFluidStack(NBTTagCompound nbt, String key) {
+		return readFluidStack(nbt.getTag(key));
+	}
+
+	/**
+	 * <p>Write the given Enum to NBT.</p>
+	 * @param e the Enum
+	 * @return NBT data
+	 */
+	@Nonnull
+	public static <E extends Enum<E>> NBTBase writeEnum(@Nullable E e) {
 		if (e == null) {
 			return serializedNull();
 		} else {
@@ -109,39 +449,64 @@ public final class NBT {
 		}
 	}
 
-	public static <E extends Enum<E>> void writeEnum(@NotNull NBTTagCompound nbt, @NotNull String key, @Nullable E e) {
+	/**
+	 * <p>Stores the given Enum to the given key in the NBTTagCompound.</p>
+	 * @param e the Enum
+	 * @param nbt the NBTTagCompound
+	 * @param key the key
+	 */
+	public static <E extends Enum<E>> void writeEnum(NBTTagCompound nbt, String key, @Nullable E e) {
 		nbt.setTag(key, writeEnum(e));
 	}
 
-	public static <E extends Enum<E>> E readEnum(@NotNull NBTBase nbt, @NotNull Class<E> clazz) {
-		if (isSerializedNull(nbt) || nbt.getId() != TAG_STRING) {
+	/**
+	 * <p>Read an Enum of the given Class from NBT.</p>
+	 * @param nbt the NBT data
+	 * @param clazz the Class of the Enum to read
+	 * @return an Enum
+	 */
+	@Nullable
+	public static <E extends Enum<E>> E readEnum(@Nullable NBTBase nbt, Class<E> clazz) {
+		if (isSerializedNull(nbt)) {
 			return null;
 		} else {
 			return Enum.valueOf(clazz, ((NBTTagString) nbt).data);
 		}
 	}
 
-	public static <E extends Enum<E>> E readEnum(@NotNull NBTTagCompound nbt, @NotNull String key, @NotNull Class<E> clazz) {
+	/**
+	 * <p>Read an Enum from the given key in the NBTTagCompound.</p>
+	 * @param nbt the NBTTagCompound
+	 * @param key the key
+	 * @param clazz the Class of the Enum to read
+	 * @return an Enum
+	 */
+	@Nullable
+	public static <E extends Enum<E>> E readEnum(NBTTagCompound nbt, String key, Class<E> clazz) {
 		return readEnum(nbt.getTag(key), clazz);
 	}
 
+	/**
+	 * <p>Get an NBT Tag that represents {@code null}.</p>
+	 * @return NBT data
+	 * @see #isSerializedNull(net.minecraft.nbt.NBTBase)
+	 */
+	@Nonnull
 	public static NBTBase serializedNull() {
 		NBTTagCompound nbt = new NBTTagCompound();
 		nbt.setByte(NULL_KEY, NULL);
 		return nbt;
 	}
 
-	public static boolean isSerializedNull(NBTBase nbt) {
-		return nbt.getId() == TAG_COMPOUND && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL;
-	}
-
-	public static <T extends NBTSerializable> T deserialize(@NotNull Class<T> clazz, @NotNull NBTBase nbt) {
-		return isSerializedNull(nbt) ? null : deserialize0(clazz, nbt);
-	}
-
-	@InvokeDynamic(name = SerializerUtil.NBT, bootstrapClass = SerializerUtil.CLASS_NAME, bootstrapMethod = SerializerUtil.BOOTSTRAP)
-	private static <T extends NBTSerializable> T deserialize0(Class<T> clazz, NBTBase nbt) {
-		throw new AssertionError("SerializationTransformer failed!");
+	/**
+	 * <p>Check if the given NBT Tag represents a serialized {@code null} reference.</p>
+	 * @param nbt the NBT data
+	 * @return true if the NBT data represents null
+	 * @see #serializedNull()
+	 */
+	@Contract("null->true")
+	public static boolean isSerializedNull(@Nullable NBTBase nbt) {
+		return nbt == null || (nbt.getId() == TAG_COMPOUND && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL);
 	}
 
 	private NBT() { }

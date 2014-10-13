@@ -6,7 +6,7 @@ import de.take_weiland.mods.commons.net.MCDataOutputStream;
 /**
  * @author diesieben07
  */
-public interface PropertyWatcher<T> {
+public interface ContainerSyncer<T> {
 
 	boolean hasChanged(T value);
 

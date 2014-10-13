@@ -1,47 +1,48 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.collect.MapMaker;
-import de.take_weiland.mods.commons.internal.InvokeDynamic;
+import de.take_weiland.mods.commons.CannotSerializeException;
 import de.take_weiland.mods.commons.internal.SerializerUtil;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
- * <p>Utilities for working with {@link de.take_weiland.mods.commons.util.ByteStreamSerializer} and
- * {@link de.take_weiland.mods.commons.util.ByteStreamSerializable}.</p>
- *
+ * <p>Registry for {@link de.take_weiland.mods.commons.util.ByteStreamSerializer}.</p>
+ * <p>Classes supported by default are:</p>
+ * <ul>
+ *     <li>Implementers of {@code ByteStreamSerializable}</li>
+ *     <li>Strings</li>
+ *     <li>ItemStacks</li>
+ *     <li>FluidStacks</li>
+ *     <li>UUIDs</li>
+ * </ul>
+ * @see de.take_weiland.mods.commons.net.MCDataOutput
+ * @see de.take_weiland.mods.commons.net.MCDataInput
  * @author diesieben07
  */
-public final class Serializers {
-
-	public static final String CLASS_NAME = "de/take_weiland/mods/commons/util/Serializers";
-	public static final String DESERIALIZE = "deserialize";
-
-
-	public static <T> T read(Class<T> clazz, MCDataInputStream in) {
-		return getSerializer(clazz).read(in);
-	}
-
-	@InvokeDynamic(name = SerializerUtil.BYTESTREAM, bootstrapClass = SerializerUtil.CLASS_NAME, bootstrapMethod = SerializerUtil.BOOTSTRAP)
-	private static <T extends ByteStreamSerializable> T readViaStaticMethod(Class<T> clazz, MCDataInputStream in) {
-		throw new AssertionError("InvokeDynamic failed");
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static <T> void write(T instance, MCDataOutputStream out) {
-		((ByteStreamSerializer) getSerializer(instance.getClass())).write(instance, out);
-	}
+@ParametersAreNonnullByDefault
+public final class ByteStreamSerializers {
 
 	private static final ConcurrentMap<Class<?>, ByteStreamSerializer<?>> serializers = new MapMaker().concurrencyLevel(2).makeMap();
 
+	/**
+	 * <p>Get a {@code ByteStreamSerializer} that can serialize instances of the given Class.</p>
+	 * @param clazz the class to be serialized
+	 * @return a ByteStreamSerializer
+	 * @throws de.take_weiland.mods.commons.CannotSerializeException if the given class cannot be serialized
+	 */
 	@SuppressWarnings("unchecked")
-	public static <T> ByteStreamSerializer<T> getSerializer(@NotNull Class<T> clazz) {
+	@Nonnull
+	public static <T> ByteStreamSerializer<T> getSerializer(Class<T> clazz) {
 		ByteStreamSerializer<T> serializer = (ByteStreamSerializer<T>) serializers.get(clazz);
 		if (serializer == null) {
 			if (serializers.putIfAbsent(clazz, (serializer = newSerializer(clazz))) != null) {
@@ -51,17 +52,17 @@ public final class Serializers {
 		return serializer;
 	}
 
-	@SuppressWarnings("unchecked")
-	@NotNull
-	public static <T extends ByteStreamSerializable> ByteStreamSerializer<T> wrap(@NotNull Class<T> clazz) {
-		ByteStreamSerializer<T> wrapper = (ByteStreamSerializer<T>) serializers.get(clazz);
-		if (wrapper == null) {
-			if (serializers.putIfAbsent(clazz, (wrapper = newWrapper(clazz))) != null) {
-				// someone got there first
-				return (ByteStreamSerializer<T>) serializers.get(clazz);
-			}
+	/**
+	 * <p>Register a class as being serializable with the given serializer.</p>
+	 * @param clazz the Class
+	 * @param serializer the Serializer
+	 * @throws java.lang.IllegalArgumentException if there is a Serializer already registered for the given class
+	 */
+	public static <T> void registerSerializer(Class<T> clazz, ByteStreamSerializer<T> serializer) {
+		checkArgument(!ByteStreamSerializable.class.isAssignableFrom(clazz), "Don't register ByteStreamSerializable wrappers manually");
+		if (serializers.putIfAbsent(clazz, serializer) != null) {
+			throw new IllegalArgumentException("Serializer for " + clazz.getName() + " already registered");
 		}
-		return wrapper;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -120,7 +121,7 @@ public final class Serializers {
 		} else if (ByteStreamSerializable.class.isAssignableFrom(clazz)) {
 			return (ByteStreamSerializer<T>) newWrapper((Class<ByteStreamSerializable>) clazz);
 		} else {
-			throw new RuntimeException("Cannot serialize " + clazz.getName());
+			throw new CannotSerializeException(clazz);
 		}
 	}
 
@@ -133,11 +134,11 @@ public final class Serializers {
 
 			@Override
 			public T read(MCDataInputStream in) {
-				return Serializers.readViaStaticMethod(clazz, in);
+				return SerializerUtil.readByteStreamViaDeserializer(clazz, in);
 			}
 		};
 	}
 
-	private Serializers() { }
+	private ByteStreamSerializers() { }
 
 }

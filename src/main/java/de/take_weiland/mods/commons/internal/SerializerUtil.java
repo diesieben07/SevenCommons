@@ -6,6 +6,7 @@ import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import net.minecraft.nbt.NBTBase;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.*;
 import java.lang.reflect.Method;
@@ -17,7 +18,8 @@ import static java.lang.invoke.MethodType.methodType;
 /**
  * @author diesieben07
  */
-public class SerializerUtil {
+@ParametersAreNonnullByDefault
+public final class SerializerUtil {
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/SerializerUtil";
 	public static final String BOOTSTRAP = "inDyBootstrap";
@@ -44,7 +46,7 @@ public class SerializerUtil {
 	}
 
 	/**
-	 * <p>This method is the bootstrap method for the InvokeDynamic call from {@link de.take_weiland.mods.commons.util.Serializers#read(Class, de.take_weiland.mods.commons.net.MCDataInputStream)}.</p>
+	 * <p>This method is the bootstrap method for the InvokeDynamic call from {@link de.take_weiland.mods.commons.util.ByteStreamSerializers#read(Class, de.take_weiland.mods.commons.net.MCDataInputStream)}.</p>
 	 * <p>It produces a ConstantCallSite, which is permanently linked to call a MethodHandle looked up via getBSDeserializer.</p>
 	 * <p>The MethodType must follow the following form:</p>
 	 * <ul>
@@ -140,7 +142,6 @@ public class SerializerUtil {
 			if (nbtDeserializers.putIfAbsent(clazz, mh) != null) {
 				return nbtDeserializers.get(clazz);
 			}
-			System.out.println("Found NBT deserializer: " + method);
 			return mh;
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException("Cannot access Deserializer in " + clazz.getName(), e);
@@ -173,5 +174,15 @@ public class SerializerUtil {
 	}
 
 
+	@InvokeDynamic(name = BYTESTREAM, bootstrapClass = CLASS_NAME, bootstrapMethod = BOOTSTRAP)
+	public static <T extends ByteStreamSerializable> T readByteStreamViaDeserializer(Class<T> clazz, MCDataInputStream in) {
+		throw new AssertionError("InvokeDynamic failed");
+	}
 
+	@InvokeDynamic(name = NBT, bootstrapClass = CLASS_NAME, bootstrapMethod = BOOTSTRAP)
+	public static <T extends NBTSerializable> T readNBTViaDeserializer(Class<T> clazz, NBTBase nbt) {
+		throw new AssertionError("InvokeDynamic failed");
+	}
+
+	private SerializerUtil() { }
 }

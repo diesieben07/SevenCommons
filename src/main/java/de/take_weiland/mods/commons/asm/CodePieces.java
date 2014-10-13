@@ -56,6 +56,10 @@ public final class CodePieces {
 		return new SingleInsnCodePiece(insn);
 	}
 
+	public static CodePiece of(AbstractInsnNode insn, ContextKey context) {
+		return of(insn).setContextKey(context);
+	}
+
 	/**
 	 * <p>Creates a CodePiece that represents all instructions in the given list. The list should not be used after being passed to this method.</p>
 	 *
@@ -71,6 +75,10 @@ public final class CodePieces {
 		} else {
 			return new InsnListCodePiece(insns);
 		}
+	}
+
+	public static CodePiece of(InsnList insns, ContextKey context) {
+		return of(insns).setContextKey(context);
 	}
 
 	/**
@@ -422,7 +430,7 @@ public final class CodePieces {
 			for (Object bsArg : bsArgs) {
 				Class<?> cls = bsArg.getClass();
 				if (Primitives.isWrapperType(cls) || cls == String.class || cls == Class.class) {
-					allBsArgs.add(Type.getType(cls));
+					allBsArgs.add(Type.getType(Primitives.unwrap(cls)));
 				} else if (cls == Type.class) {
 					allBsArgs.add(Type.getType(Class.class));
 				} else {

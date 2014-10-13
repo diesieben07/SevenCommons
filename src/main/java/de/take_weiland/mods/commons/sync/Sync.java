@@ -28,9 +28,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     <li>BitSets</li>
  *     <li>UUIDs</li>
  * </ul>
- * <p>If the property can never be null, you can set {@link #nullable()} to false, which may allow the system to do some
- * optimizations. That action is equivalent to applying the {@link org.jetbrains.annotations.NotNull} annotation
- * to the property.</p>
  *
  * @author diesieben07
  */

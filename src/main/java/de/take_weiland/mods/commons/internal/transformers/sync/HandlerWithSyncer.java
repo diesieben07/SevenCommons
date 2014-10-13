@@ -5,8 +5,11 @@ import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.PropertySyncer;
+import de.take_weiland.mods.commons.sync.Sync;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
+
+import java.lang.annotation.Annotation;
 
 import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
@@ -32,7 +35,8 @@ class HandlerWithSyncer extends PropertyHandler {
 		syncer = ASMVariables.of(state.clazz, watcherField, CodePieces.getThis());
 
 		CodePiece newWatcher = CodePieces.invokeDynamic(SyncingManager.CREATE_SYNCER, Type.getMethodDescriptor(getType(PropertySyncer.class)))
-				.withBootstrap(SyncingManager.CLASS_NAME, SyncingManager.BOOTSTRAP, var.getType());
+				.withBootstrap(SyncingManager.CLASS_NAME, SyncingManager.BOOTSTRAP,
+						var.getType(), var.rawName(), var.isMethod() ? SyncingManager.METHOD : SyncingManager.FIELD);
 
 		ASMUtils.initialize(state.clazz, syncer.set(newWatcher));
 	}
@@ -59,5 +63,10 @@ class HandlerWithSyncer extends PropertyHandler {
 		String name = "read";
 		String desc = Type.getMethodDescriptor(getType(Object.class), getType(MCDataInputStream.class));
 		return var.set(CodePieces.invokeInterface(owner, name, desc, syncer.get(), stream));
+	}
+
+	@Override
+	Class<? extends Annotation> getAnnotation() {
+		return Sync.class;
 	}
 }

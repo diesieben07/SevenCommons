@@ -5,6 +5,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import sun.misc.JavaLangAccess;
 import sun.misc.SharedSecrets;
@@ -169,6 +170,10 @@ public final class JavaUtils {
 	 */
 	public static int decodeIntB(long l) {
 		return (int) l;
+	}
+
+	public static int getDimensions(Class<?> clazz) {
+		return StringUtils.countMatches(clazz.getName(), "[");
 	}
 
 	/**

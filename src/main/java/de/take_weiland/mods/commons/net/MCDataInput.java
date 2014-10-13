@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataInput;
 import de.take_weiland.mods.commons.util.BlockCoordinates;
-import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -70,7 +69,7 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * <p>Read an ItemStack from the buffer.</p>
 	 * <p>This method first reads a short, specifying the ItemID of the ItemStack. If the ItemID is -1, null is returned.
 	 * Otherwise a short and a byte are read, specifying the damage value and stack size respectively. After that the
-	 * NBTTagCompound associated with the ItemStack is read as if by the {@link #readNbt()} method.</p>
+	 * NBTTagCompound associated with the ItemStack is read as if by the {@link #readNBT()} method.</p>
 	 * @return an ItemStack or null
 	 */
 	ItemStack readItemStack();
@@ -79,7 +78,7 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * <p>Read a FluidStack from the buffer.</p>
 	 * <p>This method first reads a VarInt, specifying the FluidID of the FluidStack. If the FluidID is -1, null is returned.
 	 * Otherwise a VarInt is read, specifying the amount of the FluidStack and then the NBTTagCompound associated with
-	 * the FluidStack as if by the {@link #readNbt()} method.</p>
+	 * the FluidStack as if by the {@link #readNBT()} method.</p>
 	 * @return a FluidStack or null
 	 */
 	FluidStack readFluidStack();
@@ -92,7 +91,7 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * {@link net.minecraft.nbt.NBTBase#load(java.io.DataInput, int)} method.</p>
 	 * @return an NBTTagCompound or null
 	 */
-	NBTTagCompound readNbt();
+	NBTTagCompound readNBT();
 
 	/**
 	 * <p>Read an Item reference from the buffer.</p>
@@ -152,7 +151,9 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 */
 	<E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass);
 
-	<T extends ByteStreamSerializable> T read(Class<T> clazz);
+	<E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass, EnumSet<E> set);
+
+	<T> T read(Class<T> clazz);
 
 	/**
 	 * <p>Read a set of coordinates from the buffer.</p>

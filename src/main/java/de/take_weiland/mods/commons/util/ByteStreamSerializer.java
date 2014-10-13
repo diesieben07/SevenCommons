@@ -8,7 +8,7 @@ import de.take_weiland.mods.commons.net.MCDataOutputStream;
  * <p>Implementations may or may not support null values.</p>
  *
  * @see de.take_weiland.mods.commons.util.ByteStreamSerializable
- * @see de.take_weiland.mods.commons.util.Serializers
+ * @see ByteStreamSerializers
  *
  * @author diesieben07
  */

@@ -3,31 +3,19 @@ package de.take_weiland.mods.commons;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.sync.Sync;
-import de.take_weiland.mods.commons.sync.Watch;
-import de.take_weiland.mods.commons.util.BlockCoordinates;
+import de.take_weiland.mods.commons.sync.SyncContents;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
-import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.EnumSet;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 //@NetworkMod()
 public class testmod_sc {
-
-	public static void main(String[] args) {
-
-	}
 
 	private static Block myBlock;
 
@@ -46,20 +34,8 @@ public class testmod_sc {
 			}
 		};
 		GameRegistry.registerBlock(myBlock, "testblock");
+		new TestTE();
 
-		BlockCoordinates coords = new BlockCoordinates(1, 2, 3);
-//		MCDataOutputStream out = MCDataOutputStream.create();
-//		coords.writeTo(out);
-//
-//		MCDataInputStream in = MCDataInputStream.create(out.toByteArray());
-//		System.out.println(in.read(BlockCoordinates.class));
-//		in.reset();
-//		System.out.println(in.read(BlockCoordinates.class));
-
-
-		NBTBase nbt = coords.serialize();
-		System.out.println(NBT.deserialize(BlockCoordinates.class, nbt));
-		System.exit(0);
 	}
 
 	private static class BaseTE extends TileEntity {
@@ -68,12 +44,8 @@ public class testmod_sc {
 
 	private static class TestTE extends BaseTE {
 
-		@Watch
+		@SyncContents
 		private FluidTank tank = new FluidTank(30);
-
-		@Sync
-		@NotNull
-		private EnumSet<ForgeDirection> directions = EnumSet.noneOf(ForgeDirection.class);
 
 		private int ticks = 0;
 		@Override

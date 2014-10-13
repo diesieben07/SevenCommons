@@ -12,7 +12,7 @@ import de.take_weiland.mods.commons.internal.transformers.AbstractAnalyzingTrans
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.Sync;
-import de.take_weiland.mods.commons.sync.Watch;
+import de.take_weiland.mods.commons.sync.SyncContents;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 import net.minecraft.entity.Entity;
@@ -36,7 +36,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
 		boolean hasAnn = false;
 		for (FieldNode field : clazz.fields) {
-			if (ASMUtils.hasAnnotation(field, Sync.class) || ASMUtils.hasAnnotation(field, Watch.class)) {
+			if (ASMUtils.hasAnnotation(field, Sync.class) || ASMUtils.hasAnnotation(field, SyncContents.class)) {
 				hasAnn = true;
 				break;
 			}
@@ -44,7 +44,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 
 		if (!hasAnn) {
 			for (MethodNode method : clazz.methods) {
-				if (ASMUtils.hasAnnotation(method, Sync.class) || ASMUtils.hasAnnotation(method, Watch.class)) {
+				if (ASMUtils.hasAnnotation(method, Sync.class) || ASMUtils.hasAnnotation(method, SyncContents.class)) {
 					hasAnn = true;
 					break;
 				}
@@ -71,7 +71,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 
 		List<ASMVariable> vars = JavaUtils.concat(
 				ASMVariables.allWith(clazz, Sync.class, CodePieces.getThis()),
-				ASMVariables.allWith(clazz, Watch.class, CodePieces.getThis()));
+				ASMVariables.allWith(clazz, SyncContents.class, CodePieces.getThis()));
 
 		List<PropertyHandler> handlers = state.handlers = Lists.newArrayListWithCapacity(vars.size());
 

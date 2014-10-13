@@ -105,6 +105,8 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 
 	void write(ByteStreamSerializable obj);
 
+	void write(Object obj);
+
 	/**
 	 * <p>Write the given UUID to this stream.</p>
 	 * <p>If the given UUID is null, a short 0xF000 is written (a fake UUID version which does not exist). Otherwise two

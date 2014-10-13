@@ -304,8 +304,30 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public <T extends ByteStreamSerializable> T read(Class<T> clazz) {
-		return Serializers.read(clazz, this);
+	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass, EnumSet<E> set) {
+		long l = readLong();
+		if (l == ENUM_SET_NULL) {
+			return null;
+		} else {
+			if (set == null) {
+				set = EnumSet.noneOf(enumClass);
+			} else {
+				set.clear();
+			}
+			E[] all = JavaUtils.getEnumConstantsShared(enumClass);
+			int len = all.length;
+			for (int i = 0; i < len; i++) {
+				if ((l & (1 << i)) != 0) {
+					set.add(all[i]);
+				}
+			}
+			return set;
+		}
+	}
+
+	@Override
+	public <T> T read(Class<T> clazz) {
+		return ByteStreamSerializers.getSerializer(clazz).read(this);
 	}
 
 	private static final int BYTE_MSB = 0b1000_0000;
@@ -355,7 +377,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 			int dmg = readShort();
 			int size = readByte();
 			ItemStack stack = new ItemStack(id, size, dmg);
-			stack.stackTagCompound = readNbt();
+			stack.stackTagCompound = readNBT();
 			return stack;
 		}
 	}
@@ -366,7 +388,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		if (id < 0) {
 			return null;
 		} else {
-			return new FluidStack(id, readVarInt(), readNbt());
+			return new FluidStack(id, readVarInt(), readNBT());
 		}
 	}
 
@@ -404,7 +426,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public NBTTagCompound readNbt() {
+	public NBTTagCompound readNBT() {
 		int id = readByte();
 		if (id == -1) {
 			return null;
