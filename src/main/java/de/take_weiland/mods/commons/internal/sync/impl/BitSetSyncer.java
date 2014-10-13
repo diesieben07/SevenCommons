@@ -3,15 +3,15 @@ package de.take_weiland.mods.commons.internal.sync.impl;
 import com.google.common.base.Objects;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
-import de.take_weiland.mods.commons.sync.ContainerSyncer;
-import de.take_weiland.mods.commons.sync.PropertySyncer;
+import de.take_weiland.mods.commons.sync.ContentSyncer;
+import de.take_weiland.mods.commons.sync.ValueSyncer;
 
 import java.util.BitSet;
 
 /**
  * @author diesieben07
  */
-public class BitSetSyncer implements PropertySyncer<BitSet> {
+public class BitSetSyncer implements ValueSyncer<BitSet> {
 
 	private BitSet companion;
 
@@ -38,7 +38,7 @@ public class BitSetSyncer implements PropertySyncer<BitSet> {
 		return in.readBitSet();
 	}
 
-	public static class Contents implements ContainerSyncer<BitSet> {
+	public static class Contents implements ContentSyncer<BitSet> {
 
 		private BitSet companion;
 

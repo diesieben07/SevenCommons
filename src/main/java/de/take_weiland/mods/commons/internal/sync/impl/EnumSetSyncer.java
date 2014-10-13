@@ -4,9 +4,9 @@ import com.google.common.base.Objects;
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
-import de.take_weiland.mods.commons.sync.ContainerSyncer;
+import de.take_weiland.mods.commons.sync.ContentSyncer;
 import de.take_weiland.mods.commons.sync.HandleSubclasses;
-import de.take_weiland.mods.commons.sync.PropertySyncer;
+import de.take_weiland.mods.commons.sync.ValueSyncer;
 
 import java.lang.reflect.Type;
 import java.util.EnumSet;
@@ -15,7 +15,7 @@ import java.util.EnumSet;
  * @author diesieben07
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public final class EnumSetSyncer implements PropertySyncer<EnumSet>, HandleSubclasses {
+public final class EnumSetSyncer implements ValueSyncer<EnumSet>, HandleSubclasses {
 
 	private static final Type iterableType = Iterable.class.getTypeParameters()[0];
 
@@ -57,7 +57,7 @@ public final class EnumSetSyncer implements PropertySyncer<EnumSet>, HandleSubcl
 		return in.readEnumSet(clazz);
 	}
 
-	public static final class Contents implements ContainerSyncer<EnumSet> {
+	public static final class Contents implements ContentSyncer<EnumSet> {
 
 		private final Class clazz;
 		private EnumSet companion;

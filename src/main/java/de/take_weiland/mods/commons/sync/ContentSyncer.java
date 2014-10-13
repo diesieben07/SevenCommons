@@ -4,14 +4,15 @@ import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 
 /**
+ *
  * @author diesieben07
  */
-public interface PropertySyncer<T> {
+public interface ContentSyncer<T> {
 
 	boolean hasChanged(T value);
 
 	void writeAndUpdate(T value, MCDataOutputStream out);
 
-	T read(MCDataInputStream in);
+	void read(T value, MCDataInputStream in);
 
 }

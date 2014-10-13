@@ -4,7 +4,7 @@ import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
-import de.take_weiland.mods.commons.sync.PropertySyncer;
+import de.take_weiland.mods.commons.sync.ValueSyncer;
 import de.take_weiland.mods.commons.sync.Sync;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
@@ -29,12 +29,12 @@ class HandlerWithSyncer extends PropertyHandler {
 	@Override
 	void initialTransform(TransformState state) {
 		String name = "_sc$sync$syncer$" + SyncTransformer.uniqueSuffix(var);
-		String desc = Type.getDescriptor(PropertySyncer.class);
+		String desc = Type.getDescriptor(ValueSyncer.class);
 		FieldNode watcherField = new FieldNode(ACC_PRIVATE  | ACC_FINAL, name, desc, null, null);
 		state.clazz.fields.add(watcherField);
 		syncer = ASMVariables.of(state.clazz, watcherField, CodePieces.getThis());
 
-		CodePiece newWatcher = CodePieces.invokeDynamic(SyncingManager.CREATE_SYNCER, Type.getMethodDescriptor(getType(PropertySyncer.class)))
+		CodePiece newWatcher = CodePieces.invokeDynamic(SyncingManager.CREATE_SYNCER, Type.getMethodDescriptor(getType(ValueSyncer.class)))
 				.withBootstrap(SyncingManager.CLASS_NAME, SyncingManager.BOOTSTRAP,
 						var.getType(), var.rawName(), var.isMethod() ? SyncingManager.METHOD : SyncingManager.FIELD);
 
@@ -43,7 +43,7 @@ class HandlerWithSyncer extends PropertyHandler {
 
 	@Override
 	ASMCondition hasChanged() {
-		String owner = Type.getInternalName(PropertySyncer.class);
+		String owner = Type.getInternalName(ValueSyncer.class);
 		String name = "hasChanged";
 		String desc = Type.getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class));
 		return ASMCondition.ifTrue(CodePieces.invokeInterface(owner, name, desc, syncer.get(), var.get()));
@@ -51,7 +51,7 @@ class HandlerWithSyncer extends PropertyHandler {
 
 	@Override
 	CodePiece writeAndUpdate(CodePiece stream) {
-		String owner = Type.getInternalName(PropertySyncer.class);
+		String owner = Type.getInternalName(ValueSyncer.class);
 		String name = "writeAndUpdate";
 		String desc = Type.getMethodDescriptor(VOID_TYPE, getType(Object.class), getType(MCDataOutputStream.class));
 		return CodePieces.invokeInterface(owner, name, desc, syncer.get(), var.get(), stream);
@@ -59,7 +59,7 @@ class HandlerWithSyncer extends PropertyHandler {
 
 	@Override
 	CodePiece read(CodePiece stream) {
-		String owner = Type.getInternalName(PropertySyncer.class);
+		String owner = Type.getInternalName(ValueSyncer.class);
 		String name = "read";
 		String desc = Type.getMethodDescriptor(getType(Object.class), getType(MCDataInputStream.class));
 		return var.set(CodePieces.invokeInterface(owner, name, desc, syncer.get(), stream));

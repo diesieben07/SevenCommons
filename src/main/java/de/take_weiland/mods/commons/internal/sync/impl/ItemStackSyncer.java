@@ -2,15 +2,15 @@ package de.take_weiland.mods.commons.internal.sync.impl;
 
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
-import de.take_weiland.mods.commons.sync.ContainerSyncer;
-import de.take_weiland.mods.commons.sync.PropertySyncer;
+import de.take_weiland.mods.commons.sync.ContentSyncer;
+import de.take_weiland.mods.commons.sync.ValueSyncer;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.item.ItemStack;
 
 /**
  * @author diesieben07
  */
-public class ItemStackSyncer implements PropertySyncer<ItemStack> {
+public class ItemStackSyncer implements ValueSyncer<ItemStack> {
 
 	private ItemStack companion;
 
@@ -30,7 +30,7 @@ public class ItemStackSyncer implements PropertySyncer<ItemStack> {
 		return in.readItemStack();
 	}
 
-	public static class Contents implements ContainerSyncer<ItemStack> {
+	public static class Contents implements ContentSyncer<ItemStack> {
 
 		private ItemStack companion;
 

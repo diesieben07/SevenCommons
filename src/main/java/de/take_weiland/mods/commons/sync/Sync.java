@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.sync;
 
-import de.take_weiland.mods.commons.internal.AnnotationNull;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -17,21 +15,31 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * obeying the rules specified in {@link de.take_weiland.mods.commons.asm.ASMUtils#findSetter(org.objectweb.asm.tree.ClassNode,
  * org.objectweb.asm.tree.MethodNode) ASMUtils.findSetter}.</p>
  * <p>Properties can be of any visibility.</p>
- * <p>The type of the property is determined via the declared type of the field. If that is not desired, use the
- * {@link #syncAs()} property to define the actual type, which must be runtime-assignable to the declared field type.</p>
+ * <p>The type of the property is determined via the declared type of the field.</p>
  * <p>The following types are supported by default:</p>
  * <ul>
  *     <li>All primitives and their wrapper types</li>
  *     <li>Strings</li>
  *     <li>ItemStacks and FluidStacks</li>
  *     <li>Enums</li>
+ *     <li>EnumSets</li>
  *     <li>BitSets</li>
  *     <li>UUIDs</li>
  * </ul>
+ * <p>Support for other types can be added by registering a {@link de.take_weiland.mods.commons.sync.ValueSyncer} for that type in the
+ * {@link de.take_weiland.mods.commons.sync.Syncing} class.</p>
+ * <p>If the value of this property changes, the old value will not be re-used even if possible. That means that if e.g.
+ * an EnumSet changes, there will be a <i>new</i> EnumSet inserted on the client-side with the new contents instead of
+ * the old EnumSet being updated with the new contents. If this behavior is not desired, use {@link de.take_weiland.mods.commons.sync.SyncContents}
+ * instead.</p>
  *
+ * <p>Note: This annotation works by using bytecode manipulation and will <i>not work</i> if you added a Transformer-Exclusion
+ * the class it is used in.</p>
+ *
+ * @see de.take_weiland.mods.commons.sync.SyncContents
  * @author diesieben07
  */
-@Retention(RUNTIME) // need it via ClassInfo
+@Retention(RUNTIME)
 @Target({ FIELD, METHOD })
 public @interface Sync {
 

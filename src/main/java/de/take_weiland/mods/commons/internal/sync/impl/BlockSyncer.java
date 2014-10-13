@@ -3,13 +3,13 @@ package de.take_weiland.mods.commons.internal.sync.impl;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.HandleSubclasses;
-import de.take_weiland.mods.commons.sync.PropertySyncer;
+import de.take_weiland.mods.commons.sync.ValueSyncer;
 import net.minecraft.block.Block;
 
 /**
  * @author diesieben07
  */
-public class BlockSyncer implements PropertySyncer<Block>, HandleSubclasses {
+public class BlockSyncer implements ValueSyncer<Block>, HandleSubclasses {
 
 	private Block companion;
 

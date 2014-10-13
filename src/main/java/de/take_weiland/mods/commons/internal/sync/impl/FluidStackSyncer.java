@@ -2,15 +2,15 @@ package de.take_weiland.mods.commons.internal.sync.impl;
 
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
-import de.take_weiland.mods.commons.sync.ContainerSyncer;
-import de.take_weiland.mods.commons.sync.PropertySyncer;
+import de.take_weiland.mods.commons.sync.ContentSyncer;
+import de.take_weiland.mods.commons.sync.ValueSyncer;
 import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 
 /**
  * @author diesieben07
  */
-public class FluidStackSyncer implements PropertySyncer<FluidStack> {
+public class FluidStackSyncer implements ValueSyncer<FluidStack> {
 
 	private FluidStack companion;
 
@@ -30,7 +30,7 @@ public class FluidStackSyncer implements PropertySyncer<FluidStack> {
 		return in.readFluidStack();
 	}
 
-	public static class Contents implements ContainerSyncer<FluidStack> {
+	public static class Contents implements ContentSyncer<FluidStack> {
 
 		private FluidStack companion;
 
