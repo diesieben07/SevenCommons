@@ -16,20 +16,22 @@ import java.util.concurrent.ConcurrentMap;
 import static java.lang.invoke.MethodType.methodType;
 
 /**
+ * Class for calling the static @Deserializer methods on ByteStreamSerializable and NBTSerializable
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-public final class SerializerUtil {
+public final class StaticDeserializerCaller {
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/SerializerUtil";
 	public static final String BOOTSTRAP = "inDyBootstrap";
 	public static final String BYTESTREAM = "bytestream";
 	public static final String NBT = "nbt";
 
-	private static final MethodHandle getBSDeserializer;
-	private static final MethodHandle getNBTDeserializer;
 	private static final ConcurrentMap<Class<?>, MethodHandle> bsDeserializers;
 	private static final ConcurrentMap<Class<?>, MethodHandle> nbtDeserializers;
+
+	private static final CallSite bytestreamCaller;
+	private static final CallSite nbtCaller;
 
 	static {
 		MapMaker mm = new MapMaker().concurrencyLevel(2);
@@ -38,8 +40,16 @@ public final class SerializerUtil {
 
 		MethodHandles.Lookup lookup = MethodHandles.lookup();
 		try {
-			getBSDeserializer = lookup.findStatic(SerializerUtil.class, "getBSDeserializer", methodType(MethodHandle.class, Class.class));
-			getNBTDeserializer = lookup.findStatic(SerializerUtil.class, "getNBTDeserializer", methodType(MethodHandle.class, Class.class));
+			MethodHandle getBSDeserializer = lookup.findStatic(StaticDeserializerCaller.class, "getBSDeserializer", methodType(MethodHandle.class, Class.class));
+			MethodHandle invoker = MethodHandles.invoker(methodType(ByteStreamSerializable.class, MCDataInputStream.class));
+			MethodHandle filtered = MethodHandles.filterArguments(invoker, 0, getBSDeserializer);
+			bytestreamCaller = new ConstantCallSite(filtered);
+
+
+			MethodHandle getNBTDeserializer = lookup.findStatic(StaticDeserializerCaller.class, "getNBTDeserializer", methodType(MethodHandle.class, Class.class));
+			invoker = MethodHandles.invoker(methodType(NBTSerializable.class, NBTBase.class));
+			filtered = MethodHandles.filterArguments(invoker, 0, getNBTDeserializer);
+			nbtCaller = new ConstantCallSite(filtered);
 		} catch (NoSuchMethodException | IllegalAccessException e) {
 			throw new AssertionError(e);
 		}
@@ -70,16 +80,7 @@ public final class SerializerUtil {
 				if (callType.returnType() != ByteStreamSerializable.class) {
 					throw err("Return type mismatch");
 				}
-				// get a MethodHandle that takes a MethodHandle and the InputStream and invokes the handle with the stream
-				MethodHandle invoker = MethodHandles.invoker(methodType(ByteStreamSerializable.class, MCDataInputStream.class)); // MethodHandle<MethodHandle, MCDataInputStream>
-
-
-				// get a MethodHandle that transforms the class into a MethodHandle via getBSDeserializer
-				// and then invokes the above MethodHandle with that MethodHandle as the argument
-				MethodHandle filtered = MethodHandles.filterArguments(invoker, 0, getBSDeserializer); // MethodHandle<Class, MCDataInputStream>
-
-
-				return new ConstantCallSite(filtered);
+				return bytestreamCaller;
 			}
 			case NBT: {
 				if (callType.parameterCount() != 2) {
@@ -92,10 +93,7 @@ public final class SerializerUtil {
 					throw err("Return type mismatch");
 				}
 
-				// similar to above
-				MethodHandle invoker = MethodHandles.invoker(methodType(NBTSerializable.class, NBTBase.class));
-				MethodHandle filtered = MethodHandles.filterArguments(invoker, 0, getNBTDeserializer);
-				return new ConstantCallSite(filtered);
+				return nbtCaller;
 			}
 			default:
 				throw err("Invalid name!");
@@ -184,5 +182,5 @@ public final class SerializerUtil {
 		throw new AssertionError("InvokeDynamic failed");
 	}
 
-	private SerializerUtil() { }
+	private StaticDeserializerCaller() { }
 }

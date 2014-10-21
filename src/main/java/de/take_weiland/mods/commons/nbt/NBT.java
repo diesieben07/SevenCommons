@@ -21,6 +21,18 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * <p>Utility methods regarding NBT data.</p>
+ * <p>The following types are supported for serialization:</p>
+ * <ul>
+ *     <li>{@link java.lang.String}</li>
+ *     <li>{@link java.util.UUID}</li>
+ *     <li>{@link net.minecraft.item.ItemStack}</li>
+ *     <li>{@link net.minecraftforge.fluids.FluidStack}</li>
+ *     <li>Any subtype of {@link java.lang.Enum}</li>
+ *     <li>Any subtype of {@link de.take_weiland.mods.commons.nbt.NBTSerializable}</li>
+ *     <li>Any type with a custom serializer, see {@link #registerSerializer(Class, NBTSerializer)}</li>
+ *     <li>Any primitive array (TODO: multi-dim)</li>
+ *     <li>Any array of one of the above types (TODO: multi-dim)</li>
+ * </ul>
  */
 @ParametersAreNonnullByDefault
 public final class NBT {
@@ -152,8 +164,10 @@ public final class NBT {
 
 	/**
 	 * <p>Register a Serializer for the given Class. Serializers for implementers of {@link de.take_weiland.mods.commons.nbt.NBTSerializable}
-	 * must not be registered, as they are handles automatically. A Serializer for those classes can be obtained via
+	 * must not be registered, as they are handled automatically. A Serializer for those classes can be obtained via
 	 * {@link #getSerializer(Class)}.</p>
+	 * <p>Even if the serializer registered here does not implement {@link de.take_weiland.mods.commons.nbt.NBTSerializer.NullSafe},
+	 * {@link #getSerializer(Class)} will return a null-safe wrapper.</p>
 	 * @param clazz the Class to serialize
 	 * @param serializer the serializer
 	 */
@@ -164,7 +178,7 @@ public final class NBT {
 		}
 		if (serializer instanceof NBTSerializer.NullSafe) {
 			// this is not 100% accurate, as getSerializer *might* have created a null-safe wrapper already
-			// but it is extremely unlikely, and doesn't hurt anyways
+			// but it is extremely unlikely, and doesn't hurt that much (we then have a null-safe wrapper around a null-safe serializer)
 			safeSerializers.put(clazz, (NBTSerializer.NullSafe<?>) serializer);
 		}
 	}
@@ -173,14 +187,6 @@ public final class NBT {
 	 * <p>Get a {@code NBTSerializer} for the given class. The class must either implement {@code NBTSerializable}
 	 * or a Serializer must be registered manually via {@link #registerSerializer(Class, NBTSerializer)}.</p>
 	 * <p>The returned Serializer will be null-safe.</p>
-	 * <p>Classes supported by default are:</p>
-	 * <ul>
-	 *     <li>{@link java.lang.String}</li>
-	 *     <li>{@link java.util.UUID}</li>
-	 *     <li>{@link net.minecraft.item.ItemStack}</li>
-	 *     <li>{@link net.minecraftforge.fluids.FluidStack}</li>
-	 *     <li>{@link java.lang.Enum Enums}</li>
-	 * </ul>
 	 * @param clazz the class to be serialized
 	 * @return a serializer for the class
 	 */

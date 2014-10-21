@@ -196,7 +196,7 @@ public final class Inventories {
 	}
 
 	/**
-	 * Unserialize an {@link IInventory} from a {@link NBTTagList}<br>
+	 * Deserialize an {@link IInventory} from a {@link NBTTagList}<br>
 	 * The format of the NBT should match that produced by {@link #writeInventory}
 	 *
 	 * @param stacks  the array to be filled

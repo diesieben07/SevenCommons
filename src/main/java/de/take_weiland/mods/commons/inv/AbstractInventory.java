@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.inv;
 
-import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -38,7 +37,7 @@ public abstract class AbstractInventory implements IInventory {
 
 	@Override
 	public ItemStack getStackInSlot(int slot) {
-		return JavaUtils.get(storage, slot);
+		return storage[slot];
 	}
 
 	/**
@@ -61,9 +60,7 @@ public abstract class AbstractInventory implements IInventory {
 
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack item) {
-		if (slot >= 0 && slot < storage.length) {
-			storage[slot] = item;
-		}
+		storage[slot] = item;
 		onInventoryChanged();
 	}
 
@@ -73,12 +70,10 @@ public abstract class AbstractInventory implements IInventory {
 	}
 
 	@Override
-	public void openChest() {
-	}
+	public void openChest() { }
 
 	@Override
-	public void closeChest() {
-	}
+	public void closeChest() { }
 
 	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack item) {

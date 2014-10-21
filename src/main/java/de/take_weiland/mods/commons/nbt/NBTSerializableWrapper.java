@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.nbt;
 
-import de.take_weiland.mods.commons.internal.SerializerUtil;
+import de.take_weiland.mods.commons.internal.StaticDeserializerCaller;
 import net.minecraft.nbt.NBTBase;
 
 import javax.annotation.Nullable;
@@ -25,6 +25,6 @@ class NBTSerializableWrapper<T extends NBTSerializable> implements NBTSerializer
 	public T deserialize(@Nullable NBTBase nbt) {
 		return NBT.isSerializedNull(nbt)
 				? null
-				: SerializerUtil.readNBTViaDeserializer(clazz, nbt);
+				: StaticDeserializerCaller.readNBTViaDeserializer(clazz, nbt);
 	}
 }

@@ -15,10 +15,13 @@ import java.io.IOException;
 /**
  * <p>An abstract base class for simpler Packet handling. Make a subclass of this for every type of Packet you have.</p>
  * <p>Register your packet classes with {@link de.take_weiland.mods.commons.net.Network#newChannel(String)}.</p>
- * <p>To send a packet, use the Methods implemented from {@link de.take_weiland.mods.commons.net.SimplePacket} like this:<br />
- * {@code new ExamplePacket("whatever").sendToServer();}<br />
- * {@code new OtherPacket(someObject).sendToPlayer(somePlayer).sendToPlayer(otherPlayer);}</p>
- * <p>Use {@link de.take_weiland.mods.commons.net.PacketDirection} to specify a valid direction this packet can be send.</p>
+ * <p>To send a packet, use the Methods implemented from {@link de.take_weiland.mods.commons.net.SimplePacket} like this:
+ * <code><pre>
+ *     new ExamplePacket("whatever").sendToServer();
+ *     new OtherPacket(someObject).sendToPlayer(somePlayer).sendToPlayer(otherPlayer);
+ * </pre></code></p>
+ * <p>Add the {@link de.take_weiland.mods.commons.net.PacketDirection} annotation to your packet class to specify a valid
+ * direction this packet can be send.</p>
  */
 public abstract class ModPacket implements SimplePacket {
 
@@ -97,12 +100,6 @@ public abstract class ModPacket implements SimplePacket {
 	}
 
 	@Override
-	public final SimplePacket sendToAllInDimension(int dimension) {
-		Packets.sendToAllInDimension(build(), dimension);
-		return this;
-	}
-
-	@Override
 	public final SimplePacket sendToAllIn(World world) {
 		Packets.sendToAllIn(build(), world);
 		return this;
@@ -117,12 +114,6 @@ public abstract class ModPacket implements SimplePacket {
 	@Override
 	public final SimplePacket sendToAllNear(TileEntity te, double radius) {
 		Packets.sendToAllNear(build(), te, radius);
-		return this;
-	}
-
-	@Override
-	public final SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) {
-		Packets.sendToAllNear(build(), dimension, x, y, z, radius);
 		return this;
 	}
 

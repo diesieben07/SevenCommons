@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.meta;
 
 /**
- * <p>An interface to be implemented by Subtypes of a Block or Item. Used in conjunction with {@link de.take_weiland.mods.commons.meta.HasSubtypes}</p>
+ * <p>An interface to be implemented by Subtypes of a Block or Item. Used in conjunction with {@link de.take_weiland.mods.commons.meta.HasSubtypes}.</p>
  *
  * @author diesieben07
  */

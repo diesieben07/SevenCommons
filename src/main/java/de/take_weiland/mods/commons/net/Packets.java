@@ -14,47 +14,68 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.common.DimensionManager;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 /**
- * Utility class for sending Packets around, in addition to {@link cpw.mods.fml.common.network.PacketDispatcher}.
- * Most methods should be self-explanatory.
+ * <p>Utility class for sending Packets around.</p>
  */
+@ParametersAreNonnullByDefault
 public final class Packets {
 
-	private Packets() {
+	/**
+	 * <p>Send the given packet to the Server.</p>
+	 * @param packet the packet
+	 */
+	public static void sendToServer(Packet packet) {
+		SCModContainer.proxy.sendPacketToServer(packet);
 	}
 
-	public static void sendToServer(Packet p) {
-		SCModContainer.proxy.sendPacketToServer(p);
-	}
-
+	/**
+	 * <p>Send the given packet to the given player.</p>
+	 * @param packet the packet
+	 * @param player the player
+	 */
 	public static void sendTo(Packet packet, EntityPlayer player) {
 		checkNotClient(player).playerNetServerHandler.sendPacketToPlayer(packet);
 	}
 
+	/**
+	 * <p>Send the given packet to the given players.</p>
+	 * @param packet the packet
+	 * @param players the players
+	 */
 	public static void sendTo(Packet packet, Iterable<? extends EntityPlayer> players) {
 		for (EntityPlayer player : players) {
 			checkNotClient(player).playerNetServerHandler.sendPacketToPlayer(packet);
 		}
 	}
 
+	/**
+	 * <p>Send the given packet to the given players.</p>
+	 * @param packet the packet
+	 * @param players the players
+	 */
 	public static void sendTo(Packet packet, EntityPlayer... players) {
 		for (EntityPlayer player : players) {
 			checkNotClient(player).playerNetServerHandler.sendPacketToPlayer(packet);
 		}
 	}
 
+	/**
+	 * <p>Send the given packet to all players currently on the server.</p>
+	 * @param packet the packet
+	 */
 	public static void sendToAll(Packet packet) {
 		sendToList(packet, Players.getAll());
 	}
 
-	public static void sendToAllInDimension(Packet packet, int dimensionId) {
-		sendToAllIn(packet, DimensionManager.getWorld(dimensionId));
-	}
-
+	/**
+	 * <p>Send the given packet to all players currently in the given world.</p>
+	 * @param packet the packet
+	 * @param world the world
+	 */
 	public static void sendToAllIn(Packet packet, World world) {
 		sendToList(packet, Players.allIn(checkNotClient(world)));
 	}
@@ -67,28 +88,38 @@ public final class Packets {
 	}
 
 	/**
-	 * Sends the packet to all players tracking the entity. If the entity is a player, does not include the player itself.
+	 * <p>Send the given packet to all players tracking the given entity. If the entity is a player, does not include the player itself.</p>
+	 * @param packet the packet
+	 * @param entity the entity
 	 */
 	public static void sendToAllTracking(Packet packet, Entity entity) {
 		checkNotClient(entity.worldObj).getEntityTracker().sendPacketToAllPlayersTrackingEntity(entity, packet);
 	}
 
 	/**
-	 * Same as {@link #sendToAllTracking(net.minecraft.network.packet.Packet, net.minecraft.entity.Entity)}, but includes the player itself if the entity is a player.
+	 * <p>Send the given packet to all players tracking the given entity, including the player itself if the entity is a player.</p>
+	 * @param packet the packet
+	 * @param entity the entity
 	 */
 	public static void sendToAllAssociated(Packet packet, Entity entity) {
 		checkNotClient(entity.worldObj).getEntityTracker().sendPacketToAllAssociatedPlayers(entity, packet);
 	}
 
 	/**
-	 * Sends the packet to all players tracking the given TileEntity, that is tracking the chunk the TE is in.
+	 * <p>Send the given packet to all players tracking the given TileEntity, that is tracking the chunk it is in.</p>
+	 * @param packet the packet
+	 * @param te the TileEntity
 	 */
 	public static void sendToAllTracking(Packet packet, TileEntity te) {
 		sendToAllTrackingChunk(packet, te.worldObj, te.xCoord >> 4, te.zCoord >> 4);
 	}
 
 	/**
-	 * Sends the packet to all players tracking the chunk at the given coordinates.
+	 * <p>Send the given packet to all players tracking the Chunk at the given coordinates in the given world.</p>
+	 * @param packet the packet
+	 * @param world the world
+	 * @param chunkX the chunk x coordinate
+	 * @param chunkZ the chunk z coordinate
 	 */
 	public static void sendToAllTrackingChunk(Packet packet, World world, int chunkX, int chunkZ) {
 		PlayerInstance pi = checkNotClient(world).getPlayerManager().getOrCreateChunkWatcher(chunkX, chunkZ, false);
@@ -97,14 +128,19 @@ public final class Packets {
 		}
 	}
 
+	/**
+	 * <p>Send the given packet to all players tracking the given chunk.</p>
+	 * @param packet the packet
+	 * @param chunk the chunk
+	 */
 	public static void sendToAllTracking(Packet packet, Chunk chunk) {
 		sendToAllTrackingChunk(packet, chunk.worldObj, chunk.xPosition, chunk.zPosition);
 	}
 
 	/**
-	 * <p>Sends the Packet to all players viewing the given container.</p>
-	 * <p>Warning: Due to Minecraft's interal design a new Container get's created for every player, even if they are watching the same inventory.
-	 * This method does <i>not</i> check for players viewing the inventory. As in: this method usually sends the packet to only one player.</p>
+	 * <p>Send the given packet to the player using the given Container.</p>
+	 * <p><b>Warning</b>: Due to Minecraft's internal design a new Container gets created for every player, even if they are watching the same inventory.
+	 * This method does <i>not</i> check for players viewing the inventory. As in: this method sends the packet to only one player.</p>
 	 */
 	public static void sendToViewing(Packet packet, Container container) {
 		List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
@@ -117,6 +153,15 @@ public final class Packets {
 		}
 	}
 
+	/**
+	 * <p>Send the given packet to all players within the given radius around the given coordinates.</p>
+	 * @param packet the packet
+	 * @param world the world
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 * @param z the z coordinate
+	 * @param radius the radius
+	 */
 	public static void sendToAllNear(Packet packet, World world, double x, double y, double z, double radius) {
 		List<EntityPlayerMP> players = Players.allIn(checkNotClient(world));
 		radius *= radius;
@@ -133,14 +178,22 @@ public final class Packets {
 		}
 	}
 
-	public static void sendToAllNear(Packet packet, int dimensionId, double x, double y, double z, double radius) {
-		sendToAllNear(packet, DimensionManager.getWorld(dimensionId), x, y, z, radius);
-	}
-
+	/**
+	 * <p>Send the given packet to all players within the given radius around the given entity.</p>
+	 * @param packet the packet
+	 * @param entity the entity
+	 * @param radius the radius
+	 */
 	public static void sendToAllNear(Packet packet, Entity entity, double radius) {
 		sendToAllNear(packet, entity.worldObj, entity.posX, entity.posY, entity.posZ, radius);
 	}
 
+	/**
+	 * <p>Send the given packet to all players within the given radius around the given TileEntity.</p>
+	 * @param packet the packet
+	 * @param te the TileEntity
+	 * @param radius the radius
+	 */
 	public static void sendToAllNear(Packet packet, TileEntity te, double radius) {
 		sendToAllNear(packet, te.worldObj, te.xCoord, te.yCoord, te.zCoord, radius);
 	}
@@ -158,4 +211,6 @@ public final class Packets {
 		}
 		return (WorldServer) world;
 	}
+
+	private Packets() { }
 }

@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.net;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
+ * <p>An Exception to be thrown packet handling code to indicate a protocol violation.</p>
  * @author diesieben07
  */
 public class ProtocolException extends Exception {
@@ -25,10 +26,18 @@ public class ProtocolException extends Exception {
 		super(cause);
 	}
 
+	/**
+	 * <p>Let this Exception kick the player, in case the packet is received on the server.</p>
+	 * @return this, for convenience
+	 */
 	public final ProtocolException kickPlayer() {
 		return kickPlayer(getMessage());
 	}
 
+	/**
+	 * <p>Let this Exception kick the player with the specified message, in case the packet is received on the server.</p>
+	 * @return this, for convenience
+	 */
 	public final ProtocolException kickPlayer(String msg) {
 		playerKickMsg = checkNotNull(msg, "No kick message");
 		return this;

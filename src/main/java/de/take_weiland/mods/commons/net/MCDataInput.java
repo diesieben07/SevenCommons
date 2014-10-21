@@ -8,6 +8,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -22,6 +24,7 @@ import java.util.UUID;
  *
  * @author diesieben07
  */
+@ParametersAreNonnullByDefault
 public interface MCDataInput extends ByteArrayDataInput {
 
 	/**
@@ -137,7 +140,13 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 */
 	BitSet readBitSet();
 
-	BitSet readBitSet(BitSet bitSet);
+	/**
+	 * <p>Read a BitSet from the buffer.</p>
+	 * <p>This method works similar to {@link #readBitSet()}, but tries to re-use the given BitSet instance if possible.</p>
+	 * @param bitSet the BitSet to re-use
+	 * @return a BitSet or null
+	 */
+	BitSet readBitSet(@Nullable BitSet bitSet);
 
 	/**
 	 * <p>Read an EnumSet from the buffer.</p>
@@ -151,38 +160,76 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 */
 	<E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass);
 
-	<E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass, EnumSet<E> set);
+	/**
+	 * <p>Read an EnumSet from the buffer.</p>
+	 * <p>This method works similar to {@link #readEnumSet(Class)}, but tries to re-use the given EnumSet instance if possible.</p>
+	 * @param enumClass the type of the enum in the EnumSet to be read
+	 * @param set the EnumSet to re-use
+	 * @return an EnumSet or null
+	 */
+	<E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass, @Nullable EnumSet<E> set);
 
 	<T> T read(Class<T> clazz);
 
 	/**
 	 * <p>Read a set of coordinates from the buffer.</p>
-	 * <p>This method reads a long from the buffer, as if by the {@link #readLong()} method and then uses
-	 * {@link de.take_weiland.mods.commons.util.BlockCoordinates#decode(long)} to create the coordinates.</p>
+	 * <p>This method is equivalent to {@link de.take_weiland.mods.commons.util.BlockCoordinates#fromByteStream(MCDataInputStream)}.</p>
 	 * @return BlockCoordinates
 	 */
 	BlockCoordinates readCoords();
 
+	/**
+	 * <p>Read a nullable boxed Boolean from the buffer.</p>
+	 * @return a Boolean or null
+	 */
 	Boolean readBooleanBox();
 
+	/**
+	 * <p>Read a nullable boxed Byte from the buffer.</p>
+	 * @return a Byte or null
+	 */
 	Byte readByteBox();
 
+	/**
+	 * <p>Read a nullable boxed Short from the buffer.</p>
+	 * @return a Short or null
+	 */
 	Short readShortBox();
 
+	/**
+	 * <p>Read a nullable boxed Character from the buffer.</p>
+	 * @return a Character or null
+	 */
 	Character readCharBox();
 
+	/**
+	 * <p>Read a nullable boxed Integer from the buffer.</p>
+	 * @return a Integer or null
+	 */
 	Integer readIntBox();
 
+	/**
+	 * <p>Read a nullable boxed Long from the buffer.</p>
+	 * @return a Long or null
+	 */
 	Long readLongBox();
 
+	/**
+	 * <p>Read a nullable boxed Float from the buffer.</p>
+	 * @return a Float or null
+	 */
 	Float readFloatBox();
 
+	/**
+	 * <p>Read a nullable boxed Double from the buffer.</p>
+	 * @return a Double or null
+	 */
 	Double readDoubleBox();
 
 	/**
 	 * <p>Read an array of booleans from the stream.</p>
 	 * <p>This method first reads a VarInt {@code length} from the buffer. If the VarInt is -1, null is returned. Otherwise
-	 * {@code ceil(length / 8)} bytes are read. Every byte specifies 8 elements in the array, from least significant to
+	 * <code>ceil(length &#47; 8)}</code> bytes are read. Every byte specifies 8 elements in the array, from least significant to
 	 * most significant bit. A set bit represents true, an unset bit represents false.</p>
 	 * @return a boolean array or null
 	 */
@@ -194,7 +241,7 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @param buf an existing array to use
 	 * @return a boolean array or null
 	 */
-	boolean[] readBooleans(boolean[] buf);
+	boolean[] readBooleans(@Nullable boolean[] buf);
 
 	/**
 	 * <p>Read an array of bytes from the stream.</p>
@@ -210,7 +257,7 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @param buf an existing array to use
 	 * @return a byte array or null
 	 */
-	byte[] readBytes(byte[] buf);
+	byte[] readBytes(@Nullable byte[] buf);
 
 	/**
 	 * <p>Read an array of shorts from the stream.</p>
@@ -226,7 +273,7 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @param buf an existing array to use
 	 * @return a short array or null
 	 */
-	short[] readShorts(short[] buf);
+	short[] readShorts(@Nullable short[] buf);
 
 	/**
 	 * <p>Read an array of ints from the stream.</p>
@@ -242,7 +289,7 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @param buf an existing array to use
 	 * @return an int array or null
 	 */
-	int[] readInts(int[] buf);
+	int[] readInts(@Nullable int[] buf);
 
 	/**
 	 * <p>Read an array of longs from the stream.</p>
@@ -258,7 +305,7 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @param buf an existing array to use
 	 * @return a long array or null
 	 */
-	long[] readLongs(long[] buf);
+	long[] readLongs(@Nullable long[] buf);
 
 	/**
 	 * <p>Read an array of chars from the stream.</p>
@@ -274,7 +321,7 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @param buf an existing array to use
 	 * @return a char array or null
 	 */
-	char[] readChars(char[] buf);
+	char[] readChars(@Nullable char[] buf);
 
 	/**
 	 * <p>Read an array of floats from the stream.</p>
@@ -290,12 +337,12 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @param buf an existing array to use
 	 * @return a float array or null
 	 */
-	float[] readFloats(float[] buf);
+	float[] readFloats(@Nullable float[] buf);
 
 	/**
 	 * <p>Read an array of doubles from the stream.</p>
 	 * <p>This method first reads a VarInt {@code length} from the buffer. If the VarInt is -1, null is returned. Otherwise
-	 * {@code length} doubles are read as if by the {@link #readDoubles()} method.</p>
+	 * {@code length} doubles are read as if by the {@link #readDouble()} method.</p>
 	 * @return a double array or null
 	 */
 	double[] readDoubles();
@@ -306,6 +353,6 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * @param buf an existing array to use
 	 * @return a double array or null
 	 */
-	double[] readDoubles(double[] buf);
+	double[] readDoubles(@Nullable double[] buf);
 
 }

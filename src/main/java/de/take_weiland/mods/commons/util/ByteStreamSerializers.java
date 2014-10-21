@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.collect.MapMaker;
 import de.take_weiland.mods.commons.CannotSerializeException;
-import de.take_weiland.mods.commons.internal.SerializerUtil;
+import de.take_weiland.mods.commons.internal.StaticDeserializerCaller;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import net.minecraft.item.ItemStack;
@@ -134,7 +134,7 @@ public final class ByteStreamSerializers {
 
 			@Override
 			public T read(MCDataInputStream in) {
-				return SerializerUtil.readByteStreamViaDeserializer(clazz, in);
+				return StaticDeserializerCaller.readByteStreamViaDeserializer(clazz, in);
 			}
 		};
 	}

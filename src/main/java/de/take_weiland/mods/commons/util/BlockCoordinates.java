@@ -1,7 +1,8 @@
 package de.take_weiland.mods.commons.util;
 
 import de.take_weiland.mods.commons.nbt.NBTSerializable;
-import de.take_weiland.mods.commons.net.MCDataInputStream;
+import de.take_weiland.mods.commons.net.MCDataInput;
+import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTBase;
@@ -137,7 +138,7 @@ public final class BlockCoordinates implements ByteStreamSerializable, NBTSerial
 		return x ^ y ^ (z << 6);
 	}
 
-	public static void toByteStream(MCDataOutputStream out, int x, int y, int z) {
+	public static void toByteStream(MCDataOutput out, int x, int y, int z) {
 		out.writeInt(x);
 		out.writeByte(y);
 		out.writeInt(z);
@@ -145,7 +146,7 @@ public final class BlockCoordinates implements ByteStreamSerializable, NBTSerial
 
 	// pseudo-constructors
 	@ByteStreamSerializable.Deserializer
-	public static BlockCoordinates fromByteStream(MCDataInputStream in) {
+	public static BlockCoordinates fromByteStream(MCDataInput in) {
 		int x = in.readInt();
 		int y = in.readUnsignedByte();
 		int z = in.readInt();

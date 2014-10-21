@@ -1,10 +1,9 @@
 package de.take_weiland.mods.commons.net;
 
-import cpw.mods.fml.common.network.PacketDispatcher;
 import net.minecraft.network.packet.Packet;
 
 /**
- * A target for packets. Only the special value {@link #SERVER} may be used for sending to the server.
+ * <p>A target for packets. Only the special value {@link #SERVER} may be used for sending to the server.</p>
  */
 public interface PacketTarget {
 
@@ -14,7 +13,7 @@ public interface PacketTarget {
 
 		@Override
 		public void send(Packet packet) {
-			PacketDispatcher.sendPacketToServer(packet);
+			Packets.sendToServer(packet);
 		}
 
 	};
@@ -23,7 +22,7 @@ public interface PacketTarget {
 
 		@Override
 		public void send(Packet packet) {
-			PacketDispatcher.sendPacketToAllPlayers(packet);
+			Packets.sendToAll(packet);
 		}
 
 	};

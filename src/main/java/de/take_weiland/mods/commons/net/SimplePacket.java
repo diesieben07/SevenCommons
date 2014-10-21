@@ -8,7 +8,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
 /**
- * A Packet which can be send around. The methods correspond to the methods in the {@link net.minecraft.network.packet.Packet} class
+ * <p>An interface defining utility methods for sending packets around.</p>
+ * TODO: docs
  */
 public interface SimplePacket {
 
@@ -22,13 +23,9 @@ public interface SimplePacket {
 
 	SimplePacket sendToAll();
 
-	SimplePacket sendToAllInDimension(int dimension);
-
 	SimplePacket sendToAllIn(World world);
 
 	SimplePacket sendToAllNear(World world, double x, double y, double z, double radius);
-
-	SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius);
 
 	SimplePacket sendToAllNear(Entity entity, double radius);
 
@@ -47,7 +44,7 @@ public interface SimplePacket {
 	SimplePacket sendToViewing(Container c);
 
 	/**
-	 * A dummy packet which doesn't do anything
+	 * <p>A dummy packet which does not send anything.</p>
 	 */
 	public static final SimplePacket DUMMY = new SimplePacket() {
 
@@ -72,22 +69,12 @@ public interface SimplePacket {
 		}
 
 		@Override
-		public SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) {
-			return this;
-		}
-
-		@Override
 		public SimplePacket sendToAllNear(World world, double x, double y, double z, double radius) {
 			return this;
 		}
 
 		@Override
 		public SimplePacket sendToAllIn(World world) {
-			return this;
-		}
-
-		@Override
-		public SimplePacket sendToAllInDimension(int dimension) {
 			return this;
 		}
 
