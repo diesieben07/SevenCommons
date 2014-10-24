@@ -4,7 +4,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import sun.misc.JavaLangAccess;
@@ -240,7 +240,7 @@ public final class JavaUtils {
 			Class.forName("sun.misc.SharedSecrets");
 			ENUM_GETTER = (EnumValueGetter) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").newInstance();
 		} catch (Exception e) {
-			SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
+			SevenCommonsLoader.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
 			ENUM_GETTER = new EnumGetterCloned();
 		}
 	}

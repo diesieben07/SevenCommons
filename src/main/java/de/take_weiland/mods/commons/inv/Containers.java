@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.inv;
 
+import com.google.common.collect.ImmutableSet;
+import de.take_weiland.mods.commons.util.ItemStacks;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.entity.player.EntityPlayer;
@@ -9,42 +11,117 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 public final class Containers {
 
 	public static final int PLAYER_INV_Y_DEFAULT = 84;
 	public static final int PLAYER_INV_X_DEFAULT = 8;
 
-	private Containers() {
-	}
-
-	public static <T extends Container & SCContainer<?>> void addPlayerInventory(T container, InventoryPlayer inventoryPlayer) {
+	public static void addPlayerInventory(Container container, InventoryPlayer inventoryPlayer) {
 		addPlayerInventory(container, inventoryPlayer, PLAYER_INV_X_DEFAULT, PLAYER_INV_Y_DEFAULT);
 	}
 
-	public static <T extends Container & SCContainer<?>> void addPlayerInventory(T container, InventoryPlayer inventoryPlayer, int xStart, int yStart) {
+	public static void addPlayerInventory(Container container, InventoryPlayer inventoryPlayer, int xStart, int yStart) {
+		Set<UUID> allItemInvs = allItemInventories(container);
+
 		// add the upper 3 rows
 		for (int j = 0; j < 3; j++) {
 			for (int i = 0; i < 9; i++) {
-				SCReflector.instance.addSlot(container, new Slot(inventoryPlayer, i + j * 9 + 9, xStart + i * 18, yStart + j * 18));
+				SCReflector.instance.addSlot(container, new PlayerSlot(inventoryPlayer, i + j * 9 + 9, xStart + i * 18, yStart + j * 18, allItemInvs));
 			}
-		}
-
-		IInventory inv = container.inventory();
-		int blockedSlot;
-		if (inv instanceof ItemInventory.WithInventory) {
-			ItemInventory.WithInventory<?> iinv = (ItemInventory.WithInventory<?>) inv;
-			blockedSlot = iinv.inv == inventoryPlayer ? iinv.slot : -1;
-		} else {
-			blockedSlot = -1;
 		}
 		// add the hotbar
 		for (int k = 0; k < 9; k++) {
-			if (k == blockedSlot) {
-				SCReflector.instance.addSlot(container, new SlotNoPickup(inventoryPlayer, k, xStart + k * 18, yStart + 58));
-			} else {
-				SCReflector.instance.addSlot(container, new Slot(inventoryPlayer, k, xStart + k * 18, yStart + 58));
+			SCReflector.instance.addSlot(container, new PlayerSlot(inventoryPlayer, k, xStart + k * 18, yStart + 58, allItemInvs));
+		}
+	}
+
+	public static ItemStack shiftClickImpl(Container container, EntityPlayer player, int slotIndex) {
+		@SuppressWarnings("unchecked")
+		List<Slot> slots = container.inventorySlots;
+		Slot sourceSlot = slots.get(slotIndex);
+		ItemStack inputStack = sourceSlot.getStack();
+		if (inputStack == null) return null;
+
+		IInventory sourceInv = sourceSlot.inventory;
+		boolean sourceIsPlayer = sourceInv == player.inventory;
+
+		if (sourceIsPlayer) {
+			// transfer to any inventory
+		} else {
+			// transfer to player inventory
+			// this is heuristic, but should do fine. if it doesn't the only "issue" is that vanilla behavior is not matched 100%
+			boolean isMachineOutput = !sourceSlot.isItemValid(inputStack);
+			if (isMachineOutput) {
+				int playerInvStart = -1;
+				int playerInvEnd = -1;
+				for (int i = 0, len = slots.size(); i < len; i++) {
+					Slot current = slots.get(i);
+					if (playerInvStart == -1) {
+						if (current.inventory == player.inventory) {
+							playerInvStart = i;
+						}
+					} else if (playerInvEnd == -1) {
+						if (current.inventory != player.inventory) {
+							playerInvEnd = i;
+						}
+					} else {
+						if (current.inventory == player.inventory) {
+							throw new RuntimeException("Non-connected player-inventory in Container " + container.getClass().getName());
+						}
+					}
+				}
 			}
 		}
+
+		Slot target = null;
+		for (int i = 0, len = slots.size(); i < len; i++) {
+			if (i == slotIndex) continue;
+			Slot candidate = slots.get(i);
+			if (candidate.inventory == sourceInv || !candidate.isItemValid(inputStack)) continue;
+			if (candidate.getHasStack()) {
+				ItemStack targetStack = candidate.getStack();
+				if (!ItemStacks.equal(targetStack, inputStack)) continue;
+				if (targetStack.stackSize >= Math.min(candidate.getSlotStackLimit(), targetStack.getMaxStackSize())) {
+					continue;
+				}
+			}
+			target = candidate;
+			break;
+		}
+		if (target == null) {
+			System.out.println("Did not find a target for " + inputStack);
+			return null;
+		}
+
+		ItemStack mergeInto = target.getStack();
+		int numTransfer;
+		if (mergeInto == null) {
+			numTransfer = target.getSlotStackLimit();
+		} else {
+			numTransfer = Math.min(target.getSlotStackLimit(), mergeInto.getMaxStackSize()) - mergeInto.stackSize;
+		}
+		numTransfer = Math.min(numTransfer, inputStack.stackSize);
+
+		System.out.println("Planning to transfer: " + numTransfer);
+		System.out.println("Transferring to: " + mergeInto + " @ " + target.inventory);
+		if (mergeInto == null) {
+			target.putStack(inputStack.splitStack(numTransfer));
+			inputStack = null;
+		} else {
+			inputStack.stackSize -= numTransfer;
+			mergeInto.stackSize += numTransfer;
+			target.onSlotChanged();
+		}
+		if (inputStack == null || inputStack.stackSize == 0) {
+			sourceSlot.putStack(null);
+		} else {
+			sourceSlot.onSlotChanged();
+		}
+		return ItemStacks.emptyToNull(inputStack);
 	}
 
 	/**
@@ -106,4 +183,24 @@ public final class Containers {
 
 		return result;
 	}
+
+	private static Set<UUID> allItemInventories(Container container) {
+		ImmutableSet.Builder<UUID> builder = ImmutableSet.builder();
+		ItemInventory last = null;
+
+		@SuppressWarnings("unchecked")
+		List<Slot> slots = container.inventorySlots;
+		for (Slot slot : slots) {
+			// keep reference to last found inventory, to avoid adding
+			// many duplicates to the builder, because the filtering of those
+			// does not happen before .build()
+			if (last != slot.inventory && slot.inventory instanceof ItemInventory) {
+				last = (ItemInventory) slot.inventory;
+				builder.add(last.uuid);
+			}
+		}
+		return builder.build();
+	}
+
+	private Containers() { }
 }

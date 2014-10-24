@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import de.take_weiland.mods.commons.net.*;
 import net.minecraft.entity.player.EntityPlayer;
 
@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 @PacketDirection(PacketDirection.Dir.TO_CLIENT)
 public class PacketSync extends ModPacket {
 
-	private static final Logger logger = SevenCommons.scLogger("SyncSystem");
+	private static final Logger logger = SevenCommonsLoader.scLogger("SyncSystem");
 
 	@Override
 	protected void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException {

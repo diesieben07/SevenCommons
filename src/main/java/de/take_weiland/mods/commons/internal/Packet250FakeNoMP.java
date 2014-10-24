@@ -76,12 +76,6 @@ public class Packet250FakeNoMP extends Packet250CustomPayload implements SimpleP
 	}
 
 	@Override
-	public SimplePacket sendToAllInDimension(int dimension) {
-		Packets.sendToAllInDimension(this, dimension);
-		return this;
-	}
-
-	@Override
 	public SimplePacket sendToAllIn(World world) {
 		Packets.sendToAllIn(this, world);
 		return this;
@@ -90,12 +84,6 @@ public class Packet250FakeNoMP extends Packet250CustomPayload implements SimpleP
 	@Override
 	public SimplePacket sendToAllNear(World world, double x, double y, double z, double radius) {
 		Packets.sendToAllNear(this, world, x, y, z, radius);
-		return this;
-	}
-
-	@Override
-	public SimplePacket sendToAllNear(int dimension, double x, double y, double z, double radius) {
-		Packets.sendToAllNear(this, dimension, x, y, z, radius);
 		return this;
 	}
 

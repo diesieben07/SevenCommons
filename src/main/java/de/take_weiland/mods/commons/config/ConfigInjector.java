@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
-import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.Property;
 import org.apache.commons.lang3.StringUtils;
@@ -54,30 +54,30 @@ public final class ConfigInjector {
 
 			if (!field.isAnnotationPresent(GetProperty.class)) {
 				if (isBlock || isItem) {
-					SevenCommons.LOGGER.warning(String.format("Field %s in class %s has @Block or @Item annotation but not @GetProperty. That might not be intended.", field.getName(), clazz.getSimpleName()));
+					SevenCommonsLoader.LOGGER.warning(String.format("Field %s in class %s has @Block or @Item annotation but not @GetProperty. That might not be intended.", field.getName(), clazz.getSimpleName()));
 				}
 				continue;
 			}
 
 			if (isItem && isBlock) {
-				SevenCommons.LOGGER.warning(String.format("Field %s in class %s has both @Block and @Item annotation. That is invalid!", field.getName(), clazz.getSimpleName()));
+				SevenCommonsLoader.LOGGER.warning(String.format("Field %s in class %s has both @Block and @Item annotation. That is invalid!", field.getName(), clazz.getSimpleName()));
 				continue;
 			}
 
 			final Class<?> fieldType = field.getType();
 
 			if ((isItem || isBlock) && !fieldType.equals(int.class)) {
-				SevenCommons.LOGGER.warning(String.format("Field %s in class %s has @%s annotation but is not of type int. That is invalid!", field.getName(), clazz.getSimpleName(), isItem ? "Item" : "Block"));
+				SevenCommonsLoader.LOGGER.warning(String.format("Field %s in class %s has @%s annotation but is not of type int. That is invalid!", field.getName(), clazz.getSimpleName(), isItem ? "Item" : "Block"));
 				continue;
 			}
 
 			if (!Modifier.isStatic(field.getModifiers())) {
-				SevenCommons.LOGGER.warning(String.format("Field %s in class %s has @GetProperty annotation but is not static. That is invalid!", field.getName(), clazz.getSimpleName()));
+				SevenCommonsLoader.LOGGER.warning(String.format("Field %s in class %s has @GetProperty annotation but is not static. That is invalid!", field.getName(), clazz.getSimpleName()));
 				continue;
 			}
 
 			if (!validTypes.contains(fieldType)) {
-				SevenCommons.LOGGER.warning(String.format("Field %s in class %s is of Type %s which is not valid in a configuration!", field.getName(), clazz.getSimpleName(), fieldType.getSimpleName()));
+				SevenCommonsLoader.LOGGER.warning(String.format("Field %s in class %s is of Type %s which is not valid in a configuration!", field.getName(), clazz.getSimpleName(), fieldType.getSimpleName()));
 				continue;
 			}
 
@@ -132,7 +132,7 @@ public final class ConfigInjector {
 
 				field.set(null, value);
 			} catch (ReflectiveOperationException e) {
-				SevenCommons.LOGGER.warning(String.format("Exception occured while trying to inject config into class %s!", clazz.getSimpleName()));
+				SevenCommonsLoader.LOGGER.warning(String.format("Exception occured while trying to inject config into class %s!", clazz.getSimpleName()));
 				e.printStackTrace();
 			} catch (Throwable t) {
 				Throwables.propagate(t);

@@ -11,6 +11,7 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -88,6 +89,7 @@ public final class ItemStacks {
 		return Block.blocksList[stack.itemID];
 	}
 
+	@Contract("null -> null")
 	public static ItemStack emptyToNull(ItemStack stack) {
 		return stack == null || stack.stackSize <= 0 ? null : stack;
 	}

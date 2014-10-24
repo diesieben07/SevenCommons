@@ -29,8 +29,7 @@ import java.util.logging.Logger;
  */
 public final class Inventories {
 
-	private Inventories() {
-	}
+	private Inventories() { }
 
 	private static final Logger logger = MiscUtil.getLogger("SC|Inventories");
 

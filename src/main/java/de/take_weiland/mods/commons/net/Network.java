@@ -3,8 +3,8 @@ package de.take_weiland.mods.commons.net;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.network.NetworkRegistry;
-import de.take_weiland.mods.commons.internal.SCModContainer;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.NetLoginHandler;
@@ -31,7 +31,7 @@ public final class Network {
 	 */
 	public static INetworkManager getNetworkManager(NetHandler netHandler) {
 		if (!netHandler.isServerHandler()) {
-			return SCModContainer.proxy.getNetworkManagerFromClient(netHandler);
+			return SevenCommons.proxy.getNetworkManagerFromClient(netHandler);
 		} else if (netHandler instanceof NetServerHandler) {
 			return ((NetServerHandler) netHandler).netManager;
 		} else {
@@ -83,7 +83,7 @@ public final class Network {
 		return channel.equals("REGISTER") || channel.equals("UNREGISTER") || channel.startsWith("MC|");
 	}
 
-	static final Logger logger = SevenCommons.scLogger("Packet System");
+	static final Logger logger = SevenCommonsLoader.scLogger("Packet System");
 
 	private Network() { }
 

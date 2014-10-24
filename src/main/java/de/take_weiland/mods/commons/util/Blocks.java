@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.util;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.internal.InstanceCacheHolder;
-import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
@@ -134,7 +134,7 @@ public final class Blocks {
 			return defaultClass;
 		}
 		if (!defaultClass.isAssignableFrom(itemBlock)) {
-			SevenCommons.LOGGER.warning(String.format("ItemBlock class %s should extend %s to enable all SevenCommons features!", itemBlock.getName(), defaultClass.getSimpleName()));
+			SevenCommonsLoader.LOGGER.warning(String.format("ItemBlock class %s should extend %s to enable all SevenCommons features!", itemBlock.getName(), defaultClass.getSimpleName()));
 		}
 
 		return itemBlock;

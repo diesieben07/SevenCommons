@@ -1,22 +1,23 @@
 package de.take_weiland.mods.commons.inv;
 
+import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.ItemStacks;
-import net.minecraft.inventory.IInventory;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.UUID;
+
 
 /**
- * <p>An inventory that stores its contents to an {@link net.minecraft.item.ItemStack}</p>
- * <p>If the ItemStack being written to is in an inventory itself, {@link ItemInventory.WithInventory} should be used instead.</p>
+ * <p>An inventory that stores its contents to an {@link net.minecraft.item.ItemStack}.</p>
  */
-public abstract class ItemInventory<T extends ItemInventory<T>> extends AbstractInventory {
+public class ItemInventory extends AbstractInventory {
 
-	/**
-	 * <p>The default NBT key used for storing the data.</p>
-	 */
-	public static final String DEFAULT_NBT_KEY = "_sc$itemInventory";
+	static final String NBT_UUID_KEY = "_sc$iteminv$uuid";
+
+	final UUID uuid = UUID.randomUUID();
 
 	/**
 	 * the ItemStack this inventory stores it's data to
@@ -38,6 +39,7 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 		super();
 		this.stack = stack;
 		this.nbtKey = nbtKey;
+		writeUUID();
 		readFromNbt(getNbt());
 	}
 
@@ -52,32 +54,67 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 		super(size);
 		this.stack = stack;
 		this.nbtKey = nbtKey;
+		writeUUID();
 		readFromNbt(getNbt());
 	}
 
 	/**
-	 * <p>This constructor uses the {@link #DEFAULT_NBT_KEY} to store the data.</p>
-	 * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
+	 * <p>This constructor uses the NBT key <tt>&lt;ModID&gt;:&lt;ItemName&gt;.inv</tt> to store the data.</p>
+	 * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be
+	 * overridden and work properly when called from this constructor.</p>
 	 *
-	 * @param item the ItemStack to save to
+	 * @param stack the ItemStack to save to
 	 */
-	protected ItemInventory(ItemStack item) {
-		this(item, DEFAULT_NBT_KEY);
+	protected ItemInventory(ItemStack stack) {
+		this(stack, defaultNBTKey(stack));
 	}
 
 	/**
-	 * <p>This constructor uses the {@link #DEFAULT_NBT_KEY} to store the data.</p>
+	 * <p>This constructor uses the NBT key <tt>&lt;ModID&gt;:&lt;ItemName&gt;.inv</tt> to store the data.</p>
 	 *
 	 * @param size the size of this inventory
-	 * @param item the ItemStack to save to
+	 * @param stack the ItemStack to save to
 	 */
-	protected ItemInventory(int size, ItemStack item) {
-		this(size, item, DEFAULT_NBT_KEY);
+	protected ItemInventory(int size, ItemStack stack) {
+		this(size, stack, defaultNBTKey(stack));
+	}
+
+	private void writeUUID() {
+		NBT.writeUUID(uuid, ItemStacks.getNbt(stack), nbtKey);
+	}
+
+	private static String defaultNBTKey(ItemStack stack) {
+		GameRegistry.UniqueIdentifier ui = GameRegistry.findUniqueIdentifierFor(stack.getItem());
+		return ui.modId + ":" + ui.name + ".inv";
 	}
 
 	@Override
 	public void onInventoryChanged() {
 		saveData();
+	}
+
+	@Override
+	public void closeChest() {
+		super.closeChest();
+		if (stack.stackTagCompound != null) {
+			stack.stackTagCompound.removeTag(NBT_UUID_KEY);
+		}
+	}
+
+	@Override
+	public String getInvName() {
+		return stack.getDisplayName();
+	}
+
+	@Override
+	public boolean isInvNameLocalized() {
+		return true;
+	}
+
+	@Override
+	public boolean isUseableByPlayer(EntityPlayer player) {
+		// usually the ItemStack is in the player's inventory
+		return true;
 	}
 
 	/**
@@ -89,44 +126,6 @@ public abstract class ItemInventory<T extends ItemInventory<T>> extends Abstract
 
 	private NBTTagCompound getNbt() {
 		return ItemStacks.getNbt(stack, nbtKey);
-	}
-
-	public abstract static class WithInventory<T extends WithInventory<T>> extends ItemInventory<T> {
-
-		public final int slot;
-		public final IInventory inv;
-
-		protected WithInventory(IInventory inv, int slot, String nbtKey) {
-			// hell yeah
-			super(checkStack(inv, slot), nbtKey);
-			this.slot = slot;
-			this.inv = inv;
-		}
-
-		protected WithInventory(int size, IInventory inv, int slot, String nbtKey) {
-			super(size, checkStack(inv, slot), nbtKey);
-			this.slot = slot;
-			this.inv = inv;
-		}
-
-		protected WithInventory(IInventory inv, int index) {
-			this(inv, index, DEFAULT_NBT_KEY);
-		}
-
-		protected WithInventory(int size, IInventory inv, int index) {
-			this(size, inv, index, DEFAULT_NBT_KEY);
-		}
-
-		private static ItemStack checkStack(IInventory inv, int slot) {
-			return checkNotNull(checkNotNull(inv, "Inventory must not be null!").getStackInSlot(slot), "Inventory slot is empty!");
-		}
-
-		@Override
-		public void onInventoryChanged() {
-			super.onInventoryChanged();
-			inv.setInventorySlotContents(slot, stack);
-		}
-
 	}
 
 }

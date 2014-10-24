@@ -2,20 +2,30 @@ package de.take_weiland.mods.commons;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.network.IGuiHandler;
+import cpw.mods.fml.common.network.NetworkMod;
+import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.sync.SyncContents;
+import de.take_weiland.mods.commons.inv.BasicSlot;
+import de.take_weiland.mods.commons.inv.Containers;
+import de.take_weiland.mods.commons.tileentity.TileEntityInventory;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Container;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTank;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
-//@NetworkMod()
+@NetworkMod()
 public class testmod_sc {
+
+	@Mod.Instance
+	public static testmod_sc instance;
 
 	private static Block myBlock;
 
@@ -32,34 +42,82 @@ public class testmod_sc {
 			public TileEntity createTileEntity(World world, int metadata) {
 				return new TestTE();
 			}
+
+			@Override
+			public boolean onBlockActivated(World par1World, int par2, int par3, int par4, EntityPlayer par5EntityPlayer, int par6, float par7, float par8, float par9) {
+				if (Sides.logical(par1World).isServer()) {
+					System.out.println("hello");
+					par5EntityPlayer.openGui(testmod_sc.instance, 0, par1World, par2, par3, par4);
+				}
+				return true;
+			}
 		};
+		GameRegistry.registerTileEntity(TestTE.class, "testte");
 		GameRegistry.registerBlock(myBlock, "testblock");
-		new TestTE();
+		NetworkRegistry.instance().registerGuiHandler(this, new TestGuiHandler());
 
 	}
 
-	private static class BaseTE extends TileEntity {
+	public static class TestTE extends TileEntityInventory {
 
-	}
-
-	private static class TestTE extends BaseTE {
-
-		@SyncContents
-		private FluidTank tank = new FluidTank(30);
-
-		private int ticks = 0;
 		@Override
 		public void updateEntity() {
-			if (ticks++ % 20 == 0) {
-				if (Sides.logical(this).isServer()) {
-					if (tank.getFluid() == null || tank.getFluid().getFluid() == FluidRegistry.LAVA) {
-						tank.setFluid(new FluidStack(FluidRegistry.WATER, 10));
-					} else {
-						tank.setFluid(new FluidStack(FluidRegistry.LAVA, 10));
-					}
-				}
-				System.out.println("Fluid is " + (tank.getFluid() == null ? null : tank.getFluid().getFluid().getLocalizedName()) + " on " + Sides.logical(this));
+		}
+
+		@Override
+		protected String unlocalizedName() {
+			return "foo.bar";
+		}
+
+		@Override
+		public int getSizeInventory() {
+			return 5;
+		}
+	}
+
+	public static class TestContainer extends Container {
+
+		public TestContainer(TestTE te, InventoryPlayer playerInv) {
+			for (int i = 0; i < 5; i++) {
+				addSlotToContainer(new BasicSlot(te, i, i * 20 + 4, 20));
 			}
+			Containers.addPlayerInventory(this, playerInv);
+		}
+
+		@Override
+		public ItemStack transferStackInSlot(EntityPlayer player, int slotId) {
+			return Containers.shiftClickImpl(this, player, slotId);
+		}
+
+		@Override
+		public boolean canInteractWith(EntityPlayer entityplayer) {
+			return true;
+		}
+	}
+
+	public static class TestGui extends GuiContainer {
+
+		public TestGui(Container container) {
+			super(container);
+		}
+
+		@Override
+		protected void drawGuiContainerBackgroundLayer(float f, int i, int j) {
+			drawDefaultBackground();
+		}
+	}
+
+	public static class TestGuiHandler implements IGuiHandler {
+
+		@Override
+		public Container getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+			System.out.println("hello");
+			return new TestContainer((TestTE) world.getBlockTileEntity(x, y, z), player.inventory);
+		}
+
+		@Override
+		public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+			return new TestGui(getServerGuiElement(ID, player, world, x, y, z));
 		}
 	}
 

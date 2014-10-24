@@ -11,7 +11,7 @@ import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.TickType;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.SCModContainer;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import net.minecraft.server.ThreadMinecraftServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -271,7 +271,7 @@ public final class Scheduler implements ITickHandler, ListeningScheduledExecutor
 		if (side.isServer()) {
 			return Thread.currentThread() instanceof ThreadMinecraftServer;
 		} else {
-			return Thread.currentThread().getId() == SCModContainer.clientMainThreadID;
+			return Thread.currentThread().getId() == SevenCommons.clientMainThreadID;
 		}
 	}
 

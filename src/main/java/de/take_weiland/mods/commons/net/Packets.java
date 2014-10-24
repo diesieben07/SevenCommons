@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.net;
 
-import de.take_weiland.mods.commons.internal.SCModContainer;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.entity.Entity;
@@ -29,7 +29,7 @@ public final class Packets {
 	 * @param packet the packet
 	 */
 	public static void sendToServer(Packet packet) {
-		SCModContainer.proxy.sendPacketToServer(packet);
+		SevenCommons.proxy.sendPacketToServer(packet);
 	}
 
 	/**

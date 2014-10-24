@@ -37,14 +37,14 @@ public final class ASMHooks {
 	private ASMHooks() { }
 
 	public static MCDataOutputStream newSyncStream(Object object, SyncType type) {
-		MCDataOutputStream out = SCModContainer.packets.createStream(SCModContainer.SYNC_PACKET_ID);
+		MCDataOutputStream out = SevenCommons.packets.createStream(SevenCommons.SYNC_PACKET_ID);
 		out.writeEnum(type);
 		type.writeObject(object, out);
 		return out;
 	}
 
 	public static void sendSyncStream(Object object, SyncType type, MCDataOutputStream out) {
-		type.sendPacket(object, SCModContainer.packets.makePacket(out));
+		type.sendPacket(object, SevenCommons.packets.makePacket(out));
 	}
 
 	private static final Type iterableComponent = Iterable.class.getTypeParameters()[0];

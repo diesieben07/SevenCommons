@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
-import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -40,7 +40,7 @@ public final class MCPNames {
 	}
 
 	public static boolean use() {
-		return SevenCommons.MCP_ENVIRONMENT;
+		return SevenCommonsLoader.MCP_ENVIRONMENT;
 	}
 
 	public static String field(@NotNull String srg) {
@@ -72,7 +72,7 @@ public final class MCPNames {
 			throw new RuntimeException("Couldn't find MCP mappings. Please provide system property " + SYS_PROP);
 		}
 		try {
-			SevenCommons.LOGGER.fine("Reading SRG->MCP mappings from " + file);
+			SevenCommonsLoader.LOGGER.fine("Reading SRG->MCP mappings from " + file);
 			return Files.readLines(file, Charsets.UTF_8, new MCPFileParser());
 		} catch (IOException e) {
 			throw new RuntimeException("Couldn't read SRG->MCP mappings", e);
