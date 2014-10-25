@@ -97,7 +97,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 
 	@Override
 	public ItemStack transferStackInSlot(EntityPlayer player, int slot) {
-		return Containers.transferStack(this, player, slot);
+		return Containers.handleShiftClick(this, player, slot);
 	}
 
 	@Override
