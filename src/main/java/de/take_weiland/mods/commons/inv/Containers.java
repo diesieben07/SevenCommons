@@ -74,33 +74,38 @@ public final class Containers {
 		int originalSize = sourceStack.stackSize;
 
 		int len = slots.size();
-		int idx = reverse ? len - 1 : 0;
+		int idx;
 
 		// first pass, try to merge with existing stacks
-		while (sourceStack.stackSize > 0 && (reverse ? idx >= 0 : idx < len)) {
-			Slot targetSlot = slots.get(idx);
-			if (mergeIntoPlayer ? targetSlot.inventory == playerInv : targetSlot.inventory != playerInv) {
-				ItemStack target = targetSlot.getStack();
-				if (ItemStacks.equal(sourceStack, target)) { // also checks target != null, because stack is never null
-					int targetMax = Math.min(targetSlot.getSlotStackLimit(), target.getMaxStackSize());
-					int toTransfer = Math.min(sourceStack.stackSize, targetMax - target.stackSize);
-					if (toTransfer > 0) {
-						target.stackSize += toTransfer;
-						sourceStack.stackSize -= toTransfer;
-						targetSlot.onSlotChanged();
+		// can skip this if stack is not stackable at all
+		if (sourceStack.isStackable()) {
+			idx = reverse ? len - 1 : 0;
+
+			while (sourceStack.stackSize > 0 && (reverse ? idx >= 0 : idx < len)) {
+				Slot targetSlot = slots.get(idx);
+				if (mergeIntoPlayer ? targetSlot.inventory == playerInv : targetSlot.inventory != playerInv) {
+					ItemStack target = targetSlot.getStack();
+					if (ItemStacks.equal(sourceStack, target)) { // also checks target != null, because stack is never null
+						int targetMax = Math.min(targetSlot.getSlotStackLimit(), target.getMaxStackSize());
+						int toTransfer = Math.min(sourceStack.stackSize, targetMax - target.stackSize);
+						if (toTransfer > 0) {
+							target.stackSize += toTransfer;
+							sourceStack.stackSize -= toTransfer;
+							targetSlot.onSlotChanged();
+						}
 					}
 				}
-			}
 
-			if (reverse) {
-				idx--;
-			} else {
-				idx++;
+				if (reverse) {
+					idx--;
+				} else {
+					idx++;
+				}
 			}
-		}
-		if (sourceStack.stackSize == 0) {
-			sourceSlot.putStack(null);
-			return true;
+			if (sourceStack.stackSize == 0) {
+				sourceSlot.putStack(null);
+				return true;
+			}
 		}
 
 		// 2nd pass: try to put anything remaining into a free slot
