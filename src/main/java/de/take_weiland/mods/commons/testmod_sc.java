@@ -86,7 +86,7 @@ public class testmod_sc {
 
 		@Override
 		public ItemStack transferStackInSlot(EntityPlayer player, int slotId) {
-			return Containers.shiftClickImpl(this, player, slotId);
+			return Containers.handleShiftClick(this, player, slotId);
 		}
 
 		@Override

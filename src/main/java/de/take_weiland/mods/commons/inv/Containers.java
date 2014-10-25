@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.inv;
 
 import com.google.common.collect.ImmutableSet;
 import de.take_weiland.mods.commons.util.ItemStacks;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -39,7 +38,7 @@ public final class Containers {
 		}
 	}
 
-	public static ItemStack shiftClickImpl(Container container, EntityPlayer player, int slotIndex) {
+	public static ItemStack handleShiftClick(Container container, EntityPlayer player, int slotIndex) {
 		@SuppressWarnings("unchecked")
 		List<Slot> slots = container.inventorySlots;
 		Slot sourceSlot = slots.get(slotIndex);
@@ -51,137 +50,81 @@ public final class Containers {
 
 		if (sourceIsPlayer) {
 			// transfer to any inventory
+			if (mergeStack(player.inventory, false, sourceSlot, slots, false)) {
+				return null;
+			} else {
+				return inputStack;
+			}
 		} else {
 			// transfer to player inventory
 			// this is heuristic, but should do fine. if it doesn't the only "issue" is that vanilla behavior is not matched 100%
 			boolean isMachineOutput = !sourceSlot.isItemValid(inputStack);
-			if (isMachineOutput) {
-				int playerInvStart = -1;
-				int playerInvEnd = -1;
-				for (int i = 0, len = slots.size(); i < len; i++) {
-					Slot current = slots.get(i);
-					if (playerInvStart == -1) {
-						if (current.inventory == player.inventory) {
-							playerInvStart = i;
-						}
-					} else if (playerInvEnd == -1) {
-						if (current.inventory != player.inventory) {
-							playerInvEnd = i;
-						}
-					} else {
-						if (current.inventory == player.inventory) {
-							throw new RuntimeException("Non-connected player-inventory in Container " + container.getClass().getName());
-						}
-					}
-				}
+			if (mergeStack(player.inventory, true, sourceSlot, slots, !isMachineOutput)) {
+				return null;
+			} else {
+				return inputStack;
 			}
 		}
-
-		Slot target = null;
-		for (int i = 0, len = slots.size(); i < len; i++) {
-			if (i == slotIndex) continue;
-			Slot candidate = slots.get(i);
-			if (candidate.inventory == sourceInv || !candidate.isItemValid(inputStack)) continue;
-			if (candidate.getHasStack()) {
-				ItemStack targetStack = candidate.getStack();
-				if (!ItemStacks.equal(targetStack, inputStack)) continue;
-				if (targetStack.stackSize >= Math.min(candidate.getSlotStackLimit(), targetStack.getMaxStackSize())) {
-					continue;
-				}
-			}
-			target = candidate;
-			break;
-		}
-		if (target == null) {
-			System.out.println("Did not find a target for " + inputStack);
-			return null;
-		}
-
-		ItemStack mergeInto = target.getStack();
-		int numTransfer;
-		if (mergeInto == null) {
-			numTransfer = target.getSlotStackLimit();
-		} else {
-			numTransfer = Math.min(target.getSlotStackLimit(), mergeInto.getMaxStackSize()) - mergeInto.stackSize;
-		}
-		numTransfer = Math.min(numTransfer, inputStack.stackSize);
-
-		System.out.println("Planning to transfer: " + numTransfer);
-		System.out.println("Transferring to: " + mergeInto + " @ " + target.inventory);
-		if (mergeInto == null) {
-			target.putStack(inputStack.splitStack(numTransfer));
-			inputStack = null;
-		} else {
-			inputStack.stackSize -= numTransfer;
-			mergeInto.stackSize += numTransfer;
-			target.onSlotChanged();
-		}
-		if (inputStack == null || inputStack.stackSize == 0) {
-			sourceSlot.putStack(null);
-		} else {
-			sourceSlot.onSlotChanged();
-		}
-		return ItemStacks.emptyToNull(inputStack);
 	}
 
-	/**
-	 * generic implementation for {@link Container#transferStackInSlot}
-	 *
-	 * @param container
-	 * @param player
-	 * @param slotIndex
-	 * @return
-	 */
-	public static <T extends Container & SCContainer<?>> ItemStack transferStack(T container, EntityPlayer player, int slotIndex) {
-		ItemStack result = null;
+	// returns true on a successful full merge
+	private static boolean mergeStack(InventoryPlayer playerInv, boolean mergeIntoPlayer, Slot sourceSlot, List<Slot> slots, boolean reverse) {
+		ItemStack sourceStack = sourceSlot.getStack();
 
-		Slot slot = (Slot) container.inventorySlots.get(slotIndex);
+		int originalSize = sourceStack.stackSize;
 
-		int firstPlayerSlot = container.getFirstPlayerSlot();
-		if (firstPlayerSlot < 0) {
-			return null;
-		}
+		int len = slots.size();
+		int idx = reverse ? len - 1 : 0;
 
-		if (slot != null && slot.getHasStack()) {
-
-			ItemStack stackInSlot = slot.getStack();
-			result = stackInSlot.copy();
-
-			IInventory playerInv = container.getPlayer().inventory;
-
-			if (slot.inventory == playerInv) {
-				long enc = container.getSlotRange(stackInSlot);
-				int targetBegin = JavaUtils.decodeIntA(enc);
-				int targetEnd = JavaUtils.decodeIntB(enc);
-				if (targetBegin != -1) {
-					if (!SCReflector.instance.mergeItemStack(container, stackInSlot, targetBegin, targetEnd, false)) {
-						return null;
+		// first pass, try to merge with existing stacks
+		while (sourceStack.stackSize > 0 && (reverse ? idx >= 0 : idx < len)) {
+			Slot targetSlot = slots.get(idx);
+			if (mergeIntoPlayer ? targetSlot.inventory == playerInv : targetSlot.inventory != playerInv) {
+				ItemStack target = targetSlot.getStack();
+				if (ItemStacks.equal(sourceStack, target)) { // also checks target != null, because stack is never null
+					int targetMax = Math.min(targetSlot.getSlotStackLimit(), target.getMaxStackSize());
+					int toTransfer = Math.min(sourceStack.stackSize, targetMax - target.stackSize);
+					if (toTransfer > 0) {
+						target.stackSize += toTransfer;
+						sourceStack.stackSize -= toTransfer;
+						targetSlot.onSlotChanged();
 					}
-				} else if (slotIndex >= firstPlayerSlot && slotIndex < firstPlayerSlot + 27) {
-					if (!SCReflector.instance.mergeItemStack(container, stackInSlot, firstPlayerSlot + 27, firstPlayerSlot + 36, false)) {
-						return null;
-					}
-				} else if (slotIndex >= firstPlayerSlot + 27 && slotIndex < firstPlayerSlot + 36 && !SCReflector.instance.mergeItemStack(container, stackInSlot, firstPlayerSlot, firstPlayerSlot + 27, false)) {
-					return null;
 				}
-			} else if (!SCReflector.instance.mergeItemStack(container, stackInSlot, firstPlayerSlot, firstPlayerSlot + 36, false)) {
-				return null;
 			}
 
-			if (stackInSlot.stackSize == 0) {
-				slot.putStack(null);
+			if (reverse) {
+				idx--;
 			} else {
-				slot.onSlotChanged();
+				idx++;
 			}
-
-			if (stackInSlot.stackSize == result.stackSize) {
-				return null;
-			}
-
-			slot.onPickupFromSlot(player, stackInSlot);
+		}
+		if (sourceStack.stackSize == 0) {
+			sourceSlot.putStack(null);
+			return true;
 		}
 
-		return result;
+		// 2nd pass: try to put anything remaining into a free slot
+		idx = reverse ? len - 1 : 0;
+		while (reverse ? idx >= 0 : idx < len) {
+			Slot targetSlot = slots.get(idx);
+			if (!targetSlot.getHasStack() && targetSlot.isItemValid(sourceStack)) {
+				targetSlot.putStack(sourceStack);
+				sourceSlot.putStack(null);
+				return true;
+			}
+
+			if (reverse) {
+				idx--;
+			} else {
+				idx++;
+			}
+		}
+
+		// we had success in merging only a partial stack
+		if (sourceStack.stackSize != originalSize) {
+			sourceSlot.onSlotChanged();
+		}
+		return false;
 	}
 
 	private static Set<UUID> allItemInventories(Container container) {

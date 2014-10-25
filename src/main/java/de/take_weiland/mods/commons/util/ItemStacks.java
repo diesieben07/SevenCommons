@@ -49,6 +49,7 @@ public final class ItemStacks {
 	 * @param b an ItemStack
 	 * @return true if the ItemStack are equal
 	 */
+	@Contract("null, null -> true; null, !null -> false; !null, null -> false")
 	public static boolean equal(@Nullable ItemStack a, @Nullable ItemStack b) {
 		return a == b || (a != null && b != null && equalsImpl(a, b));
 	}
