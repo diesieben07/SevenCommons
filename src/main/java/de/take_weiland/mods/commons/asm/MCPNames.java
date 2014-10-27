@@ -223,6 +223,8 @@ public final class MCPNames {
 	public static final String M_ITEMSTACK_WRITE_NBT = "func_77955_b";
 	public static final String M_LOAD_ITEMSTACK_FROM_NBT = "func_77949_a";
 
+	public static final String M_ADD_CRAFTING_TO_CRAFTERS = "func_75132_a";
+
 	private MCPNames() { }
 
 }

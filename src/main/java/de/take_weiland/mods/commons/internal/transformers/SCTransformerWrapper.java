@@ -16,6 +16,7 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		builder.add(new GuiScreenTransformer());
 		builder.add(new EntityPlayerTransformer());
 		builder.add(new EntityTrackerEntryTransformer());
+		builder.add(new ContainerTransformer());
 
 		// packets
 		builder.add(new Packet250Transformer());

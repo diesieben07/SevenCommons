@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons;
 
+import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
@@ -52,6 +53,8 @@ public class testmod_sc {
 				return true;
 			}
 		};
+		Reflection.initialize(Container.class);
+		System.exit(0);
 		GameRegistry.registerTileEntity(TestTE.class, "testte");
 		GameRegistry.registerBlock(myBlock, "testblock");
 		NetworkRegistry.instance().registerGuiHandler(this, new TestGuiHandler());

@@ -63,6 +63,17 @@ public final class ItemStacks {
 		return a == b || (a != null && b != null && equalsImpl(a, b) && a.stackSize == b.stackSize);
 	}
 
+	public static int hash(@Nullable ItemStack stack) {
+		if (stack == null) {
+			return 0;
+		} else {
+			int result = stack.itemID | (stack.getItemDamage() << 16);
+			result = 31 * result + stack.stackSize;
+			result = 31 * result + (stack.stackTagCompound != null ? stack.stackTagCompound.hashCode() : 0);
+			return result;
+		}
+	}
+
 	public static ItemStack merge(ItemStack from, ItemStack into) {
 		return merge(from, into, false);
 	}

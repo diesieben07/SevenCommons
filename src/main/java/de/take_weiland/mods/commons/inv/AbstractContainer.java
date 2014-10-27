@@ -2,17 +2,18 @@ package de.take_weiland.mods.commons.inv;
 
 import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.PacketInventoryName;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
+/**
+ * <p>Basic implementation for an inventory container.</p>
+ * @param <T> the inventory this container displays
+ */
 public abstract class AbstractContainer<T extends IInventory> extends Container implements SCContainer<T> {
 
 	protected final T inventory;
@@ -104,13 +105,4 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	public void onContainerClosed(EntityPlayer player) {
 		inventory.closeChest();
 	}
-
-	@Override
-	public void addCraftingToCrafters(ICrafting listener) {
-		super.addCraftingToCrafters(listener);
-		if (inventory instanceof NameableInventory && ((NameableInventory) inventory).hasCustomName() && listener instanceof EntityPlayerMP) {
-			new PacketInventoryName(windowId, ((NameableInventory) inventory).getCustomName()).sendTo((EntityPlayer) listener);
-		}
-	}
-
 }
