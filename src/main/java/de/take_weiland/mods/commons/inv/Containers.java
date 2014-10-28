@@ -62,16 +62,35 @@ public final class Containers {
 		}
 	}
 
+	/**
+	 * <p>Trigger the given button on the currently open Container. This method will call
+	 * {@link de.take_weiland.mods.commons.inv.ButtonContainer#onButtonClick(cpw.mods.fml.relauncher.Side, net.minecraft.entity.player.EntityPlayer, int)}
+	 * on both client and server.</p>
+	 * <p>This method must only be called from the client thread and will throw a {@code ClassCastException} if the
+	 * currently open container does not implement {@code ButtonContainer}.</p>
+	 * @param button the button
+	 */
 	public static void triggerButton(int button) {
 		EntityPlayer player = SevenCommons.proxy.getClientPlayer();
 		((ButtonContainer) player.openContainer).onButtonClick(Side.CLIENT, player, button);
 		new PacketContainerButton(player.openContainer.windowId, button).sendToServer();
 	}
 
+	/**
+	 * <p>Get all inventories present in the given Container. The inventories are returned in order of first appearance
+	 * by the Iterator of the returned Set.</p>
+	 * @param container the Container
+	 * @return all inventories
+	 */
 	public static ImmutableSet<IInventory> getInventories(Container container) {
 		return ((ContainerProxy) container)._sc$getInventories();
 	}
 
+	/**
+	 * <p>Get the player interacting with the given Container. On the client this is always {@code Minecraft#thePlayer}.</p>
+	 * @param container the Container
+	 * @return the player
+	 */
 	public static EntityPlayer getViewer(Container container) {
 		List<ICrafting> listeners = SCReflector.instance.getCrafters(container);
 		for (int i = 0, len = listeners.size(); i < len; i++) {
@@ -92,7 +111,7 @@ public final class Containers {
 	 *     <li>When the slot to be moved is in the inventory of the player it will be moved to the first available Slot
 	 *     that accepts it.</li>
 	 * </ul>
-	 * <p>This behavior can be overriden by implementing {@link de.take_weiland.mods.commons.inv.SpecialShiftClick} on
+	 * <p>This behavior can be overridden by implementing {@link de.take_weiland.mods.commons.inv.SpecialShiftClick} on
 	 * your Container.</p>
 	 * @param container the Container
 	 * @param player the player performing the shift-click

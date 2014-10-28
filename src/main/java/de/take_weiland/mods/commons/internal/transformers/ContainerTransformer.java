@@ -13,6 +13,8 @@ import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
 /**
+ * <ul><li>Adds ContainerProxy interface to support Containers.getInventories</li>
+ * <li>Adds hook into addCraftingToCrafters for NameableInventory support.</li></ul>
  * @author diesieben07
  */
 public class ContainerTransformer implements ASMClassTransformer {

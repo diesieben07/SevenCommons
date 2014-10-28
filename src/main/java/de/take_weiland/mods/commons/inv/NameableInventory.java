@@ -4,8 +4,9 @@ import net.minecraft.inventory.IInventory;
 
 /**
  * <p>An inventory which can be named.</p>
- * <p>If you implement this on a TileEntity, it will automatically take the name of a renamed ItemStack if placed, use the {@link de.take_weiland.mods.commons.tileentity.TileAutoName}
- * interface to control that behavior.</p>
+ * <p>If a {@code NameableInventory} is used in a Container it's name will be automatically synchronized with the client.</p>
+ * <p>If you implement this on a TileEntity, it will automatically take the name of a renamed ItemStack if placed, use the
+ * {@link de.take_weiland.mods.commons.tileentity.TileAutoName} interface to control that behavior.</p>
  * <p>Keep in mind that this only applies if you either register your block using
  * {@link de.take_weiland.mods.commons.util.Blocks#init(net.minecraft.block.Block, String)} or you use
  * {@link de.take_weiland.mods.commons.templates.SCItemBlock} or a subclass as your ItemBlock class.</p>

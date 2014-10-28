@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.util;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.internal.InstanceCacheHolder;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
@@ -11,7 +10,9 @@ import de.take_weiland.mods.commons.meta.Subtype;
 import de.take_weiland.mods.commons.templates.SCItemBlock;
 import de.take_weiland.mods.commons.templates.TypedItemBlock;
 import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 import java.util.List;
@@ -87,7 +88,19 @@ public final class Blocks {
 		GameRegistry.registerBlock(block, getItemBlockClass(block, itemClass), baseName);
 
 		if (block instanceof HasSubtypes) {
-			ItemStacks.registerSubstacks(baseName, block, InstanceCacheHolder.BLOCK_STACK_FUNCTION);
+			ItemStacks.registerSubstacks(baseName, getItem(block));
+		}
+	}
+
+	public static Item getItem(Block block) {
+		return Item.itemsList[block.blockID];
+	}
+
+	public static Block fromItem(Item item) {
+		if (item instanceof ItemBlock) {
+			return Block.blocksList[((ItemBlock) item).getBlockID()];
+		} else {
+			throw new IllegalArgumentException("Not an ItemBlock");
 		}
 	}
 
@@ -121,10 +134,10 @@ public final class Blocks {
 			// this should technically be <? extends Subtype> but Java has no way of doing this
 			MetadataProperty<Subtype> property = ((HasSubtypes<Subtype>) block).subtypeProperty();
 			for (Subtype type : property.values()) {
-				list.add(property.apply(type, ItemStacks.of(block)));
+				list.add(property.apply(type, new ItemStack(block)));
 			}
 		} else {
-			list.add(ItemStacks.of(block));
+			list.add(new ItemStack(block));
 		}
 	}
 

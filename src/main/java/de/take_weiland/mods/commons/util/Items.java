@@ -2,16 +2,15 @@ package de.take_weiland.mods.commons.util;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.internal.InstanceCacheHolder;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
+import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 
 import static de.take_weiland.mods.commons.util.RegistrationUtil.checkPhase;
 
 public final class Items {
 
-	private Items() {
-	}
+	private Items() { }
 
 	/**
 	 * <p>Equivalent to {@link #init(net.minecraft.item.Item, String, String)} with the currently active ModId.</p>
@@ -57,21 +56,17 @@ public final class Items {
 		if (item instanceof HasSubtypes) {
 			SCReflector.instance.setHasSubtypes(item, true);
 
-			ItemStacks.registerSubstacks(baseName, item, InstanceCacheHolder.ITEM_STACK_FUNCTION);
+			ItemStacks.registerSubstacks(baseName, item);
 		}
 
 		GameRegistry.registerItem(item, baseName);
 	}
 
-	public static Item byId(int id) {
-		if (id >= 0 && id <= 32000) {
-			Item item = Item.itemsList[id];
-			if (item == null) {
-				throw new IllegalArgumentException("Unknown ItemID " + id);
-			}
-			return item;
-		}
-		throw new IllegalArgumentException("Invalid ItemID " + id);
+	public static Block getBlock(Item item) {
+		return Blocks.fromItem(item);
 	}
 
+	public static Item forBlock(Block block) {
+		return Blocks.getItem(block);
+	}
 }

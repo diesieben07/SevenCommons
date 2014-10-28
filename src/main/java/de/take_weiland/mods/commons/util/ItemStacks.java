@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
@@ -12,14 +11,16 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * <p>Utilities for ItemStacks.</p>
  *
  * @see net.minecraft.item.ItemStack
  */
+@ParametersAreNonnullByDefault
 public final class ItemStacks {
 
 	public static ItemStack clone(@Nullable ItemStack stack) {
@@ -33,11 +34,11 @@ public final class ItemStacks {
 	 * @param into the ItemStack to merge into, may be null
 	 * @return true if the first ItemStack can be fully merged into the second one
 	 */
-	public static boolean fitsInto(ItemStack from, ItemStack into) {
+	public static boolean fitsInto(@Nullable ItemStack from, @Nullable ItemStack into) {
 		return from == null || into == null || fitsIntoImpl(from, into);
 	}
 
-	private static boolean fitsIntoImpl(@NotNull ItemStack from, @NotNull ItemStack into) {
+	private static boolean fitsIntoImpl(ItemStack from, ItemStack into) {
 		return equalsImpl(from, into) && from.stackSize + into.stackSize <= into.getMaxStackSize();
 	}
 
@@ -54,12 +55,13 @@ public final class ItemStacks {
 		return a == b || (a != null && b != null && equalsImpl(a, b));
 	}
 
-	private static boolean equalsImpl(@NotNull ItemStack a, @NotNull ItemStack b) {
+	private static boolean equalsImpl(ItemStack a, ItemStack b) {
 		return a.itemID == b.itemID && a.getItemDamage() == b.getItemDamage()
 				&& Objects.equal(a.stackTagCompound, b.stackTagCompound);
 	}
 
-	public static boolean identical(ItemStack a, ItemStack b) {
+	@Contract("null, null -> true; null, !null -> false; !null, null -> false")
+	public static boolean identical(@Nullable ItemStack a, @Nullable ItemStack b) {
 		return a == b || (a != null && b != null && equalsImpl(a, b) && a.stackSize == b.stackSize);
 	}
 
@@ -74,11 +76,11 @@ public final class ItemStacks {
 		}
 	}
 
-	public static ItemStack merge(ItemStack from, ItemStack into) {
+	public static ItemStack merge(@Nullable ItemStack from, @Nullable ItemStack into) {
 		return merge(from, into, false);
 	}
 
-	public static ItemStack merge(ItemStack from, ItemStack into, boolean force) {
+	public static ItemStack merge(@Nullable ItemStack from, @Nullable ItemStack into, boolean force) {
 		if (from == null) {
 			return into;
 		}
@@ -102,7 +104,7 @@ public final class ItemStacks {
 	}
 
 	@Contract("null -> null")
-	public static ItemStack emptyToNull(ItemStack stack) {
+	public static ItemStack emptyToNull(@Nullable ItemStack stack) {
 		return stack == null || stack.stackSize <= 0 ? null : stack;
 	}
 
@@ -117,60 +119,28 @@ public final class ItemStacks {
 		return NBT.getOrCreateCompound(getNbt(stack), key);
 	}
 
-	public static ItemStack of(Item item) {
-		return new ItemStack(item);
-	}
-
-	public static ItemStack of(Item item, int quantity) {
-		return new ItemStack(item, quantity);
-	}
-
-	public static ItemStack of(Item item, int quantity, int meta) {
-		return new ItemStack(item, quantity, meta);
-	}
-
-	public static ItemStack of(Block block) {
-		return new ItemStack(block);
-	}
-
-	public static ItemStack of(Block block, int quantity) {
-		return new ItemStack(block, quantity);
-	}
-
-	public static ItemStack of(Block block, int quantity, int meta) {
-		return new ItemStack(block, quantity, meta);
-	}
-
-	public static boolean is(ItemStack stack, int id) {
-		return stack != null && stack.itemID == id;
-	}
-
-	public static boolean is(ItemStack stack, int id, int meta) {
-		return stack != null && stack.itemID == id && stack.getItemDamage() == meta;
-	}
-
-	public static boolean is(ItemStack stack, Item item) {
+	public static boolean is(@Nullable ItemStack stack, Item item) {
 		return stack != null && stack.itemID == item.itemID;
 	}
 
-	public static boolean is(ItemStack stack, Item item, int meta) {
+	public static boolean is(@Nullable ItemStack stack, Item item, int meta) {
 		return stack != null && stack.itemID == item.itemID && stack.getItemDamage() == meta;
 	}
 
-	public static boolean is(ItemStack stack, Block block, int meta) {
-		return stack != null && stack.itemID == block.blockID && stack.getItemDamage() == meta;
-	}
-
-	public static boolean is(ItemStack stack, Block block) {
+	public static boolean is(@Nullable ItemStack stack, Block block) {
 		return stack != null && stack.itemID == block.blockID;
 	}
 
+	public static boolean is(@Nullable ItemStack stack, Block block, int meta) {
+		return stack != null && stack.itemID == block.blockID && stack.getItemDamage() == meta;
+	}
+
 	@SuppressWarnings("unchecked")
-	static <T extends Enum<T> & Subtype, R> void registerSubstacks(String baseName, R item, Function<R, ItemStack> function) {
+	static <T extends Enum<T> & Subtype> void registerSubstacks(String baseName, Item item) {
 		MetadataProperty<T> prop = ((HasSubtypes<T>) item).subtypeProperty();
 		T[] types = prop.values();
 		for (T type : types) {
-			ItemStack stack = function.apply(item);
+			ItemStack stack = new ItemStack(item);
 			stack.setItemDamage(prop.toMeta(type, 0));
 
 			String name = baseName + "." + type.subtypeName();
@@ -178,6 +148,5 @@ public final class ItemStacks {
 		}
 	}
 
-	private ItemStacks() {
-	}
+	private ItemStacks() { }
 }
