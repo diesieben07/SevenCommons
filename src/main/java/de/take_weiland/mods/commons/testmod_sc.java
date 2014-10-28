@@ -47,14 +47,12 @@ public class testmod_sc {
 			@Override
 			public boolean onBlockActivated(World par1World, int par2, int par3, int par4, EntityPlayer par5EntityPlayer, int par6, float par7, float par8, float par9) {
 				if (Sides.logical(par1World).isServer()) {
-					System.out.println("hello");
 					par5EntityPlayer.openGui(testmod_sc.instance, 0, par1World, par2, par3, par4);
 				}
 				return true;
 			}
 		};
 		Reflection.initialize(Container.class);
-		System.exit(0);
 		GameRegistry.registerTileEntity(TestTE.class, "testte");
 		GameRegistry.registerBlock(myBlock, "testblock");
 		NetworkRegistry.instance().registerGuiHandler(this, new TestGuiHandler());

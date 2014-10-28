@@ -1,11 +1,13 @@
 package de.take_weiland.mods.commons.inv;
 
 import com.google.common.collect.ImmutableSet;
+import de.take_weiland.mods.commons.internal.ContainerProxy;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
@@ -53,6 +55,10 @@ public final class Containers {
 		for (int k = 0; k < 9; k++) {
 			SCReflector.instance.addSlot(container, new PlayerSlot(inventoryPlayer, k, xStart + k * 18, yStart + 58, allItemInvs));
 		}
+	}
+
+	public static List<IInventory> getInventories(Container container) {
+		return ((ContainerProxy) container)._sc$getInventories();
 	}
 
 	/**

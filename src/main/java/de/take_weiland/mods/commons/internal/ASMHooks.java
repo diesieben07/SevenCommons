@@ -1,22 +1,18 @@
 package de.take_weiland.mods.commons.internal;
 
-import com.google.common.collect.Sets;
-import com.google.common.reflect.TypeToken;
+import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
 import de.take_weiland.mods.commons.internal.sync.SyncType;
-import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.network.packet.Packet250CustomPayload;
@@ -25,8 +21,6 @@ import net.minecraftforge.common.MinecraftForge;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -41,35 +35,22 @@ public final class ASMHooks {
 	public static final String ON_PLAYER_CLONE = "onPlayerClone";
 	public static final String NEW_SYNC_STREAM = "newSyncStream";
 	public static final String SEND_SYNC_STREAM = "sendSyncStream";
-	public static final String FIND_ENUM_SET_TYPE = "findEnumSetType";
-	public static final String NEW_CONTAINER_WATCHER = "newContainerWatcher";
+	public static final String FIND_CONTAINER_INVS = "findContainerInvs";
 
 	private ASMHooks() { }
 
-	public static void newContainerWatcher(Container container, ICrafting watcher) {
-		if (watcher instanceof EntityPlayerMP) {
-			EntityPlayerMP player = (EntityPlayerMP) watcher;
-			HashSet<IInventory> visited = null;
+	public static List<IInventory> findContainerInvs(Container container) {
+		IInventory last = null;
+		ImmutableSet.Builder<IInventory> builder = ImmutableSet.builder();
 
-			@SuppressWarnings("unchecked")
-			List<Slot> slots = container.inventorySlots;
-			for (int i = 0, len = slots.size(); i < len; i++) {
-				IInventory inv = slots.get(i).inventory;
-				if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
-					boolean isNew;
-					if (visited == null) {
-						visited = Sets.newHashSetWithExpectedSize(1);
-						isNew = true;
-					} else {
-						isNew = visited.contains(inv);
-					}
-					if (isNew) {
-						new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName())
-								.sendTo(player);
-					}
-				}
+		@SuppressWarnings("unchecked")
+		List<Slot> slots = container.inventorySlots;
+		for (Slot slot : slots) {
+			if (slot.inventory != last) {
+				builder.add((last = slot.inventory));
 			}
 		}
+		return builder.build().asList();
 	}
 
 	public static MCDataOutputStream newSyncStream(Object object, SyncType type) {
@@ -81,11 +62,6 @@ public final class ASMHooks {
 
 	public static void sendSyncStream(Object object, SyncType type, MCDataOutputStream out) {
 		type.sendPacket(object, SevenCommons.packets.makePacket(out));
-	}
-
-	private static final Type iterableComponent = Iterable.class.getTypeParameters()[0];
-	public static Class<?> findEnumSetType(Type genericType) {
-		return TypeToken.of(genericType).resolveType(iterableComponent).getRawType();
 	}
 
 	public static void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {
