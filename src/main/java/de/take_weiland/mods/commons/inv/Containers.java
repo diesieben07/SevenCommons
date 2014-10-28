@@ -1,12 +1,17 @@
 package de.take_weiland.mods.commons.inv;
 
 import com.google.common.collect.ImmutableSet;
+import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.ContainerProxy;
+import de.take_weiland.mods.commons.internal.PacketContainerButton;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
@@ -57,13 +62,38 @@ public final class Containers {
 		}
 	}
 
-	public static List<IInventory> getInventories(Container container) {
+	public static void triggerButton(int button) {
+		EntityPlayer player = SevenCommons.proxy.getClientPlayer();
+		((ButtonContainer) player.openContainer).onButtonClick(Side.CLIENT, player, button);
+		new PacketContainerButton(player.openContainer.windowId, button).sendToServer();
+	}
+
+	public static ImmutableSet<IInventory> getInventories(Container container) {
 		return ((ContainerProxy) container)._sc$getInventories();
+	}
+
+	public static EntityPlayer getViewer(Container container) {
+		List<ICrafting> listeners = SCReflector.instance.getCrafters(container);
+		for (int i = 0, len = listeners.size(); i < len; i++) {
+			ICrafting listener = listeners.get(i);
+			if (listener instanceof EntityPlayerMP) {
+				return (EntityPlayer) listener;
+			}
+		}
+		return SevenCommons.proxy.getClientPlayer();
 	}
 
 	/**
 	 * <p>Implementation for shift-clicking in Containers. This is a drop-in replacement you can call from the
 	 * {@link Container#transferStackInSlot(net.minecraft.entity.player.EntityPlayer, int)} method in your Container.</p>
+	 * <ul>
+	 *     <li>When the slot to be moved is not in the inventory of the player it will be moved there as known
+	 *     from vanilla inventories.</li>
+	 *     <li>When the slot to be moved is in the inventory of the player it will be moved to the first available Slot
+	 *     that accepts it.</li>
+	 * </ul>
+	 * <p>This behavior can be overriden by implementing {@link de.take_weiland.mods.commons.inv.SpecialShiftClick} on
+	 * your Container.</p>
 	 * @param container the Container
 	 * @param player the player performing the shift-click
 	 * @param slotIndex the slot being shift-clicked
@@ -81,6 +111,16 @@ public final class Containers {
 		ItemStack copy = inputStack.copy();
 
 		if (sourceIsPlayer) {
+			if (container instanceof SpecialShiftClick) {
+				ShiftClickTarget target = ((SpecialShiftClick) container).getShiftClickTarget(inputStack, player);
+				if (!target.isStandard()) {
+					if (target.isNone() || !mergeToTarget(player.inventory, sourceSlot, slots, target)) {
+						return null;
+					} else {
+						return copy;
+					}
+				}
+			}
 			// transfer to any inventory
 			if (!mergeStack(player.inventory, false, sourceSlot, slots, false)) {
 				return null;
@@ -96,6 +136,52 @@ public final class Containers {
 			} else {
 				return copy;
 			}
+		}
+	}
+
+	// same as mergeStack, but uses a ShiftClickTarget
+	// ugly copy paste is ugly
+	private static boolean mergeToTarget(InventoryPlayer playerInv, Slot sourceSlot, List<Slot> slots, ShiftClickTarget target) {
+		ItemStack sourceStack = sourceSlot.getStack();
+		int originalSize = sourceStack.stackSize;
+
+		// first pass, try merge with existing stacks
+		target.reset();
+		while (sourceStack.stackSize > 0 && target.hasNext()) {
+			Slot targetSlot = slots.get(target.next());
+			if (targetSlot.inventory != playerInv) {
+				ItemStack targetStack = targetSlot.getStack();
+				if (ItemStacks.equal(targetStack, sourceStack)) {
+					int targetMax = Math.min(targetSlot.getSlotStackLimit(), targetStack.getMaxStackSize());
+					int toTransfer = Math.min(sourceStack.stackSize, targetMax - targetStack.stackSize);
+					if (toTransfer > 0) {
+						targetStack.stackSize += toTransfer;
+						sourceStack.stackSize -= toTransfer;
+						targetSlot.onSlotChanged();
+					}
+				}
+			}
+		}
+		if (sourceStack.stackSize == 0) {
+			sourceSlot.putStack(null);
+			return true;
+		}
+
+		//2nd pass: merge anything leftover into empty slots
+		target.reset();
+		while (target.hasNext()) {
+			Slot targetSlot = slots.get(target.next());
+			if (targetSlot.inventory != playerInv && !targetSlot.getHasStack() && targetSlot.isItemValid(sourceStack)) {
+				targetSlot.putStack(sourceStack);
+				sourceSlot.putStack(null);
+				return true;
+			}
+		}
+		if (originalSize != sourceStack.stackSize) {
+			sourceSlot.onSlotChanged();
+			return true;
+		} else {
+			return false;
 		}
 	}
 

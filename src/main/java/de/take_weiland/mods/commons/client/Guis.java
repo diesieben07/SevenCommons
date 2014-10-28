@@ -1,6 +1,9 @@
 package de.take_weiland.mods.commons.client;
 
+import de.take_weiland.mods.commons.util.I18n;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.inventory.IInventory;
 
 /**
  * <p>Utilities for working with {@code GuiScreens}</p>
@@ -58,6 +61,15 @@ public final class Guis {
 			++scaleFactor;
 		}
 		return scaleFactor;
+	}
+
+	public static void drawInventoryName(IInventory inventory, int x, int y) {
+		drawInventoryName(inventory, x, y, 0x404040);
+	}
+
+	public static void drawInventoryName(IInventory inventory, int x, int y, int color) {
+		FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
+		fr.drawString(inventory.isInvNameLocalized() ? inventory.getInvName() : I18n.translate(inventory.getInvName()), x, y, color);
 	}
 
 }

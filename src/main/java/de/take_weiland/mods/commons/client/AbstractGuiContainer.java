@@ -1,39 +1,42 @@
 package de.take_weiland.mods.commons.client;
 
-import com.google.common.primitives.UnsignedBytes;
-import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.inv.SCContainer;
-import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 /**
- * <p>A base implementation for Guis with an Inventory (GuiContainer).</p>
+ * <p>A base implementation for GuiContainer.</p>
  *
- * @param <I> The type of inventory this Gui displays
- * @param <C> The type of container this Gui displays
  * @author diesieben07
  */
-public abstract class AbstractGuiContainer<I extends IInventory, C extends Container & SCContainer<I>> extends GuiContainer {
+public abstract class AbstractGuiContainer<C extends Container> extends GuiContainer {
 
 	protected final ResourceLocation texture;
 	protected final C container;
 
+	/**
+	 * <p>Create a new AbstractGuiContainer.</p>
+	 * @param container the Container
+	 */
 	public AbstractGuiContainer(C container) {
 		super(container);
 		this.container = container;
-		texture = provideTexture();
+		this.texture = provideTexture();
 	}
 
+	/**
+	 * <p>Bind the background texture for this Gui.</p>
+	 */
 	public final void bindTexture() {
 		GL11.glColor3f(1, 1, 1);
 		mc.renderEngine.bindTexture(texture);
 	}
 
+	/**
+	 * <p>Create the ResourceLocation for the background texture of this Gui.</p>
+	 * @return a ResourceLocation
+	 */
 	protected abstract ResourceLocation provideTexture();
 
 	@Override
@@ -44,28 +47,10 @@ public abstract class AbstractGuiContainer<I extends IInventory, C extends Conta
 		}
 	}
 
-	@Override
-	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-		fontRenderer.drawString(getInvDisplayName(), 8, 6, 0x404040);
-	}
-
-	protected final String getInvDisplayName() {
-		IInventory inv = container.inventory();
-		return inv.isInvNameLocalized() ? inv.getInvName() : I18n.getString(inv.getInvName());
-	}
-
-	protected final void triggerContainerButton(int buttonId) {
-		mc.playerController.sendEnchantPacket(container.windowId, UnsignedBytes.checkedCast(buttonId));
-		container.onButtonClick(Side.CLIENT, mc.thePlayer, buttonId);
-	}
-
-	@Override
-	protected void actionPerformed(GuiButton button) {
-		if (container.isContainerButton(mc.thePlayer, button.id)) {
-			triggerContainerButton(button.id);
-		}
-	}
-
+	/**
+	 * <p>Get the Container bound to this Gui.</p>
+	 * @return the Container
+	 */
 	public final C getContainer() {
 		return container;
 	}

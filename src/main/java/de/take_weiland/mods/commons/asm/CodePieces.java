@@ -811,7 +811,24 @@ public final class CodePieces {
 	 * @return a CodePiece
 	 */
 	public static CodePiece getThis() {
-		return thisLoader == null ? (thisLoader = of(new VarInsnNode(ALOAD, 0))) : thisLoader;
+		return thisLoader == null ? (thisLoader = getLocal(0)) : thisLoader;
+	}
+
+	public static CodePiece getLocal(int var) {
+		return getLocal(var, ASMUtils.OBJECT_TYPE);
+	}
+
+	public static CodePiece getLocal(int var, Type type) {
+		checkArgument(var >= 0, "local variable index must be >= 0");
+		return of(new VarInsnNode(type.getOpcode(ILOAD), var));
+	}
+
+	public static CodePiece setLocal(int var, CodePiece value) {
+		return setLocal(var, value, ASMUtils.OBJECT_TYPE);
+	}
+
+	public static CodePiece setLocal(int var, CodePiece value, Type type) {
+		return value.append(new VarInsnNode(type.getOpcode(ISTORE), var));
 	}
 
 	private static CodePiece nullLoader;

@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -89,6 +90,15 @@ public final class Players {
 	@SuppressWarnings("unchecked")
 	public static List<EntityPlayerMP> allIn(WorldServer world) {
 		return world.playerEntities;
+	}
+
+	/**
+	 * <p>Get the client player ({@link net.minecraft.client.Minecraft#thePlayer} in a safe manner. This method can
+	 * be referenced in common code without crashing a Dedicated Server, but still must only be called from a client thread.</p>
+	 * @return the client player
+	 */
+	public static EntityPlayer getClient() {
+		return SevenCommons.proxy.getClientPlayer();
 	}
 
 	/**

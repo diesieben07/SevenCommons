@@ -7,7 +7,9 @@ import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.inv.BasicSlot;
+import de.take_weiland.mods.commons.inv.ButtonContainer;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.tileentity.TileEntityInventory;
 import de.take_weiland.mods.commons.util.Sides;
@@ -20,6 +22,8 @@ import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+
+import javax.annotation.Nonnull;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()
@@ -52,7 +56,8 @@ public class testmod_sc {
 				return true;
 			}
 		};
-		Reflection.initialize(Container.class);
+		Reflection.initialize(GuiContainer.class);
+		System.exit(0);
 		GameRegistry.registerTileEntity(TestTE.class, "testte");
 		GameRegistry.registerBlock(myBlock, "testblock");
 		NetworkRegistry.instance().registerGuiHandler(this, new TestGuiHandler());
@@ -76,7 +81,7 @@ public class testmod_sc {
 		}
 	}
 
-	public static class TestContainer extends Container {
+	public static class TestContainer extends Container implements ButtonContainer {
 
 		public TestContainer(TestTE te, InventoryPlayer playerInv) {
 			for (int i = 0; i < 5; i++) {
@@ -86,7 +91,7 @@ public class testmod_sc {
 		}
 
 		@Override
-		public ItemStack transferStackInSlot(EntityPlayer player, int slotId) {
+		public ItemStack transferStackInSlot(@Nonnull EntityPlayer player, int slotId) {
 			return Containers.handleShiftClick(this, player, slotId);
 		}
 
@@ -94,6 +99,12 @@ public class testmod_sc {
 		public boolean canInteractWith(EntityPlayer entityplayer) {
 			return true;
 		}
+
+		@Override
+		public void onButtonClick(Side side, EntityPlayer player, int buttonId) {
+
+		}
+
 	}
 
 	public static class TestGui extends GuiContainer {

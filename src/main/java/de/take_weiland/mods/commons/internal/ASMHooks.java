@@ -7,12 +7,17 @@ import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
 import de.take_weiland.mods.commons.internal.sync.SyncType;
+import de.take_weiland.mods.commons.inv.Containers;
+import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.util.SCReflector;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.network.packet.Packet250CustomPayload;
@@ -36,10 +41,29 @@ public final class ASMHooks {
 	public static final String NEW_SYNC_STREAM = "newSyncStream";
 	public static final String SEND_SYNC_STREAM = "sendSyncStream";
 	public static final String FIND_CONTAINER_INVS = "findContainerInvs";
+	public static final String ON_LISTENER_ADDED = "onListenerAdded";
+	public static final String IS_USEABLE_CLIENT = "isUseableClient";
 
 	private ASMHooks() { }
 
-	public static List<IInventory> findContainerInvs(Container container) {
+	@SideOnly(Side.CLIENT)
+	public static boolean isUseableClient(Slot slot) {
+		return slot != null && slot.canTakeStack(Minecraft.getMinecraft().thePlayer);
+	}
+
+	public static void onListenerAdded(Container container, ICrafting listener) {
+		if (listener instanceof EntityPlayerMP) {
+			List<IInventory> invs = Containers.getInventories(container).asList();
+			for (int i = 0, len = invs.size(); i < len; i++) {
+				IInventory inv = invs.get(i);
+				if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
+					new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
+				}
+			}
+		}
+	}
+
+	public static ImmutableSet<IInventory> findContainerInvs(Container container) {
 		IInventory last = null;
 		ImmutableSet.Builder<IInventory> builder = ImmutableSet.builder();
 
@@ -50,7 +74,7 @@ public final class ASMHooks {
 				builder.add((last = slot.inventory));
 			}
 		}
-		return builder.build().asList();
+		return builder.build();
 	}
 
 	public static MCDataOutputStream newSyncStream(Object object, SyncType type) {

@@ -225,6 +225,12 @@ public final class MCPNames {
 
 	public static final String M_ADD_CRAFTING_TO_CRAFTERS = "func_75132_a";
 
+	public static final String M_CHECK_HOTBAR_KEYS = "func_82319_a";
+
+	public static final String M_HANDLE_MOUSE_CLICK = "func_74191_a";
+
+	public static final String F_GUICONTAINER_THE_SLOT = "field_82320_o";
+
 	private MCPNames() { }
 
 }

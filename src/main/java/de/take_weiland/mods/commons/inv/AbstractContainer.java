@@ -1,9 +1,5 @@
 package de.take_weiland.mods.commons.inv;
 
-import com.google.common.primitives.UnsignedBytes;
-import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
@@ -11,85 +7,90 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 /**
- * <p>Basic implementation for an inventory container.</p>
- * @param <T> the inventory this container displays
+ * <p>Abstract base class for an inventory Container.</p>
+ * <p>This implementation handles one inventory plus the player inventory.</p>
  */
-public abstract class AbstractContainer<T extends IInventory> extends Container implements SCContainer<T> {
+public abstract class AbstractContainer<T extends IInventory> extends Container {
 
+	/**
+	 * <p>The inventory being displayed.</p>
+	 */
 	protected final T inventory;
 
+	/**
+	 * <p>The player interacting with this Container.</p>
+	 */
 	protected final EntityPlayer player;
 
-	private final int firstPlayerSlot;
-
-	protected AbstractContainer(T upper, EntityPlayer player) {
-		this(upper, player, Containers.PLAYER_INV_X_DEFAULT, Containers.PLAYER_INV_Y_DEFAULT);
-		upper.openChest();
-	}
-
-	protected AbstractContainer(T upper, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
-		inventory = upper;
+	/**
+	 * <p>Create a new AbstractContainer with the given inventory, player and position for the player inventory.</p>
+	 * <p>This constructor first calls {@link #addSlots()} to add any non-player slots and then adds the player inventory
+	 * at the given coordinates.</p>
+	 * @param inventory the inventory
+	 * @param player the player
+	 * @param playerInventoryX the x-coordinate for the player inventory
+	 * @param playerInventoryY the y-coordinate for the player inventory
+	 */
+	protected AbstractContainer(T inventory, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
+		this.inventory = inventory;
 		this.player = player;
 		addSlots();
 		if (playerInventoryX >= 0) {
-			firstPlayerSlot = inventorySlots.size();
 			Containers.addPlayerInventory(this, player.inventory, playerInventoryX, playerInventoryY);
-		} else {
-			firstPlayerSlot = -1;
 		}
+		inventory.openChest();
 	}
 
+	/**
+	 * <p>Create a new AbstractContainer with the given inventory and player.</p>
+	 * <p>This constructor first calls {@link #addSlots()} to add any non-player slots and then adds the player inventory
+	 * at the default coordinates.</p>
+	 * @param inventory the inventory
+	 * @param player the player
+	 */
+	protected AbstractContainer(T inventory, EntityPlayer player) {
+		this(inventory, player, Containers.PLAYER_INV_X_DEFAULT, Containers.PLAYER_INV_Y_DEFAULT);
+	}
+
+	/**
+	 * <p>Create a new AbstractContainer with the inventory implemented by the TileEntity at the given position and the
+	 * given player.</p>
+	 * <p>This constructor first fetches the TileEntity at the given position. This TileEntity must be of type {@code T}.
+	 * Then {@link #addSlots()} is called to add any non-player slots and then the player inventory is added at the
+	 * default coordinates.
+	 * @param world the world
+	 * @param x the x coordinate of the TileEntity
+	 * @param y the y coordinate of the TileEntity
+	 * @param z the z coordinate of the TileEntity
+	 * @param player the player
+	 */
 	protected AbstractContainer(World world, int x, int y, int z, EntityPlayer player) {
 		this(world, x, y, z, player, Containers.PLAYER_INV_X_DEFAULT, Containers.PLAYER_INV_Y_DEFAULT);
 	}
 
+	/**
+	 * <p>Create a new AbstractContainer with the inventory implemented by the TileEntity at the given position and the
+	 * given player.</p>
+	 * <p>This constructor first fetches the TileEntity at the given position. This TileEntity must be of type {@code T}.
+	 * Then {@link #addSlots()} is called to add any non-player slots and then the player inventory is added at the
+	 * given coordinates.
+	 * @param world the world
+	 * @param x the x coordinate of the TileEntity
+	 * @param y the y coordinate of the TileEntity
+	 * @param z the z coordinate of the TileEntity
+	 * @param player the player
+	 * @param playerInventoryX the x-coordinate for the player inventory
+	 * @param playerInventoryY  the y-coordinate for the player inventory
+	 */
 	@SuppressWarnings("unchecked")
 	protected AbstractContainer(World world, int x, int y, int z, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
 		this((T) world.getBlockTileEntity(x, y, z), player, playerInventoryX, playerInventoryY);
 	}
 
-	@Override
-	public int getFirstPlayerSlot() {
-		return firstPlayerSlot;
-	}
-
+	/**
+	 * <p>Add any non-player slots to this Container.</p>
+	 */
 	protected abstract void addSlots();
-
-	protected int getSlotFor(ItemStack item) {
-		return -1;
-	}
-
-	@Override
-	public long getSlotRange(ItemStack item) {
-		int target = getSlotFor(item);
-		return target == -1 ? JavaUtils.encodeInts(-1, -1) : JavaUtils.encodeInts(target, target + 1);
-	}
-
-	@Override
-	public final T inventory() {
-		return inventory;
-	}
-
-	@Override
-	public EntityPlayer getPlayer() {
-		return player;
-	}
-
-	@Override
-	public boolean isContainerButton(EntityPlayer player, int buttonId) {
-		return false;
-	}
-
-	@Override
-	public void onButtonClick(Side side, EntityPlayer player, int buttonId) {
-	}
-
-	@Override
-	public final boolean enchantItem(EntityPlayer player, int id) {
-		id = UnsignedBytes.toInt((byte) id);
-		onButtonClick(Sides.logical(player), player, id);
-		return true;
-	}
 
 	@Override
 	public boolean canInteractWith(EntityPlayer player) {

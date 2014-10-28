@@ -26,8 +26,9 @@ import static org.objectweb.asm.Opcodes.*;
 
 public final class ASMUtils {
 
-	private ASMUtils() {
-	}
+	private ASMUtils() { }
+
+	public static final Type OBJECT_TYPE = Type.getType(Object.class);
 
 	// *** bytecode analyzing helpers *** //
 
