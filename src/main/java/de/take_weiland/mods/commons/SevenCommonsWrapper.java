@@ -41,6 +41,9 @@ import static java.lang.String.format;
  * If your Mod is a normal mod, add the following lines to the Jar-Manifest of your jar file:<pre>
  * FMLCorePlugin: com.example.yourmod.SevenCommonsWrapper
  * FMLCorePluginContainsFMLMod: true</pre></p>
+ * <p>Additionally add the following entry to your Jar-Manifest:<pre>
+ * SevenCommonsVersion: {MajorVersion}
+ * </pre></p>
  *
  * @author diesieben07
  */
