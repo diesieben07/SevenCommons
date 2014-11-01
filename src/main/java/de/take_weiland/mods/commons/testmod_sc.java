@@ -1,5 +1,8 @@
 package de.take_weiland.mods.commons;
 
+import com.google.common.base.Function;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -24,10 +27,29 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()
 public class testmod_sc {
+
+	public static void main(String[] args) {
+		final File folder = new File(".").getAbsoluteFile();
+		System.out.println(Iterables.transform(Arrays.asList(folder.list()), new Function<String, Object>() {
+			@Nullable
+			@Override
+			public Object apply(@Nullable String input) {
+				try {
+					return new File(folder, input).getCanonicalFile();
+				} catch (IOException e) {
+					throw Throwables.propagate(e);
+				}
+			}
+		}));
+	}
 
 	@Mod.Instance
 	public static testmod_sc instance;

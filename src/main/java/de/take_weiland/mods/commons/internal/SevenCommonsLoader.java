@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal;
 import com.google.common.base.Throwables;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
-import de.take_weiland.mods.commons.SevenCommonsWrapper;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.launchwrapper.Launch;
@@ -32,11 +31,6 @@ public final class SevenCommonsLoader implements IFMLLoadingPlugin {
 	}
 
 	public SevenCommonsLoader() {
-		if (Launch.blackboard.put(SevenCommonsWrapper.INSTANCE_KEY, this) != null) {
-			throw new IllegalStateException("More than one instance of SevenCommons!");
-		}
-		Launch.blackboard.put(SevenCommonsWrapper.VERSION_KEY, VERSION);
-
 		String[] excl = {
 				"de.take_weiland.mods.commons.asm.",
 				"de.take_weiland.mods.commons.internal.transformers.",
