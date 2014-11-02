@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
+import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
 import com.google.common.primitives.Ints;
 import cpw.mods.fml.relauncher.CoreModManager;
@@ -234,10 +235,7 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		}
 
 		private static File getTarget(URL downloadURL) {
-			String filename = downloadURL.getFile();
-			if (!filename.endsWith(".jar")) {
-				filename += ".jar";
-			}
+			String filename = Files.getNameWithoutExtension(downloadURL.getFile()) + ".jar";
 			return new File(getMCDir(), "/mods/" + MC_VERSION + "/" + filename);
 		}
 
