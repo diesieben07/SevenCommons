@@ -68,7 +68,7 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 	private static final String MARKER = "de.take_weiland.sevencommons.wrapper";
 	private static final String VERSION_ENTRY = "SevenCommonsVersion";
 	private static final String MC_VERSION = "1.6.4";
-	private static final String JAR_REQUEST_URL = "http://sevencommons.take-weiland.de/request_recommended?v=%d";
+	private static final String JAR_REQUEST_URL = "http://mods.take-weiland.de/sevencommons_version.php?v=%d";
 	private static final String SC_MAIN_CLASS = "de.take_weiland.mods.commons.internal.SevenCommonsLoader";
 
 	private static ImmutableSet<Integer> allVersions() {
