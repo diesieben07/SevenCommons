@@ -617,6 +617,9 @@ public final class ASMUtils {
 	public static IClassNameTransformer getClassNameTransformer() {
 		if (!nameTransChecked) {
 			nameTransformer = Iterables.getOnlyElement(Iterables.filter(Launch.classLoader.getTransformers(), IClassNameTransformer.class), null);
+			if (nameTransformer == null) {
+				System.err.println("!!! No IClassNameTransformer found !!!");
+			}
 			nameTransChecked = true;
 		}
 		return nameTransformer;
