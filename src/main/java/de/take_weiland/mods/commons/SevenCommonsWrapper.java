@@ -57,30 +57,52 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		}
 		Launch.blackboard.put(MARKER, Boolean.TRUE);
 
-		Set<Integer> versions = allVersions();
-		if (versions.size() != 1) {
-			System.err.println("Multiple SevenCommons versions found: " + versions);
+		Set<Integer> reqVersions = allReqVersions();
+		Set<Integer> presVersions = allPresVersions();
+		if (reqVersions.size() != 1) {
+			System.err.println("Multiple SevenCommons versions requested: " + reqVersions);
+			System.exit(1);
+		} else if (presVersions.size() >= 2) {
+			System.err.println("Multiple SevenCommons versions installed: " + presVersions);
 			System.exit(1);
 		} else {
-			int version = Iterables.getOnlyElement(versions);
-			doDownload(version);
+			int reqVersion = Iterables.getOnlyElement(reqVersions);
+			if (presVersions.isEmpty()) {
+				doDownload(reqVersion);
+			} else {
+				int presVersion = Iterables.getOnlyElement(presVersions);
+				if (presVersion != reqVersion) {
+					System.err.println("Requested SevenCommons version was: " + reqVersion + ", but " + presVersion + " is installed.");
+				} else {
+					System.out.println("Requested SevenCommons version already installed.");
+				}
+			}
 		}
 	}
 
 	private static final String MARKER = "de.take_weiland.sevencommons.wrapper";
-	private static final String VERSION_ENTRY = "SevenCommonsVersion";
+	private static final String REQ_VERSION_ENTRY = "SevenCommonsVersion";
+	private static final String PRESENT_VERSION_ENTRY = "SevenCommonsInstalledVersion";
 	static final String MC_VERSION = "1.6.4";
 	private static final String JAR_REQUEST_URL = "http://mods.take-weiland.de/sevencommons_version.php?v=%d";
 	private static final String SC_MAIN_CLASS = "de.take_weiland.mods.commons.internal.SevenCommonsLoader";
 
-	private static ImmutableSet<Integer> allVersions() {
+	private static ImmutableSet<Integer> allReqVersions() {
+		return allVersions(getVersionFunc(REQ_VERSION_ENTRY));
+	}
+
+	private static ImmutableSet<Integer> allPresVersions() {
+		return allVersions(getVersionFunc(PRESENT_VERSION_ENTRY));
+	}
+
+	private static ImmutableSet<Integer> allVersions(Function<JarFile, Integer> getVersionFunc) {
 		return FluentIterable.from(getAllMods())
-				.transform(getVersionFunc())
+				.transform(getVersionFunc)
 				.filter(Predicates.notNull())
 				.toSet();
 	}
 
-	private static Integer getVersion(JarFile mod) {
+	private static Integer getVersion(JarFile mod, String versionKey) {
 		Manifest mf;
 		try {
 			mf = mod.getManifest();
@@ -88,7 +110,7 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 			return null;
 		}
 		if (mf != null) {
-			String version = mf.getMainAttributes().getValue(VERSION_ENTRY);
+			String version = mf.getMainAttributes().getValue(versionKey);
 			if (version == null) {
 				return null;
 			} else {
@@ -104,11 +126,11 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		}
 	}
 
-	private static Function<JarFile, Integer> getVersionFunc() {
+	private static Function<JarFile, Integer> getVersionFunc(final String key) {
 		return new Function<JarFile, Integer>() {
 			@Override
 			public Integer apply(JarFile input) {
-				return getVersion(input);
+				return getVersion(input, key);
 			}
 		};
 	}

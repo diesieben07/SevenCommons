@@ -37,7 +37,8 @@ minecraft {
 
 jar {
 	manifest {
-        attributes 'FMLCorePlugin': 'de.take_weiland.mods.commons.internal.SevenCommons'
+        attributes 'FMLCorePlugin': 'de.take_weiland.mods.commons.internal.SevenCommonsLoader'
+        attributes 'SevenCommonsInstalledVersion': '0'
     }
 }
 
