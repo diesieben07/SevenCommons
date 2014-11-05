@@ -48,6 +48,7 @@ import static java.lang.String.format;
  *
  * @author diesieben07
  */
+@IFMLLoadingPlugin.MCVersion(SevenCommonsWrapper.MC_VERSION)
 public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 
 	public static void setup() {
@@ -68,7 +69,7 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 
 	private static final String MARKER = "de.take_weiland.sevencommons.wrapper";
 	private static final String VERSION_ENTRY = "SevenCommonsVersion";
-	private static final String MC_VERSION = "1.6.4";
+	static final String MC_VERSION = "1.6.4";
 	private static final String JAR_REQUEST_URL = "http://mods.take-weiland.de/sevencommons_version.php?v=%d";
 	private static final String SC_MAIN_CLASS = "de.take_weiland.mods.commons.internal.SevenCommonsLoader";
 
@@ -147,6 +148,7 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 	}
 
 	private static void doDownload(int majorVersion) {
+		System.out.println("Downloading SevenCommons. Major Version: " + majorVersion);
 		Downloader loader = new Downloader(majorVersion);
 		loader.start();
 		try {
@@ -200,9 +202,14 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 				return;
 			}
 			target = getTarget(source);
+			if (!target.getParentFile().mkdirs()) {
+				error("Failed to create mods folder: " + target.getParent());
+				return;
+			}
 			ReadableByteChannel in = null;
 			WritableByteChannel out = null;
 			try {
+				display.setup();
 				URLConnection conn = source.openConnection();
 				in = monitor(Channels.newChannel(conn.getInputStream()), conn.getContentLength());
 				out = Channels.newChannel(new FileOutputStream(target));
@@ -323,7 +330,8 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 
 	private static final class ConsoleDisplay extends DownloadDisplay {
 
-		private static final int WIDTH = 30;
+		private int lastPercent = -1;
+		private long lastTime;
 
 		ConsoleDisplay(Thread downloadThread) {
 			super(downloadThread);
@@ -336,24 +344,23 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 
 		@Override
 		void displayProgress(double progress) {
-			int n = (int) Math.floor(progress * WIDTH);
+			int p = (int) Math.floor(progress * 100);
+			if (p == lastPercent) {
+				return;
+			}
+			long now = System.currentTimeMillis();
+			if (p != 0 && p != 100 && Math.abs(lastTime - now) <= 500) {
+				return;
+			}
+			lastTime = now;
 
-			StringBuilder sb = new StringBuilder(WIDTH + 3);
-			sb.append('\r').append('[');
-			int i = 0;
-			for (; i < n; i++) {
-				sb.append('=');
-			}
-			for (; i < WIDTH; i++) {
-				sb.append(' ');
-			}
-			sb.append(']');
-			System.out.print(sb.toString());
+			lastPercent = p;
+			System.out.println(p + "% complete...");
 		}
 
 		@Override
 		void displayError(String err) {
-			System.out.println("\rDownload failed with: " + err);
+			System.out.println("Download failed with: " + err);
 		}
 	}
 
