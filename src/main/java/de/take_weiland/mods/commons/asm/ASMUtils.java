@@ -617,9 +617,6 @@ public final class ASMUtils {
 	public static IClassNameTransformer getClassNameTransformer() {
 		if (!nameTransChecked) {
 			nameTransformer = Iterables.getOnlyElement(Iterables.filter(Launch.classLoader.getTransformers(), IClassNameTransformer.class), null);
-			if (nameTransformer == null) {
-				System.err.println("!!! No IClassNameTransformer found !!!");
-			}
 			nameTransChecked = true;
 		}
 		return nameTransformer;
@@ -666,7 +663,7 @@ public final class ASMUtils {
 	 */
 	public static ClassNode getClassNode(String name, int readerFlags) {
 		try {
-			byte[] bytes = Launch.classLoader.getClassBytes(transformName(name));
+			byte[] bytes = Launch.classLoader.getClassBytes(untransformName(name));
 			if (bytes == null) {
 				throw new MissingClassException(name);
 			}

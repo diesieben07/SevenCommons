@@ -121,12 +121,12 @@ public abstract class ClassInfo extends HasModifiers {
 		if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, className)) != null) {
 			return new ClassInfoReflect(clazz);
 			// didn't find it. Try with the transformed name now
-		} else if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, ASMUtils.transformName(className))) != null) {
+		} else if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, ASMUtils.untransformName(className))) != null) {
 			return new ClassInfoReflect(clazz);
 		} else {
 			try {
 				// the class is definitely not loaded, get it's bytes
-				byte[] bytes = Launch.classLoader.getClassBytes(ASMUtils.transformName(className));
+				byte[] bytes = Launch.classLoader.getClassBytes(ASMUtils.untransformName(className));
 				// somehow we can't access the class bytes (happens for JDK classes for example)
 				// we try and load the class now
 				if (bytes == null) {
