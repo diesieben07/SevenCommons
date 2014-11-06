@@ -4,6 +4,9 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import de.take_weiland.mods.commons.client.I18n;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.util.MiscUtil;
 import de.take_weiland.mods.commons.nbt.NBT;
@@ -65,6 +68,11 @@ public final class Inventories {
 		} else {
 			return null;
 		}
+	}
+
+	@SideOnly(Side.CLIENT)
+	public static String getDisplayName(IInventory inv) {
+		return inv.isInvNameLocalized() ? inv.getInvName() : I18n.translate(inv.getInvName());
 	}
 
 	/**

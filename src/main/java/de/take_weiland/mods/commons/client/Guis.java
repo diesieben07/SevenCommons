@@ -1,8 +1,7 @@
 package de.take_weiland.mods.commons.client;
 
-import de.take_weiland.mods.commons.util.I18n;
+import de.take_weiland.mods.commons.inv.Inventories;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.inventory.IInventory;
 
 /**
@@ -12,9 +11,6 @@ import net.minecraft.inventory.IInventory;
  * @see net.minecraft.client.gui.GuiScreen
  */
 public final class Guis {
-
-	private Guis() {
-	}
 
 	/**
 	 * <p>Close any currently open GuiScreen.</p>
@@ -40,10 +36,9 @@ public final class Guis {
 	}
 
 	/**
-	 * <p>Computes the current GUI scale. Calling this method is equivalent to the following:</p>
-	 * <p><pre>{@code
+	 * <p>Computes the current GUI scale. Calling this method is equivalent to the following:<pre><code>
 	 * Minecraft mc = Minecraft.getMinecraft();
-	 * int scale = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight).getScaleFactor(); }</pre></p>
+	 * int scale = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight).getScaleFactor();</code></pre></p>
 	 *
 	 * @return the current GUI scale
 	 */
@@ -63,13 +58,27 @@ public final class Guis {
 		return scaleFactor;
 	}
 
+	/**
+	 * <p>Draw the name for the given inventory at the given coordinates in the default color (<code>0x404040</code>).</p>
+	 * @param inventory the inventory
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 */
 	public static void drawInventoryName(IInventory inventory, int x, int y) {
 		drawInventoryName(inventory, x, y, 0x404040);
 	}
 
+	/**
+	 * <p>Draw the name for the given inventory at the given coordinates in the given color.</p>
+	 * @param inventory the inventory
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 * @param color the color
+	 */
 	public static void drawInventoryName(IInventory inventory, int x, int y, int color) {
-		FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
-		fr.drawString(inventory.isInvNameLocalized() ? inventory.getInvName() : I18n.translate(inventory.getInvName()), x, y, color);
+		Minecraft.getMinecraft().fontRenderer.drawString(Inventories.getDisplayName(inventory), x, y, color);
 	}
+
+	private Guis() { }
 
 }

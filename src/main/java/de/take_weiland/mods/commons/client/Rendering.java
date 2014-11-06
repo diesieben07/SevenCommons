@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.client;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -25,11 +24,6 @@ import static org.lwjgl.opengl.GL11.*;
  */
 public final class Rendering {
 
-	private Rendering() {
-	}
-
-	private static final Gui gui = new Gui();
-
 	/**
 	 * <p>Fills a specified area on the screen with the provided {@link net.minecraft.util.Icon Icon}.</p>
 	 *
@@ -40,21 +34,73 @@ public final class Rendering {
 	 * @param height The height of the provided icon to draw on the screen
 	 */
 	public static void fillAreaWithIcon(Icon icon, int x, int y, int width, int height) {
-		int scale = Guis.computeGuiScale();
+		Tessellator t = Tessellator.instance;
+		t.startDrawingQuads();
 
-		// TODO: restore/respect any glScissor already set
-		glScissor(0, Minecraft.getMinecraft().displayHeight - (y + height) * scale, (width + x) * scale, height * scale);
-		glEnable(GL_SCISSOR_TEST);
+		float zLevel = getZLevel();
 
-		int cols = MathHelper.ceiling_float_int(width / 16F);
-		int rows = MathHelper.ceiling_float_int(height / 16F);
-		for (int row = 0; row < rows; row++) {
-			for (int col = 0; col < cols; col++) {
-				gui.drawTexturedModelRectFromIcon(x + col * 16, y + row * 16, icon, 16, 16);
+		int iconWidth = icon.getIconWidth();
+		int iconHeight = icon.getIconHeight();
+
+		// number of rows & cols of "full" icons (full size)
+		int fullCols = MathHelper.floor_float(width / (float) iconWidth);
+		int fullRows = MathHelper.floor_float(height / (float) iconHeight);
+
+		float minU = icon.getMinU();
+		float maxU = icon.getMaxU();
+		float minV = icon.getMinV();
+		float maxV = icon.getMaxV();
+
+		// interpolated max u/v for the excess row / col
+		float partialMaxU = minU + (maxU - minU) * ((width - fullCols * iconWidth) / (float) width);
+		float partialMaxV = minV + (maxV - minV) * ((height - fullRows * iconHeight) / (float) height);
+
+		boolean excessCol = (width % iconWidth) != 0;
+		boolean excessRow = (height % iconHeight) != 0;
+
+		int xNow;
+		int yNow;
+		for (int row = 0; row < fullRows; row++) {
+			yNow = y + row * iconHeight;
+			for (int col = 0; col < fullCols; col++) {
+				// main part, only full icons
+				xNow = x + col * iconWidth;
+				t.addVertexWithUV(xNow, yNow + iconHeight, zLevel, minU, maxV);
+				t.addVertexWithUV(xNow + iconWidth, yNow + iconHeight, zLevel, maxU, maxV);
+				t.addVertexWithUV(xNow + iconWidth, yNow, zLevel, maxU, minV);
+				t.addVertexWithUV(xNow, yNow, zLevel, minU, minV);
+			}
+			if (excessCol) {
+				// excess part in every row at the end of the columns
+				xNow = x + fullCols * iconWidth;
+				t.addVertexWithUV(xNow, yNow + iconHeight, zLevel, minU, maxV);
+				t.addVertexWithUV(x + width, yNow + iconHeight, zLevel, partialMaxU, maxV);
+				t.addVertexWithUV(x + width, yNow, zLevel, partialMaxU, minV);
+				t.addVertexWithUV(xNow, yNow, zLevel, minU, minV);
+			}
+		}
+		if (excessRow) {
+			// last "excess" row
+			for (int col = 0; col < fullCols; col++) {
+				xNow = x + col * iconWidth;
+				yNow = y + fullRows * iconHeight;
+				t.addVertexWithUV(xNow, y + height, zLevel, minU, partialMaxV);
+				t.addVertexWithUV(xNow + iconWidth, y + height, zLevel, maxU, partialMaxV);
+				t.addVertexWithUV(xNow + iconWidth, yNow, zLevel, maxU, minV);
+				t.addVertexWithUV(xNow, yNow, zLevel, minU, minV);
+			}
+			if (excessCol) {
+				// missing quad in the bottom right corner when excess row & col
+				xNow = x + fullCols * iconWidth;
+				yNow = y + fullRows * iconHeight;
+				t.addVertexWithUV(xNow, y + height, zLevel, minU, partialMaxV);
+				t.addVertexWithUV(x + width, y + height, zLevel, partialMaxU, partialMaxV);
+				t.addVertexWithUV(x + width, yNow, zLevel, partialMaxU, minV);
+				t.addVertexWithUV(xNow, yNow, zLevel, minU, minV);
 			}
 		}
 
-		glDisable(GL_SCISSOR_TEST);
+		t.draw();
 	}
 
 	/**
@@ -547,5 +593,7 @@ public final class Rendering {
 	private static float getZLevel() {
 		return SCReflector.instance.getZLevel(Minecraft.getMinecraft().currentScreen);
 	}
+
+	private Rendering() { }
 
 }

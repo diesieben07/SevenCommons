@@ -11,7 +11,7 @@ public class MissingClassException extends RuntimeException {
 		super(message);
 	}
 
-	MissingClassException(String message, Throwable cause) {
+	public MissingClassException(String message, Throwable cause) {
 		super(message, cause);
 	}
 }

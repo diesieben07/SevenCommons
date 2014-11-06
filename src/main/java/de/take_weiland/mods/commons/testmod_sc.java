@@ -11,6 +11,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.client.Rendering;
 import de.take_weiland.mods.commons.inv.BasicSlot;
 import de.take_weiland.mods.commons.inv.ButtonContainer;
 import de.take_weiland.mods.commons.inv.Containers;
@@ -18,13 +19,16 @@ import de.take_weiland.mods.commons.tileentity.TileEntityInventory;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.FluidRegistry;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -73,14 +77,14 @@ public class testmod_sc {
 
 			@Override
 			public boolean onBlockActivated(World par1World, int par2, int par3, int par4, EntityPlayer par5EntityPlayer, int par6, float par7, float par8, float par9) {
-				if (Sides.logical(par1World).isServer()) {
+				if (Sides.logical(par1World).isClient()) {
 					par5EntityPlayer.openGui(testmod_sc.instance, 0, par1World, par2, par3, par4);
 				}
 				return true;
 			}
 		};
 		Reflection.initialize(GuiContainer.class);
-		System.exit(0);
+//		System.exit(0);
 		GameRegistry.registerTileEntity(TestTE.class, "testte");
 		GameRegistry.registerBlock(myBlock, "testblock");
 		NetworkRegistry.instance().registerGuiHandler(this, new TestGuiHandler());
@@ -130,15 +134,14 @@ public class testmod_sc {
 
 	}
 
-	public static class TestGui extends GuiContainer {
+	public static class TestGui extends GuiScreen {
 
-		public TestGui(Container container) {
-			super(container);
-		}
 
 		@Override
-		protected void drawGuiContainerBackgroundLayer(float f, int i, int j) {
-			drawDefaultBackground();
+		public void drawScreen(int par1, int par2, float par3) {
+			super.drawScreen(par1, par2, par3);
+			mc.renderEngine.bindTexture(TextureMap.locationBlocksTexture);
+			Rendering.fillAreaWithIcon(FluidRegistry.WATER.getIcon(), 10, 10, 31, 100);
 		}
 	}
 
@@ -146,13 +149,14 @@ public class testmod_sc {
 
 		@Override
 		public Container getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-			System.out.println("hello");
-			return new TestContainer((TestTE) world.getBlockTileEntity(x, y, z), player.inventory);
+//			System.out.println("hello");
+//			return new TestContainer((TestTE) world.getBlockTileEntity(x, y, z), player.inventory);
+			return null;
 		}
 
 		@Override
 		public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-			return new TestGui(getServerGuiElement(ID, player, world, x, y, z));
+			return new TestGui();
 		}
 	}
 
