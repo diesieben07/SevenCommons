@@ -5,12 +5,13 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
 /**
- * Fired when a player starts tracking an Entity
+ * <p>Fired when a player starts tracking an Entity.</p>
+ * <p>To be replaced by the Forge version in 1.7.</p>
  */
 public class PlayerStartTrackingEvent extends PlayerEvent {
 
 	/**
-	 * the entity now being tracked
+	 * <p>The Entity now being tracked.</p>
 	 */
 	public final Entity tracked;
 

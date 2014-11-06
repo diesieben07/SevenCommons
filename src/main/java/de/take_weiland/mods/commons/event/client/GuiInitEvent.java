@@ -7,21 +7,21 @@ import net.minecraftforge.event.Event;
 import java.util.List;
 
 /**
- * called whenever {@link GuiScreen#initGui} gets called<br>
- * Usually used to add additional {@link GuiButton}s to a GuiScreen which is not yours
+ * <p>Called whenever {@link GuiScreen#initGui} gets called.</p>
+ * <p>Usually used to add additional buttons to a GuiScreen which is not yours.</p>
+ * <p>To be replaced by the forge version in 1.7.</p>
  *
  * @author diesieben07
  */
 public final class GuiInitEvent extends Event {
 
 	/**
-	 * the GuiScreen being initialized
+	 * <p>The GuiScreen.</p>
 	 */
 	public final GuiScreen gui;
 
 	/**
-	 * the buttonList of this GuiScreen<br>
-	 * You may add to this
+	 * <p>The buttons in the GuiScreen, you can modify this list.</p>
 	 */
 	public final List<GuiButton> buttons;
 
