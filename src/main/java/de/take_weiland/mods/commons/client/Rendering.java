@@ -14,6 +14,8 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 
+import javax.annotation.Nullable;
+
 import static net.minecraftforge.common.ForgeDirection.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -111,9 +113,9 @@ public final class Rendering {
 	 * @param x            the x coordinate
 	 * @param y            the y coordinate
 	 * @param width        the width of the rectangle to draw
-	 * @param fullHeight   the height of the rectangle, if the tank is full
+	 * @param fullHeight   the height of the rectangle when the tank is full
 	 */
-	public static void drawFluidStack(FluidStack fluidStack, int tankCapacity, int x, int y, int width, int fullHeight) {
+	public static void drawFluidStack(@Nullable FluidStack fluidStack, int tankCapacity, int x, int y, int width, int fullHeight) {
 		TextureManager renderEngine = Minecraft.getMinecraft().renderEngine;
 
 		if (fluidStack != null) {
@@ -121,9 +123,33 @@ public final class Rendering {
 			Icon fluidIcon = fluid.getStillIcon();
 			int fluidHeight = MathHelper.ceiling_float_int((fluidStack.amount / (float) tankCapacity) * fullHeight);
 
-			glColor3f(1f, 1f, 1f);
+			glColor3f(1, 1, 1);
 			renderEngine.bindTexture(renderEngine.getResourceLocation(fluid.getSpriteNumber()));
 			fillAreaWithIcon(fluidIcon, x, y + fullHeight - fluidHeight, width, fluidHeight);
+		}
+	}
+
+	/**
+	 * <p>Draw a horizontal bar representing the fullness of a Tank filled with the given FluidStack and of the given capacity.</p>
+	 *
+	 * @param fluidStack   the FluidStack
+	 * @param tankCapacity the capacity of the tank (maximum amount of fluid in the FluidStack)
+	 * @param x            the x coordinate
+	 * @param y            the y coordinate
+	 * @param fullWidth the width of the rectangle when the tank is full
+	 * @param height the height of the rectangle
+	 */
+	public static void drawFluidStackHorizontal(@Nullable FluidStack fluidStack, int tankCapacity, int x, int y, int fullWidth, int height) {
+		TextureManager renderEngine = Minecraft.getMinecraft().renderEngine;
+
+		if (fluidStack != null) {
+			Fluid fluid = fluidStack.getFluid();
+			Icon fluidIcon = fluid.getStillIcon();
+			int fluidWidth = MathHelper.ceiling_float_int((fluidStack.amount / (float) tankCapacity) * fullWidth);
+
+			glColor3f(1, 1, 1);
+			renderEngine.bindTexture(renderEngine.getResourceLocation(fluid.getSpriteNumber()));
+			fillAreaWithIcon(fluidIcon, x, y, fluidWidth, height);
 		}
 	}
 
@@ -138,6 +164,19 @@ public final class Rendering {
 	 */
 	public static void drawTank(IFluidTank tank, int x, int y, int width, int fullHeight) {
 		drawFluidStack(tank.getFluid(), tank.getCapacity(), x, y, width, fullHeight);
+	}
+
+	/**
+	 * <p>Draw a horizontal bar representing the fullness of the given {@code IFluidTank}.</p>
+	 *
+	 * @param tank       the tank
+	 * @param x          the x coordinate
+	 * @param y          the y coordinate
+	 * @param fullWidth the width of the rectangle when the tank is full
+	 * @param height the height of the rectangle
+	 */
+	public static void drawTankHorizontal(IFluidTank tank, int x, int y, int fullWidth, int height) {
+		drawFluidStackHorizontal(tank.getFluid(), tank.getCapacity(), x, y, fullWidth, height);
 	}
 
 	/**
