@@ -47,7 +47,7 @@ public final class ModPacketTransformer extends AbstractAnalyzingTransformer {
 			if (validReceiver == null) {
 				receiveSide = PacketDirection.Dir.BOTH_WAYS;
 			} else {
-				receiveSide = ASMUtils.getAnnotationProperty(validReceiver, "value");
+				receiveSide = ASMUtils.getAnnotationProperty(validReceiver, "value", PacketDirection.class);
 			}
 
 			createSideValidator(clazz, receiveSide);

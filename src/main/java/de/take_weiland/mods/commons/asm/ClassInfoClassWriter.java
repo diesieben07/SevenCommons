@@ -4,11 +4,13 @@ import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import org.objectweb.asm.ClassWriter;
 
 /**
- * A class writer that does not load classes do compute frames but instead uses bytecode-analysis
+ * <p>A {@code ClassWriter} that does not use {@code Class.forName} to determine the "common superclass" of two types but instead uses
+ * {@link de.take_weiland.mods.commons.asm.info.ClassInfo}. This way {@code COMPUTE_FRAMES} can be used reliably even in edge cases where
+ * the currently transformed class would have to be loaded has self-references.</p>
  */
-public class ExtendedClassWriter extends ClassWriter {
+public class ClassInfoClassWriter extends ClassWriter {
 
-	public ExtendedClassWriter(int flags) {
+	public ClassInfoClassWriter(int flags) {
 		super(flags);
 	}
 

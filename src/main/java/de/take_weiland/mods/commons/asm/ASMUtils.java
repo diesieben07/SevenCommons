@@ -1,12 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import com.google.common.base.*;
+import com.google.common.collect.*;
 import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.util.JavaUtils;
@@ -17,6 +12,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
@@ -24,10 +21,17 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.objectweb.asm.Opcodes.*;
 
+/**
+ * <p>A collection of utility methods for working with the ASM library.</p>
+ */
+@ParametersAreNonnullByDefault
 public final class ASMUtils {
 
 	private ASMUtils() { }
 
+	/**
+	 * <p>The {@code Object} class as an ASM Type.</p>
+	 */
 	public static final Type OBJECT_TYPE = Type.getType(Object.class);
 
 	// *** bytecode analyzing helpers *** //
@@ -236,7 +240,7 @@ public final class ASMUtils {
 	/**
 	 * <p>Add the given code to the instance-initializer of the given class.</p>
 	 * <p>Effectively this class inserts the code into every root-constructor of the class. If no constructor is present,
-	 * this method will create the default constructor.</p>
+	 * this method will create the default constructor, otherwise the code will be prepended to every constructor.</p>
 	 * <p>The code may not contain exitpoints (such as return or throws) or this method may produce faulty code.</p>
 	 *
 	 * @param clazz the class
@@ -262,7 +266,8 @@ public final class ASMUtils {
 
 	/**
 	 * <p>Add the given code to the static-initializer of the given class.</p>
-	 * <p>If the static-initializer is not present, this method will create it.</p>
+	 * <p>If the static-initializer is not present, this method will create it, otherwise the code will be prepended to
+	 * the already present instructions.</p>
 	 * <p>The code may not contain exitpoints (such as return or throws) or this method may produce faulty code.</p>
 	 *
 	 * @param clazz the class
@@ -291,8 +296,8 @@ public final class ASMUtils {
 	static Predicate<MethodNode> predIsConstructor() {
 		return new Predicate<MethodNode>() {
 			@Override
-			public boolean apply(MethodNode input) {
-				return isConstructor(input);
+			public boolean apply(@Nullable MethodNode input) {
+				return isConstructor(checkNotNull(input));
 			}
 		};
 	}
@@ -364,13 +369,13 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Useful if you need to add code that is called, whenever a new instance of the class is created, no matter through which constructor.</p>
+	 * <p>Get all root constructors of the given class. A root constructor that does not delegate to another constructor of the same class.</p>y
 	 *
 	 * @param clazz the class
 	 * @return all root constructors
 	 */
 	public static List<MethodNode> getRootConstructors(ClassNode clazz) {
-		List<MethodNode> roots = Lists.newArrayList();
+		ImmutableList.Builder<MethodNode> builder = ImmutableList.builder();
 
 		cstrs:
 		for (MethodNode method : getConstructors(clazz)) {
@@ -381,9 +386,9 @@ public final class ASMUtils {
 				}
 				insn = insn.getNext();
 			} while (insn != null);
-			roots.add(method);
+			builder.add(method);
 		}
-		return roots;
+		return builder.build();
 	}
 
 	/**
@@ -397,8 +402,8 @@ public final class ASMUtils {
 		checkNotNull(annotation, "annotation");
 		return Collections2.filter(clazz.methods, new Predicate<MethodNode>() {
 			@Override
-			public boolean apply(MethodNode method) {
-				return hasAnnotation(method, annotation);
+			public boolean apply(@Nullable MethodNode method) {
+				return hasAnnotation(checkNotNull(method), annotation);
 			}
 		});
 	}
@@ -413,8 +418,8 @@ public final class ASMUtils {
 	public static Collection<FieldNode> fieldsWith(ClassNode clazz, final Class<? extends Annotation> annotation) {
 		return Collections2.filter(clazz.fields, new Predicate<FieldNode>() {
 			@Override
-			public boolean apply(FieldNode field) {
-				return hasAnnotation(field, annotation);
+			public boolean apply(@Nullable FieldNode field) {
+				return hasAnnotation(checkNotNull(field), annotation);
 			}
 		});
 	}
@@ -448,7 +453,7 @@ public final class ASMUtils {
 
 		AnnotationNode overrideSetter = getAnnotation(getter, OverrideSetter.class);
 		if (overrideSetter != null) {
-			setterName = getAnnotationProperty(overrideSetter, "value");
+			setterName = getAnnotationProperty(overrideSetter, "value", OverrideSetter.class);
 		} else {
 			if (getter.name.startsWith("get") && getter.name.length() >= 4 && Character.isUpperCase(getter.name.charAt(3))) {
 				setterName = "set" + getter.name.substring(3);
@@ -465,7 +470,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * Walks {@code n} steps forwards in the InsnList of the given instruction.
+	 * <p>Walks {@code n} steps forwards in the InsnList of the given instruction.</p>
 	 *
 	 * @param insn the starting point
 	 * @param n    how many steps to move forwards
@@ -473,17 +478,18 @@ public final class ASMUtils {
 	 * @throws java.lang.IndexOutOfBoundsException if the list ends before n steps have been walked
 	 */
 	public static AbstractInsnNode getNext(AbstractInsnNode insn, int n) {
+		@Nullable AbstractInsnNode curr = insn;
 		for (int i = 0; i < n; ++i) {
-			insn = insn.getNext();
-			if (insn == null) {
+			curr = curr.getNext();
+			if (curr == null) {
 				throw new IndexOutOfBoundsException();
 			}
 		}
-		return insn;
+		return curr;
 	}
 
 	/**
-	 * Walks {@code n} steps backwards in the InsnList of the given instruction.
+	 * <p>Walks {@code n} steps backwards in the InsnList of the given instruction.</p>
 	 *
 	 * @param insn the starting point
 	 * @param n    how many steps to move backwards
@@ -491,9 +497,10 @@ public final class ASMUtils {
 	 * @throws java.lang.IndexOutOfBoundsException if the list ends before n steps have been walked
 	 */
 	public static AbstractInsnNode getPrevious(AbstractInsnNode insn, int n) {
+		@Nullable AbstractInsnNode curr = insn;
 		for (int i = 0; i < n; ++i) {
-			insn = insn.getPrevious();
-			if (insn == null) {
+			curr = curr.getPrevious();
+			if (curr == null) {
 				throw new IndexOutOfBoundsException();
 			}
 		}
@@ -501,33 +508,20 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * Creates a new InsnList that contains clones of the instructions going from {@code from} to {@code to}.
-	 *
+	 * <p>Creates a clone of the given InsnList.</p>
 	 * @param insns the InsnList
-	 * @param from  the first node to clone, must be in the InsnList (inclusive)
-	 * @param to    the last node to clone, must be in the InsnList (inclusive)
 	 * @return the cloned list
 	 */
-	public static InsnList clone(InsnList insns, AbstractInsnNode from, AbstractInsnNode to) {
-		InsnList clone = new InsnList();
-		Map<LabelNode, LabelNode> labels = labelCloneMap(insns.getFirst());
-
-		AbstractInsnNode fence = to.getNext();
-		AbstractInsnNode current = from;
-		do {
-			clone.add(current.clone(labels));
-			current = current.getNext();
-			if (current == fence) {
-				break;
-			}
-		} while (true);
-		return clone;
-	}
-
 	public static InsnList clone(InsnList insns) {
 		return clone(insns, labelCloneMap(insns.getFirst()));
 	}
 
+	/**
+	 * <p>Create a clone of the given InsnList using the given Label remaps.</p>
+	 * @param list the InsnList
+	 * @param map a Map that maps all labels in the list to the new labels
+	 * @return the cloned list
+	 */
 	public static InsnList clone(InsnList list, Map<LabelNode, LabelNode> map) {
 		InsnList cloned = new InsnList();
 		AbstractInsnNode current = list.getFirst();
@@ -536,18 +530,6 @@ public final class ASMUtils {
 			current = current.getNext();
 		}
 		return cloned;
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T extends AbstractInsnNode> T clone(T insn) {
-		return (T) insn.clone(labelCloneMap(findFirstInList(insn)));
-	}
-
-	private static AbstractInsnNode findFirstInList(AbstractInsnNode insn) {
-		while (insn.getPrevious() != null) {
-			insn = insn.getPrevious();
-		}
-		return insn;
 	}
 
 	private static Map<LabelNode, LabelNode> labelCloneMap(final AbstractInsnNode first) {
@@ -564,6 +546,12 @@ public final class ASMUtils {
 
 	// *** name utilities *** //
 
+	/**
+	 * <p>Get the descriptor for a method with the given return type and the given arguments.</p>
+	 * @param returnType the return type of the method
+	 * @param args the arguments of the method
+	 * @return the descriptor
+	 */
 	public static String getMethodDescriptor(Class<?> returnType, Class<?>... args) {
 		StringBuilder b = new StringBuilder();
 		b.append('(');
@@ -577,7 +565,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * convert the given binary name (e.g. {@code java.lang.Object$Subclass}) to an internal name (e.g. {@code java/lang/Object$Subclass})
+	 * <p>Convert the given binary name (e.g. {@code java.lang.Object$Subclass}) to an internal name (e.g. {@code java/lang/Object$Subclass}).</p>
 	 *
 	 * @param binaryName the binary name
 	 * @return the internal name
@@ -587,7 +575,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * convert the given internal name to a binary name (opposite of {@link #internalName(String)}
+	 * <p>Convert the given internal name to a binary name (opposite of {@link #internalName(String)}).</p>
 	 *
 	 * @param internalName the internal name
 	 * @return the binary name
@@ -599,34 +587,58 @@ public final class ASMUtils {
 	/**
 	 * <p>Get the descriptor for the given internal name.</p>
 	 * @param internalName the internal name
-	 * @see org.objectweb.asm.Type#getDescriptor()
 	 * @return the descriptor
+	 *
+	 * @see org.objectweb.asm.Type#getDescriptor()
 	 */
 	public static String getDescriptor(String internalName) {
-		return "L" + internalName + ";";
+		switch (internalName) {
+			case "boolean":
+				return "Z";
+			case "byte":
+				return "B";
+			case "short":
+				return "S";
+			case "char":
+				return "C";
+			case "int":
+				return "I";
+			case "long":
+				return "L";
+			case "float":
+				return "F";
+			case "double":
+				return "D";
+			default:
+				return 'L' + internalName + ';';
+		}
 	}
 
 	private static IClassNameTransformer nameTransformer;
 	private static boolean nameTransChecked = false;
 
 	/**
-	 * get the active {@link net.minecraft.launchwrapper.IClassNameTransformer}, if any
+	 * <p>Get the active {@link net.minecraft.launchwrapper.IClassNameTransformer}, if any.</p>
 	 *
 	 * @return the active transformer, or null if none
 	 */
+	@Nullable
 	public static IClassNameTransformer getClassNameTransformer() {
 		if (!nameTransChecked) {
-			nameTransformer = Iterables.getOnlyElement(Iterables.filter(Launch.classLoader.getTransformers(), IClassNameTransformer.class), null);
+			nameTransformer = FluentIterable.from(Launch.classLoader.getTransformers())
+					.filter(IClassNameTransformer.class)
+					.first().orNull();
 			nameTransChecked = true;
 		}
 		return nameTransformer;
 	}
 
 	/**
-	 * transform the class name with the current {@link net.minecraft.launchwrapper.IClassNameTransformer}, if any
+	 * <p>Transform the class name with the current {@link net.minecraft.launchwrapper.IClassNameTransformer}, if any. Returns the untransformed
+	 * name if no transformer is present.</p>
 	 *
-	 * @param untransformedName the un-transformed name of the class
-	 * @return the transformed name of the class
+	 * @param untransformedName the un-transformed internal name of the class
+	 * @return the transformed internal name of the class
 	 */
 	public static String transformName(String untransformedName) {
 		IClassNameTransformer t = getClassNameTransformer();
@@ -634,10 +646,11 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * un-transform the class name with the current {@link net.minecraft.launchwrapper.IClassNameTransformer}, if any
+	 * <p>Un-transform the class name with the current {@link net.minecraft.launchwrapper.IClassNameTransformer}, if any. Returns
+	 * the transformed name if no transformer is present.</p>
 	 *
-	 * @param transformedName the transformed name of the class
-	 * @return the un-transformed name of the class
+	 * @param transformedName the transformed internal name of the class
+	 * @return the un-transformed internal name of the class
 	 */
 	public static String untransformName(String transformedName) {
 		IClassNameTransformer t = getClassNameTransformer();
@@ -647,19 +660,24 @@ public final class ASMUtils {
 	// *** Misc Utils *** //
 
 	/**
-	 * equivalent to {@link #getClassNode(String, int)} with no ClassReader flags
+	 * <p>Create a ClassNode for the class specified by the given internal name. The class must be accessible
+	 * by the {@link net.minecraft.launchwrapper.Launch#classLoader LaunchClassLoader}.</p>
+	 * @param name the internal name
+	 * @return a ClassNode
+	 * @throws de.take_weiland.mods.commons.asm.MissingClassException if the class could not be found
 	 */
 	public static ClassNode getClassNode(String name) {
 		return getClassNode(name, 0);
 	}
 
 	/**
-	 * gets a {@link org.objectweb.asm.tree.ClassNode} for the given class name
+	 * <p>Create a ClassNode for the class specified by the given internal name. The class must be accessible
+	 * by the {@link net.minecraft.launchwrapper.Launch#classLoader LaunchClassLoader}.</p>
 	 *
-	 * @param name        the class to load
+	 * @param name the internal name
 	 * @param readerFlags the flags to pass to the {@link org.objectweb.asm.ClassReader}
 	 * @return a ClassNode
-	 * @throws MissingClassException if the class couldn't be found or can't be loaded as raw-bytes
+	 * @throws de.take_weiland.mods.commons.asm.MissingClassException if the class could not be found
 	 */
 	public static ClassNode getClassNode(String name, int readerFlags) {
 		try {
@@ -675,17 +693,19 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * equivalent to {@link #getClassNode(byte[], int)} with no ClassReader flags
+	 * <p>Create a ClassNode for the class represented by the given bytes.</p>
+	 * @param bytes the class bytes
+	 * @return a ClassNode
 	 */
 	public static ClassNode getClassNode(byte[] bytes) {
 		return getClassNode(bytes, 0);
 	}
 
 	/**
-	 * gets a {@link org.objectweb.asm.tree.ClassNode} representing the class described by the given bytes
+	 * <p>Create a ClassNode for the class represented by the given bytes.</p>
 	 *
-	 * @param bytes       the raw bytes describing the class
-	 * @param readerFlags the the flags to pass to the {@link org.objectweb.asm.ClassReader}
+	 * @param bytes the class bytes
+	 * @param readerFlags the flags to pass to the {@link org.objectweb.asm.ClassReader}
 	 * @return a ClassNode
 	 */
 	public static ClassNode getClassNode(byte[] bytes, int readerFlags) {
@@ -698,14 +718,25 @@ public final class ASMUtils {
 	private static final int THIN_FLAGS = ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES;
 
 	/**
-	 * equivalent to {@link #getClassNode(String, int)} with all skip flags set ({@code ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES})
+	 * <p>Create a ClassNode for the class specified by the given internal name. The class must be accessible
+	 * by the {@link net.minecraft.launchwrapper.Launch#classLoader LaunchClassLoader}.</p>
+	 * <p>The ClassNode will only contain the rough outline of the class. It is read with {@code ClassReader.SKIP_CODE}, {@code ClassReader.SKIP_DEBUG}
+	 * {@code ClassReader.SKIP_FRAMES} set.</p>
+	 * @param name the internal name
+	 * @return a ClassNode
+	 *
 	 */
 	public static ClassNode getThinClassNode(String name) {
 		return getClassNode(name, THIN_FLAGS);
 	}
 
 	/**
-	 * equivalent to {@link #getClassNode(byte[], int)} with all skip flags set ({@code ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES})
+	 * <p>Create a ClassNode for the class represented by the given bytes.</p>
+	 * <p>The ClassNode will only contain the rough outline of the class. It is read with {@code ClassReader.SKIP_CODE}, {@code ClassReader.SKIP_DEBUG}
+	 * {@code ClassReader.SKIP_FRAMES} set.</p>
+	 * @param bytes the class bytes
+	 * @return a ClassNode
+	 *
 	 */
 	public static ClassNode getThinClassNode(byte[] bytes) {
 		return getClassNode(bytes, THIN_FLAGS);
@@ -726,11 +757,11 @@ public final class ASMUtils {
 	// *** annotation utilities *** //
 
 	/**
-	 * <p>Finds the given annotation on the given Class or on any Field or Method in the class.</p>
+	 * <p>Checks if the given annotation is present or any of the class' fields or methods.</p>
 	 *
 	 * @param clazz      the class to search in
 	 * @param annotation the annotation to find
-	 * @return true if the annotation was found on the Class or any Field or Method
+	 * @return true if the annotation was found on any field or method
 	 */
 	public static boolean hasMemberAnnotation(ClassNode clazz, Class<? extends Annotation> annotation) {
 		String desc = Type.getDescriptor(annotation);
@@ -755,56 +786,82 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given field</p>
+	 * <p>Gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given field.</p>
 	 *
 	 * @param field the field
-	 * @param ann   the annotation class to get
-	 * @return the AnnotationNode or null if the annotation is not present
+	 * @param ann   the annotation class
+	 * @return the AnnotationNode or null
 	 */
+	@Nullable
 	public static AnnotationNode getAnnotation(FieldNode field, Class<? extends Annotation> ann) {
 		return getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, Type.getDescriptor(ann));
 	}
 
+	/**
+	 * <p>Get the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given field.</p>
+	 * @param field the field
+	 * @param annotationClass the internal name of the annotation class
+	 * @return the AnnotationNode or null
+	 */
+	@Nullable
 	public static AnnotationNode getAnnotation(FieldNode field, String annotationClass) {
 		return getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, getDescriptor(annotationClass));
 	}
 
 	/**
-	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given class
+	 * <p>Gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given class.</p>
 	 *
 	 * @param clazz the class
-	 * @param ann   the annotation class to get
-	 * @return the AnnotationNode or null if the annotation is not present
+	 * @param ann   the annotation class
+	 * @return the AnnotationNode or null
 	 */
+	@Nullable
 	public static AnnotationNode getAnnotation(ClassNode clazz, Class<? extends Annotation> ann) {
 		return getAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, Type.getDescriptor(ann));
 	}
 
+	/**
+	 * <p>Get the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given class.</p>
+	 * @param clazz the class
+	 * @param annotationClass the internal name of the annotation class
+	 * @return the AnnotationNode or null
+	 */
+	@Nullable
 	public static AnnotationNode getAnnotation(ClassNode clazz, String annotationClass) {
 		return getAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, getDescriptor(annotationClass));
 	}
 
 	/**
-	 * gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given method
+	 * <p>Gets the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given method.</p>
 	 *
 	 * @param method the method
-	 * @param ann    the annotation class to get
-	 * @return the AnnotationNode or null if the annotation is not present
+	 * @param ann   the annotation class
+	 * @return the AnnotationNode or null
 	 */
+	@Nullable
 	public static AnnotationNode getAnnotation(MethodNode method, Class<? extends Annotation> ann) {
 		return getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, Type.getDescriptor(ann));
 	}
 
+	/**
+	 * <p>Get the {@link org.objectweb.asm.tree.AnnotationNode} for the given annotation class, if present on the given method.</p>
+	 * @param method the method
+	 * @param annotationClass the internal name of the annotation class
+	 * @return the AnnotationNode or null
+	 */
+	@Nullable
 	public static AnnotationNode getAnnotation(MethodNode method, String annotationClass) {
 		return getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, getDescriptor(annotationClass));
 	}
 
+	@Nullable
 	static AnnotationNode getAnnotation(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, String desc) {
 		AnnotationNode node = findAnnotation(visAnn, desc);
 		return node == null ? findAnnotation(invisAnn, desc) : node;
 	}
 
-	private static AnnotationNode findAnnotation(List<AnnotationNode> annotations, String annotationDescriptor) {
+	@Nullable
+	private static AnnotationNode findAnnotation(@Nullable List<AnnotationNode> annotations, String annotationDescriptor) {
 		if (annotations == null) {
 			return null;
 		}
@@ -820,7 +877,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Check if the given annotation class is present on this field.</p>
+	 * <p>Check if the given annotation is present on the given field.</p>
 	 *
 	 * @param field      the field
 	 * @param annotation the annotation
@@ -831,7 +888,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Check if the given annotation class is present on this field.</p>
+	 * <p>Check if the given annotation is present on this field.</p>
 	 *
 	 * @param field      the field
 	 * @param annotationClass the internal name of the annotation class
@@ -842,7 +899,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Check if the given annotation class is present on this class.</p>
+	 * <p>Check if the given annotation is present on this class.</p>
 	 *
 	 * @param clazz      the class
 	 * @param annotation the annotation
@@ -853,7 +910,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Check if the given annotation class is present on this class.</p>
+	 * <p>Check if the given annotation is present on this class.</p>
 	 *
 	 * @param clazz      the class
 	 * @param annotationClass the internal name of the annotation class
@@ -864,7 +921,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Check if the given annotation class is present on this method.</p>
+	 * <p>Check if the given annotation is present on this method.</p>
 	 *
 	 * @param method     the method
 	 * @param annotation the annotation
@@ -875,7 +932,7 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Check if the given annotation class is present on this method.</p>
+	 * <p>Check if the given annotation is present on this method.</p>
 	 *
 	 * @param method the method
 	 * @param annotationClass the internal name of the annotation class
@@ -886,43 +943,29 @@ public final class ASMUtils {
 	}
 
 	/**
-	 * <p>Retrieves the given property from the annotation or {@code null} if it is not present.</p>
+	 * <p>Gets the given property from the annotation or {@code defaultValue} if it is not present.</p>
 	 * <p>This method does not take the {@code default} value for this property into account.
 	 * If you need those, use {@link #getAnnotationProperty(org.objectweb.asm.tree.AnnotationNode, String, Class)} instead.</p>
-	 *
-	 * @param ann the AnnotationNode
-	 * @param key the name of the property to get
-	 * @param <T> the type of the property
-	 * @return the value of the property or null if the property is not present
-	 */
-	public static <T> T getAnnotationProperty(AnnotationNode ann, String key) {
-		return getAnnotationProperty(ann, key, (T) null);
-	}
-
-	/**
-	 * <p>Retrieves the given property from the annotation or {@code defaultValue} if it is not present.</p>
-	 * <p>This method does not take the {@code default} value for this property into account.
-	 * If you need those, use {@link #getAnnotationProperty(org.objectweb.asm.tree.AnnotationNode, String, Class)} instead.</p>
+	 * <p>Annotation values are not unpacked from their ASM representation so they appear as specified in {@link org.objectweb.asm.tree.AnnotationNode#values}.
+	 * Enum constants are an exception.</p>
 	 *
 	 * @param ann          the AnnotationNode
 	 * @param key          the name of the property to get
-	 * @param defaultValue a default value, in case the property is not present.
-	 * @param <T>          the type of the property
-	 * @return the value of the property or {@code defaultValue} if the property is not present
+	 * @return an Optional representing the property
 	 */
-	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, T defaultValue) {
+	public static <T> Optional<T> getAnnotationProperty(AnnotationNode ann, String key) {
 		List<Object> data = ann.values;
 		int len;
 		if (data == null || (len = data.size()) == 0) {
-			return defaultValue;
+			return Optional.absent();
 		}
 		for (int i = 0; i < len; i += 2) {
 			if (data.get(i).equals(key)) {
 				//noinspection unchecked
-				return (T) unwrapAnnotationValue(data.get(i + 1));
+				return Optional.of((T) unwrapAnnotationValue(data.get(i + 1)));
 			}
 		}
-		return defaultValue;
+		return Optional.absent();
 	}
 
 	/**
@@ -935,18 +978,19 @@ public final class ASMUtils {
 	 * @return the value of the property or the default value specified in the annotation class
 	 * @throws java.util.NoSuchElementException if this annotation doesn't have this property
 	 */
-	public static <T> T getAnnotationProperty(AnnotationNode ann, String key, Class<? extends Annotation> annClass) {
-		T result = getAnnotationProperty(ann, key, (T) null);
-		if (result == null) {
-			try {
-				//noinspection unchecked
-				return (T) annClass.getMethod(key).getDefaultValue();
-			} catch (NoSuchMethodException e) {
-				throw new NoSuchElementException("Annotation property " + key + "missing");
+	public static <T> T getAnnotationProperty(AnnotationNode ann, final String key, final Class<? extends Annotation> annClass) {
+		Optional<T> result = getAnnotationProperty(ann, key);
+		return result.or(new Supplier<T>() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public T get() {
+				try {
+					return (T) annClass.getMethod(key).getDefaultValue();
+				} catch (NoSuchMethodException e) {
+					throw new NoSuchElementException("Annotation property " + key + " not present in class " + annClass.getName());
+				}
 			}
-		} else {
-			return result;
-		}
+		});
 	}
 
 	private static Object unwrapAnnotationValue(Object v) {
@@ -994,12 +1038,19 @@ public final class ASMUtils {
 		return type.getSort() != Type.ARRAY && type.getSort() != Type.OBJECT && type.getSort() != Type.METHOD;
 	}
 
+	/**
+	 * <p>Checks if the given {@code Type} represents a primitive wrapper such as {@code Integer} or the {@code Void} type.</p>
+	 * @param type
+	 * @return
+	 */
 	public static boolean isPrimitiveWrapper(Type type) {
 		return unboxedType(type) != type;
 	}
 
 	public static Type unboxedType(Type wrapper) {
 		switch (wrapper.getInternalName()) {
+			case "java/lang/Void":
+				return Type.VOID_TYPE;
 			case "java/lang/Boolean":
 				return Type.BOOLEAN_TYPE;
 			case "java/lang/Byte":
@@ -1023,6 +1074,8 @@ public final class ASMUtils {
 
 	public static Type boxedType(Type primitive) {
 		switch (primitive.getSort()) {
+			case Type.VOID:
+				return Type.getType(Void.class);
 			case Type.BOOLEAN:
 				return Type.getType(Boolean.class);
 			case Type.BYTE:

@@ -26,20 +26,20 @@ public class InvokeDynamicTransformer extends AbstractAnalyzingTransformer {
 		boolean transformed = false;
 
 		for (MethodNode method : clazz.methods) {
-			if (ASMUtils.hasAnnotation(method, InvokeDynamic.CLASS_NAME)) {
-				doTransform(clazz, method);
+			AnnotationNode annotation = ASMUtils.getAnnotation(method, InvokeDynamic.CLASS_NAME);
+			if (annotation != null) {
+				doTransform(clazz, method, annotation);
 				transformed = true;
 			}
 		}
 		return transformed;
 	}
 
-	private static void doTransform(ClassNode clazz, MethodNode method) {
-		AnnotationNode annotation = ASMUtils.getAnnotation(method, InvokeDynamic.CLASS_NAME);
-		String name = ASMUtils.getAnnotationProperty(annotation, InvokeDynamic.NAME);
-		String bsOwner = ASMUtils.internalName(ASMUtils.<String>getAnnotationProperty(annotation, InvokeDynamic.BS_OWNER));
-		String bsName = ASMUtils.getAnnotationProperty(annotation, InvokeDynamic.BS_NAME);
-		Object[] args = parseArgs(clazz, method, ASMUtils.<List<AnnotationNode>>getAnnotationProperty(annotation, InvokeDynamic.BS_ARGS));
+	private static void doTransform(ClassNode clazz, MethodNode method, AnnotationNode annotation) {
+		String name = ASMUtils.getAnnotationProperty(annotation, InvokeDynamic.NAME, InvokeDynamic.class);
+		String bsOwner = ASMUtils.internalName(ASMUtils.<String>getAnnotationProperty(annotation, InvokeDynamic.BS_OWNER, InvokeDynamic.class));
+		String bsName = ASMUtils.getAnnotationProperty(annotation, InvokeDynamic.BS_NAME, InvokeDynamic.class);
+		Object[] args = parseArgs(clazz, method, ASMUtils.<List<AnnotationNode>>getAnnotationProperty(annotation, InvokeDynamic.BS_ARGS, InvokeDynamic.class));
 
 		CodePiece invoke = CodePieces.invokeDynamic(name, method.desc, CodePieces.allArgs(method.desc, (method.access & ACC_STATIC) != 0))
 				.withBootstrap(bsOwner, bsName, args);
@@ -55,7 +55,7 @@ public class InvokeDynamicTransformer extends AbstractAnalyzingTransformer {
 		Object[] args = new Object[argAnns.size()];
 		for (int i = 0; i < args.length; i++) {
 			AnnotationNode ann = argAnns.get(i);
-			switch (ASMUtils.<String>getAnnotationProperty(ann, "type")) {
+			switch (ASMUtils.<String>getAnnotationProperty(ann, "type", InvokeDynamic.class)) {
 				case InvokeDynamic.TYPE_STRING:
 					args[i] = ASMUtils.getAnnotationProperty(ann, InvokeDynamic.STRING_VALUE);
 					break;

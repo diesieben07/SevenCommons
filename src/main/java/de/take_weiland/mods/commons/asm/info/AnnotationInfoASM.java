@@ -21,6 +21,6 @@ class AnnotationInfoASM extends AnnotationInfo {
 
 	@Override
 	public <T> T getProperty(String prop, T defaultValue) {
-		return ASMUtils.getAnnotationProperty(annotation, prop, defaultValue);
+		return ASMUtils.<T>getAnnotationProperty(annotation, prop).or(defaultValue);
 	}
 }
