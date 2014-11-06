@@ -6,12 +6,15 @@ import de.take_weiland.mods.commons.internal.ASMHooks;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import static de.take_weiland.mods.commons.asm.MCPNames.M_SEND_PACKET_TO_PLAYER;
 import static de.take_weiland.mods.commons.asm.MCPNames.M_TRY_START_WATCHING_THIS;
 import static de.take_weiland.mods.commons.internal.transformers.TransformerUtil.requireNext;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
+@ParametersAreNonnullByDefault
 public class EntityTrackerEntryTransformer implements ASMClassTransformer {
 
 	@Override
