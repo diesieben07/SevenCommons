@@ -1,13 +1,15 @@
 package de.take_weiland.mods.commons.asm.info;
 
-import java.lang.annotation.Annotation;
-
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
 
 /**
+ * <p>Information about a Member of a class, such as a field or method.</p>
  * @author diesieben07
  */
-public abstract class MemberInfo extends HasModifiers {
+public abstract class MemberInfo extends HasModifiers implements HasAnnotations {
+
+	MemberInfo() { }
+
 	/**
 	 * <p>Get the name of this member.</p>
 	 *
@@ -18,13 +20,9 @@ public abstract class MemberInfo extends HasModifiers {
 	/**
 	 * <p>Get the class containing this member.</p>
 	 *
-	 * @return the ClassInfo
+	 * @return the containing class
 	 */
 	public abstract ClassInfo containingClass();
-
-	public abstract AnnotationInfo getAnnotation(Class<? extends Annotation> annotation);
-
-	public abstract boolean hasAnnotation(Class<? extends Annotation> annotation);
 
 	/**
 	 * <p>Determine if this member is static.</p>

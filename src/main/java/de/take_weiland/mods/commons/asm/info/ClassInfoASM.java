@@ -52,12 +52,7 @@ final class ClassInfoASM extends ClassInfo {
 	@Override
 	public AnnotationInfo getAnnotation(Class<? extends Annotation> annotation) {
 		AnnotationNode ann = ASMUtils.getAnnotation(clazz, annotation);
-		return ann == null ? null : new AnnotationInfoASM(ann);
-	}
-
-	@Override
-	public boolean hasMemberAnnotation(Class<? extends Annotation> annotation) {
-		return ASMUtils.hasMemberAnnotation(clazz, annotation);
+		return ann == null ? null : new AnnotationInfoASM(this, ann);
 	}
 
 	@Override

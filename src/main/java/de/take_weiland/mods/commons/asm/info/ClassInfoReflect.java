@@ -58,23 +58,7 @@ final class ClassInfoReflect extends ClassInfo {
 	@Override
 	public AnnotationInfo getAnnotation(Class<? extends Annotation> annotation) {
 		Annotation ann = clazz.getAnnotation(annotation);
-		return ann == null ? null : new AnnotationInfoReflect(ann);
-	}
-
-	@Override
-	public boolean hasMemberAnnotation(Class<? extends Annotation> annotation) {
-		for (Field field : clazz.getFields()) {
-			if (field.isAnnotationPresent(annotation)) {
-				return true;
-			}
-		}
-
-		for (Method method : clazz.getMethods()) {
-			if (method.isAnnotationPresent(annotation)) {
-				return true;
-			}
-		}
-		return false;
+		return ann == null ? null : new AnnotationInfoReflect(this, ann);
 	}
 
 	@Override
@@ -221,6 +205,7 @@ final class ClassInfoReflect extends ClassInfo {
 
 	@Override
 	boolean isAssignableFromReflect(ClassInfoReflect child) {
+		// use JDK test if both are reflectively loaded
 		return this.clazz.isAssignableFrom(child.clazz);
 	}
 

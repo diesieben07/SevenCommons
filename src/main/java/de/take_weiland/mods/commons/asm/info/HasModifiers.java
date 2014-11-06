@@ -4,6 +4,7 @@ import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 
 /**
+ * <p>Something that has modifiers like a method, field or class.</p>
  * @author diesieben07
  */
 public abstract class HasModifiers {
@@ -19,7 +20,7 @@ public abstract class HasModifiers {
 	/**
 	 * <p>Determine if the given Java language modifier is set on this element.</p>
 	 *
-	 * @param modifier the modifier to check
+	 * @param mod the modifier to check
 	 * @return true if the given modifier is set
 	 * @see java.lang.reflect.Modifier
 	 */

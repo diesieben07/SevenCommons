@@ -54,4 +54,17 @@ public abstract class FieldInfo extends MemberInfo {
 		return hasModifier(ACC_ENUM);
 	}
 
+	@Override
+	public int hashCode() {
+		return clazz.hashCode() ^ name().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof FieldInfo)) {
+			return false;
+		}
+		FieldInfo that = (FieldInfo) obj;
+		return that.clazz.equals(this.clazz) && that.name().equals(this.name());
+	}
 }

@@ -35,7 +35,7 @@ class FieldInfoReflect extends FieldInfo {
 	@Override
 	public AnnotationInfo getAnnotation(Class<? extends Annotation> annotation) {
 		Annotation ann = field.getAnnotation(annotation);
-		return ann == null ? null : new AnnotationInfoReflect(ann);
+		return ann == null ? null : new AnnotationInfoReflect(this, ann);
 	}
 
 	@Override

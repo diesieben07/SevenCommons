@@ -9,7 +9,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 
@@ -17,17 +16,16 @@ import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
 /**
- * <p>Some information about a class, obtain via {@link ClassInfo#of(String)}, {@link ClassInfo#of(Class)} or {@link ClassInfo#of(org.objectweb.asm.tree.ClassNode)}</p>
+ * <p>Some information about a class, obtain via {@link ClassInfo#of(String)}, {@link ClassInfo#of(Class)} or {@link ClassInfo#of(org.objectweb.asm.tree.ClassNode)}.</p>
  *
  * @author diesieben07
  */
-public abstract class ClassInfo extends HasModifiers {
+public abstract class ClassInfo extends HasModifiers implements HasAnnotations {
 
 	private ClassInfo zuper;
 
 	// limit subclasses to this package
-	ClassInfo() {
-	}
+	ClassInfo() { }
 
 	/**
 	 * <p>Create a {@code ClassInfo} representing the given class.</p>
@@ -69,7 +67,7 @@ public abstract class ClassInfo extends HasModifiers {
 				throw new IllegalArgumentException("Invalid Type!");
 			default:
 				// primitives
-				return of(type.getClassName());
+				return create(type.getClassName());
 		}
 	}
 
@@ -88,6 +86,8 @@ public abstract class ClassInfo extends HasModifiers {
 
 	static ClassInfo create(String className) {
 		switch (className) {
+			case "void":
+				return of(void.class);
 			case "boolean":
 				return of(boolean.class);
 			case "byte":
@@ -120,12 +120,9 @@ public abstract class ClassInfo extends HasModifiers {
 		// first, try to get the class if it's already loaded
 		if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, className)) != null) {
 			return new ClassInfoReflect(clazz);
-			// didn't find it. Try with the transformed name now
-		} else if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, ASMUtils.untransformName(className))) != null) {
-			return new ClassInfoReflect(clazz);
 		} else {
 			try {
-				// the class is definitely not loaded, get it's bytes
+				// the class is not loaded, try get it's bytes
 				byte[] bytes = Launch.classLoader.getClassBytes(ASMUtils.untransformName(className));
 				// somehow we can't access the class bytes (happens for JDK classes for example)
 				// we try and load the class now
@@ -249,12 +246,6 @@ public abstract class ClassInfo extends HasModifiers {
 	public Set<String> getSupers() {
 		return ClassInfoUtil.getSupers(this);
 	}
-
-	public abstract boolean hasMemberAnnotation(Class<? extends Annotation> annotation);
-
-	public abstract boolean hasAnnotation(Class<? extends Annotation> annotation);
-
-	public abstract AnnotationInfo getAnnotation(Class<? extends Annotation> annotation);
 
 	/**
 	 * <p>Get the number of dimensions of this array class, or 0 if this ClassInfo does not represent an array class.</p>
@@ -400,10 +391,22 @@ public abstract class ClassInfo extends HasModifiers {
 	 */
 	public abstract MethodInfo getConstructor(String desc);
 
+	/**
+	 * <p>Get a List of all methods present on this class.</p>
+	 * @return the list of methods
+	 */
 	public abstract List<MethodInfo> getMethods();
 
+	/**
+	 * <p>Get a List of all constructors present on this class.</p>
+	 * @return the list of constructors
+	 */
 	public abstract List<MethodInfo> getConstructors();
 
+	/**
+	 * <p>Get a List of all fields present on this class.</p>
+	 * @return the list of fields
+	 */
 	public abstract List<FieldInfo> getFields();
 
 	@Override

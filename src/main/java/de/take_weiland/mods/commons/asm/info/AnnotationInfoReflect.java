@@ -1,5 +1,9 @@
 package de.take_weiland.mods.commons.asm.info;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import org.objectweb.asm.Type;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
@@ -10,8 +14,14 @@ class AnnotationInfoReflect extends AnnotationInfo {
 
 	private final Annotation annotation;
 
-	AnnotationInfoReflect(Annotation annotation) {
+	AnnotationInfoReflect(HasAnnotations holder, Annotation annotation) {
+		super(holder);
 		this.annotation = annotation;
+	}
+
+	@Override
+	public Type type() {
+		return Type.getType(annotation.annotationType());
 	}
 
 	@Override
@@ -25,20 +35,15 @@ class AnnotationInfoReflect extends AnnotationInfo {
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getProperty(String prop, T defaultValue) {
-		Class<?> clazz = annotation.annotationType();
-		for (Method method : clazz.getMethods()) {
-			if (method.getName().equals(prop)) {
-				try {
-					@SuppressWarnings("unchecked")
-					T r = (T) method.invoke(annotation);
-					return r;
-				} catch (ReflectiveOperationException e) {
-					throw new RuntimeException(e);
-				}
-			}
+	public <T> Optional<T> getProperty(String prop) {
+		try {
+			return Optional.of((T) annotation.annotationType().getMethod(prop).invoke(annotation));
+		} catch (NoSuchMethodException e) {
+			return Optional.absent();
+		} catch (ReflectiveOperationException e) {
+			throw Throwables.propagate(e);
 		}
-		return defaultValue;
 	}
 }

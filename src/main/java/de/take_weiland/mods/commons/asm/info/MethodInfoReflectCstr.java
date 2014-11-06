@@ -40,7 +40,7 @@ class MethodInfoReflectCstr extends MethodInfo {
 	@Override
 	public AnnotationInfo getAnnotation(Class<? extends Annotation> annotation) {
 		Annotation ann = constructor.getAnnotation(annotation);
-		return ann == null ? null : new AnnotationInfoReflect(ann);
+		return ann == null ? null : new AnnotationInfoReflect(this, ann);
 	}
 
 	@Override

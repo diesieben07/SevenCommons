@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.asm.info;
 
+import com.google.common.base.Optional;
 import de.take_weiland.mods.commons.asm.ASMUtils;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 
 /**
@@ -10,8 +12,14 @@ class AnnotationInfoASM extends AnnotationInfo {
 
 	private final AnnotationNode annotation;
 
-	AnnotationInfoASM(AnnotationNode annotation) {
+	AnnotationInfoASM(HasAnnotations holder, AnnotationNode annotation) {
+		super(holder);
 		this.annotation = annotation;
+	}
+
+	@Override
+	public Type type() {
+		return Type.getType(annotation.desc);
 	}
 
 	@Override
@@ -20,7 +28,7 @@ class AnnotationInfoASM extends AnnotationInfo {
 	}
 
 	@Override
-	public <T> T getProperty(String prop, T defaultValue) {
-		return ASMUtils.<T>getAnnotationProperty(annotation, prop).or(defaultValue);
+	public <T> Optional<T> getProperty(String prop) {
+		return ASMUtils.getAnnotationProperty(annotation, prop);
 	}
 }

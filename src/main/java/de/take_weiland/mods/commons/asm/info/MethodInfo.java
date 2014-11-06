@@ -23,7 +23,7 @@ public abstract class MethodInfo extends MemberInfo {
 	public abstract String desc();
 
 	/**
-	 * <p>Get a ClassInfo representing the class containing this method.</p>
+	 * <p>Get the class containing this method.</p>
 	 *
 	 * @return the containing class
 	 */
@@ -95,4 +95,17 @@ public abstract class MethodInfo extends MemberInfo {
 		return hasModifier(ACC_STRICT);
 	}
 
+	@Override
+	public int hashCode() {
+		return clazz.hashCode() ^ name().hashCode() ^ desc().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof MethodInfo)) {
+			return false;
+		}
+		MethodInfo that = (MethodInfo) obj;
+		return that.clazz.equals(this.clazz) && that.name().equals(this.name()) && that.desc().equals(this.desc());
+	}
 }
