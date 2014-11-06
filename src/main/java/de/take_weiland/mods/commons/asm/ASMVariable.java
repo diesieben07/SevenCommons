@@ -16,7 +16,7 @@ public interface ASMVariable {
 	/**
 	 * <p>Create a {@code CodePiece} that will get the value of this variable and leave it on the stack.</p>
 	 *
-	 * @return a CodePiece that gets the value of this variable
+	 * @return a CodePiece
 	 */
 	CodePiece get();
 
@@ -24,13 +24,27 @@ public interface ASMVariable {
 	 * <p>Create a {@code CodePiece} that will set the value of this variable to the value provided by the given
 	 * {@code CodePiece}.</p>
 	 *
-	 * @param newValue a CodePiece that will leave the desired value on top of the stack
-	 * @return a CodePiece that sets the value of this variable
+	 * @param newValue a CodePiece representing the new value
+	 * @return a CodePiece
 	 */
 	CodePiece set(CodePiece newValue);
 
+	/**
+	 * <p>Create a {@code CodePiece} that will set the value of this variable to the given new value and leave the original
+	 * value of the variable on the stack.</p>
+	 * <p>This method produces code that is potentially more effective than using <code>var.get().append(var.set(newValue));</code>.</p>
+	 * @param newValue a CodePiece representing the new value
+	 * @return a CodePiece
+	 */
 	CodePiece getAndSet(CodePiece newValue);
 
+	/**
+	 * <p>Create a {@code CodePiece} that will set the value of this variable to the given new value and then leave
+	 * that new value on the stack.</p>
+	 * <p>This method produces code that will only execute the code in {@code newValue} once.</p>
+	 * @param newValue a CodePiece representing the new value
+	 * @return a CodePiece
+	 */
 	CodePiece setAndGet(CodePiece newValue);
 
 	/**
@@ -39,12 +53,21 @@ public interface ASMVariable {
 	 * <p>If this variable is not represented by a getter and setter, this method and
 	 * {@link #setterAnnotation(Class)} have the same functionality.</p>
 	 *
-	 * @param ann the annotation class to get
+	 * @param ann the annotation class
 	 * @return an AnnotationNode
 	 */
 	AnnotationNode getterAnnotation(Class<? extends Annotation> ann);
 
-	AnnotationNode getterAnnotation(String name);
+	/**
+	 * <p>Get an {@code AnnotationNode} for the given annotation class,
+	 * if it is present on the getter / the field of this variable.</p>
+	 * <p>If this variable is not represented by a getter and setter, this method and
+	 * {@link #setterAnnotation(Class)} have the same functionality.</p>
+	 *
+	 * @param internalName the internal name of the annotation class
+	 * @return an AnnotationNode
+	 */
+	AnnotationNode getterAnnotation(String internalName);
 
 	/**
 	 * <p>Get an {@code AnnotationNode} for the given annotation class,
@@ -52,12 +75,21 @@ public interface ASMVariable {
 	 * <p>If this variable is not represented by a getter and setter, this method and
 	 * {@link #getterAnnotation(Class)} have the same functionality.</p>
 	 *
-	 * @param ann the annotation class to get
+	 * @param ann the annotation class
 	 * @return an AnnotationNode
 	 */
 	AnnotationNode setterAnnotation(Class<? extends Annotation> ann);
 
-	AnnotationNode setterAnnotation(String name);
+	/**
+	 * <p>Get an {@code AnnotationNode} for the given annotation class,
+	 * if it is present on the setter / the field of this variable.</p>
+	 * <p>If this variable is not represented by a getter and setter, this method and
+	 * {@link #getterAnnotation(Class)} have the same functionality.</p>
+	 *
+	 * @param internalName the internal name of the annotation class
+	 * @return an AnnotationNode
+	 */
+	AnnotationNode setterAnnotation(String internalName);
 
 	/**
 	 * <p>Determine if the given modifier is present on the getter / the field of this variable.</p>
@@ -94,6 +126,11 @@ public interface ASMVariable {
 	 */
 	String name();
 
+	/**
+	 * <p>Get the raw name of this variable. For fields this will be equivalent to {@link #name()}, for a getter/setter pair
+	 * it will be the name of the getter (e.g. getFoobar).</p>
+	 * @return the raw name of this variable
+	 */
 	String rawName();
 
 	/**
@@ -105,13 +142,23 @@ public interface ASMVariable {
 
 	/**
 	 * <p>Checks if this variable allows value-writes.</p>
+	 * <p>Note that a true returned from this method does not mean the variable can actually be written to. A final field
+	 * for example will still return true from this method, whereas a getter without a setter will not.</p>
 	 *
 	 * @return true if writing to this variable is allowed
 	 */
 	boolean isWritable();
 
+	/**
+	 * <p>Checks if this variable represents a field.</p>
+	 * @return true if this variable represents a field
+	 */
 	boolean isField();
 
+	/**
+	 * <p>Checks if this variable represents a method.</p>
+	 * @return true if this variable represents a method
+	 */
 	boolean isMethod();
 
 }

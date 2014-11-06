@@ -49,6 +49,7 @@ public class testmod_sc {
 				}
 			}
 		}));
+
 	}
 
 	@Mod.Instance

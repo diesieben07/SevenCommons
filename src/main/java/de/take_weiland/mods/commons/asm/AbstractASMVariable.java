@@ -26,8 +26,8 @@ abstract class AbstractASMVariable implements ASMVariable {
 	}
 
 	@Override
-	public AnnotationNode getterAnnotation(String name) {
-		return ASMUtils.getAnnotation(getterAnns(true), getterAnns(false), ASMUtils.getDescriptor(name));
+	public AnnotationNode getterAnnotation(String internalName) {
+		return ASMUtils.getAnnotation(getterAnns(true), getterAnns(false), ASMUtils.getDescriptor(internalName));
 	}
 
 	@Override
@@ -37,9 +37,9 @@ abstract class AbstractASMVariable implements ASMVariable {
 	}
 
 	@Override
-	public AnnotationNode setterAnnotation(String name) {
+	public AnnotationNode setterAnnotation(String internalName) {
 		checkWritable();
-		return ASMUtils.getAnnotation(setterAnns(true), setterAnns(false), ASMUtils.getDescriptor(name));
+		return ASMUtils.getAnnotation(setterAnns(true), setterAnns(false), ASMUtils.getDescriptor(internalName));
 	}
 
 	@Override

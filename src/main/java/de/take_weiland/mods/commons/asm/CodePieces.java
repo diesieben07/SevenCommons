@@ -56,6 +56,13 @@ public final class CodePieces {
 		return new SingleInsnCodePiece(insn);
 	}
 
+	/**
+	 * <p>Creates a CodePiece that represents the given instruction with the given ContextKey.</p>
+	 *
+	 * @param insn the instruction
+	 * @param context the ContextKey
+	 * @return a CodePiece
+	 */
 	public static CodePiece of(AbstractInsnNode insn, ContextKey context) {
 		return of(insn).setContextKey(context);
 	}
@@ -77,6 +84,13 @@ public final class CodePieces {
 		}
 	}
 
+	/**
+	 * <p>Creates a CodePiece that represents all instructions in the given list with the given ContextKey. The list should not be used after being passed to this method.</p>
+	 *
+	 * @param insns the InsnList
+	 * @param context the ContextKey
+	 * @return a CodePiece
+	 */
 	public static CodePiece of(InsnList insns, ContextKey context) {
 		return of(insns).setContextKey(context);
 	}
@@ -770,7 +784,7 @@ public final class CodePieces {
 	public static CodePiece makeLazy(ASMVariable var, CodePiece valueCreator) {
 		checkArgument(!ASMUtils.isPrimitive(var.getType()), "cannot make primitive value lazy");
 		CodeBuilder builder = new CodeBuilder();
-		ContextKey context = ContextKey.create();
+		ContextKey context = new ContextKey();
 		LabelNode notNull = new LabelNode();
 
 		if (var.isField() || var.isMethod()) {

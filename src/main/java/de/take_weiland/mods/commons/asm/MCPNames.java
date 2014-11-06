@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +14,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+/**
+ * <p>A helper class for working with obfuscated field names.</p>
+ * <p>In the development environment the mappings file will automatically loaded. You can provide the location of a custom mappings file by
+ * providing the system property {@code sevencommons.mappingsFile}.</p>
+ * @author diesieben07
+ */
 public final class MCPNames {
 
 	private static final Map<String, String> fields;
@@ -39,15 +44,25 @@ public final class MCPNames {
 		}
 	}
 
+	/**
+	 * <p>Whether the code is running in a development environment or not.</p>
+	 * @return true if the code is running in development mode (use MCP instead of SRG names)
+	 */
 	public static boolean use() {
 		return SevenCommonsLoader.MCP_ENVIRONMENT;
 	}
 
-	public static String field(@NotNull String srg) {
+	/**
+	 * <p>Get the correct name for the given SRG field based on the context.</p>
+	 * @param srg the SRG name for a field
+	 * @return the input if the code is running outside of development mode or the matching MCP name otherwise
+	 */
+	public static String field(String srg) {
 		if (use()) {
 			String mcp = fields.get(srg);
 			if (mcp == null) {
-				throw new RuntimeException("Unknown SRG field " + srg);
+				// no mapping
+				return srg;
 			}
 			return mcp;
 		} else {
@@ -55,11 +70,17 @@ public final class MCPNames {
 		}
 	}
 
-	public static String method(@NotNull String srg) {
+	/**
+	 * <p>Get the correct name for the given SRG method based on the context.</p>
+	 * @param srg the SRG name for a method
+	 * @return the input if the code is running outside of development mode or the matching MCP name otherwise
+	 */
+	public static String method(String srg) {
 		if (use()) {
 			String mcp = methods.get(srg);
 			if (mcp == null) {
-				throw new RuntimeException("Unknown SRG method " + srg);
+				// no mapping
+				return srg;
 			}
 			return mcp;
 		} else {

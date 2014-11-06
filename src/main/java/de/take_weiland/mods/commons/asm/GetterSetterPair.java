@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.asm;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import javax.annotation.Nullable;
 import java.lang.annotation.ElementType;
 import java.util.List;
 
@@ -16,9 +17,11 @@ import static org.objectweb.asm.Type.VOID;
 class GetterSetterPair extends ClassBoundASMVariable {
 
 	private final MethodNode getter;
+
+	@Nullable
 	private final MethodNode setter;
 
-	GetterSetterPair(ClassNode clazz, MethodNode getter, MethodNode setter, CodePiece instance) {
+	GetterSetterPair(ClassNode clazz, MethodNode getter, @Nullable MethodNode setter, @Nullable CodePiece instance) {
 		super(clazz, instance);
 		Type valueType = Type.getReturnType(getter.desc);
 		checkArgument(valueType.getSort() != VOID, "getter must not return void!");
@@ -53,7 +56,8 @@ class GetterSetterPair extends ClassBoundASMVariable {
 	@Override
 	public CodePiece set(CodePiece newValue) {
 		checkWritable();
-		if (isStatic()) {
+		assert setter != null;
+		if (instance == null) {
 			return CodePieces.invoke(clazz, setter, newValue);
 		} else {
 			return CodePieces.invoke(clazz, setter, instance, newValue);
@@ -63,8 +67,10 @@ class GetterSetterPair extends ClassBoundASMVariable {
 	@Override
 	public CodePiece setAndGet(CodePiece newValue) {
 		checkWritable();
+		assert setter != null;
+
 		CodeBuilder cb = new CodeBuilder();
-		if (isStatic()) {
+		if (instance == null) {
 			cb.add(newValue);
 			cb.add(new InsnNode(DUP));
 			cb.add(new MethodInsnNode(INVOKESTATIC, clazz.name, setter.name, setter.desc));
@@ -104,6 +110,7 @@ class GetterSetterPair extends ClassBoundASMVariable {
 
 	@Override
 	protected List<AnnotationNode> setterAnns(boolean visible) {
+		assert setter != null;
 		return visible ? setter.visibleAnnotations : setter.invisibleAnnotations;
 	}
 
@@ -114,6 +121,7 @@ class GetterSetterPair extends ClassBoundASMVariable {
 
 	@Override
 	protected int setterModifiers() {
+		assert setter != null;
 		return setter.access;
 	}
 
@@ -138,7 +146,7 @@ class GetterSetterPair extends ClassBoundASMVariable {
 
 	@Override
 	public String toString() {
-		if (isWritable()) {
+		if (setter != null) {
 			return String.format("Getter/Setter Pair (getter=\"%s\", setter=\"%s\"", getter.name, setter.name);
 		} else {
 			return "Getter \"" + getter.name + "\"";

@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.Supplier;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
@@ -12,15 +11,6 @@ import java.util.Map;
  * @author diesieben07
  */
 public abstract class CodePlaceholder extends CodePiece {
-
-	public static CodePlaceholder forSupplier(final Supplier<? extends CodePiece> supplier) {
-		return new CodePlaceholder() {
-			@Override
-			protected CodePiece resolve() {
-				return supplier.get();
-			}
-		};
-	}
 
 	/**
 	 * <p>Resolve this placeholder to the actual CodePiece. This method is called at most once per instance.</p>

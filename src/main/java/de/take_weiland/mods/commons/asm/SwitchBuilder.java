@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -18,9 +17,11 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static de.take_weiland.mods.commons.asm.CodePieces.constant;
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.GOTO;
 
 /**
+ * <p>A helper class for building switch statements in bytecode. This class will choose automatically between a tableswitch
+ * and a lookupswitch.</p>
  * @author diesieben07
  */
 public final class SwitchBuilder {
@@ -30,12 +31,22 @@ public final class SwitchBuilder {
 	private final Map<Integer, CodePiece> bodies = Maps.newHashMap();
 	private final List<Integer> keysInOrder = Lists.newArrayList();
 	private LabelNode breakLabel;
-	private final ContextKey context = ContextKey.create();
+	private final ContextKey context = new ContextKey();
 
+	/**
+	 * <p>Create a new SwitchBuilder that performs a switch on the given value.</p>
+	 * @param value the value to switch on
+	 */
 	public SwitchBuilder(CodePiece value) {
 		this.value = checkNotNull(value);
 	}
 
+	/**
+	 * <p>Add the given body for the given case statement.</p>
+	 * @param key the key
+	 * @param body the body
+	 * @return this, for convenience
+	 */
 	public SwitchBuilder add(int key, CodePiece body) {
 		Integer keyBox = key;
 		if (bodies.put(keyBox, checkNotNull(body)) != null) {
@@ -45,6 +56,11 @@ public final class SwitchBuilder {
 		return this;
 	}
 
+	/**
+	 * <p>Add the given code as the default body for the switch.</p>
+	 * @param defaultBody the code
+	 * @return this, for convenience
+	 */
 	public SwitchBuilder onDefault(CodePiece defaultBody) {
 		checkState(!bodies.containsKey(null), "Can only specify one default body!");
 		keysInOrder.add(null);
@@ -54,22 +70,44 @@ public final class SwitchBuilder {
 
 	private BreakPlaceholder _break;
 
-	public CodePlaceholder getBreak() {
+	/**
+	 * <p>Get a CodePiece that represents a {@code break} statement within this switch statement.</p>
+	 * @return a CodePiece
+	 */
+	public CodePiece getBreak() {
 		return _break == null ? _break = new BreakPlaceholder() :_break;
 	}
 
+	/**
+	 * <p>Build this SwitchBuilder into a CodePiece.</p>
+	 * <p>This method will make optimizations, such as turning a switch statement with a single body into an equivalent
+	 * if-statement.</p>
+	 * @return a CodePiece
+	 */
 	public CodePiece build() {
-		checkState(bodies.containsKey(null), "switch without default");
 		int size = bodies.size();
-		if (size == 1) { // we only have a "default" branch
-			return CodePieces.concat(value, CodePieces.ofOpcode(POP), bodies.get(null));
-		} else if (size == 2) { // we only have one key + default
+		boolean hasDefault = bodies.containsKey(null);
+		if (size == 0) {
+			return CodePieces.of();
+		} else if (size == 1) { // we only have one branch, so an if statement
+			CodePiece onlyBody = Iterables.getOnlyElement(bodies.values());
+			Integer onlyKey = Iterables.getOnlyElement(bodies.keySet());
+			if (onlyKey == null) { // only got a default branch
+				return onlyBody;
+			} else {
+				return ASMCondition.ifSame(constant((int) onlyKey), value, Type.INT_TYPE).doIfTrue(onlyBody);
+			}
+		} else if (size == 2 && hasDefault) { // we only have one key + default
 			CodePiece defaultBody = bodies.remove(null);
 			CodePiece onlyKey = constant((int) Iterables.getOnlyElement(bodies.keySet()));
 			CodePiece onlyBody = Iterables.getOnlyElement(bodies.values());
 
 			return ASMCondition.ifEqual(onlyKey, value, Type.INT_TYPE).doIfElse(onlyBody, defaultBody);
 		} else {
+			if (!hasDefault) {
+				bodies.put(null, CodePieces.of());
+				keysInOrder.add(null);
+			}
 			CodeBuilder builder = new CodeBuilder();
 
 			int[] keys = new int[size];
@@ -131,11 +169,6 @@ public final class SwitchBuilder {
 
 			return builder.build();
 		}
-	}
-
-	@Override
-	public String toString() {
-		return Objects.toStringHelper(this).add("bodies", bodies).add("keys", keysInOrder).toString();
 	}
 
 	CodePiece breakPiece;

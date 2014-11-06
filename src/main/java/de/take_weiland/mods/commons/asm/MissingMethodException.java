@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.asm;
 
 /**
+ * <p>Indicates that a required method could not be found.</p>
+ *
  * @author diesieben07
  */
 public class MissingMethodException extends RuntimeException {

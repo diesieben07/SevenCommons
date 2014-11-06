@@ -8,6 +8,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
@@ -30,7 +31,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 	}
 
 	@Override
-	public final byte[] transform(String name, String transformedName, byte[] bytes) {
+	public final byte[] transform(String name, String transformedName, @Nullable byte[] bytes) {
 		try {
 			return transform0(transformedName, bytes);
 		} catch (Throwable t) {
@@ -40,7 +41,7 @@ public abstract class ASMClassTransformerWrapper implements IClassTransformer {
 		}
 	}
 
-	private byte[] transform0(String transformedName, byte[] bytes) {
+	private byte[] transform0(String transformedName, @Nullable byte[] bytes) {
 		if (bytes == null) {
 			return null;
 		}

@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.asm;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import javax.annotation.Nullable;
 import java.lang.annotation.ElementType;
 import java.util.List;
 
@@ -15,7 +16,7 @@ class ASMField extends ClassBoundASMVariable {
 
 	private final FieldNode field;
 
-	ASMField(ClassNode clazz, FieldNode field, CodePiece instance) {
+	ASMField(ClassNode clazz, FieldNode field, @Nullable CodePiece instance) {
 		super(clazz, instance);
 		this.field = field;
 	}
@@ -25,10 +26,10 @@ class ASMField extends ClassBoundASMVariable {
 	@Override
 	public CodePiece get() {
 		if (getCache == null) {
-			if (!isStatic()) {
-				getCache = CodePieces.getField(clazz, field, instance);
-			} else {
+			if (instance == null) {
 				getCache = CodePieces.getField(clazz, field);
+			} else {
+				getCache = CodePieces.getField(clazz, field, instance);
 			}
 		}
 		return getCache;
@@ -36,7 +37,7 @@ class ASMField extends ClassBoundASMVariable {
 
 	@Override
 	public CodePiece set(CodePiece newValue) {
-		if (isStatic()) {
+		if (instance == null) {
 			return CodePieces.setField(clazz, field, newValue);
 		} else {
 			return CodePieces.setField(clazz, field, instance, newValue);
@@ -47,7 +48,7 @@ class ASMField extends ClassBoundASMVariable {
 	public CodePiece setAndGet(CodePiece newValue) {
 		CodeBuilder cb = new CodeBuilder();
 
-		if (isStatic()) {
+		if (instance == null) {
 			cb.add(newValue);
 			cb.add(new InsnNode(DUP));
 			cb.add(new FieldInsnNode(PUTSTATIC, clazz.name, field.name, field.desc));

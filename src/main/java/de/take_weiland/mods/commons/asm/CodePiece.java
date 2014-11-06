@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.asm;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import de.take_weiland.mods.commons.util.ComputingMap;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
@@ -21,19 +20,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public abstract class CodePiece {
 
-	ContextKey contextKey = ContextKey.create();
+	ContextKey contextKey = new ContextKey();
 
 	CodePiece() { } // limit subclasses to package
 
 	/**
 	 * <p>Set the ContextKey used to compute the labels for this CodePiece.</p>
-	 * <p>If a {@link org.objectweb.asm.tree.LabelNode} is shared across different CodePieces, their ContextKey must be
-	 * the same.</p>
+	 * <p>If a {@link org.objectweb.asm.tree.LabelNode} is shared across different CodePieces, the ContextKey for those
+	 * CodePieces must be identical.</p>
 	 * <p>The default ContextKey for a CodePiece is newly created and unique.</p>
 	 * @param key the ContextKey
 	 * @return this CodePiece
 	 */
-	public final CodePiece setContextKey(@NotNull ContextKey key) {
+	public final CodePiece setContextKey(ContextKey key) {
 		this.contextKey = checkNotNull(key, "key");
 		return this;
 	}

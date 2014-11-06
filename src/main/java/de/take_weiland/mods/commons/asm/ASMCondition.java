@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.collect.Lists;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.JumpInsnNode;
@@ -156,7 +155,7 @@ public abstract class ASMCondition {
 	 * @param conditions the conditions
 	 * @return an ASMCondition
 	 */
-	public static ASMCondition or(@NotNull ASMCondition... conditions) {
+	public static ASMCondition or(ASMCondition... conditions) {
 		List<ASMCondition> all = Lists.newArrayListWithExpectedSize(conditions.length);
 		for (ASMCondition condition : conditions) {
 			condition.unwrapIntoOr(all);
@@ -170,7 +169,7 @@ public abstract class ASMCondition {
 	 * @param conditions the conditions
 	 * @return an ASMCondition
 	 */
-	public static ASMCondition and(@NotNull ASMCondition... conditions) {
+	public static ASMCondition and(ASMCondition... conditions) {
 		List<ASMCondition> all = Lists.newArrayListWithCapacity(conditions.length);
 		for (ASMCondition condition : conditions) {
 			condition.unwrapIntoAnd(all);
@@ -209,7 +208,7 @@ public abstract class ASMCondition {
 	 */
 	public CodePiece doIfTrue(CodePiece code) {
 		CodeBuilder cb = new CodeBuilder();
-		ContextKey context = ContextKey.create();
+		ContextKey context = new ContextKey();
 		LabelNode onFalse = new LabelNode();
 
 		jumpToIfFalse(cb, onFalse, context);
@@ -226,7 +225,7 @@ public abstract class ASMCondition {
 	 */
 	public CodePiece doIfFalse(CodePiece code) {
 		CodeBuilder cb = new CodeBuilder();
-		ContextKey context = ContextKey.create();
+		ContextKey context = new ContextKey();
 		LabelNode onTrue = new LabelNode();
 
 		jumpToIfTrue(cb, onTrue, context);
@@ -250,7 +249,7 @@ public abstract class ASMCondition {
 		}
 
 		CodeBuilder cb = new CodeBuilder();
-		ContextKey context = ContextKey.create();
+		ContextKey context = new ContextKey();
 
 		if (preferJumpOnTrue()) {
 			LabelNode trueLbl = new LabelNode();

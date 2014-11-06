@@ -16,7 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
 
 /**
  * <p>Factory class for ASMVariables.</p>
@@ -328,7 +328,6 @@ public final class ASMVariables {
 		}
 	}
 
-	private ASMVariables() {
-	}
+	private ASMVariables() { }
 
 }
