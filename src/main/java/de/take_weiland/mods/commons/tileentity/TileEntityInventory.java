@@ -1,10 +1,9 @@
 package de.take_weiland.mods.commons.tileentity;
 
+import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.util.Blocks;
-import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.util.JavaUtils;
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -12,17 +11,19 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 
 /**
- * <p>Basic implementation of a {@link TileEntity} with an Inventory. Similar to
+ * <p>Basic implementation of a {@link net.minecraft.tileentity.TileEntity} with an Inventory. Similar to
  * {@link de.take_weiland.mods.commons.inv.AbstractInventory}.</p>
  * <p>Note that this class implements {@link de.take_weiland.mods.commons.inv.NameableInventory}, so if you
- * use {@link Blocks#init(Block, String)} on your block (or
+ * use {@link Blocks#init} on your block (or
  * use {@link de.take_weiland.mods.commons.templates.SCItemBlock} as your custom ItemBlock class), this TileEntity
  * will automatically take the name of a renamed ItemStack when placed. To control that behavior, implement
- * {@link TileAutoName}</p>
+ * {@link de.take_weiland.mods.commons.tileentity.TileAutoName}.</p>
  */
-public abstract class TileEntityInventory extends AbstractTileEntity implements IInventory, NameableInventory {
+public abstract class TileEntityInventory extends TileEntity implements IInventory, NameableInventory {
 
 	private static final String CUSTOM_NAME_KEY = "_sc$customName";
+	private static final String INV_KEY = "_sc$inventory";
+
 	private boolean hasName = false;
 	private String name;
 
@@ -78,6 +79,11 @@ public abstract class TileEntityInventory extends AbstractTileEntity implements 
 	}
 
 	@Override
+	public int getSizeInventory() {
+		return storage.length;
+	}
+
+	@Override
 	public String getInvName() {
 		return hasCustomName() ? getCustomName() : unlocalizedName();
 	}
@@ -105,7 +111,7 @@ public abstract class TileEntityInventory extends AbstractTileEntity implements 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
-		Inventories.readInventory(storage, nbt);
+		Inventories.readInventory(storage, nbt, INV_KEY);
 		if (nbt.hasKey(CUSTOM_NAME_KEY)) {
 			setCustomName(nbt.getString(CUSTOM_NAME_KEY));
 		}
@@ -114,7 +120,7 @@ public abstract class TileEntityInventory extends AbstractTileEntity implements 
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
-		Inventories.writeInventory(storage, nbt);
+		Inventories.writeInventory(storage, nbt, INV_KEY);
 		if (hasCustomName()) {
 			nbt.setString(CUSTOM_NAME_KEY, getCustomName());
 		}

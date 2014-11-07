@@ -26,12 +26,13 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	 * <p>Create a new AbstractContainer with the given inventory, player and position for the player inventory.</p>
 	 * <p>This constructor first calls {@link #addSlots()} to add any non-player slots and then adds the player inventory
 	 * at the given coordinates.</p>
+	 * <p>If you pass a negative value for {@code playerInventoryX} the player inventory will not be added.</p>
 	 * @param inventory the inventory
 	 * @param player the player
 	 * @param playerInventoryX the x-coordinate for the player inventory
 	 * @param playerInventoryY the y-coordinate for the player inventory
 	 */
-	protected AbstractContainer(T inventory, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
+	public AbstractContainer(T inventory, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
 		this.inventory = inventory;
 		this.player = player;
 		addSlots();
@@ -48,7 +49,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	 * @param inventory the inventory
 	 * @param player the player
 	 */
-	protected AbstractContainer(T inventory, EntityPlayer player) {
+	public AbstractContainer(T inventory, EntityPlayer player) {
 		this(inventory, player, Containers.PLAYER_INV_X_DEFAULT, Containers.PLAYER_INV_Y_DEFAULT);
 	}
 
@@ -64,7 +65,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	 * @param z the z coordinate of the TileEntity
 	 * @param player the player
 	 */
-	protected AbstractContainer(World world, int x, int y, int z, EntityPlayer player) {
+	public AbstractContainer(World world, int x, int y, int z, EntityPlayer player) {
 		this(world, x, y, z, player, Containers.PLAYER_INV_X_DEFAULT, Containers.PLAYER_INV_Y_DEFAULT);
 	}
 
@@ -73,7 +74,8 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	 * given player.</p>
 	 * <p>This constructor first fetches the TileEntity at the given position. This TileEntity must be of type {@code T}.
 	 * Then {@link #addSlots()} is called to add any non-player slots and then the player inventory is added at the
-	 * given coordinates.
+	 * given coordinates.</p>
+	 * <p>If you pass a negative value for {@code playerInventoryX} the player inventory will not be added.</p>
 	 * @param world the world
 	 * @param x the x coordinate of the TileEntity
 	 * @param y the y coordinate of the TileEntity
@@ -83,12 +85,12 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	 * @param playerInventoryY  the y-coordinate for the player inventory
 	 */
 	@SuppressWarnings("unchecked")
-	protected AbstractContainer(World world, int x, int y, int z, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
+	public AbstractContainer(World world, int x, int y, int z, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
 		this((T) world.getBlockTileEntity(x, y, z), player, playerInventoryX, playerInventoryY);
 	}
 
 	/**
-	 * <p>Add any non-player slots to this Container.</p>
+	 * <p>Add the slots for the inventory to this Container in this method. Note that the player inventory is usually added automatically.</p>
 	 */
 	protected abstract void addSlots();
 

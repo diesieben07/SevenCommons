@@ -90,6 +90,7 @@ public class ItemInventory extends AbstractInventory {
 
 	@Override
 	public void onInventoryChanged() {
+		super.onInventoryChanged();
 		saveData();
 	}
 

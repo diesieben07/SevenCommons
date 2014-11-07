@@ -6,7 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 /**
- * <p>Used to control automatic naming of TileEntities with {@link de.take_weiland.mods.commons.inv.NameableInventory}.</p>
+ * <p>Used to control automatic naming of TileEntities implementing {@link de.take_weiland.mods.commons.inv.NameableInventory}.</p>
  */
 public interface TileAutoName extends NameableInventory {
 
