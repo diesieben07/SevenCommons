@@ -6,8 +6,8 @@ import com.google.common.collect.Lists;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.List;
@@ -110,9 +110,9 @@ public abstract class AbstractInventory extends FluentIterable<ItemStack> implem
 		}
 	}
 
-	@NotNull
+	@Nonnull
 	@Override
-	public Iterator<ItemStack> iterator() {
+	public final Iterator<ItemStack> iterator() {
 		return Iterators.forArray(storage);
 	}
 

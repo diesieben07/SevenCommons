@@ -1,8 +1,7 @@
 package de.take_weiland.mods.commons;
 
-import com.google.common.base.Function;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -15,6 +14,7 @@ import de.take_weiland.mods.commons.client.Rendering;
 import de.take_weiland.mods.commons.inv.BasicSlot;
 import de.take_weiland.mods.commons.inv.ButtonContainer;
 import de.take_weiland.mods.commons.inv.Containers;
+import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.tileentity.TileEntityInventory;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
@@ -26,33 +26,22 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ReportedException;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidRegistry;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()
 public class testmod_sc {
 
-	public static void main(String[] args) {
-		final File folder = new File(".").getAbsoluteFile();
-		System.out.println(Iterables.transform(Arrays.asList(folder.list()), new Function<String, Object>() {
-			@Nullable
-			@Override
-			public Object apply(@Nullable String input) {
-				try {
-					return new File(folder, input).getCanonicalFile();
-				} catch (IOException e) {
-					throw Throwables.propagate(e);
-				}
-			}
-		}));
+	public static void main(@Nonnull String[] bar) {
 
 	}
 
@@ -62,7 +51,7 @@ public class testmod_sc {
 	private static Block myBlock;
 
 	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, NoSuchFieldException {
+	public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, NoSuchFieldException, IOException {
 		myBlock = new Block(4000, Material.rock) {
 
 			@Override
@@ -83,6 +72,21 @@ public class testmod_sc {
 				return true;
 			}
 		};
+
+		try {
+			ItemStack stone = new ItemStack(Block.stone);
+			NBTTagList list = new NBTTagList();
+			NBTTagCompound stoneTag = stone.writeToNBT(new NBTTagCompound());
+			stoneTag.setFloat("slot", (byte) 5);
+			list.appendTag(stoneTag);
+
+			ItemStack[] inv = new ItemStack[3];
+			Inventories.readInventory(inv, list);
+		} catch (ReportedException e) {
+			Files.asCharSink(new File("test.txt"), Charsets.UTF_8).write(e.getCrashReport().getCompleteReport());
+		}
+		System.exit(0);
+
 		Reflection.initialize(GuiContainer.class);
 //		System.exit(0);
 		GameRegistry.registerTileEntity(TestTE.class, "testte");

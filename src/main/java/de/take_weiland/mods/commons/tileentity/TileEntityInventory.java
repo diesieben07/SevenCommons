@@ -1,14 +1,17 @@
 package de.take_weiland.mods.commons.tileentity;
 
+import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.util.Blocks;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+
+import javax.annotation.Nonnull;
+import java.util.Iterator;
 
 /**
  * <p>Basic implementation of a {@link net.minecraft.tileentity.TileEntity} with an Inventory. Similar to
@@ -19,7 +22,7 @@ import net.minecraft.tileentity.TileEntity;
  * will automatically take the name of a renamed ItemStack when placed. To control that behavior, implement
  * {@link de.take_weiland.mods.commons.tileentity.TileAutoName}.</p>
  */
-public abstract class TileEntityInventory extends TileEntity implements IInventory, NameableInventory {
+public abstract class TileEntityInventory extends TileEntity implements IInventory, NameableInventory, Iterable<ItemStack> {
 
 	private static final String CUSTOM_NAME_KEY = "_sc$customName";
 	private static final String INV_KEY = "_sc$inventory";
@@ -57,7 +60,7 @@ public abstract class TileEntityInventory extends TileEntity implements IInvento
 
 	@Override
 	public ItemStack getStackInSlot(int slot) {
-		return JavaUtils.get(storage, slot);
+		return storage[slot];
 	}
 
 	@Override
@@ -72,9 +75,7 @@ public abstract class TileEntityInventory extends TileEntity implements IInvento
 
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack item) {
-		if (slot >= 0 && slot < storage.length) {
-			storage[slot] = item;
-		}
+		storage[slot] = item;
 		onInventoryChanged();
 	}
 
@@ -151,4 +152,9 @@ public abstract class TileEntityInventory extends TileEntity implements IInvento
 		return name;
 	}
 
+	@Nonnull
+	@Override
+	public Iterator<ItemStack> iterator() {
+		return Iterators.forArray(storage);
+	}
 }
