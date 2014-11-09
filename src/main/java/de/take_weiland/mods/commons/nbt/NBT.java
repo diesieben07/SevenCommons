@@ -8,10 +8,9 @@ import net.minecraft.nbt.*;
 import net.minecraftforge.fluids.FluidStack;
 import org.jetbrains.annotations.Contract;
 
-import javax.annotation.Nullable;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,6 +48,46 @@ public final class NBT {
 	public static final int TAG_LIST = 9;
 	public static final int TAG_COMPOUND = 10;
 	public static final int TAG_INT_ARR = 11;
+
+	/**
+	 * <p>An enumeration of all NBT tag types.</p>
+	 */
+	public enum Tag {
+
+		END,
+		BYTE,
+		SHORT,
+		INT,
+		LONG,
+		FLOAT,
+		DOUBLE,
+		BYTE_ARRAY,
+		STRING,
+		LIST,
+		COMPOUND,
+		INT_ARRAY;
+
+		/**
+		 * <p>The id for this tag type, as returned by {@link net.minecraft.nbt.NBTBase#getId()}.</p>
+		 * @return the type id
+		 */
+		public final int id() {
+			return ordinal();
+		}
+
+		/**
+		 * <p>Get the tag type specified by the given type id.</p>
+		 * @param id the type id
+		 * @return the tag type
+		 */
+		public static Tag byId(int id) {
+			checkArgument(id >= 0 && id <= 11, "NBT type id out of range");
+			return VALUES[id];
+		}
+
+		private static final Tag[] VALUES = values();
+
+	}
 
 	private static final byte NULL = -1;
 	private static final String NULL_KEY = "_sc$null";

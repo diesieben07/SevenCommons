@@ -10,14 +10,43 @@ import org.jetbrains.annotations.NotNull;
 import sun.misc.JavaLangAccess;
 import sun.misc.SharedSecrets;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public final class JavaUtils {
 
 	private JavaUtils() {
+	}
+
+	/**
+	 * <p>Returns a String representation of the given Object. For arrays uses the appropriate {@code toString} method
+	 * {@link java.util.Arrays}, otherwise uses {@link java.util.Objects#toString(Object)}.</p>
+	 * @param o the Object
+	 * @return a String representation
+	 */
+	public static String toString(@Nullable Object o) {
+		if (o instanceof boolean[]) {
+			return Arrays.toString((boolean[]) o);
+		} else if (o instanceof byte[]) {
+			return Arrays.toString((byte[]) o);
+		} else if (o instanceof short[]) {
+			return Arrays.toString((short[]) o);
+		} else if (o instanceof char[]) {
+			return Arrays.toString((char[]) o);
+		} else if (o instanceof int[]) {
+			return Arrays.toString((int[]) o);
+		} else if (o instanceof long[]) {
+			return Arrays.toString((long[]) o);
+		} else if (o instanceof float[]) {
+			return Arrays.toString((float[]) o);
+		} else if (o instanceof double[]) {
+			return Arrays.toString((double[]) o);
+		} else if (o instanceof Object[]) {
+			return Arrays.deepToString((Object[]) o);
+		} else {
+			return Objects.toString(o);
+		}
 	}
 
 	/**
