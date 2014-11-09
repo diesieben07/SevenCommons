@@ -2,24 +2,26 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNullableByDefault;
 import java.util.*;
 
 /**
  * @author diesieben07
  */
+@ParametersAreNullableByDefault
 final class ConcatList<T> extends AbstractList<T> {
 
 	private final List<? extends T> a;
 	private final List<? extends T> b;
 
-	ConcatList(List<? extends T> a, List<? extends T> b) {
+	ConcatList(@Nonnull List<? extends T> a, @Nonnull List<? extends T> b) {
 		this.a = a;
 		this.b = b;
 	}
 
-	@NotNull
+	@Nonnull
 	@Override
 	public T get(int index) {
 		int aSize = a.size();
@@ -50,7 +52,7 @@ final class ConcatList<T> extends AbstractList<T> {
 		}
 	}
 
-	@NotNull
+	@Nonnull
 	@Override
 	public List<T> subList(int fromIndex, int toIndex) {
 		int aSize = a.size();
@@ -67,12 +69,12 @@ final class ConcatList<T> extends AbstractList<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> List<T> unmodifiable(List<? extends T> list) {
+	private static <T> List<T> unmodifiable(@Nonnull List<? extends T> list) {
 		// cast is safe, because List is immutable
 		return list instanceof ImmutableList ? (List<T>) list : Collections.unmodifiableList(list);
 	}
 
-	@NotNull
+	@Nonnull
 	@Override
 	public Iterator<T> iterator() {
 		return Iterators.concat(a.iterator(), b.iterator());
@@ -100,22 +102,22 @@ final class ConcatList<T> extends AbstractList<T> {
 	}
 
 	@Override
-	public boolean removeAll(@NotNull Collection<?> c) {
+	public boolean removeAll(@Nonnull Collection<?> c) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public boolean retainAll(@NotNull Collection<?> c) {
+	public boolean retainAll(@Nonnull Collection<?> c) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public boolean addAll(@NotNull Collection<? extends T> c) {
+	public boolean addAll(@Nonnull Collection<? extends T> c) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public boolean addAll(int index, @NotNull Collection<? extends T> c) {
+	public boolean addAll(int index, @Nonnull Collection<? extends T> c) {
 		throw new UnsupportedOperationException();
 	}
 }

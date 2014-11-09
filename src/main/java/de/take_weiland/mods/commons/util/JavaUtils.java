@@ -1,23 +1,23 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import sun.misc.JavaLangAccess;
 import sun.misc.SharedSecrets;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
+/**
+ * <p>Various utility methods.</p>
+ */
+@ParametersAreNonnullByDefault
 public final class JavaUtils {
-
-	private JavaUtils() {
-	}
 
 	/**
 	 * <p>Returns a String representation of the given Object. For arrays uses the appropriate {@code toString} method
@@ -50,76 +50,83 @@ public final class JavaUtils {
 	}
 
 	/**
-	 * returns the value at the given slot in the array, or null if the slot is out of bounds
+	 * <p>Returns the value at the given index in the arrayor null if the index is out of bounds.</p>
+	 * @param array the array
+	 * @param index the index
+	 * @return the element at index {@code index} or null
 	 */
 	public static <T> T get(T[] array, int index) {
-		return indexExists(array, index) ? array[index] : null;
+		return index >= 0 && index < array.length ? array[index] : null;
 	}
 
 	/**
-	 * returns true if the given slot exists in the array
+	 * <p>Returns the value at the given index in the array or {@code defaultValue} if the index is out of bounds.</p>
+	 * @param array the array
+	 * @param index the index
+	 * @param defaultValue the default value
+	 * @return the element at index {@code index} or the default value
+	 */
+	public static <T, D extends T, R extends T> T get(R[] array, int index, D defaultValue) {
+		return index >= 0 && index < array.length ? array[index] : defaultValue;
+	}
+
+	/**
+	 * <p>Checks whether the given index exists in the given array.</p>
+	 * @param array the array
+	 * @param index the index
+	 * @return true if the index is not out of bounds
 	 */
 	public static boolean indexExists(Object[] array, int index) {
 		return index >= 0 && index < array.length;
 	}
 
 	/**
-	 * returns the value at the given slot in the array, or the defaultValue if the slot is out of bounds
-	 */
-	public static <T> T get(T[] array, int index, T defaultValue) {
-		return indexExists(array, index) ? array[index] : defaultValue;
-	}
-
-	/**
-	 * returns the value at the given slot in the list, or null if the slot is out of bounds
+	 * <p>Returns the value at the given index in the List or null if the index is out of bounds.</p>
+	 * @param list the List
+	 * @param index the index
+	 * @return the element at index {@code index} or null
 	 */
 	public static <T> T get(List<T> list, int index) {
-		return indexExists(list, index) ? list.get(index) : null;
+		return index >= 0 && index < list.size() ? list.get(index) : null;
 	}
 
 	/**
-	 * returns true if the given slot exists in the list
+	 * <p>Returns the value at the given index in the List or {@code defaultValue} if the index is out of bounds.</p>
+	 * @param list the List
+	 * @param index the index
+	 * @param defaultValue the default value
+	 * @return the element at index {@code index} or the default value
+	 */
+	public static <T, D extends T, V extends T> T get(List<V> list, int index, D defaultValue) {
+		return index >= 0 && index < list.size() ? list.get(index) : defaultValue;
+	}
+
+	/**
+	 * <p>Checks whether the given index exists in the given List.</p>
+	 * @param list the List
+	 * @param index the index
+	 * @return true if the index is not out of bounds
 	 */
 	public static boolean indexExists(List<?> list, int index) {
 		return index >= 0 && index < list.size();
 	}
 
 	/**
-	 * returns the value at the given slot in the list, or the defaultValue if the slot is out of bounds
+	 * <p>Remove all elements from the given Iterable.</p>
+	 * @param iterable the Iterable
 	 */
-	public static <T> T get(List<T> list, int index, T defaultValue) {
-		return indexExists(list, index) ? list.get(index) : defaultValue;
+	public static void clear(Iterable<?> iterable) {
+		if (iterable instanceof Collection) {
+			((Collection<?>) iterable).clear();
+		} else {
+			clear(iterable.iterator());
+		}
 	}
 
-	@Deprecated
-	public static <T> T safeArrayAccess(T[] array, int index) {
-		return get(array, index);
-	}
-
-	@Deprecated
-	public static boolean arrayIndexExists(Object[] array, int index) {
-		return indexExists(array, index);
-	}
-
-	@Deprecated
-	public static <T> T defaultedArrayAccess(T[] array, int index, T defaultValue) {
-		return get(array, index, defaultValue);
-	}
-
-	@Deprecated
-	public static boolean listIndexExists(List<?> list, int index) {
-		return indexExists(list, index);
-	}
-
-	@Deprecated
-	public static <T> T safeListAccess(List<T> list, int index) {
-		return listIndexExists(list, index) ? list.get(index) : null;
-	}
-
-	public static void clear(Iterable<?> i) {
-		clear(i.iterator());
-	}
-
+	/**
+	 * <p>Remove all elements from the given Iterator.</p>
+	 * @param it the Iterator
+	 */
 	public static void clear(Iterator<?> it) {
 		while (it.hasNext()) {
 			it.next();
@@ -128,45 +135,89 @@ public final class JavaUtils {
 	}
 
 	/**
-	 * returns the given list or {@link java.util.Collections#emptyList()} if the list is null
+	 * <p>Return the given List if it is not {@code null}, an empty, immutable List otherwise.</p>
+	 * @param list the List
+	 * @return {@code list} itself if it is not {@code null}, {@code Collections.emptyList()} otherwise.
 	 */
-	public static <T> List<T> nullToEmpty(List<T> nullable) {
-		return nullable == null ? Collections.<T>emptyList() : nullable;
+	public static <T> List<T> nullToEmpty(@Nullable List<T> list) {
+		return list == null ? Collections.<T>emptyList() : list;
 	}
 
-	public static <T> List<T> concat(@NotNull List<? extends T> first, @NotNull List<? extends T> second) {
+	/**
+	 * <p>Concatenate the two Lists. The resulting List is an unmodifiable view.</p>
+	 * @param first the first List
+	 * @param second the second List
+	 * @return the concatenated List
+	 */
+	public static <T> List<T> concat(List<? extends T> first, List<? extends T> second) {
 		return new ConcatList<>(first, second);
 	}
 
 	/**
-	 * concatenate the given iterables, null will be treated as an empty iterable
+	 * <p>Concatenate the two Lists, where {@code null} is considered an empty List.
+	 * The resulting List is an unmodifiable view.</p>
+	 * @param first the first List
+	 * @param second the second List
+	 * @return the concatenated List
 	 */
-	public static <T> Iterable<T> concatNullable(Iterable<T> a, Iterable<T> b) {
-		return a == null ? (b == null ? Collections.<T>emptyList() : b) : (b == null ? a : Iterables.concat(a, b));
+	public static <T> List<T> concatNullable(@Nullable List<? extends T> first, @Nullable List<? extends T> second) {
+		if (first == null) {
+			return second == null ? Collections.<T>emptyList() : Collections.unmodifiableList(second);
+		} else if (second == null) {
+			return Collections.unmodifiableList(first);
+		} else {
+			return concat(first, second);
+		}
 	}
 
 	/**
-	 * Creates a new {@link com.google.common.base.Predicate} that returns true if the input is an instance
-	 * of the given class and the given predicate also applies to true.
+	 * <p>Concatenate the given Iterables, where {@code null} stands for an empty Iterable.</p>
+	 * @param first the first Iterable
+	 * @param second the second Iterable
+	 * @return {@code first} and {@code second} concatenated
+	 */
+	public static <T> Iterable<T> concatNullable(@Nullable Iterable<T> first, @Nullable Iterable<T> second) {
+		if (first == null) {
+			if (second == null) {
+				return Collections.emptyList();
+			} else {
+				return second;
+			}
+		} else if (second == null) {
+			return first;
+		} else {
+			return Iterables.concat(first, second);
+		}
+	}
+
+
+
+	/**
+	 * <p>Creates a new {@link com.google.common.base.Predicate} that returns true if the input is an instance
+	 * of the given class and the given predicate also applies to true.</p>
 	 *
+	 * @param clazz the Class to check for
 	 * @param predicate the Predicate
-	 * @param <T>       the Type of the resulting predicate, for convenience, it can always handle any input
-	 * @param <F>       the Class to check for first
 	 * @return a new Predicate
 	 */
-	public static <T, F> Predicate<T> instanceOfAnd(Class<F> clazz, Predicate<? super F> predicate) {
-		//cast is safe because Predicates.and does short-circuiting
-		//noinspection unchecked
-		return Predicates.and(Predicates.instanceOf(clazz), (Predicate<Object>) predicate);
+	public static <T, F> Predicate<T> instanceOfAnd(final Class<F> clazz, final Predicate<? super F> predicate) {
+		return new Predicate<T>() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public boolean apply(@Nullable T input) {
+				// cast to F is safe because we check isInstance first
+				return clazz.isInstance(input) && predicate.apply((F) input);
+			}
+		};
 	}
 
 	/**
-	 * Throws the given Throwable as if it was an unchecked exception<br />
-	 * This method always throws, the return type is just there to allow constructs like this:<br />
-	 * {@code
-	 * throw JavaUtils.throwUnchecked(new Throwable());
-	 * }<br />
-	 * in case a return type is expected
+	 * <p>Throw the given {@code Throwable} as if it as an unchecked Exception. This method always throws, the return type
+	 * is just to satisfy the compiler.</p>
+	 * <p>Usage:<pre><code>throw JavaUtils.throwUnchecked(new Throwable());
+	 * </code></pre></p>
+	 * @param t the Throwable
+	 * @return nothing, this method always throws
 	 */
 	@Unsafe
 	public static RuntimeException throwUnchecked(Throwable t) {
@@ -174,59 +225,55 @@ public final class JavaUtils {
 		return JavaUtils.<RuntimeException>throwUnchecked0(t);
 	}
 
-	@SuppressWarnings("unchecked") // dirty hack. the cast doesn't exist in bytecode, so it always succeeds
+	@SuppressWarnings("unchecked")
 	private static <T extends Throwable> RuntimeException throwUnchecked0(Throwable t) throws T {
+		// dirty hack. the cast doesn't exist in bytecode, so it always succeeds
 		throw (T) t;
 	}
 
 	/**
-	 * encode two integers into a single long value<br />
-	 * The long can be decoded with {@link #decodeIntA(long)} and {@link #decodeIntB(long)} respectively
+	 * <p>Get the number of dimensions of the given class if it represents an array or 0 otherwise.</p>
+	 * @param clazz the class
+	 * @return the number of dimensions
 	 */
-	public static long encodeInts(int a, int b) {
-		return (((long) a) << 32) | (b & 0xffffffffL);
-	}
-
-	/**
-	 * decode the first int encoded into the given long with {@link #encodeInts(int, int)}
-	 */
-	public static int decodeIntA(long l) {
-		return (int) (l >> 32);
-	}
-
-	/**
-	 * decode the second int encoded into the given long with {@link #encodeInts(int, int)}
-	 */
-	public static int decodeIntB(long l) {
-		return (int) l;
-	}
-
 	public static int getDimensions(Class<?> clazz) {
-		return StringUtils.countMatches(clazz.getName(), "[");
+		int dims = 0;
+		String name = clazz.getName();
+		for (int i = 0, len = name.length(); i < len; i++) {
+			if (name.charAt(i) != '[') {
+				return dims;
+			} else {
+				dims++;
+			}
+		}
+		throw new AssertionError("Class.getName() is empty?!");
 	}
 
 	/**
-	 * Gets all values defined in the given Enum class. The returned array is shared across the entire codebase and should never be modified!
+	 * <p>Get all constants defined in the given enum class. This is equivalent to {@code E.values()} except that the array
+	 * returned by this method is not cloned and as thus shared across the entire application. <strong>Therefor the
+	 * array must not be modified!</strong></p>
+	 * @param clazz the enum class
+	 * @return all defined constants
 	 */
 	@Unsafe
-	public static <T extends Enum<T>> T[] getEnumConstantsShared(Class<T> clazz) {
+	public static <E extends Enum<E>> E[] getEnumConstantsShared(Class<E> clazz) {
 		return ENUM_GETTER.getEnumValues(clazz);
 	}
 
 	/**
-	 * gets the Enum constant with the given ordinal for the given Enum class<br />
-	 * This method is preferable to<br />
-	 * {@code
-	 * SomeEnum v = SomeEnum.values()[ordinal];
-	 * }<br />
-	 * because it doesn't need to copy the value array, like values() does
+	 * <p>Get the enum constant with the given ordinal value in the given enum class.</p>
+	 * <p>This method is equivalent to {@code E.values()[ordinal]}, but is potentially more efficient.</p>
+	 * @param clazz the enum class
+	 * @param ordinal the ordinal value
+	 * @return the enum constant
 	 */
 	public static <T extends Enum<T>> T byOrdinal(Class<T> clazz, int ordinal) {
-		return get(getEnumConstantsShared(clazz), ordinal);
+		return getEnumConstantsShared(clazz)[ordinal];
 	}
 
 	/**
-	 * checks if sun.misc.Unsafe is available on this JVM
+	 * <p>Check if {@code sun.misc.Unsafe} is available on this JVM.</p>
 	 *
 	 * @return true if sun.misc.Unsafe was found
 	 */
@@ -237,7 +284,8 @@ public final class JavaUtils {
 	}
 
 	/**
-	 * returns the sun.misc.Unsafe instance, if available, otherwise null
+	 * <p>Return the {@code sun.misc.Unsafe} instance if it is available, {@code null} otherwise.</p>
+	 * @return the {@code sun.misc.Unsafe} instance or null
 	 */
 	@Unsafe
 	public static Object getUnsafe() {
@@ -254,9 +302,18 @@ public final class JavaUtils {
 		}
 		unsafeChecked = true;
 		try {
-			Field field = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe");
-			field.setAccessible(true);
-			unsafe = field.get(null);
+			Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+			for (Field field : unsafeClass.getDeclaredFields()) {
+				if (!Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
+				field.setAccessible(true);
+				Object value = field.get(null);
+				if (unsafeClass.isInstance(value)) {
+					unsafe = value;
+					break;
+				}
+			}
 		} catch (Exception e) {
 			// no unsafe
 		}
@@ -268,7 +325,7 @@ public final class JavaUtils {
 		try {
 			Class.forName("sun.misc.SharedSecrets");
 			ENUM_GETTER = (EnumValueGetter) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").newInstance();
-		} catch (Exception e) {
+		} catch (Throwable t) {
 			SevenCommonsLoader.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
 			ENUM_GETTER = new EnumGetterCloned();
 		}
@@ -299,5 +356,7 @@ public final class JavaUtils {
 		}
 
 	}
+
+	private JavaUtils() { }
 
 }
