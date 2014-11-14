@@ -17,12 +17,16 @@ import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import de.take_weiland.mods.commons.internal.sync.PacketSync;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
+import de.take_weiland.mods.commons.util.Logging;
 import net.minecraftforge.common.Configuration;
 
 import java.io.File;
+import java.util.logging.Logger;
 
 public final class SevenCommons extends DummyModContainer {
 
+	public static final Logger LOGGER = Logging.getLogger("SevenCommons");
+	public static final String VERSION = "1.0";
 	public static long clientMainThreadID;
 
 	public static SevenCommonsProxy proxy;
@@ -41,7 +45,7 @@ public final class SevenCommons extends DummyModContainer {
 		meta.name = "SevenCommons";
 		meta.modId = "sevencommons";
 		meta.authorList = ImmutableList.of("diesieben07");
-		meta.version = SevenCommonsLoader.VERSION;
+		meta.version = VERSION;
 
 		meta.description = "Provides various Utilities for other mods.";
 
