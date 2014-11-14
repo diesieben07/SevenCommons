@@ -16,7 +16,6 @@ import de.take_weiland.mods.commons.inv.ButtonContainer;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.tileentity.TileEntityInventory;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -43,9 +42,7 @@ import java.io.IOException;
 public class testmod_sc {
 
 	public static void main(@Nonnull String[] bar) {
-		System.out.println(String[][].class.getName());
-		System.out.println(JavaUtils.hasUnsafe());
-		System.out.println(JavaUtils.getUnsafe());
+
 	}
 
 	@Mod.Instance

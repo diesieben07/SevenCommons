@@ -107,14 +107,15 @@ public final class SCReflection {
 		return ASMUtils.internalName(pkg) + "/_sc_dyn_" + nextId.getAndIncrement();
 	}
 
+	private static final Logger logger = SevenCommonsLoader.scLogger("Reflection");
 	private static final AtomicInteger nextId = new AtomicInteger(0);
 	private static final ReflectionStrategy strategy = selectStrategy();
-	private static final Logger logger = SevenCommonsLoader.scLogger("Reflection");
 
 	private static ReflectionStrategy selectStrategy() {
 		if (JavaUtils.hasUnsafe()) {
 			try {
-				return Class.forName("de.take_weiland.mods.commons.reflect.SunProprietaryStrategy").asSubclass(ReflectionStrategy.class).newInstance();
+				return (ReflectionStrategy) Class.forName("de.take_weiland.mods.commons.reflect.UnsafeStrategy")
+						.newInstance();
 			} catch (Exception e) {
 				// then not
 			}
