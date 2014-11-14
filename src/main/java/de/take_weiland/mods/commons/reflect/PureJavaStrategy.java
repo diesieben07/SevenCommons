@@ -5,7 +5,7 @@ import com.google.common.reflect.Reflection;
 import java.lang.reflect.*;
 import java.util.Arrays;
 
-final class NativeJavaStrategy extends AbstractStrategy {
+final class PureJavaStrategy extends ReflectionStrategy {
 
 	@Override
 	public <T> T createAccessor(Class<T> iface) {

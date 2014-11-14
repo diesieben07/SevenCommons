@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal;
 import com.google.common.base.Throwables;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
-import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.util.MiscUtil;
 import net.minecraft.launchwrapper.Launch;
 
@@ -75,10 +74,6 @@ public final class SevenCommonsLoader implements IFMLLoadingPlugin {
 				throw Throwables.propagate(e);
 			}
 		}
-	}
-
-	public static Logger scLogger() {
-		return scLogger(SCReflection.getCallerClass().getSimpleName());
 	}
 
 	public static Logger scLogger(String channel) {

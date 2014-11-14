@@ -15,7 +15,7 @@ import java.util.Map;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
-class SunProprietaryStrategy extends AbstractStrategy {
+final class UnsafeStrategy extends ReflectionStrategy {
 
 	private static final Unsafe unsafe = (Unsafe) JavaUtils.getUnsafe();
 
