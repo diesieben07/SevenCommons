@@ -12,8 +12,6 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.config.ConfigInjector;
-import de.take_weiland.mods.commons.config.GetProperty;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import de.take_weiland.mods.commons.internal.sync.PacketSync;
@@ -30,7 +28,8 @@ public final class SevenCommons extends DummyModContainer {
 	public static SevenCommonsProxy proxy;
 	public static SevenCommons instance;
 
-	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
+//	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
+	// TODO
 	public static boolean updaterEnabled = true;
 
 	public static PacketHandler packets;
@@ -74,7 +73,6 @@ public final class SevenCommons extends DummyModContainer {
 
 	public void universalPreInit(FMLPreInitializationEvent event) {
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
-		ConfigInjector.inject(config, getClass());
 
 		packets = Network.newChannel("SevenCommons")
 				.register(PacketSync.class, SYNC_PACKET_ID)
