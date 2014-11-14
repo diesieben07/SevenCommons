@@ -121,8 +121,7 @@ class SunProprietaryStrategy extends AbstractStrategy {
 
 		mv.visitInsn(getType(field.getType()).getOpcode(IRETURN));
 
-		mv.visitMaxs(1, 2);
-
+		mv.visitMaxs(getType(field.getType()).getSize(), 2);
 		mv.visitEnd();
 	}
 
@@ -139,21 +138,20 @@ class SunProprietaryStrategy extends AbstractStrategy {
 		name = field.getName();
 		desc = getDescriptor(field.getType());
 		if (isStatic) {
-			mv.visitVarInsn(ALOAD, 2);
+			mv.visitVarInsn(getType(field.getType()).getOpcode(ILOAD), 2);
 			mv.visitFieldInsn(PUTSTATIC, owner, name, desc);
 		} else {
 			mv.visitVarInsn(ALOAD, 1);
 			if (setter.getParameterTypes()[0] != field.getDeclaringClass()) {
 				mv.visitTypeInsn(CHECKCAST, getInternalName(field.getDeclaringClass()));
 			}
-			mv.visitVarInsn(ALOAD, 2);
+			mv.visitVarInsn(getType(field.getType()).getOpcode(ILOAD), 2);
 			mv.visitFieldInsn(PUTFIELD, owner, name, desc);
 		}
 
 		mv.visitInsn(RETURN);
 
-		mv.visitMaxs(isStatic ? 1 : 2, 3);
-
+		mv.visitMaxs(getType(field.getType()).getSize() + (isStatic ? 0 : 1), 2 + getType(field.getType()).getSize());
 		mv.visitEnd();
 	}
 
@@ -180,15 +178,17 @@ class SunProprietaryStrategy extends AbstractStrategy {
 			}
 		}
 
+		int idx = 2;
 		for (int i = 1; i < len; ++i) {
 			Type paramType = getType(params[i]);
-			mv.visitVarInsn(paramType.getOpcode(ILOAD), i + 1); // var 0 is this
+			mv.visitVarInsn(paramType.getOpcode(ILOAD), idx);
+			idx += paramType.getSize();
 		}
 		mv.visitMethodInsn(isStatic ? INVOKESTATIC : INVOKEVIRTUAL, owner, name, desc);
 
 		mv.visitInsn(getType(target.getReturnType()).getOpcode(IRETURN));
 
-		mv.visitMaxs(isStatic ? len - 1 : len, len + 1);
+		mv.visitMaxs(isStatic ? idx - 2 : idx - 1, idx);
 
 		mv.visitEnd();
 	}

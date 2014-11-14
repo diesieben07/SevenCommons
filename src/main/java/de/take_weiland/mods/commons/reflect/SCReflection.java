@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.util.JavaUtils;
+import org.objectweb.asm.tree.ClassNode;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -43,10 +44,10 @@ public final class SCReflection {
 	 * @return the defined class
 	 */
 	public static Class<?> defineDynamicClass(byte[] clazz) {
-		Class<?> def = defineDynamicClass(clazz, SCReflection.class);
 		if (DEBUG) {
 			try {
-				File file = new File("sevencommonsdyn/" + def.getName().replace('.', '/') + ".class");
+				ClassNode node = ASMUtils.getThinClassNode(clazz);
+				File file = new File("sevencommonsdyn/" + node.name + ".class");
 				Files.createParentDirs(file);
 				OutputStream out = new FileOutputStream(file);
 				out.write(clazz);
@@ -55,7 +56,7 @@ public final class SCReflection {
 				e.printStackTrace();
 			}
 		}
-		return def;
+		return defineDynamicClass(clazz, SCReflection.class);
 	}
 
 	/**
