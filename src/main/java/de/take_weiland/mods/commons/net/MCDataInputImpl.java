@@ -2,7 +2,10 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.primitives.Ints;
 import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.util.*;
+import de.take_weiland.mods.commons.util.BlockCoordinates;
+import de.take_weiland.mods.commons.util.ByteStreamSerializers;
+import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -15,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.nio.Buffer;
+import java.io.InputStream;
 import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.Map;
@@ -122,6 +125,11 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		if (maxLen - pos < bytes) {
 			throw new IllegalStateException("Read past end of buffer");
 		}
+	}
+
+	@Override
+	public InputStream asInputStream() {
+		return this;
 	}
 
 	@Override
