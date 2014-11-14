@@ -15,7 +15,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * obeying the rules specified in {@link de.take_weiland.mods.commons.asm.ASMUtils#findSetter(org.objectweb.asm.tree.ClassNode,
  * org.objectweb.asm.tree.MethodNode) ASMUtils.findSetter}.</p>
  * <p>Properties can be of any visibility.</p>
- * <p>The type of the property is determined via the declared type of the field.</p>
+ * <p>The type of the property is determined via the declared type of the field resp. the return type of the getter.</p>
  * <p>The following types are supported by default:</p>
  * <ul>
  *     <li>All primitives and their wrapper types</li>
@@ -33,8 +33,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * the old EnumSet being updated with the new contents. If this behavior is not desired, use {@link de.take_weiland.mods.commons.sync.SyncContents}
  * instead.</p>
  *
- * <p>Note: This annotation works by using bytecode manipulation and will <i>not work</i> if you added a Transformer-Exclusion
- * the class it is used in.</p>
+ * <p>Note: This annotation works by using bytecode manipulation and will only work on classes that are not excluded from
+ * class transformers.</p>
  *
  * @see de.take_weiland.mods.commons.sync.SyncContents
  * @author diesieben07

@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 
-import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * <p>Registry for {@link de.take_weiland.mods.commons.sync.ValueSyncer} and {@link de.take_weiland.mods.commons.sync.ContentSyncer}.</p>
@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
  * @see de.take_weiland.mods.commons.sync.SyncContents
  * @author diesieben07
  */
+@ParametersAreNonnullByDefault
 public final class Syncing {
 
 	/**
@@ -25,7 +26,7 @@ public final class Syncing {
 	 * @param clazz the class the syncer can sync
 	 * @param syncer the syncer class
 	 */
-	public static <T> void registerSyncer(@Nonnull Class<T> clazz, @Nonnull Class<? extends ValueSyncer<T>> syncer) {
+	public static <T> void registerSyncer(Class<T> clazz, Class<? extends ValueSyncer<T>> syncer) {
 		SyncingManager.regSyncer(clazz, syncer);
 	}
 
@@ -41,8 +42,8 @@ public final class Syncing {
 	 * @param clazz the class the syncer can sync
 	 * @param watcher the syncer class
 	 */
-	public static <T> void registerContentSyncer(@Nonnull Class<T> clazz, @Nonnull Class<? extends ContentSyncer<T>> watcher) {
-		SyncingManager.getContentSyncer(clazz, watcher);
+	public static <T> void registerContentSyncer(Class<T> clazz, Class<? extends ContentSyncer<T>> watcher) {
+		SyncingManager.regContentSyncer(clazz, watcher);
 	}
 
 	private Syncing() { }

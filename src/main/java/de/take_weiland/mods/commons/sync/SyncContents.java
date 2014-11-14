@@ -20,7 +20,7 @@ package de.take_weiland.mods.commons.sync;
  *     <li>BitSets</li>
  *     <li>EnumSets</li>
  * </ul>
- * <p>Support for other types can be added by registering a {@link de.take_weiland.mods.commons.sync.ValueSyncer} for that type in the
+ * <p>Support for other types can be added by registering a {@link de.take_weiland.mods.commons.sync.ContentSyncer} for that type in the
  * {@link de.take_weiland.mods.commons.sync.Syncing} class.</p>
  * @author diesieben07
  */

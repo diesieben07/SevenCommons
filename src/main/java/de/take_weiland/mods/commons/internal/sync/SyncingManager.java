@@ -56,7 +56,7 @@ public final class SyncingManager {
 		}
 	}
 
-	public static <T> void getContentSyncer(@Nonnull Class<T> toSync, @Nonnull Class<? extends ContentSyncer<T>> syncer) {
+	public static <T> void regContentSyncer(@Nonnull Class<T> toSync, @Nonnull Class<? extends ContentSyncer<T>> syncer) {
 		regContentSyncer(toSync, makeCnstrProvider(syncer, ContentSyncer.class));
 	}
 
@@ -284,18 +284,18 @@ public final class SyncingManager {
 		regSyncer(Block.class, BlockSyncer.class);
 
 		regSyncer(ItemStack.class, ItemStackSyncer.class);
-		getContentSyncer(ItemStack.class, ItemStackSyncer.Contents.class);
+		regContentSyncer(ItemStack.class, ItemStackSyncer.Contents.class);
 
 		regSyncer(FluidStack.class, FluidStackSyncer.class);
-		getContentSyncer(FluidStack.class, FluidStackSyncer.Contents.class);
+		regContentSyncer(FluidStack.class, FluidStackSyncer.Contents.class);
 
 		regSyncer(BitSet.class, BitSetSyncer.class);
-		getContentSyncer(BitSet.class, BitSetSyncer.Contents.class);
+		regContentSyncer(BitSet.class, BitSetSyncer.Contents.class);
 
 		regSyncer(Enum.class, EnumSyncer.class);
 
 		regSyncer(EnumSet.class, EnumSetSyncer.class);
-		getContentSyncer(EnumSet.class, EnumSetSyncer.Contents.class);
+		regContentSyncer(EnumSet.class, EnumSetSyncer.Contents.class);
 
 		FluidTankSyncer.register();
 	}
