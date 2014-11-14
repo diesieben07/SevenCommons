@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.OutputStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -12,6 +12,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * <p>This implementation writes to a byte array.</p>
  * @author diesieben07
  */
+@ParametersAreNonnullByDefault
 public abstract class MCDataOutputStream extends OutputStream implements MCDataOutput {
 
 	/**
@@ -29,7 +30,7 @@ public abstract class MCDataOutputStream extends OutputStream implements MCDataO
 	 */
 	public static MCDataOutputStream create(int initialCapacity) {
 		checkArgument(initialCapacity >= 0, "initialCapacity must be >= 0");
-		if (MCDataInputStream.useUnsafe) {
+		if (BufferUtils.useUnsafe) {
 			return new MCDataOutputImplUnsafe(initialCapacity);
 		} else {
 			return new MCDataOutputImplNonUnsafe(initialCapacity);
@@ -43,8 +44,8 @@ public abstract class MCDataOutputStream extends OutputStream implements MCDataO
 	public abstract void write(int b);
 
 	@Override
-	public abstract void write(@NotNull byte[] b, int off, int len);
+	public abstract void write(byte[] b, int off, int len);
 
 	@Override
-	public abstract void write(@NotNull byte[] b);
+	public abstract void write(byte[] b);
 }

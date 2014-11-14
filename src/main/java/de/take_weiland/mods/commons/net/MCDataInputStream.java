@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.net;
 
-import de.take_weiland.mods.commons.util.JavaUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
@@ -14,8 +13,6 @@ import static com.google.common.base.Preconditions.*;
  * @author diesieben07
  */
 public abstract class MCDataInputStream extends InputStream implements MCDataInput {
-
-	static final boolean useUnsafe = JavaUtils.hasUnsafe() && BufferUtils.canUseUnsafe();
 
 	/**
 	 * <p>Create a new MCDataInputStream that reads from the given byte array.</p>
@@ -38,7 +35,7 @@ public abstract class MCDataInputStream extends InputStream implements MCDataInp
 		checkArgument(len >= 0, "len must be >= 0");
 		checkArgument(off >= 0, "off must be >= 0");
 		checkPositionIndexes(off, off + len, checkNotNull(buf, "buf").length);
-		if (useUnsafe) {
+		if (BufferUtils.useUnsafe) {
 			return new MCDataInputImplUnsafe(buf, off, len);
 		} else {
 			return new MCDataInputImplNonUnsafe(buf, off, len);

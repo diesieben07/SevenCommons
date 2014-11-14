@@ -1,14 +1,14 @@
 package de.take_weiland.mods.commons.net;
 
-import de.take_weiland.mods.commons.reflect.Construct;
-import de.take_weiland.mods.commons.reflect.Getter;
-import de.take_weiland.mods.commons.reflect.SCReflection;
-import de.take_weiland.mods.commons.reflect.Setter;
+import de.take_weiland.mods.commons.reflect.*;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import sun.misc.Unsafe;
 
 import java.nio.ByteOrder;
 import java.util.BitSet;
+import java.util.EnumSet;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
 * @author diesieben07
@@ -18,9 +18,7 @@ final class BufferUtils {
 	static final int ITEM_NULL_ID = 32000;
 	static final int BLOCK_NULL_ID = 4096;
 
-	static boolean canUseUnsafe() {
-		return UnsafeChecks.checkUseable();
-	}
+	static final boolean useUnsafe = JavaUtils.hasUnsafe() && UnsafeChecks.checkUseable();
 
 	private static final class UnsafeChecks {
 
@@ -63,9 +61,11 @@ final class BufferUtils {
 	}
 
 	static final BitSetHandler bitSetHandler;
+	static final EnumSetHandler enumSetHandler;
 
 	static {
-		BitSetHandler handler;
+		BitSetHandler bsHandler;
+		EnumSetHandler esHandler;
 		try {
 			BitSet.class.getDeclaredConstructor(long[].class);
 			if (BitSet.class.getDeclaredField("wordsInUse").getType() != int.class) {
@@ -75,11 +75,21 @@ final class BufferUtils {
 				throw new RuntimeException("BitSet.words not found");
 			}
 
-			handler = (BitSetHandler) Class.forName("de.take_weiland.mods.commons.net.BufferUtils$BitSetHandlerFast").newInstance();
+			bsHandler = (BitSetHandler) Class.forName("de.take_weiland.mods.commons.net.BufferUtils$BitSetHandlerFast").newInstance();
 		} catch (Exception e) {
-			handler = new BitSetHandlerPureJava();
+			bsHandler = new BitSetHandlerPureJava();
 		}
-		bitSetHandler = handler;
+		try {
+			Class<?> regularEnumSet = Class.forName("java.util.RegularEnumSet");
+			if (regularEnumSet.getDeclaredField("elements").getType() != long.class) {
+				throw new RuntimeException("RegularEnumSet.elements not of type long");
+			}
+			esHandler = (EnumSetHandler) Class.forName("de.take_weiland.mods.commons.net.BufferUtils$EnumSetHandlerFast").newInstance();
+		} catch (Exception e) {
+			esHandler = new EnumSetHandlerPureJava();
+		}
+		bitSetHandler = bsHandler;
+		enumSetHandler = esHandler;
 	}
 
 	abstract static class BitSetHandler {
@@ -92,7 +102,7 @@ final class BufferUtils {
 
 	}
 
-	static class BitSetHandlerPureJava extends BitSetHandler {
+	private static class BitSetHandlerPureJava extends BitSetHandler {
 
 		@Override
 		BitSet createShared(long[] longs) {
@@ -110,7 +120,7 @@ final class BufferUtils {
 		}
 	}
 
-	static class BitSetHandlerFast extends BitSetHandler {
+	private static class BitSetHandlerFast extends BitSetHandler {
 
 		@Override
 		BitSet createShared(long[] longs) {
@@ -130,7 +140,7 @@ final class BufferUtils {
 		}
 	}
 
-	static interface BitSetAccessor {
+	private static interface BitSetAccessor {
 
 		BitSetAccessor instance = SCReflection.createAccessor(BitSetAccessor.class);
 
@@ -148,6 +158,129 @@ final class BufferUtils {
 
 		@Construct
 		BitSet createBitsetShared(long[] arr);
+
+	}
+
+	abstract static class EnumSetHandler {
+
+		abstract <E extends Enum<E>> EnumSet<E> createShared(Class<E> clazz, long data);
+
+		abstract <E extends Enum<E>> EnumSet<E> update(Class<E> clazz, EnumSet<E> set, long data);
+
+		abstract long asLong(EnumSet<?> set);
+
+	}
+
+	static final class EnumSetHandlerPureJava extends EnumSetHandler {
+
+		@Override
+		<E extends Enum<E>> EnumSet<E> createShared(Class<E> clazz, long data) {
+			E[] values = JavaUtils.getEnumConstantsShared(clazz);
+			int numEnums = values.length;
+			checkArgument(numEnums <= 63);
+			if (data == MCDataOutputImpl.ENUM_SET_NULL) {
+				return null;
+			}
+
+			EnumSet<E> set = EnumSet.noneOf(clazz);
+			int limit = Math.min(numEnums, 64);
+			for (int i = 0; i < limit; i++) {
+				if ((data & (1 << i)) != 0) {
+					set.add(values[i]);
+				}
+			}
+			return set;
+		}
+
+		@Override
+		long asLong(EnumSet<?> set) {
+			if (set.isEmpty()) {
+				return 0;
+			}
+			long l = 0;
+			for (Enum<?> e : set) {
+				l |= 1 << e.ordinal();
+			}
+			return l;
+		}
+
+		@Override
+		<E extends Enum<E>> EnumSet<E> update(Class<E> clazz, EnumSet<E> set, long l) {
+			E[] universe = JavaUtils.getEnumConstantsShared(clazz);
+			int len = universe.length;
+			checkArgument(len <= 63);
+
+			if (l == MCDataOutputImpl.ENUM_SET_NULL) {
+				return null;
+			} else {
+				if (set == null) {
+					set = EnumSet.noneOf(clazz);
+				} else {
+					set.clear();
+				}
+				for (int i = 0; i < len; i++) {
+					if ((l & (1 << i)) != 0) {
+						set.add(universe[i]);
+					}
+				}
+				return set;
+			}
+		}
+	}
+
+	static final class EnumSetHandlerFast extends EnumSetHandler {
+
+		@Override
+		<E extends Enum<E>> EnumSet<E> createShared(Class<E> clazz, long data) {
+			E[] universe = JavaUtils.getEnumConstantsShared(clazz);
+			checkArgument(universe.length <= 63);
+			if (data == MCDataOutputImpl.ENUM_SET_NULL) {
+				return null;
+			}
+
+			EnumSet<E> set = EnumSetAcc.instance.newSmallES(clazz, universe);
+			EnumSetAcc.instance.setData(set, data);
+			return set;
+		}
+
+		@Override
+		long asLong(EnumSet<?> set) {
+			return EnumSetAcc.instance.getData(set);
+		}
+
+		@Override
+		<E extends Enum<E>> EnumSet<E> update(Class<E> clazz, EnumSet<E> set, long data) {
+			E[] universe = JavaUtils.getEnumConstantsShared(clazz);
+			int len = universe.length;
+			checkArgument(len <= 63);
+
+			if (data == MCDataOutputImpl.ENUM_SET_NULL) {
+				return null;
+			} else {
+				if (set == null) {
+					set = EnumSetAcc.instance.newSmallES(clazz, universe);
+				}
+				EnumSetAcc.instance.setData(set, data);
+				return set;
+			}
+		}
+	}
+
+	private interface EnumSetAcc {
+
+		EnumSetAcc instance = SCReflection.createAccessor(EnumSetAcc.class);
+
+		@Getter(field = "elements")
+		@OverrideTarget("java.util.RegularEnumSet")
+		long getData(EnumSet<?> set);
+
+		@Setter(field = "elements")
+		@OverrideTarget("java.util.RegularEnumSet")
+		void setData(EnumSet<?> set, long data);
+
+		@Construct
+		@OverrideTarget("java.util.RegularEnumSet")
+		<E extends Enum<E>> EnumSet<E> newSmallES(Class<E> clazz, E[] universe);
 
 	}
 

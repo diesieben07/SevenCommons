@@ -9,6 +9,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNullableByDefault;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,6 +30,7 @@ import java.util.UUID;
  *
  * @author diesieben07
  */
+@ParametersAreNullableByDefault
 public interface MCDataOutput extends ByteArrayDataOutput {
 
 	/**
@@ -89,7 +92,7 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 	/**
 	 * <p>Writes a Block reference to the buffer.</p>
 	 * <p>If the Block is null, a VarInt {@code 4096} is written, otherwise the ID of the Block is written as a VarInt.</p>
-	 * @param block
+	 * @param block the Block
 	 */
 	void writeBlock(Block block);
 
@@ -103,13 +106,17 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 	 */
 	void writeCoords(int x, int y, int z);
 
-	void write(ByteStreamSerializable obj);
-
-	void write(Object obj);
+	/**
+	 * <p>Write the given Object to this stream. The object must either implement {@link de.take_weiland.mods.commons.util.ByteStreamSerializable}
+	 * or an external serializer must be registered for it using
+	 * {@link de.take_weiland.mods.commons.util.ByteStreamSerializers#registerSerializer(Class, de.take_weiland.mods.commons.util.ByteStreamSerializer)}.</p>
+	 * @param obj the object to write
+	 */
+	void write(@Nonnull Object obj);
 
 	/**
 	 * <p>Write the given UUID to this stream.</p>
-	 * <p>If the given UUID is null, a short 0xF000 is written (a fake UUID version which does not exist). Otherwise two
+	 * <p>If the given UUID is null, a long 0xF000 is written (a fake UUID version which does not exist). Otherwise two
 	 * long values are written, first the most significant bits of the UUID and then the least significant bits.</p>
 	 * @param uuid the UUID to write, may be null
 	 */
@@ -135,7 +142,8 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 	 * <p>Write the given EnumSet to this stream.</p>
 	 * <p>If the EnumSet is null, the long value {@code 1L << 63L} is written. Otherwise a long value is written where the
 	 * ith bit represents if the enum constant with ordinal value i is present in the Set.</p>
-	 * <p>This method only supports Enum types with at most 63 constants.</p>
+	 * <p>This method only supports Enum types with at most 63 constants. If an Enum type with 64 or more constants is used,
+	 * the behavior of this method is unspecified.</p>
 	 * @param enumSet the EnumSet to write, may be null
 	 */
 	<E extends Enum<E>> void writeEnumSet(EnumSet<E> enumSet);
@@ -287,20 +295,60 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 	 */
 	void writeDoubles(double[] doubles, int off, int len);
 
+	/**
+	 * <p>Write the given Boolean to the stream. The Boolean is encoded as a single byte. The value {@code false} is
+	 * encoded as {@code 0}, {@code true} as {@code 1} and {@code null} as {@code -1}.</p>
+	 * @param b the Boolean
+	 */
 	void writeBooleanBox(Boolean b);
 
+	/**
+	 * <p>Write the given Byte to the stream. If the value is {@code null}, a single byte {@code 0} is written.
+	 * Otherwise a byte {@code 1} is written followed by the given Byte.</p>
+	 * @param b the the Byte
+	 */
 	void writeByteBox(Byte b);
 
+	/**
+	 * <p>Write the given Short to the stream. If the value is {@code null}, a single byte {@code 0} is written.
+	 * Otherwise a byte {@code 1} is written followed by the given Short.</p>
+	 * @param s the Short
+	 */
 	void writeShortBox(Short s);
 
+	/**
+	 * <p>Write the given Character to the stream. If the value is {@code null}, a single byte {@code 0} is written.
+	 * Otherwise a byte {@code 1} is written followed by the given Character.</p>
+	 * @param c the Character
+	 */
 	void writeCharBox(Character c);
 
+	/**
+	 * <p>Write the given Integer to the stream. If the value is {@code null}, a single byte {@code 0} is written.
+	 * Otherwise a byte {@code 1} is written followed by the given Integer.</p>
+	 * @param i the Integer
+	 */
 	void writeIntBox(Integer i);
 
+	/**
+	 * <p>Write the given Long to the stream. If the value is {@code null}, a single byte {@code 0} is written.
+	 * Otherwise a byte {@code 1} is written followed by the given Long.</p>
+	 * @param l the Long
+	 */
 	void writeLongBox(Long l);
 
+	/**
+	 * <p>Write the given Float to the stream. If the value is {@code null}, a single byte {@code 0} is written.
+	 * Otherwise a byte {@code 1} is written followed by the given Float.</p>
+	 * @param f the Float
+	 */
 	void writeFloatBox(Float f);
 
+	/**
+	 * <p>Write the given Double to the stream. If the value is {@code null}, a single byte {@code 0} is written.
+	 * Otherwise a byte {@code 1} is written followed by the given Double.</p>
+	 * @param d the Double
+	 */
 	void writeDoubleBox(Double d);
 
 	/**
@@ -353,5 +401,11 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 	 * @see #lock()
 	 */
 	boolean isLocked();
+
+	/**
+	 * <p>Get an {@code OutputStream} view of this stream. The created stream writes through to this stream.</p>
+	 * @return an OutputStream
+	 */
+	OutputStream asOutputStream();
 
 }

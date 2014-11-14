@@ -116,9 +116,9 @@ public interface MCDataInput extends ByteArrayDataInput {
 
 	/**
 	 * <p>Read a UUID from the buffer.</p>
-	 * <p>This method first reads a short, containing the least significant 2 bytes of the UUIDs most significant bits.
-	 * If this short equals {@code 0xF000}, null is returned. That value specifies a fake UUID version used for null here.
-	 * Otherwise the rest of the UUIDs most significant bits are read and after that the UUIDs least significant bits are read.</p>
+	 * <p>This method first reads a long, containing the UUIDs most significant bits.
+	 * If this long equals {@code 0xF000}, null is returned. Otherwise a second long value is read, containing the UUIDs
+	 * least significant bits.</p>
 	 * @return a UUID or null
 	 */
 	UUID readUUID();
@@ -153,8 +153,8 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 * <p>This method reads a long value from the buffer, as if by the {@link #readLong()} method. If that long value is
 	 * equal to {@code 1L << 63L}, null is returned. Otherwise a new EnumSet is returned. If the bit {@code 1 << i} the
 	 * Enum constant with ordinal value {@code i} is present in the set.</p>
-	 * <p>Resulting from this representation, this method only supports Enum types with at most 63 constants, which should
-	 * be plenty for any reasonable use of enums.</p>
+	 * <p>This method only supports Enum types with at most 63 constants. If an Enm type with 64 or more constants is used,
+	 * this method throws an {@code IllegalArgumentException}.</p>
 	 * @param enumClass the type of enum in the EnumSet to be read
 	 * @return an EnumSet or null
 	 */

@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.net;
 
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.BlockCoordinates;
-import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import de.take_weiland.mods.commons.util.ByteStreamSerializers;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.block.Block;
@@ -46,6 +45,11 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 	MCDataOutputImpl(int initialCap) {
 		checkArgument(initialCap >= 0, "negative initial size");
 		buf = new byte[initialCap];
+	}
+
+	@Override
+	public OutputStream asOutputStream() {
+		return this;
 	}
 
 	@Override
@@ -347,24 +351,18 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		BlockCoordinates.toByteStream(this, x, y, z);
 	}
 
-	@Override
-	public void write(ByteStreamSerializable obj) {
-		obj.writeTo(this);
-	}
-
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public void write(Object obj) {
 		ByteStreamSerializers.getSerializer((Class) obj.getClass()).write(obj, this);
 	}
 
-	static final int UUID_FAKE_NULL_VERSION = 0xF000;
-	static final int UUID_VERSION_MASK = 0xF000;
+	static final long UUID_NULL_MSB = 0xF000;
 
 	@Override
 	public void writeUUID(UUID uuid) {
 		if (uuid == null) {
-			writeShort(UUID_FAKE_NULL_VERSION);
+			writeLong(UUID_NULL_MSB);
 		} else {
 			writeLong(uuid.getMostSignificantBits());
 			writeLong(uuid.getLeastSignificantBits());
@@ -391,14 +389,8 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 	public <E extends Enum<E>> void writeEnumSet(EnumSet<E> enumSet) {
 		if (enumSet == null) {
 			writeLong(ENUM_SET_NULL);
-		} else if (enumSet.size() == 0) {
-			writeLong(0);
 		} else {
-			long l = 0;
-			for (E e : enumSet) {
-				l |= (1L << e.ordinal());
-			}
-			writeLong(l);
+			writeLong(BufferUtils.enumSetHandler.asLong(enumSet));
 		}
 	}
 

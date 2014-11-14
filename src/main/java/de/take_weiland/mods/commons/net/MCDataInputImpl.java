@@ -12,8 +12,10 @@ import net.minecraftforge.fluids.FluidStack;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.Map;
@@ -25,6 +27,7 @@ import static de.take_weiland.mods.commons.net.MCDataOutputImpl.*;
 /**
  * @author diesieben07
  */
+@ParametersAreNonnullByDefault
 abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput {
 
 	private static final int NO_MARK = -1;
@@ -46,7 +49,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public int read(@NotNull byte[] b, int off, int len) {
+	public int read(byte[] b, int off, int len) {
 		checkPositionIndexes(off, off + len, buf.length);
 		int avail = maxLen - pos;
 		if (avail == 0) {
@@ -61,7 +64,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public int read(@NotNull byte[] b) {
+	public int read(byte[] b) {
 		return read(b, 0, b.length);
 	}
 
@@ -121,7 +124,6 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		}
 	}
 
-	@NotNull
 	@Override
 	public String readUTF() {
 		try {
@@ -287,42 +289,12 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 
 	@Override
 	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass) {
-		long l = readLong();
-		if (l == ENUM_SET_NULL) {
-			return null;
-		} else {
-			EnumSet<E> set = EnumSet.noneOf(enumClass);
-			if (l != 0) {
-				for (E e : JavaUtils.getEnumConstantsShared(enumClass)) {
-					if ((l & (1 << e.ordinal())) != 0) {
-						set.add(e);
-					}
-				}
-			}
-			return set;
-		}
+		return BufferUtils.enumSetHandler.createShared(enumClass, readLong());
 	}
 
 	@Override
 	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass, EnumSet<E> set) {
-		long l = readLong();
-		if (l == ENUM_SET_NULL) {
-			return null;
-		} else {
-			if (set == null) {
-				set = EnumSet.noneOf(enumClass);
-			} else {
-				set.clear();
-			}
-			E[] all = JavaUtils.getEnumConstantsShared(enumClass);
-			int len = all.length;
-			for (int i = 0; i < len; i++) {
-				if ((l & (1 << i)) != 0) {
-					set.add(all[i]);
-				}
-			}
-			return set;
-		}
+		return BufferUtils.enumSetHandler.update(enumClass, set, readLong());
 	}
 
 	@Override
@@ -396,32 +368,11 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 
 	@Override
 	public UUID readUUID() {
-		checkAvailable(2);
-		byte[] buf = this.buf;
-		int pos = this.pos;
-		short short0 = (short) ((buf[pos++] & 0xFF) | buf[pos++] << 8);
-		if ((short0 & UUID_VERSION_MASK) == UUID_FAKE_NULL_VERSION) {
-			this.pos = pos;
+		long msb = readLong();
+		if (msb == UUID_NULL_MSB) {
 			return null;
 		} else {
-			checkAvailable(14);
-			long msb = (long) (short0 & 0xFFFF)
-					| (long) (buf[pos++] & 0xFF) << 16
-					| (long) (buf[pos++] & 0xFF) << 24
-					| (long) (buf[pos++] & 0xFF) << 32
-					| (long) (buf[pos++] & 0xFF) << 40
-					| (long) (buf[pos++] & 0xFF) << 48
-					| (long) (buf[pos++] & 0xFF) << 56;
-			long lsb = (long) (buf[pos++] & 0xFF)
-					| (long) (buf[pos++] & 0xFF) << 8
-					| (long) (buf[pos++] & 0xFF) << 16
-					| (long) (buf[pos++] & 0xFF) << 24
-					| (long) (buf[pos++] & 0xFF) << 32
-					| (long) (buf[pos++] & 0xFF) << 40
-					| (long) (buf[pos++] & 0xFF) << 48
-					| (long) (buf[pos] & 0xFF) << 56;
-			this.pos = pos + 1;
-			return new UUID(msb, lsb);
+			return new UUID(msb, readLong());
 		}
 	}
 
