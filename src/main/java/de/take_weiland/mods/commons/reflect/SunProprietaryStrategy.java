@@ -71,14 +71,18 @@ class SunProprietaryStrategy extends AbstractStrategy {
 		mv.visitInsn(DUP);
 
 		Class<?>[] params = cstr.getParameterTypes();
+
+		int idx = 1;
 		for (int i = 0; i < params.length; i++) {
-			 mv.visitVarInsn(Type.getType(params[i]).getOpcode(ILOAD), i + 1);
+			Type type = Type.getType(params[i]);
+			mv.visitVarInsn(type.getOpcode(ILOAD), idx);
+			idx += type.getSize();
 		}
 
 		mv.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(cstr.getDeclaringClass()), "<init>", Type.getConstructorDescriptor(cstr));
 		mv.visitInsn(ARETURN);
 
-		mv.visitMaxs(2 + params.length, 1 + params.length);
+		mv.visitMaxs(1 + idx, idx);
 		mv.visitEnd();
 	}
 
