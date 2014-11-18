@@ -10,43 +10,39 @@ import net.minecraft.item.ItemStack;
 /**
  * @author diesieben07
  */
-public class ItemStackSyncer implements ValueSyncer<ItemStack> {
-
-	private ItemStack companion;
+public final class ItemStackSyncer implements ValueSyncer<ItemStack> {
 
 	@Override
-	public boolean hasChanged(ItemStack value) {
-		return !ItemStacks.identical(companion, value);
+	public boolean hasChanged(ItemStack value, Object data) {
+		return !ItemStacks.identical((ItemStack) data, value);
 	}
 
 	@Override
-	public void writeAndUpdate(ItemStack value, MCDataOutputStream out) {
-		companion = ItemStacks.clone(value);
+	public Object writeAndUpdate(ItemStack value, MCDataOutputStream out, Object data) {
 		out.writeItemStack(value);
+		return ItemStacks.clone(value);
 	}
 
 	@Override
-	public ItemStack read(MCDataInputStream in) {
+	public ItemStack read(MCDataInputStream in, Object data) {
 		return in.readItemStack();
 	}
 
-	public static class Contents implements ContentSyncer<ItemStack> {
-
-		private ItemStack companion;
+	public static final class Contents implements ContentSyncer<ItemStack> {
 
 		@Override
-		public boolean hasChanged(ItemStack value) {
-			return !ItemStacks.identical(value, companion);
+		public boolean hasChanged(ItemStack value, Object data) {
+			return !ItemStacks.identical(value, (ItemStack) data);
 		}
 
 		@Override
-		public void writeAndUpdate(ItemStack value, MCDataOutputStream out) {
-			companion = ItemStacks.clone(value);
+		public Object writeAndUpdate(ItemStack value, MCDataOutputStream out, Object data) {
 			out.writeItemStack(value);
+			return ItemStacks.clone(value);
 		}
 
 		@Override
-		public void read(ItemStack value, MCDataInputStream in) {
+		public void read(ItemStack value, MCDataInputStream in, Object data) {
 			int id = in.readShort();
 			if (id == -1) {
 				throw new IllegalArgumentException();

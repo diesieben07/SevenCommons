@@ -11,21 +11,19 @@ import net.minecraft.block.Block;
  */
 public class BlockSyncer implements ValueSyncer<Block>, HandleSubclasses {
 
-	private Block companion;
-
 	@Override
-	public boolean hasChanged(Block value) {
-		return value != companion;
+	public boolean hasChanged(Block value, Object data) {
+		return value != data;
 	}
 
 	@Override
-	public void writeAndUpdate(Block value, MCDataOutputStream out) {
+	public Object writeAndUpdate(Block value, MCDataOutputStream out, Object data) {
 		out.writeBlock(value);
-		companion = value;
+		return value;
 	}
 
 	@Override
-	public Block read(MCDataInputStream in) {
+	public Block read(MCDataInputStream in, Object data) {
 		return in.readBlock();
 	}
 }

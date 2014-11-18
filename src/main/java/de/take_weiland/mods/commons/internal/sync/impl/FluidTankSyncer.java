@@ -18,55 +18,61 @@ import static java.lang.invoke.MethodType.methodType;
  */
 public final class FluidTankSyncer implements ContentSyncer<FluidTank> {
 
-	private FluidStack companion;
-
 	private FluidTankSyncer() { }
 
 	@Override
-	public boolean hasChanged(FluidTank value) {
-		return !Fluids.identical(companion, value.getFluid());
+	public boolean hasChanged(FluidTank value, Object data) {
+		return !Fluids.identical((FluidStack) data, value.getFluid());
 	}
 
 	@Override
-	public void writeAndUpdate(FluidTank value, MCDataOutputStream out) {
+	public Object writeAndUpdate(FluidTank value, MCDataOutputStream out, Object data) {
 		FluidStack fluid = value.getFluid();
-		companion = Fluids.clone(fluid);
 		out.writeFluidStack(fluid);
+		return Fluids.clone(fluid);
 	}
 
 	@Override
-	public void read(FluidTank value, MCDataInputStream in) {
+	public void read(FluidTank value, MCDataInputStream in, Object data) {
 		value.setFluid(in.readFluidStack());
 	}
 
 	private static final class WithCapacity implements ContentSyncer<FluidTank> {
 
-		private FluidStack companion;
-		private int capComp;
-
 		WithCapacity() {}
 
 		@Override
-		public boolean hasChanged(FluidTank value) {
-			return capComp != value.getCapacity() || !Fluids.identical(companion, value.getFluid());
+		public boolean hasChanged(FluidTank value, Object data) {
+			DataObject dataObject = (DataObject) data;
+			return dataObject.capComp != value.getCapacity() || !Fluids.identical(dataObject.companion, value.getFluid());
 		}
 
 		@Override
-		public void writeAndUpdate(FluidTank value, MCDataOutputStream out) {
+		public Object writeAndUpdate(FluidTank value, MCDataOutputStream out, Object data) {
 			FluidStack fluid = value.getFluid();
 			int cap = value.getCapacity();
-			companion = Fluids.clone(fluid);
-			capComp = cap;
 
 			out.writeFluidStack(fluid);
 			out.writeVarInt(cap);
+
+			DataObject dataObject = (DataObject) data;
+			dataObject.companion = Fluids.clone(fluid);
+			dataObject.capComp = cap;
+			return data;
 		}
 
 		@Override
-		public void read(FluidTank value, MCDataInputStream in) {
+		public void read(FluidTank value, MCDataInputStream in, Object data) {
 			value.setFluid(in.readFluidStack());
 			value.setCapacity(in.readVarInt());
 		}
+	}
+
+	private static final class DataObject {
+
+		FluidStack companion;
+		int capComp;
+
 	}
 
 	private static final CallSite noCapCstr;

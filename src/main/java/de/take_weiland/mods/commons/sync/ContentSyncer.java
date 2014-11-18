@@ -9,10 +9,10 @@ import de.take_weiland.mods.commons.net.MCDataOutputStream;
  */
 public interface ContentSyncer<T> {
 
-	boolean hasChanged(T value);
+	boolean hasChanged(T value, Object data);
 
-	void writeAndUpdate(T value, MCDataOutputStream out);
+	Object writeAndUpdate(T value, MCDataOutputStream out, Object data);
 
-	void read(T value, MCDataInputStream in);
+	void read(T value, MCDataInputStream in, Object data);
 
 }

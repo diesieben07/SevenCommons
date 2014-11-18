@@ -10,43 +10,39 @@ import net.minecraftforge.fluids.FluidStack;
 /**
  * @author diesieben07
  */
-public class FluidStackSyncer implements ValueSyncer<FluidStack> {
-
-	private FluidStack companion;
+public final class FluidStackSyncer implements ValueSyncer<FluidStack> {
 
 	@Override
-	public boolean hasChanged(FluidStack value) {
-		return !Fluids.identical(companion, value);
+	public boolean hasChanged(FluidStack value, Object data) {
+		return !Fluids.identical((FluidStack) data, value);
 	}
 
 	@Override
-	public void writeAndUpdate(FluidStack value, MCDataOutputStream out) {
-		companion = Fluids.clone(value);
+	public Object writeAndUpdate(FluidStack value, MCDataOutputStream out, Object data) {
 		out.writeFluidStack(value);
+		return Fluids.clone(value);
 	}
 
 	@Override
-	public FluidStack read(MCDataInputStream in) {
+	public FluidStack read(MCDataInputStream in, Object data) {
 		return in.readFluidStack();
 	}
 
-	public static class Contents implements ContentSyncer<FluidStack> {
-
-		private FluidStack companion;
+	public static final class Contents implements ContentSyncer<FluidStack> {
 
 		@Override
-		public boolean hasChanged(FluidStack value) {
-			return !Fluids.identical(value, companion);
+		public boolean hasChanged(FluidStack value, Object data) {
+			return !Fluids.identical(value, (FluidStack) data);
 		}
 
 		@Override
-		public void writeAndUpdate(FluidStack value, MCDataOutputStream out) {
-			companion = Fluids.clone(value);
+		public Object writeAndUpdate(FluidStack value, MCDataOutputStream out, Object data) {
 			out.writeFluidStack(value);
+			return Fluids.clone(value);
 		}
 
 		@Override
-		public void read(FluidStack value, MCDataInputStream in) {
+		public void read(FluidStack value, MCDataInputStream in, Object data) {
 			int id = in.readVarInt();
 			if (id == -1) {
 				throw new IllegalArgumentException();

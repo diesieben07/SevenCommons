@@ -11,54 +11,54 @@ import java.util.BitSet;
 /**
  * @author diesieben07
  */
-public class BitSetSyncer implements ValueSyncer<BitSet> {
-
-	private BitSet companion;
+public final class BitSetSyncer implements ValueSyncer<BitSet> {
 
 	@Override
-	public boolean hasChanged(BitSet value) {
-		return !Objects.equal(companion, value);
+	public boolean hasChanged(BitSet value, Object data) {
+		return !Objects.equal(data, value);
 	}
 
 	@Override
-	public void writeAndUpdate(BitSet value, MCDataOutputStream out) {
+	public Object writeAndUpdate(BitSet value, MCDataOutputStream out, Object data) {
 		if (value == null) {
-			companion = null;
-		} else if (companion == null) {
-			companion = (BitSet) value.clone();
+			data = null;
+		} else if (data == null) {
+			data = value.clone();
 		} else {
-			companion.clear();
-			companion.or(value);
+			BitSet bs = (BitSet) data;
+			bs.clear();
+			bs.or(value);
 		}
 		out.writeBitSet(value);
+		return data;
 	}
 
 	@Override
-	public BitSet read(MCDataInputStream in) {
+	public BitSet read(MCDataInputStream in, Object data) {
 		return in.readBitSet();
 	}
 
-	public static class Contents implements ContentSyncer<BitSet> {
-
-		private BitSet companion;
+	public static final class Contents implements ContentSyncer<BitSet> {
 
 		@Override
-		public boolean hasChanged(BitSet value) {
-			return !Objects.equal(companion, value);
+		public boolean hasChanged(BitSet value, Object data) {
+			return !Objects.equal(data, value);
 		}
 
 		@Override
-		public void writeAndUpdate(BitSet value, MCDataOutputStream out) {
-			if (companion == null) {
-				companion = (BitSet) value.clone();
+		public Object writeAndUpdate(BitSet value, MCDataOutputStream out, Object data) {
+			if (data == null) {
+				data = value.clone();
 			} else {
-				companion.clear();
-				companion.or(value);
+				BitSet bs = (BitSet) data;
+				bs.clear();
+				bs.or(value);
 			}
+			return data;
 		}
 
 		@Override
-		public void read(BitSet value, MCDataInputStream in) {
+		public void read(BitSet value, MCDataInputStream in, Object data) {
 			in.readBitSet(value);
 		}
 	}

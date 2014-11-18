@@ -8,23 +8,21 @@ import net.minecraft.item.Item;
 /**
  * @author diesieben07
  */
-public class ItemSyncer implements ValueSyncer<Item> {
-
-	private Item companion;
+public final class ItemSyncer implements ValueSyncer<Item> {
 
 	@Override
-	public boolean hasChanged(Item value) {
-		return value != companion;
+	public boolean hasChanged(Item value, Object data) {
+		return value != data;
 	}
 
 	@Override
-	public void writeAndUpdate(Item value, MCDataOutputStream out) {
-		companion = value;
+	public Object writeAndUpdate(Item value, MCDataOutputStream out, Object data) {
 		out.writeItem(value);
+		return value;
 	}
 
 	@Override
-	public Item read(MCDataInputStream in) {
+	public Item read(MCDataInputStream in, Object data) {
 		return in.readItem();
 	}
 }
