@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.sync.impl;
+package de.take_weiland.mods.commons.sync.impl;
 
 import com.google.common.base.Objects;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
@@ -12,6 +12,8 @@ import java.util.BitSet;
  * @author diesieben07
  */
 public final class BitSetSyncer implements ValueSyncer<BitSet> {
+
+	public BitSetSyncer() { }
 
 	@Override
 	public boolean hasChanged(BitSet value, Object data) {
@@ -40,6 +42,8 @@ public final class BitSetSyncer implements ValueSyncer<BitSet> {
 
 	public static final class Contents implements ContentSyncer<BitSet> {
 
+		public Contents() { }
+
 		@Override
 		public boolean hasChanged(BitSet value, Object data) {
 			return !Objects.equal(data, value);
@@ -59,7 +63,9 @@ public final class BitSetSyncer implements ValueSyncer<BitSet> {
 
 		@Override
 		public void read(BitSet value, MCDataInputStream in, Object data) {
-			in.readBitSet(value);
+			if (in.readBitSet(value) != value) {
+				throw new RuntimeException("Value for ContentSyncer is null on client!");
+			}
 		}
 	}
 }

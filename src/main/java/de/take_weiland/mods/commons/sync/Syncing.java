@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.sync;
 
-import de.take_weiland.mods.commons.internal.sync.SyncingManager;
-
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -27,7 +25,7 @@ public final class Syncing {
 	 * @param syncer the syncer class
 	 */
 	public static <T> void registerSyncer(Class<T> clazz, Class<? extends ValueSyncer<T>> syncer) {
-		SyncingManager.regSyncer(clazz, syncer);
+//		SyncingManager.regSyncer(clazz, syncer);
 	}
 
 	/**
@@ -43,7 +41,7 @@ public final class Syncing {
 	 * @param watcher the syncer class
 	 */
 	public static <T> void registerContentSyncer(Class<T> clazz, Class<? extends ContentSyncer<T>> watcher) {
-		SyncingManager.regContentSyncer(clazz, watcher);
+//		SyncingManager.regContentSyncer(clazz, watcher);
 	}
 
 	private Syncing() { }

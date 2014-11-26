@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.reflect.Reflection;
+import com.google.common.reflect.TypeToken;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
@@ -15,6 +16,8 @@ import de.take_weiland.mods.commons.inv.BasicSlot;
 import de.take_weiland.mods.commons.inv.ButtonContainer;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.Inventories;
+import de.take_weiland.mods.commons.sync.SyncTypeInfo;
+import de.take_weiland.mods.commons.sync.TypeInfos;
 import de.take_weiland.mods.commons.tileentity.TileEntityInventory;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
@@ -37,6 +40,7 @@ import net.minecraftforge.fluids.FluidRegistry;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.EnumSet;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
@@ -45,8 +49,13 @@ public class testmod_sc {
 
 	private static EnumSet<ForgeDirection>[] sets = new EnumSet[5];
 
-	public static void main(@Nonnull String[] bar) {
+	public static void main(@Nonnull String[] bar) throws NoSuchFieldException {
+		Type fieldType = testmod_sc.class.getDeclaredField("sets").getGenericType();
 
+		SyncTypeInfo base = TypeInfos.forType(fieldType);
+		System.out.println(TypeInfos.getArrayComponent(base).getRawType());
+
+		System.out.println(TypeToken.of(fieldType).getComponentType().getRawType());
 	}
 
 	@Mod.Instance

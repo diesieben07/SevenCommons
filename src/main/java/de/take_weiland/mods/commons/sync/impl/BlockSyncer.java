@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.sync.impl;
+package de.take_weiland.mods.commons.sync.impl;
 
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
@@ -9,7 +9,9 @@ import net.minecraft.block.Block;
 /**
  * @author diesieben07
  */
-public class BlockSyncer implements ValueSyncer<Block>, HandleSubclasses {
+public final class BlockSyncer implements ValueSyncer<Block>, HandleSubclasses {
+
+	public BlockSyncer() { }
 
 	@Override
 	public boolean hasChanged(Block value, Object data) {

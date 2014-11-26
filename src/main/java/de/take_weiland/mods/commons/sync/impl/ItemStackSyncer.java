@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.sync.impl;
+package de.take_weiland.mods.commons.sync.impl;
 
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
@@ -11,6 +11,8 @@ import net.minecraft.item.ItemStack;
  * @author diesieben07
  */
 public final class ItemStackSyncer implements ValueSyncer<ItemStack> {
+
+	public ItemStackSyncer() { }
 
 	@Override
 	public boolean hasChanged(ItemStack value, Object data) {
@@ -30,6 +32,8 @@ public final class ItemStackSyncer implements ValueSyncer<ItemStack> {
 
 	public static final class Contents implements ContentSyncer<ItemStack> {
 
+		public Contents() { }
+
 		@Override
 		public boolean hasChanged(ItemStack value, Object data) {
 			return !ItemStacks.identical(value, (ItemStack) data);
@@ -37,17 +41,16 @@ public final class ItemStackSyncer implements ValueSyncer<ItemStack> {
 
 		@Override
 		public Object writeAndUpdate(ItemStack value, MCDataOutputStream out, Object data) {
-			out.writeItemStack(value);
+			out.writeShort(value.itemID);
+			out.writeShort(value.getItemDamage());
+			out.writeByte(value.stackSize);
+			out.writeNBT(value.stackTagCompound);
 			return ItemStacks.clone(value);
 		}
 
 		@Override
 		public void read(ItemStack value, MCDataInputStream in, Object data) {
-			int id = in.readShort();
-			if (id == -1) {
-				throw new IllegalArgumentException();
-			}
-			value.itemID = id;
+			value.itemID = in.readShort();
 			value.setItemDamage(in.readShort());
 			value.stackSize = in.readByte();
 			value.stackTagCompound = in.readNBT();

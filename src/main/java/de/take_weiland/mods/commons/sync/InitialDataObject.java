@@ -7,6 +7,5 @@ public interface InitialDataObject {
 
 	Object initialDataObject();
 
-	Object initialDataObject
 
 }

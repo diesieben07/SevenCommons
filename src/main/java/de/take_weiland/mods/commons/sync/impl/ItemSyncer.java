@@ -1,14 +1,17 @@
-package de.take_weiland.mods.commons.internal.sync.impl;
+package de.take_weiland.mods.commons.sync.impl;
 
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
+import de.take_weiland.mods.commons.sync.HandleSubclasses;
 import de.take_weiland.mods.commons.sync.ValueSyncer;
 import net.minecraft.item.Item;
 
 /**
  * @author diesieben07
  */
-public final class ItemSyncer implements ValueSyncer<Item> {
+public final class ItemSyncer implements ValueSyncer<Item>, HandleSubclasses {
+
+	public ItemSyncer() { }
 
 	@Override
 	public boolean hasChanged(Item value, Object data) {

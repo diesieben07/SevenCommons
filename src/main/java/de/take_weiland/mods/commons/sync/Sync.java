@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.internal.AnnotationNull;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -42,5 +44,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Target({ FIELD, METHOD })
 public @interface Sync {
+
+	Class<? extends ValueSyncer<?>> with() default AnnotationNull.class;
 
 }

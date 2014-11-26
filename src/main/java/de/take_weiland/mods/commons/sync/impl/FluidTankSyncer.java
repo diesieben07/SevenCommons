@@ -1,15 +1,15 @@
-package de.take_weiland.mods.commons.internal.sync.impl;
+package de.take_weiland.mods.commons.sync.impl;
 
-import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.ContentSyncer;
-import de.take_weiland.mods.commons.sync.SyncCapacity;
 import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 
-import java.lang.invoke.*;
+import java.lang.invoke.CallSite;
+import java.lang.invoke.ConstantCallSite;
+import java.lang.invoke.MethodHandles;
 
 import static java.lang.invoke.MethodType.methodType;
 
@@ -39,7 +39,7 @@ public final class FluidTankSyncer implements ContentSyncer<FluidTank> {
 
 	private static final class WithCapacity implements ContentSyncer<FluidTank> {
 
-		WithCapacity() {}
+		private WithCapacity() {}
 
 		@Override
 		public boolean hasChanged(FluidTank value, Object data) {
@@ -91,30 +91,30 @@ public final class FluidTankSyncer implements ContentSyncer<FluidTank> {
 	}
 
 	public static void register() {
-		SyncingManager.regContentSyncer(FluidTank.class, new SyncingManager.CallSiteProvider() {
-			@Override
-			public CallSite get(Class<?> caller, String member, boolean isMethod) {
-				try {
-					boolean syncCap;
-					if (isMethod) {
-						syncCap = caller.getDeclaredMethod(member).isAnnotationPresent(SyncCapacity.class);
-					} else {
-						syncCap = caller.getDeclaredField(member).isAnnotationPresent(SyncCapacity.class);
-					}
-					if (syncCap) {
-						return withCapCstr;
-					} else {
-						return noCapCstr;
-					}
-				} catch (ReflectiveOperationException e) {
-					throw new AssertionError(e);
-				}
-			}
-
-			@Override
-			public boolean handlesSubclasses() {
-				return true;
-			}
-		});
+//		SyncingManager.regContentSyncer(FluidTank.class, new SyncingManager.CallSiteProvider() {
+//			@Override
+//			public CallSite get(Class<?> caller, String member, boolean isMethod) {
+//				try {
+//					boolean syncCap;
+//					if (isMethod) {
+//						syncCap = caller.getDeclaredMethod(member).isAnnotationPresent(SyncCapacity.class);
+//					} else {
+//						syncCap = caller.getDeclaredField(member).isAnnotationPresent(SyncCapacity.class);
+//					}
+//					if (syncCap) {
+//						return withCapCstr;
+//					} else {
+//						return noCapCstr;
+//					}
+//				} catch (ReflectiveOperationException e) {
+//					throw new AssertionError(e);
+//				}
+//			}
+//
+//			@Override
+//			public boolean handlesSubclasses() {
+//				return true;
+//			}
+//		});
 	}
 }

@@ -9,6 +9,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +17,20 @@ import java.util.Set;
  * <p>Utilities for working with player entities.</p>
  */
 public final class Players {
+
+	@Nullable
+	public static EntityPlayerMP getSPOwner() {
+		MinecraftServer server = MinecraftServer.getServer();
+		if (server.isDedicatedServer()) {
+			return null;
+		}
+		return forName(server.getServerOwner());
+	}
+
+	public static boolean isSPOwner(EntityPlayer player) {
+		MinecraftServer server = MinecraftServer.getServer();
+		return !server.isDedicatedServer() && player.username.equals(server.getServerOwner());
+	}
 
 	/**
 	 * <p>Gets an Iterable containing all operators currently online on this server.</p>
