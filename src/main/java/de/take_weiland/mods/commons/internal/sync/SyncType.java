@@ -128,7 +128,7 @@ public enum SyncType {
 			method = new MethodNode(ACC_PUBLIC, name, desc, null, null);
 			clazz.methods.add(method);
 
-			CodePieces.invokeSuper(clazz, method).appendTo(method.instructions);
+			CodePieces.invokeSuper(clazz, name, getReturnType(desc)).appendTo(method.instructions);
 			method.instructions.add(new InsnNode(RETURN));
 		} else {
 			method.localVariables.clear();

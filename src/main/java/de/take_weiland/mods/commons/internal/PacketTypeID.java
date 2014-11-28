@@ -11,12 +11,12 @@ import java.io.IOException;
  * @author diesieben07
  */
 @PacketDirection(PacketDirection.Dir.TO_CLIENT)
-public class PacketTypeId extends ModPacket {
+public class PacketTypeID extends ModPacket {
 
 	private Class<?> clazz;
 	private int id;
 
-	public PacketTypeId(Class<?> clazz, int id) {
+	public PacketTypeID(Class<?> clazz, int id) {
 		this.clazz = clazz;
 		this.id = id;
 	}

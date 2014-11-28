@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.internal.sync;
 
-import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.sync.ContentSyncer;
 import de.take_weiland.mods.commons.sync.ValueSyncer;
+import de.take_weiland.mods.commons.sync.ctx.SyncContext;
 
 /**
  * @author diesieben07
@@ -19,13 +19,13 @@ public final class StandardSyncerFinder<S> implements SyncerFinder {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> ValueSyncer<T> findValueSyncer(TypeToken<T> type) {
+	public <T> ValueSyncer<T> findValueSyncer(SyncContext<T> context) {
 		// cast is safe, T == S
-		return type.getRawType() == clazz ? (ValueSyncer<T>) syncer : null;
+		return context.getRawType() == clazz ? (ValueSyncer<T>) syncer : null;
 	}
 
 	@Override
-	public <T> ContentSyncer<T> findContentSyncer(TypeToken<T> type) {
+	public <T> ContentSyncer<T> findContentSyncer(SyncContext<T> context) {
 		return null;
 	}
 
@@ -40,15 +40,15 @@ public final class StandardSyncerFinder<S> implements SyncerFinder {
 		}
 
 		@Override
-		public <T> ValueSyncer<T> findValueSyncer(TypeToken<T> type) {
+		public <T> ValueSyncer<T> findValueSyncer(SyncContext<T> context) {
 			return null;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public <T> ContentSyncer<T> findContentSyncer(TypeToken<T> type) {
+		public <T> ContentSyncer<T> findContentSyncer(SyncContext<T> context) {
 			// cast is safe, T == S
-			return type.getRawType() == clazz ? (ContentSyncer<T>) syncer : null;
+			return context.getRawType() == clazz ? (ContentSyncer<T>) syncer : null;
 		}
 
 	}

@@ -291,7 +291,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		CodePiece nextIdxFromStream = CodePieces.invoke(state.clazz, state.readIdx, getThis(), stream.get());
 
 		if (state.isSuperSynced()) {
-			CodePiece idxFromSuper = CodePieces.invokeSuper(state.clazz, method, stream.get());
+			CodePiece idxFromSuper = CodePieces.invokeSuper(state.clazz, method.name, stream.get());
 			idx.set(idxFromSuper).appendTo(insns);
 		} else {
 			idx.set(nextIdxFromStream).appendTo(insns);

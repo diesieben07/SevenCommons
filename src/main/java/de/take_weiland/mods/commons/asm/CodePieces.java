@@ -1,13 +1,14 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.ObjectArrays;
 import com.google.common.primitives.Primitives;
+import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import javax.annotation.Nullable;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -20,7 +21,16 @@ import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
 /**
- * <p>Factory class for CodePieces</p>
+ * <p>Factory class for CodePieces.</p>
+ * <p>When a Class is required, methods in this class will accept an {@code Object}. This object must be one of the following:
+ * <ul>
+ *     <li>An ASM {@link org.objectweb.asm.Type Type}</li>
+ *     <li>A {@code Class} object</li>
+ *     <li>A {@link org.objectweb.asm.tree.ClassNode}</li>
+ *     <li>A {@code String} representing an internal name</li>
+ * </ul></p>
+ * <p>When a value of some sort is required, {@code Object} will be accepted as well. If a {@code CodePiece} is passed, it's value will be used.
+ * Any other object will be converted into a {@code CodePiece} using {@link #constant(Object)}.</p>
  *
  * @author diesieben07
  * @see de.take_weiland.mods.commons.asm.CodePiece
@@ -341,63 +351,20 @@ public final class CodePieces {
 		return value.append(of(new FieldInsnNode(PUTSTATIC, clazz, field, desc)));
 	}
 
-	/**
-	 * <p>Create a CodePiece that will invoke the given static method with the given arguments.</p>
-	 *
-	 * @param clazz  the class containing the method
-	 * @param method the method to invoke
-	 * @param desc   the method descriptor
-	 * @param args   the arguments for the method
-	 * @return a CodePiece
-	 */
-	public static CodePiece invokeStatic(String clazz, String method, String desc, CodePiece... args) {
-		return invoke(INVOKESTATIC, clazz, method, desc, args);
+	public static CodePiece invokeStatic(Object clazz, String method, Object returnType, Object... typesAndArgs) {
+		return invoke0(INVOKESTATIC, clazz, method, null, returnType, typesAndArgs);
 	}
 
-	public static CodePiece invokeVirtual(String clazz, String method, String desc, CodePiece... args) {
-		return invoke(INVOKEVIRTUAL, clazz, method, desc, args);
+	public static CodePiece invokeVirtual(Object clazz, String method, Object instance, Object returnType, Object... typesAndArgs) {
+		return invoke0(INVOKEVIRTUAL, clazz, method, instance, returnType, typesAndArgs);
 	}
 
-	public static CodePiece invokeInterface(String clazz, String method, String desc, CodePiece... args) {
-		return invoke(INVOKEINTERFACE, clazz, method, desc, args);
+	public static CodePiece invokeInterface(Object clazz, String method, Object instance, Object returnType, Object... typesAndArgs) {
+		return invoke0(INVOKEINTERFACE, clazz, method, instance, returnType, typesAndArgs);
 	}
 
-	public static CodePiece invokeSpecial(String clazz, String method, String desc, CodePiece... args) {
-		return invoke(INVOKESPECIAL, clazz, method, desc, args);
-	}
-
-	/**
-	 * <p>Create a CodePiece that will invoke the given method using the given opcode and arguments.</p>
-	 *
-	 * @param invokeOpcode the opcode to use to invoke the method (must be {@code INVOKEVIRTUAL}, {@code INVOKESPECIAL} or {@code INVOKESTATIC})
-	 * @param clazz        the class containing the method
-	 * @param method       the method to invoke
-	 * @param desc         the method descriptor
-	 * @param args         the arguments for the method (in case of a non-static method pass the instance as the first argument)
-	 * @return a CodePiece
-	 */
-	public static CodePiece invoke(int invokeOpcode, String clazz, String method, String desc, CodePiece... args) {
-		boolean isStatic = invokeOpcode == INVOKESTATIC;
-		int reqArgs = ASMUtils.argumentCount(desc) + (isStatic ? 0 : 1);
-		checkArgument(args.length == reqArgs, "Argument count mismatch");
-
-		return concat(args).append(new MethodInsnNode(invokeOpcode, clazz, method, desc));
-	}
-
-	/**
-	 * <p>Create a CodePiece that will invoke the given method using the given opcode and arguments.</p>
-	 *
-	 * @param clazz  the class containing the method
-	 * @param method the method to invoke
-	 * @param args   the arguments for the method (in case of a non-static method pass the instance as the first argument)
-	 * @return a CodePiece
-	 */
-	public static CodePiece invoke(ClassNode clazz, MethodNode method, CodePiece... args) {
-		boolean isStatic = (method.access & ACC_STATIC) == ACC_STATIC;
-		boolean isPrivate = (method.access & ACC_PRIVATE) == ACC_PRIVATE;
-		boolean isInterface = (clazz.access & ACC_INTERFACE) == ACC_INTERFACE;
-		int opcode = isStatic ? INVOKESTATIC : (isPrivate ? INVOKESPECIAL : (isInterface ? INVOKEINTERFACE : INVOKEVIRTUAL));
-		return invoke(opcode, clazz.name, method.name, method.desc, args);
+	public static CodePiece invokeSpecial(Object clazz, String method, Object instance, Object returnType, Object... typesAndArgs) {
+		return invoke0(INVOKESPECIAL, clazz, method, instance, returnType, typesAndArgs);
 	}
 
 	/**
@@ -405,13 +372,73 @@ public final class CodePieces {
 	 *
 	 * @param clazz  the class containing the method (not the super method)
 	 * @param method the method to invoke
-	 * @param args   the arguments for the method
+	 * @param typesAndArgs the types and arguments for the method
 	 * @return a CodePiece
 	 */
-	public static CodePiece invokeSuper(ClassNode clazz, MethodNode method, CodePiece... args) {
-		checkArgument((method.access & ACC_STATIC) != ACC_STATIC, "Cannot call super on static method");
-		checkArgument((method.access & ACC_PRIVATE) != ACC_PRIVATE, "Cannot call super on private method");
-		return invoke(INVOKESPECIAL, clazz.superName, method.name, method.desc, ObjectArrays.concat(getThis(), args));
+	public static CodePiece invokeSuper(Object clazz, String method, Object returnType, Object... typesAndArgs) {
+		ClassInfo ci;
+		if (clazz instanceof ClassNode) {
+			ci = ClassInfo.of((ClassNode) clazz);
+		} else {
+			ci = ClassInfo.of(parseType(clazz, "Invalid class"));
+		}
+		return invoke0(INVOKESPECIAL, ci.superName(), method, getThis(), returnType, typesAndArgs);
+	}
+
+	public static CodePiece invoke(Object clazz, MethodNode method, Object... args) {
+		Type type = parseType(clazz, "Invalid class");
+
+		int opcode;
+		if ((method.access & ACC_STATIC) != 0) {
+			opcode = INVOKESTATIC;
+		} else if ((method.access & ACC_PRIVATE) != 0) {
+			opcode = INVOKESPECIAL;
+		} else {
+			ClassInfo ci;
+			if (clazz instanceof ClassNode) {
+				ci = ClassInfo.of((ClassNode) clazz);
+			} else {
+				ci = ClassInfo.of(type);
+			}
+			if (ci.isInterface()) {
+				opcode = INVOKEINTERFACE;
+			} else {
+				opcode = INVOKEVIRTUAL;
+			}
+		}
+
+		int requiredArgs = ASMUtils.argumentCount(method.desc) + (opcode == INVOKESTATIC ? 0 : 1);
+		checkArgument(args.length == requiredArgs, "Invalid number of arguments");
+
+		CodeBuilder builder = new CodeBuilder();
+		for (Object arg : args) {
+			builder.add(parse(arg));
+		}
+		return builder.add(new MethodInsnNode(opcode, type.getInternalName(), method.name, method.desc)).build();
+	}
+
+	private static CodePiece invoke0(int opcode, Object clazz, String method, Object instance, Object returnType, Object... typesAndArgs) {
+		CodeBuilder builder = new CodeBuilder();
+		if (opcode != INVOKESTATIC) {
+			builder.add(parse(instance));
+		}
+		Object[] unwrapped = unwrapTypesAndArgs(builder, typesAndArgs);
+
+		Type[] types = (Type[]) unwrapped[0];
+		String desc = Type.getMethodDescriptor(parseType(returnType, "Invalid return type"), types);
+
+		return ((CodeBuilder) unwrapped[1]).add(new MethodInsnNode(opcode, parseType(clazz, "Invalid target class").getInternalName(), method, desc)).build();
+	}
+
+	private static CodePiece invoke0(int opcode, Object clazz, MethodNode method, Object instance, Object... args) {
+		CodeBuilder builder = new CodeBuilder();
+		if (opcode != INVOKESTATIC) {
+			builder.add(parse(instance));
+		}
+		for (Object arg : args) {
+			builder.add(parse(arg));
+		}
+		return builder.add(new MethodInsnNode(opcode, parseType(clazz, "Invalid class").getInternalName(), method.name, method.desc)).build();
 	}
 
 	public static InDyHelper invokeDynamic(@NotNull String name, @NotNull String desc, @NotNull CodePiece... args) {
@@ -458,75 +485,58 @@ public final class CodePieces {
 	}
 
 	/**
-	 * <p>Create a CodePiece that will create a new instance of the given class.</p>
-	 *
-	 * @param c the class to instantiate
-	 * @return a CodePiece
-	 */
-	public static CodePiece instantiate(Class<?> c) {
-		return instantiate(Type.getInternalName(c));
-	}
-
-	/**
-	 * <p>Create a CodePiece that will create a new instance of the given class.</p>
-	 *
-	 * @param t the class to instantiate
-	 * @return a CodePiece
-	 */
-	public static CodePiece instantiate(Type t) {
-		return instantiate(t.getInternalName());
-	}
-
-	/**
-	 * <p>Create a CodePiece that will create a new instance of the given class.</p>
-	 *
-	 * @param internalName the internal name of the class to instantiate
-	 * @return a CodePiece
-	 */
-	public static CodePiece instantiate(String internalName) {
-		return instantiate(internalName, new Type[0]);
-	}
-
-	/**
 	 * <p>Create a CodePiece that will create a new instance of the given class, passing the given arguments to the constructor.</p>
-	 *
-	 * @param c        the class to instantiate
-	 * @param argTypes the constructor argument types, in order
-	 * @param args     the constructor arguments
+	 * <p>The {@code typesAndArgs} parameter must contain an argument type and it's value in alternating order, each pair
+	 * representing one argument to the constructor.</p>
+	 * <p>See the documentation for this class for the behavior of type and value arguments.</p>
+	 * @param type the type of the class to instantiate
+	 * @param typesAndArgs the constructor arguments and types
 	 * @return a CodePiece
 	 */
-	public static CodePiece instantiate(Class<?> c, Type[] argTypes, CodePiece... args) {
-		return instantiate(Type.getInternalName(c), argTypes, args);
+	public static CodePiece instantiate(Object type, Object... typesAndArgs) {
+		CodeBuilder builder = new CodeBuilder();
+		String internalName = parseType(type, "Illegal Type to instantiate").getInternalName();
+		builder.add(new TypeInsnNode(NEW, internalName));
+		builder.add(new InsnNode(DUP));
+
+		Type[] types = unwrapTypesAndArgs(builder, typesAndArgs);
+
+		builder.add(new MethodInsnNode(INVOKESPECIAL, internalName, "<init>", getMethodDescriptor(VOID_TYPE, types)));
+		return builder.build();
 	}
 
-	/**
-	 * <p>Create a CodePiece that will create a new instance of the given class, passing the given arguments to the constructor.</p>
-	 *
-	 * @param t        the class to instantiate
-	 * @param argTypes the constructor argument types, in order
-	 * @param args     the constructor arguments
-	 * @return a CodePiece
-	 */
-	public static CodePiece instantiate(Type t, Type[] argTypes, CodePiece... args) {
-		return instantiate(t.getInternalName(), argTypes, args);
+	private static Type[] unwrapTypesAndArgs(CodeBuilder builder, Object[] typesAndArgs) {
+		checkArgument(typesAndArgs.length % 2 == 0, "Invalid input for typesAndArgs");
+		int numArgs = typesAndArgs.length / 2;
+		Type[] types = new Type[numArgs];
+
+		for (int i = 0; i < typesAndArgs.length; i++) {
+			Object o = typesAndArgs[i];
+			if (i % 2 == 0) {
+				types[i / 2] = parseType(o, "Type expected at offset " + i);
+			} else {
+				builder.add(parse(o));
+			}
+		}
+		return types;
 	}
 
-	/**
-	 * <p>Create a CodePiece that will create a new instance of the given class, passing the given arguments to the constructor.</p>
-	 *
-	 * @param internalName the internal name of the class to instantiate
-	 * @param argTypes     the constructor argument types, in order
-	 * @param args         the constructor arguments
-	 * @return a CodePiece
-	 */
-	public static CodePiece instantiate(String internalName, Type[] argTypes, CodePiece... args) {
-		checkArgument(args.length == argTypes.length, "parameter list length mismatch");
-		return concat(
-				of(new TypeInsnNode(NEW, internalName)),
-				ofOpcode(DUP),
-				concat(args),
-				of(new MethodInsnNode(INVOKESPECIAL, internalName, "<init>", getMethodDescriptor(VOID_TYPE, argTypes)))
-		);
+	private static Type parseType(Object type, String msg) {
+		if (type instanceof Type) {
+			return (Type) type;
+		} else if (type instanceof Class) {
+			return Type.getType((Class<?>) type);
+		} else if (type instanceof ClassNode) {
+			return Type.getObjectType(((ClassNode) type).name);
+		} else if (type instanceof String) {
+			return Type.getType((String) type);
+		} else {
+			throw new IllegalArgumentException(msg);
+		}
+	}
+
+	private static CodePiece parse(Object value) {
+		return value instanceof CodePiece ? (CodePiece) value : constant(value);
 	}
 
 	/**
@@ -703,10 +713,8 @@ public final class CodePieces {
 	public static CodePiece unbox(CodePiece boxed, Type primitiveType) {
 		Type boxedType = ASMUtils.boxedType(primitiveType);
 		checkArgument(boxedType != primitiveType, "Not a primitive");
-		String owner = boxedType.getInternalName();
 		String name = primitiveType.getClassName() + "Value";
-		String desc = Type.getMethodDescriptor(primitiveType);
-		return invoke(INVOKEVIRTUAL, owner, name, desc, boxed);
+		return invokeVirtual(boxedType, name, boxed, primitiveType);
 	}
 
 	/**
@@ -728,10 +736,8 @@ public final class CodePieces {
 	public static CodePiece box(CodePiece unboxed, Type primitiveType) {
 		Type boxedType = ASMUtils.boxedType(primitiveType);
 		checkArgument(boxedType != primitiveType, "Not a primitive");
-		String owner = boxedType.getInternalName();
 		String name = "valueOf";
-		String desc = Type.getMethodDescriptor(boxedType, primitiveType);
-		return invoke(INVOKESTATIC, owner, name, desc, unboxed);
+		return invokeStatic(boxedType, name, boxedType, primitiveType, unboxed);
 	}
 
 	public static CodePiece arrayGet(CodePiece array, int index, Type component) {
@@ -873,7 +879,7 @@ public final class CodePieces {
 	 * @param o the constant
 	 * @return a CodePiece
 	 */
-	public static CodePiece constant(Object o) {
+	public static CodePiece constant(@Nullable Object o) {
 		if (o == null) {
 			return constantNull();
 		} else if (o instanceof Boolean) {

@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.reflect.Reflection;
-import com.google.common.reflect.TypeToken;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
@@ -12,12 +11,14 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.client.Rendering;
+import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 import de.take_weiland.mods.commons.inv.BasicSlot;
 import de.take_weiland.mods.commons.inv.ButtonContainer;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.Inventories;
-import de.take_weiland.mods.commons.sync.SyncTypeInfo;
-import de.take_weiland.mods.commons.sync.TypeInfos;
+import de.take_weiland.mods.commons.sync.SyncCapacity;
+import de.take_weiland.mods.commons.sync.ctx.SyncContext;
+import de.take_weiland.mods.commons.sync.ctx.FieldContext;
 import de.take_weiland.mods.commons.tileentity.TileEntityInventory;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
@@ -36,26 +37,31 @@ import net.minecraft.util.ReportedException;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidTank;
 
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.lang.reflect.Field;
 import java.util.EnumSet;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
 @NetworkMod()
 public class testmod_sc {
 
-	private static EnumSet<ForgeDirection>[] sets = new EnumSet[5];
+	private EnumSet<ForgeDirection> sets;
+
+	@SyncCapacity
+	private FluidTank tank;
 
 	public static void main(@Nonnull String[] bar) throws NoSuchFieldException {
-		Type fieldType = testmod_sc.class.getDeclaredField("sets").getGenericType();
+		SyncingManager.setup();
 
-		SyncTypeInfo base = TypeInfos.forType(fieldType);
-		System.out.println(TypeInfos.getArrayComponent(base).getRawType());
+		Field field = testmod_sc.class.getDeclaredField("tank");
+		SyncContext<FluidTank> context = new FieldContext<>(field);
+		System.out.println(context);
 
-		System.out.println(TypeToken.of(fieldType).getComponentType().getRawType());
+		System.out.println(SyncingManager.getContentSyncer(context));
 	}
 
 	@Mod.Instance

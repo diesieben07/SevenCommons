@@ -57,9 +57,9 @@ abstract class PropertyHandler {
 		}
 
 		if (var.getterAnnotation(SyncContents.class) != null) {
-			return new HandlerWithWatcher(var, idx);
+			return new HandlerContentSyncer(var, idx);
 		} else {
-			return new HandlerWithSyncer(var, idx);
+			return new HandlerValueSyncer(var, idx);
 		}
 	}
 

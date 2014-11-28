@@ -17,11 +17,11 @@ import static org.objectweb.asm.Type.*;
 /**
 * @author diesieben07
 */
-class HandlerWithWatcher extends PropertyHandler {
+class HandlerContentSyncer extends PropertyHandler {
 
 	private ASMVariable watcher;
 
-	HandlerWithWatcher(ASMVariable var, int idx) {
+	HandlerContentSyncer(ASMVariable var, int idx) {
 		super(var, idx);
 	}
 
