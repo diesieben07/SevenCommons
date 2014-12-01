@@ -257,7 +257,7 @@ public final class ASMUtils {
 			method.instructions.add(new MethodInsnNode(INVOKESPECIAL, clazz.superName, name, desc));
 			method.instructions.add(new InsnNode(RETURN));
 			clazz.methods.add(method);
-			rootCtsrs = Arrays.asList(method);
+			rootCtsrs = Collections.singletonList(method);
 		}
 		for (MethodNode cstr : rootCtsrs) {
 			code.insertAfter(cstr.instructions, findFirst(cstr.instructions, INVOKESPECIAL));

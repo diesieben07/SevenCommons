@@ -183,7 +183,6 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 
 		int maxIdx = state.superSyncCount + state.handlers.size();
 
-		String owner = Type.getInternalName(MCDataOutputStream.class);
 		String writeName, readName;
 		if (maxIdx <= 255) {
 			writeName = "writeByte";
@@ -195,9 +194,12 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 			writeName = "writeInt";
 			readName = "readInt";
 		}
-		desc = Type.getMethodDescriptor(VOID_TYPE, INT_TYPE);
 
-		CodePiece write = CodePieces.invoke(INVOKEVIRTUAL, owner, writeName, desc, CodePieces.of(new VarInsnNode(ALOAD, 2)), CodePieces.of(new VarInsnNode(ILOAD, 1)));
+		CodePiece stream = CodePieces.of(new VarInsnNode(ALOAD, 2));
+		CodePiece data = CodePieces.of(new VarInsnNode(ILOAD, 1));
+		CodePiece write = CodePieces.invokeVirtual(MCDataOutputStream.class, writeName, stream, void.class,
+				int.class, data);
+
 		write.appendTo(method.instructions);
 		method.instructions.add(new InsnNode(RETURN));
 		state.clazz.methods.add(method);
@@ -207,10 +209,8 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		desc = Type.getMethodDescriptor(INT_TYPE, getType(MCDataInputStream.class));
 		method = new MethodNode(ACC_PROTECTED, name, desc, null, null);
 
-		owner = Type.getInternalName(MCDataInputStream.class);
-		desc = Type.getMethodDescriptor(INT_TYPE);
-
-		CodePiece read = CodePieces.invoke(INVOKEVIRTUAL, owner, readName, desc, CodePieces.of(new VarInsnNode(ALOAD, 1)));
+		stream = CodePieces.of(new VarInsnNode(ALOAD, 1));
+		CodePiece read = CodePieces.invokeVirtual(MCDataInputStream.class, readName, stream, int.class);
 		read.appendTo(method.instructions);
 		method.instructions.add(new InsnNode(IRETURN));
 		state.clazz.methods.add(method);
@@ -237,7 +237,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		insns.add(start);
 
 		if (state.isSuperSynced()) {
-			stream.set(CodePieces.invokeSuper(state.clazz, write, stream.get(), CodePieces.constant(true))).appendTo(insns);
+			stream.set(CodePieces.invokeSuper(state.clazz, write, stream.get(), true));
 		}
 
 		for (PropertyHandler handler : handlers) {
@@ -251,10 +251,10 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 
 		CodePiece finishStream = CodePieces.invoke(state.clazz, state.writeIdx, getThis(), constant(0), stream.get());
 
-		CodePiece sendStream = CodePieces.invokeStatic(ASMHooks.CLASS_NAME, ASMHooks.SEND_SYNC_STREAM,
-				getMethodDescriptor(VOID_TYPE, getType(Object.class), getType(SyncType.class), getType(MCDataOutputStream.class)),
-				getThis(), constant(state.type), stream.get());
-
+		CodePiece sendStream = CodePieces.invokeStatic(ASMHooks.CLASS_NAME, ASMHooks.SEND_SYNC_STREAM, void.class,
+				Object.class, getThis(),
+				SyncType.class, state.type,
+				MCDataOutputStream.class, stream.get());
 
 		ASMCondition streamNotNull = ASMCondition.ifNotNull(stream.get());
 		isSuperCall.negate().and(streamNotNull)
@@ -325,7 +325,9 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		String owner = ASMHooks.CLASS_NAME;
 		String name = ASMHooks.NEW_SYNC_STREAM;
 		String desc = Type.getMethodDescriptor(getType(MCDataOutputStream.class), getType(Object.class), getType(SyncType.class));
-		CodePiece newStream = CodePieces.invokeStatic(owner, name, desc, getThis(), constant(state.type));
+		CodePiece newStream = CodePieces.invokeStatic(owner, name, MCDataOutputStream.class,
+				Object.class, getThis(),
+				SyncType.class, state.type);
 		return ASMCondition.ifNull(stream.get()).doIfTrue(stream.set(newStream)).append(stream.get());
 	}
 

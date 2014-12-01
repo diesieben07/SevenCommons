@@ -37,8 +37,10 @@ public class ContainerTransformer implements ASMClassTransformer {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, MCPNames.M_ADD_CRAFTING_TO_CRAFTERS);
 		String owner = ASMHooks.CLASS_NAME;
 		String name = ASMHooks.ON_LISTENER_ADDED;
-		String desc = Type.getMethodDescriptor(VOID_TYPE, getObjectType(clazz.name), getType(ICrafting.class));
-		CodePieces.invokeStatic(owner, name, desc, CodePieces.getThis(), CodePieces.getLocal(1))
+		CodePieces.invokeStatic(owner, name, void.class,
+				clazz, CodePieces.getThis(),
+				ICrafting.class, CodePieces.getLocal(1))
+
 				.prependTo(method.instructions);
 	}
 
@@ -60,7 +62,9 @@ public class ContainerTransformer implements ASMClassTransformer {
 		name = ASMHooks.FIND_CONTAINER_INVS;
 		desc = Type.getMethodDescriptor(getType(ImmutableSet.class), getObjectType(clazz.name));
 
-		inventories.setAndGet(CodePieces.invokeStatic(owner, name, desc, CodePieces.getThis())).appendTo(insns);
+		inventories.setAndGet(CodePieces.invokeStatic(owner, name, ImmutableSet.class,
+				clazz, CodePieces.getThis()))
+				.appendTo(insns);
 
 		insns.add(nonNull);
 		insns.add(new InsnNode(ARETURN));

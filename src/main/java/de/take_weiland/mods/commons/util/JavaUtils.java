@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.Unsafe;
@@ -207,6 +208,16 @@ public final class JavaUtils {
 			public boolean apply(@Nullable T input) {
 				// cast to F is safe because we check isInstance first
 				return clazz.isInstance(input) && predicate.apply((F) input);
+			}
+		};
+	}
+
+	public static <F, T> Function<F, T> doIfElse(final Predicate<? super F> condition, final Function<? super F, ? extends T> ifTrue, final Function<? super F, ? extends T> ifFalse) {
+		return new Function<F, T>() {
+			@Nullable
+			@Override
+			public T apply(@Nullable F input) {
+				return condition.apply(input) ? ifTrue.apply(input) : ifFalse.apply(input);
 			}
 		};
 	}

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 
 /**
  * @author diesieben07
@@ -14,9 +15,21 @@ public final class DirectContext<T> implements SyncContext<T> {
     private final ImmutableMap<Key<?>, Object> data;
     private TypeToken<T> genericType;
 
-    public DirectContext(Type type, ImmutableMap<Key<?>, Object> data) {
+    public DirectContext(Class<T> clazz) {
+        this((Type) clazz);
+    }
+
+    public DirectContext(Type type) {
+        this(type, ImmutableMap.<Key<?>, Object>of());
+    }
+
+    public DirectContext(Class<T> clazz, Map<Key<?>, ?> data) {
+        this((Type) clazz, data);
+    }
+
+    public DirectContext(Type type, Map<Key<?>, ?> data) {
         this.type = type;
-        this.data = data;
+        this.data = ImmutableMap.copyOf(data);
     }
 
     @Override
@@ -42,4 +55,13 @@ public final class DirectContext<T> implements SyncContext<T> {
         return (Class<? super T>) (type instanceof Class ? type : getGenericType().getRawType());
     }
 
+    @Override
+    public int hashCode() {
+        return AbstractContext.hash(this);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return AbstractContext.eq(this, obj);
+    }
 }

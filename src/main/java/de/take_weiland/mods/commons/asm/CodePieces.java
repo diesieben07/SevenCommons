@@ -379,42 +379,36 @@ public final class CodePieces {
 		ClassInfo ci;
 		if (clazz instanceof ClassNode) {
 			ci = ClassInfo.of((ClassNode) clazz);
+		} else if (clazz instanceof Class) {
+			ci = ClassInfo.of((Class<?>) clazz);
 		} else {
 			ci = ClassInfo.of(parseType(clazz, "Invalid class"));
 		}
 		return invoke0(INVOKESPECIAL, ci.superName(), method, getThis(), returnType, typesAndArgs);
 	}
 
-	public static CodePiece invoke(Object clazz, MethodNode method, Object... args) {
-		Type type = parseType(clazz, "Invalid class");
+	public static CodePiece invokeSuper(Object clazz, MethodNode method, Object... args) {
+		checkArgument((method.access & ACC_STATIC) == 0, "Cannot invoke super on static method");
+		checkArgument((method.access & ACC_PRIVATE) == 0, "Cannot invoke super on private method");
 
+		return invoke0(INVOKESPECIAL, parseClassInfo(clazz, "invalid class").superName(), method, args);
+	}
+
+	public static CodePiece invoke(Object clazz, MethodNode method, Object... args) {
 		int opcode;
 		if ((method.access & ACC_STATIC) != 0) {
 			opcode = INVOKESTATIC;
 		} else if ((method.access & ACC_PRIVATE) != 0) {
 			opcode = INVOKESPECIAL;
 		} else {
-			ClassInfo ci;
-			if (clazz instanceof ClassNode) {
-				ci = ClassInfo.of((ClassNode) clazz);
-			} else {
-				ci = ClassInfo.of(type);
-			}
-			if (ci.isInterface()) {
+			if (parseClassInfo(clazz, "invalid class").isInterface()) {
 				opcode = INVOKEINTERFACE;
 			} else {
 				opcode = INVOKEVIRTUAL;
 			}
 		}
 
-		int requiredArgs = ASMUtils.argumentCount(method.desc) + (opcode == INVOKESTATIC ? 0 : 1);
-		checkArgument(args.length == requiredArgs, "Invalid number of arguments");
-
-		CodeBuilder builder = new CodeBuilder();
-		for (Object arg : args) {
-			builder.add(parse(arg));
-		}
-		return builder.add(new MethodInsnNode(opcode, type.getInternalName(), method.name, method.desc)).build();
+		return invoke0(opcode, clazz, method, args);
 	}
 
 	private static CodePiece invoke0(int opcode, Object clazz, String method, Object instance, Object returnType, Object... typesAndArgs) {
@@ -422,19 +416,17 @@ public final class CodePieces {
 		if (opcode != INVOKESTATIC) {
 			builder.add(parse(instance));
 		}
-		Object[] unwrapped = unwrapTypesAndArgs(builder, typesAndArgs);
+		Type[] types = unwrapTypesAndArgs(builder, typesAndArgs);
 
-		Type[] types = (Type[]) unwrapped[0];
 		String desc = Type.getMethodDescriptor(parseType(returnType, "Invalid return type"), types);
 
-		return ((CodeBuilder) unwrapped[1]).add(new MethodInsnNode(opcode, parseType(clazz, "Invalid target class").getInternalName(), method, desc)).build();
+		return builder.add(new MethodInsnNode(opcode, parseType(clazz, "Invalid target class").getInternalName(), method, desc)).build();
 	}
 
-	private static CodePiece invoke0(int opcode, Object clazz, MethodNode method, Object instance, Object... args) {
+	private static CodePiece invoke0(int opcode, Object clazz, MethodNode method, Object... args) {
+		int reqArgs = ASMUtils.argumentCount(method.desc) + (opcode == INVOKESTATIC ? 0 : 1);
+		checkArgument(args.length == reqArgs, "Invalid number of arguments");
 		CodeBuilder builder = new CodeBuilder();
-		if (opcode != INVOKESTATIC) {
-			builder.add(parse(instance));
-		}
 		for (Object arg : args) {
 			builder.add(parse(arg));
 		}
@@ -532,6 +524,16 @@ public final class CodePieces {
 			return Type.getType((String) type);
 		} else {
 			throw new IllegalArgumentException(msg);
+		}
+	}
+
+	private static ClassInfo parseClassInfo(Object type, String msg) {
+		if (type instanceof ClassNode) {
+			return ClassInfo.of((ClassNode) type);
+		} else if (type instanceof Class) {
+			return ClassInfo.of((Class<?>) type);
+		} else {
+			return ClassInfo.of(parseType(type, msg));
 		}
 	}
 

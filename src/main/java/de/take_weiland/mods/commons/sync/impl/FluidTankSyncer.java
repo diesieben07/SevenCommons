@@ -1,14 +1,14 @@
 package de.take_weiland.mods.commons.sync.impl;
 
 import com.google.common.base.Functions;
-import de.take_weiland.mods.commons.internal.sync.SyncerFinder;
+import com.google.common.collect.ImmutableMap;
 import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.ContentSyncer;
 import de.take_weiland.mods.commons.sync.SyncCapacity;
-import de.take_weiland.mods.commons.sync.ValueSyncer;
 import de.take_weiland.mods.commons.sync.ctx.ContextAnnotations;
+import de.take_weiland.mods.commons.sync.ctx.DirectContext;
 import de.take_weiland.mods.commons.sync.ctx.SyncContext;
 import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
@@ -27,21 +27,9 @@ public final class FluidTankSyncer implements ContentSyncer<FluidTank> {
 	public static void register() {
 		ContextAnnotations.register(SyncCapacity.class, SYNC_CAPACITY, Functions.constant(Boolean.TRUE));
 
-		SyncingManager.registerSyncerFinder(new SyncerFinder() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public <T> ContentSyncer<T> findContentSyncer(SyncContext<T> context) {
-				if (FluidTank.class.isAssignableFrom(context.getRawType())) {
-					return (ContentSyncer<T>) (context.getValue(SYNC_CAPACITY) == null ? FluidTankSyncer.INSTANCE : WithCapacity.INSTANCE);
-				}
-				return null;
-			}
-
-			@Override
-			public <T> ValueSyncer<T> findValueSyncer(SyncContext<T> context) {
-				return null;
-			}
-		});
+		SyncingManager.register(FluidTank.class, new FluidTankSyncer());
+		DirectContext<FluidTank> context = new DirectContext<>(FluidTank.class, ImmutableMap.<SyncContext.Key<?>, Object>of(SYNC_CAPACITY, Boolean.TRUE));
+		SyncingManager.register(context, new FluidTankSyncer.WithCapacity());
 	}
 
 	@Override

@@ -1,67 +1,44 @@
 package de.take_weiland.mods.commons.internal.transformers.sync;
 
-import de.take_weiland.mods.commons.asm.*;
+import de.take_weiland.mods.commons.asm.ASMVariable;
+import de.take_weiland.mods.commons.asm.CodePiece;
+import de.take_weiland.mods.commons.asm.CodePieces;
 import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
-import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.ContentSyncer;
 import de.take_weiland.mods.commons.sync.SyncContents;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.FieldNode;
+import de.take_weiland.mods.commons.sync.ctx.SyncContext;
 
 import java.lang.annotation.Annotation;
-
-import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.*;
 
 /**
 * @author diesieben07
 */
-class HandlerContentSyncer extends PropertyHandler {
+class HandlerContentSyncer extends HandlerSyncer {
 
-	private ASMVariable watcher;
+	private ASMVariable syncer;
 
 	HandlerContentSyncer(ASMVariable var, int idx) {
 		super(var, idx);
 	}
 
 	@Override
-	void initialTransform(TransformState state) {
-		String name = "_sc$sync$watcher$" + SyncTransformer.uniqueSuffix(var);
-		String desc = Type.getDescriptor(ContentSyncer.class);
-		FieldNode watcherField = new FieldNode(ACC_PRIVATE  | ACC_FINAL, name, desc, null, null);
-		state.clazz.fields.add(watcherField);
-		watcher = ASMVariables.of(state.clazz, watcherField, CodePieces.getThis());
-
-		CodePiece newWatcher = CodePieces.invokeDynamic(SyncingManager.CREATE_CONTAINER_SYNCER, Type.getMethodDescriptor(getType(ContentSyncer.class)))
-				.withBootstrap(SyncingManager.CLASS_NAME, SyncingManager.BOOTSTRAP,
-						var.getType(), var.rawName(), var.isMethod() ? SyncingManager.METHOD : SyncingManager.FIELD);
-
-		ASMUtils.initialize(state.clazz, watcher.set(newWatcher));
+	CodePiece newSyncer(CodePiece context) {
+		return CodePieces.invokeStatic(SyncingManager.class, "getContentSyncer", ContentSyncer.class,
+				SyncContext.class, context);
 	}
 
 	@Override
-	ASMCondition hasChanged() {
-		String owner = Type.getInternalName(ContentSyncer.class);
-		String name = "hasChanged";
-		String desc = Type.getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class));
-		return ASMCondition.ifTrue(CodePieces.invokeInterface(owner, name, desc, watcher.get(), var.get()));
-	}
-
-	@Override
-	CodePiece writeAndUpdate(CodePiece stream) {
-		String owner = Type.getInternalName(ContentSyncer.class);
-		String name = "writeAndUpdate";
-		String desc = Type.getMethodDescriptor(VOID_TYPE, getType(Object.class), getType(MCDataOutputStream.class));
-		return CodePieces.invokeInterface(owner, name, desc, watcher.get(), var.get(), stream);
+	Class<?> syncerClass() {
+		return ContentSyncer.class;
 	}
 
 	@Override
 	CodePiece read(CodePiece stream) {
-		String owner = Type.getInternalName(ContentSyncer.class);
-		String name = "read";
-		String desc = Type.getMethodDescriptor(VOID_TYPE, getType(Object.class), getType(MCDataInputStream.class));
-		return CodePieces.invokeInterface(owner, name, desc, watcher.get(), var.get(), stream);
+		return CodePieces.invokeInterface(ContentSyncer.class, "read", syncer.get(), void.class,
+				Object.class, var.get(),
+				MCDataInputStream.class, stream,
+				Object.class, syncerData.get());
 	}
 
 	@Override

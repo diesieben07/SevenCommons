@@ -9,9 +9,8 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import static de.take_weiland.mods.commons.asm.CodePieces.invokeStatic;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.BOOLEAN_TYPE;
-import static org.objectweb.asm.Type.getType;
 
 /**
  * This is to prevent picking up blocked player slots (mostly by ItemInventory) via the number keys in GuiContainer.
@@ -30,8 +29,7 @@ public class GuiContainerTransformer implements ASMClassTransformer {
 
 		owner = ASMHooks.CLASS_NAME;
 		name = ASMHooks.IS_USEABLE_CLIENT;
-		desc = Type.getMethodDescriptor(BOOLEAN_TYPE, getType(Slot.class));
-		ASMCondition useable = ASMCondition.ifTrue(CodePieces.invokeStatic(owner, name, desc, hoveredSlot));
+		ASMCondition useable = ASMCondition.ifTrue(invokeStatic(owner, name, boolean.class, Slot.class, hoveredSlot));
 
 		useable.doIfFalse(CodePieces.constant(false).append(new InsnNode(IRETURN)))
 				.prependTo(method.instructions);

@@ -39,10 +39,35 @@ public abstract class AbstractContext<T> implements SyncContext<T> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        return eq(this, o);
+    }
+
+    @Override
+    public int hashCode() {
+        return hash(this);
+    }
+
+    @Override
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("type", getGenericType())
                 .add("data", getData())
                 .toString();
+    }
+
+    static int hash(SyncContext<?> context) {
+        return 31 * context.getGenericType().hashCode() + context.getData().hashCode();
+    }
+
+    static boolean eq(SyncContext<?> self, Object other) {
+        if (self == other) {
+            return true;
+        } else if (other instanceof SyncContext) {
+            SyncContext<?> that = (SyncContext<?>) other;
+            return self.getGenericType().equals(that.getGenericType()) && self.getData().equals(that.getData());
+        } else {
+            return false;
+        }
     }
 }

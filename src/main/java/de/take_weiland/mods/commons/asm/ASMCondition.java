@@ -88,7 +88,7 @@ public abstract class ASMCondition {
 			}
 			return ifTrue(CodePieces.invokeStatic(owner, name, desc, a, b));
 		} else if (type.getSort() == Type.OBJECT) {
-			ASMCondition nonNullComparison = ifTrue(CodePieces.invoke(INVOKEVIRTUAL, "java/lang/Object", "equals", getMethodDescriptor(BOOLEAN_TYPE, getType(Object.class)), a, b));
+			ASMCondition nonNullComparison = ifTrue(CodePieces.invokeVirtual(Object.class, "equals", a, boolean.class, Object.class, b));
 			if (nullable) {
 				return ifSame(a, b, type).or(ifNotNull(a).and(nonNullComparison));
 			} else {

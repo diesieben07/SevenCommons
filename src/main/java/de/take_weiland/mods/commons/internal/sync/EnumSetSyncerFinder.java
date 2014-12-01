@@ -1,27 +1,16 @@
 package de.take_weiland.mods.commons.internal.sync;
 
-import com.google.common.collect.MapMaker;
 import de.take_weiland.mods.commons.sync.ContentSyncer;
 import de.take_weiland.mods.commons.sync.ValueSyncer;
 import de.take_weiland.mods.commons.sync.ctx.SyncContext;
 import de.take_weiland.mods.commons.sync.impl.EnumSetSyncer;
 
 import java.util.EnumSet;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author diesieben07
  */
 public final class EnumSetSyncerFinder implements SyncerFinder {
-
-    private static ConcurrentMap<Class<?>, EnumSetSyncer<?>> cacheValue;
-    private static ConcurrentMap<Class<?>, EnumSetSyncer.Contents<?>> cacheContents;
-
-    static {
-        MapMaker mm = new MapMaker().concurrencyLevel(2);
-        cacheValue = mm.makeMap();
-        cacheContents = mm.makeMap();
-    }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
@@ -30,22 +19,7 @@ public final class EnumSetSyncerFinder implements SyncerFinder {
         if (enumType == null) {
             return null;
         }
-
-        ConcurrentMap<Class<?>, EnumSetSyncer<?>> cache = cacheValue;
-        EnumSetSyncer<?> syncer;
-
-        if (cache == null) {
-            syncer = new EnumSetSyncer<>((Class<Enum>) enumType);
-        } else {
-            syncer = cache.get(enumType);
-            if (syncer == null) {
-                syncer = new EnumSetSyncer<>((Class<Enum>) enumType);
-                if (cache.putIfAbsent(enumType, syncer) != null) {
-                    syncer = cache.get(enumType);
-                }
-            }
-        }
-        return (ValueSyncer<T>) syncer;
+        return (ValueSyncer<T>) new EnumSetSyncer<>((Class<Enum>) enumType);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -55,22 +29,7 @@ public final class EnumSetSyncerFinder implements SyncerFinder {
         if (enumType == null) {
             return null;
         }
-
-        ConcurrentMap<Class<?>, EnumSetSyncer.Contents<?>> cache = cacheContents;
-        EnumSetSyncer.Contents<?> syncer;
-
-        if (cache == null) {
-            syncer = new EnumSetSyncer.Contents<>((Class<Enum>) enumType);
-        } else {
-            syncer = cache.get(enumType);
-            if (syncer == null) {
-                syncer = new EnumSetSyncer.Contents<>((Class<Enum>) enumType);
-                if (cache.putIfAbsent(enumType, syncer) != null) {
-                    syncer = cache.get(enumType);
-                }
-            }
-        }
-        return (ContentSyncer<T>) syncer;
+        return (ContentSyncer<T>) new EnumSetSyncer.Contents<>((Class<Enum>) enumType);
     }
 
     private static Class<?> getEnumType(SyncContext<?> context) {

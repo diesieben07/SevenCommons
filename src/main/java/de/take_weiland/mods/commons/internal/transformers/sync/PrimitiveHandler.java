@@ -8,12 +8,8 @@ import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.Sync;
 import org.apache.commons.lang3.StringUtils;
-import org.objectweb.asm.Type;
 
 import java.lang.annotation.Annotation;
-
-import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.VOID_TYPE;
 
 /**
 * @author diesieben07
@@ -38,19 +34,15 @@ class PrimitiveHandler extends PropertyHandler {
 
 	@Override
 	CodePiece writeAndUpdate(CodePiece stream) {
-		String owner = Type.getInternalName(MCDataOutputStream.class);
 		String name = "write" + StringUtils.capitalize(var.getType().getClassName());
-		String desc = Type.getMethodDescriptor(VOID_TYPE, var.getType());
-		return CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, stream, var.get())
+		return CodePieces.invokeVirtual(MCDataOutputStream.class, name, stream, void.class, var.getType(), var.get())
 				.append(companion.set(var.get()));
 	}
 
 	@Override
 	CodePiece read(CodePiece stream) {
-		String owner = Type.getInternalName(MCDataInputStream.class);
 		String name = "read" + StringUtils.capitalize(var.getType().getClassName());
-		String desc = Type.getMethodDescriptor(var.getType());
-		return var.set(CodePieces.invoke(INVOKEVIRTUAL, owner, name, desc, stream));
+		return var.set(CodePieces.invokeVirtual(MCDataInputStream.class, name, stream, var.getType()));
 	}
 
 	@Override
