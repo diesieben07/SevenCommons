@@ -1,35 +1,18 @@
 package de.take_weiland.mods.commons.internal.sync;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.MapMaker;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.LoaderState;
+import com.google.common.collect.*;
 import de.take_weiland.mods.commons.internal.PacketTypeID;
 import de.take_weiland.mods.commons.internal.PacketTypeIds;
 import de.take_weiland.mods.commons.net.ModPacket;
-import de.take_weiland.mods.commons.sync.ContentSyncer;
-import de.take_weiland.mods.commons.sync.ValueSyncer;
-import de.take_weiland.mods.commons.sync.ctx.DirectContext;
-import de.take_weiland.mods.commons.sync.ctx.SyncContext;
-import de.take_weiland.mods.commons.sync.impl.*;
+import de.take_weiland.mods.commons.sync.*;
 import de.take_weiland.mods.commons.util.Players;
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
-
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * @author diesieben07
@@ -47,7 +30,8 @@ public final class SyncingManager {
 	public static final int METHOD = 0;
 	public static final int FIELD = 1;
 
-	private static final ConcurrentMap<Class<?>, Function<? super SyncContext<?>, ValueSyncer<?>>> valueSyncers;
+	private static Multimap<Class<?>, SyncerProvider> valueSyncers;
+	private static Multimap<Class<?>, SyncerProvider> contentSyncers;
 
 	private static List<SyncerFinder> finders;
 
@@ -55,104 +39,72 @@ public final class SyncingManager {
 
 	static {
 		MapMaker mm = new MapMaker().concurrencyLevel(2);
-		valueSyncers = mm.makeMap();
+//		valueSyncers = mm.makeMap();
 //		contentSyncers = mm.makeMap();
 
 		finders = Lists.newArrayList();
+		valueSyncers = ArrayListMultimap.create();
+		contentSyncers = ArrayListMultimap.create();
 	}
 
-	public static <T> void registerValueSyncer(Class<T> clazz, Function<SyncContext<? extends T>, ValueSyncer<T>> function) {
-
+	public static void register(Class<?> clazz, SyncerProvider.ForValue provider) {
+		valueSyncers.put(clazz, provider);
 	}
 
-	public static <T> void register(Class<T> clazz, ValueSyncer<T> syncer) {
-		register(new DirectContext<>(clazz), syncer);
+	public static void register(Class<?> clazz, SyncerProvider.ForContents provider) {
+		contentSyncers.put(clazz, provider);
 	}
 
-	public static <T> void register(SyncContext<T> context, ValueSyncer<T> syncer) {
-		if (valueSyncers.putIfAbsent(context, syncer) != null) {
-			throw new IllegalArgumentException("Already have a ValueSyncer for " + context);
-		}
+	static void registerInternal(Class<?> clazz, SyncerProvider provider, boolean isContentSyncer) {
+		(isContentSyncer ? contentSyncers : valueSyncers).put(clazz, provider);
 	}
 
-	public static <T> void register(Class<T> clazz, ContentSyncer<T> syncer) {
-		register(new DirectContext<>(clazz), syncer);
+	public static <T> ValueSyncer<T> getValueSyncer(SyncElement<T> element) {
+		return (ValueSyncer<T>) getSyncer(element, valueSyncers);
 	}
 
-	public static <T> void register(SyncContext<T> context, ContentSyncer<T> syncer) {
-		if (contentSyncers.putIfAbsent(context, syncer) != null) {
-			throw new IllegalArgumentException("Already have a ContentSyncer for " + context);
-		}
+	public static <T> ContentSyncer<T> getContentSyncer(SyncElement<T> element) {
+		return (ContentSyncer<T>) getSyncer(element, contentSyncers);
 	}
 
-	public static <T> void register(SyncContext<T> context, ValueSyncer<T> valueSyncer, ContentSyncer<T> contentSyncer) {
-		register(context, valueSyncer);
-		register(context, contentSyncer);
-	}
+	private static <T> Syncer<T> getSyncer(SyncElement<T> element, Multimap<Class<?>, ? extends SyncerProvider> syncers) {
+		Syncer<T> syncer;
+		Class<?> clazz = element.getType().getRawType();
 
-	public static <T> void register(Class<T> clazz, ValueSyncer<T> valueSyncer, ContentSyncer<T> contentSyncer) {
-		register(new DirectContext<>(clazz), valueSyncer, contentSyncer);
-	}
-
-	public static void register(SyncerFinder finder) {
-		checkState(!Loader.instance().hasReachedState(LoaderState.POSTINITIALIZATION), "Cannot add new Syncers after Init");
-		finders.add(finder);
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> ValueSyncer<T> getValueSyncer(SyncContext<T> context) {
-		ValueSyncer<T> syncer = (ValueSyncer<T>) valueSyncers.get(context);
-
-		if (syncer == null) {
-			for (SyncerFinder finder : finders) {
-				if (syncer == null) {
-					syncer = finder.findValueSyncer(context);
-				} else {
-					if (finder.findValueSyncer(context) != null) {
-						throw new IllegalStateException("Multiple ValueSyncers for " + context);
-					}
-				}
-			}
-			if (syncer == null) {
-				throw new IllegalStateException("No ValueSyncer for " + context);
+		do {
+			syncer = findSyncer(element, clazz, syncers);
+			if (syncer != null || clazz == Object.class) {
+				break;
 			} else {
-				if (valueSyncers.putIfAbsent(context, syncer) != null) {
-					syncer = (ValueSyncer<T>) valueSyncers.get(context);
+				clazz = clazz.getSuperclass();
+			}
+		} while (true);
+		if (syncer == null) {
+			throw new IllegalStateException("No Syncer found for " + element.getType());
+		}
+		return syncer;
+	}
+
+	private static <T> Syncer<T> findSyncer(SyncElement<T> element, Class<?> baseClazz, Multimap<Class<?>, ? extends SyncerProvider> syncers) {
+		Syncer<T> syncer = null;
+		for (SyncerProvider provider : syncers.get(baseClazz)) {
+			if (syncer == null) {
+				syncer = provider.apply(element);
+			} else {
+				if (provider.apply(element) != null) {
+					throw new IllegalStateException("Multiple Syncers for " + element.getType() + " on level " + baseClazz);
 				}
 			}
 		}
 		return syncer;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <T> ContentSyncer<T> getContentSyncer(SyncContext<T> context) {
-		ContentSyncer<T> syncer = (ContentSyncer<T>) contentSyncers.get(context);
-
-		if (syncer == null) {
-			for (SyncerFinder finder : finders) {
-				if (syncer == null) {
-					syncer = finder.findContentSyncer(context);
-				} else {
-					if (finder.findContentSyncer(context) != null) {
-						throw new IllegalStateException("Multiple ContentSyncers for " + context);
-					}
-				}
-			}
-			if (syncer == null) {
-				throw new IllegalStateException("No ContentSyncer for " + context);
-			} else {
-				if (contentSyncers.putIfAbsent(context, syncer) != null) {
-					syncer = (ContentSyncer<T>) contentSyncers.get(context);
-				}
-			}
-		}
-
-		return syncer;
-	}
 
 	public static void freeze() {
 		// make it threadsafe
 		finders = ImmutableList.copyOf(finders);
+		valueSyncers = ImmutableMultimap.copyOf(valueSyncers);
+		contentSyncers = ImmutableMultimap.copyOf(contentSyncers);
 	}
 
 	public static int getTypeIdServer(Class<?> clazz) {
@@ -214,17 +166,17 @@ public final class SyncingManager {
 
 		setup = true;
 		// primitives and their wrappers are handled via ASM
-
-		register(Item.class, new ItemSyncer());
-		register(Block.class, new BlockSyncer());
-
-		register(ItemStack.class, new ItemStackSyncer(), new ItemStackSyncer.Contents());
-		register(FluidStack.class, new FluidStackSyncer(), new FluidStackSyncer.Contents());
-		register(BitSet.class, new BitSetSyncer(), new BitSetSyncer.Contents());
-
-		FluidTankSyncer.register();
-
-		register(new EnumSetSyncerFinder());
-		register(new EnumSyncerFinder());
+//
+//		register(Item.class, new ItemSyncer());
+//		register(Block.class, new BlockSyncer());
+//
+//		register(ItemStack.class, new ItemStackSyncer(), new ItemStackSyncer.Contents());
+//		register(FluidStack.class, new FluidStackSyncer(), new FluidStackSyncer.Contents());
+//		register(BitSet.class, new BitSetSyncer(), new BitSetSyncer.Contents());
+//
+//		FluidTankSyncer.register();
+//
+//		register(new EnumSetSyncerFinder());
+//		register(new EnumSyncerFinder());
 	}
 }

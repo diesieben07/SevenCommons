@@ -7,7 +7,7 @@ import de.take_weiland.mods.commons.net.MCDataOutputStream;
  *
  * @author diesieben07
  */
-public interface ContentSyncer<T> {
+public interface ContentSyncer<T> extends Syncer<T> {
 
 	boolean hasChanged(T value, Object data);
 
