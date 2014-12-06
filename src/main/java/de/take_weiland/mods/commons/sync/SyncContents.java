@@ -1,5 +1,10 @@
 package de.take_weiland.mods.commons.sync;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * <p>Similar to {@link de.take_weiland.mods.commons.sync.Sync}, but instead this annotation will synchronize the
  * <i>contents</i> of a property without ever updating the value of the property itself. As such this Annotation can be
@@ -24,5 +29,7 @@ package de.take_weiland.mods.commons.sync;
  * {@link de.take_weiland.mods.commons.sync.Syncing} class.</p>
  * @author diesieben07
  */
+@Target({ElementType.FIELD, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
 public @interface SyncContents {
 }

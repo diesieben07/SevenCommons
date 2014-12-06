@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.sync;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
 
 import java.lang.annotation.Annotation;
 
@@ -14,12 +13,14 @@ public interface SyncingConfigurator<T> {
 
 	SyncingConfigurator<T> when(Predicate<? super SyncElement<T>> filter);
 
-	SyncingConfigurator<? extends T> allowSubclasses();
+	SyncingConfigurator<T> andSubclasses();
 
 	void with(ValueSyncer<T> valueSyncer);
 
-	void with(Supplier<? extends ValueSyncer<T>> supplier);
-
 	void with(SyncerProvider.ForValue provider);
+
+	void with(ContentSyncer<T> contentSyncer);
+
+	void with(SyncerProvider.ForContents provider);
 
 }

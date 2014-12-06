@@ -191,8 +191,6 @@ public final class JavaUtils {
 		}
 	}
 
-
-
 	/**
 	 * <p>Creates a new {@link com.google.common.base.Predicate} that returns true if the input is an instance
 	 * of the given class and the given predicate also applies to true.</p>

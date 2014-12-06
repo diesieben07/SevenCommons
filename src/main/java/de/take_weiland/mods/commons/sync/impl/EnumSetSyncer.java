@@ -1,33 +1,90 @@
 package de.take_weiland.mods.commons.sync.impl;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.MapMaker;
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.ContentSyncer;
+import de.take_weiland.mods.commons.sync.SyncElement;
+import de.take_weiland.mods.commons.sync.SyncerProvider;
 import de.take_weiland.mods.commons.sync.ValueSyncer;
 
 import java.lang.reflect.Type;
 import java.util.EnumSet;
+import java.util.concurrent.ConcurrentMap;
+
+import static de.take_weiland.mods.commons.internal.sync.SyncingManager.sync;
 
 /**
  * @author diesieben07
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public final class EnumSetSyncer<E extends Enum<E>> implements ValueSyncer<EnumSet<E>> {
+
+	private static final ConcurrentMap<Class<?>, EnumSetSyncer<?>> valueCache;
+	private static final ConcurrentMap<Class<?>, EnumSetSyncer.Contents<?>> contentCache;
+
+	static {
+		MapMaker mm = new MapMaker().concurrencyLevel(2);
+		valueCache = mm.makeMap();
+		contentCache = mm.makeMap();
+	}
+
+	public static void register() {
+		sync(EnumSet.class)
+				.with(new SyncerProvider.ForValue() {
+					@Override
+					public <S> ValueSyncer<S> apply(SyncElement<S> element) {
+						Class setValues = getEnumSetType(element.getType());
+						if (setValues == null) {
+							return null;
+						}
+						EnumSetSyncer syncer = valueCache.get(setValues);
+						if (syncer == null) {
+							syncer = new EnumSetSyncer(setValues);
+							if (valueCache.putIfAbsent(setValues, syncer) != null) {
+								syncer = valueCache.get(setValues);
+							}
+						}
+						return syncer;
+					}
+				});
+
+		sync(EnumSet.class)
+				.with(new SyncerProvider.ForContents() {
+					@Override
+					public <S> ContentSyncer<S> apply(SyncElement<S> element) {
+						Class setValues = getEnumSetType(element.getType());
+						if (setValues == null) {
+							return null;
+						}
+
+						Contents syncer = contentCache.get(setValues);
+						if (syncer == null) {
+							syncer = new EnumSetSyncer.Contents(setValues);
+							if (contentCache.putIfAbsent(setValues, syncer) != null) {
+								syncer = contentCache.get(setValues);
+							}
+						}
+						return syncer;
+					}
+				});
+	}
 
 	private static final Type iterableType = Iterable.class.getTypeParameters()[0];
 
-	static Class getEnumSetType(Type enumSetType) {
-		Class clazz = TypeToken.of(enumSetType).resolveType(iterableType).getRawType();
+	static Class getEnumSetType(TypeToken enumSetType) {
+		Class clazz = enumSetType.resolveType(iterableType).getRawType();
 		if (!clazz.isEnum()) {
-			throw new RuntimeException("Could not resolve EnumSet type, got " + clazz);
+			return null;
 		}
 		return clazz;
 	}
 
 	private final Class<E> clazz;
 
-	public EnumSetSyncer(Class<E> clazz) {
+	EnumSetSyncer(Class<E> clazz) {
 		this.clazz = clazz;
 	}
 

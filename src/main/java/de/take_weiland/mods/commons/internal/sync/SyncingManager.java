@@ -5,11 +5,17 @@ import de.take_weiland.mods.commons.internal.PacketTypeID;
 import de.take_weiland.mods.commons.internal.PacketTypeIds;
 import de.take_weiland.mods.commons.net.ModPacket;
 import de.take_weiland.mods.commons.sync.*;
+import de.take_weiland.mods.commons.sync.impl.*;
 import de.take_weiland.mods.commons.util.Players;
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
@@ -33,18 +39,15 @@ public final class SyncingManager {
 	private static Multimap<Class<?>, SyncerProvider> valueSyncers;
 	private static Multimap<Class<?>, SyncerProvider> contentSyncers;
 
-	private static List<SyncerFinder> finders;
-
 	private static final ConcurrentMap<Class<?>, Integer> typeIds = new MapMaker().concurrencyLevel(2).makeMap();
 
 	static {
-		MapMaker mm = new MapMaker().concurrencyLevel(2);
-//		valueSyncers = mm.makeMap();
-//		contentSyncers = mm.makeMap();
-
-		finders = Lists.newArrayList();
 		valueSyncers = ArrayListMultimap.create();
 		contentSyncers = ArrayListMultimap.create();
+	}
+
+	public static <T> SyncingConfigurator<T> sync(Class<T> clazz) {
+		return new ConfiguratorImpl<>(clazz);
 	}
 
 	public static void register(Class<?> clazz, SyncerProvider.ForValue provider) {
@@ -102,7 +105,6 @@ public final class SyncingManager {
 
 	public static void freeze() {
 		// make it threadsafe
-		finders = ImmutableList.copyOf(finders);
 		valueSyncers = ImmutableMultimap.copyOf(valueSyncers);
 		contentSyncers = ImmutableMultimap.copyOf(contentSyncers);
 	}
@@ -165,18 +167,22 @@ public final class SyncingManager {
 		if (setup) return;
 
 		setup = true;
-		// primitives and their wrappers are handled via ASM
-//
-//		register(Item.class, new ItemSyncer());
-//		register(Block.class, new BlockSyncer());
-//
-//		register(ItemStack.class, new ItemStackSyncer(), new ItemStackSyncer.Contents());
-//		register(FluidStack.class, new FluidStackSyncer(), new FluidStackSyncer.Contents());
-//		register(BitSet.class, new BitSetSyncer(), new BitSetSyncer.Contents());
-//
-//		FluidTankSyncer.register();
-//
-//		register(new EnumSetSyncerFinder());
-//		register(new EnumSyncerFinder());
+
+		sync(Item.class).with(new ItemSyncer());
+		sync(Block.class).with(new BlockSyncer());
+
+		sync(ItemStack.class).with(new ItemStackSyncer());
+		sync(ItemStack.class).with(new ItemStackSyncer.Contents());
+
+		sync(FluidStack.class).with(new FluidStackSyncer());
+		sync(FluidStack.class).with(new FluidStackSyncer.Contents());
+
+		sync(BitSet.class).with(new BitSetSyncer());
+		sync(BitSet.class).with(new BitSetSyncer.Contents());
+
+		FluidTankSyncer.register();
+		EnumSyncer.register();
+		EnumSetSyncer.register();
+
 	}
 }
