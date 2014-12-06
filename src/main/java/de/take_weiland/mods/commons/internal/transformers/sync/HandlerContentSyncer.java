@@ -7,7 +7,7 @@ import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.sync.ContentSyncer;
 import de.take_weiland.mods.commons.sync.SyncContents;
-import de.take_weiland.mods.commons.sync.ctx.SyncContext;
+import de.take_weiland.mods.commons.sync.SyncElement;
 
 import java.lang.annotation.Annotation;
 
@@ -16,16 +16,14 @@ import java.lang.annotation.Annotation;
 */
 class HandlerContentSyncer extends HandlerSyncer {
 
-	private ASMVariable syncer;
-
 	HandlerContentSyncer(ASMVariable var, int idx) {
 		super(var, idx);
 	}
 
 	@Override
-	CodePiece newSyncer(CodePiece context) {
+	CodePiece newSyncer(CodePiece syncElement) {
 		return CodePieces.invokeStatic(SyncingManager.class, "getContentSyncer", ContentSyncer.class,
-				SyncContext.class, context);
+				SyncElement.class, syncElement);
 	}
 
 	@Override

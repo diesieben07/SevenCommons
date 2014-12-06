@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import de.take_weiland.mods.commons.asm.*;
+import de.take_weiland.mods.commons.internal.sync.SyncElementField;
+import de.take_weiland.mods.commons.internal.sync.SyncElementMethod;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.Syncer;
-import de.take_weiland.mods.commons.sync.ctx.FieldContext;
-import de.take_weiland.mods.commons.sync.ctx.MethodContext;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -27,7 +27,7 @@ abstract class HandlerSyncer extends PropertyHandler {
 		super(var, idx);
 	}
 
-	abstract CodePiece newSyncer(CodePiece context);
+	abstract CodePiece newSyncer(CodePiece syncElement);
 	abstract Class<?> syncerClass();
 
 	@Override
@@ -45,7 +45,7 @@ abstract class HandlerSyncer extends PropertyHandler {
 		state.clazz.fields.add(syncerDataField);
 		syncerData = ASMVariables.of(state.clazz, syncerDataField, CodePieces.getThis());
 
-		ASMUtils.initialize(state.clazz, syncer.set(newSyncer(getSyncContext(state.clazz, var))));
+		ASMUtils.initialize(state.clazz, syncer.set(newSyncer(getSyncElement(state.clazz, var))));
 	}
 
 	@Override
@@ -64,25 +64,25 @@ abstract class HandlerSyncer extends PropertyHandler {
 		return syncerData.set(newData);
 	}
 
-	static CodePiece getSyncContext(ClassNode clazz, ASMVariable variable) {
+	static CodePiece getSyncElement(ClassNode clazz, ASMVariable variable) {
 		CodePiece clazzObj = CodePieces.constant(Type.getObjectType(clazz.name));
-		CodePiece context;
+		CodePiece element;
 		if (variable.isMethod()) {
 			CodePiece method = CodePieces.invokeVirtual(Class.class, "getDeclaredMethod", getType(clazz.name),
 					clazzObj, Method.class,
 					String.class, variable.rawName(),
 					Class[].class, new Class[0]);
 
-			context = CodePieces.instantiate(MethodContext.class, Method.class, method);
+			element = CodePieces.instantiate(SyncElementMethod.class, Method.class, method);
 		} else if (variable.isField()) {
 			CodePiece field = CodePieces.invokeVirtual(Class.class, "getDeclaredField",
 					clazzObj, Field.class,
 					String.class, variable.rawName());
 
-			context = CodePieces.instantiate(FieldContext.class, Field.class, field);
+			element = CodePieces.instantiate(SyncElementField.class, Field.class, field);
 		} else {
 			throw new AssertionError("@Sync variable neither Field nor method!?");
 		}
-		return context;
+		return element;
 	}
 }

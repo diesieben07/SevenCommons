@@ -6,8 +6,8 @@ import de.take_weiland.mods.commons.asm.CodePieces;
 import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.sync.Sync;
+import de.take_weiland.mods.commons.sync.SyncElement;
 import de.take_weiland.mods.commons.sync.ValueSyncer;
-import de.take_weiland.mods.commons.sync.ctx.SyncContext;
 
 import java.lang.annotation.Annotation;
 
@@ -21,9 +21,9 @@ class HandlerValueSyncer extends HandlerSyncer {
 	}
 
 	@Override
-	CodePiece newSyncer(CodePiece context) {
+	CodePiece newSyncer(CodePiece syncElement) {
 		return CodePieces.invokeStatic(SyncingManager.class, "getValueSyncer", ValueSyncer.class,
-				SyncContext.class, context);
+				SyncElement.class, syncElement);
 	}
 
 	@Override

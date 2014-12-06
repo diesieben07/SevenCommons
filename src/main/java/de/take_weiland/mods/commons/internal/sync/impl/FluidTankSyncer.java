@@ -6,7 +6,6 @@ import de.take_weiland.mods.commons.sync.ContentSyncer;
 import de.take_weiland.mods.commons.sync.SyncCapacity;
 import de.take_weiland.mods.commons.sync.SyncElement;
 import de.take_weiland.mods.commons.sync.SyncerProvider;
-import de.take_weiland.mods.commons.sync.ctx.SyncContext;
 import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
@@ -17,8 +16,6 @@ import static de.take_weiland.mods.commons.internal.sync.SyncingManager.sync;
  * @author diesieben07
  */
 public final class FluidTankSyncer implements ContentSyncer<FluidTank> {
-
-	static final SyncContext.Key<Boolean> SYNC_CAPACITY = new SyncContext.Key<>("FluidTank.Capacity");
 
 	private static FluidTankSyncer INSTANCE;
 
