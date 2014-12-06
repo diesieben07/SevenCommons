@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.sync.impl;
+package de.take_weiland.mods.commons.internal.sync.impl;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.MapMaker;
