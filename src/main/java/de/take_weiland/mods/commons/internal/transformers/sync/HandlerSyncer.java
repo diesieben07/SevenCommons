@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import de.take_weiland.mods.commons.asm.*;
-import de.take_weiland.mods.commons.internal.sync.SyncElementField;
-import de.take_weiland.mods.commons.internal.sync.SyncElementMethod;
+import de.take_weiland.mods.commons.internal.sync.ClassPropertyField;
+import de.take_weiland.mods.commons.internal.sync.ClassPropertyMethod;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.Syncer;
 import org.objectweb.asm.Type;
@@ -73,13 +73,13 @@ abstract class HandlerSyncer extends PropertyHandler {
 					String.class, variable.rawName(),
 					Class[].class, new Class[0]);
 
-			element = CodePieces.instantiate(SyncElementMethod.class, Method.class, method);
+			element = CodePieces.instantiate(ClassPropertyMethod.class, Method.class, method);
 		} else if (variable.isField()) {
 			CodePiece field = CodePieces.invokeVirtual(Class.class, "getDeclaredField",
 					clazzObj, Field.class,
 					String.class, variable.rawName());
 
-			element = CodePieces.instantiate(SyncElementField.class, Field.class, field);
+			element = CodePieces.instantiate(ClassPropertyField.class, Field.class, field);
 		} else {
 			throw new AssertionError("@Sync variable neither Field nor method!?");
 		}

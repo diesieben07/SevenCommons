@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
 import com.google.common.base.Predicate;
+import de.take_weiland.mods.commons.properties.ClassProperty;
 
 import java.lang.annotation.Annotation;
 
@@ -22,7 +23,7 @@ public interface SyncingConfigurator<T> {
 	 * @param filter the filter
 	 * @return this
 	 */
-	SyncingConfigurator<T> when(Predicate<? super SyncElement<T>> filter);
+	SyncingConfigurator<T> when(Predicate<? super ClassProperty<T>> filter);
 
 	/**
 	 * <p>Allow subclasses of {@code T} as well.</p>

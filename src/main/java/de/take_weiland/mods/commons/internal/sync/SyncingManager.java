@@ -5,6 +5,7 @@ import de.take_weiland.mods.commons.internal.PacketTypeID;
 import de.take_weiland.mods.commons.internal.PacketTypeIds;
 import de.take_weiland.mods.commons.internal.sync.impl.*;
 import de.take_weiland.mods.commons.net.ModPacket;
+import de.take_weiland.mods.commons.properties.ClassProperty;
 import de.take_weiland.mods.commons.sync.*;
 import de.take_weiland.mods.commons.util.Players;
 import net.minecraft.block.Block;
@@ -62,15 +63,15 @@ public final class SyncingManager {
 		(isContentSyncer ? contentSyncers : valueSyncers).put(clazz, provider);
 	}
 
-	public static <T> ValueSyncer<T> getValueSyncer(SyncElement<T> element) {
+	public static <T> ValueSyncer<T> getValueSyncer(ClassProperty<T> element) {
 		return (ValueSyncer<T>) getSyncer(element, valueSyncers);
 	}
 
-	public static <T> ContentSyncer<T> getContentSyncer(SyncElement<T> element) {
+	public static <T> ContentSyncer<T> getContentSyncer(ClassProperty<T> element) {
 		return (ContentSyncer<T>) getSyncer(element, contentSyncers);
 	}
 
-	private static <T> Syncer<T> getSyncer(SyncElement<T> element, Multimap<Class<?>, ? extends SyncerProvider> syncers) {
+	private static <T> Syncer<T> getSyncer(ClassProperty<T> element, Multimap<Class<?>, ? extends SyncerProvider> syncers) {
 		Syncer<T> syncer;
 		Class<?> clazz = element.getType().getRawType();
 
@@ -88,7 +89,7 @@ public final class SyncingManager {
 		return syncer;
 	}
 
-	private static <T> Syncer<T> findSyncer(SyncElement<T> element, Class<?> baseClazz, Multimap<Class<?>, ? extends SyncerProvider> syncers) {
+	private static <T> Syncer<T> findSyncer(ClassProperty<T> element, Class<?> baseClazz, Multimap<Class<?>, ? extends SyncerProvider> syncers) {
 		Syncer<T> syncer = null;
 		for (SyncerProvider provider : syncers.get(baseClazz)) {
 			if (syncer == null) {

@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.reflect.TypeToken;
-import de.take_weiland.mods.commons.sync.SyncElement;
+import de.take_weiland.mods.commons.properties.ClassProperty;
 
 import javax.annotation.Nonnull;
 import java.lang.annotation.Annotation;
@@ -10,12 +10,12 @@ import java.lang.reflect.AnnotatedElement;
 /**
  * @author diesieben07
  */
-public abstract class SyncElementMember<MEM extends AnnotatedElement, T> implements SyncElement<T> {
+public abstract class ClassPropertyMember<MEM extends AnnotatedElement, T> implements ClassProperty<T> {
 
 	protected final MEM member;
 	private TypeToken<T> type;
 
-	protected SyncElementMember(MEM member) {
+	protected ClassPropertyMember(MEM member) {
 		this.member = member;
 	}
 

@@ -7,7 +7,7 @@ import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.sync.ContentSyncer;
 import de.take_weiland.mods.commons.sync.SyncContents;
-import de.take_weiland.mods.commons.sync.SyncElement;
+import de.take_weiland.mods.commons.properties.ClassProperty;
 
 import java.lang.annotation.Annotation;
 
@@ -23,7 +23,7 @@ class HandlerContentSyncer extends HandlerSyncer {
 	@Override
 	CodePiece newSyncer(CodePiece syncElement) {
 		return CodePieces.invokeStatic(SyncingManager.class, "getContentSyncer", ContentSyncer.class,
-				SyncElement.class, syncElement);
+				ClassProperty.class, syncElement);
 	}
 
 	@Override

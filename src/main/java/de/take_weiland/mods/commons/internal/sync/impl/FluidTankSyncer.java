@@ -4,7 +4,7 @@ import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.ContentSyncer;
 import de.take_weiland.mods.commons.sync.SyncCapacity;
-import de.take_weiland.mods.commons.sync.SyncElement;
+import de.take_weiland.mods.commons.properties.ClassProperty;
 import de.take_weiland.mods.commons.sync.SyncerProvider;
 import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
@@ -38,7 +38,7 @@ public final class FluidTankSyncer implements ContentSyncer<FluidTank> {
 				.with(new SyncerProvider.ForContents() {
 					@SuppressWarnings("unchecked")
 					@Override
-					public <S> ContentSyncer<S> apply(SyncElement<S> element) {
+					public <S> ContentSyncer<S> apply(ClassProperty<S> element) {
 						if (element.isAnnotationPresent(SyncCapacity.class)) {
 							return (ContentSyncer<S>) WithCapacity.instance();
 						} else {

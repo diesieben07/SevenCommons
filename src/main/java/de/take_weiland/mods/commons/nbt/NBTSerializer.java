@@ -2,13 +2,12 @@ package de.take_weiland.mods.commons.nbt;
 
 import net.minecraft.nbt.NBTBase;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * @author diesieben07
  */
-@ParametersAreNonnullByDefault
 public interface NBTSerializer<T> {
 
 	NBTBase serialize(T instance);
@@ -22,6 +21,14 @@ public interface NBTSerializer<T> {
 
 		@Override
 		T deserialize(@Nullable NBTBase nbt);
+	}
+
+	interface Contents<T> {
+
+		NBTBase serialize(@Nonnull T instance);
+
+		void deserialize(NBTBase nbt, @Nonnull T instance);
+
 	}
 
 }

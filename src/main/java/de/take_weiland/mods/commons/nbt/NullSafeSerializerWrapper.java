@@ -8,9 +8,10 @@ import javax.annotation.Nullable;
 * @author diesieben07
 */
 class NullSafeSerializerWrapper<T> implements NBTSerializer.NullSafe<T> {
+
 	private final NBTSerializer<T> wrapped;
 
-	public NullSafeSerializerWrapper(NBTSerializer<T> wrapped) {
+	NullSafeSerializerWrapper(NBTSerializer<T> wrapped) {
 		this.wrapped = wrapped;
 	}
 

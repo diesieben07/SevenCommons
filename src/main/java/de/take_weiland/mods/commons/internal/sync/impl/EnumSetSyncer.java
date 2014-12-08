@@ -6,7 +6,7 @@ import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.ContentSyncer;
-import de.take_weiland.mods.commons.sync.SyncElement;
+import de.take_weiland.mods.commons.properties.ClassProperty;
 import de.take_weiland.mods.commons.sync.SyncerProvider;
 import de.take_weiland.mods.commons.sync.ValueSyncer;
 
@@ -35,7 +35,7 @@ public final class EnumSetSyncer<E extends Enum<E>> implements ValueSyncer<EnumS
 		sync(EnumSet.class)
 				.with(new SyncerProvider.ForValue() {
 					@Override
-					public <S> ValueSyncer<S> apply(SyncElement<S> element) {
+					public <S> ValueSyncer<S> apply(ClassProperty<S> element) {
 						Class setValues = getEnumSetType(element.getType());
 						if (setValues == null) {
 							return null;
@@ -54,7 +54,7 @@ public final class EnumSetSyncer<E extends Enum<E>> implements ValueSyncer<EnumS
 		sync(EnumSet.class)
 				.with(new SyncerProvider.ForContents() {
 					@Override
-					public <S> ContentSyncer<S> apply(SyncElement<S> element) {
+					public <S> ContentSyncer<S> apply(ClassProperty<S> element) {
 						Class setValues = getEnumSetType(element.getType());
 						if (setValues == null) {
 							return null;

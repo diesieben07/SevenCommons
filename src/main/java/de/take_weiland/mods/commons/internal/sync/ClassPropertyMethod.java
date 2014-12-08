@@ -7,9 +7,9 @@ import java.lang.reflect.Method;
 /**
  * @author diesieben07
  */
-public class SyncElementMethod<T> extends SyncElementMember<Method, T> {
+public class ClassPropertyMethod<T> extends ClassPropertyMember<Method, T> {
 
-	public SyncElementMethod(Method member) {
+	public ClassPropertyMethod(Method member) {
 		super(member);
 	}
 

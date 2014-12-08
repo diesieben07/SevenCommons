@@ -1,8 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
 import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.util.BlockCoordinates;
-import de.take_weiland.mods.commons.util.ByteStreamSerializers;
+import de.take_weiland.mods.commons.util.BlockPos;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -348,13 +347,7 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 
 	@Override
 	public void writeCoords(int x, int y, int z) {
-		BlockCoordinates.toByteStream(this, x, y, z);
-	}
-
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	@Override
-	public void write(Object obj) {
-		ByteStreamSerializers.getSerializer((Class) obj.getClass()).write(obj, this);
+		BlockPos.toByteStream(this, x, y, z);
 	}
 
 	static final long UUID_NULL_MSB = 0xF000;

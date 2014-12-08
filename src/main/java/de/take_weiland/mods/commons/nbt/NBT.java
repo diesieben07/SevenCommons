@@ -1,8 +1,10 @@
 package de.take_weiland.mods.commons.nbt;
 
-import com.google.common.collect.MapMaker;
+import com.google.common.collect.Maps;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
 import net.minecraftforge.fluids.FluidStack;
@@ -11,10 +13,10 @@ import org.jetbrains.annotations.Contract;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -89,17 +91,23 @@ public final class NBT {
 
 	}
 
+	private static Map<String, NBTSerializer.NullSafe<?>> serializers = Maps.newHashMap();
+
+	/**
+	 * <p>Create a null-safe version of the given serializer.</p>
+	 * @param serializer the serializer to wrap
+	 * @return a null-safe version of the serializer
+	 */
+	public static <T> NBTSerializer.NullSafe<T> makeNullSafe(NBTSerializer<T> serializer) {
+		if (serializer instanceof NBTSerializer.NullSafe) {
+			return (NBTSerializer.NullSafe<T>) serializer;
+		} else {
+			return new NullSafeSerializerWrapper<>(serializer);
+		}
+	}
+
 	private static final byte NULL = -1;
 	private static final String NULL_KEY = "_sc$null";
-
-	private static final ConcurrentMap<Class<?>, NBTSerializer<?>> customSerializers;
-	private static final ConcurrentMap<Class<?>, NBTSerializer.NullSafe<?>> safeSerializers;
-
-	static {
-		MapMaker mm = new MapMaker().concurrencyLevel(2);
-		customSerializers = mm.makeMap();
-		safeSerializers = mm.makeMap();
-	}
 
 	/**
 	 * <p>Get a List view of the given NBTTagList.
@@ -172,86 +180,13 @@ public final class NBT {
 		return nbt == null ? null : (T) nbt.copy();
 	}
 
-	/**
-	 * <p>Serializes the given Object to NBT.</p>
-	 * <p>This method supports null values.</p>
-	 * @see #read(Class, net.minecraft.nbt.NBTBase)
-	 * @see #registerSerializer(Class, NBTSerializer)
-	 * @param obj the Object
-	 * @return the NBT data
-	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	@Nonnull
-	public static NBTBase write(@Nullable Object obj) {
-		return obj == null
-				? serializedNull()
-				: getNotNullSerializer((Class) obj.getClass()).serialize(obj);
-	}
-
-	/**
-	 * <p>Deserializes an Object of Class {@code T} from NBT.</p>
-	 * <p>This method supports serialized null values. The Object has to be serialized via
-	 * {@link #write(Object)} or a Serializer returned from {@link #getSerializer(Class)}.</p>
-	 * @param clazz the Class
-	 * @param nbt the NBT data
-	 * @return the deserialized Object
-	 */
-	@Nullable
-	public static <T> T read(Class<T> clazz, @Nullable NBTBase nbt) {
-		return isSerializedNull(nbt) ? null : getNotNullSerializer(clazz).deserialize(nbt);
-	}
-
-	/**
-	 * <p>Register a Serializer for the given Class. Serializers for implementers of {@link de.take_weiland.mods.commons.nbt.NBTSerializable}
-	 * must not be registered, as they are handled automatically. A Serializer for those classes can be obtained via
-	 * {@link #getSerializer(Class)}.</p>
-	 * <p>Even if the serializer registered here does not implement {@link de.take_weiland.mods.commons.nbt.NBTSerializer.NullSafe},
-	 * {@link #getSerializer(Class)} will return a null-safe wrapper.</p>
-	 * @param clazz the Class to serialize
-	 * @param serializer the serializer
-	 */
-	public static <T> void registerSerializer(Class<T> clazz, NBTSerializer<T> serializer) {
-		checkArgument(!NBTSerializable.class.isAssignableFrom(clazz), "Don't register serializers for NBTSerializable!");
-		if (customSerializers.putIfAbsent(clazz, serializer) != null) {
-			throw new IllegalArgumentException("Serializer for " + clazz.getName() + " already registered!");
-		}
-		if (serializer instanceof NBTSerializer.NullSafe) {
-			// this is not 100% accurate, as getSerializer *might* have created a null-safe wrapper already
-			// but it is extremely unlikely, and doesn't hurt that much (we then have a null-safe wrapper around a null-safe serializer)
-			safeSerializers.put(clazz, (NBTSerializer.NullSafe<?>) serializer);
-		}
-	}
-
-	/**
-	 * <p>Get a {@code NBTSerializer} for the given class. The class must either implement {@code NBTSerializable}
-	 * or a Serializer must be registered manually via {@link #registerSerializer(Class, NBTSerializer)}.</p>
-	 * <p>The returned Serializer will be null-safe.</p>
-	 * @param clazz the class to be serialized
-	 * @return a serializer for the class
-	 */
-	@Nonnull
 	@SuppressWarnings("unchecked")
-	public static <T> NBTSerializer.NullSafe<T> getSerializer(Class<T> clazz) {
-		NBTSerializer.NullSafe<T> result = (NBTSerializer.NullSafe<T>) safeSerializers.get(clazz);
-		if (result == null) {
-			result = newNullSafeSerializer(clazz);
-			if (safeSerializers.putIfAbsent(clazz, result) != null) {
-				result = (NBTSerializer.NullSafe<T>) safeSerializers.get(clazz);
-			}
+	public static <T> NBTSerializer.NullSafe<T> getSerializer(String typeID) {
+		NBTSerializer.NullSafe<?> serializer = serializers.get(typeID);
+		if (serializer == null) {
+			throw new IllegalArgumentException("No NBTSerializer for typeID " + typeID);
 		}
-		return result;
-	}
-
-	@SuppressWarnings("unchecked")
-	private static <T> NBTSerializer<T> getNotNullSerializer(Class<T> clazz) {
-		NBTSerializer<T> result = (NBTSerializer<T>) safeSerializers.get(clazz);
-		if (result == null) {
-			result = (NBTSerializer<T>) customSerializers.get(clazz);
-		}
-		if (result == null) {
-			throw cannotSerialize(clazz);
-		}
-		return result;
+		return (NBTSerializer.NullSafe<T>) serializer;
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
@@ -289,8 +224,6 @@ public final class NBT {
 		} else if (clazz.isArray() && JavaUtils.getDimensions(clazz) == 1) {
 			Class<?> comp = clazz.getComponentType();
 			return (NBTSerializer.NullSafe<T>) new ObjectArraySerializer.Simple<>(getSerializer(comp), comp);
-		} else if (NBTSerializable.class.isAssignableFrom(clazz)) {
-			return (NBTSerializer.NullSafe<T>) new NBTSerializableWrapper(clazz);
 		}
 		final NBTSerializer<T> wrapped = (NBTSerializer<T>) customSerializers.get(clazz);
 		if (wrapped == null) {
@@ -343,6 +276,60 @@ public final class NBT {
 	@Nullable
 	public static String readString(NBTTagCompound nbt, String key) {
 		return readString(nbt.getTag(key));
+	}
+
+	@Nonnull
+	public static NBTBase writeBlock(@Nullable Block block) {
+		if (block == null) {
+			return serializedNull();
+		} else {
+			return new NBTTagShort("", (short) block.blockID);
+		}
+	}
+
+	public static void writeBlock(@Nullable Block block, NBTTagCompound nbt, String key) {
+		nbt.setTag(key, writeBlock(block));
+	}
+
+	@Nullable
+	public static Block readBlock(@Nullable NBTBase nbt) {
+		if (isSerializedNull(nbt)) {
+			return null;
+		} else {
+			return Block.blocksList[((NBTTagShort) nbt).data];
+		}
+	}
+
+	@Nullable
+	public static Block readBlock(NBTTagCompound nbt, String key) {
+		return readBlock(nbt.getTag(key));
+	}
+
+	@Nonnull
+	public static NBTBase writeItem(@Nullable Item item) {
+		if (item == null) {
+			return serializedNull();
+		} else {
+			return new NBTTagShort("", (short) item.itemID);
+		}
+	}
+
+	public static void writeItem(@Nullable Item item, NBTTagCompound nbt, String key) {
+		nbt.setTag(key, writeItem(item));
+	}
+
+	@Nullable
+	public static Item readItem(@Nullable NBTBase nbt) {
+		if (isSerializedNull(nbt)) {
+			return null;
+		} else {
+			return Item.itemsList[((NBTTagShort) nbt).data];
+		}
+	}
+
+	@Nullable
+	public static Item readItem(NBTTagCompound nbt, String key) {
+		return readItem(nbt.getTag(key));
 	}
 
 	/**
@@ -530,6 +517,44 @@ public final class NBT {
 	public static <E extends Enum<E>> E readEnum(NBTTagCompound nbt, String key, Class<E> clazz) {
 		return readEnum(nbt.getTag(key), clazz);
 	}
+
+	@Nonnull
+	public static <E extends Enum<E>> NBTBase writeEnumSet(@Nullable EnumSet<E> enumSet) {
+		if (enumSet == null) {
+			return serializedNull();
+		} else {
+			NBTTagList list = new NBTTagList();
+			for (E e : enumSet) {
+				list.appendTag(new NBTTagString("", e.name()));
+			}
+			return list;
+		}
+	}
+
+	public static <E extends Enum<E>> void writeEnumSet(@Nullable EnumSet<E> enumSet, NBTTagCompound nbt, String key) {
+		nbt.setTag(key, writeEnumSet(enumSet));
+	}
+
+	@Nullable
+	public static <E extends Enum<E>> EnumSet<E> readEnumSet(@Nullable NBTBase nbt, Class<E> enumClass) {
+		if (isSerializedNull(nbt)) {
+			return null;
+		} else {
+			EnumSet<E> enumSet = EnumSet.noneOf(enumClass);
+			NBTTagList list = (NBTTagList) nbt;
+			for (int i = 0, len = list.tagCount(); i < len; i++) {
+				enumSet.add(Enum.valueOf(enumClass, ((NBTTagString) list.tagAt(i)).data));
+			}
+			return enumSet;
+		}
+	}
+
+	@Nullable
+	public static <E extends Enum<E>> EnumSet<E> readEnumSet(NBTTagCompound nbt, String key, Class<E> enumClass) {
+		return readEnumSet(nbt.getTag(key), enumClass);
+	}
+
+	public
 
 	/**
 	 * <p>Get an NBT Tag that represents {@code null}.</p>

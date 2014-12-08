@@ -7,9 +7,9 @@ import java.lang.reflect.Field;
 /**
  * @author diesieben07
  */
-public final class SyncElementField<T> extends SyncElementMember<Field, T> {
+public final class ClassPropertyField<T> extends ClassPropertyMember<Field, T> {
 
-	public SyncElementField(Field field) {
+	public ClassPropertyField(Field field) {
 		super(field);
 	}
 

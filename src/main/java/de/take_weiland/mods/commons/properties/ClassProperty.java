@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.sync;
+package de.take_weiland.mods.commons.properties;
 
 import com.google.common.reflect.TypeToken;
 
@@ -7,7 +7,7 @@ import java.lang.reflect.AnnotatedElement;
 /**
  * @author diesieben07
  */
-public interface SyncElement<T> extends AnnotatedElement {
+public interface ClassProperty<T> extends AnnotatedElement {
 
 	TypeToken<T> getType();
 

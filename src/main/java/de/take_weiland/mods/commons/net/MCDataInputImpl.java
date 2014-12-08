@@ -2,10 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.primitives.Ints;
 import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.util.BlockCoordinates;
-import de.take_weiland.mods.commons.util.ByteStreamSerializers;
-import de.take_weiland.mods.commons.util.JavaUtils;
-import de.take_weiland.mods.commons.util.SCReflector;
+import de.take_weiland.mods.commons.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -306,8 +303,8 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public <T> T read(Class<T> clazz) {
-		return ByteStreamSerializers.getSerializer(clazz).read(this);
+	public <T> T read(ByteStreamSerializer<T> serializer) {
+		return serializer.read(this);
 	}
 
 	private static final int BYTE_MSB = 0b1000_0000;
@@ -429,8 +426,8 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public BlockCoordinates readCoords() {
-		return BlockCoordinates.fromByteStream(this);
+	public BlockPos readCoords() {
+		return BlockPos.fromByteStream(this);
 	}
 
 	@Override

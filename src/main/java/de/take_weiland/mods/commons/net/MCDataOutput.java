@@ -2,14 +2,12 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataOutput;
 import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.util.ByteStreamSerializable;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNullableByDefault;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -105,14 +103,6 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 	 * @param z the z coordinate
 	 */
 	void writeCoords(int x, int y, int z);
-
-	/**
-	 * <p>Write the given Object to this stream. The object must either implement {@link de.take_weiland.mods.commons.util.ByteStreamSerializable}
-	 * or an external serializer must be registered for it using
-	 * {@link de.take_weiland.mods.commons.util.ByteStreamSerializers#registerSerializer(Class, de.take_weiland.mods.commons.util.ByteStreamSerializer)}.</p>
-	 * @param obj the object to write
-	 */
-	void write(@Nonnull Object obj);
 
 	/**
 	 * <p>Write the given UUID to this stream.</p>
