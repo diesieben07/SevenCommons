@@ -296,10 +296,11 @@ public final class JavaUtils {
 	 * <p>Return the {@code sun.misc.Unsafe} instance if it is available, {@code null} otherwise.</p>
 	 * @return the {@code sun.misc.Unsafe} instance or null
 	 */
+	@SuppressWarnings("unchecked")
 	@Unsafe
-	public static Object getUnsafe() {
+	public static <T> T getUnsafe() {
 		initUnsafe();
-		return unsafe;
+		return (T) unsafe;
 	}
 
 	private static Object unsafe;

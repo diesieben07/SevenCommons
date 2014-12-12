@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.base.Throwables;
+import de.take_weiland.mods.commons.internal.EnumSetHandling;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.properties.ClassProperty;
@@ -248,7 +249,7 @@ public final class BuiltinSerializers {
 				NBTTagCompound nbt = new NBTTagCompound();
 
 				nbt.setString("t", enumTypeID);
-				nbt.set
+				nbt.setLong("d", EnumSetHandling.INSTANCE.asLong(instance));
 			}
 		}
 	}
