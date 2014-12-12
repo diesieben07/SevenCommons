@@ -1,15 +1,20 @@
 package de.take_weiland.mods.commons.nbt;
 
+import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.properties.ClassProperty;
+import de.take_weiland.mods.commons.properties.Types;
 import de.take_weiland.mods.commons.util.ByteStreamSerializer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.EnumSet;
 
 /**
  * @author diesieben07
@@ -200,6 +205,51 @@ public final class BuiltinSerializers {
 		@Override
 		public java.util.EnumSet<E> deserialize(@Nullable NBTBase nbt) {
 			return NBT.readEnumSet(nbt, enumClass);
+		}
+	}
+
+	private enum EnumSetUnkownType implements NBTSerializer<java.util.EnumSet<?>>, ByteStreamSerializer<java.util.EnumSet<?>> {
+
+		INSTANCE;
+
+		private static final Field enumSetTypeField;
+
+		static {
+			Field found = null;
+			for (Field field : java.util.EnumSet.class.getDeclaredFields()) {
+				if (Modifier.isStatic(field.getModifiers()) && field.getType() == Class.class) {
+					found = field;
+					break;
+				}
+			}
+			if (found == null) {
+				throw new RuntimeException("Could not find EnumSet type field!");
+			}
+			found.setAccessible(true);
+			enumSetTypeField = found;
+		}
+
+		@SuppressWarnings("unchecked")
+		private static <E extends Enum<E>> Class<E> getEnumSetType(java.util.EnumSet<E> enumSet) {
+			try {
+				return (Class<E>) enumSetTypeField.get(enumSet);
+			} catch (IllegalAccessException e) {
+				throw Throwables.propagate(e);
+			}
+		}
+
+		@Override
+		public NBTBase serialize(java.util.EnumSet<?> instance) {
+			if (instance == null) {
+				return NBT.serializedNull();
+			} else {
+				Class<?> enumClass = getEnumSetType(instance);
+				String enumTypeID = Types.getID(enumClass);
+				NBTTagCompound nbt = new NBTTagCompound();
+
+				nbt.setString("t", enumTypeID);
+				nbt.set
+			}
 		}
 	}
 

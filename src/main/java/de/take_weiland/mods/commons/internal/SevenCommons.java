@@ -10,15 +10,16 @@ import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import de.take_weiland.mods.commons.internal.sync.PacketSync;
-import de.take_weiland.mods.commons.internal.sync.SyncingManager;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
+import de.take_weiland.mods.commons.properties.Types;
 import de.take_weiland.mods.commons.util.Logging;
 import net.minecraftforge.common.Configuration;
 
@@ -89,13 +90,14 @@ public final class SevenCommons extends DummyModContainer {
 		ClassInfoUtil.preInit();
 
 		TickRegistry.registerTickHandler(new SCPlayerTicker(), Side.SERVER);
+		GameRegistry.registerPlayerTracker(new SCPlayerTracker());
 
 		proxy.preInit(event);
 	}
 
 	@Subscribe
 	public void postInit(FMLPostInitializationEvent event) {
-		SyncingManager.freeze();
+		Types.freeze();
 	}
 
 	@Override

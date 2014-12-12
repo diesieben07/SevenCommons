@@ -223,14 +223,15 @@ public final class NBT {
 			return (NBTSerializer.NullSafe<T>) new ObjectArraySerializer.ItemStackSpecialized();
 		} else if (clazz.isArray() && JavaUtils.getDimensions(clazz) == 1) {
 			Class<?> comp = clazz.getComponentType();
-			return (NBTSerializer.NullSafe<T>) new ObjectArraySerializer.Simple<>(getSerializer(comp), comp);
+//			return (NBTSerializer.NullSafe<T>) new ObjectArraySerializer.Simple<>(getSerializer(comp), comp);
 		}
-		final NBTSerializer<T> wrapped = (NBTSerializer<T>) customSerializers.get(clazz);
-		if (wrapped == null) {
-			throw cannotSerialize(clazz);
-		} else {
-			return new NullSafeSerializerWrapper<>(wrapped);
-		}
+//		final NBTSerializer<T> wrapped = (NBTSerializer<T>) customSerializers.get(clazz);
+//		if (wrapped == null) {
+//			throw cannotSerialize(clazz);
+//		} else {
+//			return new NullSafeSerializerWrapper<>(wrapped);
+//		}
+		return null;
 	}
 
 	private static RuntimeException cannotSerialize(Class<?> clazz) {
@@ -553,8 +554,6 @@ public final class NBT {
 	public static <E extends Enum<E>> EnumSet<E> readEnumSet(NBTTagCompound nbt, String key, Class<E> enumClass) {
 		return readEnumSet(nbt.getTag(key), enumClass);
 	}
-
-	public
 
 	/**
 	 * <p>Get an NBT Tag that represents {@code null}.</p>
