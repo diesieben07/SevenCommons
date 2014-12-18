@@ -13,10 +13,7 @@ import org.jetbrains.annotations.Contract;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -553,6 +550,53 @@ public final class NBT {
 	@Nullable
 	public static <E extends Enum<E>> EnumSet<E> readEnumSet(NBTTagCompound nbt, String key, Class<E> enumClass) {
 		return readEnumSet(nbt.getTag(key), enumClass);
+	}
+
+	@Nonnull
+	public static NBTBase writeBitSet(@Nullable BitSet bitSet) {
+		if (bitSet == null) {
+			return serializedNull();
+		} else {
+			return new NBTTagByteArray("", bitSet.toByteArray());
+		}
+	}
+
+	public static void writeBitSet(@Nullable BitSet bitSet, NBTTagCompound nbt, String key) {
+		nbt.setTag(key, writeBitSet(bitSet));
+	}
+
+	@Nullable
+	public static BitSet readBitSet(@Nullable NBTBase nbt) {
+		if (isSerializedNull(nbt)) {
+			return null;
+		} else {
+			return BitSet.valueOf(((NBTTagByteArray) nbt).byteArray);
+		}
+	}
+
+	@Nullable
+	public static BitSet readBitSet(NBTTagCompound nbt, String key) {
+		return readBitSet(nbt.getTag(key));
+	}
+
+	@Nullable
+	@Contract("null, _ -> null")
+	public static BitSet readBitSet(@Nullable NBTBase nbt, @Nullable BitSet bitSet) {
+		BitSet read = readBitSet(nbt);
+		if (bitSet == null) {
+			return read;
+		} else if (read == null) {
+			return null;
+		} else {
+			bitSet.clear();
+			bitSet.or(read);
+			return bitSet;
+		}
+	}
+
+	@Nullable
+	public static BitSet readBitSet(NBTTagCompound nbt, String key, @Nullable BitSet bitSet) {
+		return readBitSet(nbt.getTag(key), bitSet);
 	}
 
 	/**

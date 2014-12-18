@@ -1,21 +1,16 @@
 package de.take_weiland.mods.commons.nbt;
 
-import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.internal.EnumSetHandling;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.properties.ClassProperty;
-import de.take_weiland.mods.commons.properties.Types;
 import de.take_weiland.mods.commons.util.ByteStreamSerializer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.EnumSet;
 
 /**
  * @author diesieben07
@@ -119,6 +114,41 @@ public final class BuiltinSerializers {
 		}
 	}
 
+	public enum FluidTankWithCapacity implements NBTSerializer.Contents<net.minecraftforge.fluids.FluidTank>, ByteStreamSerializer.Contents<net.minecraftforge.fluids.FluidTank> {
+
+		INSTANCE;
+
+		private static final String CAP_KEY = "_sc$capacity";
+
+		@Override
+		public NBTBase serialize(net.minecraftforge.fluids.FluidTank instance) {
+			NBTTagCompound nbt = instance.writeToNBT(new NBTTagCompound());
+			nbt.setInteger(CAP_KEY, instance.getCapacity());
+			return nbt;
+		}
+
+		@Override
+		public void deserialize(NBTBase nbt, @Nonnull net.minecraftforge.fluids.FluidTank instance) {
+			NBTTagCompound comp = (NBTTagCompound) nbt;
+			instance.readFromNBT(comp);
+			instance.setCapacity(comp.getInteger(CAP_KEY));
+		}
+
+
+		@Override
+		public void write(@Nonnull net.minecraftforge.fluids.FluidTank instance, @Nonnull MCDataOutputStream out) {
+			out.writeFluidStack(instance.getFluid());
+			out.writeVarInt(instance.getCapacity());
+		}
+
+		@Override
+		public void read(@Nonnull net.minecraftforge.fluids.FluidTank instance, @Nonnull MCDataInputStream in) {
+			instance.setFluid(in.readFluidStack());
+			instance.setCapacity(in.readVarInt());
+		}
+
+	}
+
 	public enum Block implements NBTSerializer.NullSafe<net.minecraft.block.Block>, ByteStreamSerializer<net.minecraft.block.Block> {
 		INSTANCE;
 
@@ -172,13 +202,13 @@ public final class BuiltinSerializers {
 
 		private static final Type enumSetElements = EnumSet.class.getTypeParameters()[0];
 
-		public static EnumSet create(ClassProperty<?> element) {
+		public static NBTSerializer<java.util.EnumSet<?>> create(ClassProperty<?> element) {
 			Class<?> enumType = element.getType().resolveType(enumSetElements).getRawType();
 			if (enumType.isEnum()) {
 				//noinspection unchecked
 				return new EnumSet(enumType);
 			} else {
-				throw new RuntimeException("Cannot find content type of EnumSet " + element);
+				return EnumSetUnkownType.INSTANCE;
 			}
 		}
 
@@ -200,12 +230,12 @@ public final class BuiltinSerializers {
 
 		@Override
 		public NBTBase serialize(@Nullable java.util.EnumSet<E> instance) {
-			return NBT.writeEnumSet(instance);
+			return instance == null ? NBT.serializedNull() : EnumSetHandling.toNbt(instance);
 		}
 
 		@Override
 		public java.util.EnumSet<E> deserialize(@Nullable NBTBase nbt) {
-			return NBT.readEnumSet(nbt, enumClass);
+			return NBT.isSerializedNull(nbt) ? null : EnumSetHandling.fromNbt(nbt, enumClass, null);
 		}
 	}
 
@@ -213,47 +243,85 @@ public final class BuiltinSerializers {
 
 		INSTANCE;
 
-		private static final Field enumSetTypeField;
-
-		static {
-			Field found = null;
-			for (Field field : java.util.EnumSet.class.getDeclaredFields()) {
-				if (Modifier.isStatic(field.getModifiers()) && field.getType() == Class.class) {
-					found = field;
-					break;
-				}
-			}
-			if (found == null) {
-				throw new RuntimeException("Could not find EnumSet type field!");
-			}
-			found.setAccessible(true);
-			enumSetTypeField = found;
-		}
-
-		@SuppressWarnings("unchecked")
-		private static <E extends Enum<E>> Class<E> getEnumSetType(java.util.EnumSet<E> enumSet) {
-			try {
-				return (Class<E>) enumSetTypeField.get(enumSet);
-			} catch (IllegalAccessException e) {
-				throw Throwables.propagate(e);
-			}
-		}
-
 		@Override
 		public NBTBase serialize(java.util.EnumSet<?> instance) {
 			if (instance == null) {
 				return NBT.serializedNull();
 			} else {
-				Class<?> enumClass = getEnumSetType(instance);
-				String enumTypeID = Types.getID(enumClass);
-				NBTTagCompound nbt = new NBTTagCompound();
-
-				nbt.setString("t", enumTypeID);
-				nbt.setLong("d", EnumSetHandling.INSTANCE.asLong(instance));
+				return EnumSetHandling.toNbt(instance);
 			}
+		}
+
+		@Override
+		public java.util.EnumSet<?> deserialize(NBTBase nbt) {
+			if (NBT.isSerializedNull(nbt)) {
+				return null;
+			} else {
+				return EnumSetHandling.fromNbt(nbt, null);
+			}
+		}
+
+
+		@Override
+		public void write(java.util.EnumSet<?> instance, @Nonnull MCDataOutputStream out) {
+			EnumSetHandling.writeToUnkownType(instance, out);
+		}
+
+		@Override
+		public java.util.EnumSet<?> read(MCDataInputStream in) {
+			return EnumSetHandling.readUnkownType(null, in);
 		}
 	}
 
+	public static enum BitSet implements NBTSerializer.NullSafe<java.util.BitSet>, ByteStreamSerializer<java.util.BitSet> {
 
+		INSTANCE;
+
+		@Override
+		public void write(java.util.BitSet instance, @Nonnull MCDataOutputStream out) {
+			out.writeBitSet(instance);
+		}
+
+		@Override
+		public java.util.BitSet read(MCDataInputStream in) {
+			return in.readBitSet();
+		}
+
+
+		@Override
+		public NBTBase serialize(@Nullable java.util.BitSet instance) {
+			return NBT.writeBitSet(instance);
+		}
+
+		@Override
+		public java.util.BitSet deserialize(@Nullable NBTBase nbt) {
+			return NBT.readBitSet(nbt);
+		}
+	}
+
+	public static enum BitSetContents implements NBTSerializer.Contents<java.util.BitSet>, ByteStreamSerializer.Contents<java.util.BitSet> {
+
+		INSTANCE;
+
+		@Override
+		public void write(@Nonnull java.util.BitSet instance, @Nonnull MCDataOutputStream out) {
+			out.writeBitSet(instance);
+		}
+
+		@Override
+		public void read(@Nonnull java.util.BitSet instance, @Nonnull MCDataInputStream in) {
+			in.readBitSet(instance);
+		}
+
+		@Override
+		public NBTBase serialize(@Nonnull java.util.BitSet instance) {
+			return NBT.writeBitSet(instance);
+		}
+
+		@Override
+		public void deserialize(NBTBase nbt, @Nonnull java.util.BitSet instance) {
+			return NBT.readBitSet()
+		}
+	}
 
 }

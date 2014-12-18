@@ -1,8 +1,14 @@
 package de.take_weiland.mods.commons.internal;
 
-import com.google.common.base.Throwables;
-import cpw.mods.fml.common.network.NetworkMod;
+import de.take_weiland.mods.commons.nbt.NBT;
+import de.take_weiland.mods.commons.net.MCDataInputStream;
+import de.take_weiland.mods.commons.net.MCDataOutputStream;
+import de.take_weiland.mods.commons.properties.Types;
 import de.take_weiland.mods.commons.util.JavaUtils;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
@@ -14,9 +20,7 @@ import java.util.EnumSet;
  */
 public abstract class EnumSetHandling {
 
-    private static final long NULL_VALUE = 1L << 63L;
     private static final Unsafe unsafe = JavaUtils.getUnsafe();
-    private static final long elementsFieldOff;
     private static final long typeFieldOff;
 
     static {
@@ -31,157 +35,157 @@ public abstract class EnumSetHandling {
             throw new RuntimeException("Could not find type field in EnumSet");
         }
         typeFieldOff = unsafe.objectFieldOffset(found);
-        found = null;
-
-        Class<?> regEnumSet;
-        try {
-            regEnumSet = Class.forName("java.util.RegularEnumSet");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Could not find java.util.RegularEnumSet", e);
-        }
-        for (Field field : regEnumSet.getDeclaredFields()) {
-            if (!Modifier.isStatic(field.getModifiers()) && field.getType() == long.class) {
-                found = field;
-                break;
-            }
-        }
-        if (found == null) {
-            throw new RuntimeException("Could not find elements filed in RegularEnumSet");
-        }
-        elementsFieldOff = unsafe.objectFieldOffset(found);
     }
 
-    public static long asLong(EnumSet<?> enumSet) {
+    public static final String DATA_TAG = "d";
+    public static final String TYPE_TAG = "t";
+
+    public static <E extends Enum<E>> NBTBase toNbt(EnumSet<E> enumSet) {
         if (enumSet == null) {
-            return NULL_VALUE;
-        } else {
-            return unsafe.getLong(enumSet, elementsFieldOff);
+            return NBT.serializedNull();
         }
+        Class<E> enumClass = getEnumType(enumSet);
+        String typeID = Types.getID(enumClass);
+        NBTTagCompound nbt = new NBTTagCompound();
+        nbt.setString(TYPE_TAG, typeID);
+        if (!enumSet.isEmpty()) {
+            NBTTagList list = new NBTTagList();
+            for (E e : enumSet) {
+                list.appendTag(new NBTTagString("", e.name()));
+            }
+        }
+        return nbt;
+    }
+
+    public static <E extends Enum<E>> EnumSet<E> fromNbt(NBTBase nbt, Class<E> enumClass, EnumSet<E> enumSet) {
+        if (NBT.isSerializedNull(nbt)) {
+            return null;
+        }
+        NBTTagCompound comp = (NBTTagCompound) nbt;
+        if (enumSet == null) {
+            enumSet = EnumSet.noneOf(enumClass);
+        }
+        if (Types.getClass(comp.getString(TYPE_TAG)) != enumClass) {
+            return enumSet;
+        }
+        fromNbt0(enumSet, enumClass, comp.getTagList(DATA_TAG));
+        return enumSet;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static EnumSet<?> fromNbt(NBTBase nbt, EnumSet<?> enumSet) {
+        if (NBT.isSerializedNull(nbt)) {
+            return null;
+        }
+        NBTTagCompound comp = (NBTTagCompound) nbt;
+        String typeID = comp.getString(TYPE_TAG);
+        Class enumClass = Types.getClass(typeID);
+        if (!enumClass.isEnum()) {
+            throw new RuntimeException("TypeID " + typeID + " does not represent an Enum!");
+        }
+        if (enumSet == null || getEnumType(enumSet) != enumClass) {
+            enumSet = EnumSet.noneOf(enumClass);
+        } else {
+            enumSet.clear();
+        }
+       fromNbt0(enumSet, enumClass, comp.getTagList(DATA_TAG));
+        return enumSet;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void fromNbt0(EnumSet set, Class clazz, NBTTagList nbt) {
+        for (NBTTagString elem : NBT.<NBTTagString>asList(nbt)) {
+            set.add(Enum.valueOf(clazz, elem.data));
+        }
+    }
+
+    public static <E extends Enum<E>> void writeToUnkownType(EnumSet<E> enumSet, MCDataOutputStream out) {
+        if (enumSet == null) {
+            out.writeBoolean(false);
+        } else {
+            out.writeBoolean(true);
+            Class<E> enumType = getEnumType(enumSet);
+            out.writeInt(Types.getNumericalID(enumType));
+            writeToKnownType(enumSet, enumType, out);
+        }
+    }
+
+    public static <E extends Enum<E>> void writeToKnownType(EnumSet<E> enumSet, Class<E> type, MCDataOutputStream out) {
+        if (enumSet == null) {
+            out.writeByte(0b0000_0001);
+        } else {
+            E[] universe = JavaUtils.getEnumConstantsShared(type);
+            int numEnums = universe.length;
+            if (numEnums == 0) {
+                out.writeByte(0);
+            } else {
+                int numBytes = getByteCount(numEnums);
+                int pos = out.length();
+                out.writeNulls(numBytes);
+
+                byte[] arr = out.backingArray();
+
+                for (E e : enumSet) {
+                    int ord = e.ordinal() + 1; // ordinal 0 = set is null
+                    arr[pos + ord >> 3] |= 1 << (ord & 3);
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static EnumSet<?> readUnkownType(EnumSet<?> set, MCDataInputStream in) {
+        if (!in.readBoolean()) {
+            return null;
+        }
+        Class clazz = Types.getClass(in.readInt());
+        if (!clazz.isEnum()) {
+            throw new RuntimeException("received non-enum class for EnumSet");
+        }
+        if (set == null || getEnumType(set) != clazz) {
+            set = EnumSet.noneOf(clazz);
+        }
+        return readKnownType(clazz, set, in);
+    }
+
+    public static <E extends Enum<E>> EnumSet<E> readKnownType(Class<E> clazz, EnumSet<E> set, MCDataInputStream in) {
+        byte first = in.readByte();
+        if ((first & 0b1) != 0) {
+            return null;
+        }
+
+        if (set == null) {
+            set = EnumSet.noneOf(clazz);
+        } else {
+            set.clear();
+        }
+        E[] universe = JavaUtils.getEnumConstantsShared(clazz);
+        for (int bit = 1; bit < 8; bit++) {
+            if ((first & (1 << bit)) != 0) {
+                set.add(universe[bit - 1]);
+            }
+        }
+
+        int numBytes = getByteCount(universe.length);
+        for (int i = 1; i < numBytes; i++) {
+            byte b = in.readByte();
+            for (int bit = 0; bit < 8; bit++) {
+                if ((b & (1 << bit)) != 0) {
+                    set.add(universe[(i << 3 - 1) + bit]);
+                }
+            }
+        }
+        return set;
+    }
+
+    private static int getByteCount(int numEnums) {
+        // unoptimized: numBytes = numEnums / 8 + (numEnums % 8 == 0 ? 1 : 0);
+        return numEnums >> 3 + (-(numEnums & 7) >>> 31);
     }
 
     @SuppressWarnings("unchecked")
     public static <E extends Enum<E>> Class<E> getEnumType(EnumSet<E> enumSet) {
         return (Class<E>) unsafe.getObject(enumSet, typeFieldOff);
     }
-
-    public static <E extends Enum<E>> EnumSet<E> fromLong(Class<E> baseClass, long data) {
-        if (data == NULL_VALUE) {
-            return null;
-        } else {
-            EnumSet<E> enumSet = EnumSet.noneOf(baseClass);
-            unsafe.putLong(enumSet, elementsFieldOff, data);
-            return enumSet;
-        }
-    }
-
-    public static <E extends Enum<E>> EnumSet<E> fromLong(Class<E> enumClass, EnumSet<E> enumSet, long data) {
-        if (data == NULL_VALUE) {
-            return null;
-        } else {
-            if (enumSet == null) {
-                enumSet = EnumSet.noneOf(enumClass);
-            }
-            unsafe.putLong(enumSet, elementsFieldOff, data);
-            return enumSet;
-        }
-    }
-
-    static {
-        EnumSetHandling instance = null;
-        try {
-            if (JavaUtils.hasUnsafe()) {
-                instance = (EnumSetHandling) Class.forName("de.take_weiland.mods.commons.internal.EnumSetHandling$FastImpl").newInstance();
-            }
-        } catch (Exception ignored) { }
-        if (instance == null) {
-            instance = new PureJavaImpl();
-        }
-        INSTANCE = instance;
-    }
-
-
-    static final class PureJavaImpl extends EnumSetHandling {
-
-        @Override
-        public long asLong(EnumSet<?> set) {
-            if (set.isEmpty()) {
-                return 0L;
-            } else {
-                long l = 0;
-                for (Enum<?> e : set) {
-                    l |= 1 << e.ordinal();
-                }
-                return l;
-            }
-        }
-
-        @Override
-        public <E extends Enum<E>> EnumSet<E> createShared(Class<E> clazz, long data) {
-            return update(clazz, null, data);
-        }
-
-        @Override
-        public <E extends Enum<E>> EnumSet<E> update(Class<E> clazz, EnumSet<E> enumSet, long data) {
-            E[] universe = JavaUtils.getEnumConstantsShared(clazz);
-            if (enumSet == null) {
-                enumSet = EnumSet.noneOf(clazz);
-            } else {
-                enumSet.clear();
-            }
-            while (data != 0) {
-                int idx = Long.numberOfTrailingZeros(data);
-                enumSet.add(universe[idx]);
-                data &= ~(1 << idx);
-            }
-            return enumSet;
-        }
-    }
-
-    static final class FastImpl extends EnumSetHandling {
-
-        private static final Unsafe unsafe = JavaUtils.getUnsafe();
-        private static final long offset;
-
-        static {
-            try {
-                Class<?> regEnumSet = Class.forName("java.util.RegularEnumSet");
-                Field found = null;
-                for (Field field : regEnumSet.getDeclaredFields()) {
-                    if (!Modifier.isStatic(field.getModifiers()) && field.getType() == long.class) {
-                        found = field;
-                        break;
-                    }
-                }
-                if (found != null) {
-                    offset = unsafe.objectFieldOffset(found);
-                } else {
-                    throw new RuntimeException();
-                }
-            } catch (Exception e) {
-                throw Throwables.propagate(e);
-            }
-        }
-
-        @Override
-        public <E extends Enum<E>> EnumSet<E> createShared(Class<E> clazz, long data) {
-            return update(clazz, null, data);
-        }
-
-        @Override
-        public <E extends Enum<E>> EnumSet<E> update(Class<E> clazz, EnumSet<E> set, long data) {
-            if (set == null) {
-                set = EnumSet.noneOf(clazz);
-            }
-            unsafe.putLong(set, offset, data);
-            return set;
-        }
-
-        @Override
-        public long asLong(EnumSet<?> set) {
-            return unsafe.getLong(set, offset);
-        }
-    }
-
-    EnumSetHandling() { }
 
 }

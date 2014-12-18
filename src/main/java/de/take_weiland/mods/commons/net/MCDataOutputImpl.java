@@ -119,6 +119,12 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 	}
 
 	@Override
+	public void writeNulls(int n) {
+		ensureWritable(n);
+		count += n;
+	}
+
+	@Override
 	public void write(int b) {
 		ensureWritable(1);
 		buf[count++] = (byte) b;

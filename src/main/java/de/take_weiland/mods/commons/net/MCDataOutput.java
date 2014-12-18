@@ -380,6 +380,12 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 	byte[] backingArray();
 
 	/**
+	 * <p>Write {@code n} 0 bytes to the buffer.</p>
+	 * @param n the number of bytes to write
+	 */
+	void writeNulls(int n);
+
+	/**
 	 * <p>Lock this stream so that no further write operations can occur. Attempts to write to a locked stream will
 	 * result in an {@link java.lang.IllegalStateException}.</p>
 	 */
