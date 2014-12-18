@@ -1,11 +1,12 @@
 package de.take_weiland.mods.commons;
 
+import com.google.common.collect.Iterables;
 import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.sync.Sync;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -15,6 +16,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
+import javax.swing.*;
 import java.io.IOException;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1")
@@ -22,6 +24,7 @@ import java.io.IOException;
 public class testmod_sc {
 
 	public static void main(@Nonnull String[] bar) throws NoSuchFieldException {
+		System.out.println(Iterables.toString(JavaUtils.hierarchy(JTextField.class, JavaUtils.Interfaces.INCLUDE)));
 	}
 
 	@Mod.Instance
@@ -61,7 +64,6 @@ public class testmod_sc {
 
 	public static class TestTE extends TileEntity {
 
-		@Sync
 		private ItemStack stack;
 
 		@Override

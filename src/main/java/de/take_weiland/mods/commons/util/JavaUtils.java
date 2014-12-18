@@ -2,9 +2,17 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.base.Throwables;
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.reflect.Getter;
+import de.take_weiland.mods.commons.reflect.Invoke;
+import de.take_weiland.mods.commons.reflect.SCReflection;
+import org.jetbrains.annotations.NotNull;
 import sun.misc.JavaLangAccess;
 import sun.misc.SharedSecrets;
 
@@ -220,6 +228,110 @@ public final class JavaUtils {
 		};
 	}
 
+	public static <T extends Cloneable> T clone(T t) {
+		try {
+			//noinspection unchecked
+			return (T) CloneableAcc.instance.clone(t);
+		} catch (CloneNotSupportedException e) {
+			throw new IllegalArgumentException("Tried to clone a non-cloneable object " + t, e);
+		}
+	}
+
+	/**
+	 * <p>Get an {@code Iterable} that iterates the class hierarchy of the given class.</p>
+	 * <p>If {@code}</p>
+	 * @param clazz
+	 * @param interfaceBehavior
+	 * @return
+	 */
+	public static Iterable<Class<?>> hierarchy(final Class<?> clazz, final Interfaces interfaceBehavior) {
+		if (interfaceBehavior == Interfaces.IGNORE) {
+			return new Iterable<Class<?>>() {
+				@NotNull
+				@Override
+				public Iterator<Class<?>> iterator() {
+					return new HierarchyIterator(clazz);
+				}
+			};
+		} else {
+			return new Iterable<Class<?>>() {
+				@NotNull
+				@Override
+				public Iterator<Class<?>> iterator() {
+					Predicate<Class<?>> notSeen = Predicates.not(Predicates.in(new HashSet<Class<?>>()));
+					return Iterators.concat(Iterators.transform(new HierarchyIterator(clazz), getIfacesFunc(notSeen)));
+				}
+			};
+		}
+
+	}
+
+	public enum Interfaces {
+
+		IGNORE,
+		INCLUDE
+
+	}
+
+	static Function<Class<?>, Iterator<Class<?>>> getIfacesFunc(final Predicate<Class<?>> ifaceFilter) {
+		return new Function<Class<?>, Iterator<Class<?>>>() {
+			@Nullable
+			@Override
+			public Iterator<Class<?>> apply(@Nullable Class<?> input) {
+				assert input != null;
+				Iterator<Class<?>> ifaces = Iterators.forArray(input.getInterfaces());
+				Iterator<Iterator<Class<?>>> ifaceIfaces = Iterators.transform(ifaces, this);
+				return Iterators.concat(Iterators.singletonIterator(input), Iterators.filter(Iterators.concat(ifaceIfaces), ifaceFilter));
+			}
+		};
+	}
+
+	static class HierarchyIterator extends AbstractIterator<Class<?>> {
+
+		private Class<?> current;
+
+		HierarchyIterator(Class<?> root) {
+			this.current = root;
+		}
+
+		@Override
+		protected Class<?> computeNext() {
+			Class<?> next = current;
+			if (next == null) {
+				return endOfData();
+			} else {
+				current = next.getSuperclass();
+				return next;
+			}
+		}
+	}
+
+	private static interface CloneableAcc {
+
+		CloneableAcc instance = SCReflection.createAccessor(CloneableAcc.class);
+
+		@Invoke(method = "clone")
+		Object clone(Object t) throws CloneNotSupportedException;
+
+	}
+
+	public static <T> Iterator<T> uniques(final Iterator<? extends T> parent) {
+		final Set<T> seen = new HashSet<>();
+		return new AbstractIterator<T>() {
+			@Override
+			protected T computeNext() {
+				T next;
+				do {
+					if (!parent.hasNext()) {
+						return endOfData();
+					}
+					next = parent.next();
+				} while (!seen.add(next));
+				return next;
+			}
+		};
+	}
+
 	/**
 	 * <p>Throw the given {@code Throwable} as if it as an unchecked Exception. This method always throws, the return type
 	 * is just to satisfy the compiler.</p>
@@ -267,7 +379,7 @@ public final class JavaUtils {
 	 */
 	@Unsafe
 	public static <E extends Enum<E>> E[] getEnumConstantsShared(Class<E> clazz) {
-		return ENUM_GETTER.getEnumValues(clazz);
+		return enumValuesGetter.getEnumValues(clazz);
 	}
 
 	/**
@@ -279,6 +391,15 @@ public final class JavaUtils {
 	 */
 	public static <T extends Enum<T>> T byOrdinal(Class<T> clazz, int ordinal) {
 		return getEnumConstantsShared(clazz)[ordinal];
+	}
+
+	/**
+	 * <p>Get the type of enum values of the given EnumSet.</p>
+	 * @param enumSet the EnumSet
+	 * @return the type of enum values
+	 */
+	public static <E extends Enum<E>> Class<E> getType(EnumSet<E> enumSet) {
+		return enumSetTypeGetter.getEnumType(enumSet);
 	}
 
 	/**
@@ -329,25 +450,44 @@ public final class JavaUtils {
 		}
 	}
 
-	private static EnumValueGetter ENUM_GETTER;
+	private static final EnumValuesGetter enumValuesGetter;
+	private static final EnumSetTypeGetter enumSetTypeGetter;
 
 	static {
+		EnumValuesGetter getter;
 		try {
 			Class.forName("sun.misc.SharedSecrets");
-			ENUM_GETTER = (EnumValueGetter) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").newInstance();
+			getter = (EnumValuesGetter) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").newInstance();
 		} catch (Throwable t) {
 			SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
-			ENUM_GETTER = new EnumGetterCloned();
+			getter = new EnumGetterCloned();
+		}
+		enumValuesGetter = getter;
+
+		Field result = null;
+		for (Field field : EnumSet.class.getDeclaredFields()) {
+			if (!Modifier.isStatic(field.getModifiers()) && field.getType() == Class.class) {
+				result = field;
+				break;
+			}
+		}
+		if (result == null) {
+			throw new RuntimeException("Failed to find type field in EnumSet!");
+		}
+		if (result.getName().equals("elementType")) {
+			enumSetTypeGetter = SCReflection.createAccessor(EnumSetTypeGetter.class);
+		} else {
+			enumSetTypeGetter = new EnumSetTypeGetterReflect(result);
 		}
 	}
 
-	abstract static class EnumValueGetter {
+	abstract static class EnumValuesGetter {
 
 		abstract <T extends Enum<T>> T[] getEnumValues(Class<T> clazz);
 
 	}
 
-	static class EnumGetterCloned extends EnumValueGetter {
+	final static class EnumGetterCloned extends EnumValuesGetter {
 
 		@Override
 		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
@@ -356,7 +496,7 @@ public final class JavaUtils {
 
 	}
 
-	static class EnumGetterShared extends EnumValueGetter {
+	final static class EnumGetterShared extends EnumValuesGetter {
 
 		private static final JavaLangAccess langAcc = SharedSecrets.getJavaLangAccess();
 
@@ -366,6 +506,36 @@ public final class JavaUtils {
 		}
 
 	}
+
+	interface EnumSetTypeGetter {
+
+		@Getter(field = "elementType")
+		<E extends Enum<E>> Class<E> getEnumType(EnumSet<E> enumSet);
+
+	}
+
+
+	final static class EnumSetTypeGetterReflect implements EnumSetTypeGetter {
+
+		private final Field field;
+
+		EnumSetTypeGetterReflect(Field field) {
+			this.field = field;
+			field.setAccessible(true);
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public final <E extends Enum<E>> Class<E> getEnumType(EnumSet<E> set) {
+			try {
+				return (Class<E>) field.get(set);
+			} catch (IllegalAccessException e) {
+				throw Throwables.propagate(e);
+			}
+		}
+	}
+
+
 
 	private JavaUtils() { }
 

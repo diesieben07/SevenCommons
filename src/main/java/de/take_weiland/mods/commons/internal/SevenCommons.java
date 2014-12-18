@@ -20,10 +20,18 @@ import de.take_weiland.mods.commons.internal.sync.PacketSync;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
 import de.take_weiland.mods.commons.properties.Types;
+import de.take_weiland.mods.commons.syncx.SyncSupport;
+import de.take_weiland.mods.commons.syncx.impl.*;
 import de.take_weiland.mods.commons.util.Logging;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.Configuration;
+import net.minecraftforge.fluids.FluidTank;
 
 import java.io.File;
+import java.util.BitSet;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public final class SevenCommons extends DummyModContainer {
@@ -93,6 +101,25 @@ public final class SevenCommons extends DummyModContainer {
 		GameRegistry.registerPlayerTracker(new SCPlayerTracker());
 
 		proxy.preInit(event);
+
+		registerDefaultWatchers();
+	}
+
+	private static void registerDefaultWatchers() {
+		EnumSetWatcher.register();
+
+		SyncSupport.sync(String.class).with(ImmutableWatcher.INSTANCE);
+		SyncSupport.sync(UUID.class).with(ImmutableWatcher.INSTANCE);
+		SyncSupport.sync(Enum.class).with(IdentityWatcher.INSTANCE);
+
+		SyncSupport.sync(Item.class).with(IdentityWatcher.INSTANCE);
+		SyncSupport.sync(Block.class).with(IdentityWatcher.INSTANCE);
+
+		SyncSupport.sync(BitSet.class).with(BitSetWatcher.INSTANCE);
+		SyncSupport.sync(ItemStack.class).with(ItemStackWatcher.INSTANCE);
+
+		SyncSupport.sync(FluidTank.class).with(FluidTankWatcher.INSTANCE);
+
 	}
 
 	@Subscribe
