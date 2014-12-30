@@ -152,6 +152,8 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		insns.add(new InsnNode(ATHROW));
 
 		checkInitMethod.tryCatchBlocks.add(new TryCatchBlockNode(before, after, finallyBlock, null));
+
+		ASMUtils.initialize(state.clazz, CodePieces.invoke(state.clazz, checkInitMethod));
 	}
 
 	private static void createSyncCall(TransformState state) {
