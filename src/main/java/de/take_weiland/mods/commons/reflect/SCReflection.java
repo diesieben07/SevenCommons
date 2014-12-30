@@ -3,8 +3,9 @@ package de.take_weiland.mods.commons.reflect;
 import com.google.common.io.Files;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
-import de.take_weiland.mods.commons.util.JavaUtils;
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.util.CheckClassAdapter;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
@@ -51,18 +52,6 @@ public final class SCReflection {
 	 * @return the defined class
 	 */
 	public static Class<?> defineDynamicClass(byte[] clazz) {
-		if (DEBUG) {
-			try {
-				ClassNode node = ASMUtils.getThinClassNode(clazz);
-				File file = new File("sevencommonsdyn/" + node.name + ".class");
-				Files.createParentDirs(file);
-				OutputStream out = new FileOutputStream(file);
-				out.write(clazz);
-				out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
 		return defineDynamicClass(clazz, SCReflection.class);
 	}
 
@@ -75,6 +64,21 @@ public final class SCReflection {
 	 * @return the defined class
 	 */
 	public static Class<?> defineDynamicClass(byte[] clazz, Class<?> context) {
+		if (DEBUG) {
+			try {
+				ClassNode node = ASMUtils.getThinClassNode(clazz);
+				File file = new File("sevencommonsdyn/" + node.name + ".class");
+				Files.createParentDirs(file);
+				OutputStream out = new FileOutputStream(file);
+				out.write(clazz);
+				out.close();
+
+				ClassReader cr = new ClassReader(clazz);
+				cr.accept(new CheckClassAdapter(new ClassNode(), true), 0);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		return strategy.defineDynClass(clazz, context);
 	}
 
@@ -112,13 +116,12 @@ public final class SCReflection {
 	private static final ReflectionStrategy strategy = selectStrategy();
 
 	private static ReflectionStrategy selectStrategy() {
-		if (JavaUtils.hasUnsafe()) {
-			try {
-				return (ReflectionStrategy) Class.forName("de.take_weiland.mods.commons.reflect.UnsafeStrategy")
-						.newInstance();
-			} catch (Exception e) {
-				// then not
-			}
+		try {
+			return (ReflectionStrategy) Class.forName("de.take_weiland.mods.commons.reflect.UnsafeStrategy")
+					.newInstance();
+		} catch (Throwable e) {
+			e.printStackTrace();
+			// then not
 		}
 
 		logger.warning("Using slow Strategy! This may lead to performance penalties. Please use Oracle's VM.");

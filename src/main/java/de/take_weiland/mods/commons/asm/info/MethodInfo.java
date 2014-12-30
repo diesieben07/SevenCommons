@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.asm.info;
 
+import org.objectweb.asm.Type;
+
 import static org.objectweb.asm.Opcodes.*;
 
 /**
@@ -30,6 +32,14 @@ public abstract class MethodInfo extends MemberInfo {
 	@Override
 	public ClassInfo containingClass() {
 		return clazz;
+	}
+
+	public Type[] getArgumentTypes() {
+		return Type.getArgumentTypes(desc());
+	}
+
+	public Type getReturnType() {
+		return Type.getReturnType(desc());
 	}
 
 	/**
@@ -107,5 +117,10 @@ public abstract class MethodInfo extends MemberInfo {
 		}
 		MethodInfo that = (MethodInfo) obj;
 		return that.clazz.equals(this.clazz) && that.name().equals(this.name()) && that.desc().equals(this.desc());
+	}
+
+	@Override
+	public String toString() {
+		return "Method " + name() + " in " + clazz;
 	}
 }

@@ -69,6 +69,11 @@ abstract class AbstractASMVariable implements ASMVariable {
 		return name();
 	}
 
+	@Override
+	public String setterName() {
+		throw new UnsupportedOperationException();
+	}
+
 	abstract List<AnnotationNode> getterAnns(boolean visible);
 
 	abstract List<AnnotationNode> setterAnns(boolean visible);

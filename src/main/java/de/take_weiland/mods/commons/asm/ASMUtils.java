@@ -1,7 +1,10 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.base.*;
-import com.google.common.collect.*;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.util.JavaUtils;
@@ -337,30 +340,50 @@ public final class ASMUtils {
 		return isAccessibleFrom(accessingClass, targetClass, field.access);
 	}
 
-	private static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, int targetAccess) {
+	/**
+	 * <p>Determine if a member with the given access-modifiers in {@code targetClass} can be accessed from
+	 * {@code accessingClass}.</p>
+	 * @param accessingClass the accessing class
+	 * @param targetClass the target class
+	 * @param targetAccess the access-modifiers of the target member
+	 * @return true if the member is accessible
+	 */
+	public static boolean isAccessibleFrom(ClassNode accessingClass, ClassNode targetClass, int targetAccess) {
+		return isAccessibleFrom(ClassInfo.of(accessingClass), ClassInfo.of(targetClass), targetAccess);
+	}
+
+	/**
+	 * <p>Determine if a member with the given access-modifiers in {@code targetClass} can be accessed from
+	 * {@code accessingClass}.</p>
+	 * @param accessingClass the accessing class
+	 * @param targetClass the target class
+	 * @param targetAccess the access-modifiers of the target member
+	 * @return true if the member is accessible
+	 */
+	public static boolean isAccessibleFrom(ClassInfo accessingClass, ClassInfo targetClass, int targetAccess) {
 		// public methods are reachable from everywhere
 		if ((targetAccess & ACC_PUBLIC) == ACC_PUBLIC) {
 			return true;
 		}
 
-		// classes can access their own methods
-		if (accessingClass.name.equals(targetClass.name)) {
+		// classes can access their own members
+		if (accessingClass.internalName().equals(targetClass.internalName())) {
 			return true;
 		}
 
-		// private methods are only reachable from within the same class
+		// private members are only reachable from within the same class
 		if ((targetAccess & ACC_PRIVATE) == ACC_PRIVATE) {
 			return false;
 		}
 
-		// method can only be protected or package-private at this point
+		// member can only be protected or package-private at this point
 		// if package is equal, it's accessible
-		if (getPackage(accessingClass.name).equals(getPackage(targetClass.name))) {
+		if (getPackage(accessingClass.internalName()).equals(getPackage(targetClass.internalName()))) {
 			return true;
 		}
 
-		// if method is protected, check the class hierarchy
-		return (targetAccess & ACC_PROTECTED) == ACC_PROTECTED && ClassInfo.of(targetClass).isAssignableFrom(ClassInfo.of(targetClass));
+		// if member is protected, check the class hierarchy
+		return (targetAccess & ACC_PROTECTED) == ACC_PROTECTED && targetClass.isAssignableFrom(targetClass);
 	}
 
 	private static String getPackage(String internalName) {

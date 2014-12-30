@@ -96,7 +96,7 @@ final class BufferUtils {
 
 		abstract BitSet createShared(long[] longs);
 
-		abstract BitSet updateInPlace(long[] longs, BitSet bitSet);
+		abstract void updateInPlace(long[] longs, BitSet bitSet);
 
 		abstract void writeTo(BitSet bitSet, MCDataOutputStream stream);
 
@@ -110,8 +110,10 @@ final class BufferUtils {
 		}
 
 		@Override
-		BitSet updateInPlace(long[] longs, BitSet bitSet) {
-			return BitSet.valueOf(longs);
+		void updateInPlace(long[] longs, BitSet bitSet) {
+			BitSet bs = BitSet.valueOf(longs);
+			bitSet.clear();
+			bitSet.or(bs);
 		}
 
 		@Override
@@ -128,10 +130,9 @@ final class BufferUtils {
 		}
 
 		@Override
-		BitSet updateInPlace(long[] longs, BitSet bitSet) {
+		void updateInPlace(long[] longs, BitSet bitSet) {
 			BitSetAccessor.instance.setWords(bitSet, longs);
 			BitSetAccessor.instance.setWordsInUse(bitSet, longs.length);
-			return bitSet;
 		}
 
 		@Override

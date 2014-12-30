@@ -28,6 +28,16 @@ class MethodInfoReflect extends MethodInfo {
 	}
 
 	@Override
+	public Type getReturnType() {
+		return Type.getReturnType(method);
+	}
+
+	@Override
+	public Type[] getArgumentTypes() {
+		return Type.getArgumentTypes(method);
+	}
+
+	@Override
 	public int modifiers() {
 		return method.getModifiers();
 	}

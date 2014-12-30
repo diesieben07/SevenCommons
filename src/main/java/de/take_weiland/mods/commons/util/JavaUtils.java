@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterables;
@@ -18,6 +17,9 @@ import sun.misc.SharedSecrets;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -238,55 +240,73 @@ public final class JavaUtils {
 	}
 
 	/**
-	 * <p>Get an {@code Iterable} that iterates the class hierarchy of the given class.</p>
-	 * <p>If {@code}</p>
-	 * @param clazz
-	 * @param interfaceBehavior
-	 * @return
+	 * <p>Get an {@code Iterable} that iterates the class hierarchy of the given class in subclass to superclass order.</p>
+	 * <p>If {@code interfaceBehavior} is set to {@code INCLUDE}, each class in the hierarchy will be followed by the
+	 * interfaces implemented by that class, unless they have already been returned by the Iterator.</p>
+	 * @param clazz the class
+	 * @param interfaceBehavior whether or not to include interfaces
+	 * @return an Iterable
 	 */
 	public static Iterable<Class<?>> hierarchy(final Class<?> clazz, final Interfaces interfaceBehavior) {
-		if (interfaceBehavior == Interfaces.IGNORE) {
-			return new Iterable<Class<?>>() {
-				@NotNull
-				@Override
-				public Iterator<Class<?>> iterator() {
-					return new HierarchyIterator(clazz);
-				}
-			};
-		} else {
-			return new Iterable<Class<?>>() {
-				@NotNull
-				@Override
-				public Iterator<Class<?>> iterator() {
-					Predicate<Class<?>> notSeen = Predicates.not(Predicates.in(new HashSet<Class<?>>()));
-					return Iterators.concat(Iterators.transform(new HierarchyIterator(clazz), getIfacesFunc(notSeen)));
-				}
-			};
-		}
-
-	}
-
-	public enum Interfaces {
-
-		IGNORE,
-		INCLUDE
-
-	}
-
-	static Function<Class<?>, Iterator<Class<?>>> getIfacesFunc(final Predicate<Class<?>> ifaceFilter) {
-		return new Function<Class<?>, Iterator<Class<?>>>() {
-			@Nullable
+		return new Iterable<Class<?>>() {
+			@NotNull
 			@Override
-			public Iterator<Class<?>> apply(@Nullable Class<?> input) {
-				assert input != null;
-				Iterator<Class<?>> ifaces = Iterators.forArray(input.getInterfaces());
-				Iterator<Iterator<Class<?>>> ifaceIfaces = Iterators.transform(ifaces, this);
-				return Iterators.concat(Iterators.singletonIterator(input), Iterators.filter(Iterators.concat(ifaceIfaces), ifaceFilter));
+			public Iterator<Class<?>> iterator() {
+				Iterator<Class<?>> hierarchy = new HierarchyIterator(clazz);
+				return interfaceBehavior == Interfaces.IGNORE ? hierarchy : new InterfaceIterator(hierarchy);
 			}
 		};
 	}
 
-	static class HierarchyIterator extends AbstractIterator<Class<?>> {
+	/**
+	 * <p>Behavior for {@link #hierarchy(Class, de.take_weiland.mods.commons.util.JavaUtils.Interfaces)}.</p>
+	 */
+	public enum Interfaces {
+
+		/**
+		 * <p>Ignore interfaces.</p>
+		 */
+		IGNORE,
+		/**
+		 * <p>Include interfaces.</p>
+		 */
+		INCLUDE
+
+	}
+
+	static final class InterfaceIterator extends AbstractIterator<Class<?>> {
+
+		private final Iterator<Class<?>> hierarchy;
+		private final Predicate<Class<?>> ifaceFilter;
+		private Iterator<Class<?>> currentIfaces;
+
+		InterfaceIterator(Iterator<Class<?>> hierarchy) {
+			this.hierarchy = hierarchy;
+			final Set<Class<?>> seenInterfaces = new HashSet<>();
+			ifaceFilter = new Predicate<Class<?>>() {
+				@Override
+				public boolean apply(@Nullable Class<?> input) {
+					assert input != null;
+					return seenInterfaces.add(input);
+				}
+			};
+		}
+
+		@Override
+		protected Class<?> computeNext() {
+			if (currentIfaces != null && currentIfaces.hasNext()) {
+				return currentIfaces.next();
+			} else if (!hierarchy.hasNext()) {
+				return endOfData();
+			} else {
+				Class<?> next = hierarchy.next();
+				currentIfaces = Iterators.filter(Iterators.forArray(next.getInterfaces()), ifaceFilter);
+				return next;
+			}
+		}
+	}
+
+	static final class HierarchyIterator extends AbstractIterator<Class<?>> {
 
 		private Class<?> current;
 
@@ -315,23 +335,6 @@ public final class JavaUtils {
 
 	}
 
-	public static <T> Iterator<T> uniques(final Iterator<? extends T> parent) {
-		final Set<T> seen = new HashSet<>();
-		return new AbstractIterator<T>() {
-			@Override
-			protected T computeNext() {
-				T next;
-				do {
-					if (!parent.hasNext()) {
-						return endOfData();
-					}
-					next = parent.next();
-				} while (!seen.add(next));
-				return next;
-			}
-		};
-	}
-
 	/**
 	 * <p>Throw the given {@code Throwable} as if it as an unchecked Exception. This method always throws, the return type
 	 * is just to satisfy the compiler.</p>
@@ -350,6 +353,29 @@ public final class JavaUtils {
 	private static <T extends Throwable> RuntimeException throwUnchecked0(Throwable t) throws T {
 		// dirty hack. the cast doesn't exist in bytecode, so it always succeeds
 		throw (T) t;
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static <T> Function<T, Class<? extends T>> getClassFunction() {
+		// T.getClass returns Class<T> or subclass
+		return (Function) GetClassFunc.INSTANCE;
+	}
+
+	private enum GetClassFunc implements Function<Object, Class<?>> {
+
+		INSTANCE;
+
+		@Nullable
+		@Override
+		public Class<?> apply(@Nullable Object input) {
+			assert input != null;
+			return input.getClass();
+		}
+
+	}
+	public static boolean isVisible(Class<? extends Annotation> annotationClass) {
+		Retention ret = annotationClass.getAnnotation(Retention.class);
+		return ret != null && ret.value() == RetentionPolicy.RUNTIME;
 	}
 
 	/**
@@ -379,7 +405,7 @@ public final class JavaUtils {
 	 */
 	@Unsafe
 	public static <E extends Enum<E>> E[] getEnumConstantsShared(Class<E> clazz) {
-		return enumValuesGetter.getEnumValues(clazz);
+		return enumValuesGetter().getEnumValues(clazz);
 	}
 
 	/**
@@ -399,7 +425,7 @@ public final class JavaUtils {
 	 * @return the type of enum values
 	 */
 	public static <E extends Enum<E>> Class<E> getType(EnumSet<E> enumSet) {
-		return enumSetTypeGetter.getEnumType(enumSet);
+		return enumSetTypeGetter().getEnumType(enumSet);
 	}
 
 	/**
@@ -450,19 +476,27 @@ public final class JavaUtils {
 		}
 	}
 
-	private static final EnumValuesGetter enumValuesGetter;
-	private static final EnumSetTypeGetter enumSetTypeGetter;
+	private static EnumValuesGetter enumValuesGetter;
 
-	static {
-		EnumValuesGetter getter;
+	private static EnumValuesGetter enumValuesGetter() {
+		EnumValuesGetter e = enumValuesGetter;
+		if (e != null) return e;
+
 		try {
 			Class.forName("sun.misc.SharedSecrets");
-			getter = (EnumValuesGetter) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").newInstance();
+			enumValuesGetter = (EnumValuesGetter) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").newInstance();
 		} catch (Throwable t) {
 			SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
-			getter = new EnumGetterCloned();
+			enumValuesGetter = new EnumGetterCloned();
 		}
-		enumValuesGetter = getter;
+		return enumValuesGetter;
+	}
+
+	private static EnumSetTypeGetter enumSetTypeGetter;
+
+	private static EnumSetTypeGetter enumSetTypeGetter() {
+		EnumSetTypeGetter e = enumSetTypeGetter;
+		if (e != null) return e;
 
 		Field result = null;
 		for (Field field : EnumSet.class.getDeclaredFields()) {
@@ -479,6 +513,7 @@ public final class JavaUtils {
 		} else {
 			enumSetTypeGetter = new EnumSetTypeGetterReflect(result);
 		}
+		return enumSetTypeGetter;
 	}
 
 	abstract static class EnumValuesGetter {

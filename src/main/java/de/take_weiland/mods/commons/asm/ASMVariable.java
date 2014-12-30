@@ -134,6 +134,13 @@ public interface ASMVariable {
 	String rawName();
 
 	/**
+	 * <p>Get the raw name of the setter method of this variable. If this variable is not represented by a getter/setter pair,
+	 * this method will throw an exception.</p>
+	 * @return the setter name
+	 */
+	String setterName();
+
+	/**
 	 * <p>Check if this variable has a static modifier.</p>
 	 *
 	 * @return true if this variable is static

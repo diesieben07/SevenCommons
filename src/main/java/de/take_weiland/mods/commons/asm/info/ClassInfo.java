@@ -419,4 +419,8 @@ public abstract class ClassInfo extends HasModifiers implements HasAnnotations {
 		return internalName().hashCode();
 	}
 
+	@Override
+	public String toString() {
+		return (isInterface() ? "interface" : isAbstract() ? "abstract class" : "class") + " " + internalName();
+	}
 }

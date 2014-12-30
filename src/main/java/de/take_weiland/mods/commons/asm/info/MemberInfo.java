@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.asm.info;
 
+import de.take_weiland.mods.commons.asm.ASMUtils;
+
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
 
 /**
@@ -23,6 +25,15 @@ public abstract class MemberInfo extends HasModifiers implements HasAnnotations 
 	 * @return the containing class
 	 */
 	public abstract ClassInfo containingClass();
+
+	/**
+	 * <p>Determine if this member can be accessed from the given class.</p>
+	 * @param clazz the accessing class
+	 * @return true if this member is accessible
+	 */
+	public boolean isAccessibleFrom(ClassInfo clazz) {
+		return ASMUtils.isAccessibleFrom(clazz, containingClass(), modifiers());
+	}
 
 	/**
 	 * <p>Determine if this member is static.</p>

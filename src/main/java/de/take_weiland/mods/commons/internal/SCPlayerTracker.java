@@ -1,8 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.common.IPlayerTracker;
-import de.take_weiland.mods.commons.properties.Types;
-import de.take_weiland.mods.commons.util.Players;
 import net.minecraft.entity.player.EntityPlayer;
 
 /**
@@ -12,9 +10,9 @@ public final class SCPlayerTracker implements IPlayerTracker {
 
     @Override
     public void onPlayerLogin(EntityPlayer player) {
-        if (!Players.isSPOwner(player)) {
-            Types.sendTypeIDs(player);
-        }
+//        if (!Players.isSPOwner(player)) {
+//            Types.sendTypeIDs(player);
+//        }
     }
 
     @Override

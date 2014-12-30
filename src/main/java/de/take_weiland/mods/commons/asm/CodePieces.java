@@ -522,6 +522,8 @@ public final class CodePieces {
 			return Type.getObjectType(((ClassNode) type).name);
 		} else if (type instanceof String) {
 			return Type.getType((String) type);
+		} else if (type instanceof ClassInfo) {
+			return Type.getType(((ClassInfo) type).internalName());
 		} else {
 			throw new IllegalArgumentException(msg);
 		}
@@ -532,6 +534,8 @@ public final class CodePieces {
 			return ClassInfo.of((ClassNode) type);
 		} else if (type instanceof Class) {
 			return ClassInfo.of((Class<?>) type);
+		} else if (type instanceof ClassInfo) {
+			return (ClassInfo) type;
 		} else {
 			return ClassInfo.of(parseType(type, msg));
 		}

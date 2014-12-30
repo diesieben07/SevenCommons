@@ -17,21 +17,15 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import de.take_weiland.mods.commons.internal.sync.PacketSync;
+import de.take_weiland.mods.commons.internal.sync.WatcherFinder;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
-import de.take_weiland.mods.commons.properties.Types;
-import de.take_weiland.mods.commons.syncx.SyncSupport;
-import de.take_weiland.mods.commons.syncx.impl.*;
 import de.take_weiland.mods.commons.util.Logging;
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.Configuration;
-import net.minecraftforge.fluids.FluidTank;
 
 import java.io.File;
-import java.util.BitSet;
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public final class SevenCommons extends DummyModContainer {
@@ -49,6 +43,8 @@ public final class SevenCommons extends DummyModContainer {
 
 	public static PacketHandler packets;
 	public static final int SYNC_PACKET_ID = 0;
+
+	private static List<Runnable> postInitCallbacks = new ArrayList<>();
 
 	public SevenCommons() {
 		super(new ModMetadata());
@@ -102,29 +98,17 @@ public final class SevenCommons extends DummyModContainer {
 
 		proxy.preInit(event);
 
-		registerDefaultWatchers();
-	}
-
-	private static void registerDefaultWatchers() {
-		EnumSetWatcher.register();
-
-		SyncSupport.sync(String.class).with(ImmutableWatcher.INSTANCE);
-		SyncSupport.sync(UUID.class).with(ImmutableWatcher.INSTANCE);
-		SyncSupport.sync(Enum.class).with(IdentityWatcher.INSTANCE);
-
-		SyncSupport.sync(Item.class).with(IdentityWatcher.INSTANCE);
-		SyncSupport.sync(Block.class).with(IdentityWatcher.INSTANCE);
-
-		SyncSupport.sync(BitSet.class).with(BitSetWatcher.INSTANCE);
-		SyncSupport.sync(ItemStack.class).with(ItemStackWatcher.INSTANCE);
-
-		SyncSupport.sync(FluidTank.class).with(FluidTankWatcher.INSTANCE);
-
+		WatcherFinder.register(Object.class, new DefaultWatcherSPI());
 	}
 
 	@Subscribe
 	public void postInit(FMLPostInitializationEvent event) {
-		Types.freeze();
+		synchronized (SevenCommons.class) {
+			for (Runnable callback : postInitCallbacks) {
+				callback.run();
+			}
+			postInitCallbacks = null;
+		}
 	}
 
 	@Override
@@ -135,6 +119,16 @@ public final class SevenCommons extends DummyModContainer {
 	@Override
 	public Class<?> getCustomResourcePackClass() {
 		return getSource().isDirectory() ? FMLFolderResourcePack.class : FMLFileResourcePack.class;
+	}
+
+	public static void registerPostInitCallback(Runnable callback) {
+		synchronized (SevenCommons.class) {
+			if (postInitCallbacks == null) {
+				callback.run();
+			} else {
+				postInitCallbacks.add(callback);
+			}
+		}
 	}
 
 }

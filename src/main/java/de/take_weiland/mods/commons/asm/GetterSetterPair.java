@@ -145,6 +145,14 @@ class GetterSetterPair extends ClassBoundASMVariable {
 	}
 
 	@Override
+	public String setterName() {
+		if (setter != null) {
+			return setter.name;
+		}
+		return super.setterName();
+	}
+
+	@Override
 	public String toString() {
 		if (setter != null) {
 			return String.format("Getter/Setter Pair (getter=\"%s\", setter=\"%s\"", getter.name, setter.name);

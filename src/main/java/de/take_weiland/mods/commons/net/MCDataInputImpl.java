@@ -12,6 +12,7 @@ import net.minecraftforge.fluids.FluidStack;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -281,14 +282,15 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public BitSet readBitSet(BitSet bitSet) {
+	public BitSet readBitSet(@Nullable BitSet bitSet) {
 		long[] words = readLongs();
 		if (words == null) {
 			return null;
 		} else if (bitSet == null) {
 			return BufferUtils.bitSetHandler.createShared(words);
 		} else {
-			return BufferUtils.bitSetHandler.updateInPlace(words, bitSet);
+			BufferUtils.bitSetHandler.updateInPlace(words, bitSet);
+			return bitSet;
 		}
 	}
 
