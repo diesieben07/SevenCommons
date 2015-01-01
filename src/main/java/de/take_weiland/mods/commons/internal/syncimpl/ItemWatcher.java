@@ -13,29 +13,29 @@ public enum ItemWatcher implements Watcher<Item> {
 	INSTANCE;
 
 	@Override
-	public void setup(SyncableProperty<Item> property) {
+	public <OBJ> void setup(SyncableProperty<Item, OBJ> property, OBJ instance) {
 
 	}
 
 	@Override
-	public void initialWrite(MCDataOutput out, SyncableProperty<Item> property) {
-		out.writeItem(property.get());
+	public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<Item, OBJ> property, OBJ instance) {
+		out.writeItem(property.get(instance));
 	}
 
 	@Override
-	public boolean hasChanged(SyncableProperty<Item> property) {
-		return property.get() != property.getData();
+	public <OBJ> boolean hasChanged(SyncableProperty<Item, OBJ> property, OBJ instance) {
+		return property.get(instance) != property.getData(instance);
 	}
 
 	@Override
-	public void writeAndUpdate(MCDataOutput out, SyncableProperty<Item> property) {
-		Item val = property.get();
+	public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<Item, OBJ> property, OBJ instance) {
+		Item val = property.get(instance);
 		out.writeItem(val);
-		property.setData(val);
+		property.setData(val, instance);
 	}
 
 	@Override
-	public void read(MCDataInput in, SyncableProperty<Item> property) {
-		property.set(in.readItem());
+	public <OBJ> void read(MCDataInput in, SyncableProperty<Item, OBJ> property, OBJ instance) {
+		property.set(in.readItem(), instance);
 	}
 }

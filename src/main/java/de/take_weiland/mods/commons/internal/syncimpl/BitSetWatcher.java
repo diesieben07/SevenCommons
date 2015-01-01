@@ -14,37 +14,37 @@ import java.util.BitSet;
 public enum BitSetWatcher implements Watcher<BitSet> {
 	VALUE {
 		@Override
-		public void read(MCDataInput in, SyncableProperty<BitSet> property) {
-			property.set(in.readBitSet());
+		public <OBJ> void read(MCDataInput in, SyncableProperty<BitSet, OBJ> property, OBJ instance) {
+			property.set(in.readBitSet(), instance);
 		}
 	},
 	CONTENTS {
 		@Override
-		public void read(MCDataInput in, SyncableProperty<BitSet> property) {
-			in.readBitSet(property.get());
+		public <OBJ> void read(MCDataInput in, SyncableProperty<BitSet, OBJ> property, OBJ instance) {
+			in.readBitSet(property.get(instance));
 		}
 	};
 
 	@Override
-	public void setup(SyncableProperty<BitSet> property) {
+	public <OBJ> void setup(SyncableProperty<BitSet, OBJ> property, OBJ instance) {
 
 	}
 
 	@Override
-	public void initialWrite(MCDataOutput out, SyncableProperty<BitSet> property) {
-		out.writeBitSet(property.get());
+	public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<BitSet, OBJ> property, OBJ instance) {
+		out.writeBitSet(property.get(instance));
 	}
 
 	@Override
-	public boolean hasChanged(SyncableProperty<BitSet> property) {
-		return !Objects.equal(property.get(), property.getData());
+	public <OBJ> boolean hasChanged(SyncableProperty<BitSet, OBJ> property, OBJ instance) {
+		return !Objects.equal(property.get(instance), property.getData(instance));
 	}
 
 	@Override
-	public void writeAndUpdate(MCDataOutput out, SyncableProperty<BitSet> property) {
-		BitSet val = property.get();
+	public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<BitSet, OBJ> property, OBJ instance) {
+		BitSet val = property.get(instance);
 		out.writeBitSet(val);
-		property.setData(val == null ? null : val.clone());
+		property.setData(val == null ? null : val.clone(), instance);
 	}
 
 }

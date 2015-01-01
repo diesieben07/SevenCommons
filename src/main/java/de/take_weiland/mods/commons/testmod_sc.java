@@ -3,11 +3,12 @@ package de.take_weiland.mods.commons;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
-import de.take_weiland.mods.commons.sync.Sync;
-import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NBTTagCompound;
+import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
-import net.minecraftforge.common.IExtendedEntityProperties;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -24,39 +25,27 @@ public class testmod_sc {
 	@Mod.Instance
 	public static testmod_sc instance;
 
+	private static Block myBlock;
+
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent event) throws NoSuchMethodException, NoSuchFieldException, IOException {
-		new TestTE();
-		new ExtendedProps();
-		System.exit(0);
-	}
+		myBlock = new Block(4000, Material.rock) {
 
-	public static abstract class BaseProps implements IExtendedEntityProperties {
+			@Override
+			public boolean hasTileEntity(int metadata) {
+				return true;
+			}
 
-		@Sync
-		private String stringInBase;
+			@Override
+			public TileEntity createTileEntity(World world, int metadata) {
+				return new TestTE();
+			}
+		};
 
-	}
+		myBlock.setCreativeTab(CreativeTabs.tabBlock);
 
-	public static final class ExtendedProps extends BaseProps implements IExtendedEntityProperties {
+		GameRegistry.registerBlock(myBlock, "testblock");
 
-		@Sync
-		private String s;
-
-		@Override
-		public void saveNBTData(NBTTagCompound compound) {
-
-		}
-
-		@Override
-		public void loadNBTData(NBTTagCompound compound) {
-
-		}
-
-		@Override
-		public void init(Entity entity, World world) {
-
-		}
 	}
 
 }

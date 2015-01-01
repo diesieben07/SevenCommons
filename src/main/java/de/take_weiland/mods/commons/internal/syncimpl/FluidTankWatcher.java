@@ -16,30 +16,30 @@ public enum FluidTankWatcher implements Watcher<FluidTank> {
 	INSTANCE;
 
 	@Override
-	public void setup(SyncableProperty<FluidTank> property) {
+	public <OBJ> void setup(SyncableProperty<FluidTank, OBJ> property, OBJ instance) {
 
 	}
 
 	@Override
-	public boolean hasChanged(SyncableProperty<FluidTank> property) {
-		return !Fluids.identical(property.get().getFluid(), (FluidStack) property.getData());
+	public <OBJ> boolean hasChanged(SyncableProperty<FluidTank, OBJ> property, OBJ instance) {
+		return !Fluids.identical(property.get(instance).getFluid(), (FluidStack) property.getData(instance));
 	}
 
 	@Override
-	public void writeAndUpdate(MCDataOutput out, SyncableProperty<FluidTank> property) {
-		FluidStack val = property.get().getFluid();
+	public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<FluidTank, OBJ> property, OBJ instance) {
+		FluidStack val = property.get(instance).getFluid();
 		out.writeFluidStack(val);
-		property.setData(Fluids.clone(val));
+		property.setData(Fluids.clone(val), instance);
 	}
 
 	@Override
-	public void initialWrite(MCDataOutput out, SyncableProperty<FluidTank> property) {
-		out.writeFluidStack(property.get().getFluid());
+	public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<FluidTank, OBJ> property, OBJ instance) {
+		out.writeFluidStack(property.get(instance).getFluid());
 	}
 
 	@Override
-	public void read(MCDataInput in, SyncableProperty<FluidTank> property) {
-		property.get().setFluid(in.readFluidStack());
+	public <OBJ> void read(MCDataInput in, SyncableProperty<FluidTank, OBJ> property, OBJ instance) {
+		property.get(instance).setFluid(in.readFluidStack());
 	}
 
 	public enum WithCapacity implements Watcher<FluidTank> {
@@ -47,21 +47,21 @@ public enum FluidTankWatcher implements Watcher<FluidTank> {
 		INSTANCE;
 
 		@Override
-		public void setup(SyncableProperty<FluidTank> property) {
-			property.setData(new Data());
+		public <OBJ> void setup(SyncableProperty<FluidTank, OBJ> property, OBJ instance) {
+			property.setData(new Data(), instance);
 		}
 
 		@Override
-		public boolean hasChanged(SyncableProperty<FluidTank> property) {
-			Data data = (Data) property.getData();
-			FluidTank tank = property.get();
+		public <OBJ> boolean hasChanged(SyncableProperty<FluidTank, OBJ> property, OBJ instance) {
+			Data data = (Data) property.getData(instance);
+			FluidTank tank = property.get(instance);
 			return data.lastCap != tank.getCapacity() || !Fluids.identical(data.lastStack, tank.getFluid());
 		}
 
 		@Override
-		public void writeAndUpdate(MCDataOutput out, SyncableProperty<FluidTank> property) {
-			Data data = (Data) property.getData();
-			FluidTank tank = property.get();
+		public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<FluidTank, OBJ> property, OBJ instance) {
+			Data data = (Data) property.getData(instance);
+			FluidTank tank = property.get(instance);
 
 			int cap = tank.getCapacity();
 			FluidStack stack = tank.getFluid();
@@ -74,15 +74,15 @@ public enum FluidTankWatcher implements Watcher<FluidTank> {
 		}
 
 		@Override
-		public void initialWrite(MCDataOutput out, SyncableProperty<FluidTank> property) {
-			FluidTank tank = property.get();
+		public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<FluidTank, OBJ> property, OBJ instance) {
+			FluidTank tank = property.get(instance);
 			out.writeVarInt(tank.getCapacity());
 			out.writeFluidStack(tank.getFluid());
 		}
 
 		@Override
-		public void read(MCDataInput in, SyncableProperty<FluidTank> property) {
-			FluidTank tank = property.get();
+		public <OBJ> void read(MCDataInput in, SyncableProperty<FluidTank, OBJ> property, OBJ instance) {
+			FluidTank tank = property.get(instance);
 			tank.setCapacity(in.readVarInt());
 			tank.setFluid(in.readFluidStack());
 		}

@@ -1,23 +1,19 @@
 package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import de.take_weiland.mods.commons.asm.*;
-import de.take_weiland.mods.commons.internal.sync.FieldProperty;
 import de.take_weiland.mods.commons.internal.sync.SyncASMHooks;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.sync.PropertyMetadata;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import static de.take_weiland.mods.commons.asm.CodePieces.constant;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.LONG_TYPE;
-import static org.objectweb.asm.Type.getObjectType;
 
 /**
  * @author diesieben07
@@ -26,6 +22,7 @@ final class HandlerSyncer extends PropertyHandler {
 
 	ASMVariable watcher;
 	ASMVariable property;
+	ASMVariable data;
 
 	HandlerSyncer(ASMVariable var, int idx, TransformState state) {
 		super(var, idx, state);
@@ -42,13 +39,23 @@ final class HandlerSyncer extends PropertyHandler {
 
 		name = "_sc$sync$prop$" + suffix;
 		desc = Type.getType(SyncableProperty.class).getDescriptor();
-		FieldNode propertyField = new FieldNode(ACC_PRIVATE | ACC_FINAL, name, desc, null, null);
+		FieldNode propertyField = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, name, desc, null, null);
 		state.clazz.fields.add(propertyField);
-		property = ASMVariables.of(state.clazz, propertyField, CodePieces.getThis());
+		property = ASMVariables.of(state.clazz, propertyField);
 
-		ASMUtils.initialize(state.clazz, property.set(newProperty()));
+		name = "_sc$sync$data$" + suffix;
+		desc = Type.getDescriptor(Object.class);
+		FieldNode dataField = new FieldNode(ACC_PRIVATE, name, desc, null, null);
+		state.clazz.fields.add(dataField);
+		data = ASMVariables.of(state.clazz, dataField, CodePieces.getThis());
+
+		ASMUtils.initializeStatic(state.clazz, property.set(newProperty()));
 
 		state.firstCstrInit.add(watcher.set(newWatcher()));
+
+		ASMUtils.initialize(state.clazz, CodePieces.invokeInterface(Watcher.class, "setup", watcher.get(), void.class,
+				SyncableProperty.class, property.get(),
+				Object.class, CodePieces.getThis()));
 	}
 
 	@Override
@@ -56,84 +63,73 @@ final class HandlerSyncer extends PropertyHandler {
 		return CodePieces.invokeInterface(Watcher.class, "read", watcher.get(),
 				void.class,
 				MCDataInput.class, stream,
-				SyncableProperty.class, property.get());
+				SyncableProperty.class, property.get(),
+				Object.class, CodePieces.getThis());
 	}
 
 	@Override
 	ASMCondition hasChanged() {
 		return ASMCondition.isTrue(CodePieces.invokeInterface(Watcher.class, "hasChanged", watcher.get(),
 				boolean.class,
-				SyncableProperty.class, property.get()));
+				SyncableProperty.class, property.get(),
+				Object.class, CodePieces.getThis()));
 	}
 
 	@Override
 	CodePiece write(CodePiece stream) {
-		return CodePieces.invokeInterface(Watcher.class, "write", watcher.get(), void.class,
+		return CodePieces.invokeInterface(Watcher.class, "initialWrite", watcher.get(), void.class,
 				MCDataOutput.class, stream,
-				SyncableProperty.class, property.get());
+				SyncableProperty.class, property.get(),
+				Object.class, CodePieces.getThis());
 	}
 
 	@Override
 	CodePiece writeAndUpdate(CodePiece stream) {
 		return CodePieces.invokeInterface(Watcher.class, "writeAndUpdate", watcher.get(), void.class,
 				MCDataOutput.class, stream,
-				SyncableProperty.class, property.get());
+				SyncableProperty.class, property.get(),
+				Object.class, CodePieces.getThis());
 	}
 
 	private CodePiece newWatcher() {
-		CodePiece me = CodePieces.constant(Type.getObjectType(state.clazz.name));
-		CodePiece watcher;
-		if (var.isField()) {
-			CodePiece field = CodePieces.invokeVirtual(Class.class, "getDeclaredField", me, Field.class,
-					String.class, var.rawName());
-			watcher = CodePieces.invokeStatic(SyncASMHooks.class, "findWatcher", Watcher.class,
-					Field.class, field);
-		} else {
-			CodePiece getter = CodePieces.invokeVirtual(Class.class, "getDeclaredMethod", me, Method.class,
-					String.class, var.rawName(),
-					Class[].class, new Class[0]);
-			watcher = CodePieces.invokeStatic(SyncASMHooks.class, "findWatcher", Watcher.class,
-					Method.class, getter);
-		}
-		return watcher;
+		return CodePieces.invokeStatic(SyncASMHooks.class, "findWatcher", Watcher.class,
+				PropertyMetadata.class, property.get());
 	}
 
 	private CodePiece newProperty() {
 		if (var.isField()) {
-			return newPropertyForField();
+			return CodePieces.invokeStatic(SyncASMHooks.class, "makeProperty", SyncableProperty.class,
+					Field.class, getReflectiveField(var),
+					Field.class, getReflectiveField(data));
 		} else {
-			return newPropertyForMethod();
+			return CodePieces.invokeStatic(SyncASMHooks.class, "makeProperty", SyncableProperty.class,
+					Method.class, getReflectiveGetter(),
+					Method.class, getReflectiveSetter(),
+					Field.class, getReflectiveField(data));
 		}
 	}
 
-	private CodePiece newPropertyForField() {
-		String name = "_sc$sync$off$" + SyncTransformer.uniqueSuffix(var);
-		FieldNode fieldOffset = new FieldNode(ACC_PRIVATE | ACC_FINAL | ACC_STATIC, name, LONG_TYPE.getDescriptor(), null, null);
-		state.clazz.fields.add(fieldOffset);
-
-		CodePiece field = CodePieces.invokeVirtual(Class.class, "getDeclaredField", constant(getObjectType(state.clazz.name)),
-				Field.class,
+	private CodePiece getReflectiveField(ASMVariable var) {
+		CodePiece myClass = CodePieces.constant(Type.getObjectType(state.clazz.name));
+		return CodePieces.invokeVirtual(Class.class, "getDeclaredField", myClass, Field.class,
 				String.class, var.rawName());
-
-		CodePiece unsafe = CodePieces.invokeStatic(JavaUtils.class, "getUnsafe", Object.class);
-		unsafe = CodePieces.castTo("sun/misc/Unsafe", unsafe);
-
-		CodePiece computeOffset = CodePieces.invokeVirtual("sun/misc/Unsafe", "objectFieldOffset", unsafe, long.class,
-				Field.class, field);
-
-		CodePiece setOffset = CodePieces.setField(state.clazz, fieldOffset, computeOffset);
-		ASMUtils.initializeStatic(state.clazz, setOffset);
-
-		CodePiece offset = CodePieces.getField(state.clazz, fieldOffset);
-		return CodePieces.instantiate(FieldProperty.class,
-				long.class, offset,
-				Object.class, CodePieces.getThis());
 	}
 
-	private CodePiece newPropertyForMethod() {
-		String setter = var.isWritable() ? var.setterName() : null;
-		Class<?> propertyClass = SyncASMHooks.makePropertyClass(state.clazz, var.rawName(), setter, var.getType());
-		return CodePieces.instantiate(propertyClass,
-				Object.class, CodePieces.getThis());
+	private CodePiece getReflectiveGetter() {
+		CodePiece myClass = CodePieces.constant(Type.getObjectType(state.clazz.name));
+		return CodePieces.invokeVirtual(Class.class, "getDeclaredMethod", myClass, Method.class,
+				String.class, var.rawName(),
+				Object[].class, CodePieces.constant(new Object[0]));
 	}
+
+	private CodePiece getReflectiveSetter() {
+		if (!var.isWritable()) {
+			return CodePieces.constantNull();
+		}
+		CodePiece myClass = CodePieces.constant(Type.getObjectType(state.clazz.name));
+		return CodePieces.invokeStatic(Class.class, "getDeclaredMethod", myClass, Method.class,
+				String.class, var.setterName(),
+				Object[].class, CodePieces.constant(new Object[] { var.getType() }));
+	}
+
 }

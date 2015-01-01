@@ -22,8 +22,9 @@ final class DefaultWatcherSPI implements WatcherSPI {
 
 	private static final Type enumSetType = EnumSet.class.getTypeParameters()[0];
 
+	@SuppressWarnings({"rawtypes", "unchecked"}) // we make sure things line up
 	@Override
-	public Watcher<?> provideWatcher(PropertyMetadata propertyMetadata, Sync.Method method) {
+	public Watcher provideWatcher(PropertyMetadata propertyMetadata, Sync.Method method) {
 		Class<?> rawType = propertyMetadata.getRawType();
 
 		if (rawType == ItemStack.class) {

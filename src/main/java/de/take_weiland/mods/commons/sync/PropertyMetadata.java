@@ -10,18 +10,18 @@ import java.lang.reflect.AnnotatedElement;
  *
  * @author diesieben07
  */
-public interface PropertyMetadata extends AnnotatedElement {
+public interface PropertyMetadata<T> extends AnnotatedElement {
 
 	/**
 	 * <p>Get the generic type of this property.</p>
 	 * @return a TypeToken
 	 */
-	TypeToken<?> getType();
+	TypeToken<T> getType();
 
 	/**
 	 * <p>Get the raw type of this property, equivalent to {@code getType().getRawType()}, but potentially more efficient.</p>
 	 * @return
 	 */
-	Class<?> getRawType();
+	Class<? super T> getRawType();
 
 }

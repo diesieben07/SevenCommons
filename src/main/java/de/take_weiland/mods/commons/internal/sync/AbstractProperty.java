@@ -1,22 +1,65 @@
 package de.take_weiland.mods.commons.internal.sync;
 
+import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
+
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Member;
 
 /**
  * @author diesieben07
  */
-public abstract class AbstractProperty implements SyncableProperty<Object> {
+@ParametersAreNonnullByDefault
+abstract class AbstractProperty<MEM extends Member & AnnotatedElement> implements SyncableProperty<Object, Object> {
 
-	private Object data;
+	final MEM member;
 
+	AbstractProperty(MEM member) {
+		this.member = member;
+	}
+
+	abstract TypeToken<?> resolveType();
+
+	private TypeToken<?> typeToken;
+
+	@SuppressWarnings("unchecked")
 	@Override
-	public Object getData() {
-		return data;
+	public TypeToken<Object> getType() {
+		TypeToken<?> tt = typeToken;
+		if (tt == null) {
+			synchronized (this) {
+				if (typeToken == null) {
+					typeToken = resolveType();
+				}
+			}
+			tt = typeToken;
+		}
+
+		return (TypeToken<Object>) tt;
 	}
 
 	@Override
-	public void setData(Object data) {
-		this.data = data;
+	public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
+		return member.isAnnotationPresent(annotationClass);
 	}
 
+	@Override
+	public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+		return member.getAnnotation(annotationClass);
+	}
+
+	@Nonnull
+	@Override
+	public Annotation[] getAnnotations() {
+		return member.getAnnotations();
+	}
+
+	@Nonnull
+	@Override
+	public Annotation[] getDeclaredAnnotations() {
+		return member.getDeclaredAnnotations();
+	}
 }

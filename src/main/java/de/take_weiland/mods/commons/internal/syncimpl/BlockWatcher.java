@@ -13,29 +13,29 @@ public enum BlockWatcher implements Watcher<Block> {
 	INSTANCE;
 
 	@Override
-	public void setup(SyncableProperty<Block> property) {
+	public <OBJ> void setup(SyncableProperty<Block, OBJ> property, OBJ instance) {
 
 	}
 
 	@Override
-	public void initialWrite(MCDataOutput out, SyncableProperty<Block> property) {
-		out.writeBlock(property.get());
+	public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<Block, OBJ> property, OBJ instance) {
+		out.writeBlock(property.get(instance));
 	}
 
 	@Override
-	public boolean hasChanged(SyncableProperty<Block> property) {
-		return property.get() != property.getData();
+	public <OBJ> boolean hasChanged(SyncableProperty<Block, OBJ> property, OBJ instance) {
+		return property.get(instance) != property.getData(instance);
 	}
 
 	@Override
-	public void writeAndUpdate(MCDataOutput out, SyncableProperty<Block> property) {
-		Block block = property.get();
+	public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<Block, OBJ> property, OBJ instance) {
+		Block block = property.get(instance);
 		out.writeBlock(block);
-		property.setData(block);
+		property.setData(block, instance);
 	}
 
 	@Override
-	public void read(MCDataInput in, SyncableProperty<Block> property) {
-		property.set(in.readBlock());
+	public <OBJ> void read(MCDataInput in, SyncableProperty<Block, OBJ> property, OBJ instance) {
+		property.set(in.readBlock(), instance);
 	}
 }

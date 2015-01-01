@@ -53,25 +53,25 @@ public abstract class EnumSetWatcher<E extends Enum<E>> implements Watcher<EnumS
 	}
 
 	@Override
-	public void setup(SyncableProperty<EnumSet<E>> property) {
+	public <OBJ> void setup(SyncableProperty<EnumSet<E>, OBJ> property, OBJ instance) {
 
 	}
 
 	@Override
-	public boolean hasChanged(SyncableProperty<EnumSet<E>> property) {
-		return !Objects.equal(property.get(), property.getData());
+	public <OBJ> boolean hasChanged(SyncableProperty<EnumSet<E>, OBJ> property, OBJ instance) {
+		return !Objects.equal(property.get(instance), property.getData(instance));
 	}
 
 	@Override
-	public void writeAndUpdate(MCDataOutput out, SyncableProperty<EnumSet<E>> property) {
-		EnumSet<E> val = property.get();
+	public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<EnumSet<E>, OBJ> property, OBJ instance) {
+		EnumSet<E> val = property.get(instance);
 		out.writeEnumSet(val);
-		property.setData(val.clone());
+		property.setData(val.clone(), instance);
 	}
 
 	@Override
-	public void initialWrite(MCDataOutput out, SyncableProperty<EnumSet<E>> property) {
-		out.writeEnumSet(property.get());
+	public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<EnumSet<E>, OBJ> property, OBJ instance) {
+		out.writeEnumSet(property.get(instance));
 	}
 
 	static final class Value<E extends Enum<E>> extends EnumSetWatcher<E> {
@@ -81,8 +81,8 @@ public abstract class EnumSetWatcher<E extends Enum<E>> implements Watcher<EnumS
 		}
 
 		@Override
-		public void read(MCDataInput in, SyncableProperty<EnumSet<E>> property) {
-			property.set(in.readEnumSet(enumType));
+		public <OBJ> void read(MCDataInput in, SyncableProperty<EnumSet<E>, OBJ> property, OBJ instance) {
+			property.set(in.readEnumSet(enumType), instance);
 		}
 	}
 
@@ -93,8 +93,8 @@ public abstract class EnumSetWatcher<E extends Enum<E>> implements Watcher<EnumS
 		}
 
 		@Override
-		public void read(MCDataInput in, SyncableProperty<EnumSet<E>> property) {
-			in.readEnumSet(enumType, property.get());
+		public <OBJ> void read(MCDataInput in, SyncableProperty<EnumSet<E>, OBJ> property, OBJ instance) {
+			in.readEnumSet(enumType, property.get(instance));
 		}
 	}
 }

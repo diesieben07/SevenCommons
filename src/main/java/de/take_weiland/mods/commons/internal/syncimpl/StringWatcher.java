@@ -13,29 +13,29 @@ public enum StringWatcher implements Watcher<String> {
 	INSTANCE;
 
 	@Override
-	public void setup(SyncableProperty<String> property) {
+	public <OBJ> void setup(SyncableProperty<String, OBJ> property, OBJ instance) {
 
 	}
 
 	@Override
-	public boolean hasChanged(SyncableProperty<String> property) {
-		return !Objects.equal(property.get(), property.getData());
+	public <OBJ> boolean hasChanged(SyncableProperty<String, OBJ> property, OBJ instance) {
+		return !Objects.equal(property.get(instance), property.getData(instance));
 	}
 
 	@Override
-	public void writeAndUpdate(MCDataOutput out, SyncableProperty<String> property) {
-		String val = property.get();
+	public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<String, OBJ> property, OBJ instance) {
+		String val = property.get(instance);
 		out.writeString(val);
-		property.setData(val);
+		property.setData(val, instance);
 	}
 
 	@Override
-	public void initialWrite(MCDataOutput out, SyncableProperty<String> property) {
-		out.writeString(property.get());
+	public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<String, OBJ> property, OBJ instance) {
+		out.writeString(property.get(instance));
 	}
 
 	@Override
-	public void read(MCDataInput in, SyncableProperty<String> property) {
-		property.set(in.readString());
+	public <OBJ> void read(MCDataInput in, SyncableProperty<String, OBJ> property, OBJ instance) {
+		property.set(in.readString(), instance);
 	}
 }

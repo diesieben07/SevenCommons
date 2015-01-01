@@ -36,29 +36,29 @@ public final class EnumWatcher<E extends Enum<E>> implements Watcher<E> {
 	}
 
 	@Override
-	public void setup(SyncableProperty<E> property) {
+	public <OBJ> void setup(SyncableProperty<E, OBJ> property, OBJ instance) {
 
 	}
 
 	@Override
-	public boolean hasChanged(SyncableProperty<E> property) {
-		return property.get() != property.getData();
+	public <OBJ> boolean hasChanged(SyncableProperty<E, OBJ> property, OBJ instance) {
+		return property.get(instance) != property.getData(instance);
 	}
 
 	@Override
-	public void writeAndUpdate(MCDataOutput out, SyncableProperty<E> property) {
-		E val = property.get();
+	public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<E, OBJ> property, OBJ instance) {
+		E val = property.get(instance);
 		out.writeEnum(val);
-		property.setData(val);
+		property.setData(val, instance);
 	}
 
 	@Override
-	public void initialWrite(MCDataOutput out, SyncableProperty<E> property) {
-		out.writeEnum(property.get());
+	public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<E, OBJ> property, OBJ instance) {
+		out.writeEnum(property.get(instance));
 	}
 
 	@Override
-	public void read(MCDataInput in, SyncableProperty<E> property) {
-		property.set(in.readEnum(enumClass));
+	public <OBJ> void read(MCDataInput in, SyncableProperty<E, OBJ> property, OBJ instance) {
+		property.set(in.readEnum(enumClass), instance);
 	}
 }

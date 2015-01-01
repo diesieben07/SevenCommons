@@ -15,29 +15,29 @@ public enum UUIDWatcher implements Watcher<UUID> {
 	INSTANCE;
 
 	@Override
-	public void setup(SyncableProperty<UUID> property) {
+	public <OBJ> void setup(SyncableProperty<UUID, OBJ> property, OBJ instance) {
 
 	}
 
 	@Override
-	public boolean hasChanged(SyncableProperty<UUID> property) {
-		return !Objects.equal(property.get(), property.getData());
+	public <OBJ> boolean hasChanged(SyncableProperty<UUID, OBJ> property, OBJ instance) {
+		return !Objects.equal(property.get(instance), property.getData(instance));
 	}
 
 	@Override
-	public void writeAndUpdate(MCDataOutput out, SyncableProperty<UUID> property) {
-		UUID val = property.get();
+	public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<UUID, OBJ> property, OBJ instance) {
+		UUID val = property.get(instance);
 		out.writeUUID(val);
-		property.setData(val);
+		property.setData(val, instance);
 	}
 
 	@Override
-	public void initialWrite(MCDataOutput out, SyncableProperty<UUID> property) {
-		out.writeUUID(property.get());
+	public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<UUID, OBJ> property, OBJ instance) {
+		out.writeUUID(property.get(instance));
 	}
 
 	@Override
-	public void read(MCDataInput in, SyncableProperty<UUID> property) {
-		property.set(in.readUUID());
+	public <OBJ> void read(MCDataInput in, SyncableProperty<UUID, OBJ> property, OBJ instance) {
+		property.set(in.readUUID(), instance);
 	}
 }

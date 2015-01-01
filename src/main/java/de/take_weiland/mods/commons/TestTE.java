@@ -1,8 +1,7 @@
 package de.take_weiland.mods.commons;
 
-import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.sync.Sync;
-import net.minecraft.item.ItemStack;
+import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.tileentity.TileEntity;
 
 /**
@@ -11,14 +10,16 @@ import net.minecraft.tileentity.TileEntity;
 public class TestTE extends TileEntity {
 
 	@Sync
-	ItemStack stack;
+	String string;
+
+	private int tick;
 
 	@Override
-	public String toString() {
-		try {
-			return TestTE.class.getDeclaredField("_sc$sync$watcher$f$stack").get(null).getClass().toString();
-		} catch (Exception e) {
-			throw Throwables.propagate(e);
+	public void updateEntity() {
+		System.out.println("string is " + string + " on " + Sides.logical(this));
+
+		if (Sides.logical(this).isServer() && (tick++ % 20) == 0) {
+			string = String.valueOf(Math.random());
 		}
 	}
 }

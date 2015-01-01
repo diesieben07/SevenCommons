@@ -13,14 +13,14 @@ import net.minecraftforge.fluids.FluidStack;
 public enum FluidStackWatcher implements Watcher<FluidStack> {
 	VALUE {
 		@Override
-		public void read(MCDataInput in, SyncableProperty<FluidStack> property) {
-			property.set(in.readFluidStack());
+		public <OBJ> void read(MCDataInput in, SyncableProperty<FluidStack, OBJ> property, OBJ instance) {
+			property.set(in.readFluidStack(), instance);
 		}
 	},
 	CONTENTS {
 		@Override
-		public void read(MCDataInput in, SyncableProperty<FluidStack> property) {
-			FluidStack val = property.get();
+		public <OBJ> void read(MCDataInput in, SyncableProperty<FluidStack, OBJ> property, OBJ instance) {
+			FluidStack val = property.get(instance);
 			val.fluidID = in.readVarInt();
 			val.amount = in.readVarInt();
 			val.tag = in.readNBT();
@@ -28,25 +28,25 @@ public enum FluidStackWatcher implements Watcher<FluidStack> {
 	};
 
 	@Override
-	public void setup(SyncableProperty<FluidStack> property) {
+	public <OBJ> void setup(SyncableProperty<FluidStack, OBJ> property, OBJ instance) {
 
 	}
 
 	@Override
-	public boolean hasChanged(SyncableProperty<FluidStack> property) {
-		return !Fluids.identical(property.get(), (FluidStack) property.getData());
+	public <OBJ> boolean hasChanged(SyncableProperty<FluidStack, OBJ> property, OBJ instance) {
+		return !Fluids.identical(property.get(instance), (FluidStack) property.getData(instance));
 	}
 
 	@Override
-	public void initialWrite(MCDataOutput out, SyncableProperty<FluidStack> property) {
-		out.writeFluidStack(property.get());
+	public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<FluidStack, OBJ> property, OBJ instance) {
+		out.writeFluidStack(property.get(instance));
 	}
 
 	@Override
-	public void writeAndUpdate(MCDataOutput out, SyncableProperty<FluidStack> property) {
-		FluidStack val = property.get();
+	public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<FluidStack, OBJ> property, OBJ instance) {
+		FluidStack val = property.get(instance);
 		out.writeFluidStack(val);
-		property.setData(Fluids.clone(val));
+		property.setData(Fluids.clone(val), instance);
 	}
 
 

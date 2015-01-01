@@ -33,8 +33,9 @@ public final class SyncSupport {
 	 */
 	public static <T> void register(final Class<T> clazz, final Watcher<T> watcher, final Sync.Method method) {
 		registerSPI(clazz, new WatcherSPI() {
+			@SuppressWarnings({"rawtypes", "unchecked"})
 			@Override
-			public Watcher<?> provideWatcher(PropertyMetadata propertyMetadata, Sync.Method actualMethod) {
+			public Watcher provideWatcher(PropertyMetadata propertyMetadata, Sync.Method actualMethod) {
 				if (actualMethod == method && propertyMetadata.getRawType() == clazz) {
 					return watcher;
 				} else {

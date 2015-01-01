@@ -18,6 +18,6 @@ public interface WatcherSPI {
 	 * @param method the sync method
 	 * @return a Watcher or null
 	 */
-	Watcher<?> provideWatcher(PropertyMetadata propertyMetadata, Sync.Method method);
+	<T> Watcher<T> provideWatcher(PropertyMetadata<T> propertyMetadata, Sync.Method method);
 
 }

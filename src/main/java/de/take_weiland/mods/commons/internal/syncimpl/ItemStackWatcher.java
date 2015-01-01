@@ -13,14 +13,14 @@ import net.minecraft.item.ItemStack;
 public enum ItemStackWatcher implements Watcher<ItemStack> {
 	VALUE {
 		@Override
-		public void read(MCDataInput in, SyncableProperty<ItemStack> property) {
-			property.set(in.readItemStack());
+		public <OBJ> void read(MCDataInput in, SyncableProperty<ItemStack, OBJ> property, OBJ instance) {
+			property.set(in.readItemStack(), instance);
 		}
 	},
 	CONTENTS {
 		@Override
-		public void read(MCDataInput in, SyncableProperty<ItemStack> property) {
-			ItemStack val = property.get();
+		public <OBJ> void read(MCDataInput in, SyncableProperty<ItemStack, OBJ> property, OBJ instance) {
+			ItemStack val = property.get(instance);
 			val.itemID = in.readShort();
 			val.setItemDamage(in.readShort());
 			val.stackSize = in.readByte();
@@ -29,25 +29,25 @@ public enum ItemStackWatcher implements Watcher<ItemStack> {
 	};
 
 	@Override
-	public void setup(SyncableProperty<ItemStack> property) {
+	public <OBJ> void setup(SyncableProperty<ItemStack, OBJ> property, OBJ instance) {
 
 	}
 
 	@Override
-	public boolean hasChanged(SyncableProperty<ItemStack> property) {
-		return !ItemStacks.equal(property.get(), (ItemStack) property.getData());
+	public <OBJ> boolean hasChanged(SyncableProperty<ItemStack, OBJ> property, OBJ instance) {
+		return !ItemStacks.equal(property.get(instance), (ItemStack) property.getData(instance));
 	}
 
 	@Override
-	public void writeAndUpdate(MCDataOutput out, SyncableProperty<ItemStack> property) {
-		ItemStack val = property.get();
+	public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<ItemStack, OBJ> property, OBJ instance) {
+		ItemStack val = property.get(instance);
 		out.writeItemStack(val);
-		property.setData(ItemStacks.clone(val));
+		property.setData(ItemStacks.clone(val), instance);
 	}
 
 	@Override
-	public void initialWrite(MCDataOutput out, SyncableProperty<ItemStack> property) {
-		out.writeItemStack(property.get());
+	public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<ItemStack, OBJ> property, OBJ instance) {
+		out.writeItemStack(property.get(instance));
 	}
 
 }
