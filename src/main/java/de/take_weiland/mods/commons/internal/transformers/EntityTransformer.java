@@ -11,7 +11,10 @@ import org.objectweb.asm.tree.*;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+import static de.take_weiland.mods.commons.asm.MCPNames.F_IS_REMOTE;
+import static de.take_weiland.mods.commons.asm.MCPNames.F_WORLD_OBJ_ENTITY;
 import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.VOID_TYPE;
 import static org.objectweb.asm.Type.getType;
 
@@ -49,9 +52,16 @@ public final class EntityTransformer implements ASMClassTransformer {
 
 	private static void patchOnUpdate(ClassNode clazz, FieldNode syncPropsField) {
 		MethodNode method = ASMUtils.requireMinecraftMethod(clazz, MCPNames.M_ON_UPDATE);
-		CodePieces.invokeStatic(ASMHooks.class, ASMHooks.TICK_SYNC_PROPS, void.class,
-				List.class, CodePieces.getField(clazz, syncPropsField, CodePieces.getThis()))
-				.prependTo(method.instructions);
+		CodePiece invoke = CodePieces.invokeStatic(ASMHooks.class, ASMHooks.TICK_SYNC_PROPS, void.class,
+				List.class, CodePieces.getField(clazz, syncPropsField, CodePieces.getThis()));
+
+		Type worldType = Type.getObjectType("net/minecraft/world/World");
+		CodePiece world = CodePieces.getField(clazz.name, MCPNames.field(F_WORLD_OBJ_ENTITY), worldType, CodePieces.getThis());
+		CodePiece isRemote = CodePieces.getField(worldType.getInternalName(), MCPNames.field(F_IS_REMOTE), BOOLEAN_TYPE, world);
+
+		ASMCondition isServer = ASMCondition.isFalse(isRemote);
+
+		isServer.doIfTrue(invoke).prependTo(method.instructions);
 	}
 
 	private static FieldNode addPropsFieldAndAccessors(ClassNode clazz) {

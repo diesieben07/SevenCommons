@@ -10,6 +10,7 @@ public final class SCPlayerTracker implements IPlayerTracker {
 
     @Override
     public void onPlayerLogin(EntityPlayer player) {
+        PacketSyncPropsIDs.sendToIfNeeded(player, player);
 //        if (!Players.isSPOwner(player)) {
 //            Types.sendTypeIDs(player);
 //        }

@@ -15,6 +15,8 @@ import net.minecraft.world.World;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import java.util.List;
+
 import static de.take_weiland.mods.commons.asm.MCPNames.*;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -161,7 +163,7 @@ public enum SyncType {
 
 		@Override
 		public void sendPacket(Object object, SimplePacket packet) {
-			packet.sendToAllTracking(((SyncedEntityProperties) object)._sc$syncprops$owner());
+			packet.sendToAllAssociated(((SyncedEntityProperties) object)._sc$syncprops$owner());
 		}
 
 		@Override
@@ -173,7 +175,11 @@ public enum SyncType {
 			if (entity == null) {
 				return null;
 			}
-			return JavaUtils.get(((EntityProxy) entity)._sc$getSyncedProps(), propsId);
+			List<SyncedEntityProperties> props = ((EntityProxy) entity)._sc$getSyncedProps();
+			if (props == null) {
+				return null;
+			}
+			return JavaUtils.get(props, propsId);
 		}
 
 		@Override

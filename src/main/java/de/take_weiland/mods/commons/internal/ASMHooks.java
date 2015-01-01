@@ -125,6 +125,7 @@ public final class ASMHooks {
 		syncedProp._sc$syncprops$setOwner(entity);
 		syncedProp._sc$syncprops$setIndex(syncedProps.size());
 
+
 		syncedProps.add(syncedProp);
 	}
 
