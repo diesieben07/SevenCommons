@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.ObjectArrays;
 import com.google.common.primitives.Primitives;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import org.jetbrains.annotations.NotNull;
@@ -391,7 +392,7 @@ public final class CodePieces {
 		checkArgument((method.access & ACC_STATIC) == 0, "Cannot invoke super on static method");
 		checkArgument((method.access & ACC_PRIVATE) == 0, "Cannot invoke super on private method");
 
-		return invoke0(INVOKESPECIAL, parseClassInfo(clazz, "invalid class").superName(), method, args);
+		return invoke0(INVOKESPECIAL, parseClassInfo(clazz, "invalid class").superName(), method, ObjectArrays.concat(getThis(), args));
 	}
 
 	public static CodePiece invoke(Object clazz, MethodNode method, Object... args) {
@@ -419,7 +420,6 @@ public final class CodePieces {
 		Type[] types = unwrapTypesAndArgs(builder, typesAndArgs);
 
 		String desc = Type.getMethodDescriptor(parseType(returnType, "Invalid return type"), types);
-
 		return builder.add(new MethodInsnNode(opcode, parseType(clazz, "Invalid target class").getInternalName(), method, desc)).build();
 	}
 
@@ -521,7 +521,7 @@ public final class CodePieces {
 		} else if (type instanceof ClassNode) {
 			return Type.getObjectType(((ClassNode) type).name);
 		} else if (type instanceof String) {
-			return Type.getType((String) type);
+			return Type.getObjectType((String) type);
 		} else if (type instanceof ClassInfo) {
 			return Type.getType(((ClassInfo) type).internalName());
 		} else {

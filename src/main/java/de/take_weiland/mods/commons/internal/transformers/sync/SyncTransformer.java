@@ -16,6 +16,7 @@ import de.take_weiland.mods.commons.util.UnsignedShorts;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -60,6 +61,8 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 			type = SyncType.TILE_ENTITY;
 		} else if (ClassInfo.of(Container.class).isAssignableFrom(classInfo)) {
 			type = SyncType.CONTAINER;
+		} else if (ClassInfo.of(IExtendedEntityProperties.class).isAssignableFrom(classInfo)) {
+			type = SyncType.ENTITY_PROPS;
 		} else {
 			throw new RuntimeException("Don't know how to @Sync in class " + clazz.name);
 		}
@@ -80,6 +83,8 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		for (PropertyHandler handler : handlers) {
 			handler.initialTransform();
 		}
+
+		type.initialTransform(clazz, state.isSuperSynced());
 
 		createIdxIO(state);
 
@@ -113,7 +118,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 
 		InsnList insns = checkInitMethod.instructions;
 
-		ASMCondition hasInit = ASMCondition.ifTrue(CodePieces.getField(state.clazz, isInitField));
+		ASMCondition hasInit = ASMCondition.isTrue(CodePieces.getField(state.clazz, isInitField));
 
 		hasInit.doIfTrue(CodePieces.of(new InsnNode(RETURN))).appendTo(insns);
 
@@ -157,25 +162,34 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 	}
 
 	private static void createSyncCall(TransformState state) {
-		String name = "_sc$sync$level";
-		String desc = Type.getMethodDescriptor(INT_TYPE);
-		MethodNode syncClass = new MethodNode(ACC_PROTECTED, name, desc, null, null);
-		state.clazz.methods.add(syncClass);
-
-		CodePiece myLevel = CodePieces.constant(state.level);
-		myLevel.append(new InsnNode(IRETURN)).appendTo(syncClass.instructions);
-
-		CodePiece actualLevel = CodePieces.invoke(state.clazz, syncClass, getThis());
-
-		ASMCondition isSyncClass = ASMCondition.ifSame(myLevel, actualLevel, INT_TYPE);
-		ASMCondition isServer = state.type.checkServer(state.clazz);
-
-		ASMCondition conditionForSync = isServer == null ? isSyncClass : isServer.and(isSyncClass);
-
-		CodePiece doSync = CodePieces.invoke(state.clazz, state.syncWrite, getThis(), constantNull(), constant(false))
+		CodePiece invokeSync = CodePieces.invoke(state.clazz, state.syncWrite, getThis(), constantNull(), constant(false))
 				.append(new InsnNode(POP));
 
-		state.type.addSyncCall(state.clazz, conditionForSync.doIfTrue(doSync));
+		ASMCondition isServer = state.type.checkServer(state.clazz);
+
+		CodePiece checkedSync;
+
+		if (state.type.requiresLevelCheck()) {
+			String name = "_sc$sync$level";
+			String desc = Type.getMethodDescriptor(INT_TYPE);
+			MethodNode syncClass = new MethodNode(ACC_PROTECTED, name, desc, null, null);
+			state.clazz.methods.add(syncClass);
+
+			CodePiece myLevel = CodePieces.constant(state.level);
+			myLevel.append(new InsnNode(IRETURN)).appendTo(syncClass.instructions);
+
+			CodePiece actualLevel = CodePieces.invoke(state.clazz, syncClass, getThis());
+
+			ASMCondition isSyncClass = ASMCondition.isSame(myLevel, actualLevel, INT_TYPE);
+
+			ASMCondition conditionForSync = isServer == null ? isSyncClass : isServer.and(isSyncClass);
+
+			checkedSync = conditionForSync.doIfTrue(invokeSync);
+		} else {
+			checkedSync = isServer == null ? invokeSync : isServer.doIfTrue(invokeSync);
+		}
+
+		state.type.addSyncCall(state.clazz, checkedSync, state.isSuperSynced());
 	}
 
 	private static void countSupers(TransformState state, ClassInfo clazz) {
@@ -256,12 +270,13 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 
 		ASMVariable stream = ASMVariables.local(write, 1);
 		CodePiece lazyStream = createLazyStream(stream, state);
-		ASMCondition isSuperCall = ASMCondition.ifTrue(ASMVariables.local(write, 2).get());
+		ASMCondition isSuperCall = ASMCondition.isTrue(ASMVariables.local(write, 2).get());
 
 		insns.add(start);
 
 		if (state.isSuperSynced()) {
-			stream.set(CodePieces.invokeSuper(state.clazz, write, stream.get(), true));
+			stream.set(CodePieces.invokeSuper(state.clazz, write, stream.get(), true))
+					.appendTo(insns);
 		}
 
 		for (PropertyHandler handler : handlers) {
@@ -280,7 +295,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 				SyncType.class, state.type,
 				MCDataOutputStream.class, stream.get());
 
-		ASMCondition streamNotNull = ASMCondition.ifNotNull(stream.get());
+		ASMCondition streamNotNull = ASMCondition.isNotNull(stream.get());
 		isSuperCall.negate().and(streamNotNull)
 				.doIfTrue(finishStream.append(sendStream))
 				.appendTo(insns);
@@ -313,7 +328,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		insns.add(start);
 
 		if (state.isSuperSynced()) {
-			CodePieces.invokeSuper(state.clazz, method, $this.get(), $out.get());
+			CodePieces.invokeSuper(state.clazz, method, $out.get());
 		}
 
 		for (PropertyHandler handler : handlers) {
@@ -346,7 +361,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		CodePiece nextIdxFromStream = CodePieces.invoke(state.clazz, state.readIdx, getThis(), stream.get());
 
 		if (state.isSuperSynced()) {
-			CodePiece idxFromSuper = CodePieces.invokeSuper(state.clazz, method.name, stream.get());
+			CodePiece idxFromSuper = CodePieces.invokeSuper(state.clazz, method.name, int.class, MCDataInputStream.class, stream.get());
 			idx.set(idxFromSuper).appendTo(insns);
 		} else {
 			idx.set(nextIdxFromStream).appendTo(insns);
@@ -383,7 +398,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 		CodePiece newStream = CodePieces.invokeStatic(owner, name, MCDataOutputStream.class,
 				Object.class, getThis(),
 				SyncType.class, state.type);
-		return ASMCondition.ifNull(stream.get()).doIfTrue(stream.set(newStream)).append(stream.get());
+		return ASMCondition.isNull(stream.get()).doIfTrue(stream.set(newStream)).append(stream.get());
 	}
 
 	static String uniqueSuffix(ASMVariable var) {

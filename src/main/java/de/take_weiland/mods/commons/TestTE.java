@@ -11,7 +11,7 @@ import net.minecraft.tileentity.TileEntity;
 public class TestTE extends TileEntity {
 
 	@Sync
-	private ItemStack stack;
+	ItemStack stack;
 
 	@Override
 	public String toString() {

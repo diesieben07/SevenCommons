@@ -95,14 +95,14 @@ public final class SwitchBuilder {
 			if (onlyKey == null) { // only got a default branch
 				return onlyBody;
 			} else {
-				return ASMCondition.ifSame(constant((int) onlyKey), value, Type.INT_TYPE).doIfTrue(onlyBody);
+				return ASMCondition.isSame(constant((int) onlyKey), value, Type.INT_TYPE).doIfTrue(onlyBody);
 			}
 		} else if (size == 2 && hasDefault) { // we only have one key + default
 			CodePiece defaultBody = bodies.remove(null);
 			CodePiece onlyKey = constant((int) Iterables.getOnlyElement(bodies.keySet()));
 			CodePiece onlyBody = Iterables.getOnlyElement(bodies.values());
 
-			return ASMCondition.ifEqual(onlyKey, value, Type.INT_TYPE).doIfElse(onlyBody, defaultBody);
+			return ASMCondition.isEqual(onlyKey, value, Type.INT_TYPE).doIfElse(onlyBody, defaultBody);
 		} else {
 			if (!hasDefault) {
 				bodies.put(null, CodePieces.of());

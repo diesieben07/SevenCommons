@@ -29,7 +29,7 @@ public class GuiContainerTransformer implements ASMClassTransformer {
 
 		owner = ASMHooks.CLASS_NAME;
 		name = ASMHooks.IS_USEABLE_CLIENT;
-		ASMCondition useable = ASMCondition.ifTrue(invokeStatic(owner, name, boolean.class, Slot.class, hoveredSlot));
+		ASMCondition useable = ASMCondition.isTrue(invokeStatic(owner, name, boolean.class, Slot.class, hoveredSlot));
 
 		useable.doIfFalse(CodePieces.constant(false).append(new InsnNode(IRETURN)))
 				.prependTo(method.instructions);

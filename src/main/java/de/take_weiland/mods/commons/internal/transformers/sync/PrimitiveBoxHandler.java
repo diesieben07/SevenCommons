@@ -29,7 +29,7 @@ class PrimitiveBoxHandler extends PropertyHandler {
 
 	@Override
 	ASMCondition hasChanged() {
-		return ASMCondition.ifEqual(var.get(), companion.get(), var.getType()).negate();
+		return ASMCondition.isEqual(var.get(), companion.get(), var.getType()).negate();
 	}
 
 	@Override

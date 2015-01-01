@@ -8,10 +8,10 @@ import java.util.List;
 public interface EntityProxy {
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/EntityProxy";
-	public static final String GET_PROPERTIES = "_sc$getSyncedEntityProperties";
-	public static final String SET_PROPERTIES = "_sc$setSyncedEntityProperties";
+	public static final String GET_PROPERTIES = "_sc$getSyncedProps";
+	public static final String SET_PROPERTIES = "_sc$setSyncedProps";
 
-	List<SyncedEntityProperties> _sc$getSyncedEntityProperties();
-	void _sc$setSyncedEntityProperties(List<SyncedEntityProperties> props);
+	List<SyncedEntityProperties> _sc$getSyncedProps();
+	void _sc$setSyncedProps(List<SyncedEntityProperties> props);
 
 }

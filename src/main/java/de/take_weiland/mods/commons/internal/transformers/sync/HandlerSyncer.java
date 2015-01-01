@@ -61,7 +61,7 @@ final class HandlerSyncer extends PropertyHandler {
 
 	@Override
 	ASMCondition hasChanged() {
-		return ASMCondition.ifTrue(CodePieces.invokeInterface(Watcher.class, "hasChanged", watcher.get(),
+		return ASMCondition.isTrue(CodePieces.invokeInterface(Watcher.class, "hasChanged", watcher.get(),
 				boolean.class,
 				SyncableProperty.class, property.get()));
 	}

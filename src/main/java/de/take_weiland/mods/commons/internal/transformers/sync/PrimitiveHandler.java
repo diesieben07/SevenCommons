@@ -26,7 +26,7 @@ class PrimitiveHandler extends PropertyHandler {
 
 	@Override
 	ASMCondition hasChanged() {
-		return ASMCondition.ifSame(var.get(), companion.get(), var.getType()).negate();
+		return ASMCondition.isSame(var.get(), companion.get(), var.getType()).negate();
 	}
 
 	@Override

@@ -1,18 +1,19 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.asm.*;
+import de.take_weiland.mods.commons.internal.EntityProxy;
+import de.take_weiland.mods.commons.internal.SyncedEntityProperties;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.net.SimplePacket;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.*;
 
 import static de.take_weiland.mods.commons.asm.MCPNames.*;
 import static org.objectweb.asm.Opcodes.*;
@@ -25,7 +26,7 @@ public enum SyncType {
 
 	TILE_ENTITY {
 		@Override
-		public void addSyncCall(ClassNode clazz, CodePiece call) {
+		public void addSyncCall(ClassNode clazz, CodePiece call, boolean isSuperSynced) {
 			addOrOverride(clazz, MCPNames.method(M_UPDATE_ENTITY), Type.getMethodDescriptor(VOID_TYPE), call);
 		}
 
@@ -57,7 +58,7 @@ public enum SyncType {
 	},
 	ENTITY {
 		@Override
-		public void addSyncCall(ClassNode clazz, CodePiece call) {
+		public void addSyncCall(ClassNode clazz, CodePiece call, boolean isSuperSynced) {
 			addOrOverride(clazz, MCPNames.method(M_ON_UPDATE), Type.getMethodDescriptor(VOID_TYPE), call);
 		}
 
@@ -86,7 +87,7 @@ public enum SyncType {
 	},
 	CONTAINER {
 		@Override
-		public void addSyncCall(ClassNode clazz, CodePiece call) {
+		public void addSyncCall(ClassNode clazz, CodePiece call, boolean isSuperSynced) {
 			addOrOverride(clazz, MCPNames.method(M_DETECT_AND_SEND_CHANGES), Type.getMethodDescriptor(VOID_TYPE), call);
 		}
 
@@ -110,9 +111,84 @@ public enum SyncType {
 		public void sendPacket(Object object, SimplePacket packet) {
 			packet.sendToViewing((Container) object);
 		}
+	},
+	ENTITY_PROPS {
+		@Override
+		public void addSyncCall(ClassNode clazz, CodePiece call, boolean isSuperSynced) {
+			if (!isSuperSynced) {
+				String name = SyncedEntityProperties.TICK;
+				String desc = Type.getMethodDescriptor(VOID_TYPE);
+				MethodNode method = new MethodNode(ACC_PUBLIC | ACC_FINAL, name, desc, null, null);
+				clazz.methods.add(method);
+
+				call.appendTo(method.instructions);
+				method.instructions.add(new InsnNode(RETURN));
+			}
+		}
+
+		@Override
+		public void initialTransform(ClassNode clazz, boolean isSuperSynced) {
+			if (!isSuperSynced) {
+				addProperty(clazz, "_sc$syncedprops$o", SyncedEntityProperties.GET_OWNER, SyncedEntityProperties.SET_OWNER, getObjectType("net/minecraft/entity/Entity"));
+				addProperty(clazz, "_sc$syncedprops$i", SyncedEntityProperties.GET_IDX, SyncedEntityProperties.SET_IDX, Type.INT_TYPE);
+				addProperty(clazz, "_sc$syncedprops$n", SyncedEntityProperties.GET_NAME, SyncedEntityProperties.SET_NAME, getType(String.class));
+
+				clazz.interfaces.add(SyncedEntityProperties.CLASS_NAME);
+			}
+		}
+
+		private void addProperty(ClassNode clazz, String fieldName, String getterName, String setterName, Type type) {
+			FieldNode field = new FieldNode(ACC_PRIVATE | ACC_FINAL, fieldName, type.getDescriptor(), null, null);
+			clazz.fields.add(field);
+
+			MethodNode getter = new MethodNode(ACC_PUBLIC | ACC_FINAL, getterName, Type.getMethodDescriptor(type), null, null);
+			clazz.methods.add(getter);
+			CodePieces.getField(clazz, field, CodePieces.getThis()).appendTo(getter.instructions);
+			getter.instructions.add(new InsnNode(type.getOpcode(IRETURN)));
+
+			MethodNode setter = new MethodNode(ACC_PUBLIC | ACC_FINAL, setterName, Type.getMethodDescriptor(VOID_TYPE, type), null, null);
+			clazz.methods.add(setter);
+			CodePieces.setField(clazz, field, CodePieces.getThis(), CodePieces.of(new VarInsnNode(type.getOpcode(ILOAD), 1))).appendTo(setter.instructions);
+			setter.instructions.add(new InsnNode(RETURN));
+		}
+
+		@Override
+		public void writeObject(Object object, MCDataOutputStream out) {
+			SyncedEntityProperties props = (SyncedEntityProperties) object;
+			out.writeInt(props._sc$syncprops$owner().entityId);
+			out.writeInt(props._sc$syncprops$index());
+		}
+
+		@Override
+		public void sendPacket(Object object, SimplePacket packet) {
+			packet.sendToAllTracking(((SyncedEntityProperties) object)._sc$syncprops$owner());
+		}
+
+		@Override
+		public Object readObject(EntityPlayer player, MCDataInputStream in) {
+			int entityId = in.readInt();
+			int propsId = in.readInt();
+
+			Entity entity = player.worldObj.getEntityByID(entityId);
+			if (entity == null) {
+				return null;
+			}
+			return JavaUtils.get(((EntityProxy) entity)._sc$getSyncedProps(), propsId);
+		}
+
+		@Override
+		public ASMCondition checkServer(ClassNode clazz) {
+			return null;
+		}
 	};
 
-	public abstract void addSyncCall(ClassNode clazz, CodePiece call);
+	public boolean requiresLevelCheck() {
+		return this != ENTITY_PROPS;
+	}
+
+	public void initialTransform(ClassNode clazz, boolean isSuperSynced) { }
+
+	public abstract void addSyncCall(ClassNode clazz, CodePiece call, boolean isSuperSynced);
 
 	public abstract void writeObject(Object object, MCDataOutputStream out);
 
@@ -140,7 +216,7 @@ public enum SyncType {
 		String owner = getInternalName(World.class);
 		String name = MCPNames.field(F_IS_REMOTE);
 		String desc = Type.BOOLEAN_TYPE.getDescriptor();
-		return ASMCondition.ifFalse(CodePieces.getField(owner, name, desc, world));
+		return ASMCondition.isFalse(CodePieces.getField(owner, name, desc, world));
 	}
 
 }

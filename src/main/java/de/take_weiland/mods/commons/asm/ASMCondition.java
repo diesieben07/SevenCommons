@@ -5,6 +5,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.JumpInsnNode;
 import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.TypeInsnNode;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public abstract class ASMCondition {
 	 * @param type the common supertype of the values
 	 * @return an ASMCondition
 	 */
-	public static ASMCondition ifSame(CodePiece a, CodePiece b, Type type) {
+	public static ASMCondition isSame(CodePiece a, CodePiece b, Type type) {
 		switch (type.getSort()) {
 			case Type.BOOLEAN:
 			case Type.BYTE:
@@ -56,8 +57,8 @@ public abstract class ASMCondition {
 	 * @param type the common supertype of the values
 	 * @return an ASMCondition
 	 */
-	public static ASMCondition ifEqual(CodePiece a, CodePiece b, Type type) {
-		return ifEqual(a, b, type, true);
+	public static ASMCondition isEqual(CodePiece a, CodePiece b, Type type) {
+		return isEqual(a, b, type, true);
 	}
 
 	/**
@@ -70,7 +71,7 @@ public abstract class ASMCondition {
 	 * @param nullable whether the first value can be null
 	 * @return an ASMCondition
 	 */
-	public static ASMCondition ifEqual(CodePiece a, CodePiece b, Type type, boolean nullable) {
+	public static ASMCondition isEqual(CodePiece a, CodePiece b, Type type, boolean nullable) {
 		if (type.getSort() == Type.ARRAY) {
 			String owner = "java/util/Arrays";
 			String name;
@@ -86,17 +87,17 @@ public abstract class ASMCondition {
 					desc = getMethodDescriptor(BOOLEAN_TYPE, getType(Object[].class), getType(Object[].class));
 				}
 			}
-			return ifTrue(CodePieces.invokeStatic(owner, name, desc, a, b));
+			return isTrue(CodePieces.invokeStatic(owner, name, desc, a, b));
 		} else if (type.getSort() == Type.OBJECT) {
-			ASMCondition nonNullComparison = ifTrue(CodePieces.invokeVirtual(Object.class, "equals", a, boolean.class, Object.class, b));
+			ASMCondition nonNullComparison = isTrue(CodePieces.invokeVirtual(Object.class, "equals", a, boolean.class, Object.class, b));
 			if (nullable) {
-				return ifSame(a, b, type).or(ifNotNull(a).and(nonNullComparison));
+				return isSame(a, b, type).or(isNotNull(a).and(nonNullComparison));
 			} else {
 				return nonNullComparison;
 			}
 		} else {
 			// primitives, or invalid
-			return ifSame(a, b, type);
+			return isSame(a, b, type);
 		}
 	}
 
@@ -105,7 +106,7 @@ public abstract class ASMCondition {
 	 * @param value the value
 	 * @return an ASMCondition
 	 */
-	public static ASMCondition ifNull(CodePiece value) {
+	public static ASMCondition isNull(CodePiece value) {
 		return new StandardCondition(value, IFNULL);
 	}
 
@@ -114,7 +115,7 @@ public abstract class ASMCondition {
 	 * @param value the value
 	 * @return an ASMCondition
 	 */
-	public static ASMCondition ifNotNull(CodePiece value) {
+	public static ASMCondition isNotNull(CodePiece value) {
 		return new StandardCondition(value, IFNONNULL);
 	}
 
@@ -123,7 +124,7 @@ public abstract class ASMCondition {
 	 * @param booleanValue the boolean value
 	 * @return an ASMCondition
 	 */
-	public static ASMCondition ifTrue(CodePiece booleanValue) {
+	public static ASMCondition isTrue(CodePiece booleanValue) {
 		return new StandardCondition(booleanValue, IFNE);
 	}
 
@@ -132,8 +133,39 @@ public abstract class ASMCondition {
 	 * @param booleanValue the boolean value
 	 * @return an ASMCondition
 	 */
-	public static ASMCondition ifFalse(CodePiece booleanValue) {
+	public static ASMCondition isFalse(CodePiece booleanValue) {
 		return new StandardCondition(booleanValue, IFEQ);
+	}
+
+	/**
+	 * <p>Create an ASMCondition that checks whether the given value is an instance of class {@code type}.</p>
+	 * @param value the value
+	 * @param type the class
+	 * @return an ASMCondition
+	 */
+	public static ASMCondition isInstance(CodePiece value, Class<?> type) {
+		return isInstance(value, Type.getInternalName(type));
+	}
+
+	/**
+	 * <p>Create an ASMCondition that checks whether the given value is an instance of class {@code type}.</p>
+	 * @param value the value
+	 * @param type the class
+	 * @return an ASMCondition
+	 */
+	public static ASMCondition isInstance(CodePiece value, Type type) {
+		return isInstance(value, type.getInternalName());
+	}
+
+	/**
+	 * <p>Create an ASMCondition that checks whether the given value is an instance of the class represented by the
+	 * given internal name.</p>
+	 * @param value the value
+	 * @param internalName the internal name
+	 * @return an ASMCondition
+	 */
+	public static ASMCondition isInstance(CodePiece value, String internalName) {
+		return isTrue(value.append(new TypeInsnNode(INSTANCEOF, internalName)));
 	}
 
 	/**

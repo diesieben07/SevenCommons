@@ -21,11 +21,13 @@ import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.network.packet.Packet250CustomPayload;
+import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -99,6 +101,42 @@ public final class ASMHooks {
 
 	public static void onStartTracking(EntityPlayer player, Entity tracked) {
 		MinecraftForge.EVENT_BUS.post(new PlayerStartTrackingEvent(player, tracked));
+
+		PacketSyncPropsIDs.sendToIfNeeded(player, tracked);
+	}
+
+	public static final String ON_NEW_ENTITY_PROPS = "onNewEntityProps";
+
+	public static void onNewEntityProps(Entity entity, IExtendedEntityProperties props, String identifier) {
+		if (entity.worldObj.isRemote || !(props instanceof SyncedEntityProperties)) {
+			return;
+		}
+		List<SyncedEntityProperties> syncedProps = ((EntityProxy) entity)._sc$getSyncedProps();
+		if (syncedProps == null) {
+			((EntityProxy) entity)._sc$setSyncedProps((syncedProps = new ArrayList<>()));
+		}
+		SyncedEntityProperties syncedProp = (SyncedEntityProperties) props;
+
+		if (syncedProp._sc$syncprops$name() != null) {
+			throw new IllegalArgumentException("@Sync used in IExtendedEntityProperties requires one instance per entity");
+		}
+
+		syncedProp._sc$syncprops$setName(identifier);
+		syncedProp._sc$syncprops$setOwner(entity);
+		syncedProp._sc$syncprops$setIndex(syncedProps.size());
+
+		syncedProps.add(syncedProp);
+	}
+
+	public static final String TICK_SYNC_PROPS = "tickSyncProps";
+
+	public static void tickSyncProps(List<SyncedEntityProperties> props) {
+		if (props != null) {
+			//noinspection ForLoopReplaceableByForEach
+			for (int i = 0, len = props.size(); i < len; i++) {
+				props.get(i)._sc$syncprops$tick();
+			}
+		}
 	}
 
 	private static final int SIGNED_SHORT_BITS = 0b0111_1111_1111_1111;

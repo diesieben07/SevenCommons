@@ -5,10 +5,13 @@ import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ASMClassTransformerWrapper;
 import de.take_weiland.mods.commons.internal.transformers.sync.SyncTransformer;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * @author diesieben07
  */
-public class SCTransformerWrapper extends ASMClassTransformerWrapper {
+@ParametersAreNonnullByDefault
+public final class SCTransformerWrapper extends ASMClassTransformerWrapper {
 
 	@Override
 	protected void setup(ImmutableList.Builder<ASMClassTransformer> builder) {
@@ -18,6 +21,7 @@ public class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		builder.add(new EntityTrackerEntryTransformer());
 		builder.add(new ContainerTransformer());
 		builder.add(new GuiContainerTransformer());
+		builder.add(new EntityTransformer());
 
 		// packets
 		builder.add(new Packet250Transformer());
