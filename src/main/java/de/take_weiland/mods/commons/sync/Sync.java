@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.internal.AnnotationNull;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -58,17 +59,6 @@ public @interface Sync {
 	 * of the two. The meaning of {@code DEFAULT} is also up to the implementation to decide.</p>
 	 * @return the method
 	 */
-	Method method() default Method.DEFAULT;
-
-	/**
-	 * <p>Methods of syncing.</p>
-	 * @see Sync#method()
-	 */
-	enum Method {
-
-		DEFAULT,
-		VALUE,
-		CONTENTS
-	}
+	SerializationMethod method() default SerializationMethod.DEFAULT;
 
 }

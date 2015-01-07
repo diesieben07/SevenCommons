@@ -25,4 +25,25 @@ public interface NBTSerializer<T> {
 
 	}
 
+	interface SPI {
+
+		<T> NBTSerializer<T> getNBTSerializer(TypeSpecification<T> type);
+
+		<T> NBTSerializer.Contents<T> getNBTContentSerializer(TypeSpecification<T> type);
+
+	}
+
+	abstract class SPIAdapter implements SPI {
+
+		@Override
+		public <T> NBTSerializer<T> getNBTSerializer(TypeSpecification<T> type) {
+			return null;
+		}
+
+		@Override
+		public <T> Contents<T> getNBTContentSerializer(TypeSpecification<T> type) {
+			return null;
+		}
+	}
+
 }

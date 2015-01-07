@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -22,6 +24,6 @@ public @interface WatcherFactory {
 	 * <p>The sync methods this factory handles.</p>
 	 * @return methods
 	 */
-	Sync.Method[] methods();
+	SerializationMethod[] methods();
 
 }

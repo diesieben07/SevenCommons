@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -18,6 +20,6 @@ public interface WatcherSPI {
 	 * @param method the sync method
 	 * @return a Watcher or null
 	 */
-	<T> Watcher<T> provideWatcher(PropertyMetadata<T> propertyMetadata, Sync.Method method);
+	<T> Watcher<T> provideWatcher(PropertyMetadata<T> propertyMetadata, SerializationMethod method);
 
 }

@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
 import de.take_weiland.mods.commons.internal.syncimpl.*;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.*;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -24,26 +25,26 @@ final class DefaultWatcherSPI implements WatcherSPI {
 
 	@SuppressWarnings({"rawtypes", "unchecked"}) // we make sure things line up
 	@Override
-	public Watcher provideWatcher(PropertyMetadata propertyMetadata, Sync.Method method) {
+	public Watcher provideWatcher(PropertyMetadata propertyMetadata, SerializationMethod method) {
 		Class<?> rawType = propertyMetadata.getRawType();
 
 		if (rawType == ItemStack.class) {
-			return method == Sync.Method.CONTENTS ? ItemStackWatcher.CONTENTS : ItemStackWatcher.VALUE;
+			return method == SerializationMethod.CONTENTS ? ItemStackWatcher.CONTENTS : ItemStackWatcher.VALUE;
 		}
 
 		if (rawType == FluidStack.class) {
-			return method == Sync.Method.CONTENTS ? FluidStackWatcher.CONTENTS : FluidStackWatcher.VALUE;
+			return method == SerializationMethod.CONTENTS ? FluidStackWatcher.CONTENTS : FluidStackWatcher.VALUE;
 		}
 
 		if (rawType == BitSet.class) {
-			return method == Sync.Method.CONTENTS ? BitSetWatcher.CONTENTS : BitSetWatcher.VALUE;
+			return method == SerializationMethod.CONTENTS ? BitSetWatcher.CONTENTS : BitSetWatcher.VALUE;
 		}
 
-		if (rawType == UUID.class && method != Sync.Method.CONTENTS) {
+		if (rawType == UUID.class && method != SerializationMethod.CONTENTS) {
 			return UUIDWatcher.INSTANCE;
 		}
 
-		if (rawType == String.class && method != Sync.Method.CONTENTS) {
+		if (rawType == String.class && method != SerializationMethod.CONTENTS) {
 			return StringWatcher.INSTANCE;
 		}
 
@@ -52,7 +53,7 @@ final class DefaultWatcherSPI implements WatcherSPI {
 			if (!enumType.isEnum()) {
 				return null;
 			} else {
-				if (method == Sync.Method.CONTENTS) {
+				if (method == SerializationMethod.CONTENTS) {
 					return EnumSetWatcher.getContentsWatcher(rawType);
 				} else {
 					return EnumSetWatcher.getValueWatcher(rawType);
@@ -60,11 +61,11 @@ final class DefaultWatcherSPI implements WatcherSPI {
 			}
 		}
 
-		if (Block.class.isAssignableFrom(rawType) && method != Sync.Method.CONTENTS) {
+		if (Block.class.isAssignableFrom(rawType) && method != SerializationMethod.CONTENTS) {
 			return BlockWatcher.INSTANCE;
 		}
 
-		if (Item.class.isAssignableFrom(rawType) && method != Sync.Method.CONTENTS) {
+		if (Item.class.isAssignableFrom(rawType) && method != SerializationMethod.CONTENTS) {
 			return ItemWatcher.INSTANCE;
 		}
 
@@ -77,7 +78,7 @@ final class DefaultWatcherSPI implements WatcherSPI {
 		}
 
 
-		if (method != Sync.Method.CONTENTS && rawType.isEnum()) {
+		if (method != SerializationMethod.CONTENTS && rawType.isEnum()) {
 			return EnumWatcher.get(rawType);
 		}
 

@@ -26,7 +26,7 @@ import static org.objectweb.asm.Type.getType;
 public final class SyncASMHooks {
 
 	public static Watcher<?> findWatcher(PropertyMetadata<?> metadata) throws ReflectiveOperationException {
-		return WatcherFinder.findWatcher(metadata);
+		return WatcherRegistry.findWatcher(metadata);
 	}
 
 	private static final List<Class<?>> keepLoaded = Collections.synchronizedList(new ArrayList<Class<?>>());

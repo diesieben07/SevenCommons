@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.sync;
 import com.google.common.collect.*;
 import de.take_weiland.mods.commons.internal.AnnotationNull;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.*;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -18,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * @author diesieben07
  */
-public class WatcherFinder {
+public class WatcherRegistry {
 
 	private static Multimap<Class<?>, WatcherSPI> providerRegistry = ArrayListMultimap.create();
 
@@ -26,7 +27,7 @@ public class WatcherFinder {
 		SevenCommons.registerPostInitCallback(new Runnable() {
 			@Override
 			public void run() {
-				synchronized (WatcherFinder.class) {
+				synchronized (WatcherRegistry.class) {
 					freeze();
 				}
 			}
@@ -38,7 +39,7 @@ public class WatcherFinder {
 	}
 
 	public static void register(Class<?> clazz, WatcherSPI spi) {
-		synchronized (WatcherFinder.class) {
+		synchronized (WatcherRegistry.class) {
 			checkNotFrozen();
 			providerRegistry.put(clazz, spi);
 		}
@@ -61,7 +62,7 @@ public class WatcherFinder {
 		Sync annotation = metadata.getAnnotation(Sync.class);
 		checkState(annotation != null, "Invalid call to SyncASMHooks!");
 
-		Sync.Method syncMethod = annotation.method();
+		SerializationMethod syncMethod = annotation.method();
 		boolean hasAs = annotation.as() != AnnotationNull.class;
 		boolean hasWith = annotation.with() != AnnotationNull.class;
 
@@ -85,7 +86,7 @@ public class WatcherFinder {
 		return watcher;
 	}
 
-	private static Watcher<?> findWatcherByType(PropertyMetadata metadata, Sync.Method syncMethod) throws ReflectiveOperationException {
+	private static Watcher<?> findWatcherByType(PropertyMetadata metadata, SerializationMethod syncMethod) throws ReflectiveOperationException {
 		Class<?> rawType = metadata.getRawType();
 		Watcher<?> watcher = findWatcherInstance(rawType, syncMethod, metadata);
 		if (watcher != null) {
@@ -95,7 +96,7 @@ public class WatcherFinder {
 		return watcher;
 	}
 
-	private static Watcher<?> findWatcherWithProviders(PropertyMetadata metadata, Sync.Method syncMethod) {
+	private static Watcher<?> findWatcherWithProviders(PropertyMetadata metadata, SerializationMethod syncMethod) {
 		Watcher<?> watcher = null;
 		Class<?> type = metadata.getRawType();
 		do {
@@ -114,8 +115,8 @@ public class WatcherFinder {
 		return watcher;
 	}
 
-	private static Watcher<?> findWatcherInstance(Class<?> clazz, Sync.Method syncContents, PropertyMetadata metadata) throws ReflectiveOperationException {
-		ListMultimap<Sync.Method, Member> membersByType = ArrayListMultimap.create(2, 1);
+	private static Watcher<?> findWatcherInstance(Class<?> clazz, SerializationMethod syncContents, PropertyMetadata metadata) throws ReflectiveOperationException {
+		ListMultimap<SerializationMethod, Member> membersByType = ArrayListMultimap.create(2, 1);
 
 		for (Field field : clazz.getFields()) {
 			WatcherFactory ann = field.getAnnotation(WatcherFactory.class);
@@ -123,7 +124,7 @@ public class WatcherFinder {
 				checkStatic(field);
 				checkIsWatcher(field.getType(), field);
 				field.setAccessible(true);
-				for (Sync.Method method : ann.methods()) {
+				for (SerializationMethod method : ann.methods()) {
 					membersByType.put(method, field);
 				}
 			}
@@ -139,7 +140,7 @@ public class WatcherFinder {
 				if (paramTypes.length != 0 && (paramTypes.length != 1 || paramTypes[0] != PropertyMetadata.class)) {
 					throw new RuntimeException("@WatcherFactory with invalid argument types on " + method.getDeclaringClass().getName() + "." + method.getName());
 				}
-				for (Sync.Method syncMethod : ann.methods()) {
+				for (SerializationMethod syncMethod : ann.methods()) {
 					membersByType.put(syncMethod, method);
 				}
 			}

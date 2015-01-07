@@ -20,4 +20,25 @@ public interface ByteStreamSerializer<T> {
 
 	}
 
+	interface SPI {
+
+		<T> ByteStreamSerializer<T> getStreamSerializer(TypeSpecification<T> type);
+
+		<T> ByteStreamSerializer.Contents<T> getContentStreamSerializer(TypeSpecification<T> type);
+
+	}
+
+	abstract class SPIAdapter implements SPI {
+
+		@Override
+		public <T> ByteStreamSerializer<T> getStreamSerializer(TypeSpecification<T> type) {
+			return null;
+		}
+
+		@Override
+		public <T> Contents<T> getContentStreamSerializer(TypeSpecification<T> type) {
+			return null;
+		}
+	}
+
 }

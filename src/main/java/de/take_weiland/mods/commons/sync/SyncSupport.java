@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
-import de.take_weiland.mods.commons.internal.sync.WatcherFinder;
+import de.take_weiland.mods.commons.internal.sync.WatcherRegistry;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -21,21 +22,21 @@ public final class SyncSupport {
 	 * @param spi the SPI
 	 */
 	public static void registerSPI(Class<?> clazz, WatcherSPI spi) {
-		WatcherFinder.register(clazz, spi);
+		WatcherRegistry.register(clazz, spi);
 	}
 
 	/**
-	 * <p>Register a {@link de.take_weiland.mods.commons.sync.Watcher} for the given {@link de.take_weiland.mods.commons.sync.Sync.Method method}
+	 * <p>Register a {@link de.take_weiland.mods.commons.sync.Watcher} for the given {@link de.take_weiland.mods.commons.serialize.SerializationMethod method}
 	 * and class {@code T}. The watcher will only be used for properties which specify the exact type {@code T}.</p>
 	 * @param clazz the class
 	 * @param watcher the watcher
 	 * @param method the method
 	 */
-	public static <T> void register(final Class<T> clazz, final Watcher<T> watcher, final Sync.Method method) {
+	public static <T> void register(final Class<T> clazz, final Watcher<T> watcher, final SerializationMethod method) {
 		registerSPI(clazz, new WatcherSPI() {
 			@SuppressWarnings({"rawtypes", "unchecked"})
 			@Override
-			public Watcher provideWatcher(PropertyMetadata propertyMetadata, Sync.Method actualMethod) {
+			public Watcher provideWatcher(PropertyMetadata propertyMetadata, SerializationMethod actualMethod) {
 				if (actualMethod == method && propertyMetadata.getRawType() == clazz) {
 					return watcher;
 				} else {

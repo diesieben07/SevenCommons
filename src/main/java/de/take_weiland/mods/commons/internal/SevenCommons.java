@@ -17,7 +17,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import de.take_weiland.mods.commons.internal.sync.PacketSync;
-import de.take_weiland.mods.commons.internal.sync.WatcherFinder;
+import de.take_weiland.mods.commons.internal.sync.WatcherRegistry;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
 import de.take_weiland.mods.commons.util.Logging;
@@ -99,7 +99,7 @@ public final class SevenCommons extends DummyModContainer {
 
 		proxy.preInit(event);
 
-		WatcherFinder.register(Object.class, new DefaultWatcherSPI());
+		WatcherRegistry.register(Object.class, new DefaultWatcherSPI());
 	}
 
 	@Subscribe
