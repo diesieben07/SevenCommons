@@ -20,7 +20,7 @@ public interface ByteStreamSerializer<T> {
 
 	}
 
-	interface SPI {
+	interface SPI extends BaseSPI {
 
 		<T> ByteStreamSerializer<T> getStreamSerializer(TypeSpecification<T> type);
 
@@ -28,7 +28,7 @@ public interface ByteStreamSerializer<T> {
 
 	}
 
-	abstract class SPIAdapter implements SPI {
+	abstract class SPIAdapter extends BaseSPI.Adapter implements SPI {
 
 		@Override
 		public <T> ByteStreamSerializer<T> getStreamSerializer(TypeSpecification<T> type) {

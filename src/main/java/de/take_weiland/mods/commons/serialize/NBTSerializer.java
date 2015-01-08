@@ -1,9 +1,14 @@
 package de.take_weiland.mods.commons.serialize;
 
+import de.take_weiland.mods.commons.internal.AnnotationNull;
 import net.minecraft.nbt.NBTBase;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author diesieben07
@@ -25,25 +30,20 @@ public interface NBTSerializer<T> {
 
 	}
 
-	interface SPI {
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target({ElementType.METHOD, ElementType.FIELD})
+	@interface Provider {
+
+		Class<?> forType() default AnnotationNull.class;
+
+	}
+
+	interface SPI extends BaseSPI {
 
 		<T> NBTSerializer<T> getNBTSerializer(TypeSpecification<T> type);
 
 		<T> NBTSerializer.Contents<T> getNBTContentSerializer(TypeSpecification<T> type);
 
-	}
-
-	abstract class SPIAdapter implements SPI {
-
-		@Override
-		public <T> NBTSerializer<T> getNBTSerializer(TypeSpecification<T> type) {
-			return null;
-		}
-
-		@Override
-		public <T> Contents<T> getNBTContentSerializer(TypeSpecification<T> type) {
-			return null;
-		}
 	}
 
 }

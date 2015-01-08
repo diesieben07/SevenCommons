@@ -20,6 +20,8 @@ import de.take_weiland.mods.commons.internal.sync.PacketSync;
 import de.take_weiland.mods.commons.internal.sync.WatcherRegistry;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
+import de.take_weiland.mods.commons.serialize.NBTSerializer;
+import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.util.Logging;
 import net.minecraftforge.common.Configuration;
 
@@ -130,6 +132,11 @@ public final class SevenCommons extends DummyModContainer {
 				postInitCallbacks.add(callback);
 			}
 		}
+	}
+
+	@NBTSerializer.Provider(forType = Object.class)
+	public static Object findNBTSerializer(TypeSpecification<?> type) {
+
 	}
 
 }

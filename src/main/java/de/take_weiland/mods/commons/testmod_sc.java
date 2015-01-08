@@ -1,7 +1,9 @@
 package de.take_weiland.mods.commons;
 
 import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.discovery.ASMDataTable;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.sync.Sync;
@@ -20,6 +22,7 @@ import net.minecraftforge.event.entity.EntityEvent;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.Set;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "after:SevenCommons")
 @NetworkMod()
@@ -34,6 +37,15 @@ public class testmod_sc {
 	public static testmod_sc instance;
 
 	private static Block myBlock;
+
+	@Mod.EventHandler
+	public void preInit(FMLPreInitializationEvent event) {
+		Set<ASMDataTable.ASMData> annotations = event.getAsmData().getAll(ForgeSubscribe.class.getName());
+		for (ASMDataTable.ASMData annotation : annotations) {
+			System.out.println(annotation.getClassName());
+		}
+		System.exit(0);
+	}
 
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent event) throws NoSuchMethodException, NoSuchFieldException, IOException {
