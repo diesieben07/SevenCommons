@@ -6,7 +6,7 @@ package de.take_weiland.mods.commons.serialize;
 public enum SerializationMethod {
 
 	/**
-	 * <p>Pick the most appropriate for the type.</p>
+	 * <p>Prefer {@code VALUE}, but use {@code CONTENTS} if {@code VALUE} is not available.</p>
 	 */
 	DEFAULT,
 

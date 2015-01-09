@@ -1,7 +1,14 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.internal.AnnotationNull;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * <p>A Watcher handles detecting changes in a {@link de.take_weiland.mods.commons.sync.SyncableProperty} and
@@ -56,4 +63,20 @@ public interface Watcher<T> {
      */
     <OBJ> void read(MCDataInput in, SyncableProperty<T, OBJ> property, OBJ instance);
 
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.METHOD, ElementType.FIELD})
+    @interface Provider {
+
+        // if name is changed, need to update SerializerRegistry as well!
+        Class<?> forType() default AnnotationNull.class;
+
+        /**
+         * <p>Specify a filter for the {@code SerializationMethod} this provider handles. {@code DEFAULT} means no filter.</p>
+         * <p>On fields this attribute is mandatory.</p>
+         *
+         * @return a filter
+         */
+        SerializationMethod method() default SerializationMethod.DEFAULT;
+
+    }
 }

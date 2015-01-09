@@ -17,11 +17,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import de.take_weiland.mods.commons.internal.sync.PacketSync;
-import de.take_weiland.mods.commons.internal.sync.WatcherRegistry;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
-import de.take_weiland.mods.commons.serialize.NBTSerializer;
-import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.util.Logging;
 import net.minecraftforge.common.Configuration;
 
@@ -100,8 +97,9 @@ public final class SevenCommons extends DummyModContainer {
 		GameRegistry.registerPlayerTracker(new SCPlayerTracker());
 
 		proxy.preInit(event);
+		SerializerRegistry.init(event.getAsmData());
 
-		WatcherRegistry.register(Object.class, new DefaultWatcherSPI());
+//		WatcherRegistry.register(Object.class, new DefaultWatcherSPI());
 	}
 
 	@Subscribe
@@ -132,11 +130,6 @@ public final class SevenCommons extends DummyModContainer {
 				postInitCallbacks.add(callback);
 			}
 		}
-	}
-
-	@NBTSerializer.Provider(forType = Object.class)
-	public static Object findNBTSerializer(TypeSpecification<?> type) {
-
 	}
 
 }

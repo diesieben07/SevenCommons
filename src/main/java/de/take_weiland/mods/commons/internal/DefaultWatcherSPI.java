@@ -2,7 +2,8 @@ package de.take_weiland.mods.commons.internal;
 
 import de.take_weiland.mods.commons.internal.syncimpl.*;
 import de.take_weiland.mods.commons.serialize.SerializationMethod;
-import de.take_weiland.mods.commons.sync.*;
+import de.take_weiland.mods.commons.sync.PropertyMetadata;
+import de.take_weiland.mods.commons.sync.SyncCapacity;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -10,22 +11,16 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.reflect.Type;
 import java.util.BitSet;
-import java.util.EnumSet;
 import java.util.UUID;
 
 /**
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-final class DefaultWatcherSPI implements WatcherSPI {
+final class DefaultWatcherSPI {
 
-	private static final Type enumSetType = EnumSet.class.getTypeParameters()[0];
-
-	@SuppressWarnings({"rawtypes", "unchecked"}) // we make sure things line up
-	@Override
-	public Watcher provideWatcher(PropertyMetadata propertyMetadata, SerializationMethod method) {
+	public static Object provideWatcher(PropertyMetadata<?> propertyMetadata, SerializationMethod method) {
 		Class<?> rawType = propertyMetadata.getRawType();
 
 		if (rawType == ItemStack.class) {
@@ -48,18 +43,6 @@ final class DefaultWatcherSPI implements WatcherSPI {
 			return StringWatcher.INSTANCE;
 		}
 
-		if (rawType == EnumSet.class) {
-			Class<?> enumType = propertyMetadata.getType().resolveType(enumSetType).getRawType();
-			if (!enumType.isEnum()) {
-				return null;
-			} else {
-				if (method == SerializationMethod.CONTENTS) {
-					return EnumSetWatcher.getContentsWatcher(rawType);
-				} else {
-					return EnumSetWatcher.getValueWatcher(rawType);
-				}
-			}
-		}
 
 		if (Block.class.isAssignableFrom(rawType) && method != SerializationMethod.CONTENTS) {
 			return BlockWatcher.INSTANCE;
@@ -78,9 +61,9 @@ final class DefaultWatcherSPI implements WatcherSPI {
 		}
 
 
-		if (method != SerializationMethod.CONTENTS && rawType.isEnum()) {
-			return EnumWatcher.get(rawType);
-		}
+//		if (method != SerializationMethod.CONTENTS && rawType.isEnum()) {
+//			return EnumWatcher.get(rawType);
+//		}
 
 		return null;
 	}

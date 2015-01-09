@@ -53,6 +53,21 @@ abstract class MemberTypeSpecification<MEM extends AnnotatedElement & Member, T>
 		return serializationMethod;
 	}
 
+	@Override
+	public String toString() {
+		return TypeSpecification.Simple.genericToString(this);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return TypeSpecification.Simple.genericEquals(this, o);
+	}
+
+	@Override
+	public int hashCode() {
+		return TypeSpecification.Simple.genericHashCode(this);
+	}
+
 	abstract Class<?> getRawType0();
 	abstract Type getGenericType0();
 

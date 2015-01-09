@@ -1,7 +1,13 @@
 package de.take_weiland.mods.commons.serialize;
 
+import de.take_weiland.mods.commons.internal.AnnotationNull;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author diesieben07
@@ -20,25 +26,13 @@ public interface ByteStreamSerializer<T> {
 
 	}
 
-	interface SPI extends BaseSPI {
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target({ElementType.METHOD, ElementType.FIELD})
+	@interface Provider {
 
-		<T> ByteStreamSerializer<T> getStreamSerializer(TypeSpecification<T> type);
+		// if name is changed, need to update SerializerRegistry as well!
+		Class<?> forType() default AnnotationNull.class;
 
-		<T> ByteStreamSerializer.Contents<T> getContentStreamSerializer(TypeSpecification<T> type);
-
-	}
-
-	abstract class SPIAdapter extends BaseSPI.Adapter implements SPI {
-
-		@Override
-		public <T> ByteStreamSerializer<T> getStreamSerializer(TypeSpecification<T> type) {
-			return null;
-		}
-
-		@Override
-		public <T> Contents<T> getContentStreamSerializer(TypeSpecification<T> type) {
-			return null;
-		}
 	}
 
 }

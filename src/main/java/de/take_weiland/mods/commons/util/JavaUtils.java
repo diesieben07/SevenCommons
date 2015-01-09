@@ -60,6 +60,10 @@ public final class JavaUtils {
 		}
 	}
 
+	public static String defaultToString(@Nullable Object o) {
+		return o == null ? "null" : o.getClass().getName() + '@' + Integer.toHexString(o.hashCode());
+	}
+
 	/**
 	 * <p>Returns the value at the given index in the arrayor null if the index is out of bounds.</p>
 	 * @param array the array

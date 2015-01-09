@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.syncimpl;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 import net.minecraft.item.Item;
@@ -10,6 +11,8 @@ import net.minecraft.item.Item;
  * @author diesieben07
  */
 public enum ItemWatcher implements Watcher<Item> {
+
+	@Watcher.Provider(forType = Item.class, method = SerializationMethod.VALUE)
 	INSTANCE;
 
 	@Override

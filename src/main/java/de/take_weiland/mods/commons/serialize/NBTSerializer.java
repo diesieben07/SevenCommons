@@ -38,12 +38,4 @@ public interface NBTSerializer<T> {
 
 	}
 
-	interface SPI extends BaseSPI {
-
-		<T> NBTSerializer<T> getNBTSerializer(TypeSpecification<T> type);
-
-		<T> NBTSerializer.Contents<T> getNBTContentSerializer(TypeSpecification<T> type);
-
-	}
-
 }

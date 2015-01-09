@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.syncimpl;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 import de.take_weiland.mods.commons.util.Fluids;
@@ -11,12 +12,16 @@ import net.minecraftforge.fluids.FluidStack;
  * @author diesieben07
  */
 public enum FluidStackWatcher implements Watcher<FluidStack> {
+
+	@Watcher.Provider(forType = FluidStack.class, method = SerializationMethod.VALUE)
 	VALUE {
 		@Override
 		public <OBJ> void read(MCDataInput in, SyncableProperty<FluidStack, OBJ> property, OBJ instance) {
 			property.set(in.readFluidStack(), instance);
 		}
 	},
+
+	@Watcher.Provider(forType = FluidStack.class, method = SerializationMethod.CONTENTS)
 	CONTENTS {
 		@Override
 		public <OBJ> void read(MCDataInput in, SyncableProperty<FluidStack, OBJ> property, OBJ instance) {

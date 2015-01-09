@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.syncimpl;
 import com.google.common.base.Objects;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 
@@ -10,6 +11,8 @@ import de.take_weiland.mods.commons.sync.Watcher;
  * @author diesieben07
  */
 public enum StringWatcher implements Watcher<String> {
+
+	@Watcher.Provider(forType = String.class, method = SerializationMethod.VALUE)
 	INSTANCE;
 
 	@Override

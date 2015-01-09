@@ -6,10 +6,13 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
+import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 
 import javax.annotation.Nonnull;
+import java.lang.reflect.Type;
 import java.util.EnumSet;
 
 /**
@@ -38,12 +41,20 @@ public abstract class EnumSetWatcher<E extends Enum<E>> implements Watcher<EnumS
 		});
 	}
 
-	public static Watcher<?> getValueWatcher(Class<?> enumClass) {
-		return valueCache.getUnchecked(enumClass);
-	}
+	private static final Type enumSetType = EnumSet.class.getTypeParameters()[0];
 
-	public static Watcher<?> getContentsWatcher(Class<?> enumClass) {
-		return contentsCache.getUnchecked(enumClass);
+	@Watcher.Provider(forType = EnumSet.class)
+	public static Object provider(TypeSpecification<?> spec) {
+		Class<?> enumType = spec.getType().resolveType(enumSetType).getRawType();
+		if (!enumType.isEnum()) {
+			return null;
+		} else {
+			if (spec.getDesiredMethod() == SerializationMethod.CONTENTS) {
+				return contentsCache.getUnchecked(enumType);
+			} else {
+				return valueCache.getUnchecked(enumType);
+			}
+		}
 	}
 
 	final Class<E> enumType;
