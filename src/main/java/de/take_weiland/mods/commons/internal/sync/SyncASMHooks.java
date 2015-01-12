@@ -1,8 +1,9 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.asm.ClassInfoClassWriter;
+import de.take_weiland.mods.commons.internal.SerializerRegistry;
 import de.take_weiland.mods.commons.reflect.SCReflection;
-import de.take_weiland.mods.commons.sync.PropertyMetadata;
+import de.take_weiland.mods.commons.serialize.PropertyMetadata;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 import org.objectweb.asm.ClassWriter;
@@ -26,7 +27,7 @@ import static org.objectweb.asm.Type.getType;
 public final class SyncASMHooks {
 
 	public static Watcher<?> findWatcher(PropertyMetadata<?> metadata) throws ReflectiveOperationException {
-		return WatcherRegistry.findWatcher(metadata);
+		return SerializerRegistry.getWatcher(metadata);
 	}
 
 	private static final List<Class<?>> keepLoaded = Collections.synchronizedList(new ArrayList<Class<?>>());

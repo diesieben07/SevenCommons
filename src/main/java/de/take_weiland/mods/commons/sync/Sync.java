@@ -24,8 +24,6 @@ import java.lang.annotation.Target;
  *     <li>ItemStack</li>
  * </ul>
  *
- * <p>Support for different types can be added through the {@link de.take_weiland.mods.commons.sync.SyncSupport} class.</p>
- *
  * @author diesieben07
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -38,13 +36,6 @@ public @interface Sync {
 	 * @return the type
 	 */
 	Class<?> as() default AnnotationNull.class;
-
-	/**
-	 * <p>Specify a Watcher to use for this property. The Watcher must have a
-	 * {@link de.take_weiland.mods.commons.sync.WatcherFactory} annotation.</p>
-	 * @return the watcher
-	 */
-	Class<? extends Watcher<?>> with() default AnnotationNull.class;
 
 	/**
 	 * <p>Specify how the property should be synced.</p>

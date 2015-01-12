@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.serialize.PropertyMetadata;
+
 /**
  * <p>Representation of a property marked with {@code &#0064;Sync}.</p>
  *

@@ -7,7 +7,7 @@ import com.google.common.cache.LoadingCache;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.serialize.SerializationMethod;
-import de.take_weiland.mods.commons.serialize.TypeSpecification;
+import de.take_weiland.mods.commons.serialize.PropertyMetadata;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 
@@ -44,7 +44,7 @@ public abstract class EnumSetWatcher<E extends Enum<E>> implements Watcher<EnumS
 	private static final Type enumSetType = EnumSet.class.getTypeParameters()[0];
 
 	@Watcher.Provider(forType = EnumSet.class)
-	public static Object provider(TypeSpecification<?> spec) {
+	public static Object provider(PropertyMetadata<?> spec) {
 		Class<?> enumType = spec.getType().resolveType(enumSetType).getRawType();
 		if (!enumType.isEnum()) {
 			return null;

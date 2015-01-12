@@ -5,12 +5,7 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.internal.SerializerRegistry;
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
-import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Sync;
-import de.take_weiland.mods.commons.sync.Watcher;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -26,7 +21,6 @@ import net.minecraftforge.event.entity.EntityEvent;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.BitSet;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @NetworkMod()
@@ -44,8 +38,8 @@ public class testmod_sc {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
-		Watcher<?> watcher = SerializerRegistry.getWatcher(new TypeSpecification.Simple<>(BitSet.class, SerializationMethod.DEFAULT));
-		System.out.println(JavaUtils.defaultToString(watcher));
+//		Watcher<?> watcher = SerializerRegistry.getWatcher(new TypeSpecification.Predefined<>(BitSet.class, SerializationMethod.DEFAULT));
+//		System.out.println(JavaUtils.defaultToString(watcher));
 		System.exit(0);
 	}
 

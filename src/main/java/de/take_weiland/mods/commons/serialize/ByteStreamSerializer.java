@@ -58,7 +58,7 @@ public interface ByteStreamSerializer<T> {
 	/**
 	 * <p>A Provider for ByteStreamSerializers.</p>
 	 * <p>When applied to a method, this method must be static and accept a single parameter of type
-	 * {@link de.take_weiland.mods.commons.serialize.TypeSpecification}. It's return type must be any non-primitive type.</p>
+	 * {@link PropertyMetadata}. It's return type must be any non-primitive type.</p>
 	 *
 	 * <p>When applied to a field, this field must be static and final. It's type must be assignable to {@code ByteStreamSerializer}
 	 * resp. {@code ByteStreamSerializer.Contents}. The {@linkplain #method() SerializationMethod filter} must be set when applied
