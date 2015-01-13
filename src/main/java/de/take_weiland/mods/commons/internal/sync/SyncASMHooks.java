@@ -3,7 +3,8 @@ package de.take_weiland.mods.commons.internal.sync;
 import de.take_weiland.mods.commons.asm.ClassInfoClassWriter;
 import de.take_weiland.mods.commons.internal.SerializerRegistry;
 import de.take_weiland.mods.commons.reflect.SCReflection;
-import de.take_weiland.mods.commons.serialize.PropertyMetadata;
+import de.take_weiland.mods.commons.serialize.TypeSpecification;
+import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 import org.objectweb.asm.ClassWriter;
@@ -26,18 +27,18 @@ import static org.objectweb.asm.Type.getType;
  */
 public final class SyncASMHooks {
 
-	public static Watcher<?> findWatcher(PropertyMetadata<?> metadata) throws ReflectiveOperationException {
+	public static Watcher<?> findWatcher(TypeSpecification<?> metadata) throws ReflectiveOperationException {
 		return SerializerRegistry.getWatcher(metadata);
 	}
 
 	private static final List<Class<?>> keepLoaded = Collections.synchronizedList(new ArrayList<Class<?>>());
 
 	public static SyncableProperty<?, ?> makeProperty(Field field, Field dataField) {
-		return new FieldProperty(field, dataField);
+		return new FieldProperty(field, dataField, Sync.class);
 	}
 
 	public static SyncableProperty<?, ?> makeProperty(Method getter, Method setter, Field dataField) {
-		return new GetterSetterProperty(getter, setter, dataField);
+		return new GetterSetterProperty(getter, setter, dataField, Sync.class);
 	}
 
 	public static Class<?> makePropertyClass(ClassNode targetClass, String getter, String setter, Type type) {

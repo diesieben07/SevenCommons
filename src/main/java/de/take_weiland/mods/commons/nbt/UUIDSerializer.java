@@ -11,11 +11,11 @@ import java.util.UUID;
 class UUIDSerializer implements NBTSerializer.NullSafe<UUID> {
 	@Override
 	public NBTBase serialize(@Nullable UUID instance) {
-		return NBT.writeUUID(instance);
+		return NBTData.writeUUID(instance);
 	}
 
 	@Override
 	public UUID deserialize(@Nullable NBTBase nbt) {
-		return NBT.readUUID(nbt);
+		return NBTData.readUUID(nbt);
 	}
 }

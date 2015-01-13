@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.util;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
-import de.take_weiland.mods.commons.nbt.NBT;
+import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.nbt.NBTSerializer;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
@@ -81,6 +81,10 @@ public final class Items {
 		return Blocks.getItem(block);
 	}
 
+	public static Item byID(int id) {
+		return Item.itemsList[id];
+	}
+
 	private static final short ITEM_NULL_ID = -1;
 
 	private static final ByteStreamSerializer<Item> streamSerializer = new ByteStreamSerializer<Item>() {
@@ -99,12 +103,12 @@ public final class Items {
 	private static final NBTSerializer<Item> nbtSerializer = new NBTSerializer<Item>() {
 		@Override
 		public NBTBase serialize(@Nullable Item instance) {
-			return instance == null ? NBT.serializedNull() : new NBTTagShort("", (short) instance.itemID);
+			return instance == null ? NBTData.serializedNull() : new NBTTagShort("", (short) instance.itemID);
 		}
 
 		@Override
 		public Item deserialize(NBTBase nbt) {
-			return NBT.isSerializedNull(nbt) ? null : Item.itemsList[((NBTTagShort) nbt).data];
+			return NBTData.isSerializedNull(nbt) ? null : Item.itemsList[((NBTTagShort) nbt).data];
 		}
 	};
 }

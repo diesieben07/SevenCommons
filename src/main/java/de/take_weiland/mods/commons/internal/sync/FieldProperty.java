@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.reflect.TypeToken;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
 /**
@@ -11,8 +12,8 @@ public final class FieldProperty extends UnsafeDataProperty<Field> {
 
 	private final long fieldOff;
 
-	public FieldProperty(Field field, Field dataField) {
-		super(field, dataField);
+	public FieldProperty(Field field, Field dataField, Class<? extends Annotation> annotationClass) {
+		super(field, dataField, annotationClass);
 		fieldOff = unsafe.objectFieldOffset(field);
 	}
 

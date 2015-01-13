@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.inv;
 
-import de.take_weiland.mods.commons.nbt.NBT;
+import de.take_weiland.mods.commons.nbt.NBTData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
@@ -27,7 +27,7 @@ final class PlayerSlot extends Slot {
 		if (stack == null || stack.stackTagCompound == null) {
 			return true;
 		}
-		UUID stackUUID = NBT.readUUID(stack.stackTagCompound, ItemInventory.NBT_UUID_KEY);
+		UUID stackUUID = NBTData.readUUID(stack.stackTagCompound.getTag(ItemInventory.NBT_UUID_KEY));
 		return stackUUID == null || itemInvUUIDs.contains(stackUUID);
 	}
 }

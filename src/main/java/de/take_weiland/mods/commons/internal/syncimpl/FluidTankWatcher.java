@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.syncimpl;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.serialize.SerializationMethod;
-import de.take_weiland.mods.commons.serialize.PropertyMetadata;
+import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.SyncCapacity;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
@@ -19,7 +19,7 @@ public enum FluidTankWatcher implements Watcher<FluidTank> {
 	INSTANCE;
 
 	@Watcher.Provider(forType = FluidTank.class, method = SerializationMethod.CONTENTS)
-	public static Object provider(PropertyMetadata<?> type) {
+	public static Object provider(TypeSpecification<?> type) {
 		if (type.hasAnnotation(SyncCapacity.class)) {
 			return WithCapacity.INSTANCE;
 		} else {

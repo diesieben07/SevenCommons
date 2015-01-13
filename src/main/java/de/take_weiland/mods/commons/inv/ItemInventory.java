@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.inv;
 
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.nbt.NBT;
+import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -80,7 +80,7 @@ public class ItemInventory extends AbstractInventory {
 	}
 
 	private void writeUUID() {
-		NBT.writeUUID(uuid, ItemStacks.getNbt(stack), nbtKey);
+		ItemStacks.getNbt(stack).setTag(nbtKey, NBTData.writeUUID(uuid));
 	}
 
 	private static String defaultNBTKey(ItemStack stack) {

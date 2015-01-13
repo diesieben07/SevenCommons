@@ -7,8 +7,8 @@ import net.minecraft.nbt.NBTTagIntArray;
 
 import javax.annotation.Nullable;
 
-import static de.take_weiland.mods.commons.nbt.NBT.isSerializedNull;
-import static de.take_weiland.mods.commons.nbt.NBT.serializedNull;
+import static de.take_weiland.mods.commons.nbt.NBTData.isSerializedNull;
+import static de.take_weiland.mods.commons.nbt.NBTData.serializedNull;
 
 /**
  * @author diesieben07

@@ -4,7 +4,7 @@ import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.sync.SyncASMHooks;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.serialize.PropertyMetadata;
+import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 import org.objectweb.asm.Type;
@@ -93,7 +93,7 @@ final class HandlerSyncer extends PropertyHandler {
 
 	private CodePiece newWatcher() {
 		return CodePieces.invokeStatic(SyncASMHooks.class, "findWatcher", Watcher.class,
-				PropertyMetadata.class, property.get());
+				TypeSpecification.class, property.get());
 	}
 
 	private CodePiece newProperty() {

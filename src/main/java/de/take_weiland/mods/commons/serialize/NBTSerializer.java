@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.serialize;
 
 import de.take_weiland.mods.commons.internal.AnnotationNull;
 import net.minecraft.nbt.NBTBase;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,6 +23,7 @@ public interface NBTSerializer<T> {
 	 * @param instance the instance
 	 * @return NBT data
 	 */
+	@NotNull
 	@Nonnull
 	NBTBase serialize(T instance);
 
@@ -62,7 +64,7 @@ public interface NBTSerializer<T> {
 	 * <p>A Provider for NBTSerializers.</p>
 	 *
 	 * <p>When applied to a method, this method must be static and accept a single parameter of type
-	 * {@link PropertyMetadata}. It's return type must be any non-primitive type.</p>
+	 * {@link TypeSpecification}. It's return type must be any non-primitive type.</p>
 	 *
 	 * <p>When applied to a field, this field must be static and final. It's type must be assignable to {@code NBTSerializer}
 	 * resp. {@code NBTSerializer.Contents}. The {@linkplain #method() SerializationMethod filter} must be set when applied

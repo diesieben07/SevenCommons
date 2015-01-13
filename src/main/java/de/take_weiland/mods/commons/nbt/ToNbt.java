@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.nbt;
 
 import de.take_weiland.mods.commons.internal.AnnotationNull;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -34,7 +35,7 @@ public @interface ToNbt {
 
 	Class<? extends NBTSerializer<?>> serializer() default AnnotationNull.class;
 
-	boolean nullable() default true;
+	SerializationMethod method() default SerializationMethod.DEFAULT;
 
 	ValueMissingAction onMissing() default ValueMissingAction.DEFAULT;
 

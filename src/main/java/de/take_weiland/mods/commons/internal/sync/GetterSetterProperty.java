@@ -4,6 +4,7 @@ import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -15,8 +16,8 @@ final class GetterSetterProperty extends UnsafeDataProperty<Method> {
 
 	private final Method setter;
 
-	GetterSetterProperty(Method getter, Method setter, Field dataField) {
-		super(getter, dataField);
+	GetterSetterProperty(Method getter, Method setter, Field dataField, Class<? extends Annotation> annotationClass) {
+		super(getter, dataField, annotationClass);
 		this.setter = setter;
 
 		getter.setAccessible(true);

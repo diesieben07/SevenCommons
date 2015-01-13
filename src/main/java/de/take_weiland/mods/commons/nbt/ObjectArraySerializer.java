@@ -8,8 +8,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Array;
 
-import static de.take_weiland.mods.commons.nbt.NBT.isSerializedNull;
-import static de.take_weiland.mods.commons.nbt.NBT.serializedNull;
+import static de.take_weiland.mods.commons.nbt.NBTData.isSerializedNull;
+import static de.take_weiland.mods.commons.nbt.NBTData.serializedNull;
 
 /**
  * @author diesieben07
@@ -88,12 +88,12 @@ abstract class ObjectArraySerializer<T> implements NBTSerializer.NullSafe<T[]> {
 
 		@Override
 		NBTBase serialize0(ItemStack element) {
-			return NBT.writeItemStack(element);
+			return NBTData.writeItemStack(element);
 		}
 
 		@Override
 		ItemStack deserialize0(@Nonnull NBTBase nbt) {
-			return NBT.readItemStack(nbt);
+			return NBTData.readItemStack(nbt);
 		}
 	}
 
@@ -106,12 +106,12 @@ abstract class ObjectArraySerializer<T> implements NBTSerializer.NullSafe<T[]> {
 
 		@Override
 		NBTBase serialize0(@Nullable String element) {
-			return NBT.writeString(element);
+			return NBTData.writeString(element);
 		}
 
 		@Override
 		String deserialize0(@Nonnull NBTBase nbt) {
-			return NBT.readString(nbt);
+			return NBTData.readString(nbt);
 		}
 	}
 

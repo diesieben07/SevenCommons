@@ -9,7 +9,7 @@ import java.lang.annotation.Annotation;
  *
  * @author diesieben07
  */
-public interface PropertyMetadata<T> {
+public interface TypeSpecification<T> {
 
 	/**
 	 * <p>Return a TypeToken representing the type of the property.</p>

@@ -10,11 +10,11 @@ import javax.annotation.Nullable;
 class StringSerializer implements NBTSerializer.NullSafe<String> {
 	@Override
 	public NBTBase serialize(@Nullable String instance) {
-		return NBT.writeString(instance);
+		return NBTData.writeString(instance);
 	}
 
 	@Override
 	public String deserialize(@Nullable NBTBase nbt) {
-		return NBT.readString(nbt);
+		return NBTData.readString(nbt);
 	}
 }

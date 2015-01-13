@@ -7,7 +7,7 @@ import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
 import de.take_weiland.mods.commons.meta.Subtype;
-import de.take_weiland.mods.commons.nbt.NBT;
+import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.nbt.NBTSerializer;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
@@ -149,6 +149,10 @@ public final class Blocks {
 		}
 	}
 
+	public static Block byID(int id) {
+		return Block.blocksList[id];
+	}
+
 	/**
 	 * <p>Get a {@code ByteStreamSerializer} for Blocks. The serializer supports null values.</p>
 	 * @return a ByteStreamSerializer
@@ -188,7 +192,7 @@ public final class Blocks {
 		@Override
 		public NBTBase serialize(@Nullable Block instance) {
 			if (instance == null) {
-				return NBT.serializedNull();
+				return NBTData.serializedNull();
 			} else {
 				return new NBTTagShort("", (short) instance.blockID);
 			}
@@ -196,7 +200,7 @@ public final class Blocks {
 
 		@Override
 		public Block deserialize(NBTBase nbt) {
-			return NBT.isSerializedNull(nbt) ? null : Block.blocksList[((NBTTagShort) nbt).data];
+			return NBTData.isSerializedNull(nbt) ? null : Block.blocksList[((NBTTagShort) nbt).data];
 		}
 	};
 

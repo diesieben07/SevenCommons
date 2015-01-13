@@ -1,9 +1,11 @@
 package de.take_weiland.mods.commons.nbt;
 
+import de.take_weiland.mods.commons.serialize.NBTSerializer;
+
 /**
  * @author diesieben07
  */
-abstract class GenericSerializer implements NBTSerializer.NullSafe<Object> {
+abstract class GenericSerializer implements NBTSerializer {
 //
 //	INSTANCE;
 //

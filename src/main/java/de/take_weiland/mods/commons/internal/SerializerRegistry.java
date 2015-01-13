@@ -37,36 +37,36 @@ public final class SerializerRegistry {
 	private static SerializerRegistry watcherRegistry;
 
 	@SuppressWarnings("unchecked")
-	public static <T> NBTSerializer<T> getNBTSerializer(PropertyMetadata<T> type) {
+	public static <T> NBTSerializer<T> getNBTSerializer(TypeSpecification<T> type) {
 		checkMethod(type, SerializationMethod.VALUE);
 		// we know this cast must succeed
 		return (NBTSerializer<T>) nbtRegistry.findSerializer(type);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> NBTSerializer.Contents<T> getNBTSerializerContent(PropertyMetadata<T> type) {
+	public static <T> NBTSerializer.Contents<T> getNBTSerializerContent(TypeSpecification<T> type) {
 		checkMethod(type, SerializationMethod.CONTENTS);
 		return (NBTSerializer.Contents<T>) nbtRegistry.findSerializer(type);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> ByteStreamSerializer<T> getStreamSerializer(PropertyMetadata<T> type) {
+	public static <T> ByteStreamSerializer<T> getStreamSerializer(TypeSpecification<T> type) {
 		checkMethod(type, SerializationMethod.VALUE);
 		return (ByteStreamSerializer<T>) streamRegistry.findSerializer(type);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> ByteStreamSerializer.Contents<T> getStreamSerializerContents(PropertyMetadata<T> type) {
+	public static <T> ByteStreamSerializer.Contents<T> getStreamSerializerContents(TypeSpecification<T> type) {
 		checkMethod(type, SerializationMethod.CONTENTS);
 		return (ByteStreamSerializer.Contents<T>) streamRegistry.findSerializer(type);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> Watcher<T> getWatcher(PropertyMetadata<T> type) {
+	public static <T> Watcher<T> getWatcher(TypeSpecification<T> type) {
 		return (Watcher<T>) watcherRegistry.findSerializer(type);
 	}
 
-	private static void checkMethod(PropertyMetadata<?> type, SerializationMethod expected) {
+	private static void checkMethod(TypeSpecification<?> type, SerializationMethod expected) {
 		checkArgument(type.getDesiredMethod() == expected, "Invalid type for SerializationMethod." + expected.name());
 	}
 
@@ -132,7 +132,7 @@ public final class SerializerRegistry {
 		registry = builder.build();
 	}
 
-	private Object findSerializer(PropertyMetadata<?> type) {
+	private Object findSerializer(TypeSpecification<?> type) {
 		SerializationMethod method = type.getDesiredMethod();
 		ChangeableMethodSpec<?> overriddenSpec = null;
 
@@ -161,7 +161,7 @@ public final class SerializerRegistry {
 		throw new IllegalArgumentException("No serializer found for " + type);
 	}
 
-	private Object findSerializerFromProviders(PropertyMetadata<?> type, Collection<MethodHandle> providers) {
+	private Object findSerializerFromProviders(TypeSpecification<?> type, Collection<MethodHandle> providers) {
 		Object serializer = null;
 		for (MethodHandle provider : providers) {
 			Object applied = apply(provider, type);
@@ -180,10 +180,10 @@ public final class SerializerRegistry {
 		return serializer;
 	}
 
-	private Object apply(MethodHandle mh, PropertyMetadata<?> spec) {
+	private Object apply(MethodHandle mh, TypeSpecification<?> spec) {
 		Object retVal;
 		try {
-			retVal = (Object) mh.invokeExact((PropertyMetadata<?>) spec);
+			retVal = (Object) mh.invokeExact((TypeSpecification<?>) spec);
 		} catch (Throwable t) {
 			throw JavaUtils.throwUnchecked(t);
 		}
@@ -236,9 +236,9 @@ public final class SerializerRegistry {
 			verifyMember(!ASMUtils.isPrimitive(ret), annotationData, "Primitive return type");
 			verifyMember(ret.getSort() != Type.ARRAY, annotationData, "Array return type");
 			verifyMember(args.length == 1, annotationData, "More than one argument");
-			verifyMember(args[0].getInternalName().equals(Type.getInternalName(PropertyMetadata.class)), annotationData, "Parameter must be TypeSpecification");
+			verifyMember(args[0].getInternalName().equals(Type.getInternalName(TypeSpecification.class)), annotationData, "Parameter must be TypeSpecification");
 
-			Method method = containingClass.getDeclaredMethod(methodName, PropertyMetadata.class);
+			Method method = containingClass.getDeclaredMethod(methodName, TypeSpecification.class);
 			method.setAccessible(true);
 			verifyMember(Modifier.isStatic(method.getModifiers()), annotationData, "Must be static");
 			mh = lookup.unreflect(method);
@@ -251,15 +251,15 @@ public final class SerializerRegistry {
 			verifyMember(filter != SerializationMethod.DEFAULT, annotationData, "Field needs method attribute");
 
 			MethodHandle getter = lookup.unreflectGetter(field);
-			mh = MethodHandles.dropArguments(getter, 0, PropertyMetadata.class);
+			mh = MethodHandles.dropArguments(getter, 0, TypeSpecification.class);
 		}
 
 		if (filter != SerializationMethod.DEFAULT) {
-			mh = mh.asType(methodType(Object.class, PropertyMetadata.class));
+			mh = mh.asType(methodType(Object.class, TypeSpecification.class));
 			mh = MethodHandles.insertArguments(mhFilterSerializationMethod, 0, filter, mh);
 		}
 
-		return mh.asType(methodType(Object.class, PropertyMetadata.class));
+		return mh.asType(methodType(Object.class, TypeSpecification.class));
 	}
 
 	private static final Field enumHolderVal;
@@ -288,16 +288,16 @@ public final class SerializerRegistry {
 		try {
 			mhFilterSerializationMethod = lookup.findStatic(SerializerRegistry.class,
 					"filterSerializationMethod",
-					methodType(Object.class, SerializationMethod.class, MethodHandle.class, PropertyMetadata.class));
+					methodType(Object.class, SerializationMethod.class, MethodHandle.class, TypeSpecification.class));
 
 		} catch (NoSuchMethodException | IllegalAccessException e) {
 			throw new AssertionError(e);
 		}
 	}
 
-	private static Object filterSerializationMethod(SerializationMethod filter, MethodHandle target, PropertyMetadata<?> type) throws Throwable {
+	private static Object filterSerializationMethod(SerializationMethod filter, MethodHandle target, TypeSpecification<?> type) throws Throwable {
 		if (type.getDesiredMethod() == filter) {
-			return (Object) target.invokeExact((PropertyMetadata<?>) type);
+			return (Object) target.invokeExact((TypeSpecification<?>) type);
 		} else {
 			return null;
 		}
@@ -311,13 +311,13 @@ public final class SerializerRegistry {
 		checkState(iface.isInstance(val), "Invalid return value from " + handle + " expected an instance of " + iface + " or null");
 	}
 
-	private static final class ChangeableMethodSpec<T> implements PropertyMetadata<T> {
+	private static final class ChangeableMethodSpec<T> implements TypeSpecification<T> {
 
-		private final PropertyMetadata<T> wrapped;
+		private final TypeSpecification<T> wrapped;
 
 		SerializationMethod overrideMethod;
 
-		ChangeableMethodSpec(PropertyMetadata<T> wrapped) {
+		ChangeableMethodSpec(TypeSpecification<T> wrapped) {
 			this.wrapped = wrapped;
 		}
 

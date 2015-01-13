@@ -6,7 +6,7 @@ import com.google.common.cache.LoadingCache;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.serialize.SerializationMethod;
-import de.take_weiland.mods.commons.serialize.PropertyMetadata;
+import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 
@@ -28,7 +28,7 @@ public final class EnumWatcher<E extends Enum<E>> implements Watcher<E> {
 			});
 
 	@Watcher.Provider(forType = Enum.class, method = SerializationMethod.VALUE)
-	public static Object get(PropertyMetadata<?> type) {
+	public static Object get(TypeSpecification<?> type) {
 		Class<?> rawType = type.getRawType();
 		if (rawType.isEnum()) {
 			return cache.getUnchecked(rawType);

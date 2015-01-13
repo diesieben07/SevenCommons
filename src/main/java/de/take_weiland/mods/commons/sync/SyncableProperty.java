@@ -1,13 +1,14 @@
 package de.take_weiland.mods.commons.sync;
 
-import de.take_weiland.mods.commons.serialize.PropertyMetadata;
+
+import de.take_weiland.mods.commons.serialize.TypeSpecification;
 
 /**
  * <p>Representation of a property marked with {@code &#0064;Sync}.</p>
  *
  * @author diesieben07
  */
-public interface SyncableProperty<T, OBJ> extends PropertyMetadata<T> {
+public interface SyncableProperty<T, OBJ> extends TypeSpecification<T> {
 
     /**
      * <p>Get the value of the property.</p>

@@ -11,11 +11,11 @@ import javax.annotation.Nullable;
 class ItemStackSerializer implements NBTSerializer.NullSafe<ItemStack> {
 	@Override
 	public NBTBase serialize(@Nullable ItemStack instance) {
-		return NBT.writeItemStack(instance);
+		return NBTData.writeItemStack(instance);
 	}
 
 	@Override
 	public ItemStack deserialize(@Nullable NBTBase nbt) {
-		return NBT.readItemStack(nbt);
+		return NBTData.readItemStack(nbt);
 	}
 }
