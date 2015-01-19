@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.transformers;
 import com.google.common.collect.ImmutableList;
 import de.take_weiland.mods.commons.asm.ASMClassTransformer;
 import de.take_weiland.mods.commons.asm.ASMClassTransformerWrapper;
-import de.take_weiland.mods.commons.internal.transformers.sync.SyncTransformer;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -27,7 +26,7 @@ public final class SCTransformerWrapper extends ASMClassTransformerWrapper {
 		builder.add(new Packet250Transformer());
 		builder.add(new ModPacketTransformer());
 
-		builder.add(new SyncTransformer());
+		builder.add(new PropertyBasedTransformerWrapper());
 
 		builder.add(new InvokeDynamicTransformer());
 

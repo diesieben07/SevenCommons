@@ -60,6 +60,30 @@ public final class JavaUtils {
 		}
 	}
 
+	public static int hashCode(Object o) {
+		if (o instanceof boolean[]) {
+			return Arrays.hashCode((boolean[]) o);
+		} else if (o instanceof byte[]) {
+			return Arrays.hashCode((byte[]) o);
+		} else if (o instanceof short[]) {
+			return Arrays.hashCode((short[]) o);
+		} else if (o instanceof char[]) {
+			return Arrays.hashCode((char[]) o);
+		} else if (o instanceof int[]) {
+			return Arrays.hashCode((int[]) o);
+		} else if (o instanceof long[]) {
+			return Arrays.hashCode((long[]) o);
+		} else if (o instanceof float[]) {
+			return Arrays.hashCode((float[]) o);
+		} else if (o instanceof double[]) {
+			return Arrays.hashCode((double[]) o);
+		} else if (o instanceof Object[]) {
+			return Arrays.deepHashCode((Object[]) o);
+		} else {
+			return Objects.hashCode(o);
+		}
+	}
+
 	public static String defaultToString(@Nullable Object o) {
 		return o == null ? "null" : o.getClass().getName() + '@' + Integer.toHexString(o.hashCode());
 	}

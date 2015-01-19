@@ -28,11 +28,6 @@ class ASMLocalVariable extends AbstractASMVariable {
 	}
 
 	@Override
-	protected List<AnnotationNode> setterAnns(boolean visible) {
-		return null;
-	}
-
-	@Override
 	protected int setterModifiers() {
 		return 0;
 	}

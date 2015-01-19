@@ -41,7 +41,7 @@ public final class ModPacketTransformer extends AbstractAnalyzingTransformer {
 			createGetHandler(clazz, handlerField);
 		}
 
-		AnnotationNode validReceiver = ASMUtils.getAnnotation(clazz, PacketDirection.class);
+		AnnotationNode validReceiver = ASMUtils.getRawAnnotation(clazz, PacketDirection.class);
 		if (validReceiver != null || !classInfo.isAbstract()) {
 			PacketDirection.Dir receiveSide;
 			if (validReceiver == null) {

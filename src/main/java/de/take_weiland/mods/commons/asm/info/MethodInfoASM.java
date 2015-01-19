@@ -35,7 +35,7 @@ class MethodInfoASM extends MethodInfo {
 
 	@Override
 	public AnnotationInfo getAnnotation(Class<? extends Annotation> annotation) {
-		AnnotationNode ann = ASMUtils.getAnnotation(method, annotation);
+		AnnotationNode ann = ASMUtils.getRawAnnotation(method, annotation);
 		return ann == null ? null : new AnnotationInfoASM(this, ann);
 	}
 

@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.sync.SyncASMHooks;
+import de.take_weiland.mods.commons.internal.transformers.ClassWithProperties;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
@@ -9,9 +10,6 @@ import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -97,39 +95,40 @@ final class HandlerSyncer extends PropertyHandler {
 	}
 
 	private CodePiece newProperty() {
-		if (var.isField()) {
-			return CodePieces.invokeStatic(SyncASMHooks.class, "makeProperty", SyncableProperty.class,
-					Field.class, getReflectiveField(var),
-					Field.class, getReflectiveField(data));
-		} else {
-			return CodePieces.invokeStatic(SyncASMHooks.class, "makeProperty", SyncableProperty.class,
-					Method.class, getReflectiveGetter(),
-					Method.class, getReflectiveSetter(),
-					Field.class, getReflectiveField(data));
-		}
+		return state.properties.getProperty(var, ClassWithProperties.PropertyType.SYNCED);
+//		if (var.isField()) {
+//			return CodePieces.invokeStatic(SyncASMHooks.class, "makeProperty", SyncableProperty.class,
+//					Field.class, getReflectiveField(var),
+//					Field.class, getReflectiveField(data));
+//		} else {
+//			return CodePieces.invokeStatic(SyncASMHooks.class, "makeProperty", SyncableProperty.class,
+//					Method.class, getReflectiveGetter(),
+//					Method.class, getReflectiveSetter(),
+//					Field.class, getReflectiveField(data));
+//		}
 	}
 
-	private CodePiece getReflectiveField(ASMVariable var) {
-		CodePiece myClass = CodePieces.constant(Type.getObjectType(state.clazz.name));
-		return CodePieces.invokeVirtual(Class.class, "getDeclaredField", myClass, Field.class,
-				String.class, var.rawName());
-	}
-
-	private CodePiece getReflectiveGetter() {
-		CodePiece myClass = CodePieces.constant(Type.getObjectType(state.clazz.name));
-		return CodePieces.invokeVirtual(Class.class, "getDeclaredMethod", myClass, Method.class,
-				String.class, var.rawName(),
-				Object[].class, CodePieces.constant(new Object[0]));
-	}
-
-	private CodePiece getReflectiveSetter() {
-		if (!var.isWritable()) {
-			return CodePieces.constantNull();
-		}
-		CodePiece myClass = CodePieces.constant(Type.getObjectType(state.clazz.name));
-		return CodePieces.invokeStatic(Class.class, "getDeclaredMethod", myClass, Method.class,
-				String.class, var.setterName(),
-				Object[].class, CodePieces.constant(new Object[] { var.getType() }));
-	}
+//	private CodePiece getReflectiveField(ASMVariable var) {
+//		CodePiece myClass = CodePieces.constant(Type.getObjectType(state.clazz.name));
+//		return CodePieces.invokeVirtual(Class.class, "getDeclaredField", myClass, Field.class,
+//				String.class, var.rawName());
+//	}
+//
+//	private CodePiece getReflectiveGetter() {
+//		CodePiece myClass = CodePieces.constant(Type.getObjectType(state.clazz.name));
+//		return CodePieces.invokeVirtual(Class.class, "getDeclaredMethod", myClass, Method.class,
+//				String.class, var.rawName(),
+//				Object[].class, CodePieces.constant(new Object[0]));
+//	}
+//
+//	private CodePiece getReflectiveSetter() {
+//		if (!var.isWritable()) {
+//			return CodePieces.constantNull();
+//		}
+//		CodePiece myClass = CodePieces.constant(Type.getObjectType(state.clazz.name));
+//		return CodePieces.invokeStatic(Class.class, "getDeclaredMethod", myClass, Method.class,
+//				String.class, var.setterName(),
+//				Object[].class, CodePieces.constant(new Object[] { var.getType() }));
+//	}
 
 }

@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.nbt;
 
 import de.take_weiland.mods.commons.internal.AnnotationNull;
+import de.take_weiland.mods.commons.serialize.NBTSerializer;
 import de.take_weiland.mods.commons.serialize.SerializationMethod;
 
 import java.lang.annotation.ElementType;
@@ -32,8 +33,6 @@ public @interface ToNbt {
 	 * the key to use for this field. Empty String (default) uses the field/method name
 	 */
 	String key() default "";
-
-	Class<? extends NBTSerializer<?>> serializer() default AnnotationNull.class;
 
 	SerializationMethod method() default SerializationMethod.DEFAULT;
 

@@ -26,7 +26,7 @@ public class InvokeDynamicTransformer extends AbstractAnalyzingTransformer {
 		boolean transformed = false;
 
 		for (MethodNode method : clazz.methods) {
-			AnnotationNode annotation = ASMUtils.getAnnotation(method, InvokeDynamic.CLASS_NAME);
+			AnnotationNode annotation = ASMUtils.getRawAnnotation(method, InvokeDynamic.CLASS_NAME);
 			if (annotation != null) {
 				doTransform(clazz, method, annotation);
 				transformed = true;

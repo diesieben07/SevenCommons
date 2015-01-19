@@ -83,11 +83,6 @@ class ASMField extends ClassBoundASMVariable {
 	}
 
 	@Override
-	protected List<AnnotationNode> setterAnns(boolean visible) {
-		return getterAnns(visible);
-	}
-
-	@Override
 	protected int setterModifiers() {
 		return field.access;
 	}

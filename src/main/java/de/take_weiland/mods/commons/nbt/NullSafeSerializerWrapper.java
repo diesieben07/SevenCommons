@@ -4,10 +4,11 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import de.take_weiland.mods.commons.serialize.NBTSerializer;
+import de.take_weiland.mods.commons.sync.Property;
 import net.minecraft.nbt.NBTBase;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 /**
 * @author diesieben07
@@ -35,13 +36,14 @@ class NullSafeSerializerWrapper<T> implements NBTSerializer<T> {
 		this.wrapped = wrapped;
 	}
 
+	@Nonnull
 	@Override
-	public NBTBase serialize(@Nullable T instance) {
-		return instance == null ? NBTData.serializedNull() : wrapped.serialize(instance);
+	public <OBJ> NBTBase serialize(Property<T, OBJ> property, OBJ instance) {
+		return null;
 	}
 
 	@Override
-	public T deserialize(@Nullable NBTBase nbt) {
-		return NBTData.isSerializedNull(nbt) ? null : wrapped.deserialize(nbt);
+	public <OBJ> void deserialize(NBTBase nbt, Property<T, OBJ> property, OBJ instance) {
+
 	}
 }

@@ -1,10 +1,12 @@
 package de.take_weiland.mods.commons;
 
+import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
@@ -21,12 +23,14 @@ import net.minecraftforge.event.entity.EntityEvent;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @NetworkMod()
 public class testmod_sc {
 
-	private static Enum enumSet;
+	@ToNbt(key = "helloWorld")
+	private String enumSet;
 
 	public static void main(@Nonnull String[] bar) throws NoSuchFieldException {
 	}
@@ -37,9 +41,12 @@ public class testmod_sc {
 	private static Block myBlock;
 
 	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent event) {
+	public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 //		Watcher<?> watcher = SerializerRegistry.getWatcher(new TypeSpecification.Predefined<>(BitSet.class, SerializationMethod.DEFAULT));
 //		System.out.println(JavaUtils.defaultToString(watcher));
+		testmod_sc.class.getDeclaredMethod("_sc$tonbt", NBTTagCompound.class).invoke(this, new NBTTagCompound());
+
+		Reflection.initialize(PlayerProps.class);
 		System.exit(0);
 	}
 

@@ -5,11 +5,14 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Primitives;
+import com.google.common.reflect.Reflection;
 import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.Launch;
+import org.apache.commons.lang3.ArrayUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -18,11 +21,17 @@ import org.objectweb.asm.tree.*;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Type.VOID_TYPE;
 
 /**
  * <p>A collection of utility methods for working with the ASM library.</p>
@@ -286,6 +295,52 @@ public final class ASMUtils {
 		code.prependTo(method.instructions);
 	}
 
+	private static final String MUTEX_NAME = "_sc$lateinit$m";
+	private static final String INIT_METHOD = "_sc$lateinit";
+	private static final String INIT_CODE_METHOD = "_sc$lateinit$c";
+
+	public static void initializeLate(ClassNode clazz, CodePiece code) {
+		FieldNode mutexField = findField(clazz, MUTEX_NAME);
+		MethodNode codeMethod;
+		if (mutexField == null) {
+			mutexField = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, MUTEX_NAME, Type.getDescriptor(Object.class), null, null);
+			clazz.fields.add(mutexField);
+			initializeStatic(clazz, CodePieces.setField(clazz, mutexField, CodePieces.instantiate(Object.class)));
+
+			codeMethod = new MethodNode(ACC_PRIVATE | ACC_FINAL, INIT_CODE_METHOD, Type.getMethodDescriptor(VOID_TYPE), null, null);
+			clazz.methods.add(codeMethod);
+			codeMethod.instructions.add(new InsnNode(RETURN));
+
+			MethodNode initMethod = new MethodNode(ACC_PRIVATE | ACC_FINAL, INIT_METHOD, Type.getMethodDescriptor(VOID_TYPE), null, null);
+			clazz.methods.add(initMethod);
+
+			LabelNode start = new LabelNode();
+			LabelNode end = new LabelNode();
+			LabelNode finallyLbl = new LabelNode();
+
+			CodePieces.getField(clazz, mutexField).appendTo(initMethod.instructions);
+			initMethod.instructions.add(new InsnNode(DUP));
+			initMethod.instructions.add(new VarInsnNode(ASTORE, 1));
+			initMethod.instructions.add(new InsnNode(MONITORENTER));
+			initMethod.instructions.add(start);
+
+			CodePieces.invokeSpecial(clazz.name, INIT_CODE_METHOD, CodePieces.getThis(), void.class)
+					.appendTo(initMethod.instructions);
+
+			initMethod.instructions.add(end);
+
+			initMethod.instructions.add(new InsnNode(RETURN));
+
+
+
+			CodePiece invoke = CodePieces.invokeVirtual(clazz.name, INIT_METHOD, CodePieces.getThis(), void.class);
+			initialize(clazz, invoke);
+
+		}
+
+
+	}
+
 	/**
 	 * <p>Determine if the given method is a constructor.</p>
 	 *
@@ -474,7 +529,7 @@ public final class ASMUtils {
 
 		String setterName;
 
-		AnnotationNode overrideSetter = getAnnotation(getter, OverrideSetter.class);
+		AnnotationNode overrideSetter = getRawAnnotation(getter, OverrideSetter.class);
 		if (overrideSetter != null) {
 			setterName = getAnnotationProperty(overrideSetter, "value", OverrideSetter.class);
 		} else {
@@ -779,6 +834,182 @@ public final class ASMUtils {
 
 	// *** annotation utilities *** //
 
+	public static <A extends Annotation> A makeReal(@Nullable AnnotationNode data, final Class<A> annotationClass) {
+		if (data == null) {
+			return null;
+		}
+
+		final Map<String, Object> map = buildMap(data, annotationClass);
+
+		return Reflection.newProxy(annotationClass, new InvocationHandler() {
+			@Override
+			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+				String name = method.getName();
+				if (name.equals("equals") && args.length == 1) {
+					return annEqImpl(map, annotationClass, args[0]);
+				}
+				switch (name) {
+					case "hashCode":
+						return annHashCodeImpl(annotationClass, map);
+					case "toString":
+						return annToStringImpl(annotationClass, map);
+					case "annotationType":
+						return annotationClass;
+					default:
+						Object val = map.get(name);
+						if (val == null) {
+							return method.getDefaultValue();
+						}
+						return val;
+				}
+			}
+		});
+	}
+
+	public static <A extends Annotation> A getAnnotation(ClassNode clazz, Class<A> annotation) {
+		return makeReal(getRawAnnotation(clazz, annotation), annotation);
+	}
+
+	public static <A extends Annotation> A getAnnotation(FieldNode field, Class<A> annotation) {
+		return makeReal(getRawAnnotation(field, annotation), annotation);
+	}
+
+	public static <A extends Annotation> A getAnnotation(MethodNode method, Class<A> annotation) {
+		return makeReal(getRawAnnotation(method, annotation), annotation);
+	}
+
+	private static Map<String, Object> buildMap(AnnotationNode ann, Class<? extends Annotation> clazz) {
+		ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+
+		int len = ann.values == null ? 0 : ann.values.size();
+		try {
+			for (int i = 0; i < len; i += 2) {
+				String key = (String) ann.values.get(i);
+				Object val = ann.values.get(i + 1);
+				Method method = clazz.getDeclaredMethod(key, ArrayUtils.EMPTY_CLASS_ARRAY);
+
+				builder.put(key, decodeAnnotationVal(val, method.getReturnType()));
+			}
+		} catch (NoSuchMethodException | ClassNotFoundException e) {
+			throw JavaUtils.throwUnchecked(e);
+		}
+
+		return builder.build();
+	}
+
+	private static Object decodeAnnotationVal(Object val, Class<?> type) throws ClassNotFoundException {
+		Class<?> cls = val.getClass();
+		if (Primitives.isWrapperType(cls) || cls == String.class) {
+			return val;
+		} else if (cls == Type.class) {
+			Type t = (Type) val;
+			switch (t.getSort()) {
+				case Type.OBJECT:
+					return Class.forName(t.getClassName());
+				case Type.ARRAY:
+					return Class.forName(binaryName(t.getInternalName()));
+				case Type.BOOLEAN:
+					return boolean.class;
+				case Type.BYTE:
+					return byte.class;
+				case Type.SHORT:
+					return short.class;
+				case Type.CHAR:
+					return char.class;
+				case Type.INT:
+					return int.class;
+				case Type.LONG:
+					return long.class;
+				case Type.FLOAT:
+					return float.class;
+				case Type.DOUBLE:
+					return double.class;
+				case Type.VOID:
+					return void.class;
+				case Type.METHOD:
+				default:
+					throw new IllegalArgumentException();
+			}
+		} else if (cls == String[].class) {
+			String[] s = (String[]) val;
+			//noinspection rawtypes
+			return Enum.valueOf((Class) Class.forName(s[0]), s[1]);
+		} else if (val instanceof AnnotationNode) {
+			AnnotationNode ann = (AnnotationNode) val;
+			//noinspection unchecked
+			return makeReal(ann, (Class<? extends Annotation>) Class.forName(Type.getType(ann.desc).getClassName()));
+		} else if (val instanceof List) {
+			List<?> list = (List<?>) val;
+
+			Class<?> componentType = type.getComponentType();
+			Object[] arr = (Object[]) Array.newInstance(componentType, list.size());
+			for (int i = 0, listSize = list.size(); i < listSize; i++) {
+				Object o = list.get(i);
+				arr[i] = decodeAnnotationVal(o, componentType);
+			}
+			return arr;
+		} else {
+			throw new IllegalArgumentException("Invalid Annotation value");
+		}
+	}
+
+	static boolean annEqImpl(Map<String, Object> data, Class<?> annotationClass, Object otherAnn) {
+		if (!annotationClass.isInstance(otherAnn)) {
+			return false;
+		}
+		for (Map.Entry<String, Object> entry : data.entrySet()) {
+			try {
+				Method method = annotationClass.getMethod(entry.getKey(), ArrayUtils.EMPTY_CLASS_ARRAY);
+				Object otherVal = method.invoke(otherAnn, ArrayUtils.EMPTY_OBJECT_ARRAY);
+				if (!Objects.deepEquals(entry.getValue(), otherVal)) {
+					return false;
+				}
+			} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+				throw JavaUtils.throwUnchecked(e);
+			}
+		}
+		return true;
+	}
+
+	static int annHashCodeImpl(Class<?> annotationClass, Map<String, Object> data) {
+		int hash = 0;
+
+		for (Method method : annotationClass.getDeclaredMethods()) {
+			String key = method.getName();
+			Object val = data.get(key);
+			if (val == null) {
+				val = method.getDefaultValue();
+			}
+			int valHash = JavaUtils.hashCode(val);
+			int keyHash = key.hashCode();
+			hash += (127 * keyHash) ^ valHash;
+		}
+
+		return hash;
+	}
+
+	static String annToStringImpl(Class<?> annotationClass, Map<String, Object> data) {
+		StringBuilder sb = new StringBuilder();
+		sb.append('@')
+				.append(annotationClass.getName())
+				.append('(');
+
+		Iterator<Map.Entry<String, Object>> it = data.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, Object> entry = it.next();
+			sb.append(entry.getKey())
+					.append('=')
+					.append(JavaUtils.toString(entry.getKey()));
+
+			if (it.hasNext()) {
+				sb.append(", ");
+			}
+		}
+		sb.append(')');
+
+		return sb.toString();
+	}
+
 	/**
 	 * <p>Checks if the given annotation is present or any of the class' fields or methods.</p>
 	 *
@@ -793,7 +1024,7 @@ public final class ASMUtils {
 		//noinspection ForLoopReplaceableByForEach
 		for (int i = 0, len = fields.size(); i < len; ++i) {
 			FieldNode field = fields.get(i);
-			if (getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, desc) != null) {
+			if (getRawAnnotation(field.visibleAnnotations, field.invisibleAnnotations, desc) != null) {
 				return true;
 			}
 		}
@@ -801,7 +1032,7 @@ public final class ASMUtils {
 		//noinspection ForLoopReplaceableByForEach
 		for (int i = 0, len = methods.size(); i < len; ++i) {
 			MethodNode method = methods.get(i);
-			if (getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, desc) != null) {
+			if (getRawAnnotation(method.visibleAnnotations, method.invisibleAnnotations, desc) != null) {
 				return true;
 			}
 		}
@@ -816,8 +1047,8 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null
 	 */
 	@Nullable
-	public static AnnotationNode getAnnotation(FieldNode field, Class<? extends Annotation> ann) {
-		return getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, Type.getDescriptor(ann));
+	public static AnnotationNode getRawAnnotation(FieldNode field, Class<? extends Annotation> ann) {
+		return getRawAnnotation(field.visibleAnnotations, field.invisibleAnnotations, Type.getDescriptor(ann));
 	}
 
 	/**
@@ -827,8 +1058,8 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null
 	 */
 	@Nullable
-	public static AnnotationNode getAnnotation(FieldNode field, String annotationClass) {
-		return getAnnotation(field.visibleAnnotations, field.invisibleAnnotations, getDescriptor(annotationClass));
+	public static AnnotationNode getRawAnnotation(FieldNode field, String annotationClass) {
+		return getRawAnnotation(field.visibleAnnotations, field.invisibleAnnotations, getDescriptor(annotationClass));
 	}
 
 	/**
@@ -839,8 +1070,8 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null
 	 */
 	@Nullable
-	public static AnnotationNode getAnnotation(ClassNode clazz, Class<? extends Annotation> ann) {
-		return getAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, Type.getDescriptor(ann));
+	public static AnnotationNode getRawAnnotation(ClassNode clazz, Class<? extends Annotation> ann) {
+		return getRawAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, Type.getDescriptor(ann));
 	}
 
 	/**
@@ -850,8 +1081,8 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null
 	 */
 	@Nullable
-	public static AnnotationNode getAnnotation(ClassNode clazz, String annotationClass) {
-		return getAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, getDescriptor(annotationClass));
+	public static AnnotationNode getRawAnnotation(ClassNode clazz, String annotationClass) {
+		return getRawAnnotation(clazz.visibleAnnotations, clazz.invisibleAnnotations, getDescriptor(annotationClass));
 	}
 
 	/**
@@ -862,8 +1093,8 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null
 	 */
 	@Nullable
-	public static AnnotationNode getAnnotation(MethodNode method, Class<? extends Annotation> ann) {
-		return getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, Type.getDescriptor(ann));
+	public static AnnotationNode getRawAnnotation(MethodNode method, Class<? extends Annotation> ann) {
+		return getRawAnnotation(method.visibleAnnotations, method.invisibleAnnotations, Type.getDescriptor(ann));
 	}
 
 	/**
@@ -873,12 +1104,12 @@ public final class ASMUtils {
 	 * @return the AnnotationNode or null
 	 */
 	@Nullable
-	public static AnnotationNode getAnnotation(MethodNode method, String annotationClass) {
-		return getAnnotation(method.visibleAnnotations, method.invisibleAnnotations, getDescriptor(annotationClass));
+	public static AnnotationNode getRawAnnotation(MethodNode method, String annotationClass) {
+		return getRawAnnotation(method.visibleAnnotations, method.invisibleAnnotations, getDescriptor(annotationClass));
 	}
 
 	@Nullable
-	static AnnotationNode getAnnotation(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, String desc) {
+	static AnnotationNode getRawAnnotation(List<AnnotationNode> visAnn, List<AnnotationNode> invisAnn, String desc) {
 		AnnotationNode node = findAnnotation(visAnn, desc);
 		return node == null ? findAnnotation(invisAnn, desc) : node;
 	}
@@ -907,7 +1138,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(FieldNode field, Class<? extends Annotation> annotation) {
-		return getAnnotation(field, annotation) != null;
+		return getRawAnnotation(field, annotation) != null;
 	}
 
 	/**
@@ -918,7 +1149,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(FieldNode field, String annotationClass) {
-		return getAnnotation(field, annotationClass) != null;
+		return getRawAnnotation(field, annotationClass) != null;
 	}
 
 	/**
@@ -929,7 +1160,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(ClassNode clazz, Class<? extends Annotation> annotation) {
-		return getAnnotation(clazz, annotation) != null;
+		return getRawAnnotation(clazz, annotation) != null;
 	}
 
 	/**
@@ -940,7 +1171,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(ClassNode clazz, String annotationClass) {
-		return getAnnotation(clazz, annotationClass) != null;
+		return getRawAnnotation(clazz, annotationClass) != null;
 	}
 
 	/**
@@ -951,7 +1182,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(MethodNode method, Class<? extends Annotation> annotation) {
-		return getAnnotation(method, annotation) != null;
+		return getRawAnnotation(method, annotation) != null;
 	}
 
 	/**
@@ -962,7 +1193,7 @@ public final class ASMUtils {
 	 * @return true if the annotation is present
 	 */
 	public static boolean hasAnnotation(MethodNode method, String annotationClass) {
-		return getAnnotation(method, annotationClass) != null;
+		return getRawAnnotation(method, annotationClass) != null;
 	}
 
 	/**

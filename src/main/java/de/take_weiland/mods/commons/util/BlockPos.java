@@ -1,16 +1,22 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.primitives.UnsignedBytes;
-import de.take_weiland.mods.commons.nbt.NBTSerializer;
-import de.take_weiland.mods.commons.net.MCDataInputStream;
+import com.google.common.base.Objects;
+import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.net.MCDataOutputStream;
+import de.take_weiland.mods.commons.serialize.NBTSerializer;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
+import de.take_weiland.mods.commons.sync.Property;
+import de.take_weiland.mods.commons.sync.SyncableProperty;
+import de.take_weiland.mods.commons.sync.Watcher;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagInt;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -89,6 +95,10 @@ public final class BlockPos implements Comparable<BlockPos> {
 		}
 	}
 
+	public long toLong() {
+		return toLong(x, y, z);
+	}
+
 	@Override
 	public int compareTo(BlockPos o) {
 		int myY;
@@ -121,6 +131,11 @@ public final class BlockPos implements Comparable<BlockPos> {
 		return hash(x, y, z);
 	}
 
+	@Override
+	public String toString() {
+		return "BlockPos(" + x + ", " + y + ", " + z + ")";
+	}
+
 	public static int hash(int x, int y, int z) {
 		// shift z to avoid hash == y for x == z
 		return x ^ y ^ (z << 6);
@@ -132,43 +147,99 @@ public final class BlockPos implements Comparable<BlockPos> {
 		out.writeInt(z);
 	}
 
-	public static ByteStreamSerializer<BlockPos> streamSerializer() {
-		return streamSerializer;
+	private static final int X_Z_BITS = 26;
+	private static final long X_Z_MASK = (1L << X_Z_BITS) - 1L;
+
+	private static final long Y_BITS = 8L;
+	private static final long Y_MASK = (1L << Y_BITS) - 1L;
+	@SuppressWarnings("SuspiciousNameCombination")
+	private static final long Y_SHIFT = X_Z_BITS;
+
+	private static final long Z_SHIFT = Y_SHIFT + Y_BITS;
+
+	public static long toLong(int x, int y, int z) {
+		return x & X_Z_MASK
+				| (y & Y_MASK) << Y_SHIFT
+				| (z & X_Z_MASK) << Z_SHIFT;
 	}
 
-	public static NBTSerializer<BlockPos> nbtSerializer() {
-		return nbtSerializer;
+	private static final long X_RV_MASK = (1L << X_Z_BITS) - 1;
+	private static final long Y_RV_MASK = ((1L << Y_BITS) - 1) << Y_SHIFT;
+	private static final long Z_RV_MASK = ((1L << X_Z_BITS) - 1) << Z_SHIFT;
+	private static final long X_SIGN_BIT = 1 << (X_Z_BITS - 1);
+	private static final long Z_SIGN_BIT = 1L << (X_Z_BITS + X_Z_BITS + Y_BITS - 1);
+
+	private static final long NULL_LONG_VAL = 1L << 63;
+
+	public static BlockPos fromLong(long l) {
+		return new BlockPos((int) ((l & X_RV_MASK) | -(l & X_SIGN_BIT)),
+				(int) ((l & Y_RV_MASK) >>> 26),
+				(int) (((l & Z_RV_MASK) | -(l & Z_SIGN_BIT)) >> 34));
 	}
 
-	private static final ByteStreamSerializer<BlockPos> streamSerializer = new ByteStreamSerializer<BlockPos>() {
-		@Override
-		public void write(BlockPos instance, MCDataOutputStream out) {
-			out.writeInt(instance.x);
-			out.writeByte(instance.y);
-			out.writeInt(instance.z);
-		}
+	private enum ValueHandler implements NBTSerializer<BlockPos>, Watcher<BlockPos> {
 
-		@Override
-		public BlockPos read(MCDataInputStream in) {
-			return new BlockPos(in.readInt(), in.readUnsignedByte(), in.readInt());
-		}
-	};
+		@NBTSerializer.Provider(forType = BlockPos.class, method = SerializationMethod.VALUE)
+		@Watcher.Provider(forType = BlockPos.class, method = SerializationMethod.VALUE)
+		INSTANCE;
 
-	private static final NBTSerializer<BlockPos> nbtSerializer = new NBTSerializer<BlockPos>() {
+		// NBTSerializer
+
+		@Nonnull
 		@Override
-		public NBTBase serialize(BlockPos instance) {
-			NBTTagCompound nbt = new NBTTagCompound();
-			nbt.setInteger("x", instance.x);
-			nbt.setByte("y", (byte) instance.y);
-			nbt.setInteger("z", instance.z);
+		public <OBJ> NBTBase serialize(Property<BlockPos, OBJ> property, OBJ instance) {
+			BlockPos pos = property.get(instance);
+
+			NBTTagList nbt = new NBTTagList();
+			nbt.appendTag(new NBTTagInt("", pos.x));
+			nbt.appendTag(new NBTTagInt("", pos.y));
+			nbt.appendTag(new NBTTagInt("", pos.z));
+
 			return nbt;
 		}
 
 		@Override
-		public BlockPos deserialize(NBTBase nbt) {
-			NBTTagCompound comp = (NBTTagCompound) nbt;
-			return new BlockPos(comp.getInteger("x"), UnsignedBytes.toInt(comp.getByte("y")), comp.getInteger("z"));
+		public <OBJ> void deserialize(NBTBase nbt, Property<BlockPos, OBJ> property, OBJ instance) {
+			NBTTagList list = (NBTTagList) nbt;
+			BlockPos pos = new BlockPos(
+					((NBTTagInt) list.tagAt(0)).data,
+					((NBTTagInt) list.tagAt(1)).data,
+					((NBTTagInt) list.tagAt(2)).data
+			);
+			property.set(pos, instance);
 		}
-	};
+
+		// Watcher
+
+		@Override
+		public <OBJ> void setup(SyncableProperty<BlockPos, OBJ> property, OBJ instance) { }
+
+		@Override
+		public <OBJ> void initialWrite(MCDataOutput out, SyncableProperty<BlockPos, OBJ> property, OBJ instance) {
+			write(out, property.get(instance));
+		}
+
+		private static void write(MCDataOutput out, @Nullable BlockPos blockPos) {
+			out.writeLong(blockPos == null ? NULL_LONG_VAL : blockPos.toLong());
+		}
+
+		@Override
+		public <OBJ> boolean hasChanged(SyncableProperty<BlockPos, OBJ> property, OBJ instance) {
+			return !Objects.equal(property.get(instance), property.getData(instance));
+		}
+
+		@Override
+		public <OBJ> void writeAndUpdate(MCDataOutput out, SyncableProperty<BlockPos, OBJ> property, OBJ instance) {
+			BlockPos pos = property.get(instance);
+			write(out, pos);
+			property.setData(pos, instance);
+		}
+
+		@Override
+		public <OBJ> void read(MCDataInput in, SyncableProperty<BlockPos, OBJ> property, OBJ instance) {
+			long l = in.readLong();
+			property.set(l == NULL_LONG_VAL ? null : fromLong(l), instance);
+		}
+	}
 
 }

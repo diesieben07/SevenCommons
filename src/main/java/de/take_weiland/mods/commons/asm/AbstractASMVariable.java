@@ -6,7 +6,9 @@ import org.objectweb.asm.tree.AnnotationNode;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 abstract class AbstractASMVariable implements ASMVariable {
 
@@ -21,25 +23,29 @@ abstract class AbstractASMVariable implements ASMVariable {
 	}
 
 	@Override
-	public final AnnotationNode getterAnnotation(Class<? extends Annotation> ann) {
-		return ASMUtils.getAnnotation(getterAnns(true), getterAnns(false), Type.getDescriptor(ann));
+	public final AnnotationNode getRawAnnotation(Class<? extends Annotation> ann) {
+		return ASMUtils.getRawAnnotation(getterAnns(true), getterAnns(false), Type.getDescriptor(ann));
 	}
 
 	@Override
-	public AnnotationNode getterAnnotation(String internalName) {
-		return ASMUtils.getAnnotation(getterAnns(true), getterAnns(false), ASMUtils.getDescriptor(internalName));
+	public AnnotationNode getRawAnnotation(String internalName) {
+		return ASMUtils.getRawAnnotation(getterAnns(true), getterAnns(false), ASMUtils.getDescriptor(internalName));
 	}
 
-	@Override
-	public final AnnotationNode setterAnnotation(Class<? extends Annotation> ann) {
-		checkWritable();
-		return ASMUtils.getAnnotation(setterAnns(true), setterAnns(false), Type.getDescriptor(ann));
-	}
+	private Map<Class<?>, Object> annotations;
 
 	@Override
-	public AnnotationNode setterAnnotation(String internalName) {
-		checkWritable();
-		return ASMUtils.getAnnotation(setterAnns(true), setterAnns(false), ASMUtils.getDescriptor(internalName));
+	public <A extends Annotation> A getAnnotation(Class<A> ann) {
+		if (annotations == null) {
+			annotations = new HashMap<>();
+		}
+		Object o = annotations.get(ann);
+		if (o == null && !annotations.containsKey(ann)) {
+			o = ASMUtils.makeReal(getRawAnnotation(ann), ann);
+			annotations.put(ann, o);
+		}
+		//noinspection unchecked
+		return (A) o;
 	}
 
 	@Override
@@ -75,8 +81,6 @@ abstract class AbstractASMVariable implements ASMVariable {
 	}
 
 	abstract List<AnnotationNode> getterAnns(boolean visible);
-
-	abstract List<AnnotationNode> setterAnns(boolean visible);
 
 	abstract int setterModifiers();
 

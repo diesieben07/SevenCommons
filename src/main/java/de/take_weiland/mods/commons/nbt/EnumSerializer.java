@@ -1,56 +1,32 @@
 package de.take_weiland.mods.commons.nbt;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import de.take_weiland.mods.commons.serialize.NBTSerializer;
 import de.take_weiland.mods.commons.serialize.SerializationMethod;
-import de.take_weiland.mods.commons.serialize.TypeSpecification;
+import de.take_weiland.mods.commons.sync.Property;
 import net.minecraft.nbt.NBTBase;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
 * @author diesieben07
 */
-class EnumSerializer<E extends Enum<E>> implements NBTSerializer<E> {
+@SuppressWarnings("rawtypes")
+@ParametersAreNonnullByDefault
+enum EnumSerializer implements NBTSerializer<Enum> {
 
-	private static final LoadingCache<Class<? extends Enum<?>>, EnumSerializer<?>> cache = CacheBuilder.newBuilder()
-			.concurrencyLevel(2)
-			.build(new CacheLoader<Class<? extends Enum<?>>, EnumSerializer<?>>() {
-				@SuppressWarnings({"unchecked", "rawtypes"})
-				@Override
-				public EnumSerializer<?> load(@Nonnull Class<? extends Enum<?>> key) throws Exception {
-					return new EnumSerializer(key);
-				}
-			});
-
-	@SuppressWarnings("unchecked")
-	@NBTSerializer.Provider(method = SerializationMethod.VALUE)
-	public static Object provider(TypeSpecification<?> type) {
-		Class<?> rawType = type.getRawType();
-		if (rawType.isEnum()) {
-			return cache.getUnchecked((Class<? extends Enum<?>>) rawType);
-		} else {
-			return null;
-		}
-	}
-
-	private final Class<E> clazz;
-
-	EnumSerializer(Class<E> clazz) {
-		this.clazz = clazz;
-	}
+	@NBTSerializer.Provider(forType = Enum.class, method = SerializationMethod.VALUE)
+	INSTANCE;
 
 	@Nonnull
 	@Override
-	public NBTBase serialize(@Nullable E instance) {
-		return NBTData.writeEnum(instance);
+	public <OBJ> NBTBase serialize(Property<Enum, OBJ> property, OBJ instance) {
+		return NBTData.writeEnum(property.get(instance));
 	}
 
 	@Override
-	public E deserialize(@Nullable NBTBase nbt) {
-		return NBTData.readEnum(nbt, clazz);
+	public <OBJ> void deserialize(@Nullable NBTBase nbt, Property<Enum, OBJ> property, OBJ instance) {
+		property.set(NBTData.readEnum(nbt, (Class) property.getRawType()), instance);
 	}
 }

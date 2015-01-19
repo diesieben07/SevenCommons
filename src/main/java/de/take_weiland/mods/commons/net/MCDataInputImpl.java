@@ -429,7 +429,8 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 
 	@Override
 	public BlockPos readCoords() {
-		return BlockPos.streamSerializer().read(this);
+//		return BlockPos.streamSerializer().read(this);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

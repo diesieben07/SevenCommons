@@ -50,46 +50,22 @@ public interface ASMVariable {
 	/**
 	 * <p>Get an {@code AnnotationNode} for the given annotation class,
 	 * if it is present on the getter / the field of this variable.</p>
-	 * <p>If this variable is not represented by a getter and setter, this method and
-	 * {@link #setterAnnotation(Class)} have the same functionality.</p>
 	 *
 	 * @param ann the annotation class
 	 * @return an AnnotationNode
 	 */
-	AnnotationNode getterAnnotation(Class<? extends Annotation> ann);
+	AnnotationNode getRawAnnotation(Class<? extends Annotation> ann);
+
+	<A extends Annotation> A getAnnotation(Class<A> ann);
 
 	/**
 	 * <p>Get an {@code AnnotationNode} for the given annotation class,
 	 * if it is present on the getter / the field of this variable.</p>
-	 * <p>If this variable is not represented by a getter and setter, this method and
-	 * {@link #setterAnnotation(Class)} have the same functionality.</p>
 	 *
 	 * @param internalName the internal name of the annotation class
 	 * @return an AnnotationNode
 	 */
-	AnnotationNode getterAnnotation(String internalName);
-
-	/**
-	 * <p>Get an {@code AnnotationNode} for the given annotation class,
-	 * if it is present on the setter / the field of this variable.</p>
-	 * <p>If this variable is not represented by a getter and setter, this method and
-	 * {@link #getterAnnotation(Class)} have the same functionality.</p>
-	 *
-	 * @param ann the annotation class
-	 * @return an AnnotationNode
-	 */
-	AnnotationNode setterAnnotation(Class<? extends Annotation> ann);
-
-	/**
-	 * <p>Get an {@code AnnotationNode} for the given annotation class,
-	 * if it is present on the setter / the field of this variable.</p>
-	 * <p>If this variable is not represented by a getter and setter, this method and
-	 * {@link #getterAnnotation(Class)} have the same functionality.</p>
-	 *
-	 * @param internalName the internal name of the annotation class
-	 * @return an AnnotationNode
-	 */
-	AnnotationNode setterAnnotation(String internalName);
+	AnnotationNode getRawAnnotation(String internalName);
 
 	/**
 	 * <p>Determine if the given modifier is present on the getter / the field of this variable.</p>

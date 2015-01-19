@@ -7,15 +7,16 @@ import com.google.common.reflect.TypeToken;
 import cpw.mods.fml.common.discovery.ASMDataTable;
 import cpw.mods.fml.common.discovery.asm.ModAnnotation;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.serialize.*;
+import de.take_weiland.mods.commons.serialize.NBTSerializer;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
+import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Watcher;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.Type;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
+import java.lang.invoke.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -23,7 +24,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.invoke.MethodType.methodType;
 
@@ -32,62 +32,44 @@ import static java.lang.invoke.MethodType.methodType;
  */
 public final class SerializerRegistry {
 
+	public static final String GET_NBT_SERIALIZER = "nbt_serializer";
+
 	private static SerializerRegistry nbtRegistry;
-	private static SerializerRegistry streamRegistry;
 	private static SerializerRegistry watcherRegistry;
+
+	public static CallSite indyBootstrap(MethodHandles.Lookup lookup, String method, MethodType type, Class<?> clazz, String propertyField) throws Throwable {
+		Field field = clazz.getDeclaredField(propertyField);
+		field.setAccessible(true);
+		TypeSpecification<?> spec = (TypeSpecification<?>) field.get(null);
+
+		if (method.equals(GET_NBT_SERIALIZER)) {
+			System.out.println("Finding serializer for " + spec);
+			return new ConstantCallSite(MethodHandles.constant(NBTSerializer.class, nbtRegistry.findSerializer(spec)));
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
 
 	@SuppressWarnings("unchecked")
 	public static <T> NBTSerializer<T> getNBTSerializer(TypeSpecification<T> type) {
-		checkMethod(type, SerializationMethod.VALUE);
-		// we know this cast must succeed
 		return (NBTSerializer<T>) nbtRegistry.findSerializer(type);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> NBTSerializer.Contents<T> getNBTSerializerContent(TypeSpecification<T> type) {
-		checkMethod(type, SerializationMethod.CONTENTS);
-		return (NBTSerializer.Contents<T>) nbtRegistry.findSerializer(type);
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> ByteStreamSerializer<T> getStreamSerializer(TypeSpecification<T> type) {
-		checkMethod(type, SerializationMethod.VALUE);
-		return (ByteStreamSerializer<T>) streamRegistry.findSerializer(type);
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> ByteStreamSerializer.Contents<T> getStreamSerializerContents(TypeSpecification<T> type) {
-		checkMethod(type, SerializationMethod.CONTENTS);
-		return (ByteStreamSerializer.Contents<T>) streamRegistry.findSerializer(type);
-	}
-
-	@SuppressWarnings("unchecked")
 	public static <T> Watcher<T> getWatcher(TypeSpecification<T> type) {
+		// TODO
 		return (Watcher<T>) watcherRegistry.findSerializer(type);
-	}
-
-	private static void checkMethod(TypeSpecification<?> type, SerializationMethod expected) {
-		checkArgument(type.getDesiredMethod() == expected, "Invalid type for SerializationMethod." + expected.name());
 	}
 
 	public static void init(ASMDataTable data) {
 		try {
 			nbtRegistry = new SerializerRegistry(
 					NBTSerializer.class,
-					NBTSerializer.Contents.class,
 					NBTSerializer.Provider.class,
 					data
 			);
 
-			streamRegistry = new SerializerRegistry(
-					ByteStreamSerializer.class,
-					ByteStreamSerializer.Contents.class,
-					ByteStreamSerializer.Provider.class,
-					data
-			);
-
 			watcherRegistry = new SerializerRegistry(
-					Watcher.class,
 					Watcher.class,
 					Watcher.Provider.class,
 					data
@@ -101,14 +83,12 @@ public final class SerializerRegistry {
 	private static final String ANNOTATION_TYPE_KEY = "forType";
 	private static final String ANNOTATION_METHOD_KEY = "method";
 
-	private final Class<?> valueSerializerIface;
-	private final Class<?> contentSerializerIface;
+	private final Class<?> iface;
 
 	private final ListMultimap<Class<?>, MethodHandle> registry;
 
-	private SerializerRegistry(Class<?> valueSerializerIface, Class<?> contentSerializerIface, Class<? extends Annotation> annotation, ASMDataTable data) throws ReflectiveOperationException {
-		this.valueSerializerIface = valueSerializerIface;
-		this.contentSerializerIface = contentSerializerIface;
+	private SerializerRegistry(Class<?> iface, Class<? extends Annotation> annotation, ASMDataTable data) throws ReflectiveOperationException {
+		this.iface = iface;
 
 		ImmutableListMultimap.Builder<Class<?>, MethodHandle> builder = ImmutableListMultimap.builder();
 
@@ -188,16 +168,7 @@ public final class SerializerRegistry {
 			throw JavaUtils.throwUnchecked(t);
 		}
 		if (retVal != null) {
-			switch (spec.getDesiredMethod()) {
-				case CONTENTS:
-					checkReturn(contentSerializerIface, retVal, mh);
-					break;
-				case VALUE:
-					checkReturn(valueSerializerIface, retVal, mh);
-					break;
-				default:
-					throw new IllegalArgumentException();
-			}
+			checkReturn(iface, retVal, mh);
 		}
 		return retVal;
 	}

@@ -8,7 +8,8 @@ import de.take_weiland.mods.commons.asm.info.MemberInfo;
 import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.internal.sync.SyncType;
 import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
-import de.take_weiland.mods.commons.internal.transformers.AbstractAnalyzingTransformer;
+import de.take_weiland.mods.commons.internal.transformers.ClassWithProperties;
+import de.take_weiland.mods.commons.internal.transformers.PropertyBasedTransformer;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.sync.Sync;
@@ -29,10 +30,12 @@ import static org.objectweb.asm.Type.*;
 /**
  * @author diesieben07
  */
-public class SyncTransformer extends AbstractAnalyzingTransformer {
+public class SyncTransformer implements PropertyBasedTransformer {
 
 	@Override
-	public boolean transform(ClassNode clazz, ClassInfo classInfo) {
+	public boolean transform(ClassWithProperties classWithProperties) {
+		ClassNode clazz = classWithProperties.clazz;
+		ClassInfo classInfo = classWithProperties.classInfo;
 		boolean hasAnn = false;
 		for (FieldNode field : clazz.fields) {
 			if (ASMUtils.hasAnnotation(field, Sync.class)) {
@@ -67,7 +70,7 @@ public class SyncTransformer extends AbstractAnalyzingTransformer {
 			throw new RuntimeException("Don't know how to @Sync in class " + clazz.name);
 		}
 
-		TransformState state = new TransformState(clazz, type, classInfo);
+		TransformState state = new TransformState(type, classWithProperties);
 		countSupers(state, classInfo);
 
 		List<ASMVariable> vars = ASMVariables.allWith(clazz, Sync.class, CodePieces.getThis());

@@ -438,7 +438,7 @@ public final class CodePieces {
 		return new InDyHelper(name, desc, args);
 	}
 
-	public static class InDyHelper {
+	public static final class InDyHelper {
 
 		private final String name;
 		private final String desc;

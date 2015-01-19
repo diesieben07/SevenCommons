@@ -7,18 +7,12 @@ import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
 import de.take_weiland.mods.commons.meta.Subtype;
-import de.take_weiland.mods.commons.nbt.NBTData;
-import de.take_weiland.mods.commons.nbt.NBTSerializer;
-import de.take_weiland.mods.commons.net.MCDataInputStream;
-import de.take_weiland.mods.commons.net.MCDataOutputStream;
 import de.take_weiland.mods.commons.templates.SCItemBlock;
 import de.take_weiland.mods.commons.templates.TypedItemBlock;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagShort;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
@@ -153,24 +147,6 @@ public final class Blocks {
 		return Block.blocksList[id];
 	}
 
-	/**
-	 * <p>Get a {@code ByteStreamSerializer} for Blocks. The serializer supports null values.</p>
-	 * @return a ByteStreamSerializer
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends Block> ByteStreamSerializer<T> streamSerializer() {
-		return (ByteStreamSerializer<T>) streamSerializer;
-	}
-
-	/**
-	 * <p>Get an {@code NBTSerializer} for Blocks. The serializer supports null values.</p>
-	 * @return an NBTSerializer
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends Block> NBTSerializer<T> nbtSerializer() {
-		return (NBTSerializer<T>) nbtSerializer;
-	}
-
 	private static Class<? extends ItemBlock> getItemBlockClass(Block block, @Nullable Class<? extends ItemBlock> itemBlock) {
 		Class<? extends ItemBlock> defaultClass = getDefaultItemBlock(block);
 		if (itemBlock == null) {
@@ -187,35 +163,6 @@ public final class Blocks {
 		return block instanceof HasSubtypes ? TypedItemBlock.class : SCItemBlock.class;
 	}
 
-	private static final NBTSerializer<Block> nbtSerializer = new NBTSerializer<Block>() {
-
-		@Override
-		public NBTBase serialize(@Nullable Block instance) {
-			if (instance == null) {
-				return NBTData.serializedNull();
-			} else {
-				return new NBTTagShort("", (short) instance.blockID);
-			}
-		}
-
-		@Override
-		public Block deserialize(NBTBase nbt) {
-			return NBTData.isSerializedNull(nbt) ? null : Block.blocksList[((NBTTagShort) nbt).data];
-		}
-	};
-
 	private static final short BLOCK_NULL_ID = -1;
 
-	private static final ByteStreamSerializer<Block> streamSerializer = new ByteStreamSerializer<Block>() {
-		@Override
-		public void write(@Nullable Block instance, MCDataOutputStream out) {
-			out.writeShort(instance == null ? BLOCK_NULL_ID : instance.blockID);
-		}
-
-		@Override
-		public Block read(MCDataInputStream in) {
-			int id = in.readShort();
-			return id == BLOCK_NULL_ID ? null : Block.blocksList[id];
-		}
-	};
 }

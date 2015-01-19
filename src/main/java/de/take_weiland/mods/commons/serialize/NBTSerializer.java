@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.serialize;
 
 import de.take_weiland.mods.commons.internal.AnnotationNull;
+import de.take_weiland.mods.commons.sync.Property;
 import net.minecraft.nbt.NBTBase;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -16,49 +16,25 @@ import java.lang.annotation.Target;
  *
  * @author diesieben07
  */
+@ParametersAreNonnullByDefault
 public interface NBTSerializer<T> {
 
 	/**
-	 * <p>Serialize the given instance to NBT.</p>
+	 * <p>Serialize the value of the given property to NBT.</p>
+	 * @param property the property
 	 * @param instance the instance
 	 * @return NBT data
 	 */
-	@NotNull
 	@Nonnull
-	NBTBase serialize(T instance);
+	<OBJ> NBTBase serialize(Property<T, OBJ> property, OBJ instance);
 
 	/**
-	 * <p>Deserialize the given NBT data into an instance.</p>
+	 * <p>Deserialize the given property from NBT.</p>
 	 * @param nbt the NBT data
-	 * @return the deserialized instance
+	 * @param property the property
+	 * @param instance the instance
 	 */
-	T deserialize(@Nullable NBTBase nbt);
-
-	/**
-	 * <p>A serializer that can serialize the contents of objects of type {@code T} to NBT.
-	 * As opposed to {@link de.take_weiland.mods.commons.serialize.NBTSerializer}
-	 * such a serializer never touches the instance being passed in but directly modifies it's contents.</p>
-	 * <p>This is used for e.g. FluidTanks.</p>
-	 *
-	 */
-	interface Contents<T> {
-
-		/**
-		 * <p>Serialize the contents of the given instance to NBT.</p>
-		 * @param instance the instance
-		 * @return NBT data
-		 */
-		@Nonnull
-		NBTBase serialize(@Nonnull T instance);
-
-		/**
-		 * <p>Deserialize the given NBT data into the contents of the given instance.</p>
-		 * @param instance the instance
-		 * @param nbt the NBT data
-		 */
-		void deserialize(@Nonnull T instance, @Nullable NBTBase nbt);
-
-	}
+	<OBJ> void deserialize(NBTBase nbt, Property<T, OBJ> property, OBJ instance);
 
 	/**
 	 * <p>A Provider for NBTSerializers.</p>

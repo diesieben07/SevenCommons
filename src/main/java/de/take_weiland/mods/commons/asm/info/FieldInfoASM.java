@@ -35,7 +35,7 @@ class FieldInfoASM extends FieldInfo {
 
 	@Override
 	public AnnotationInfo getAnnotation(Class<? extends Annotation> annotation) {
-		AnnotationNode ann = ASMUtils.getAnnotation(field, annotation);
+		AnnotationNode ann = ASMUtils.getRawAnnotation(field, annotation);
 		return ann == null ? null : new AnnotationInfoASM(this, ann);
 	}
 

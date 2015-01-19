@@ -2,8 +2,10 @@ package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.asm.ClassInfoClassWriter;
 import de.take_weiland.mods.commons.internal.SerializerRegistry;
+import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
+import de.take_weiland.mods.commons.sync.Property;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
@@ -33,11 +35,15 @@ public final class SyncASMHooks {
 
 	private static final List<Class<?>> keepLoaded = Collections.synchronizedList(new ArrayList<Class<?>>());
 
-	public static SyncableProperty<?, ?> makeProperty(Field field, Field dataField) {
+	public static Property<?, ?> makeProperty(Field field) {
+		return new FieldProperty(field, field, ToNbt.class);
+	}
+
+	public static SyncableProperty<?, ?> makeSyncableProperty(Field field, Field dataField) {
 		return new FieldProperty(field, dataField, Sync.class);
 	}
 
-	public static SyncableProperty<?, ?> makeProperty(Method getter, Method setter, Field dataField) {
+	public static SyncableProperty<?, ?> makeSyncableProperty(Method getter, Method setter, Field dataField) {
 		return new GetterSetterProperty(getter, setter, dataField, Sync.class);
 	}
 

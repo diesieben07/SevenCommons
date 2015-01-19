@@ -133,10 +133,6 @@ public final class NBTData {
         return isSerializedNull(nbt) ? null : ItemStack.loadItemStackFromNBT((NBTTagCompound) nbt);
     }
 
-    public static ItemStack readItemStack(@Nullable NBTBase nbt, ItemStack stack) {
-
-    }
-
     /**
      * <p>Write the given FluidStack to NBT.</p>
      * @param stack the FluidStack

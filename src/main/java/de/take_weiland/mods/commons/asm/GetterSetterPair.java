@@ -109,12 +109,6 @@ class GetterSetterPair extends ClassBoundASMVariable {
 	}
 
 	@Override
-	protected List<AnnotationNode> setterAnns(boolean visible) {
-		assert setter != null;
-		return visible ? setter.visibleAnnotations : setter.invisibleAnnotations;
-	}
-
-	@Override
 	protected ElementType annotationType() {
 		return ElementType.METHOD;
 	}

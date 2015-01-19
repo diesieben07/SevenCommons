@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
-import de.take_weiland.mods.commons.nbt.NBTSerializer;
 import de.take_weiland.mods.commons.serialize.ByteStreamSerializer;
+import de.take_weiland.mods.commons.serialize.NBTSerializer;
 import de.take_weiland.mods.commons.sync.Watcher;
 
 /**
