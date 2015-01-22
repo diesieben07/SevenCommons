@@ -298,7 +298,16 @@ public final class ASMUtils {
 	private static final String MUTEX_NAME = "_sc$lateinit$m";
 	private static final String INIT_METHOD = "_sc$lateinit";
 	private static final String INIT_CODE_METHOD = "_sc$lateinit$c";
+	private static final String HAS_INIT_FIELD = "_sc$lateinit$f";
 
+	/**
+	 * <p>Add the given code to the late-static initializer of the given class. The code will be executed the first time any
+	 * constructor is called, immediately after the super constructor is called.</p>
+	 * <p>The generated code will be threadsafe and have almost 0 overhead on constructor invocation.</p>
+	 * <p>The code may not contain exitpoints (such as return or throws) or this method may produce faulty code.</p>
+	 * @param clazz the class
+	 * @param code the code to execute
+	 */
 	public static void initializeLate(ClassNode clazz, CodePiece code) {
 		FieldNode mutexField = findField(clazz, MUTEX_NAME);
 		MethodNode codeMethod;
@@ -307,38 +316,65 @@ public final class ASMUtils {
 			clazz.fields.add(mutexField);
 			initializeStatic(clazz, CodePieces.setField(clazz, mutexField, CodePieces.instantiate(Object.class)));
 
-			codeMethod = new MethodNode(ACC_PRIVATE | ACC_FINAL, INIT_CODE_METHOD, Type.getMethodDescriptor(VOID_TYPE), null, null);
+			FieldNode hasInitField = new FieldNode(ACC_PRIVATE | ACC_STATIC, HAS_INIT_FIELD, Type.BOOLEAN_TYPE.getDescriptor(), null, null);
+			clazz.fields.add(hasInitField);
+
+			codeMethod = new MethodNode(ACC_PRIVATE, INIT_CODE_METHOD, Type.getMethodDescriptor(VOID_TYPE), null, null);
 			clazz.methods.add(codeMethod);
 			codeMethod.instructions.add(new InsnNode(RETURN));
 
-			MethodNode initMethod = new MethodNode(ACC_PRIVATE | ACC_FINAL, INIT_METHOD, Type.getMethodDescriptor(VOID_TYPE), null, null);
+			MethodNode initMethod = new MethodNode(ACC_PRIVATE, INIT_METHOD, Type.getMethodDescriptor(VOID_TYPE), null, null);
 			clazz.methods.add(initMethod);
+			InsnList insns = initMethod.instructions;
+
+			ASMCondition hasInit = ASMCondition.isTrue(CodePieces.getField(clazz, hasInitField));
 
 			LabelNode start = new LabelNode();
 			LabelNode end = new LabelNode();
 			LabelNode finallyLbl = new LabelNode();
+			LabelNode finally2nd = new LabelNode();
 
-			CodePieces.getField(clazz, mutexField).appendTo(initMethod.instructions);
-			initMethod.instructions.add(new InsnNode(DUP));
-			initMethod.instructions.add(new VarInsnNode(ASTORE, 1));
-			initMethod.instructions.add(new InsnNode(MONITORENTER));
-			initMethod.instructions.add(start);
+			CodePieces.getField(clazz, mutexField).appendTo(insns);
+			insns.add(new InsnNode(DUP));
+			insns.add(new VarInsnNode(ASTORE, 1));
+			insns.add(new InsnNode(MONITORENTER));
+			insns.add(start);
+
+			hasInit.doIfTrue(CodePieces.of(new InsnNode(RETURN)))
+					.appendTo(insns);
 
 			CodePieces.invokeSpecial(clazz.name, INIT_CODE_METHOD, CodePieces.getThis(), void.class)
-					.appendTo(initMethod.instructions);
+					.appendTo(insns);
 
-			initMethod.instructions.add(end);
+			CodePieces.setField(clazz, hasInitField, CodePieces.constant(true))
+					.appendTo(insns);
 
-			initMethod.instructions.add(new InsnNode(RETURN));
+			insns.add(new VarInsnNode(ALOAD, 1));
+			insns.add(new InsnNode(MONITOREXIT));
+			insns.add(end);
 
+			insns.add(new InsnNode(RETURN));
 
+			insns.add(finallyLbl);
+			insns.add(new VarInsnNode(ASTORE, 2));
+			insns.add(new VarInsnNode(ALOAD, 1));
+			insns.add(new InsnNode(MONITOREXIT));
+
+			insns.add(finally2nd);
+
+			insns.add(new VarInsnNode(ALOAD, 2));
+			insns.add(new InsnNode(ATHROW));
+
+			initMethod.tryCatchBlocks.add(new TryCatchBlockNode(start, end, finallyLbl, null));
+			initMethod.tryCatchBlocks.add(new TryCatchBlockNode(finallyLbl, finally2nd, finallyLbl, null));
 
 			CodePiece invoke = CodePieces.invokeVirtual(clazz.name, INIT_METHOD, CodePieces.getThis(), void.class);
-			initialize(clazz, invoke);
-
+			initialize(clazz, hasInit.doIfFalse(invoke));
+		} else {
+			codeMethod = requireMethod(clazz, INIT_CODE_METHOD);
 		}
 
-
+		code.prependTo(codeMethod.instructions);
 	}
 
 	/**
@@ -834,19 +870,34 @@ public final class ASMUtils {
 
 	// *** annotation utilities *** //
 
-	public static <A extends Annotation> A makeReal(@Nullable AnnotationNode data, final Class<A> annotationClass) {
-		if (data == null) {
+	/**
+	 * <p>Turn the given AnnotationNode into an actual instance of it's annotation class.</p>
+	 * <p>If {@code annotationNode} is null, null is returned.</p>
+	 * @param annotationNode the AnnotationNode
+	 * @param annotationClass the annotation class
+	 * @return a instance of the annotation or null
+	 */
+	public static <A extends Annotation> A makeReal(@Nullable AnnotationNode annotationNode, final Class<A> annotationClass) {
+		if (annotationNode == null) {
 			return null;
 		}
+		if (!annotationNode.desc.equals(Type.getDescriptor(annotationClass))) {
+			throw new IllegalArgumentException("Annotation mismatch");
+		}
 
-		final Map<String, Object> map = buildMap(data, annotationClass);
+		final Map<String, Object> map = buildMap(annotationNode, annotationClass);
 
+		// This proxy class is created most likely anyways
+		// since Annotations use them internally, too
 		return Reflection.newProxy(annotationClass, new InvocationHandler() {
 			@Override
-			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			public Object invoke(Object proxy, Method method, @Nullable Object[] args) throws Throwable {
 				String name = method.getName();
-				if (name.equals("equals") && args.length == 1) {
+				if (name.equals("equals") && args != null && args.length == 1) {
 					return annEqImpl(map, annotationClass, args[0]);
+				}
+				if (args != null) {
+					throw new NoSuchMethodError();
 				}
 				switch (name) {
 					case "hashCode":
@@ -866,14 +917,32 @@ public final class ASMUtils {
 		});
 	}
 
+	/**
+	 * <p>Get the annotation of the given class, if present on the given ClassNode, null otherwise.</p>
+	 * @param clazz the ClassNode
+	 * @param annotation the annotation class
+	 * @return the annotation or null
+	 */
 	public static <A extends Annotation> A getAnnotation(ClassNode clazz, Class<A> annotation) {
 		return makeReal(getRawAnnotation(clazz, annotation), annotation);
 	}
 
+	/**
+	 * <p>Get the annotation of the given class, if present on the given FieldNode, null otherwise.</p>
+	 * @param field the FieldNode
+	 * @param annotation the annotation class
+	 * @return the annotation or null
+	 */
 	public static <A extends Annotation> A getAnnotation(FieldNode field, Class<A> annotation) {
 		return makeReal(getRawAnnotation(field, annotation), annotation);
 	}
 
+	/**
+	 * <p>Get the annotation of the given class, if present on the given MethodNode, null otherwise.</p>
+	 * @param method the MethodNode
+	 * @param annotation the annotation class
+	 * @return the annotation or null
+	 */
 	public static <A extends Annotation> A getAnnotation(MethodNode method, Class<A> annotation) {
 		return makeReal(getRawAnnotation(method, annotation), annotation);
 	}

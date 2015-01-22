@@ -7,7 +7,6 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.nbt.ToNbt;
-import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -15,7 +14,9 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
@@ -24,12 +25,12 @@ import net.minecraftforge.event.entity.EntityEvent;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.EnumSet;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @NetworkMod()
 public class testmod_sc {
 
-	@ToNbt(key = "helloWorld")
 	private String enumSet;
 
 	public static void main(@Nonnull String[] bar) throws NoSuchFieldException {
@@ -42,11 +43,7 @@ public class testmod_sc {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-//		Watcher<?> watcher = SerializerRegistry.getWatcher(new TypeSpecification.Predefined<>(BitSet.class, SerializationMethod.DEFAULT));
-//		System.out.println(JavaUtils.defaultToString(watcher));
-		testmod_sc.class.getDeclaredMethod("_sc$tonbt", NBTTagCompound.class).invoke(this, new NBTTagCompound());
-
-		Reflection.initialize(PlayerProps.class);
+		Reflection.initialize(TestTE.class);
 		System.exit(0);
 	}
 
@@ -89,9 +86,23 @@ public class testmod_sc {
 		}
 	}
 
+	private static abstract class SuperTE extends TileEntity {
+
+		@ToNbt
+		private EnumSet<ForgeDirection> helloWorld;
+
+	}
+
+	private static class TestTE extends SuperTE {
+
+		@ToNbt
+		private String foobar;
+
+	}
+
 	private static class PlayerProps implements IExtendedEntityProperties {
 
-		@Sync
+		@ToNbt
 		String someString;
 
 		@Override

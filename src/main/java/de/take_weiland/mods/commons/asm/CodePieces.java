@@ -1205,7 +1205,7 @@ public final class CodePieces {
 		}
 	}
 
-	private static CodePiece ldcConstant(Object o) {
+	private static CodePiece ldcConstant(@Nullable Object o) {
 		if (o == null) {
 			return constantNull();
 		} else {

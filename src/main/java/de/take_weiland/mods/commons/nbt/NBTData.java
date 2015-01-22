@@ -218,30 +218,12 @@ public final class NBTData {
         }
     }
 
-    public static void writeBitSet(@Nullable BitSet bitSet, NBTTagCompound nbt, String key) {
-        nbt.setTag(key, writeBitSet(bitSet));
-    }
-
     @Nullable
     public static BitSet readBitSet(@Nullable NBTBase nbt) {
         if (isSerializedNull(nbt)) {
             return null;
         } else {
             return BitSet.valueOf(((NBTTagByteArray) nbt).byteArray);
-        }
-    }
-
-    @Nullable
-    public static BitSet readBitSet(@Nullable NBTBase nbt, @Nullable BitSet bitSet) {
-        BitSet read = readBitSet(nbt);
-        if (bitSet == null) {
-            return read;
-        } else if (read == null) {
-            return null;
-        } else {
-            bitSet.clear();
-            bitSet.or(read);
-            return bitSet;
         }
     }
 

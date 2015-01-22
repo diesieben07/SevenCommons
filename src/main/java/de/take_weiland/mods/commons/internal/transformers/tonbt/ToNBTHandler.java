@@ -7,6 +7,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import org.objectweb.asm.Type;
 
+import static de.take_weiland.mods.commons.asm.MCPNames.M_GET_TAG;
 import static de.take_weiland.mods.commons.asm.MCPNames.M_SET_TAG;
 
 /**
@@ -17,7 +18,13 @@ abstract class ToNBTHandler {
 	static ToNBTHandler create(ClassWithProperties clazz, ASMVariable var) {
 		Type type = var.getType();
 		if (ASMUtils.isPrimitive(type)) {
-			return new PrimitiveHandler(var, type);
+			return new PrimitiveHandler(var);
+		} else if (SimpleIntrinsicsHandler.isIntrinsic(type)) {
+			return new SimpleIntrinsicsHandler(type, var);
+		} else if (type.getInternalName().equals("java/util/EnumSet")) {
+			return new EnumSetHandler(clazz, var);
+		} else if (EnumHandler.isEnum(type)) {
+			return new EnumHandler(var);
 		} else {
 			return new DelegatingHandler(clazz, var);
 		}
@@ -47,5 +54,14 @@ abstract class ToNBTHandler {
 				NBTBase.class, makeNBT());
 	}
 
+	final CodePiece read(CodePiece nbtCompound) {
+		String getTagMethod = MCPNames.method(M_GET_TAG);
+		CodePiece tag = CodePieces.invokeVirtual(NBTTagCompound.class, getTagMethod, nbtCompound, NBTBase.class,
+				String.class, CodePieces.constant(key));
+		return consumeNBT(tag);
+	}
+
 	abstract CodePiece makeNBT();
+
+	abstract CodePiece consumeNBT(CodePiece nbt);
 }

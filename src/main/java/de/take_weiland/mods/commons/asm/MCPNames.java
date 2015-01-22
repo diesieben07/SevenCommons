@@ -239,6 +239,7 @@ public final class MCPNames {
 	public static final String F_NBT_DOUBLE_DATA = "field_74755_a";
 
 	public static final String M_SET_TAG = "func_74782_a";
+	public static final String M_GET_TAG = "func_74781_a";
 
 	public static final String M_NBT_GET_ID = "func_74732_a";
 

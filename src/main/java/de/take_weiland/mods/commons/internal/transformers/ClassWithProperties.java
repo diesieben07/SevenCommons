@@ -132,7 +132,7 @@ public final class ClassWithProperties {
 		return "_sc$prop$c$" + ident;
 	}
 
-	private static String identifier(ASMVariable var) {
+	public static String identifier(ASMVariable var) {
 		return (var.isField() ? "f$" : "m$") + var.rawName();
 	}
 

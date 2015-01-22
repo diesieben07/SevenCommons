@@ -32,23 +32,8 @@ import static java.lang.invoke.MethodType.methodType;
  */
 public final class SerializerRegistry {
 
-	public static final String GET_NBT_SERIALIZER = "nbt_serializer";
-
 	private static SerializerRegistry nbtRegistry;
 	private static SerializerRegistry watcherRegistry;
-
-	public static CallSite indyBootstrap(MethodHandles.Lookup lookup, String method, MethodType type, Class<?> clazz, String propertyField) throws Throwable {
-		Field field = clazz.getDeclaredField(propertyField);
-		field.setAccessible(true);
-		TypeSpecification<?> spec = (TypeSpecification<?>) field.get(null);
-
-		if (method.equals(GET_NBT_SERIALIZER)) {
-			System.out.println("Finding serializer for " + spec);
-			return new ConstantCallSite(MethodHandles.constant(NBTSerializer.class, nbtRegistry.findSerializer(spec)));
-		} else {
-			throw new UnsupportedOperationException();
-		}
-	}
 
 	@SuppressWarnings("unchecked")
 	public static <T> NBTSerializer<T> getNBTSerializer(TypeSpecification<T> type) {
