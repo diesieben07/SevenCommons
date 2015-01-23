@@ -41,26 +41,29 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 			handlers.add(ToNBTHandler.create(clazz, var));
 		}
 
+		int level = determineLevel(clazz.classInfo);
+		MethodNode levelMethod = makeLevelMethod(clazz.clazz, level);
+		ASMCondition isCurrentLvl = isCurrentLevel(clazz.clazz, levelMethod, level);
+
+		MethodNode writeMethod = makeWriteMethod(clazz.clazz, level > 0);
+		MethodContext writeContext = new MethodContext(writeMethod);
+
 		CodeBuilder writeCode = new CodeBuilder();
 		CodeBuilder readCode = new CodeBuilder();
 
 		CodePiece nbt = CodePieces.getLocal(1);
 		for (ToNBTHandler handler : handlers) {
 			handler.initialTransform();
-			writeCode.add(handler.write(nbt));
+			writeCode.add(handler.write(nbt, writeContext));
 			readCode.add(handler.read(nbt));
 		}
 		writeCode.add(new InsnNode(RETURN));
 		readCode.add(new InsnNode(RETURN));
 
-		CodePiece writeAll = writeCode.build();
+		writeCode.build().appendTo(writeMethod.instructions);
+
 		CodePiece readAll = readCode.build();
 
-		int level = determineLevel(clazz.classInfo);
-		MethodNode levelMethod = makeLevelMethod(clazz.clazz, level);
-		ASMCondition isCurrentLvl = isCurrentLevel(clazz.clazz, levelMethod, level);
-
-		MethodNode writeMethod = makeWriteMethod(clazz.clazz, writeAll, level > 0);
 		MethodNode readMethod = makeReadMethod(clazz.clazz, readAll, level > 0);
 
 		CodePiece callWrite = CodePieces.invoke(clazz.clazz.name, writeMethod, CodePieces.getThis(), nbt);
@@ -115,7 +118,7 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 		return ASMCondition.isSame(currentLevel, CodePieces.constant(myLevel), Type.INT_TYPE);
 	}
 
-	private static MethodNode makeWriteMethod(ClassNode clazz, CodePiece code, boolean callSuper) {
+	private static MethodNode makeWriteMethod(ClassNode clazz, boolean callSuper) {
 		String name = "_sc$tonbt$write";
 		String desc = Type.getMethodDescriptor(VOID_TYPE, getType(NBTTagCompound.class));
 		MethodNode method = new MethodNode(ACC_PROTECTED, name, desc, null, null);
@@ -125,7 +128,6 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 			method.instructions.add(new VarInsnNode(ALOAD, 1));
 			method.instructions.add(new MethodInsnNode(INVOKESPECIAL, clazz.superName, name, desc));
 		}
-		code.appendTo(method.instructions);
 		return method;
 	}
 

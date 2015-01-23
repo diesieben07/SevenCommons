@@ -751,38 +751,15 @@ public final class CodePieces {
 	}
 
 	public static CodePiece arrayGet(CodePiece array, CodePiece index, Type component) {
-		int opcode;
-		switch (component.getSort()) {
-			case Type.BOOLEAN:
-			case Type.BYTE:
-				opcode = BALOAD;
-				break;
-			case Type.CHAR:
-				opcode = CALOAD;
-				break;
-			case Type.SHORT:
-				opcode = SALOAD;
-				break;
-			case Type.INT:
-				opcode = IALOAD;
-				break;
-			case Type.LONG:
-				opcode = LALOAD;
-				break;
-			case Type.FLOAT:
-				opcode = FALOAD;
-				break;
-			case Type.DOUBLE:
-				opcode = DALOAD;
-				break;
-			case Type.OBJECT:
-			case Type.ARRAY:
-				opcode = AALOAD;
-				break;
-			default:
-				throw new IllegalArgumentException("Invalid type");
-		}
-		return array.append(index).append(new InsnNode(opcode));
+		return array.append(index).append(new InsnNode(component.getOpcode(IALOAD)));
+	}
+
+	public static CodePiece arraySet(CodePiece array, int index, CodePiece value, Type component) {
+		return arraySet(array, constant(index), value, component);
+	}
+
+	public static CodePiece arraySet(CodePiece array, CodePiece index, CodePiece value, Type component) {
+		return array.append(index).append(value).append(new InsnNode(component.getOpcode(IASTORE)));
 	}
 
 	/**

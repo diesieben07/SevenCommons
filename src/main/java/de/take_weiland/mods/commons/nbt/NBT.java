@@ -90,15 +90,6 @@ public final class NBT {
 	}
 
 	/**
-	 * <p>Create a null-safe version of the given serializer.</p>
-	 * @param serializer the serializer to wrap
-	 * @return a null-safe version of the serializer
-	 */
-	public static <T> NBTSerializer<T> makeNullSafe(NBTSerializer<T> serializer) {
-		return NullSafeSerializerWrapper.makeNullSafe(serializer);
-	}
-
-	/**
 	 * <p>Get a List view of the given NBTTagList.
 	 * The returned List is modifiable and writes through to the underlying NBTTagList.</p>
 	 * <p>The type-parameter {@code T} can be used to narrow the type of the List, if it is known. If a wrong type is

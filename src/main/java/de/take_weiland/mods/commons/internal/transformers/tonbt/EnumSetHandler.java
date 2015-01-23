@@ -58,7 +58,7 @@ final class EnumSetHandler extends ToNBTHandler {
     }
 
     @Override
-    CodePiece makeNBT() {
+    CodePiece makeNBT(MethodContext context) {
         return CodePieces.invokeStatic(NBTData.class, "writeEnumSet", NBTBase.class,
                 EnumSet.class, var.get());
     }

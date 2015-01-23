@@ -16,7 +16,7 @@ final class PrimitiveHandler extends ToNBTHandler {
 	}
 
 	@Override
-	CodePiece makeNBT() {
+	CodePiece makeNBT(MethodContext context) {
 		Type repr = getRepresentation(var.getType());
 		String className = getTagClassName(repr);
 		CodePiece wrap = wrap(var.getType(), var.get());

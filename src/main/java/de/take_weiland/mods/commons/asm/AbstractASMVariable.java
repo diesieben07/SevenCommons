@@ -5,7 +5,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +84,5 @@ abstract class AbstractASMVariable implements ASMVariable {
 	abstract int setterModifiers();
 
 	abstract int getterModifiers();
-
-	abstract ElementType annotationType();
 
 }

@@ -42,6 +42,14 @@ public final class ASMVariables {
 		throw new IllegalArgumentException("No such local variable");
 	}
 
+	public static ASMVariable arrayElement(ASMVariable array, int index) {
+		return arrayElement(array, CodePieces.constant(index));
+	}
+
+	public static ASMVariable arrayElement(ASMVariable array, CodePiece index) {
+		return new ArrayAccessVariable(array, index);
+	}
+
 	/**
 	 * <p>Creates an {@code ASMVariable} that represents the given LocalVariableNode.</p>
 	 *

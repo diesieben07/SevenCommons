@@ -21,6 +21,8 @@ import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.fluids.FluidTank;
+import org.objectweb.asm.Type;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -34,6 +36,7 @@ public class testmod_sc {
 	private String enumSet;
 
 	public static void main(@Nonnull String[] bar) throws NoSuchFieldException {
+		System.out.println(Type.getType(String[][][].class).getElementType().getInternalName());
 	}
 
 	@Mod.Instance
@@ -96,7 +99,7 @@ public class testmod_sc {
 	private static class TestTE extends SuperTE {
 
 		@ToNbt
-		private String foobar;
+		private FluidTank tank;
 
 	}
 

@@ -4,7 +4,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import javax.annotation.Nullable;
-import java.lang.annotation.ElementType;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -106,11 +105,6 @@ class GetterSetterPair extends ClassBoundASMVariable {
 	@Override
 	protected List<AnnotationNode> getterAnns(boolean visible) {
 		return visible ? getter.visibleAnnotations : getter.invisibleAnnotations;
-	}
-
-	@Override
-	protected ElementType annotationType() {
-		return ElementType.METHOD;
 	}
 
 	@Override

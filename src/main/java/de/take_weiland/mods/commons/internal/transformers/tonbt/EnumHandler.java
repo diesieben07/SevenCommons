@@ -3,10 +3,9 @@ package de.take_weiland.mods.commons.internal.transformers.tonbt;
 import de.take_weiland.mods.commons.asm.ASMVariable;
 import de.take_weiland.mods.commons.asm.CodePiece;
 import de.take_weiland.mods.commons.asm.CodePieces;
-import de.take_weiland.mods.commons.asm.info.ClassInfo;
+import de.take_weiland.mods.commons.asm.MethodContext;
 import de.take_weiland.mods.commons.nbt.NBTData;
 import net.minecraft.nbt.NBTBase;
-import org.objectweb.asm.Type;
 
 /**
  * @author diesieben07
@@ -18,7 +17,7 @@ final class EnumHandler extends ToNBTHandler {
     }
 
     @Override
-    CodePiece makeNBT() {
+    CodePiece makeNBT(MethodContext context) {
         return CodePieces.invokeStatic(NBTData.class, "writeEnum", NBTBase.class,
                 Enum.class, var.get());
     }
@@ -31,7 +30,4 @@ final class EnumHandler extends ToNBTHandler {
         return var.set(CodePieces.castTo(var.getType(), rawEnum));
     }
 
-    public static boolean isEnum(Type type) {
-        return ClassInfo.of(type).isEnum();
-    }
 }

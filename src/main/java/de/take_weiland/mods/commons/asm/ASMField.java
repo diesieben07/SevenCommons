@@ -4,7 +4,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import javax.annotation.Nullable;
-import java.lang.annotation.ElementType;
 import java.util.List;
 
 import static org.objectweb.asm.Opcodes.*;
@@ -70,11 +69,6 @@ class ASMField extends ClassBoundASMVariable {
 	@Override
 	public Type getType() {
 		return Type.getType(field.desc);
-	}
-
-	@Override
-	protected ElementType annotationType() {
-		return ElementType.FIELD;
 	}
 
 	@Override

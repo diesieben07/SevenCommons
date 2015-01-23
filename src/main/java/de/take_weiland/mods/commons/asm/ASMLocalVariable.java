@@ -5,7 +5,6 @@ import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
-import java.lang.annotation.ElementType;
 import java.util.List;
 
 import static org.objectweb.asm.Opcodes.ILOAD;
@@ -35,11 +34,6 @@ class ASMLocalVariable extends AbstractASMVariable {
 	@Override
 	protected int getterModifiers() {
 		return 0;
-	}
-
-	@Override
-	protected ElementType annotationType() {
-		return ElementType.LOCAL_VARIABLE;
 	}
 
 	private CodePiece getCache;

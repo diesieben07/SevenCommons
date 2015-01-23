@@ -38,16 +38,6 @@ public abstract class CodePiece {
 	}
 
 	/**
-	 * <p>Create a new {@link org.objectweb.asm.tree.InsnList} that contains all instructions in this CodePiece.</p>
-	 * @return a new InsnList
-	 */
-	public InsnList build() {
-		InsnList list = new InsnList();
-		appendTo(list);
-		return list;
-	}
-
-	/**
 	 * <p>Appends the instructions in this CodePiece to the given InsnList.</p>
 	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
 	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>

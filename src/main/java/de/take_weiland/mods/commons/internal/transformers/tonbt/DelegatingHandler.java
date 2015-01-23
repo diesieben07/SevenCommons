@@ -44,7 +44,7 @@ final class DelegatingHandler extends ToNBTHandler {
 	}
 
 	@Override
-	CodePiece makeNBT() {
+	CodePiece makeNBT(MethodContext context) {
 		return CodePieces.invokeInterface(NBTSerializer.class, "serialize", serializer.get(), NBTBase.class,
 				Property.class, property,
 				Object.class, CodePieces.getThis());

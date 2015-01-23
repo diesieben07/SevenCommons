@@ -16,11 +16,6 @@ final class EmptyCodePiece extends CodePiece {
 	private EmptyCodePiece() { }
 
 	@Override
-	public InsnList build() {
-		return new InsnList();
-	}
-
-	@Override
 	public void insertAfter(InsnList to, AbstractInsnNode location) { }
 
 	@Override
