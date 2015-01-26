@@ -237,6 +237,8 @@ public final class MCPNames {
 	public static final String F_NBT_LONG_DATA = "field_74753_a";
 	public static final String F_NBT_FLOAT_DATA = "field_74750_a";
 	public static final String F_NBT_DOUBLE_DATA = "field_74755_a";
+	public static final String F_NBT_BYTE_ARR_DATA = "field_74754_a";
+	public static final String F_NBT_INT_ARR_DATA = "field_74749_a";
 
 	public static final String M_SET_TAG = "func_74782_a";
 	public static final String M_GET_TAG = "func_74781_a";

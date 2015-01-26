@@ -20,12 +20,19 @@ abstract class ToNBTHandler {
 
 	static ToNBTHandler create(ClassWithProperties clazz, ASMVariable var) {
 		Type type = var.getType();
-		String internalName = type.getInternalName();
 		if (ASMUtils.isPrimitive(type)) {
 			return new PrimitiveHandler(var);
-		} else if (SimpleIntrinsicsHandler.isIntrinsic(type)) {
+		}
+
+		if (SimpleIntrinsicsHandler.isIntrinsic(type)) {
 			return new SimpleIntrinsicsHandler(type, var);
-		} else if (internalName.equals("java/util/EnumSet")) {
+		}
+
+		String internalName = type.getInternalName();
+		if (IntrinsicArraysHandler.isIntrinsic(internalName)) {
+			return new IntrinsicArraysHandler(var);
+		}
+		if (internalName.equals("java/util/EnumSet")) {
 			return new EnumSetHandler(clazz, var);
 		}
 		if (type.getSort() == Type.ARRAY) {

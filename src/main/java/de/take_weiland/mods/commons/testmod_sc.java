@@ -16,7 +16,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
-import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
@@ -26,7 +25,6 @@ import org.objectweb.asm.Type;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.EnumSet;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @NetworkMod()
@@ -35,7 +33,7 @@ public class testmod_sc {
 	private String enumSet;
 
 	public static void main(@Nonnull String[] bar) throws NoSuchFieldException {
-		System.out.println(Type.getType(String[][][].class).getElementType().getInternalName());
+		System.out.println(Type.getType(int[].class).getInternalName());
 	}
 
 	@Mod.Instance
@@ -91,14 +89,14 @@ public class testmod_sc {
 	private static abstract class SuperTE extends TileEntity {
 
 		@ToNbt
-		private EnumSet<ForgeDirection> helloWorld;
+		private TileEntity[][] helloWorld;
 
 	}
 
 	private static class TestTE extends SuperTE {
 
 		@ToNbt
-		private String[][] tank;
+		private int[][] tank;
 
 		void foo() {
 
