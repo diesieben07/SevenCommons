@@ -688,6 +688,25 @@ public final class CodePieces {
 		return intVal;
 	}
 
+	public static CodePiece forLoop(CodePiece start, CodePiece end, CodePiece body, LocalVariable index) {
+		CodeBuilder cb = new CodeBuilder();
+		ContextKey context = new ContextKey();
+		LabelNode head = new LabelNode();
+
+		cb.add(index.set(start));
+		cb.add(head, context);
+		cb.add(body);
+		cb.add(index.increment(1)).add(index.get());
+		cb.add(end);
+		cb.add(new JumpInsnNode(IF_ICMPNE, head), context);
+
+		return cb.build();
+	}
+
+	public static CodePiece arrayLength(CodePiece array) {
+		return array.append(new InsnNode(ARRAYLENGTH));
+	}
+
 	public static CodePiece doThrow(Class<? extends Exception> ex) {
 		return doThrow(instantiate(ex));
 	}

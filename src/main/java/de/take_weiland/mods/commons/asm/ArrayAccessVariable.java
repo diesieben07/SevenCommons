@@ -66,7 +66,8 @@ class ArrayAccessVariable implements ASMVariable {
     @Override
     public Type getType() {
         Type arrayType = array.getType();
-        return ASMUtils.asArray(arrayType.getElementType(), arrayType.getDimensions() - 1);
+        int dim = arrayType.getDimensions() - 1;
+        return dim == 0 ? arrayType.getElementType() : ASMUtils.asArray(arrayType.getElementType(), dim);
     }
 
     @Override

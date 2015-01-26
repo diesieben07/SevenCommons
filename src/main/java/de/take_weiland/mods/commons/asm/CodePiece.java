@@ -6,7 +6,6 @@ import de.take_weiland.mods.commons.util.ComputingMap;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
-import org.objectweb.asm.tree.MethodNode;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -201,14 +200,6 @@ public abstract class CodePiece {
 
 	static Map<ContextKey, Map<LabelNode, LabelNode>> newSimpleContext(ContextKey singleContext) {
 		return ImmutableMap.of(singleContext, newLabelMap());
-	}
-
-	void insertBefore0(MethodNode method, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
-		insertBefore0(method.instructions, location, context);
-	}
-
-	void insertAfter0(MethodNode method, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
-		insertAfter0(method.instructions, location, context);
 	}
 
 	Map<ContextKey, Map<LabelNode, LabelNode>> makeContext() {

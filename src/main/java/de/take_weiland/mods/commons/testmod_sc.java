@@ -98,7 +98,7 @@ public class testmod_sc {
 	private static class TestTE extends SuperTE {
 
 		@ToNbt
-		private String[] tank;
+		private String[][] tank;
 
 		void foo() {
 

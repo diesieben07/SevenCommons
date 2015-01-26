@@ -2,8 +2,13 @@ package de.take_weiland.mods.commons.internal.transformers.tonbt;
 
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.transformers.ClassWithProperties;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagList;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodNode;
+
+import static org.objectweb.asm.Opcodes.POP;
 
 /**
  * @author diesieben07
@@ -13,8 +18,7 @@ final class ArrayHandler extends ToNBTHandler {
     private final ClassWithProperties clazz;
     private ToNBTHandler elementHandler;
     private ASMVariable elementsRead;
-    private ASMVariable elementsWrite;
-    private final LocalVariable index = new LocalVariable(Type.INT_TYPE);
+    private LocalVariable indexRead;
 
     ArrayHandler(ClassWithProperties clazz, ASMVariable var) {
         super(var);
@@ -23,35 +27,55 @@ final class ArrayHandler extends ToNBTHandler {
 
     @Override
     void overrideVar(ASMVariable var) {
-        throw new UnsupportedOperationException();
+//        throw new UnsupportedOperationException();
+        super.overrideVar(var);
     }
 
     @Override
     void initialTransform(MethodNode readMethod, MethodNode writeMethod) {
-        elementsRead = ASMVariables.arrayElement(var, index.get(readMethod));
-        elementsWrite = ASMVariables.arrayElement(var, index.get(writeMethod));
+        indexRead = new LocalVariable(readMethod, Type.INT_TYPE);
+
+        elementsRead = ASMVariables.arrayElement(var, indexRead.get());
         elementHandler = ToNBTHandler.create(clazz, elementsRead);
+        elementHandler.initialTransform(readMethod, writeMethod);
     }
 
     @Override
     CodePiece makeNBT(MethodNode writeMethod) {
-        CodeBuilder cb = new CodeBuilder();
-        elementHandler.overrideVar(elementsWrite);
+        LocalVariable index = new LocalVariable(writeMethod, Type.INT_TYPE);
 
-        cb.add(index.set(writeMethod, CodePieces.constant(0)));
-        cb.add(elementHandler.makeNBT(writeMethod));
+        CodeBuilder cb = new CodeBuilder();
+        ASMVariable cachedVar;
+        if (var instanceof LocalVariable) {
+            cachedVar = var;
+        } else {
+            cachedVar = new LocalVariable(writeMethod, var.getType());
+            cb.add(cachedVar.set(var.get()));
+        }
+
+        elementHandler.overrideVar(ASMVariables.arrayElement(cachedVar, index.get()));
+
+        LocalVariable nbtList = new LocalVariable(writeMethod, Type.getType(NBTTagList.class));
+        cb.add(nbtList.set(CodePieces.instantiate(NBTTagList.class)));
+
+        CodePiece elemNbt = elementHandler.makeNBT(writeMethod);
+        CodePiece addNbt = CodePieces.invokeVirtual(NBTTagList.class, "appendTag", nbtList.get(), void.class,
+                NBTBase.class, elemNbt);
+
+        LocalVariable len = new LocalVariable(writeMethod, Type.INT_TYPE);
+        cb.add(len.set(CodePieces.arrayLength(cachedVar.get())));
+
+        CodePiece loop = CodePieces.forLoop(CodePieces.constant(0), len.get(), addNbt, index);
+
+        cb.add(loop);
+
+        cb.add(nbtList.get());
 
         return cb.build();
     }
 
     @Override
     CodePiece consumeNBT(CodePiece nbt, MethodNode readMethod) {
-        CodeBuilder cb = new CodeBuilder();
-        elementHandler.overrideVar(elementsRead);
-
-        cb.add(index.set(readMethod, CodePieces.constant(0)));
-        cb.add(elementHandler.consumeNBT(nbt, readMethod));
-
-        return cb.build();
+        return nbt.append(new InsnNode(POP));
     }
 }

@@ -34,16 +34,6 @@ public abstract class CodePlaceholder extends CodePiece {
 	}
 
 	@Override
-	void insertAfter0(MethodNode method, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
-		delegate(method).insertAfter0(method, location, context);
-	}
-
-	@Override
-	void insertBefore0(MethodNode method, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
-		delegate(method).insertBefore0(method, location, context);
-	}
-
-	@Override
 	void insertBefore0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
 		delegate(null).insertBefore0(insns, location, context);
 	}
