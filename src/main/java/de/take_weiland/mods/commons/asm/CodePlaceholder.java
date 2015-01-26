@@ -3,7 +3,10 @@ package de.take_weiland.mods.commons.asm;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.MethodNode;
 
+import javax.annotation.Nullable;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 /**
@@ -12,41 +15,42 @@ import java.util.Map;
  */
 public abstract class CodePlaceholder extends CodePiece {
 
+	private final Map<MethodNode, CodePiece> cache = new IdentityHashMap<>();
+
 	/**
-	 * <p>Resolve this placeholder to the actual CodePiece. This method is called at most once per instance.</p>
+	 * <p>Resolve this placeholder to the actual CodePiece. This method is called at most once per instance and target method.</p>
 	 * @return the resolved CodePiece
+	 * @param method the current method, may be null if unknown
 	 */
-	protected abstract CodePiece resolve();
+	protected abstract CodePiece resolve(@Nullable MethodNode method);
 
-	private CodePiece delegate;
-
-	private CodePiece delegate() {
-		return delegate == null ? (delegate = resolve()) : delegate;
+	private CodePiece delegate(@Nullable MethodNode method) {
+		CodePiece resolved = cache.get(method);
+		if (resolved == null) {
+			resolved = resolve(method);
+			cache.put(method, resolved);
+		}
+		return resolved;
 	}
 
 	@Override
-	public final void insertAfter(InsnList to, AbstractInsnNode location) {
-		delegate().insertAfter(to, location);
+	void insertAfter0(MethodNode method, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
+		delegate(method).insertAfter0(method, location, context);
 	}
 
 	@Override
-	public final void insertBefore(InsnList to, AbstractInsnNode location) {
-		delegate().insertBefore(to, location);
+	void insertBefore0(MethodNode method, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
+		delegate(method).insertBefore0(method, location, context);
 	}
 
 	@Override
 	void insertBefore0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
-		delegate().insertBefore0(insns, location, context);
+		delegate(null).insertBefore0(insns, location, context);
 	}
 
 	@Override
 	void insertAfter0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
-		delegate().insertAfter0(insns, location, context);
-	}
-
-	@Override
-	boolean isEmpty() {
-		return delegate().isEmpty();
+		delegate(null).insertAfter0(insns, location, context);
 	}
 
 	protected CodePlaceholder() { }

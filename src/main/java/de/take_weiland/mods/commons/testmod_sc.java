@@ -21,7 +21,6 @@ import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
-import net.minecraftforge.fluids.FluidTank;
 import org.objectweb.asm.Type;
 
 import javax.annotation.Nonnull;
@@ -99,7 +98,11 @@ public class testmod_sc {
 	private static class TestTE extends SuperTE {
 
 		@ToNbt
-		private FluidTank tank;
+		private String[] tank;
+
+		void foo() {
+
+		}
 
 	}
 

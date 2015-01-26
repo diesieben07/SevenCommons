@@ -39,8 +39,4 @@ class InsnListCodePiece extends CodePiece {
 		}
 	}
 
-	@Override
-	boolean isEmpty() {
-		return insns.size() == 0;
-	}
 }

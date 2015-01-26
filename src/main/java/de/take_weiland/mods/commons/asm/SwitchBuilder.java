@@ -4,10 +4,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.JumpInsnNode;
-import org.objectweb.asm.tree.LabelNode;
-import org.objectweb.asm.tree.LookupSwitchInsnNode;
-import org.objectweb.asm.tree.TableSwitchInsnNode;
+import org.objectweb.asm.tree.*;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -176,7 +173,7 @@ public final class SwitchBuilder {
 	private class BreakPlaceholder extends CodePlaceholder {
 
 		@Override
-		protected CodePiece resolve() {
+		protected CodePiece resolve(MethodNode method) {
 			checkState(breakLabel != null);
 			return breakPiece == null
 					? (breakPiece = CodePieces.of(new JumpInsnNode(GOTO, breakLabel)).setContextKey(context))

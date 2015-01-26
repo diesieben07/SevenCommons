@@ -274,12 +274,6 @@ public abstract class ASMCondition {
 	 * @return a CodePiece
 	 */
 	public CodePiece doIfElse(CodePiece onTrue, CodePiece onFalse) {
-		if (onTrue.isEmpty()) {
-			return doIfFalse(onFalse);
-		} else if (onFalse.isEmpty()) {
-			return doIfTrue(onTrue);
-		}
-
 		CodeBuilder cb = new CodeBuilder();
 		ContextKey context = new ContextKey();
 

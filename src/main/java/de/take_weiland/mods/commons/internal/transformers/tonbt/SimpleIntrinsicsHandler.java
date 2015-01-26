@@ -4,10 +4,10 @@ import com.google.common.collect.ImmutableSet;
 import de.take_weiland.mods.commons.asm.ASMVariable;
 import de.take_weiland.mods.commons.asm.CodePiece;
 import de.take_weiland.mods.commons.asm.CodePieces;
-import de.take_weiland.mods.commons.asm.MethodContext;
 import de.take_weiland.mods.commons.nbt.NBTData;
 import net.minecraft.nbt.NBTBase;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.util.Set;
 
@@ -37,13 +37,13 @@ final class SimpleIntrinsicsHandler extends ToNBTHandler {
     }
 
     @Override
-    CodePiece makeNBT(MethodContext context) {
+    CodePiece makeNBT(MethodNode writeMethod) {
         return CodePieces.invokeStatic(NBTData.class, "write" + getSimpleName(), NBTBase.class,
                 type, var.get());
     }
 
     @Override
-    CodePiece consumeNBT(CodePiece nbt) {
+    CodePiece consumeNBT(CodePiece nbt, MethodNode readMethod) {
         return var.set(CodePieces.invokeStatic(NBTData.class, "read" + getSimpleName(), type,
                 NBTBase.class, nbt));
     }

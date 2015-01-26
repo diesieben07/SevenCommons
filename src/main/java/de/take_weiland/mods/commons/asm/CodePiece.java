@@ -6,7 +6,9 @@ import de.take_weiland.mods.commons.util.ComputingMap;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.MethodNode;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -64,11 +66,11 @@ public abstract class CodePiece {
 	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
 	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>
 	 *
-	 * @param to       the list to append to
+	 * @param list       the list to append to
 	 * @param location the position where to insert the code, must be part of the InsnList
 	 */
-	public void insertAfter(InsnList to, AbstractInsnNode location) {
-		insertAfter0(to, location, newSimpleContext(contextKey));
+	public final void insertAfter(InsnList list, AbstractInsnNode location) {
+		insertAfter0(list, location, makeContext());
 	}
 
 	/**
@@ -76,11 +78,11 @@ public abstract class CodePiece {
 	 * <p>This method must only be used to build the "final" list of instructions for e.g. a method.
 	 * Intermediate operations (e.g. concatenating various CodePieces) must use {@link #append(CodePiece)}, etc.</p>
 	 *
-	 * @param to       the list to append to
+	 * @param list       the list to append to
 	 * @param location the position where to insert the code, must be part of the InsnList
 	 */
-	public void insertBefore(InsnList to, AbstractInsnNode location) {
-		insertBefore0(to, location, newSimpleContext(contextKey));
+	public final void insertBefore(InsnList list, AbstractInsnNode location) {
+		insertBefore0(list, location, makeContext());
 	}
 
 	/**
@@ -171,14 +173,12 @@ public abstract class CodePiece {
 		return false;
 	}
 
-	abstract boolean isEmpty();
-
 	private static Function<LabelNode, LabelNode> labelCreator;
 	static Map<LabelNode, LabelNode> newLabelMap() {
 		if (labelCreator == null) {
 			labelCreator = new Function<LabelNode, LabelNode>() {
 				@Override
-				public LabelNode apply(LabelNode input) {
+				public LabelNode apply(@Nullable LabelNode input) {
 					return new LabelNode();
 				}
 			};
@@ -191,7 +191,7 @@ public abstract class CodePiece {
 		if (labelMapCreator == null) {
 			labelMapCreator = new Function<ContextKey, Map<LabelNode, LabelNode>>() {
 				@Override
-				public Map<LabelNode, LabelNode> apply(ContextKey input) {
+				public Map<LabelNode, LabelNode> apply(@Nullable ContextKey input) {
 					return newLabelMap();
 				}
 			};
@@ -201,6 +201,18 @@ public abstract class CodePiece {
 
 	static Map<ContextKey, Map<LabelNode, LabelNode>> newSimpleContext(ContextKey singleContext) {
 		return ImmutableMap.of(singleContext, newLabelMap());
+	}
+
+	void insertBefore0(MethodNode method, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
+		insertBefore0(method.instructions, location, context);
+	}
+
+	void insertAfter0(MethodNode method, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) {
+		insertAfter0(method.instructions, location, context);
+	}
+
+	Map<ContextKey, Map<LabelNode, LabelNode>> makeContext() {
+		return newSimpleContext(contextKey);
 	}
 
 	abstract void insertBefore0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context);

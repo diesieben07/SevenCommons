@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers.tonbt;
 import de.take_weiland.mods.commons.asm.*;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.MethodNode;
 
 import static de.take_weiland.mods.commons.asm.MCPNames.*;
 
@@ -16,7 +17,7 @@ final class PrimitiveHandler extends ToNBTHandler {
 	}
 
 	@Override
-	CodePiece makeNBT(MethodContext context) {
+	CodePiece makeNBT(MethodNode writeMethod) {
 		Type repr = getRepresentation(var.getType());
 		String className = getTagClassName(repr);
 		CodePiece wrap = wrap(var.getType(), var.get());
@@ -26,7 +27,7 @@ final class PrimitiveHandler extends ToNBTHandler {
 	}
 
 	@Override
-	CodePiece consumeNBT(CodePiece nbt) {
+	CodePiece consumeNBT(CodePiece nbt, MethodNode readMethod) {
 		Type repr = getRepresentation(var.getType());
 		String dataName;
 		switch (repr.getSort()) {

@@ -46,25 +46,23 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 		ASMCondition isCurrentLvl = isCurrentLevel(clazz.clazz, levelMethod, level);
 
 		MethodNode writeMethod = makeWriteMethod(clazz.clazz, level > 0);
-		MethodContext writeContext = new MethodContext(writeMethod);
+		MethodNode readMethod = makeReadMethod(clazz.clazz, level > 0);
 
 		CodeBuilder writeCode = new CodeBuilder();
 		CodeBuilder readCode = new CodeBuilder();
 
 		CodePiece nbt = CodePieces.getLocal(1);
 		for (ToNBTHandler handler : handlers) {
-			handler.initialTransform();
-			writeCode.add(handler.write(nbt, writeContext));
-			readCode.add(handler.read(nbt));
+			handler.initialTransform(readMethod, writeMethod);
+			writeCode.add(handler.write(nbt, writeMethod));
+			readCode.add(handler.read(nbt, readMethod));
 		}
 		writeCode.add(new InsnNode(RETURN));
 		readCode.add(new InsnNode(RETURN));
 
 		writeCode.build().appendTo(writeMethod.instructions);
 
-		CodePiece readAll = readCode.build();
-
-		MethodNode readMethod = makeReadMethod(clazz.clazz, readAll, level > 0);
+		readCode.build().appendTo(readMethod.instructions);
 
 		CodePiece callWrite = CodePieces.invoke(clazz.clazz.name, writeMethod, CodePieces.getThis(), nbt);
 		CodePiece callRead = CodePieces.invoke(clazz.clazz.name, readMethod, CodePieces.getThis(), nbt);
@@ -131,7 +129,7 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 		return method;
 	}
 
-	private static MethodNode makeReadMethod(ClassNode clazz, CodePiece code, boolean callSuper) {
+	private static MethodNode makeReadMethod(ClassNode clazz, boolean callSuper) {
 		String name = "_sc$tonbt$read";
 		String desc = Type.getMethodDescriptor(VOID_TYPE, getType(NBTTagCompound.class));
 		MethodNode method = new MethodNode(ACC_PROTECTED, name, desc, null, null);
@@ -141,7 +139,6 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 			method.instructions.add(new VarInsnNode(ALOAD, 1));
 			method.instructions.add(new MethodInsnNode(INVOKESPECIAL, clazz.superName, name, desc));
 		}
-		code.appendTo(method.instructions);
 		return method;
 	}
 

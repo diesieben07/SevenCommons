@@ -7,6 +7,7 @@ import de.take_weiland.mods.commons.nbt.NBTData;
 import net.minecraft.nbt.NBTBase;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -28,7 +29,7 @@ final class EnumSetHandler extends ToNBTHandler {
     }
 
     @Override
-    void initialTransform() {
+    void initialTransform(MethodNode readMethod, MethodNode writeMethod) {
         String name = "_sc$tonbt$est$" + ClassWithProperties.identifier(var);
         String desc = Type.getDescriptor(Class.class);
         FieldNode typeField = new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, name, desc, null, null);
@@ -58,13 +59,13 @@ final class EnumSetHandler extends ToNBTHandler {
     }
 
     @Override
-    CodePiece makeNBT(MethodContext context) {
+    CodePiece makeNBT(MethodNode writeMethod) {
         return CodePieces.invokeStatic(NBTData.class, "writeEnumSet", NBTBase.class,
                 EnumSet.class, var.get());
     }
 
     @Override
-    CodePiece consumeNBT(CodePiece nbt) {
+    CodePiece consumeNBT(CodePiece nbt, MethodNode readMethod) {
         return var.set(CodePieces.invokeStatic(NBTData.class, "readEnumSet", EnumSet.class,
                 NBTBase.class, nbt,
                 Class.class, esType.get()));

@@ -10,6 +10,7 @@ import de.take_weiland.mods.commons.sync.Property;
 import net.minecraft.nbt.NBTBase;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -28,7 +29,7 @@ final class DelegatingHandler extends ToNBTHandler {
 	}
 
 	@Override
-	void initialTransform() {
+	void initialTransform(MethodNode readMethod, MethodNode writeMethod) {
 		property = properties.getProperty(var, ClassWithProperties.PropertyType.NORMAL);
 
 		String name = "_sc$tonbt$ser$" + ClassWithProperties.identifier(var);
@@ -44,14 +45,14 @@ final class DelegatingHandler extends ToNBTHandler {
 	}
 
 	@Override
-	CodePiece makeNBT(MethodContext context) {
+	CodePiece makeNBT(MethodNode writeMethod) {
 		return CodePieces.invokeInterface(NBTSerializer.class, "serialize", serializer.get(), NBTBase.class,
 				Property.class, property,
 				Object.class, CodePieces.getThis());
 	}
 
 	@Override
-	CodePiece consumeNBT(CodePiece nbt) {
+	CodePiece consumeNBT(CodePiece nbt, MethodNode readMethod) {
 		return CodePieces.invokeStatic(ASMHooks.class, ASMHooks.READ_NBT, void.class,
 				NBTBase.class, nbt,
 				NBTSerializer.class, serializer.get(),

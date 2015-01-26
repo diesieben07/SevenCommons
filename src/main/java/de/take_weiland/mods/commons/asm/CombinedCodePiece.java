@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * @author diesieben07
  */
-class CombinedCodePiece extends CodePiece {
+final class CombinedCodePiece extends CodePiece {
 
 	final CodePiece[] pieces;
 
@@ -20,13 +20,8 @@ class CombinedCodePiece extends CodePiece {
 	}
 
 	@Override
-	public void insertBefore(InsnList list, AbstractInsnNode location) {
-		insertBefore0(list, location, newContext());
-	}
-
-	@Override
-	public void insertAfter(InsnList list, AbstractInsnNode location) {
-		insertAfter0(list, location, newContext());
+	Map<ContextKey, Map<LabelNode, LabelNode>> makeContext() {
+		return newContext();
 	}
 
 	@Override
@@ -81,13 +76,4 @@ class CombinedCodePiece extends CodePiece {
 		return true;
 	}
 
-	@Override
-	boolean isEmpty() {
-		for (CodePiece piece : pieces) {
-			if (!piece.isEmpty()) {
-				return false;
-			}
-		}
-		return true;
-	}
 }

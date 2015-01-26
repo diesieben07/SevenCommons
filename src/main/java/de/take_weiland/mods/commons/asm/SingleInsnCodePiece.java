@@ -39,8 +39,4 @@ class SingleInsnCodePiece extends CodePiece {
 		}
 	}
 
-	@Override
-	boolean isEmpty() {
-		return false;
-	}
 }

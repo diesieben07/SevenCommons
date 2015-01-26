@@ -16,12 +16,6 @@ final class EmptyCodePiece extends CodePiece {
 	private EmptyCodePiece() { }
 
 	@Override
-	public void insertAfter(InsnList to, AbstractInsnNode location) { }
-
-	@Override
-	public void insertBefore(InsnList to, AbstractInsnNode location) { }
-
-	@Override
 	void insertBefore0(InsnList insns, AbstractInsnNode location, Map<ContextKey, Map<LabelNode, LabelNode>> context) { }
 
 	@Override
@@ -32,8 +26,4 @@ final class EmptyCodePiece extends CodePiece {
 		return self;
 	}
 
-	@Override
-	boolean isEmpty() {
-		return true;
-	}
 }
