@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.nbt;
 
-import de.take_weiland.mods.commons.internal.AnnotationNull;
-import de.take_weiland.mods.commons.serialize.NBTSerializer;
 import de.take_weiland.mods.commons.serialize.SerializationMethod;
 
 import java.lang.annotation.ElementType;
@@ -36,13 +34,16 @@ public @interface ToNbt {
 
 	SerializationMethod method() default SerializationMethod.DEFAULT;
 
-	ValueMissingAction onMissing() default ValueMissingAction.DEFAULT;
+	MissingAction onMissing() default MissingAction.DEFAULT;
 
-	enum ValueMissingAction {
+	enum MissingAction {
 
+        /**
+         * <p>Apply a default value. In the case of {@link de.take_weiland.mods.commons.serialize.SerializationMethod#CONTENTS}
+         * this is equivalent to {@link #IGNORE}.</p>
+         */
 		DEFAULT,
-		THROW
-
+        IGNORE
 	}
 
 }

@@ -20,8 +20,8 @@ import java.util.UUID;
  */
 public final class NBTData {
 
-    private static final byte NULL = -1;
-    private static final String NULL_KEY = "_sc$null";
+    public static final byte NULL = -1;
+    public static final String NULL_KEY = "_sc$null";
 
     private NBTData() { }
 
@@ -240,13 +240,14 @@ public final class NBTData {
     }
 
     /**
-     * <p>Check if the given NBT Tag represents a serialized {@code null} reference.</p>
+     * <p>Check if the given NBT Tag is null or represents a serialized {@code null} reference.</p>
      * @param nbt the NBT data
      * @return true if the NBT data represents null
      * @see #serializedNull()
      */
     @Contract("null->true")
     public static boolean isSerializedNull(@Nullable NBTBase nbt) {
-        return nbt == null || (nbt.getId() == NBT.TAG_COMPOUND && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL);
+        return nbt == null || nbt.getId() == NBT.TAG_COMPOUND && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL;
     }
+
 }

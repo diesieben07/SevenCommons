@@ -1,22 +1,19 @@
 package de.take_weiland.mods.commons.nbt;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableMap;
 import de.take_weiland.mods.commons.serialize.NBTSerializer;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
-import net.minecraftforge.fluids.FluidStack;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * <p>Utility methods regarding NBT data.</p>
@@ -54,26 +51,40 @@ public final class NBT {
 	 */
 	public enum Tag {
 
-		END,
-		BYTE,
-		SHORT,
-		INT,
-		LONG,
-		FLOAT,
-		DOUBLE,
-		BYTE_ARRAY,
-		STRING,
-		LIST,
-		COMPOUND,
-		INT_ARRAY;
+		END(NBTTagEnd.class),
+		BYTE(NBTTagByte.class),
+		SHORT(NBTTagShort.class),
+		INT(NBTTagInt.class),
+		LONG(NBTTagLong.class),
+		FLOAT(NBTTagFloat.class),
+		DOUBLE(NBTTagDouble.class),
+		BYTE_ARRAY(NBTTagByteArray.class),
+		STRING(NBTTagString.class),
+		LIST(NBTTagList.class),
+		COMPOUND(NBTTagCompound.class),
+		INT_ARRAY(NBTTagIntArray.class);
 
-		/**
+        private final Class<? extends NBTBase> clazz;
+
+        private Tag(Class<? extends NBTBase> clazz) {
+            this.clazz = clazz;
+        }
+
+        /**
 		 * <p>The id for this tag type, as returned by {@link net.minecraft.nbt.NBTBase#getId()}.</p>
 		 * @return the type id
 		 */
 		public final int id() {
 			return ordinal();
 		}
+
+        /**
+         * <p>Get the tag class corresponding to this tag type.</p>
+         * @return the class
+         */
+        public final Class<? extends NBTBase> getTagClass() {
+            return clazz;
+        }
 
 		/**
 		 * <p>Get the tag type specified by the given type id.</p>
@@ -85,7 +96,30 @@ public final class NBT {
 			return VALUES[id];
 		}
 
+        /**
+         * <p>Get the tag type based on the given class.</p>
+         * @param clazz the tag class
+         * @return the tag type
+         */
+        public static Tag byClass(Class<?> clazz) {
+            Tag t = BY_CLAZZ.get(clazz);
+            if (t == null) {
+                checkNotNull(clazz, "clazz");
+                throw new IllegalArgumentException("Invalid NBT Tag class " + clazz.getName());
+            }
+            return t;
+        }
+
 		private static final Tag[] VALUES = values();
+        private static final ImmutableMap<Class<?>, Tag> BY_CLAZZ;
+
+        static {
+            ImmutableMap.Builder<Class<?>, Tag> b = ImmutableMap.builder();
+            for (Tag tag : VALUES) {
+                b.put(tag.clazz, tag);
+            }
+            BY_CLAZZ = b.build();
+        }
 
 	}
 
