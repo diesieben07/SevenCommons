@@ -111,6 +111,5 @@ public final class NBTDynCallback {
 
     private static final Map<Class<?>, MethodHandle> writers = new HashMap<>();
 
-    private static final class ReadWritePair
 
 }

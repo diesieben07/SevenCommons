@@ -3,10 +3,9 @@ package de.take_weiland.mods.commons.serialize;
 import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.nbt.NBTData;
-import de.take_weiland.mods.commons.nbt.ToNbt;
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagByte;
 import net.minecraft.nbt.NBTTagCompound;
-import org.objectweb.asm.Type;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -44,7 +43,6 @@ public final class MethodPair {
      *     <li>set must have type (C, T) => void</li>
      * </ul>
      * <p>The resulting MethodHandle will then have type (NBTBase, C) => void</p>
-     * @param actualType the type of the property (T in the above)
      * @param get the getter
      * @param set the setter
      * @return a MethodHandle
@@ -106,103 +104,49 @@ public final class MethodPair {
 
         checkArgument(NBTBase.class.isAssignableFrom(type.parameterType(0)), "NBT reader must have NBT as first argument");
 
-        MethodHandle nbtGuarded = guardNBTType(reader);
 
         return reader;
     }
 
-    private static MethodHandle guardNBTType(MethodHandle reader, ToNbt.MissingAction missingAction) {
-        Class<?> nbtClass = reader.type().parameterType(0);
-        if (nbtClass == NBTBase.class) {
-            return reader;
-        }
-        int nbtID = NBT.Tag.byClass(nbtClass).id();
+    public static MethodHandle makeValueReader(MethodHandle reader, MethodHandle setter) {
+        Class<?> propertyHolderClass = setter.type().parameterType(0);
+        Class<?> actualValueClass = setter.type().parameterType(1);
 
+        int nbtID = NBT.Tag.byClass(reader.type().parameterType(0)).id();
+
+        MethodHandle doNothing = MethodHandles.dropArguments(DO_NOTHING, 0, propertyHolderClass, NBTBase.class);
+        MethodHandle isSerNull = MethodHandles.dropArguments(IS_SERIALIZED_NULL, 0, propertyHolderClass);
+        MethodHandle setToNull = MethodHandles.dropArguments(MethodHandles.insertArguments(setter, 1, (Object) null), 1, NBTBase.class);
+        MethodHandle isValidNBT = MethodHandles.dropArguments(MethodHandles.insertArguments(CHECK_NBT_ID, 1, nbtID), 0, propertyHolderClass);
+        MethodHandle doSetAndRead = MethodHandles.filterArguments(setter, 1, reader.asType(methodType(actualValueClass, NBTBase.class)));
+
+        MethodHandle nonNullSet = MethodHandles.guardWithTest(isValidNBT, doSetAndRead, doNothing);
+        return MethodHandles.guardWithTest(isSerNull, setToNull, nonNullSet);
+    }
+
+    public static MethodHandle makeContentReader(MethodHandle reader, MethodHandle getter) {
+        Class<?> propertyHolderClass = getter.type().parameterType(0);
+        Class<?> actualValueClass = getter.type().returnType();
+
+        Class<?> nbtClass = reader.type().parameterType(0);
+
+        MethodHandle doNothing = MethodHandles.dropArguments(DO_NOTHING, 0, propertyHolderClass, NBTBase.class);
+        MethodHandle invReader = MethodHandles.permuteArguments(reader.asType(methodType(void.class, NBTBase.class, actualValueClass)), methodType(void.class, actualValueClass, NBTBase.class), 1, 0);
+        MethodHandle doRead = MethodHandles.filterArguments(invReader, 0, getter);
 
         MethodHandle guarded;
-        if (reader.type().returnType() == void.class) {
-            // reader has type (NBTBase, T) => void
-            Class<?> readerParam = reader.type().parameterType(1);
-            MethodHandle onMissing = MethodHandles.dropArguments(DO_NOTHING, 0, NBTBase.class, readerParam);
-
-            MethodHandle test;
-            if (nbtID == NBT.TAG_COMPOUND) {
-                test = CHECK_NBT_COMPOUND;
-            } else {
-                test = MethodHandles.insertArguments(CHECK_NBT_VALID, 1, nbtID);
-            }
-
-            reader = reader.asType(methodType(void.class, NBTBase.class, readerParam));
-            guarded = MethodHandles.guardWithTest(test, reader, onMissing);
+        if (nbtClass == NBTBase.class) {
+            MethodHandle isSerNull = MethodHandles.dropArguments(IS_SERIALIZED_NULL, 0, propertyHolderClass);
+            guarded = MethodHandles.guardWithTest(isSerNull, doNothing, doRead);
+        } else if (nbtClass == NBTTagCompound.class) {
+            MethodHandle isValid = MethodHandles.dropArguments(CHECK_VALID_COMPOUND, 0, propertyHolderClass);
+            guarded = MethodHandles.guardWithTest(isValid, doRead, doNothing);
         } else {
-            Class<?> readerParam = reader.type().returnType();
-
-            MethodHandle test;
-            MethodHandle onMissing;
-            if (missingAction == ToNbt.MissingAction.IGNORE) {
-                onMissing = MethodHandles.dropArguments()
-            }
-
-            reader = reader.asType(methodType(readerParam, NBTBase.class));
-            guarded = MethodHandles.guardWithTest(test, reader, onMissing);
+            int nbtID = NBT.Tag.byClass(nbtClass).id();
+            MethodHandle isValid = MethodHandles.dropArguments(MethodHandles.insertArguments(CHECK_NBT_ID, 1, nbtID), 0, propertyHolderClass);
+            guarded = MethodHandles.guardWithTest(isValid, doRead, doNothing);
         }
-
         return guarded;
-    }
-
-    private static MethodHandle makeValueReader(MethodHandle reader, MethodHandle setter, ToNbt.MissingAction action) {
-        checkValueReader(reader);
-
-        Class<?> type = reader.type().returnType();
-
-        checkSetter(setter);
-        checkArgument(setter.type().parameterType(1).isAssignableFrom(type));
-
-        MethodHandle doSet = MethodHandles.filterArguments(setter, 1, reader.asType(methodType(type, NBTBase.class)));
-
-        MethodHandle onMissing;
-
-        if (action == ToNbt.MissingAction.DEFAULT) {
-            MethodHandle setDefault = MethodHandles.insertArguments(setter, 1, getDefaultValue(type));
-            onMissing = MethodHandles.dropArguments(setDefault, 1, NBTBase.class);
-        } else {
-            onMissing = MethodHandles.dropArguments(DO_NOTHING, 0, setter.type().parameterType(0), NBTBase.class);
-        }
-
-        MethodHandle onSerNull;
-        if (type.isPrimitive()) {
-            onSerNull = onMissing;
-        } else {
-            onSerNull = MethodHandles.insertArguments(setter, 1, (Object) null);
-        }
-
-        MethodHandle guard;
-        if (reader.type().parameterType(0) == NBTBase.class) {
-            guard =
-        }
-    }
-
-    private static Object getDefaultValue(Class<?> clazz) {
-        switch (Type.getType(clazz).getSort()) {
-            case Type.BOOLEAN:
-                return false;
-            case Type.BYTE:
-                return (byte) 0;
-            case Type.SHORT:
-                return (short) 0;
-            case Type.INT:
-                return 0;
-            case Type.CHAR:
-                return (char) 0;
-            case Type.LONG:
-                return 0L;
-            case Type.FLOAT:
-                return 0f;
-            case Type.DOUBLE:
-                return 0d;
-            default:
-                return null;
-        }
     }
 
     private static void checkValueReader(MethodHandle reader) {
@@ -229,30 +173,35 @@ public final class MethodPair {
     }
 
     private static final MethodHandle IS_SERIALIZED_NULL;
-    private static final MethodHandle IS_NBT_NONNULL;
-    private static final MethodHandle CHECK_NBT_VALID;
-    private static final MethodHandle CHECK_NBT_COMPOUND;
+    private static final MethodHandle CHECK_NBT_ID;
+    private static final MethodHandle CHECK_VALID_COMPOUND;
     private static final MethodHandle DO_NOTHING;
 
     static {
         MethodHandles.Lookup lookup = MethodHandles.lookup();
         try {
             IS_SERIALIZED_NULL = lookup.findStatic(MethodPair.class, "isRealSerializedNull", methodType(boolean.class, NBTBase.class));
-            IS_NBT_NONNULL = lookup.findStatic(MethodPair.class, "isNBTNonNull", methodType(boolean.class, NBTBase.class));
-            CHECK_NBT_VALID = lookup.findStatic(MethodPair.class, "checkNBTId", methodType(boolean.class, NBTBase.class, int.class));
-            CHECK_NBT_COMPOUND = lookup.findStatic(MethodPair.class, "checkNBTCompound", methodType(boolean.class, NBTBase.class));
+            CHECK_NBT_ID = lookup.findStatic(MethodPair.class, "checkNBTId", methodType(boolean.class, NBTBase.class, int.class));
+            CHECK_VALID_COMPOUND = lookup.findStatic(MethodPair.class, "checkValidCompound", methodType(boolean.class, NBTBase.class));
             DO_NOTHING = MethodHandles.constant(Void.class, null).asType(methodType(void.class));
         } catch (Throwable t) {
             throw Throwables.propagate(t);
         }
     }
 
-    private static boolean checkNBTId(@Nullable NBTBase nbt, int desired) {
-        return nbt != null && nbt.getId() == desired;
+    private static boolean checkValidCompound(@Nullable NBTBase nbt) {
+        if (nbt == null) {
+            return false;
+        }
+        if (nbt.getId() != NBT.TAG_COMPOUND) {
+            return false;
+        }
+        NBTBase nullKey = ((NBTTagCompound) nbt).getTag(NBTData.NULL_KEY);
+        return nullKey == null || nullKey.getId() != NBT.TAG_BYTE || ((NBTTagByte) nullKey).data != NBTData.NULL;
     }
 
-    private static boolean isNBTNonNull(@Nullable NBTBase nbt) {
-        return nbt != null;
+    private static boolean checkNBTId(@Nullable NBTBase nbt, int desired) {
+        return nbt != null && nbt.getId() == desired;
     }
 
     private static boolean isRealSerializedNull(@Nullable NBTBase nbt) {
@@ -280,5 +229,6 @@ public final class MethodPair {
             readerType = reader.type().returnType();
         }
         checkArgument(readerType == writerType, "NBT reader and writer must handle same type");
+        return readerType;
     }
 }

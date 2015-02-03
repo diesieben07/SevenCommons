@@ -7,12 +7,14 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.nbt.ToNbt;
+import de.take_weiland.mods.commons.serialize.MethodPair;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -20,21 +22,36 @@ import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
-import org.objectweb.asm.Type;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
+
+import static java.lang.invoke.MethodType.methodType;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @NetworkMod()
 public class testmod_sc {
 
-	private String enumSet;
+    private String enumSet;
 
-	public static void main(@Nonnull String[] bar) throws NoSuchFieldException {
-		System.out.println(Type.getType(int[].class).getInternalName());
-	}
+	public static void main(@Nonnull String[] bar) throws Throwable {
+        MethodHandles.Lookup lookup = MethodHandles.lookup();
+        MethodHandle stringReader = lookup.findStatic(testmod_sc.class, "doRead", methodType(void.class, NBTBase.class, String.class));
+        MethodHandle setter = lookup.findGetter(testmod_sc.class, "enumSet", String.class);
+
+        MethodHandle mh = MethodPair.makeContentReader(stringReader, setter);
+
+        testmod_sc inst = new testmod_sc();
+        mh.invokeExact(inst, (NBTBase) new NBTTagCompound());
+        System.out.println(inst.enumSet);
+    }
+
+    private static void doRead(NBTBase nbt, String s) {
+        System.out.println("reading now! " + nbt + ", old val " + s);
+    }
 
 	@Mod.Instance
 	public static testmod_sc instance;

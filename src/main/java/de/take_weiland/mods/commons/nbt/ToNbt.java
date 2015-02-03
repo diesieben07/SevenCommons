@@ -34,16 +34,4 @@ public @interface ToNbt {
 
 	SerializationMethod method() default SerializationMethod.DEFAULT;
 
-	MissingAction onMissing() default MissingAction.DEFAULT;
-
-	enum MissingAction {
-
-        /**
-         * <p>Apply a default value. In the case of {@link de.take_weiland.mods.commons.serialize.SerializationMethod#CONTENTS}
-         * this is equivalent to {@link #IGNORE}.</p>
-         */
-		DEFAULT,
-        IGNORE
-	}
-
 }
