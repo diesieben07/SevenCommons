@@ -29,7 +29,8 @@ public final class MethodPair {
 
     public MethodPair(MethodHandle reader, MethodHandle writer) {
         this.reader = checkAndSecureReader(reader);
-        this.writer = checkAndSecureWriter(writer);
+//        this.writer = checkAndSecureWriter(writer);
+        this.writer = writer;
 
         typeClass = findTypeClass(reader, writer);
     }
@@ -69,20 +70,6 @@ public final class MethodPair {
         }
 
         return result;
-    }
-
-    /**
-     * <p>Returns (C) => NBTBase</p>
-     * @param get
-     * @param set
-     * @return
-     */
-    public MethodHandle makeWriter(MethodHandle get, MethodHandle set) {
-        MethodHandle result;
-
-        get = adaptGet(get);
-
-        return MethodHandles.filterArguments(writer, 0, get);
     }
 
     private MethodHandle adaptSet(MethodHandle set) {
@@ -186,33 +173,38 @@ public final class MethodPair {
         return guarded;
     }
 
-    private static void checkValueReader(MethodHandle reader) {
-        MethodType type = reader.type();
-        checkArgument(type.returnType() != void.class, "value deserializer must not return void");
-        checkArgument(type.parameterCount() == 1, "value deserializer must take 1 argument");
-        checkArgument(type.parameterType(0).isAssignableFrom(NBTBase.class), "value deserializer must take NBT as 1st argument");
+    public static MethodHandle makeWriter(MethodHandle writer, MethodHandle getter) {
+        // C being the property holder class
+        // T being the type of the property
+        // S being the type that the writer handles (must be assignable from T)
+        // NBT being the type of NBT that the writer produces
+        //
+        // writer has type (S) => NBT
+        // getter has type (C) => T
+        // we produce a method like this:
+        // NBTBase write(C c) {
+        //     T t = getter(c);
+        //     if (t == null) {
+        //         return serializedNull();
+        //     } else {
+        //         return writer(t);
+        //     }
+
+        Class<?> actualValueClass = getter.type().returnType();
+
+        MethodHandle isNull = IS_REF_NULL.asType(methodType(boolean.class, actualValueClass));
+        MethodHandle guarded = MethodHandles.guardWithTest(isNull, MethodHandles.dropArguments(SER_NULL, 0, actualValueClass), writer.asType(methodType(NBTBase.class, actualValueClass)));
+        return MethodHandles.filterArguments(guarded, 0, getter);
     }
 
-    private static void checkSetter(MethodHandle setter) {
-        MethodType setterType = setter.type();
-        checkArgument(setterType.returnType() == void.class, "Setter must return void");
-        checkArgument(setterType.parameterCount() == 2, "Setter must take 2 arguments");
-        checkArgument(!setterType.parameterType(0).isPrimitive(), "Setter argument 0 must be reference");
-    }
 
-    private static MethodHandle checkAndSecureWriter(MethodHandle writer) {
-        MethodType type = writer.type();
-
-        checkArgument(NBTBase.class.isAssignableFrom(type.returnType()), "NBT writer must return NBTBase or subclass");
-        checkArgument(type.parameterCount() == 1, "NBTWriter must take one argument");
-
-        return writer;
-    }
 
     private static final MethodHandle IS_SERIALIZED_NULL;
     private static final MethodHandle CHECK_NBT_ID;
     private static final MethodHandle CHECK_VALID_COMPOUND;
     private static final MethodHandle DO_NOTHING;
+    private static final MethodHandle IS_REF_NULL;
+    private static final MethodHandle SER_NULL;
 
     static {
         MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -221,9 +213,15 @@ public final class MethodPair {
             CHECK_NBT_ID = lookup.findStatic(MethodPair.class, "checkNBTId", methodType(boolean.class, NBTBase.class, int.class));
             CHECK_VALID_COMPOUND = lookup.findStatic(MethodPair.class, "checkValidCompound", methodType(boolean.class, NBTBase.class));
             DO_NOTHING = MethodHandles.constant(Void.class, null).asType(methodType(void.class));
+            IS_REF_NULL = lookup.findStatic(MethodPair.class, "isRefNull", methodType(boolean.class, Object.class));
+            SER_NULL = lookup.findStatic(NBTData.class, "serializedNull", methodType(NBTBase.class));
         } catch (Throwable t) {
             throw Throwables.propagate(t);
         }
+    }
+
+    private static boolean isRefNull(@Nullable Object o) {
+        return o == null;
     }
 
     private static boolean checkValidCompound(@Nullable NBTBase nbt) {

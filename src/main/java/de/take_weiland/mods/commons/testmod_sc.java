@@ -16,6 +16,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
@@ -40,17 +41,25 @@ public class testmod_sc {
 	public static void main(@Nonnull String[] bar) throws Throwable {
         MethodHandles.Lookup lookup = MethodHandles.lookup();
         MethodHandle stringReader = lookup.findStatic(testmod_sc.class, "doRead", methodType(void.class, NBTBase.class, String.class));
-        MethodHandle setter = lookup.findGetter(testmod_sc.class, "enumSet", String.class);
 
-        MethodHandle mh = MethodPair.makeContentReader(stringReader, setter);
+        MethodHandle getter = lookup.findVirtual(testmod_sc.class, "doGet", methodType(String.class));
+        MethodHandle stringWriter = lookup.findConstructor(NBTTagString.class, methodType(void.class, String.class, String.class));
+        stringWriter = MethodHandles.insertArguments(stringWriter, 0, "");
+
+        MethodHandle mh = MethodPair.makeWriter(stringWriter, getter);
 
         testmod_sc inst = new testmod_sc();
-        mh.invokeExact(inst, (NBTBase) new NBTTagCompound());
-        System.out.println(inst.enumSet);
+        inst.enumSet = "hello world";
+        System.out.println((NBTBase) mh.invokeExact(inst));
     }
 
     private static void doRead(NBTBase nbt, String s) {
         System.out.println("reading now! " + nbt + ", old val " + s);
+    }
+
+    private String doGet() {
+        System.out.println("getting!");
+        return enumSet;
     }
 
 	@Mod.Instance
