@@ -109,6 +109,25 @@ public final class MethodPair {
     }
 
     public static MethodHandle makeValueReader(MethodHandle reader, MethodHandle setter) {
+        // C being the property holder class
+        // T being the type of the property
+        // S being the type that the reader produces (must be assignable to T)
+        // NBT being the NBT type that the reader handles
+        //
+        // reader has type (NBT) => S
+        // setter has type (C, T) => void
+        //
+        // we produce a method like this:
+        // void read(C c, NBTBase nbt) {
+        //     if (nbt == <serialized null>) {
+        //         setter(c, null);
+        //     } else if (nbt instanceof NBT) { // includes null check
+        //         setter(c, reader((NBT) nbt));
+        //     }
+        // }
+        //
+        // the conditions are optimized as possible
+
         Class<?> propertyHolderClass = setter.type().parameterType(0);
         Class<?> actualValueClass = setter.type().parameterType(1);
 
@@ -125,6 +144,24 @@ public final class MethodPair {
     }
 
     public static MethodHandle makeContentReader(MethodHandle reader, MethodHandle getter) {
+        // C being the property holder class
+        // T being the type of the property
+        // S being the type that the reader handles (must be assignable from T)
+        // NBT being the NBT type that the reader handles
+        //
+        // reader has type (NBT, S) => void
+        // getter has type (C) => T
+        //
+        // we produce a method like this:
+        // void read(C c, NBTBase nbt) {
+        //     if (nbt != <serialized null> && nbt instanceof NBT) {
+        //         reader(getter(c), (NBT) nbt);
+        //     }
+        // }
+        //
+        // the condition is optimized to not use instanceof.
+
+
         Class<?> propertyHolderClass = getter.type().parameterType(0);
         Class<?> actualValueClass = getter.type().returnType();
 
