@@ -9,9 +9,9 @@ final class ArrayConversions {
 
 	static byte[] encodeInts(int[] value) {
 		int iLen = value.length;
-		byte[] bytes = new byte[iLen * 4];
-		for (int lOff = 0, bOff = 0; lOff < iLen; ++lOff) {
-			int i = value[lOff];
+		byte[] bytes = new byte[iLen << 2];
+		for (int iOff = 0, bOff = 0; iOff < iLen; iOff++) {
+			int i = value[iOff];
 			bytes[bOff] = (byte) (i & 0xff);
 			bytes[bOff + 1] = (byte) ((i >> 8) & 0xff);
 			bytes[bOff + 2] = (byte) ((i >> 16) & 0xff);
@@ -30,7 +30,7 @@ final class ArrayConversions {
 					| (int) bytes[bOff + 1] << 8
 					| (int) bytes[bOff + 2] << 16
 					| (int) bytes[bOff + 3] << 24;
-			bOff += 8;
+			bOff += 4;
 		}
 		return ints;
 	}
@@ -146,7 +146,7 @@ final class ArrayConversions {
 	static byte[] encodeBooleans(boolean[] value) {
 		int boolLen = value.length;
 		int fullBytes = boolLen & ~7; // boolLen - (boolLen % 8)
-		int byteLen = (boolLen >> 3) + (((boolLen) | (boolLen >> 1)) & 1);
+		int byteLen = (boolLen >> 3) + (((boolLen) | (boolLen >> 1)) & 1); // boolLen / 8 + (boolLen % 8 == 0 ? 0 : 1)
 		byte[] bytes = new byte[byteLen];
 
 		int byOff = 0;
