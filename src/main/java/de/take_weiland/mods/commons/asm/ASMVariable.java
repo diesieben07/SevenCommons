@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 
@@ -144,4 +145,7 @@ public interface ASMVariable {
 	 */
 	boolean isMethod();
 
+    Handle getterHandle();
+
+    Handle setterHandle();
 }

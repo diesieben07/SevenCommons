@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -158,4 +159,29 @@ class GetterSetterPair extends ClassBoundASMVariable {
 	public boolean isMethod() {
 		return true;
 	}
+
+    @Override
+    public Handle getterHandle() {
+        return new Handle(invokeOp(getter), clazz.name, getter.name, getter.desc);
+    }
+
+    @Override
+    public Handle setterHandle() {
+        if (setter == null) {
+            throw new IllegalStateException("No setter!");
+        }
+        return new Handle(invokeOp(setter), clazz.name, setter.name, setter.desc);
+    }
+
+    private int invokeOp(MethodNode method) {
+        if ((method.access & ACC_STATIC) != 0) {
+            return H_INVOKESTATIC;
+        } else if ((method.access & ACC_PRIVATE) != 0) {
+            return H_INVOKESPECIAL;
+        } else if ((clazz.access & ACC_INTERFACE) != 0) {
+            return H_INVOKEINTERFACE;
+        } else {
+            return H_INVOKEVIRTUAL;
+        }
+    }
 }

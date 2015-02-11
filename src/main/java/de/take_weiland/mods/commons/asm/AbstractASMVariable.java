@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -85,4 +86,13 @@ abstract class AbstractASMVariable implements ASMVariable {
 
 	abstract int getterModifiers();
 
+    @Override
+    public Handle getterHandle() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Handle setterHandle() {
+        throw new UnsupportedOperationException();
+    }
 }

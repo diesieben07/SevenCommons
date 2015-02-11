@@ -227,6 +227,66 @@ public final class NBTData {
         }
     }
 
+    @NBTSerializer
+    public static NBTBase writeBooleanArray(boolean[] booleans) {
+        return new NBTTagByteArray("", ArrayConversions.encodeBooleans(booleans));
+    }
+
+    @NBTSerializer
+    public static boolean[] readBooleanArray(NBTTagByteArray nbt) {
+        return ArrayConversions.decodeBooleans(nbt.byteArray);
+    }
+
+    @NBTSerializer
+    public static NBTBase writeShortArray(short[] shorts) {
+        return new NBTTagByteArray("", ArrayConversions.encodeShorts(shorts));
+    }
+
+    @NBTSerializer
+    public static short[] readShortArray(NBTTagByteArray nbt) {
+        return ArrayConversions.decodeShorts(nbt.byteArray);
+    }
+
+    @NBTSerializer
+    public static NBTBase writeCharArray(char[] chars) {
+        return new NBTTagByteArray("", ArrayConversions.encodeChars(chars));
+    }
+
+    @NBTSerializer
+    public static char[] readCharArray(NBTTagByteArray nbt) {
+        return ArrayConversions.decodeChars(nbt.byteArray);
+    }
+
+    @NBTSerializer
+    public static NBTBase writeLongArray(long[] longs) {
+        return new NBTTagIntArray("", ArrayConversions.encodeLongs(longs));
+    }
+
+    @NBTSerializer
+    public static long[] readLongArray(NBTTagIntArray nbt) {
+        return ArrayConversions.decodeLongs(nbt.intArray);
+    }
+
+    @NBTSerializer
+    public static NBTBase writeFloatArray(float[] floats) {
+        return new NBTTagIntArray("", ArrayConversions.encodeFloats(floats));
+    }
+
+    @NBTSerializer
+    public static float[] readFloatArray(NBTTagIntArray nbt) {
+        return ArrayConversions.decodeFloats(nbt.intArray);
+    }
+
+    @NBTSerializer
+    public static NBTBase writeDoubleArray(double[] doubles) {
+        return new NBTTagIntArray("", ArrayConversions.encodeDoubles(doubles));
+    }
+
+    @NBTSerializer
+    public static double[] readDoubleArray(NBTTagIntArray nbt) {
+        return ArrayConversions.decodeDoubles(nbt.intArray);
+    }
+
     /**
      * <p>Get an NBT Tag that represents {@code null}.</p>
      * @return NBT data

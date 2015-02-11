@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 
@@ -103,5 +104,15 @@ class ArrayAccessVariable implements ASMVariable {
     @Override
     public boolean isMethod() {
         return false;
+    }
+
+    @Override
+    public Handle getterHandle() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Handle setterHandle() {
+        throw new UnsupportedOperationException();
     }
 }

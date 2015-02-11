@@ -1350,6 +1350,35 @@ public final class ASMUtils {
 		return false;
 	}
 
+    public static Class<?> getClass(Type type) throws ClassNotFoundException {
+        switch (type.getSort()) {
+            case Type.OBJECT:
+                return Class.forName(type.getClassName());
+            case Type.ARRAY:
+                return Class.forName(binaryName(type.getInternalName()));
+            case Type.BOOLEAN:
+                return boolean.class;
+            case Type.BYTE:
+                return byte.class;
+            case Type.SHORT:
+                return short.class;
+            case Type.CHAR:
+                return char.class;
+            case Type.INT:
+                return int.class;
+            case Type.LONG:
+                return long.class;
+            case Type.FLOAT:
+                return float.class;
+            case Type.DOUBLE:
+                return double.class;
+            case Type.VOID:
+                return void.class;
+            case Type.METHOD:
+            default:
+                throw new IllegalArgumentException();
+        }
+    }
 
 	/**
 	 * <p>Checks if the given {@link org.objectweb.asm.Type} represents a primitive type or the void type.</p>

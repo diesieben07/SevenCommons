@@ -20,6 +20,6 @@ public class TestArrayConversions {
 	public void testDecodeBooleans() {
 		byte[] data = { 0b0110_1001, 0b0000_0001 };
 		boolean[] expected = { true, false, false, true, false, true, true, false, true};
-		assertThat(decodeBooleans(data, 9),	is(expected));
+		assertThat(decodeBooleans(data),	is(expected));
 	}
 }

@@ -1,13 +1,13 @@
 package de.take_weiland.mods.commons;
 
-import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.internal.NBTDynCallback;
 import de.take_weiland.mods.commons.nbt.ToNbt;
-import de.take_weiland.mods.commons.serialize.MethodPair;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -16,7 +16,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
@@ -26,8 +25,10 @@ import net.minecraftforge.event.entity.EntityEvent;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.lang.invoke.CallSite;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 
 import static java.lang.invoke.MethodType.methodType;
@@ -40,17 +41,18 @@ public class testmod_sc {
 
 	public static void main(@Nonnull String[] bar) throws Throwable {
         MethodHandles.Lookup lookup = MethodHandles.lookup();
-        MethodHandle stringReader = lookup.findStatic(testmod_sc.class, "doRead", methodType(void.class, NBTBase.class, String.class));
 
-        MethodHandle getter = lookup.findVirtual(testmod_sc.class, "doGet", methodType(String.class));
-        MethodHandle stringWriter = lookup.findConstructor(NBTTagString.class, methodType(void.class, String.class, String.class));
-        stringWriter = MethodHandles.insertArguments(stringWriter, 0, "");
+        String name = "enumSet";
+        MethodType type = methodType(NBTBase.class, testmod_sc.class);
 
-        MethodHandle mh = MethodPair.makeWriter(stringWriter, getter);
+        MethodHandle get = lookup.findGetter(testmod_sc.class, "enumSet", String.class);
+        MethodHandle set = lookup.findSetter(testmod_sc.class, "enumSet", String.class);
 
         testmod_sc inst = new testmod_sc();
-        inst.enumSet = "hello world";
-        System.out.println((NBTBase) mh.invokeExact(inst));
+        inst.enumSet = "hello";
+
+        CallSite callSite = NBTDynCallback.makeNBTWrite(lookup, name, type, 0, get, set);
+        System.out.println(JavaUtils.defaultToString(callSite.getTarget().invoke(inst)));
     }
 
     private static void doRead(NBTBase nbt, String s) {
@@ -69,8 +71,13 @@ public class testmod_sc {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-		Reflection.initialize(TestTE.class);
-		System.exit(0);
+		GameRegistry.registerTileEntity(TestTE.class, "testtile");
+        NBTTagCompound nbt = new NBTTagCompound();
+        TestTE testTE = new TestTE();
+        testTE.tank = "hello";
+        testTE.writeToNBT(nbt);
+        System.out.println(nbt);
+        System.exit(0);
 	}
 
 	@Mod.EventHandler
@@ -114,15 +121,13 @@ public class testmod_sc {
 
 	private static abstract class SuperTE extends TileEntity {
 
-		@ToNbt
-		private TileEntity[][] helloWorld;
 
 	}
 
 	private static class TestTE extends SuperTE {
 
 		@ToNbt
-		private int[][] tank;
+		private String tank;
 
 		void foo() {
 

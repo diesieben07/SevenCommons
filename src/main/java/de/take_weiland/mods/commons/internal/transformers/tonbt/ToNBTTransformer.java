@@ -1,17 +1,19 @@
 package de.take_weiland.mods.commons.internal.transformers.tonbt;
 
-import com.google.common.collect.Lists;
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.asm.info.HasAnnotations;
+import de.take_weiland.mods.commons.internal.NBTDynCallback;
 import de.take_weiland.mods.commons.internal.transformers.ClassWithProperties;
 import de.take_weiland.mods.commons.internal.transformers.PropertyBasedTransformer;
 import de.take_weiland.mods.commons.internal.transformers.TransformerUtil;
 import de.take_weiland.mods.commons.nbt.ToNbt;
 import net.minecraft.entity.Entity;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.IExtendedEntityProperties;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -36,11 +38,6 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 
 		ClassType type = ClassType.typeOf(clazz.classInfo);
 
-		List<ToNBTHandler> handlers = Lists.newArrayListWithCapacity(vars.size());
-		for (ASMVariable var : vars) {
-			handlers.add(ToNBTHandler.create(clazz, var));
-		}
-
 		int level = determineLevel(clazz.classInfo);
 		MethodNode levelMethod = makeLevelMethod(clazz.clazz, level);
 		ASMCondition isCurrentLvl = isCurrentLevel(clazz.clazz, levelMethod, level);
@@ -52,10 +49,21 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 		CodeBuilder readCode = new CodeBuilder();
 
 		CodePiece nbt = CodePieces.getLocal(1);
-		for (ToNBTHandler handler : handlers) {
-			handler.initialTransform(readMethod, writeMethod);
-			writeCode.add(handler.write(nbt, writeMethod));
-			readCode.add(handler.read(nbt, readMethod));
+		for (ASMVariable var : vars) {
+            String varKey = var.name();
+
+            Handle get = var.getterHandle();
+            Handle set = var.setterHandle();
+
+            String name = var.rawName();
+            String desc = Type.getMethodDescriptor(getType(NBTBase.class), getObjectType(clazz.clazz.name));
+
+            CodePiece writtenNbt = CodePieces.invokeDynamic(name, desc, CodePieces.getThis())
+                    .withBootstrap(getInternalName(NBTDynCallback.class), "makeNBTWrite", var.isMethod() ? 1 : 0, get, set);
+
+			writeCode.add(CodePieces.invokeVirtual(NBTTagCompound.class, "setTag", nbt, void.class,
+                    String.class, varKey,
+                    NBTBase.class, writtenNbt));
 		}
 		writeCode.add(new InsnNode(RETURN));
 		readCode.add(new InsnNode(RETURN));

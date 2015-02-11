@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -105,4 +106,14 @@ class ASMField extends ClassBoundASMVariable {
 	public boolean isMethod() {
 		return false;
 	}
+
+    @Override
+    public Handle getterHandle() {
+        return new Handle(isStatic() ? H_GETSTATIC : H_GETFIELD, clazz.name, field.name, field.desc);
+    }
+
+    @Override
+    public Handle setterHandle() {
+        return new Handle(isStatic() ? H_PUTSTATIC : H_PUTFIELD, clazz.name, field.name, field.desc);
+    }
 }

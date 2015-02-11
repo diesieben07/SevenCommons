@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.serialize;
 
 import com.google.common.base.Throwables;
+import de.take_weiland.mods.commons.internal.NBTSerializerWrapper;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.nbt.NBTData;
 import net.minecraft.nbt.NBTBase;
@@ -20,82 +21,69 @@ import static java.lang.invoke.MethodType.methodType;
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-public final class MethodPair {
+public final class DirectNBTSerializer extends NBTSerializerWrapper {
 
     private final Class<?> typeClass;
 
     private final MethodHandle reader;
     private final MethodHandle writer;
 
-    public MethodPair(MethodHandle reader, MethodHandle writer) {
-        this.reader = checkAndSecureReader(reader);
-//        this.writer = checkAndSecureWriter(writer);
-        this.writer = writer;
+    public DirectNBTSerializer(MethodHandle reader, MethodHandle writer) {
+        this.reader = checkReader(reader);
+        this.writer = checkWriter(writer);
 
         typeClass = findTypeClass(reader, writer);
     }
 
-    /**
-     * <p>Make a MethodHandle that reads the given property (specified through get and set) from NBT.</p>
-     * <p>With C being the class containing the property and T being the type of the property the following
-     * must apply:</p>
-     * <ul>
-     *     <li>get must have type (C) => T</li>
-     *     <li>set must have type (C, T) => void</li>
-     * </ul>
-     * <p>The resulting MethodHandle will then have type (NBTBase, C) => void</p>
-     * @param get the getter
-     * @param set the setter
-     * @return a MethodHandle
-     */
-    public MethodHandle makeReader(MethodHandle get, MethodHandle set) {
-        MethodHandle result;
-
-        // adapt get and set for our type
-        get = adaptGet(get);
-        set = adaptSet(set);
-
-        if (reader.type().returnType() == void.class) {
-            // reader has type (NBTBase, T) => void
-            // result has type (NBTBase, C) => void
-            result = MethodHandles.filterArguments(reader, 1, get);
-        } else {
-            // reader has type (NBTBase) => T
-            // setWithNBT has type (C, NBTBase)
-            MethodHandle setWithNBT = MethodHandles.filterArguments(set, 1, reader);
-
-            // swap arguments
-            MethodType newType = methodType(setWithNBT.type().returnType(), setWithNBT.type().parameterType(1), setWithNBT.type().parameterType(1));
-            result = MethodHandles.permuteArguments(setWithNBT, newType, 1, 0);
-        }
-
-        return result;
-    }
-
-    private MethodHandle adaptSet(MethodHandle set) {
-        return set.asType(methodType(void.class, set.type().parameterType(0), typeClass));
-    }
-
-    private MethodHandle adaptGet(MethodHandle get) {
-        return get.asType(methodType(typeClass, get.type().parameterType(1)));
-    }
-
-    private static MethodHandle checkAndSecureReader(MethodHandle reader) {
+    private static MethodHandle checkReader(MethodHandle reader) {
         MethodType type = reader.type();
-
+        checkArgument(NBTBase.class.isAssignableFrom(type.parameterType(0)), "reader must take NBT as first argument");
         if (type.returnType() == void.class) {
-            checkArgument(type.parameterCount() == 2, "void returning NBT reader must have 2 arguments");
+            checkArgument(type.parameterCount() == 2, "void returning NBT reader must take 2 arguments");
         } else {
-            checkArgument(type.parameterCount() == 1, "value-returning NBT reader must have 1 argument");
+            checkArgument(type.parameterCount() == 1, "value returning NBT reader must take only NBT as argument");
         }
-
-        checkArgument(NBTBase.class.isAssignableFrom(type.parameterType(0)), "NBT reader must have NBT as first argument");
-
-
         return reader;
     }
 
-    public static MethodHandle makeValueReader(MethodHandle reader, MethodHandle setter) {
+    private static MethodHandle checkWriter(MethodHandle writer) {
+        MethodType type = writer.type();
+        checkArgument(NBTBase.class.isAssignableFrom(type.returnType()), "NBT writer must return NBT");
+        checkArgument(type.parameterCount() == 1, "NBT writer must take 1 parameter");
+        return writer;
+    }
+
+    private static Class<?> findTypeClass(MethodHandle reader, MethodHandle writer) {
+        Class<?> writerType = writer.type().parameterType(0);
+        Class<?> readerType;
+        if (reader.type().returnType() == void.class) {
+            readerType = reader.type().parameterType(1);
+        } else {
+            readerType = reader.type().returnType();
+        }
+        checkArgument(readerType == writerType, "NBT reader and writer must handle same type");
+        return readerType;
+    }
+
+    @Override
+    public MethodHandle makeReader(TypeSpecification<?> typeSpec, MethodHandle getter, MethodHandle setter) {
+        return makeReader0(reader, getter, setter);
+    }
+
+    @Override
+    public MethodHandle makeWriter(TypeSpecification<?> typeSpec, MethodHandle getter, MethodHandle setter) {
+        return makeWriter0(writer, getter);
+    }
+
+    public static MethodHandle makeReader0(MethodHandle reader, MethodHandle getter, MethodHandle setter) {
+        if (reader.type().returnType() == void.class) {
+            return makeContentReader(reader, getter);
+        } else {
+            return makeValueReader(reader, setter);
+        }
+    }
+
+    private  static MethodHandle makeValueReader(MethodHandle reader, MethodHandle setter) {
         // C being the property holder class
         // T being the type of the property
         // S being the type that the reader produces (must be assignable to T)
@@ -130,7 +118,7 @@ public final class MethodPair {
         return MethodHandles.guardWithTest(isSerNull, setToNull, nonNullSet);
     }
 
-    public static MethodHandle makeContentReader(MethodHandle reader, MethodHandle getter) {
+    private static MethodHandle makeContentReader(MethodHandle reader, MethodHandle getter) {
         // C being the property holder class
         // T being the type of the property
         // S being the type that the reader handles (must be assignable from T)
@@ -173,7 +161,7 @@ public final class MethodPair {
         return guarded;
     }
 
-    public static MethodHandle makeWriter(MethodHandle writer, MethodHandle getter) {
+    public static MethodHandle makeWriter0(MethodHandle writer, MethodHandle getter) {
         // C being the property holder class
         // T being the type of the property
         // S being the type that the writer handles (must be assignable from T)
@@ -197,8 +185,6 @@ public final class MethodPair {
         return MethodHandles.filterArguments(guarded, 0, getter);
     }
 
-
-
     private static final MethodHandle IS_SERIALIZED_NULL;
     private static final MethodHandle CHECK_NBT_ID;
     private static final MethodHandle CHECK_VALID_COMPOUND;
@@ -209,11 +195,11 @@ public final class MethodPair {
     static {
         MethodHandles.Lookup lookup = MethodHandles.lookup();
         try {
-            IS_SERIALIZED_NULL = lookup.findStatic(MethodPair.class, "isRealSerializedNull", methodType(boolean.class, NBTBase.class));
-            CHECK_NBT_ID = lookup.findStatic(MethodPair.class, "checkNBTId", methodType(boolean.class, NBTBase.class, int.class));
-            CHECK_VALID_COMPOUND = lookup.findStatic(MethodPair.class, "checkValidCompound", methodType(boolean.class, NBTBase.class));
+            IS_SERIALIZED_NULL = lookup.findStatic(DirectNBTSerializer.class, "isRealSerializedNull", methodType(boolean.class, NBTBase.class));
+            CHECK_NBT_ID = lookup.findStatic(DirectNBTSerializer.class, "checkNBTId", methodType(boolean.class, NBTBase.class, int.class));
+            CHECK_VALID_COMPOUND = lookup.findStatic(DirectNBTSerializer.class, "checkValidCompound", methodType(boolean.class, NBTBase.class));
             DO_NOTHING = MethodHandles.constant(Void.class, null).asType(methodType(void.class));
-            IS_REF_NULL = lookup.findStatic(MethodPair.class, "isRefNull", methodType(boolean.class, Object.class));
+            IS_REF_NULL = lookup.findStatic(DirectNBTSerializer.class, "isRefNull", methodType(boolean.class, Object.class));
             SER_NULL = lookup.findStatic(NBTData.class, "serializedNull", methodType(NBTBase.class));
         } catch (Throwable t) {
             throw Throwables.propagate(t);
@@ -255,15 +241,4 @@ public final class MethodPair {
         }
     }
 
-    private static Class<?> findTypeClass(MethodHandle reader, MethodHandle writer) {
-        Class<?> writerType = writer.type().parameterType(0);
-        Class<?> readerType;
-        if (reader.type().returnType() == void.class) {
-            readerType = reader.type().parameterType(1);
-        } else {
-            readerType = reader.type().returnType();
-        }
-        checkArgument(readerType == writerType, "NBT reader and writer must handle same type");
-        return readerType;
-    }
 }

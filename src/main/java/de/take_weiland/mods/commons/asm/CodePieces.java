@@ -11,6 +11,7 @@ import org.objectweb.asm.tree.*;
 
 import javax.annotation.Nullable;
 import java.lang.invoke.CallSite;
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
@@ -465,12 +466,14 @@ public final class CodePieces {
 				if (Primitives.isWrapperType(cls) || cls == String.class || cls == Class.class) {
 					allBsArgs.add(Type.getType(Primitives.unwrap(cls)));
 				} else if (cls == Type.class) {
-					allBsArgs.add(Type.getType(Class.class));
+                    allBsArgs.add(Type.getType(Class.class));
+                } else if (cls == Handle.class) {
+                    allBsArgs.add(Type.getType(MethodHandle.class));
 				} else {
 					throw new RuntimeException("Bootstrap arguments need to be constants");
 				}
 			}
-			String bsDesc = Type.getMethodDescriptor(getType(CallSite.class), allBsArgs.toArray(new Type[allBsArgs.size()]));
+            String bsDesc = Type.getMethodDescriptor(getType(CallSite.class), allBsArgs.toArray(new Type[allBsArgs.size()]));
 			Handle handle = new Handle(handleTag, bsOwner, bsName, bsDesc);
 			return concat(args).append(new InvokeDynamicInsnNode(name, desc, handle, bsArgs));
 		}
