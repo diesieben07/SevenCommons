@@ -190,7 +190,7 @@ public final class DirectNBTSerializer extends NBTSerializerWrapper {
     private static final MethodHandle CHECK_VALID_COMPOUND;
     private static final MethodHandle DO_NOTHING;
     private static final MethodHandle IS_REF_NULL;
-    private static final MethodHandle SER_NULL;
+    private static final Method Handle SER_NULL;
 
     static {
         MethodHandles.Lookup lookup = MethodHandles.lookup();
