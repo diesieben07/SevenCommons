@@ -1,22 +1,25 @@
 package de.take_weiland.mods.commons.nbt;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.nbt.NBTBase;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.invoke.CallSite;
-import java.lang.invoke.ConstantCallSite;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodType;
+import java.lang.invoke.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.invoke.MethodType.methodType;
 
 /**
+ * <p>Registry for NBT serializers to be used with {@link de.take_weiland.mods.commons.nbt.ToNbt @ToNbt}.</p>
+ * <p>A Serializer consists of two Methods: A serializer and a deserializer. These are represented by MethodHandles.</p>
+ * @see de.take_weiland.mods.commons.nbt.NBTSerializerFactory
+ *
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
@@ -24,72 +27,138 @@ public final class NBTSerializers {
 
     private static Multimap<Class<?>, NBTSerializerFactory> factories = ArrayListMultimap.create();
 
-    public static void registerWithTypeSpecFilter(Class<?> clazz, Predicate<TypeSpecification<?>> predicate, MethodHandle reader, MethodHandle writer) {
-        MethodHandle filter = NBTSerializerMethods.PREDICATE_APPLY.bindTo(predicate).asType(methodType(boolean.class, TypeSpecification.class));
-        register(clazz, filter, reader, writer);
+    static {
+        SevenCommons.registerPostInitCallback(new Runnable() {
+            @Override
+            public void run() {
+                freeze();
+            }
+        });
     }
 
-    public static void registerWithClassFilter(Class<?> clazz, Predicate<Class<?>> predicate, MethodHandle reader, MethodHandle writer) {
-        MethodHandle filter = NBTSerializerMethods.PREDICATE_APPLY.bindTo(predicate).asType(methodType(boolean.class, Class.class));
-        register(clazz, filter, reader, writer);
+    static synchronized void freeze() {
+        factories = ImmutableMultimap.copyOf(factories);
+    }
+
+    private static boolean isFrozen() {
+       return factories instanceof ImmutableMultimap;
     }
 
     /**
-     * <p>Register a MethodHandle </p>
-     * @param clazz
-     * @param reader
-     * @param writer
+     * <p>Register a new NBTSerializerFactory.</p>
+     * <p>The factory will be queried for properties of type {@code T} or any subtypes of {@code T}.
+     * Any additional filtering is on behalf of the factory.</p>
+     * @param clazz the base class
+     * @param factory the factory
      */
-    public static void register(Class<?> clazz, MethodHandle reader, MethodHandle writer) {
-        MethodHandle filter = NBTSerializerMethods.EQUAL.bindTo(clazz).asType(methodType(boolean.class, Class.class));
-        register(clazz, filter, reader, writer);
+    public static synchronized <T> void register(Class<T> clazz, NBTSerializerFactory factory) {
+        checkState(!isFrozen(), "Register NBTSerializers before postInit");
+        factories.put(clazz, factory);
     }
 
     /**
      * <p>Register a reader and writer MethodHandle.</p>
-     * <p>The filter must have the exact type <tt>(Class&lt;?&gt;):boolean</tt> or <tt>(TypeSpecification&lt;?&gt;):boolean</tt>.</p>
-     * <p></p>
-     * @param clazz
-     * @param filter
-     * @param reader
-     * @param writer
+     * <p>The filter must have the exact type <tt>(Class&lt;?&gt;)->boolean</tt> or <tt>(TypeSpecification&lt;?&gt;)->boolean</tt>.</p>
+     * <p>The reader and writer must be valid NBT serializers as defined by
+     * {@link #bindReader(java.lang.invoke.MethodHandle, java.lang.invoke.MethodHandle, java.lang.invoke.MethodHandle) bindReader}
+     * and {@link #bindWriter(java.lang.invoke.MethodHandle, java.lang.invoke.MethodHandle, java.lang.invoke.MethodHandle) bindWriter}.</p>
+     * <p>The filter will be queried for properties of type {@code T} or any subtype of {@code T}. If it returns true, {@code reader}
+     * and {@code writer} will be bound to the getter and setter using {@code bindReader} and {@code bindWriter}.</p>
+     * @param clazz the base class
+     * @param filter the filter
+     * @param reader the reader
+     * @param writer the writer
      */
-    public static void register(Class<?> clazz, MethodHandle filter, MethodHandle reader, MethodHandle writer) {
+    public static <T> void register(Class<T> clazz, MethodHandle filter, MethodHandle reader, MethodHandle writer) {
         validateReader(reader);
         validateWriter(writer);
+        filter = validateFilter(filter);
 
         register(clazz, new MethodHandleBasedFactory(filter, reader, writer));
     }
 
     /**
-     * <p>Register a new NBTSerializerFactory. This factory will be queried for types of the given class or any superclasses and interfaces implemented by it directly
-     * or indirectly. Any filtering is on behalf of the factory.</p>
+     * <p>Equivalent to
+     * {@link #register(Class, java.lang.invoke.MethodHandle, java.lang.invoke.MethodHandle, java.lang.invoke.MethodHandle)}
+     * with a MethodHandle equivalent to {@code (Class c) => return clazz == c} as the filter.</p>
      * @param clazz the base class
-     * @param factory the factory
+     * @param reader the reader
+     * @param writer the writer
      */
-    public static synchronized void register(Class<?> clazz, NBTSerializerFactory factory) {
-        factories.put(clazz, factory);
+    public static void register(Class<?> clazz, MethodHandle reader, MethodHandle writer) {
+        MethodHandle filter = NBTSerializerMethods.CLASS_EQUAL.bindTo(clazz);
+        register(clazz, filter, reader, writer);
     }
 
+    /**
+     * <p>Bind a reading MethodHandle to the given getter and setter.</p>
+     * <p>Given two types {@code C} and {@code T} the getter must have type {@code (C)->T} and the setter must have
+     * type {@code (C, T)->void}.</p>
+     * <p>If the reader's return type is {@code void} it must have a type that is convertible to {@code (T, NBTBase)->void}
+     * by the rules of {@link java.lang.invoke.MethodHandle#asType(java.lang.invoke.MethodType) MethodHandle.asType},
+     * otherwise it must have a type that is convertible to {@code (NBTBase)->T} by the rules of {@code MethodHandle.asType}.
+     * In either of those cases the last argument of the reader must be {@code NBTBase} or a subtype.</p>
+     * <p>This method will in both cases produce a MethodHandle of the exact type {@code (C, NBTBase)->void}.</p>
+     * @param reader the reader
+     * @param getter the getter
+     * @param setter the setter
+     * @return a MethodHandle
+     */
     public static MethodHandle bindReader(MethodHandle reader, MethodHandle getter, MethodHandle setter) {
         validateReader(reader);
         return MethodHandleBasedFactory.bindReader(reader, getter, setter);
     }
 
+    /**
+     * <p>Bind a writing MethodHandle to the given getter and setter.</p>
+     * <p>Given two types {@code C} and {@code T} the getter must have type {@code (C)->T} and the setter must have
+     * type {@code (C, T)->void}.</p>
+     * <p>The writer's type must be convertible to {@code (T)->NBTBase} by the rules of
+     * {@link java.lang.invoke.MethodHandle#asType(java.lang.invoke.MethodType) MethodHandle.asType}.</p>
+     * <p>This method will produce a MethodHandle of the exact type {@code (C)->NBTBase}.</p>
+     * @param writer the writer
+     * @param getter the getter
+     * @param setter the setter
+     * @return a MethodHandle
+     */
     public static MethodHandle bindWriter(MethodHandle writer, MethodHandle getter, MethodHandle setter) {
         validateWriter(writer);
         return MethodHandleBasedFactory.bindWriter(writer, getter, setter);
     }
 
+    /**
+     * <p>Create a CallSite that can be used to write the property specified by the given {@code TypeSpecification},
+     * {@code getter} and {@code setter} to NBT.</p>
+     * <p>Given two types {@code C} and {@code T} the getter must have type {@code (C)->T} and the setter must have
+     * type {@code (C, T)->void}.</p>
+     * <p>The type of the resulting CallSite will then have the exact type {@code (C)->NBTBase}.</p>
+     * @param spec the TypeSpecification
+     * @param getter the getter
+     * @param setter the setter
+     * @return a CallSite
+     */
     public static CallSite makeWriterCallSite(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter) {
         return makeCallSite(spec, getter, setter, true);
     }
 
+    /**
+     * <p>Create a CallSite that can be used to read the property specified by the given {@code TypeSpecification},
+     * {@code getter} and {@code setter} from NBT.</p>
+     * <p>Given two types {@code C} and {@code T} the getter must have type {@code (C)->T} and the setter must have
+     * type {@code (C, T)->void}.</p>
+     * <p>The type of the resulting CallSite will then have the exact type {@code (C, NBTBase)->void}.</p>
+     * @param spec the TypeSpecification
+     * @param getter the getter
+     * @param setter the setter
+     * @return a CallSite
+     */
     public static CallSite makeReaderCallSite(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter) {
         return makeCallSite(spec, getter, setter, false);
     }
 
     private static CallSite makeCallSite(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter, boolean writer) {
+        checkState(isFrozen(), "Don't query NBTSerializers before postInit");
+
         validateGetterSetter(getter, setter);
 
         MethodHandle result = findMH(spec, getter, setter, writer);
@@ -136,6 +205,17 @@ public final class NBTSerializers {
         MethodType type = writer.type();
         checkArgument(NBTBase.class.isAssignableFrom(type.returnType()), "NBT writer must return NBT");
         checkArgument(type.parameterCount() == 1, "NBT writer must take 1 argument");
+    }
+
+    private static MethodHandle validateFilter(MethodHandle filter) {
+        checkArgument(filter.type().returnType() == boolean.class, "filter must return boolean");
+        checkArgument(filter.type().parameterCount() == 1, "filter must take 1 argument");
+        if (filter.type().parameterType(0) == Class.class) {
+            filter = MethodHandles.filterArguments(filter, 0, NBTSerializerMethods.GET_RAW_TYPE);
+        } else {
+            checkArgument(filter.type().parameterType(0) == TypeSpecification.class, "filter must take Class<?> or TypeSpecification");
+        }
+        return filter;
     }
 
     static void validateGetterSetter(MethodHandle getter, MethodHandle setter) {

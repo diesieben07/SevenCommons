@@ -13,7 +13,7 @@ import static java.lang.invoke.MethodType.methodType;
 /**
  * @author diesieben07
  */
-final class BuiltinSerializers implements NBTSerializerFactory {
+public final class BuiltinSerializers implements NBTSerializerFactory {
 
     private static final MethodHandle READ_BOOL, WRITE_BOOL,
         READ_BYTE, WRITE_BYTE,
@@ -29,7 +29,7 @@ final class BuiltinSerializers implements NBTSerializerFactory {
         try {
             MethodHandles.Lookup lookup = MethodHandles.lookup();
             READ_BYTE = lookup.findGetter(NBTTagByte.class, field(F_NBT_BYTE_DATA), byte.class);
-            WRITE_BYTE = lookup.findConstructor(NBTTagByte.class, methodType(String.class, byte.class))
+            WRITE_BYTE = lookup.findConstructor(NBTTagByte.class, methodType(void.class, String.class, byte.class))
                     .bindTo("")
                     .asType(methodType(NBTBase.class, byte.class));
 
@@ -37,7 +37,7 @@ final class BuiltinSerializers implements NBTSerializerFactory {
             WRITE_BOOL = MethodHandles.explicitCastArguments(WRITE_BYTE, methodType(NBTBase.class, boolean.class));
 
             READ_SHORT = lookup.findGetter(NBTTagShort.class, field(F_NBT_SHORT_DATA), short.class);
-            WRITE_SHORT = lookup.findConstructor(NBTTagShort.class, methodType(String.class, short.class))
+            WRITE_SHORT = lookup.findConstructor(NBTTagShort.class, methodType(void.class, String.class, short.class))
                     .bindTo("")
                     .asType(methodType(NBTBase.class, short.class));
 
@@ -45,27 +45,27 @@ final class BuiltinSerializers implements NBTSerializerFactory {
             WRITE_CHAR = MethodHandles.explicitCastArguments(WRITE_SHORT, methodType(NBTBase.class, char.class));
 
             READ_INT = lookup.findGetter(NBTTagInt.class, field(F_NBT_INT_DATA), int.class);
-            WRITE_INT = lookup.findConstructor(NBTTagInt.class, methodType(String.class, int.class))
+            WRITE_INT = lookup.findConstructor(NBTTagInt.class, methodType(void.class, String.class, int.class))
                     .bindTo("")
                     .asType(methodType(NBTBase.class, int.class));
 
             READ_LONG = lookup.findGetter(NBTTagLong.class, field(F_NBT_LONG_DATA), long.class);
-            WRITE_LONG = lookup.findConstructor(NBTTagLong.class, methodType(String.class, long.class))
+            WRITE_LONG = lookup.findConstructor(NBTTagLong.class, methodType(void.class, String.class, long.class))
                     .bindTo("")
                     .asType(methodType(NBTBase.class, long.class));
 
             READ_FLOAT = lookup.findGetter(NBTTagFloat.class, field(F_NBT_FLOAT_DATA), float.class);
-            WRITE_FLOAT = lookup.findConstructor(NBTTagFloat.class, methodType(String.class, float.class))
+            WRITE_FLOAT = lookup.findConstructor(NBTTagFloat.class, methodType(void.class, String.class, float.class))
                     .bindTo("")
                     .asType(methodType(NBTBase.class, float.class));
 
             READ_DOUBLE = lookup.findGetter(NBTTagDouble.class, field(F_NBT_DOUBLE_DATA), double.class);
-            WRITE_DOUBLE = lookup.findConstructor(NBTTagDouble.class, methodType(String.class, double.class))
+            WRITE_DOUBLE = lookup.findConstructor(NBTTagDouble.class, methodType(void.class, String.class, double.class))
                     .bindTo("")
                     .asType(methodType(NBTBase.class, double.class));
 
             READ_STRING = lookup.findGetter(NBTTagString.class, field(F_NBT_STRING_DATA), String.class);
-            WRITE_STRING = lookup.findConstructor(NBTTagString.class, methodType(String.class, String.class))
+            WRITE_STRING = lookup.findConstructor(NBTTagString.class, methodType(void.class, String.class, String.class))
                     .bindTo("")
                     .asType(methodType(NBTBase.class, String.class));
 

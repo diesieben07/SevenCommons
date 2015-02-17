@@ -7,33 +7,21 @@ import net.minecraft.nbt.NBTBase;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.invoke.MethodType.methodType;
 
 /**
 * @author diesieben07
 */
-class MethodHandleBasedFactory implements NBTSerializerFactory {
+final class MethodHandleBasedFactory implements NBTSerializerFactory {
 
     private final MethodHandle filter;
     private final MethodHandle reader;
     private final MethodHandle writer;
 
     MethodHandleBasedFactory(MethodHandle filter, MethodHandle reader, MethodHandle writer) {
-        this.filter = validateFilter(filter);
+        this.filter = filter;
         this.reader = reader;
         this.writer = writer;
-    }
-
-    private static MethodHandle validateFilter(MethodHandle filter) {
-        checkArgument(filter.type().returnType() == boolean.class, "filter must return boolean");
-        checkArgument(filter.type().parameterCount() == 1, "filter must take 1 argument");
-        if (filter.type().parameterType(0) == Class.class) {
-            filter = MethodHandles.filterArguments(filter, 0, NBTSerializerMethods.GET_RAW_TYPE);
-        } else {
-            checkArgument(filter.type().parameterType(0) == TypeSpecification.class, "filter must take Class<?> or TypeSpecification");
-        }
-        return filter;
     }
 
     @Override
@@ -89,13 +77,21 @@ class MethodHandleBasedFactory implements NBTSerializerFactory {
         //
         // the conditions are optimized as possible
 
-        Class<?> propertyHolder = setter.type().parameterType(0);
         Class<?> propertyType = setter.type().parameterType(1);
+        if (propertyType.isPrimitive()) {
+            return bindValueReaderPrim(reader, getter, setter);
+        }
+
+        Class<?> propertyHolder = setter.type().parameterType(0);
         Class<?> nbtClass = reader.type().parameterType(0);
 
-        MethodHandle setNull = MethodHandles.insertArguments(setter, 1, (Object) null);
         MethodHandle isSerNull = MethodHandles.dropArguments(NBTSerializerMethods.IS_SER_NULL, 0, propertyHolder);
+
+        MethodHandle setNull = MethodHandles.insertArguments(setter, 1, (Object) null);
+        setNull = MethodHandles.dropArguments(setNull, 1, NBTBase.class);
+
         MethodHandle isValid;
+
         if (nbtClass == NBTBase.class) {
             isValid = MethodHandles.dropArguments(NBTSerializerMethods.IS_NONNULL, 0, propertyHolder);
         } else {
@@ -107,6 +103,25 @@ class MethodHandleBasedFactory implements NBTSerializerFactory {
         MethodHandle nonNullSet = MethodHandles.guardWithTest(isValid, readSet, adaptedNothing);
 
         return MethodHandles.guardWithTest(isSerNull, setNull, nonNullSet);
+    }
+
+    private static MethodHandle bindValueReaderPrim(MethodHandle reader, MethodHandle getter, MethodHandle setter) {
+        Class<?> propertyHolder = setter.type().parameterType(0);
+        Class<?> propertyType = setter.type().parameterType(1);
+        Class<?> nbtClass = reader.type().parameterType(0);
+
+        MethodHandle isValid;
+        if (nbtClass == NBTBase.class) {
+            isValid = MethodHandles.dropArguments(NBTSerializerMethods.IS_NONNULL_AND_NOT_SERNULL, 0, propertyHolder);
+        } else {
+            int nbtID = NBT.Tag.byClass(nbtClass).id();
+            isValid = MethodHandles.dropArguments(MethodHandles.insertArguments(NBTSerializerMethods.IS_NONNULL_AND_ID, 1, nbtID), 0, propertyHolder);
+        }
+
+        MethodHandle readSet = MethodHandles.filterArguments(setter, 1, reader.asType(methodType(propertyType, NBTBase.class)));
+        MethodHandle doNothing = MethodHandles.dropArguments(NBTSerializerMethods.DO_NOTHING, 0, propertyHolder, NBTBase.class);
+
+        return MethodHandles.guardWithTest(isValid, readSet, doNothing);
     }
 
     private static MethodHandle bindContentReader(MethodHandle reader, MethodHandle getter, MethodHandle setter) {

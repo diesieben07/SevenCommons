@@ -2,12 +2,10 @@ package de.take_weiland.mods.commons;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.internal.NBTDynCallback;
+import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.nbt.ToNbt;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -25,13 +23,7 @@ import net.minecraftforge.event.entity.EntityEvent;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.lang.invoke.CallSite;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
-
-import static java.lang.invoke.MethodType.methodType;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @NetworkMod()
@@ -40,19 +32,19 @@ public class testmod_sc {
     private String enumSet;
 
 	public static void main(@Nonnull String[] bar) throws Throwable {
-        MethodHandles.Lookup lookup = MethodHandles.lookup();
-
-        String name = "enumSet";
-        MethodType type = methodType(NBTBase.class, testmod_sc.class);
-
-        MethodHandle get = lookup.findGetter(testmod_sc.class, "enumSet", String.class);
-        MethodHandle set = lookup.findSetter(testmod_sc.class, "enumSet", String.class);
-
-        testmod_sc inst = new testmod_sc();
-        inst.enumSet = "hello";
-
-        CallSite callSite = NBTDynCallback.makeNBTWrite(lookup, name, type, 0, get, set);
-        System.out.println(JavaUtils.defaultToString(callSite.getTarget().invoke(inst)));
+//        MethodHandles.Lookup lookup = MethodHandles.lookup();
+//
+//        String name = "enumSet";
+//        MethodType type = methodType(NBTBase.class, testmod_sc.class);
+//
+//        MethodHandle get = lookup.findGetter(testmod_sc.class, "enumSet", String.class);
+//        MethodHandle set = lookup.findSetter(testmod_sc.class, "enumSet", String.class);
+//
+//        testmod_sc inst = new testmod_sc();
+//        inst.enumSet = "hello";
+//
+////        CallSite callSite = ToNbtBootstrap.makeNBTWrite(lookup, name, type, 0, get, set);
+//        System.out.println(JavaUtils.defaultToString(callSite.getTarget().invoke(inst)));
     }
 
     private static void doRead(NBTBase nbt, String s) {
@@ -70,15 +62,25 @@ public class testmod_sc {
 	private static Block myBlock;
 
 	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-		GameRegistry.registerTileEntity(TestTE.class, "testtile");
+	public void preInit(FMLPostInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        GameRegistry.registerTileEntity(TestTE.class, "testtile");
         NBTTagCompound nbt = new NBTTagCompound();
         TestTE testTE = new TestTE();
         testTE.tank = "hello";
         testTE.writeToNBT(nbt);
         System.out.println(nbt);
+
+        nbt.setString("tank", "hello world");
+        nbt.setTag("read", NBTData.serializedNull());
+
+        for (int i = 0; i < 2000000; i++) {
+            testTE.readFromNBT(nbt);
+        }
+        System.out.println(testTE.tank);
+        System.out.println(testTE.read);
+
         System.exit(0);
-	}
+    }
 
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent event) throws NoSuchMethodException, NoSuchFieldException, IOException {
@@ -129,6 +131,9 @@ public class testmod_sc {
 		@ToNbt
 		private String tank;
 
+        @ToNbt
+        int read;
+
 		void foo() {
 
 		}
@@ -139,6 +144,9 @@ public class testmod_sc {
 
 		@ToNbt
 		String someString;
+
+        @ToNbt
+        int read;
 
 		@Override
 		public void saveNBTData(NBTTagCompound compound) {

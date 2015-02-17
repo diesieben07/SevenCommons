@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.serialize;
 
 import com.google.common.reflect.TypeToken;
+import de.take_weiland.mods.commons.SerializationMethod;
 
 import java.lang.annotation.Annotation;
 
@@ -27,7 +28,7 @@ public interface TypeSpecification<T> {
 	 * <p>Get the desired SerializationMethod for the property.</p>
 	 * @return the SerializationMethod
 	 */
-	SerializationMethod getDesiredMethod();
+	SerializationMethod.Method getDesiredMethod();
 
 	/**
 	 * <p>True, if the given annotation is present on the property.</p>

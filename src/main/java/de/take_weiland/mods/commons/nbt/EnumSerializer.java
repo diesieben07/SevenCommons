@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.nbt;
 
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.serialize.NBTSerializer;
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.Property;
 import net.minecraft.nbt.NBTBase;
 
@@ -16,7 +16,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 enum EnumSerializer implements NBTSerializer<Enum> {
 
-	@NBTSerializer.Provider(forType = Enum.class, method = SerializationMethod.VALUE)
+	@NBTSerializer.Provider(forType = Enum.class, method = SerializationMethod.Method.VALUE)
 	INSTANCE;
 
 	@Nonnull

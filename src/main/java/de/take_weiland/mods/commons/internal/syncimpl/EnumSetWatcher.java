@@ -4,9 +4,9 @@ import com.google.common.base.Objects;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
@@ -49,7 +49,7 @@ public abstract class EnumSetWatcher<E extends Enum<E>> implements Watcher<EnumS
 		if (!enumType.isEnum()) {
 			return null;
 		} else {
-			if (spec.getDesiredMethod() == SerializationMethod.CONTENTS) {
+			if (spec.getDesiredMethod() == SerializationMethod.Method.CONTENTS) {
 				return contentsCache.getUnchecked(enumType);
 			} else {
 				return valueCache.getUnchecked(enumType);

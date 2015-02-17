@@ -3,8 +3,8 @@ package de.take_weiland.mods.commons.internal.sync;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.nbt.ToNbt;
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 
@@ -22,7 +22,7 @@ import java.util.Map;
 abstract class AbstractProperty<MEM extends Member & AnnotatedElement> implements SyncableProperty<Object, Object> {
 
 	final MEM member;
-	private final SerializationMethod method;
+	private final SerializationMethod.Method method;
 
 	AbstractProperty(MEM member, Class<? extends Annotation> annotationClass) {
 		this.member = member;
@@ -34,7 +34,7 @@ abstract class AbstractProperty<MEM extends Member & AnnotatedElement> implement
 	private TypeToken<?> typeToken;
 
 	@Override
-	public final SerializationMethod getDesiredMethod() {
+	public final SerializationMethod.Method getDesiredMethod() {
 		return method;
 	}
 
@@ -65,24 +65,24 @@ abstract class AbstractProperty<MEM extends Member & AnnotatedElement> implement
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <A extends Annotation> SerializationMethod getMethodFromAnnotation(A ann) {
-		return ((Function<A, SerializationMethod>) methodGetters.get(ann.annotationType())).apply(ann);
+	private static <A extends Annotation> SerializationMethod.Method getMethodFromAnnotation(A ann) {
+		return ((Function<A, SerializationMethod.Method>) methodGetters.get(ann.annotationType())).apply(ann);
 	}
 
-	private static final Map<Class<? extends Annotation>, Function<? extends Annotation, SerializationMethod>> methodGetters;
+	private static final Map<Class<? extends Annotation>, Function<? extends Annotation, SerializationMethod.Method>> methodGetters;
 
 	static {
 		methodGetters = ImmutableMap.of(
-				Sync.class, new Function<Sync, SerializationMethod>() {
+				Sync.class, new Function<Sync, SerializationMethod.Method>() {
 					@Override
-					public SerializationMethod apply(@Nullable Sync input) {
+					public SerializationMethod.Method apply(@Nullable Sync input) {
 						assert input != null;
 						return input.method();
 					}
 				},
-				ToNbt.class, new Function<ToNbt, SerializationMethod>() {
+				ToNbt.class, new Function<ToNbt, SerializationMethod.Method>() {
 					@Override
-					public SerializationMethod apply(@Nullable ToNbt input) {
+					public SerializationMethod.Method apply(@Nullable ToNbt input) {
 						assert input != null;
 						return input.method();
 					}

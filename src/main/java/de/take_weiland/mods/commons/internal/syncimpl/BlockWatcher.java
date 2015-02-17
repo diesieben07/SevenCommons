@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.internal.syncimpl;
 
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 import net.minecraft.block.Block;
@@ -12,7 +12,7 @@ import net.minecraft.block.Block;
  */
 public enum BlockWatcher implements Watcher<Block> {
 
-	@Watcher.Provider(forType = Block.class, method = SerializationMethod.VALUE)
+	@Watcher.Provider(forType = Block.class, method = SerializationMethod.Method.VALUE)
 	INSTANCE;
 
 	@Override

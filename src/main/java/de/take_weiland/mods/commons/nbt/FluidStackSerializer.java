@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.nbt;
 
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.serialize.NBTSerializer;
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.Property;
 import net.minecraft.nbt.NBTBase;
 import net.minecraftforge.fluids.FluidStack;
@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 */
 enum FluidStackSerializer implements NBTSerializer<FluidStack> {
 
-	@NBTSerializer.Provider(forType = FluidStack.class, method = SerializationMethod.VALUE)
+	@NBTSerializer.Provider(forType = FluidStack.class, method = SerializationMethod.Method.VALUE)
 	VALUE;
 
 	@Nonnull

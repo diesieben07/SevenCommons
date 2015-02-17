@@ -1,9 +1,9 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.internal.AnnotationNull;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -101,7 +101,7 @@ public interface Watcher<T> {
          *
          * @return a filter
          */
-        SerializationMethod method() default SerializationMethod.DEFAULT;
+        SerializationMethod.Method method() default SerializationMethod.Method.DEFAULT;
 
     }
 }

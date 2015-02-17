@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.nbt;
 
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
+import de.take_weiland.mods.commons.SerializationMethod;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -32,6 +32,6 @@ public @interface ToNbt {
 	 */
 	String key() default "";
 
-	SerializationMethod method() default SerializationMethod.DEFAULT;
+	SerializationMethod.Method method() default SerializationMethod.Method.DEFAULT;
 
 }

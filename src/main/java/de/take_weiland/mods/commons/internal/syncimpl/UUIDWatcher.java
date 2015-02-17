@@ -1,9 +1,9 @@
 package de.take_weiland.mods.commons.internal.syncimpl;
 
 import com.google.common.base.Objects;
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
 
@@ -14,7 +14,7 @@ import java.util.UUID;
  */
 public enum UUIDWatcher implements Watcher<UUID> {
 
-	@Watcher.Provider(forType = UUID.class, method = SerializationMethod.VALUE)
+	@Watcher.Provider(forType = UUID.class, method = SerializationMethod.Method.VALUE)
 	INSTANCE;
 
 	@Override

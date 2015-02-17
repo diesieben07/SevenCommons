@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers.tonbt;
 import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.asm.info.HasAnnotations;
-import de.take_weiland.mods.commons.internal.NBTDynCallback;
+import de.take_weiland.mods.commons.internal.ToNbtBootstrap;
 import de.take_weiland.mods.commons.internal.transformers.ClassWithProperties;
 import de.take_weiland.mods.commons.internal.transformers.PropertyBasedTransformer;
 import de.take_weiland.mods.commons.internal.transformers.TransformerUtil;
@@ -42,7 +42,7 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 		MethodNode levelMethod = makeLevelMethod(clazz.clazz, level);
 		ASMCondition isCurrentLvl = isCurrentLevel(clazz.clazz, levelMethod, level);
 
-		MethodNode writeMethod = makeWriteMethod(clazz.clazz, level > 0);
+		MethodNode genWrite = makeWriteMethod(clazz.clazz, level > 0);
 		MethodNode readMethod = makeReadMethod(clazz.clazz, level > 0);
 
 		CodeBuilder writeCode = new CodeBuilder();
@@ -55,24 +55,28 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
             Handle get = var.getterHandle();
             Handle set = var.setterHandle();
 
-            String name = var.rawName();
             String desc = Type.getMethodDescriptor(getType(NBTBase.class), getObjectType(clazz.clazz.name));
-
-            CodePiece writtenNbt = CodePieces.invokeDynamic(name, desc, CodePieces.getThis())
-                    .withBootstrap(getInternalName(NBTDynCallback.class), "makeNBTWrite", var.isMethod() ? 1 : 0, get, set);
+            CodePiece writtenNbt = CodePieces.invokeDynamic("write", desc, CodePieces.getThis())
+                    .withBootstrap(getInternalName(ToNbtBootstrap.class), "bootstrap", get, set, var.rawName(), var.isMethod() ? 1 : 0);
 
 			writeCode.add(CodePieces.invokeVirtual(NBTTagCompound.class, "setTag", nbt, void.class,
                     String.class, varKey,
                     NBTBase.class, writtenNbt));
+
+            CodePiece readNbt = CodePieces.invokeVirtual(NBTTagCompound.class, "getTag", nbt, NBTBase.class,
+                    String.class, varKey);
+            desc = Type.getMethodDescriptor(VOID_TYPE, getObjectType(clazz.clazz.name), getType(NBTBase.class));
+            readCode.add(CodePieces.invokeDynamic("read", desc, CodePieces.getThis(), readNbt)
+                    .withBootstrap(getInternalName(ToNbtBootstrap.class), "bootstrap", get, set, var.rawName(), var.isMethod() ? 1 : 0));
 		}
 		writeCode.add(new InsnNode(RETURN));
 		readCode.add(new InsnNode(RETURN));
 
-		writeCode.build().appendTo(writeMethod.instructions);
+		writeCode.build().appendTo(genWrite.instructions);
 
 		readCode.build().appendTo(readMethod.instructions);
 
-		CodePiece callWrite = CodePieces.invoke(clazz.clazz.name, writeMethod, CodePieces.getThis(), nbt);
+		CodePiece callWrite = CodePieces.invoke(clazz.clazz.name, genWrite, CodePieces.getThis(), nbt);
 		CodePiece callRead = CodePieces.invoke(clazz.clazz.name, readMethod, CodePieces.getThis(), nbt);
 
 		type.injectWrite(clazz, isCurrentLvl.doIfTrue(callWrite), level > 0);
@@ -81,7 +85,7 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 		return true;
 	}
 
-	private static int determineLevel(ClassInfo clazz) {
+    private static int determineLevel(ClassInfo clazz) {
 		clazz = clazz.superclass();
 		int level = 0;
 
@@ -125,15 +129,17 @@ public final class ToNBTTransformer implements PropertyBasedTransformer {
 	}
 
 	private static MethodNode makeWriteMethod(ClassNode clazz, boolean callSuper) {
-		String name = "_sc$tonbt$write";
-		String desc = Type.getMethodDescriptor(VOID_TYPE, getType(NBTTagCompound.class));
-		MethodNode method = new MethodNode(ACC_PROTECTED, name, desc, null, null);
-		clazz.methods.add(method);
-		if (callSuper) {
-			method.instructions.add(new VarInsnNode(ALOAD, 0));
-			method.instructions.add(new VarInsnNode(ALOAD, 1));
-			method.instructions.add(new MethodInsnNode(INVOKESPECIAL, clazz.superName, name, desc));
-		}
+        String name = "_sc$tonbt$write";
+        String desc = Type.getMethodDescriptor(VOID_TYPE, getType(NBTTagCompound.class));
+        MethodNode method = new MethodNode(ACC_PROTECTED, name, desc, null, null);
+        clazz.methods.add(method);
+
+        if (callSuper) {
+            method.instructions.add(new VarInsnNode(ALOAD, 0));
+            method.instructions.add(new VarInsnNode(ALOAD, 1));
+            method.instructions.add(new MethodInsnNode(INVOKESPECIAL, clazz.superName, name, desc));
+        }
+
 		return method;
 	}
 

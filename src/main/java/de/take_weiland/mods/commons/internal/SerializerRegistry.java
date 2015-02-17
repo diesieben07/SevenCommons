@@ -6,9 +6,9 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.reflect.TypeToken;
 import cpw.mods.fml.common.discovery.ASMDataTable;
 import cpw.mods.fml.common.discovery.asm.ModAnnotation;
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.serialize.NBTSerializer;
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Watcher;
 import de.take_weiland.mods.commons.util.JavaUtils;
@@ -18,7 +18,6 @@ import org.objectweb.asm.Type;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashSet;
@@ -98,23 +97,23 @@ public final class SerializerRegistry {
 	}
 
 	private Object findSerializer(TypeSpecification<?> type) {
-		SerializationMethod method = type.getDesiredMethod();
+		SerializationMethod.Method method = type.getDesiredMethod();
 		ChangeableMethodSpec<?> overriddenSpec = null;
 
 		for (Class<?> clazz : JavaUtils.hierarchy(type.getRawType(), JavaUtils.Interfaces.INCLUDE)) {
 			Collection<MethodHandle> providers = registry.get(clazz);
 			Object serializer;
 
-			if (method != SerializationMethod.DEFAULT) {
+			if (method != SerializationMethod.Method.DEFAULT) {
 				serializer = findSerializerFromProviders(type, providers);
 			} else {
 				if (overriddenSpec == null) {
 					overriddenSpec = new ChangeableMethodSpec<>(type);
 				}
-				overriddenSpec.overrideMethod = SerializationMethod.VALUE;
+				overriddenSpec.overrideMethod = SerializationMethod.Method.VALUE;
 				serializer = findSerializerFromProviders(overriddenSpec, providers);
 				if (serializer != null) {
-					overriddenSpec.overrideMethod = SerializationMethod.CONTENTS;
+					overriddenSpec.overrideMethod = SerializationMethod.Method.CONTENTS;
 					serializer = findSerializerFromProviders(overriddenSpec, providers);
 				}
 			}
@@ -173,10 +172,10 @@ public final class SerializerRegistry {
 	private MethodHandle asMethodHandle(MethodHandles.Lookup lookup, ASMDataTable.ASMData annotationData) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, NoSuchFieldException {
 		MethodHandle mh;
 
-		SerializationMethod filter = SerializationMethod.DEFAULT;
+		SerializationMethod.Method filter = SerializationMethod.Method.DEFAULT;
 		ModAnnotation.EnumHolder methodVal = (ModAnnotation.EnumHolder) annotationData.getAnnotationInfo().get(ANNOTATION_METHOD_KEY);
 		if (methodVal != null) {
-			filter = Enum.valueOf(SerializationMethod.class, getEnumValue(methodVal));
+			filter = Enum.valueOf(SerializationMethod.Method.class, getEnumValue(methodVal));
 		}
 
 		Class<?> containingClass = Class.forName(annotationData.getClassName(), true, Launch.classLoader);
@@ -194,7 +193,7 @@ public final class SerializerRegistry {
 			verifyMember(args.length == 1, annotationData, "More than one argument");
 			verifyMember(args[0].getInternalName().equals(Type.getInternalName(TypeSpecification.class)), annotationData, "Parameter must be TypeSpecification");
 
-			Method method = containingClass.getDeclaredMethod(methodName, TypeSpecification.class);
+			java.lang.reflect.Method method = containingClass.getDeclaredMethod(methodName, TypeSpecification.class);
 			method.setAccessible(true);
 			verifyMember(Modifier.isStatic(method.getModifiers()), annotationData, "Must be static");
 			mh = lookup.unreflect(method);
@@ -204,13 +203,13 @@ public final class SerializerRegistry {
 			verifyMember(!field.getType().isPrimitive(), annotationData, "Primitive type");
 			verifyMember(!field.getType().isArray(), annotationData, "Array type");
 			verifyMember(Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers()), annotationData, "Field must be static final");
-			verifyMember(filter != SerializationMethod.DEFAULT, annotationData, "Field needs method attribute");
+			verifyMember(filter != SerializationMethod.Method.DEFAULT, annotationData, "Field needs method attribute");
 
 			MethodHandle getter = lookup.unreflectGetter(field);
 			mh = MethodHandles.dropArguments(getter, 0, TypeSpecification.class);
 		}
 
-		if (filter != SerializationMethod.DEFAULT) {
+		if (filter != SerializationMethod.Method.DEFAULT) {
 			mh = mh.asType(methodType(Object.class, TypeSpecification.class));
 			mh = MethodHandles.insertArguments(mhFilterSerializationMethod, 0, filter, mh);
 		}
@@ -244,14 +243,14 @@ public final class SerializerRegistry {
 		try {
 			mhFilterSerializationMethod = lookup.findStatic(SerializerRegistry.class,
 					"filterSerializationMethod",
-					methodType(Object.class, SerializationMethod.class, MethodHandle.class, TypeSpecification.class));
+					methodType(Object.class, SerializationMethod.Method.class, MethodHandle.class, TypeSpecification.class));
 
 		} catch (NoSuchMethodException | IllegalAccessException e) {
 			throw new AssertionError(e);
 		}
 	}
 
-	private static Object filterSerializationMethod(SerializationMethod filter, MethodHandle target, TypeSpecification<?> type) throws Throwable {
+	private static Object filterSerializationMethod(SerializationMethod.Method filter, MethodHandle target, TypeSpecification<?> type) throws Throwable {
 		if (type.getDesiredMethod() == filter) {
 			return (Object) target.invokeExact((TypeSpecification<?>) type);
 		} else {
@@ -271,14 +270,14 @@ public final class SerializerRegistry {
 
 		private final TypeSpecification<T> wrapped;
 
-		SerializationMethod overrideMethod;
+		SerializationMethod.Method overrideMethod;
 
 		ChangeableMethodSpec(TypeSpecification<T> wrapped) {
 			this.wrapped = wrapped;
 		}
 
 		@Override
-		public SerializationMethod getDesiredMethod() {
+		public SerializationMethod.Method getDesiredMethod() {
 			return overrideMethod;
 		}
 

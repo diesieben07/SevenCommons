@@ -9,7 +9,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.util.Objects;
 
 import static java.lang.invoke.MethodType.methodType;
 
@@ -27,7 +26,7 @@ final class NBTSerializerMethods {
     static final MethodHandle IS_ID;
     static final MethodHandle IS_NONNULL_AND_ID;
     static final MethodHandle IS_NONNULL_AND_NOT_SERNULL;
-    static final MethodHandle EQUAL;
+    static final MethodHandle CLASS_EQUAL;
     static final MethodHandle PREDICATE_APPLY;
 
     static {
@@ -36,7 +35,7 @@ final class NBTSerializerMethods {
 
             GET_RAW_TYPE = lookup.findVirtual(TypeSpecification.class, "getRawType", methodType(Class.class));
 
-            EQUAL = lookup.findStatic(Objects.class, "equals", methodType(boolean.class, Object.class, Object.class));
+            CLASS_EQUAL = lookup.findStatic(NBTSerializerMethods.class, "equal", methodType(boolean.class, Class.class, Class.class));
 
             PREDICATE_APPLY = lookup.findVirtual(Predicate.class, "apply", methodType(boolean.class, Object.class));
 
@@ -47,10 +46,14 @@ final class NBTSerializerMethods {
             IS_NONNULL = lookup.findStatic(NBTSerializerMethods.class, "isNonNull", methodType(boolean.class, NBTBase.class));
             IS_ID = lookup.findStatic(NBTSerializerMethods.class, "isDesiredID", methodType(boolean.class, NBTBase.class, int.class));
             IS_NONNULL_AND_ID = lookup.findStatic(NBTSerializerMethods.class, "isNonnullAndID", methodType(boolean.class, NBTBase.class, int.class));
-            IS_NONNULL_AND_NOT_SERNULL = lookup.findStatic(NBTSerializers.class, "isNonNullAndNotSerNull", methodType(boolean.class, NBTBase.class));
+            IS_NONNULL_AND_NOT_SERNULL = lookup.findStatic(NBTSerializerMethods.class, "isNonNullAndNotSerNull", methodType(boolean.class, NBTBase.class));
         } catch(ReflectiveOperationException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    private static boolean equal(Class<?> a, Class<?> b) {
+        return a == b;
     }
 
     private static boolean isNull(@Nullable Object o) {
@@ -82,4 +85,6 @@ final class NBTSerializerMethods {
     private static boolean isNonNullAndNotSerNull(@Nullable NBTBase nbt) {
         return nbt != null && (nbt.getId() != NBT.TAG_COMPOUND || ((NBTTagCompound) nbt).getByte(NBTData.NULL_KEY) == NBTData.NULL);
     }
+
+    private NBTSerializerMethods() { }
 }

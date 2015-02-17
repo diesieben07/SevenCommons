@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.serialize;
 
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.internal.AnnotationNull;
 import de.take_weiland.mods.commons.sync.Property;
 import net.minecraft.nbt.NBTBase;
@@ -74,7 +75,7 @@ public interface NBTSerializer<T> {
 		 *
 		 * @return a filter
 		 */
-		SerializationMethod method() default SerializationMethod.DEFAULT;
+		SerializationMethod.Method method() default SerializationMethod.Method.DEFAULT;
 
 	}
 

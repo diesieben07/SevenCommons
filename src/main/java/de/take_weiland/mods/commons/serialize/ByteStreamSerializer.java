@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.serialize;
 
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.internal.AnnotationNull;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
@@ -93,7 +94,7 @@ public interface ByteStreamSerializer<T> {
 		 *
 		 * @return a filter
 		 */
-		SerializationMethod method() default SerializationMethod.DEFAULT;
+		SerializationMethod.Method method() default SerializationMethod.Method.DEFAULT;
 
 	}
 

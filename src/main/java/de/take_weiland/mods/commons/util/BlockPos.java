@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Objects;
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.serialize.NBTSerializer;
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.Property;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 import de.take_weiland.mods.commons.sync.Watcher;
@@ -179,8 +179,8 @@ public final class BlockPos implements Comparable<BlockPos> {
 
 	private enum ValueHandler implements NBTSerializer<BlockPos>, Watcher<BlockPos> {
 
-		@NBTSerializer.Provider(forType = BlockPos.class, method = SerializationMethod.VALUE)
-		@Watcher.Provider(forType = BlockPos.class, method = SerializationMethod.VALUE)
+		@NBTSerializer.Provider(forType = BlockPos.class, method = SerializationMethod.Method.VALUE)
+		@Watcher.Provider(forType = BlockPos.class, method = SerializationMethod.Method.VALUE)
 		INSTANCE;
 
 		// NBTSerializer
