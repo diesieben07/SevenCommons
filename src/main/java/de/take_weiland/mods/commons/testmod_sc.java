@@ -69,7 +69,7 @@ public class testmod_sc {
         GameRegistry.registerTileEntity(TestTE.class, "testtile");
         NBTTagCompound nbt = new NBTTagCompound();
         TestTE testTE = new TestTE();
-        testTE.tank = "hello";
+        testTE.tank = null;
         testTE.list = Lists.newArrayList("hello", "world");
 
         testTE.writeToNBT(nbt);
@@ -79,6 +79,8 @@ public class testmod_sc {
         nbtList.appendTag(new NBTTagString("", "world"));
         nbtList.appendTag(new NBTTagString("", "hello"));
         nbt.setTag("list", nbtList);
+
+        testTE.tank = 123;
 
         testTE.readFromNBT(nbt);
 
@@ -134,11 +136,11 @@ public class testmod_sc {
 
 	private static class TestTE extends SuperTE {
 
-//		@ToNbt
-		private String tank;
+		@ToNbt
+		private Integer tank;
 
         @ToNbt
-        @SerializationMethod(SerializationMethod.Method.VALUE)
+        @SerializationMethod(SerializationMethod.Method.DEFAULT)
         List<String> list;
 
 		void foo() {

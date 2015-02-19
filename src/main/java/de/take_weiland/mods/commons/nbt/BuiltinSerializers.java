@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.base.Throwables;
+import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
@@ -96,6 +97,11 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
         MethodHandle reader = null;
 
         if (typeSpec.getDesiredMethod() != SerializationMethod.Method.CONTENTS) {
+            boolean box = Primitives.isWrapperType(clazz);
+            if (box) {
+                clazz = Primitives.unwrap(clazz);
+            }
+
             if (clazz == boolean.class) {
                 reader = READ_BOOL;
             }
@@ -123,6 +129,10 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
             if (clazz == String.class) {
                 reader = READ_STRING;
             }
+
+            if (box && reader != null) {
+                reader = reader.asType(methodType(Primitives.wrap(clazz), reader.type().parameterType(0)));
+            }
         }
         if (typeSpec.getDesiredMethod() != SerializationMethod.Method.VALUE) {
             if (clazz == List.class) {
@@ -139,37 +149,52 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
     @Override
     public MethodHandle makeWriter(TypeSpecification<?> typeSpec, MethodHandle getter, MethodHandle setter) {
         Class<?> clazz = typeSpec.getRawType();
+
         MethodHandle writer = null;
-        if (clazz == boolean.class) {
-            writer = WRITE_BOOL;
-        }
-        if (clazz == byte.class) {
-            writer = WRITE_BYTE;
-        }
-        if (clazz == short.class) {
-            writer = WRITE_SHORT;
-        }
-        if (clazz == char.class) {
-            writer = WRITE_CHAR;
-        }
-        if (clazz == int.class) {
-            writer = WRITE_INT;
-        }
-        if (clazz == long.class) {
-            writer = WRITE_LONG;
-        }
-        if (clazz == float.class) {
-            writer = WRITE_FLOAT;
-        }
-        if (clazz == double.class) {
-            writer = WRITE_DOUBLE;
-        }
-        if (clazz == String.class) {
-            writer = WRITE_STRING;
+        if (typeSpec.getDesiredMethod() != SerializationMethod.Method.CONTENTS) {
+            boolean unbox = Primitives.isWrapperType(clazz);
+            if (unbox) {
+                clazz = Primitives.unwrap(clazz);
+            }
+
+            writer = null;
+            if (clazz == boolean.class) {
+                writer = WRITE_BOOL;
+            }
+            if (clazz == byte.class) {
+                writer = WRITE_BYTE;
+            }
+            if (clazz == short.class) {
+                writer = WRITE_SHORT;
+            }
+            if (clazz == char.class) {
+                writer = WRITE_CHAR;
+            }
+            if (clazz == int.class) {
+                writer = WRITE_INT;
+            }
+            if (clazz == long.class) {
+                writer = WRITE_LONG;
+            }
+            if (clazz == float.class) {
+                writer = WRITE_FLOAT;
+            }
+            if (clazz == double.class) {
+                writer = WRITE_DOUBLE;
+            }
+            if (clazz == String.class) {
+                writer = WRITE_STRING;
+            }
+
+            if (unbox && writer != null) {
+                writer = writer.asType(methodType(NBTBase.class, Primitives.wrap(clazz)));
+            }
         }
 
-        if (clazz == List.class) {
-            writer = makeListValueWriter(typeSpec, getter, setter);
+        if (typeSpec.getDesiredMethod() != SerializationMethod.Method.VALUE) {
+            if (clazz == List.class) {
+                writer = makeListValueWriter(typeSpec, getter, setter);
+            }
         }
 
         if (writer == null) {
