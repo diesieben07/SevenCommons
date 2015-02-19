@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
+import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.nbt.NBTSerializers;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import net.minecraft.nbt.NBTBase;
@@ -29,15 +30,37 @@ public final class ToNbtBootstrap {
             typeSpec = new FieldTypeSpec<>(callingClass.getDeclaredField(memberName));
         }
 
+        MethodHandle mh;
+
         if (name.equals("read")) {
             checkArgument(type.equals(methodType(void.class, callingClass, NBTBase.class)));
-            return new ConstantCallSite(NBTSerializers.makeReader(typeSpec, getter, setter));
+            mh = NBTSerializers.makeReader(typeSpec, getter, setter);
         } else if (name.equals("write")) {
             checkArgument(type.equals(methodType(NBTBase.class, callingClass)));
-            return new ConstantCallSite(NBTSerializers.makeWriter(typeSpec, getter, setter));
+            mh = NBTSerializers.makeWriter(typeSpec, getter, setter);
         } else {
             throw new IllegalArgumentException();
         }
+
+        if (mh == null) {
+            mh = MethodHandles.throwException(type.returnType(), RuntimeException.class);
+            mh = MethodHandles.filterArguments(mh, 0, newRTEx()).bindTo("Could not find serializer for " + typeSpec);
+            mh = MethodHandles.dropArguments(mh, 0, type.parameterArray());
+        }
+        return new ConstantCallSite(mh);
+    }
+
+    private static MethodHandle NEW_RT_EX;
+
+    private static MethodHandle newRTEx() {
+        if (NEW_RT_EX == null) {
+            try {
+                NEW_RT_EX = MethodHandles.lookup().findConstructor(RuntimeException.class, methodType(void.class, String.class));
+            } catch (ReflectiveOperationException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+        return NEW_RT_EX;
     }
 
     private ToNbtBootstrap() { }

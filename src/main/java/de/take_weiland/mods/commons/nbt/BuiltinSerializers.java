@@ -94,35 +94,40 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
     public MethodHandle makeReader(TypeSpecification<?> typeSpec, MethodHandle getter, MethodHandle setter) {
         Class<?> clazz = typeSpec.getRawType();
         MethodHandle reader = null;
-        if (clazz == boolean.class) {
-            reader = READ_BOOL;
+
+        if (typeSpec.getDesiredMethod() != SerializationMethod.Method.CONTENTS) {
+            if (clazz == boolean.class) {
+                reader = READ_BOOL;
+            }
+            if (clazz == byte.class) {
+                reader = READ_BYTE;
+            }
+            if (clazz == short.class) {
+                reader = READ_SHORT;
+            }
+            if (clazz == char.class) {
+                reader = READ_CHAR;
+            }
+            if (clazz == int.class) {
+                reader = READ_INT;
+            }
+            if (clazz == long.class) {
+                reader = READ_LONG;
+            }
+            if (clazz == float.class) {
+                reader = READ_FLOAT;
+            }
+            if (clazz == double.class) {
+                reader = READ_DOUBLE;
+            }
+            if (clazz == String.class) {
+                reader = READ_STRING;
+            }
         }
-        if (clazz == byte.class) {
-            reader = READ_BYTE;
-        }
-        if (clazz == short.class) {
-            reader = READ_SHORT;
-        }
-        if (clazz == char.class) {
-            reader = READ_CHAR;
-        }
-        if (clazz == int.class) {
-            reader = READ_INT;
-        }
-        if (clazz == long.class) {
-            reader = READ_LONG;
-        }
-        if (clazz == float.class) {
-            reader = READ_FLOAT;
-        }
-        if (clazz == double.class) {
-            reader = READ_DOUBLE;
-        }
-        if (clazz == String.class) {
-            reader = READ_STRING;
-        }
-        if (clazz == List.class) {
-            reader = makeListValueReader(typeSpec, getter, setter);
+        if (typeSpec.getDesiredMethod() != SerializationMethod.Method.VALUE) {
+            if (clazz == List.class) {
+                reader = makeListValueReader(typeSpec, getter, setter);
+            }
         }
         if (reader == null) {
             return null;

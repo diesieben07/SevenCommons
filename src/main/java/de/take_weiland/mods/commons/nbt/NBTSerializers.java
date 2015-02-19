@@ -195,7 +195,7 @@ public final class NBTSerializers {
                 return result;
             }
         }
-        throw new IllegalStateException("Could not find a suitable NBT serializer for " + spec);
+        return null;
     }
 
     private static void validateReader(MethodHandle reader) {

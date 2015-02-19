@@ -138,6 +138,7 @@ public class testmod_sc {
 		private String tank;
 
         @ToNbt
+        @SerializationMethod(SerializationMethod.Method.VALUE)
         List<String> list;
 
 		void foo() {
