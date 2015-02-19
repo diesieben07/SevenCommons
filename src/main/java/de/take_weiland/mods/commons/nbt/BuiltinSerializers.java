@@ -135,6 +135,9 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
             if (clazz == List.class) {
                 reader = makeListReaderValue(typeSpec);
             }
+            if (clazz.isArray() && clazz.getComponentType().isPrimitive()) {
+                reader = ArrayConversions.getReader(clazz);
+            }
 
             if (box && reader != null) {
                 reader = reader.asType(methodType(Primitives.wrap(clazz), reader.type().parameterType(0)));
@@ -191,6 +194,10 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
             }
             if (clazz == String.class) {
                 writer = WRITE_STRING;
+            }
+
+            if (clazz.isArray() && clazz.getComponentType().isPrimitive()) {
+                writer = ArrayConversions.getWriter(clazz);
             }
 
             if (unbox && writer != null) {

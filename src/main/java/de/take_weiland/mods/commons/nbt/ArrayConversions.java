@@ -1,14 +1,129 @@
 package de.take_weiland.mods.commons.nbt;
 
+import com.google.common.base.Throwables;
+import de.take_weiland.mods.commons.asm.MCPNames;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagByteArray;
+import net.minecraft.nbt.NBTTagIntArray;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+
+import static java.lang.invoke.MethodType.methodType;
+
 /**
  * @author diesieben07
  */
 final class ArrayConversions {
 
-    private ArrayConversions() {
+    private ArrayConversions() { }
+
+    static MethodHandle getReader(Class<?> arrClass) {
+        Class<?> repr;
+        MethodHandle read;
+        if (arrClass == boolean[].class || arrClass == short[].class || arrClass == char[].class) {
+            repr = byte[].class;
+            read = readByteArr();
+        } else {
+            repr = int[].class;
+            read = readIntArr();
+        }
+
+        if (repr != arrClass) {
+            MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodHandle conv;
+            try {
+                conv = lookup.findStatic(ArrayConversions.class, "d" + arrClass.getComponentType().getName(), methodType(arrClass, repr));
+            } catch (ReflectiveOperationException e) {
+                throw Throwables.propagate(e);
+            }
+            read = MethodHandles.filterReturnValue(read, conv);
+        }
+        return read;
     }
 
-    static byte[] encodeShorts(short[] value) {
+    static MethodHandle getWriter(Class<?> arrClass) {
+        Class<?> repr;
+        MethodHandle write;
+        if (arrClass == boolean[].class || arrClass == short[].class || arrClass == char[].class) {
+            repr = byte[].class;
+            write = writeByteArr();
+        } else {
+            repr = int[].class;
+            write = writeIntArr();
+        }
+
+        if (repr != arrClass) {
+            MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodHandle conv;
+            try {
+                conv = lookup.findStatic(ArrayConversions.class, "e" + arrClass.getComponentType().getName(), methodType(repr, arrClass));
+            } catch (ReflectiveOperationException e) {
+                throw Throwables.propagate(e);
+            }
+            write = MethodHandles.filterArguments(write, 0, conv);
+        }
+        return write;
+    }
+
+    private static MethodHandle WR_BYTE_ARR;
+    private static MethodHandle RE_BYTE_ARR;
+    private static MethodHandle WR_INT_ARR;
+    private static MethodHandle RE_INT_ARR;
+
+    private static MethodHandle writeByteArr() {
+        if (WR_BYTE_ARR == null) {
+            try {
+                WR_BYTE_ARR = MethodHandles.publicLookup()
+                        .findConstructor(NBTTagByteArray.class, methodType(void.class, String.class, byte[].class))
+                        .bindTo("")
+                        .asType(methodType(NBTBase.class, byte[].class));
+            } catch (ReflectiveOperationException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+        return WR_BYTE_ARR;
+    }
+
+    private static MethodHandle readByteArr() {
+        if (RE_BYTE_ARR == null) {
+            try {
+                RE_BYTE_ARR = MethodHandles.publicLookup()
+                        .findGetter(NBTTagByteArray.class, MCPNames.field(MCPNames.F_NBT_BYTE_ARR_DATA), byte[].class);
+            } catch (ReflectiveOperationException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+        return RE_BYTE_ARR;
+    }
+
+    private static MethodHandle writeIntArr() {
+        if (WR_INT_ARR == null) {
+            try {
+                WR_INT_ARR = MethodHandles.publicLookup()
+                        .findConstructor(NBTTagIntArray.class, methodType(void.class, String.class, int[].class))
+                        .bindTo("")
+                        .asType(methodType(NBTBase.class, int[].class));
+            } catch (ReflectiveOperationException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+        return WR_INT_ARR;
+    }
+
+    private static MethodHandle readIntArr() {
+        if (RE_INT_ARR == null) {
+            try {
+                RE_INT_ARR = MethodHandles.publicLookup()
+                        .findGetter(NBTTagIntArray.class, MCPNames.field(MCPNames.F_NBT_INT_ARR_DATA), int[].class);
+            } catch (ReflectiveOperationException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+        return RE_INT_ARR;
+    }
+
+    static byte[] eS(short[] value) {
         int sLen = value.length;
         byte[] bytes = new byte[sLen << 1];
         for (int sOff = 0, bOff = 0; sOff < sLen; sOff++) {
@@ -19,7 +134,7 @@ final class ArrayConversions {
         return bytes;
     }
 
-    static short[] decodeShorts(byte[] bytes) {
+    static short[] dS(byte[] bytes) {
         int sLen = bytes.length << 1;
         short[] shorts = new short[sLen];
         for (int sOff = 0, boff = 0; sOff < sLen; sOff++) {
@@ -28,7 +143,7 @@ final class ArrayConversions {
         return shorts;
     }
 
-    static byte[] encodeChars(char[] value) {
+    static byte[] eC(char[] value) {
         int cLen = value.length;
         byte[] bytes = new byte[cLen << 1];
         for (int sOff = 0, bOff = 0; sOff < cLen; sOff++) {
@@ -39,7 +154,7 @@ final class ArrayConversions {
         return bytes;
     }
 
-    static char[] decodeChars(byte[] bytes) {
+    static char[] dC(byte[] bytes) {
         int cLen = bytes.length >>> 1;
         char[] chars = new char[cLen];
         for (int cOff = 0, boff = 0; cOff < cLen; cOff++) {
@@ -48,7 +163,7 @@ final class ArrayConversions {
         return chars;
     }
 
-    static int[] encodeLongs(long[] value) {
+    static int[] eJ(long[] value) {
         int lLen = value.length;
         int[] ints = new int[lLen << 1];
         for (int lOff = 0, iOff = 0; lOff < lLen; ++lOff) {
@@ -59,7 +174,7 @@ final class ArrayConversions {
         return ints;
     }
 
-    static long[] decodeLongs(int[] ints) {
+    static long[] dJ(int[] ints) {
         int lLen = ints.length << 1;
         long[] longs = new long[lLen];
         for (int lOff = 0, iOff = 0; lOff < lLen; ++lOff) {
@@ -68,7 +183,7 @@ final class ArrayConversions {
         return longs;
     }
 
-    static int[] encodeFloats(float[] value) {
+    static int[] eF(float[] value) {
         int len = value.length;
         int[] ints = new int[len];
         for (int i = 0; i < len; i++) {
@@ -77,7 +192,7 @@ final class ArrayConversions {
         return ints;
     }
 
-    static float[] decodeFloats(int[] ints) {
+    static float[] dF(int[] ints) {
         int len = ints.length;
         float[] floats = new float[len];
         for (int i = 0; i < len; i++) {
@@ -86,7 +201,7 @@ final class ArrayConversions {
         return floats;
     }
 
-    static int[] encodeDoubles(double[] value) {
+    static int[] eD(double[] value) {
         int dLen = value.length;
         int[] ints = new int[dLen << 1];
         for (int lOff = 0, iOff = 0; lOff < dLen; ++lOff) {
@@ -97,7 +212,7 @@ final class ArrayConversions {
         return ints;
     }
 
-    static double[] decodeDoubles(int[] ints) {
+    static double[] dD(int[] ints) {
         int dLen = ints.length << 1;
         double[] doubles = new double[dLen];
         for (int dOff = 0, iOff = 0; dOff < dLen; ++dOff) {
@@ -106,50 +221,23 @@ final class ArrayConversions {
         return doubles;
     }
 
-    static byte[] encodeBooleans(boolean[] value) {
-        int nBits = value.length;
-        int lastByteBits = nBits & 7;
-        int nBytes = (nBits >> 3) + (-lastByteBits >>> 31) + 1; // 1 byte for size
-        byte[] bytes = new byte[nBytes];
-
-        bytes[0] = (byte) lastByteBits;
-
-        int cByteIdx = 1;
-        byte cByte = 0;
-        for (int bit = 0; bit < nBits; bit++) {
-            int bitInByte = bit & 7;
-
-            if (value[bit]) {
-                cByte |= (1 << bitInByte);
-            }
-
-            if (bitInByte == 0b111) {
-                bytes[cByteIdx++] = cByte;
-                cByte = 0;
-            }
-        }
-        if (cByte != 0) {
-            bytes[cByteIdx] = cByte;
+    static byte[] eZ(boolean[] value) {
+        int n = value.length;
+        byte[] bytes = new byte[n];
+        for (int i = 0; i < n; i++) {
+            if (value[i]) bytes[i] = 1;
         }
         return bytes;
     }
 
-    static boolean[] decodeBooleans(byte[] bytes) {
-        int nBytes = bytes.length;
-        int nBits = ((nBytes - 2) << 3) + bytes[0];
-        boolean[] bits = new boolean[nBits];
+    static boolean[] dZ(byte[] bytes) {
+        int n = bytes.length;
+        boolean[] booleans = new boolean[n];
 
-        int cByteIdx = 1;
-        byte cByte = 0;
-        for (int bit = 0; bit < nBits; bit++) {
-            int bitInByte = bit & 7;
-            if (bitInByte == 0) {
-                cByte = bytes[cByteIdx++];
-            }
-            bits[bit] = (cByte & (1 << bitInByte)) != 0;
+        for (int i = 0; i < n; i++) {
+            if (bytes[i] != 0) booleans[i] = true;
         }
-
-        return bits;
+        return booleans;
     }
 
 }

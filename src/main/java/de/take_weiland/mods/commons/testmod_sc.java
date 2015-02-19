@@ -5,7 +5,6 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.nbt.ToNbt;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -14,8 +13,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
@@ -70,19 +67,17 @@ public class testmod_sc {
         GameRegistry.registerTileEntity(TestTE.class, "testtile");
         NBTTagCompound nbt = new NBTTagCompound();
         TestTE testTE = new TestTE();
-        testTE.tank = null;
-        testTE.list = Arrays.asList("hello", "world");
+        testTE.tank = new int[] { 1, 2, 3 };
 
         testTE.writeToNBT(nbt);
 
-        NBTTagList nbtList = new NBTTagList();
-        nbtList.appendTag(new NBTTagString("", "world"));
-        nbtList.appendTag(new NBTTagString("", "hello"));
-        nbt.setTag("list", nbtList);
+        System.out.println(Arrays.toString(nbt.getIntArray("tank")));
+
+        testTE.tank = null;
 
         testTE.readFromNBT(nbt);
 
-        System.out.println(JavaUtils.defaultToString(testTE.list));
+        System.out.println(Arrays.toString(testTE.tank));
 
         System.exit(0);
     }
@@ -134,7 +129,7 @@ public class testmod_sc {
 	private static class TestTE extends SuperTE {
 
 		@ToNbt
-		private Integer tank;
+		private int[] tank;
 
         @ToNbt
         List<String> list;
