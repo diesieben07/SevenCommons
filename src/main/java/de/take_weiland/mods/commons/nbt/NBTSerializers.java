@@ -10,6 +10,7 @@ import net.minecraft.nbt.NBTBase;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.invoke.*;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -222,13 +223,13 @@ public final class NBTSerializers {
         MethodType getterType = getter.type();
         MethodType setterType = setter.type();
         checkArgument(getterType.returnType() != void.class, "Getter must not return void");
-        checkArgument(getterType.parameterCount() == 1, "getter must take 1 argument");
-
         checkArgument(setterType.returnType() == void.class, "Setter must return void");
-        checkArgument(setterType.parameterCount() == 2, "setter must take 2 arguments");
-
+        checkArgument(setterType.parameterCount() >= 1, "setter must take at least 1 argument");
         checkArgument(getterType.returnType() == setterType.parameterType(1), "setter and getter must handle same type");
-        checkArgument(getterType.parameterType(0) == setterType.parameterType(0), "setter and getter must take same instance type");
+
+        List<Class<?>> setterPrArgs = setterType.parameterList().subList(0, setterType.parameterCount() - 1);
+        List<Class<?>> getterPrArgs = getterType.parameterList();
+        checkArgument(setterPrArgs.equals(getterPrArgs), "getter and setter prefix arguments must match exactly");
     }
 
     private NBTSerializers() { }

@@ -1,11 +1,13 @@
 package de.take_weiland.mods.commons.nbt;
 
+import com.google.common.collect.Lists;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.nbt.NBTBase;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import static java.lang.invoke.MethodType.methodType;
 
@@ -56,70 +58,94 @@ final class MethodHandleBasedFactory implements NBTSerializerFactory {
     }
 
     private static MethodHandle bindValueReader(MethodHandle reader, MethodHandle getter, MethodHandle setter) {
-        // C being the property holder class
         // T being the type of the property
+        // X0-Xn being the data types needed to access the property via getter and setter
+        //       (in case of a simple "field in a class" this is just a reference of that class)
+        //       these might be no types at all
+        //
         // S being the type that the reader produces (must be assignable to T)
         // NBT being the NBT type that the reader handles
         //
         // reader has type (NBT) => S
-        // setter has type (C, T) => void
+        // setter has type (X0, ..., XN, T) => void
+        // getter has type (X0, ..., XN) => T
         //
         // we produce a method like this:
-        // void read(C c, NBTBase nbt) {
+        // void read(X0 x0, ...,XN xn, NBTBase nbt) {
         //     if (nbt == <serialized null>) {
-        //         setter(c, null);
+        //         setter(x0, ..., xn, null);
         //     } else {
         //         if (nbt instanceof NBT) { // includes null check
-        //             setter(c, reader((NBT) nbt));
+        //             setter(x0, ..., xn, reader((NBT) nbt));
         //         }
         //     }
         // }
         //
         // the conditions are optimized as possible
 
-        Class<?> propertyType = setter.type().parameterType(1);
+        // X0-XN in the above
+        List<Class<?>> prefixArgs = getter.type().parameterList();
+        // the N in X0-XN
+        int numPrArgs = prefixArgs.size();
+
+        // T in the above
+        Class<?> propertyType = setter.type().parameterType(numPrArgs);
         if (propertyType.isPrimitive()) {
-            return bindValueReaderPrim(reader, getter, setter);
+            // special case for primitives (because of serialized nulls -.-)
+            return bindValueReaderPrim(prefixArgs, reader, setter);
         }
 
-        Class<?> propertyHolder = setter.type().parameterType(0);
+        // NBT in the above
         Class<?> nbtClass = reader.type().parameterType(0);
 
-        MethodHandle isSerNull = MethodHandles.dropArguments(NBTSerializerMethods.IS_SER_NULL, 0, propertyHolder);
+        // check if the NBT is a serialized null
+        MethodHandle isSerNull = MethodHandles.dropArguments(NBTSerializerMethods.IS_SER_NULL, 0, prefixArgs);
 
-        MethodHandle setNull = MethodHandles.insertArguments(setter, 1, (Object) null);
-        setNull = MethodHandles.dropArguments(setNull, 1, NBTBase.class);
+        // make a handle that invokes the setter with null for T, ignoring the NBT
+        MethodHandle setNull = MethodHandles.insertArguments(setter, numPrArgs, (Object) null);
+        setNull = MethodHandles.dropArguments(setNull, numPrArgs, NBTBase.class);
 
+        // make a handle that checks if the NBT has the correct ID and is not null (key is not present in NBTTagCompound)
         MethodHandle isValid;
-
         if (nbtClass == NBTBase.class) {
-            isValid = MethodHandles.dropArguments(NBTSerializerMethods.IS_NONNULL, 0, propertyHolder);
+            isValid = MethodHandles.dropArguments(NBTSerializerMethods.IS_NONNULL, 0, prefixArgs);
         } else {
             int nbtID = NBT.Tag.byClass(nbtClass).id();
-            isValid = MethodHandles.dropArguments(MethodHandles.insertArguments(NBTSerializerMethods.IS_ID, 1, nbtID), 0, propertyHolder);
+            isValid = MethodHandles.dropArguments(MethodHandles.insertArguments(NBTSerializerMethods.IS_ID, 1, nbtID), 0, prefixArgs);
         }
-        MethodHandle readSet = MethodHandles.filterArguments(setter, 1, reader.asType(methodType(propertyType, NBTBase.class)));
-        MethodHandle adaptedNothing = MethodHandles.dropArguments(NBTSerializerMethods.DO_NOTHING, 0, propertyHolder, NBTBase.class);
-        MethodHandle nonNullSet = MethodHandles.guardWithTest(isValid, readSet, adaptedNothing);
 
+        // make a handle that takes all the prefix args + NBT and then calls the setter with the result of reader
+        MethodHandle readSet = MethodHandles.filterArguments(setter, numPrArgs, reader.asType(methodType(propertyType, NBTBase.class)));
+
+        // make a handle that does nothing but drop all the arguments, for the else branch
+        List<Class<?>> allArgs = Lists.newArrayList(prefixArgs);
+        allArgs.add(NBTBase.class);
+        MethodHandle doNothing = MethodHandles.dropArguments(NBTSerializerMethods.DO_NOTHING, 0, allArgs);
+
+        // make a handle that invokes the setter if the NBT has the correct ID
+        MethodHandle nonNullSet = MethodHandles.guardWithTest(isValid, readSet, doNothing);
+
+        // make a handle that will either invoke the setter with null or try to read the NBT
         return MethodHandles.guardWithTest(isSerNull, setNull, nonNullSet);
     }
 
-    private static MethodHandle bindValueReaderPrim(MethodHandle reader, MethodHandle getter, MethodHandle setter) {
-        Class<?> propertyHolder = setter.type().parameterType(0);
+    private static MethodHandle bindValueReaderPrim(List<Class<?>> prefixArgs, MethodHandle reader, MethodHandle setter) {
         Class<?> propertyType = setter.type().parameterType(1);
         Class<?> nbtClass = reader.type().parameterType(0);
 
         MethodHandle isValid;
         if (nbtClass == NBTBase.class) {
-            isValid = MethodHandles.dropArguments(NBTSerializerMethods.IS_NONNULL_AND_NOT_SERNULL, 0, propertyHolder);
+            isValid = MethodHandles.dropArguments(NBTSerializerMethods.IS_NONNULL_AND_NOT_SERNULL, 0, prefixArgs);
         } else {
             int nbtID = NBT.Tag.byClass(nbtClass).id();
-            isValid = MethodHandles.dropArguments(MethodHandles.insertArguments(NBTSerializerMethods.IS_NONNULL_AND_ID, 1, nbtID), 0, propertyHolder);
+            isValid = MethodHandles.dropArguments(MethodHandles.insertArguments(NBTSerializerMethods.IS_NONNULL_AND_ID, 1, nbtID), 0, prefixArgs);
         }
 
         MethodHandle readSet = MethodHandles.filterArguments(setter, 1, reader.asType(methodType(propertyType, NBTBase.class)));
-        MethodHandle doNothing = MethodHandles.dropArguments(NBTSerializerMethods.DO_NOTHING, 0, propertyHolder, NBTBase.class);
+
+        List<Class<?>> allArgs = Lists.newArrayList(prefixArgs);
+        allArgs.add(NBTBase.class);
+        MethodHandle doNothing = MethodHandles.dropArguments(NBTSerializerMethods.DO_NOTHING, 0, allArgs);
 
         return MethodHandles.guardWithTest(isValid, readSet, doNothing);
     }
