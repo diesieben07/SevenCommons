@@ -10,6 +10,7 @@ import net.minecraft.nbt.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -32,7 +33,8 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
         READ_STRING, WRITE_STRING;
 
     private static final MethodHandle LIST_WRITER_HELPER;
-    private static final MethodHandle LIST_READER_HELPER;
+    private static final MethodHandle LIST_READER_HELPER_CONT;
+    private static final MethodHandle LIST_READER_HELPER_VAL;
     private static final MethodHandle LIST_ITER_SET;
     private static final MethodHandle LIST_ADD_OR_SET;
     private static final MethodHandle LIST_SAFE_GET;
@@ -85,7 +87,8 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
             LIST_ITER_SET = lookup.findVirtual(ListIterator.class, "set", methodType(void.class, Object.class));
             LIST_ADD_OR_SET = lookup.findStatic(BuiltinSerializers.class, "listAddOrSet", methodType(void.class, List.class, int.class, Object.class));
             LIST_SAFE_GET = lookup.findStatic(BuiltinSerializers.class, "listSafeGet", methodType(Object.class, List.class, int.class));
-            LIST_READER_HELPER = lookup.findStatic(BuiltinSerializers.class, "listReaderHelper", methodType(void.class, MethodHandle.class, List.class, NBTTagList.class));
+            LIST_READER_HELPER_CONT = lookup.findStatic(BuiltinSerializers.class, "listReaderHelperContents", methodType(void.class, MethodHandle.class, List.class, NBTTagList.class));
+            LIST_READER_HELPER_VAL = lookup.findStatic(BuiltinSerializers.class, "listReaderHelperValue", methodType(List.class, MethodHandle.class, NBTTagList.class));
         } catch (ReflectiveOperationException e) {
             throw Throwables.propagate(e);
         }
@@ -129,14 +132,18 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
             if (clazz == String.class) {
                 reader = READ_STRING;
             }
+            if (clazz == List.class) {
+                reader = makeListReaderValue(typeSpec);
+            }
 
             if (box && reader != null) {
                 reader = reader.asType(methodType(Primitives.wrap(clazz), reader.type().parameterType(0)));
             }
         }
-        if (typeSpec.getDesiredMethod() != SerializationMethod.Method.VALUE) {
+
+        if (reader == null && typeSpec.getDesiredMethod() != SerializationMethod.Method.VALUE) {
             if (clazz == List.class) {
-                reader = makeListValueReader(typeSpec, getter, setter);
+                reader = makeListReaderContents(typeSpec);
             }
         }
         if (reader == null) {
@@ -191,10 +198,8 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
             }
         }
 
-        if (typeSpec.getDesiredMethod() != SerializationMethod.Method.VALUE) {
-            if (clazz == List.class) {
-                writer = makeListValueWriter(typeSpec, getter, setter);
-            }
+        if (clazz == List.class) {
+            writer = makeListWriter(typeSpec);
         }
 
         if (writer == null) {
@@ -206,7 +211,7 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
 
     private static final Type ITER_TYPE = Iterable.class.getTypeParameters()[0];
 
-    private static MethodHandle makeListValueWriter(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter) {
+    private static MethodHandle makeListWriter(TypeSpecification<?> spec) {
         TypeToken<?> listType = spec.getType().resolveType(ITER_TYPE);
         if (listType.isAssignableFrom(List.class)) {
             throw new UnsupportedOperationException("Nested lists not supported yet");
@@ -220,7 +225,7 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
         return LIST_WRITER_HELPER.bindTo(valueWriter);
     }
 
-    private static MethodHandle makeListValueReader(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter) {
+    private static MethodHandle makeListReaderContents(TypeSpecification<?> spec) {
         TypeToken<?> listType = spec.getType().resolveType(ITER_TYPE);
         if (listType.isAssignableFrom(List.class)) {
             throw new UnsupportedOperationException("Nested lists not supported yet");
@@ -230,10 +235,23 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
         MethodHandle valSetter = LIST_ADD_OR_SET;
         TypeSpecification<?> valueSpec = spec.overwriteType(listType, SerializationMethod.Method.VALUE);
         MethodHandle valueReader = NBTSerializers.makeReader(valueSpec, valGetter, valSetter);
-        return LIST_READER_HELPER.bindTo(valueReader);
+        return LIST_READER_HELPER_CONT.bindTo(valueReader);
     }
 
-    private static void listReaderHelper(MethodHandle valueReader, List<?> list, NBTTagList nbt) throws Throwable {
+    private static MethodHandle makeListReaderValue(TypeSpecification<?> spec) {
+        TypeToken<?> listType = spec.getType().resolveType(ITER_TYPE);
+        if (listType.isAssignableFrom(List.class)) {
+            throw new UnsupportedOperationException("Nested lists not supported yet");
+        }
+
+        MethodHandle valGetter = LIST_SAFE_GET;
+        MethodHandle valSetter = LIST_ADD_OR_SET;
+        TypeSpecification<?> valueSpec = spec.overwriteType(listType, SerializationMethod.Method.VALUE);
+        MethodHandle valueReader = NBTSerializers.makeReader(valueSpec, valGetter, valSetter);
+        return LIST_READER_HELPER_VAL.bindTo(valueReader);
+    }
+
+    private static void listReaderHelperContents(MethodHandle valueReader, List<?> list, NBTTagList nbt) throws Throwable {
         list.clear();
         int len = nbt.tagCount();
         for (int i = 0; i < len; i++) {
@@ -241,16 +259,27 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
         }
     }
 
+    private static List<?> listReaderHelperValue(MethodHandle valueReader, NBTTagList nbt) throws Throwable {
+        int len = nbt.tagCount();
+        List<?> list = new ArrayList<>(len);
+        for (int i = 0; i < len; i++) {
+            valueReader.invokeExact((List<?>) list, (int) i, (NBTBase) nbt.tagAt(i));
+        }
+        return list;
+    }
+
     private static <T> void listAddOrSet(List<T> list, int idx, T o) {
         if (list.size() == idx) {
             list.add(o);
         } else {
+            // i is last in list here normally and list.set(<lastIdx>) is O(1) even for LinkedList
             // handles potential IOOBE
             list.set(idx, o);
         }
     }
 
     private static Object listSafeGet(List<?> list, int i) {
+        // i is last in list here normally and list.get(<lastIdx>) is O(1) even for LinkedList
         return i < list.size() ? list.get(i) : null;
     }
 

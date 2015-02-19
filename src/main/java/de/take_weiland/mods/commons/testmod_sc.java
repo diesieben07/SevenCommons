@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons;
 
-import com.google.common.collect.Lists;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.nbt.ToNbt;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -26,6 +26,7 @@ import net.minecraftforge.event.entity.EntityEvent;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.List;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
@@ -70,22 +71,18 @@ public class testmod_sc {
         NBTTagCompound nbt = new NBTTagCompound();
         TestTE testTE = new TestTE();
         testTE.tank = null;
-        testTE.list = Lists.newArrayList("hello", "world");
+        testTE.list = Arrays.asList("hello", "world");
 
         testTE.writeToNBT(nbt);
-        System.out.println(nbt);
 
         NBTTagList nbtList = new NBTTagList();
         nbtList.appendTag(new NBTTagString("", "world"));
         nbtList.appendTag(new NBTTagString("", "hello"));
         nbt.setTag("list", nbtList);
 
-        testTE.tank = 123;
-
         testTE.readFromNBT(nbt);
 
-        System.out.println(testTE.tank);
-        System.out.println(testTE.list);
+        System.out.println(JavaUtils.defaultToString(testTE.list));
 
         System.exit(0);
     }
@@ -140,7 +137,6 @@ public class testmod_sc {
 		private Integer tank;
 
         @ToNbt
-        @SerializationMethod(SerializationMethod.Method.DEFAULT)
         List<String> list;
 
 		void foo() {
