@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.nbt.ToNbt;
+import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.SyncableProperty;
 
@@ -91,4 +92,8 @@ abstract class AbstractProperty<MEM extends Member & AnnotatedElement> implement
 		);
 	}
 
+    @Override
+    public <X> TypeSpecification<X> overwriteType(TypeToken<X> type, @Nullable SerializationMethod.Method method) {
+        return null;
+    }
 }

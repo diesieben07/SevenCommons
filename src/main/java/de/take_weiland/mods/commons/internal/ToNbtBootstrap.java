@@ -4,10 +4,7 @@ import de.take_weiland.mods.commons.nbt.NBTSerializers;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import net.minecraft.nbt.NBTBase;
 
-import java.lang.invoke.CallSite;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
+import java.lang.invoke.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.invoke.MethodType.methodType;
@@ -34,10 +31,10 @@ public final class ToNbtBootstrap {
 
         if (name.equals("read")) {
             checkArgument(type.equals(methodType(void.class, callingClass, NBTBase.class)));
-            return NBTSerializers.makeReaderCallSite(typeSpec, getter, setter);
+            return new ConstantCallSite(NBTSerializers.makeReader(typeSpec, getter, setter));
         } else if (name.equals("write")) {
             checkArgument(type.equals(methodType(NBTBase.class, callingClass)));
-            return NBTSerializers.makeWriterCallSite(typeSpec, getter, setter);
+            return new ConstantCallSite(NBTSerializers.makeWriter(typeSpec, getter, setter));
         } else {
             throw new IllegalArgumentException();
         }

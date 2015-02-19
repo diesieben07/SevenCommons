@@ -34,6 +34,11 @@ abstract class AbstractTypeSpec<T, MEM extends Member & AnnotatedElement> implem
         return genericType == null ? (genericType = (TypeToken<T>) resolveType()) : genericType;
     }
 
+    @Override
+    public <X> TypeSpecification<X> overwriteType(final TypeToken<X> type, final SerializationMethod.Method method) {
+        return new DerivedSpec<>(this, type, method);
+    }
+
     abstract TypeToken<?> resolveType();
 
     @Override
@@ -49,5 +54,53 @@ abstract class AbstractTypeSpec<T, MEM extends Member & AnnotatedElement> implem
     @Override
     public String toString() {
         return "TypeSpec of type " + getType();
+    }
+
+    private static class DerivedSpec<X> implements TypeSpecification<X> {
+
+        private final TypeSpecification<?> parent;
+        private final TypeToken<X> type;
+        private final SerializationMethod.Method method;
+
+        public DerivedSpec(TypeSpecification<?> parent, TypeToken<X> type, SerializationMethod.Method method) {
+            this.parent = parent;
+            this.type = type;
+            this.method = method;
+        }
+
+        @Override
+        public TypeToken<X> getType() {
+            return type;
+        }
+
+        @Override
+        public Class<? super X> getRawType() {
+            return type.getRawType();
+        }
+
+        @Override
+        public SerializationMethod.Method getDesiredMethod() {
+            return method == null ? parent.getDesiredMethod() : method;
+        }
+
+        @Override
+        public boolean hasAnnotation(Class<? extends Annotation> annotation) {
+            return parent.hasAnnotation(annotation);
+        }
+
+        @Override
+        public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
+            return parent.getAnnotation(annotationClass);
+        }
+
+        @Override
+        public <X1> TypeSpecification<X1> overwriteType(TypeToken<X1> type, SerializationMethod.Method method) {
+            return new DerivedSpec<>(this, type, method);
+        }
+
+        @Override
+        public String toString() {
+            return "TypeSpec of type " + getType();
+        }
     }
 }

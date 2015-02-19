@@ -15,6 +15,7 @@ import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.Type;
 
+import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.*;
 import java.lang.reflect.Field;
@@ -300,6 +301,11 @@ public final class SerializerRegistry {
 		public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
 			return wrapped.getAnnotation(annotationClass);
 		}
-	}
+
+        @Override
+        public <X> TypeSpecification<X> overwriteType(TypeToken<X> type, @Nullable SerializationMethod.Method method) {
+            return null;
+        }
+    }
 
 }

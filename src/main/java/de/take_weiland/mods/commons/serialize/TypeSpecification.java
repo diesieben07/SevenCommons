@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.serialize;
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
 
+import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 
 /**
@@ -43,5 +44,7 @@ public interface TypeSpecification<T> {
 	 * @return the annotation
 	 */
 	<A extends Annotation> A getAnnotation(Class<A> annotationClass);
+
+    <X> TypeSpecification<X> overwriteType(TypeToken<X> type, @Nullable SerializationMethod.Method method);
 
 }

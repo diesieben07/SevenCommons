@@ -1,11 +1,16 @@
 package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.base.Throwables;
+import com.google.common.reflect.TypeToken;
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import net.minecraft.nbt.*;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.ListIterator;
 
 import static de.take_weiland.mods.commons.asm.MCPNames.*;
 import static java.lang.invoke.MethodType.methodType;
@@ -24,6 +29,12 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
         READ_FLOAT, WRITE_FLOAT,
         READ_DOUBLE, WRITE_DOUBLE,
         READ_STRING, WRITE_STRING;
+
+    private static final MethodHandle LIST_WRITER_HELPER;
+    private static final MethodHandle LIST_READER_HELPER;
+    private static final MethodHandle LIST_ITER_SET;
+    private static final MethodHandle LIST_ADD_OR_SET;
+    private static final MethodHandle LIST_SAFE_GET;
 
     static {
         try {
@@ -69,6 +80,11 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
                     .bindTo("")
                     .asType(methodType(NBTBase.class, String.class));
 
+            LIST_WRITER_HELPER = lookup.findStatic(BuiltinSerializers.class, "listWriterHelper", methodType(NBTBase.class, MethodHandle.class, List.class));
+            LIST_ITER_SET = lookup.findVirtual(ListIterator.class, "set", methodType(void.class, Object.class));
+            LIST_ADD_OR_SET = lookup.findStatic(BuiltinSerializers.class, "listAddOrSet", methodType(void.class, List.class, int.class, Object.class));
+            LIST_SAFE_GET = lookup.findStatic(BuiltinSerializers.class, "listSafeGet", methodType(Object.class, List.class, int.class));
+            LIST_READER_HELPER = lookup.findStatic(BuiltinSerializers.class, "listReaderHelper", methodType(void.class, MethodHandle.class, List.class, NBTTagList.class));
         } catch (ReflectiveOperationException e) {
             throw Throwables.propagate(e);
         }
@@ -104,6 +120,9 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
         }
         if (clazz == String.class) {
             reader = READ_STRING;
+        }
+        if (clazz == List.class) {
+            reader = makeListValueReader(typeSpec, getter, setter);
         }
         if (reader == null) {
             return null;
@@ -143,11 +162,77 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
         if (clazz == String.class) {
             writer = WRITE_STRING;
         }
+
+        if (clazz == List.class) {
+            writer = makeListValueWriter(typeSpec, getter, setter);
+        }
+
         if (writer == null) {
             return null;
         } else {
             return NBTSerializers.bindWriter(writer, getter, setter);
         }
     }
+
+    private static final Type ITER_TYPE = Iterable.class.getTypeParameters()[0];
+
+    private static MethodHandle makeListValueWriter(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter) {
+        TypeToken<?> listType = spec.getType().resolveType(ITER_TYPE);
+        if (listType.isAssignableFrom(List.class)) {
+            throw new UnsupportedOperationException("Nested lists not supported yet");
+        }
+
+        MethodHandle valGetter = MethodHandles.dropArguments(MethodHandles.identity(Object.class), 1, ListIterator.class);
+        MethodHandle valSetter = MethodHandles.dropArguments(LIST_ITER_SET, 0, Object.class);
+
+        TypeSpecification<?> valueSpec = spec.overwriteType(listType, SerializationMethod.Method.VALUE);
+        MethodHandle valueWriter = NBTSerializers.makeWriter(valueSpec, valGetter, valSetter);
+        return LIST_WRITER_HELPER.bindTo(valueWriter);
+    }
+
+    private static MethodHandle makeListValueReader(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter) {
+        TypeToken<?> listType = spec.getType().resolveType(ITER_TYPE);
+        if (listType.isAssignableFrom(List.class)) {
+            throw new UnsupportedOperationException("Nested lists not supported yet");
+        }
+
+        MethodHandle valGetter = LIST_SAFE_GET;
+        MethodHandle valSetter = LIST_ADD_OR_SET;
+        TypeSpecification<?> valueSpec = spec.overwriteType(listType, SerializationMethod.Method.VALUE);
+        MethodHandle valueReader = NBTSerializers.makeReader(valueSpec, valGetter, valSetter);
+        return LIST_READER_HELPER.bindTo(valueReader);
+    }
+
+    private static void listReaderHelper(MethodHandle valueReader, List<?> list, NBTTagList nbt) throws Throwable {
+        list.clear();
+        int len = nbt.tagCount();
+        for (int i = 0; i < len; i++) {
+            valueReader.invokeExact((List<?>) list, (int) i, (NBTBase) nbt.tagAt(i));
+        }
+    }
+
+    private static <T> void listAddOrSet(List<T> list, int idx, T o) {
+        if (list.size() == idx) {
+            list.add(o);
+        } else {
+            // handles potential IOOBE
+            list.set(idx, o);
+        }
+    }
+
+    private static Object listSafeGet(List<?> list, int i) {
+        return i < list.size() ? list.get(i) : null;
+    }
+
+    private static NBTBase listWriterHelper(MethodHandle valueWriter, List<?> list) throws Throwable {
+        NBTTagList nbt = new NBTTagList();
+        ListIterator<?> it = list.listIterator();
+        while (it.hasNext()) {
+            Object o = it.next();
+            nbt.appendTag((NBTBase) valueWriter.invokeExact((Object) o, (ListIterator<?>) it));
+        }
+        return nbt;
+    }
+
 
 }

@@ -1,20 +1,19 @@
 package de.take_weiland.mods.commons.nbt;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.nbt.NBTBase;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.invoke.*;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static java.lang.invoke.MethodType.methodType;
 
 /**
  * <p>Registry for NBT serializers to be used with {@link de.take_weiland.mods.commons.nbt.ToNbt @ToNbt}.</p>
@@ -128,54 +127,62 @@ public final class NBTSerializers {
     }
 
     /**
-     * <p>Create a CallSite that can be used to write the property specified by the given {@code TypeSpecification},
-     * {@code getter} and {@code setter} to NBT.</p>
-     * <p>Given two types {@code C} and {@code T} the getter must have type {@code (C)->T} and the setter must have
-     * type {@code (C, T)->void}.</p>
-     * <p>The type of the resulting CallSite will then have the exact type {@code (C)->NBTBase}.</p>
-     * @param spec the TypeSpecification
-     * @param getter the getter
-     * @param setter the setter
-     * @return a CallSite
-     */
-    public static CallSite makeWriterCallSite(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter) {
-        return makeCallSite(spec, getter, setter, true);
-    }
-
-    /**
-     * <p>Create a CallSite that can be used to read the property specified by the given {@code TypeSpecification},
+     * <p>Create a MethodHandle that can be used to read the property specified by the given {@code TypeSpecification},
      * {@code getter} and {@code setter} from NBT.</p>
      * <p>Given two types {@code C} and {@code T} the getter must have type {@code (C)->T} and the setter must have
      * type {@code (C, T)->void}.</p>
-     * <p>The type of the resulting CallSite will then have the exact type {@code (C, NBTBase)->void}.</p>
+     * <p>The type of the resulting MethodHandle will then have the exact type {@code (C, NBTBase)->void}.</p>
      * @param spec the TypeSpecification
      * @param getter the getter
      * @param setter the setter
-     * @return a CallSite
+     * @return a MethodHandle
      */
-    public static CallSite makeReaderCallSite(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter) {
-        return makeCallSite(spec, getter, setter, false);
+    public static MethodHandle makeReader(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter) {
+        return findMH(spec, getter, setter, false);
     }
 
-    private static CallSite makeCallSite(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter, boolean writer) {
-        checkState(isFrozen(), "Don't query NBTSerializers before postInit");
-
-        validateGetterSetter(getter, setter);
-
-        MethodHandle result = findMH(spec, getter, setter, writer);
-        return new ConstantCallSite(result);
+    /**
+     * <p>Create a MethodHandle that can be used to write the property specified by the given {@code TypeSpecification},
+     * {@code getter} and {@code setter} to NBT.</p>
+     * <p>Given two types {@code C} and {@code T} the getter must have type {@code (C)->T} and the setter must have
+     * type {@code (C, T)->void}.</p>
+     * <p>The type of the resulting MethodHandle will then have the exact type {@code (C)->NBTBase}.</p>
+     * @param spec the TypeSpecification
+     * @param getter the getter
+     * @param setter the setter
+     * @return a MethodHandle
+     */
+    public static MethodHandle makeWriter(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter) {
+        return findMH(spec, getter, setter, true);
     }
 
     private static MethodHandle findMH(TypeSpecification<?> spec, MethodHandle getter, MethodHandle setter, boolean writer) {
-        MethodType expectedType = writer ? methodType(NBTBase.class, getter.type().parameterType(0)) : methodType(void.class, getter.type().parameterType(0), NBTBase.class);
+        checkState(isFrozen(), "Don't query NBTSerializers before postInit");
+        validateGetterSetter(getter, setter);
 
-        for (Class<?> clazz : JavaUtils.hierarchy(spec.getRawType(), JavaUtils.Interfaces.INCLUDE)) {
+        List<Class<?>> prefixArgs = getter.type().parameterList();
+
+        Class<?> rawType = spec.getRawType();
+        Iterable<Class<?>> hierarchy = JavaUtils.hierarchy(rawType, JavaUtils.Interfaces.INCLUDE);
+        if (rawType.isInterface()) {
+            hierarchy = Iterables.concat(hierarchy, ImmutableList.of(Object.class));
+        }
+
+        for (Class<?> clazz : hierarchy) {
             MethodHandle result = null;
             for (NBTSerializerFactory factory : factories.get(clazz)) {
                 MethodHandle applied = writer ? factory.makeWriter(spec, getter, setter) : factory.makeReader(spec, getter, setter);
 
                 if (applied != null) {
-                    checkArgument(applied.type().equals(expectedType), "Factory " + factory + " produced invalid " + (writer ? "writer" : "reader"));
+                    boolean valid;
+                    if (writer) {
+                        valid = applied.type().returnType() == NBTBase.class && applied.type().parameterList().equals(prefixArgs);
+                    } else {
+                        valid = applied.type().returnType() == void.class
+                                && applied.type().parameterList().subList(0, applied.type().parameterCount() - 1).equals(prefixArgs)
+                                && applied.type().parameterType(applied.type().parameterCount() - 1) == NBTBase.class;
+                    }
+                    checkArgument(valid, "Factory " + factory + " produced invalid " + (writer ? "writer" : "reader"));
                 }
 
                 if (result == null) {
@@ -225,7 +232,7 @@ public final class NBTSerializers {
         checkArgument(getterType.returnType() != void.class, "Getter must not return void");
         checkArgument(setterType.returnType() == void.class, "Setter must return void");
         checkArgument(setterType.parameterCount() >= 1, "setter must take at least 1 argument");
-        checkArgument(getterType.returnType() == setterType.parameterType(1), "setter and getter must handle same type");
+        checkArgument(getterType.returnType() == setterType.parameterType(setterType.parameterCount() - 1), "setter and getter must handle same type");
 
         List<Class<?>> setterPrArgs = setterType.parameterList().subList(0, setterType.parameterCount() - 1);
         List<Class<?>> getterPrArgs = getterType.parameterList();

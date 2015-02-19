@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons;
 
+import com.google.common.collect.Lists;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
@@ -14,6 +14,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
@@ -24,6 +26,7 @@ import net.minecraftforge.event.entity.EntityEvent;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @NetworkMod()
@@ -67,17 +70,20 @@ public class testmod_sc {
         NBTTagCompound nbt = new NBTTagCompound();
         TestTE testTE = new TestTE();
         testTE.tank = "hello";
+        testTE.list = Lists.newArrayList("hello", "world");
+
         testTE.writeToNBT(nbt);
         System.out.println(nbt);
 
-        nbt.setString("tank", "hello world");
-        nbt.setTag("read", NBTData.serializedNull());
+        NBTTagList nbtList = new NBTTagList();
+        nbtList.appendTag(new NBTTagString("", "world"));
+        nbtList.appendTag(new NBTTagString("", "hello"));
+        nbt.setTag("list", nbtList);
 
-        for (int i = 0; i < 2000000; i++) {
-            testTE.readFromNBT(nbt);
-        }
+        testTE.readFromNBT(nbt);
+
         System.out.println(testTE.tank);
-        System.out.println(testTE.read);
+        System.out.println(testTE.list);
 
         System.exit(0);
     }
@@ -128,11 +134,11 @@ public class testmod_sc {
 
 	private static class TestTE extends SuperTE {
 
-		@ToNbt
+//		@ToNbt
 		private String tank;
 
         @ToNbt
-        int read;
+        List<String> list;
 
 		void foo() {
 
