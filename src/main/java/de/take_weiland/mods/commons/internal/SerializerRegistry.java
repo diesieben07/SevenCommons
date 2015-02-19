@@ -8,16 +8,15 @@ import cpw.mods.fml.common.discovery.ASMDataTable;
 import cpw.mods.fml.common.discovery.asm.ModAnnotation;
 import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.serialize.NBTSerializer;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Watcher;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.Type;
 
-import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
-import java.lang.invoke.*;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
@@ -32,15 +31,9 @@ import static java.lang.invoke.MethodType.methodType;
  */
 public final class SerializerRegistry {
 
-	private static SerializerRegistry nbtRegistry;
 	private static SerializerRegistry watcherRegistry;
 
-	@SuppressWarnings("unchecked")
-	public static <T> NBTSerializer<T> getNBTSerializer(TypeSpecification<T> type) {
-		return (NBTSerializer<T>) nbtRegistry.findSerializer(type);
-	}
-
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
 	public static <T> Watcher<T> getWatcher(TypeSpecification<T> type) {
 		// TODO
 		return (Watcher<T>) watcherRegistry.findSerializer(type);
@@ -48,12 +41,6 @@ public final class SerializerRegistry {
 
 	public static void init(ASMDataTable data) {
 		try {
-			nbtRegistry = new SerializerRegistry(
-					NBTSerializer.class,
-					NBTSerializer.Provider.class,
-					data
-			);
-
 			watcherRegistry = new SerializerRegistry(
 					Watcher.class,
 					Watcher.Provider.class,
@@ -302,10 +289,6 @@ public final class SerializerRegistry {
 			return wrapped.getAnnotation(annotationClass);
 		}
 
-        @Override
-        public <X> TypeSpecification<X> overwriteType(TypeToken<X> type, @Nullable SerializationMethod.Method method) {
-            return null;
-        }
     }
 
 }

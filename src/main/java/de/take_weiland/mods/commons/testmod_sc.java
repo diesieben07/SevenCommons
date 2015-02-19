@@ -23,6 +23,7 @@ import net.minecraftforge.event.entity.EntityEvent;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -67,17 +68,17 @@ public class testmod_sc {
         GameRegistry.registerTileEntity(TestTE.class, "testtile");
         NBTTagCompound nbt = new NBTTagCompound();
         TestTE testTE = new TestTE();
-        testTE.tank = new int[] { 1, 2, 3 };
+        testTE.list = new ArrayList<>();
+        testTE.list.add(Arrays.asList("foo", "bar"));
+        testTE.list.add(Arrays.asList("hello", "world"));
 
         testTE.writeToNBT(nbt);
 
-        System.out.println(Arrays.toString(nbt.getIntArray("tank")));
-
-        testTE.tank = null;
+        testTE.list = null;
 
         testTE.readFromNBT(nbt);
 
-        System.out.println(Arrays.toString(testTE.tank));
+        System.out.println(testTE.list);
 
         System.exit(0);
     }
@@ -128,17 +129,20 @@ public class testmod_sc {
 
 	private static class TestTE extends SuperTE {
 
-		@ToNbt
+//		@ToNbt
 		private int[] tank;
 
         @ToNbt
-        List<String> list;
+        List<List<String>> list;
 
-		void foo() {
+        @Override
+        public void readFromNBT(NBTTagCompound par1NBTTagCompound) {
+        }
 
-		}
-
-	}
+        @Override
+        public void writeToNBT(NBTTagCompound par1NBTTagCompound) {
+        }
+    }
 
 	private static class PlayerProps implements IExtendedEntityProperties {
 

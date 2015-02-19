@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.reflect.TypeToken;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
@@ -10,10 +9,7 @@ import de.take_weiland.mods.commons.event.client.GuiInitEvent;
 import de.take_weiland.mods.commons.internal.sync.SyncType;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.NameableInventory;
-import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
-import de.take_weiland.mods.commons.serialize.NBTSerializer;
-import de.take_weiland.mods.commons.sync.Property;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -24,18 +20,14 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.network.packet.Packet250CustomPayload;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 
-import javax.annotation.Nullable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -53,30 +45,10 @@ public final class ASMHooks {
 	public static final String FIND_CONTAINER_INVS = "findContainerInvs";
 	public static final String ON_LISTENER_ADDED = "onListenerAdded";
 	public static final String IS_USEABLE_CLIENT = "isUseableClient";
-	public static final String READ_NBT = "readNBT";
-	public static final String FIND_ES_TYPE = "findEnumSetType";
 
-	private ASMHooks() { }
+    private ASMHooks() { }
 
-	public static <OBJ, T> void readNBT(@Nullable NBTBase nbt, NBTSerializer<T> serializer, Property<T, OBJ> prop, OBJ instance) {
-		if (NBTData.isSerializedNull(nbt)) {
-			prop.set(null, instance);
-			return;
-		}
-		serializer.deserialize(nbt, prop, instance);
-	}
-
-	private static final Type esParam = EnumSet.class.getTypeParameters()[0];
-
-	public static Class<?> findEnumSetType(Type type, String memberName) {
-		Class<?> rawType = TypeToken.of(type).resolveType(esParam).getRawType();
-		if (!rawType.isEnum()) {
-			throw new IllegalStateException("Cannot determine parameter-type of EnumSet " + memberName);
-		}
-		return rawType;
-	}
-
-	@SideOnly(Side.CLIENT)
+    @SideOnly(Side.CLIENT)
 	public static boolean isUseableClient(Slot slot) {
 		return slot != null && slot.canTakeStack(Minecraft.getMinecraft().thePlayer);
 	}

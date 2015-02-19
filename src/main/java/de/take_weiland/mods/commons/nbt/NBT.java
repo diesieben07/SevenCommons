@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.collect.ImmutableMap;
-import de.take_weiland.mods.commons.serialize.NBTSerializer;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.nbt.*;
 import org.jetbrains.annotations.Contract;
@@ -17,18 +16,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * <p>Utility methods regarding NBT data.</p>
- * <p>The following types are supported for serialization:</p>
- * <ul>
- *     <li>{@link java.lang.String}</li>
- *     <li>{@link java.util.UUID}</li>
- *     <li>{@link net.minecraft.item.ItemStack}</li>
- *     <li>{@link net.minecraftforge.fluids.FluidStack}</li>
- *     <li>Any subtype of {@link java.lang.Enum}</li>
- *     <li>Any subtype of {@link de.take_weiland.mods.commons.nbt.NBTSerializable}</li>
- *     <li>Any type with a custom serializer, see {@link #registerSerializer(Class, NBTSerializer)}</li>
- *     <li>Any primitive array (TODO: multi-dim)</li>
- *     <li>Any array of one of the above types (TODO: multi-dim)</li>
- * </ul>
  */
 @ParametersAreNonnullByDefault
 public final class NBT {

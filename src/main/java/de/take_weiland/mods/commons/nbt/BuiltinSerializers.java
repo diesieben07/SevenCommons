@@ -4,6 +4,7 @@ import com.google.common.base.Throwables;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
+import de.take_weiland.mods.commons.internal.DerivedTypeSpec;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import net.minecraft.nbt.*;
 
@@ -227,7 +228,7 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
         MethodHandle valGetter = MethodHandles.dropArguments(MethodHandles.identity(Object.class), 1, ListIterator.class);
         MethodHandle valSetter = MethodHandles.dropArguments(LIST_ITER_SET, 0, Object.class);
 
-        TypeSpecification<?> valueSpec = spec.overwriteType(listType, SerializationMethod.Method.VALUE);
+        TypeSpecification<?> valueSpec = new DerivedTypeSpec<>(spec, listType, SerializationMethod.Method.VALUE);
         MethodHandle valueWriter = NBTSerializers.makeWriter(valueSpec, valGetter, valSetter);
         return LIST_WRITER_HELPER.bindTo(valueWriter);
     }
@@ -240,7 +241,7 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
 
         MethodHandle valGetter = LIST_SAFE_GET;
         MethodHandle valSetter = LIST_ADD_OR_SET;
-        TypeSpecification<?> valueSpec = spec.overwriteType(listType, SerializationMethod.Method.VALUE);
+        TypeSpecification<?> valueSpec = new DerivedTypeSpec<>(spec, listType, SerializationMethod.Method.VALUE);
         MethodHandle valueReader = NBTSerializers.makeReader(valueSpec, valGetter, valSetter);
         return LIST_READER_HELPER_CONT.bindTo(valueReader);
     }
@@ -253,7 +254,7 @@ public final class BuiltinSerializers implements NBTSerializerFactory {
 
         MethodHandle valGetter = LIST_SAFE_GET;
         MethodHandle valSetter = LIST_ADD_OR_SET;
-        TypeSpecification<?> valueSpec = spec.overwriteType(listType, SerializationMethod.Method.VALUE);
+        TypeSpecification<?> valueSpec = new DerivedTypeSpec<>(spec, listType, SerializationMethod.Method.VALUE);
         MethodHandle valueReader = NBTSerializers.makeReader(valueSpec, valGetter, valSetter);
         return LIST_READER_HELPER_VAL.bindTo(valueReader);
     }
