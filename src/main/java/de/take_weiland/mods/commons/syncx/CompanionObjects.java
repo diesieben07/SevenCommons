@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import de.take_weiland.mods.commons.internal.AbstractTypeSpec;
+import de.take_weiland.mods.commons.internal.sync.BuiltinSyncers;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Sync;
@@ -38,7 +39,7 @@ public final class CompanionObjects {
     public static final String METHOD_NEW_COMPANION = "makeNewCompanion";
 
     private static Multimap<Class<?>, SyncerFactory> FACTORIES = ImmutableMultimap.<Class<?>, SyncerFactory>of(
-            Object.class, new DefaultFactory()
+            Object.class, new BuiltinSyncers()
     );
 
     private static final ClassValue<MethodHandle> CONSTRUCTORS = new ClassValue<MethodHandle>() {

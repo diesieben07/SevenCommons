@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.syncx;
+package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
@@ -6,10 +6,11 @@ import de.take_weiland.mods.commons.internal.MethodHandleHelpers;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
+import de.take_weiland.mods.commons.syncx.SyncerFactory;
+import de.take_weiland.mods.commons.syncx.SyncerFactoryUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 
 import static java.lang.invoke.MethodHandles.publicLookup;
 import static java.lang.invoke.MethodType.methodType;
@@ -17,7 +18,7 @@ import static java.lang.invoke.MethodType.methodType;
 /**
  * @author diesieben07
  */
-public class DefaultFactory implements SyncerFactory {
+public final class BuiltinSyncers implements SyncerFactory {
     @Override
     public Handle get(TypeSpecification<?> type) {
         if (type.getRawType().isPrimitive()) {
@@ -43,11 +44,7 @@ public class DefaultFactory implements SyncerFactory {
         @Override
         public Instance make(MethodHandle getter, MethodHandle setter, MethodHandle companionGet, MethodHandle companionSet) {
             try {
-                Class<?> valueClazz = getter.type().parameterType(0);
-                Class<?> compClazz = companionGet.type().parameterType(0);
-
                 MethodHandle eq = MethodHandleHelpers.equal(primitive);
-                MethodHandle checker = MethodHandles.filterArguments(eq, 0, getter, companionGet);
 
                 String writeMethod = "write" + StringUtils.capitalize(primitive.getSimpleName());
                 MethodHandle rawWrite = publicLookup().findVirtual(ByteArrayDataOutput.class, writeMethod, methodType(void.class, primitive))
