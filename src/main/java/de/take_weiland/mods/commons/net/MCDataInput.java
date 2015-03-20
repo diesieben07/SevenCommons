@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataInput;
 import de.take_weiland.mods.commons.util.BlockPos;
-import de.take_weiland.mods.commons.util.ByteStreamSerializer;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;

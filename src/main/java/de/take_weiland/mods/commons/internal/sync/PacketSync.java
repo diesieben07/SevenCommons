@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.sync;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import de.take_weiland.mods.commons.net.*;
-import de.take_weiland.mods.commons.syncx.SyncerCompanion;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.io.IOException;

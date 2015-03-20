@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.syncx;
+package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;

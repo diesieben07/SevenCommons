@@ -6,7 +6,6 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.sync.Sync;
-import de.take_weiland.mods.commons.syncx.SyncerCompanions;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -21,28 +20,13 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityEvent;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.lang.invoke.MethodHandle;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Random;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @NetworkMod()
 public class testmod_sc {
-
-    private long test;
-
-	public static void main(@Nonnull String[] bar) throws Throwable {
-        SyncerCompanions s = SyncerCompanions.instance();
-
-        Object o = s.makeCompanion(3);
-        MethodHandle getter = s.makeGetter(String.class, 0);
-        MethodHandle setter = s.makeSetter(String.class, 0);
-
-        setter.invokeExact(o, "hello");
-        System.out.println((String) getter.invokeExact(o));
-    }
 
 	@Mod.Instance
 	public static testmod_sc instance;
@@ -58,6 +42,8 @@ public class testmod_sc {
 //        companion.check(te, false);
 //
 //        System.exit(0);
+
+        GameRegistry.registerTileEntity(TestTE.class, "testte");
     }
 
 	@Mod.EventHandler
@@ -107,7 +93,7 @@ public class testmod_sc {
 	public static class TestTE extends SuperTE {
 
         @Sync
-        public int test;
+        public String test;
 
         private int tick;
 
@@ -115,7 +101,7 @@ public class testmod_sc {
         public void updateEntity() {
             if (tick++ % 10 == 0) {
                 if (Sides.logical(this).isServer()) {
-                    test = new Random().nextInt(Integer.MAX_VALUE);
+                    test = String.valueOf(new Random().nextInt(Integer.MAX_VALUE));
                 } else {
                     System.out.println("client val is " + test);
                 }

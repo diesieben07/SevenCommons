@@ -1,11 +1,11 @@
-package de.take_weiland.mods.commons.syncx;
+package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import de.take_weiland.mods.commons.internal.sync.SyncType;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.reflect.SCReflection;
+import de.take_weiland.mods.commons.sync.SyncerFactory;
 import net.minecraft.tileentity.TileEntityBeacon;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
@@ -316,9 +316,9 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
             SyncerFactory.Instance instance = info.handle.make(info.getter, info.setter, companionGetter, companionSetter);
 
             MethodHandle[] arr = new MethodHandle[3];
-            arr[CHECKER_IN_ARR] = instance.checker;
-            arr[READER_IN_ARR] = instance.reader;
-            arr[WRITER_IN_ARR] = instance.writer;
+            arr[CHECKER_IN_ARR] = instance.getChecker();
+            arr[READER_IN_ARR] = instance.getReader();
+            arr[WRITER_IN_ARR] = instance.getWriter();
 
             map.put(getMemberID(info.member), arr);
         }

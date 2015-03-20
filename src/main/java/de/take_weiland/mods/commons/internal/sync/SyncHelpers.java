@@ -1,7 +1,6 @@
-package de.take_weiland.mods.commons.syncx;
+package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.internal.sync.SyncType;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;

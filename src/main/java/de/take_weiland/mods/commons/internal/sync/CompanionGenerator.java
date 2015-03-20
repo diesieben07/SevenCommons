@@ -1,6 +1,7 @@
-package de.take_weiland.mods.commons.syncx;
+package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.reflect.SCReflection;
+import de.take_weiland.mods.commons.sync.SyncerFactory;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.AccessibleObject;

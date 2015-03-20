@@ -4,7 +4,7 @@ import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.internal.transformers.EntitySyncPropsHooks;
-import de.take_weiland.mods.commons.syncx.SyncerCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncerCompanion;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;

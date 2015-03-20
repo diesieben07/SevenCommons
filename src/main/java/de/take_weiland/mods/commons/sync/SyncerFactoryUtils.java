@@ -1,7 +1,8 @@
-package de.take_weiland.mods.commons.syncx;
+package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.sync.SyncerFactory;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

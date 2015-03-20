@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.syncx;
+package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -8,11 +8,9 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import de.take_weiland.mods.commons.internal.AbstractTypeSpec;
-import de.take_weiland.mods.commons.internal.sync.BuiltinSyncers;
-import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Sync;
-import de.take_weiland.mods.commons.testmod_sc;
+import de.take_weiland.mods.commons.sync.SyncerFactory;
 import de.take_weiland.mods.commons.util.JavaUtils;
 
 import javax.annotation.Nullable;
@@ -55,16 +53,6 @@ public final class CompanionObjects {
         } catch (Throwable t) {
             throw Throwables.propagate(t);
         }
-    }
-
-    public static void main(String[] args) throws Throwable {
-        MethodHandle cstr = CONSTRUCTORS.get(testmod_sc.TestTE.class);
-        SyncerCompanion companion = (SyncerCompanion) cstr.invokeExact();
-
-        testmod_sc.TestTE te = new testmod_sc.TestTE();
-        te.test = 123;
-        MCDataOutput out = companion.check(te, false);
-        System.out.println(te.test);
     }
 
     private static MethodHandle compileCompanion(Class<?> type) {

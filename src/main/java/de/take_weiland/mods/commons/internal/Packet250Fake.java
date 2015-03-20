@@ -16,10 +16,12 @@ import java.io.IOException;
 public class Packet250Fake extends Packet250CustomPayload {
 
 	private final ModPacket modPacket;
+    private final FMLPacketHandlerImpl.ModPacketInfo packetInfo;
 
-	public Packet250Fake(ModPacket modPacket, String channel, byte[] bytes, int len) {
+	public Packet250Fake(ModPacket modPacket, FMLPacketHandlerImpl.ModPacketInfo packetInfo, String channel, byte[] bytes, int len) {
 		this.modPacket = modPacket;
-		this.channel = channel;
+        this.packetInfo = packetInfo;
+        this.channel = channel;
 		this.data = bytes;
 		this.length = len;
 	}
@@ -40,7 +42,7 @@ public class Packet250Fake extends Packet250CustomPayload {
 	public void processPacket(NetHandler nh) {
 		MCDataInputStream in = MCDataInputStream.create(data, 0, length);
 		in.readVarInt(); // skip packet ID
-        FMLPacketHandlerImpl.handlePacket(in, nh.getPlayer(), modPacket);
+        FMLPacketHandlerImpl.handlePacket(in, nh.getPlayer(), modPacket, packetInfo);
 	}
 
 	@Override

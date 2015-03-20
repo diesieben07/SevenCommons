@@ -78,7 +78,7 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
     }
 
 
-    private ImmutableMap<Class<? extends ModPacket>, ModPacketInfo> updatePacketInfo(Map<Class<? extends ModPacket>, Integer> newPackets) {
+    private void updatePacketInfo(Map<Class<? extends ModPacket>, Integer> newPackets) {
         synchronized (FMLPacketHandlerImpl.class) {
             ImmutableMap.Builder<Class<? extends ModPacket>, ModPacketInfo> builder = ImmutableMap.builder();
             builder.putAll(packetInfo);
@@ -89,7 +89,7 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
 
                 builder.put(clazz, new ModPacketInfo(clazz, this, id));
             }
-            return packetInfo;
+            packetInfo = builder.build();
         }
     }
 
@@ -102,16 +102,16 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
 		int id = in.readVarInt();
 
 		ModPacket modPacket = newPacket(id);
-		handlePacket(in, player, modPacket);
+		handlePacket(in, player, modPacket, packetInfo.get(modPacket.getClass()));
 	}
 
 	final void handlePacket(MCDataInputStream in, EntityPlayer player) {
-		handlePacket(in, player, newPacket(in.readVarInt()));
+        ModPacket packet = newPacket(in.readVarInt());
+        handlePacket(in, player, packet, packetInfo.get(packet.getClass()));
 	}
 
-	static void handlePacket(MCDataInputStream in, EntityPlayer player, ModPacket modPacket) {
+	static void handlePacket(MCDataInputStream in, EntityPlayer player, ModPacket modPacket, ModPacketInfo info) {
 		Side side = Sides.logical(player);
-        ModPacketInfo info = packetInfo.get(modPacket.getClass());
         try {
             if (!info.isValidTarget(side)) {
 				throw new ProtocolException(String.format("Packet received on wrong Side!"));
@@ -131,15 +131,15 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
 
     public static Packet makePacketForModPacket(ModPacket packet) {
         ModPacketInfo info = packetInfo.get(packet.getClass());
-        return info.handler.buildPacket(packet, info.packetID);
+        return info.handler.buildPacket(packet, info);
     }
 
-	private Packet buildPacket(ModPacket mp, int id) {
+	private Packet buildPacket(ModPacket mp, ModPacketInfo info) {
 		MCDataOutputStream out = MCDataOutputStream.create(mp.expectedSize() + 1); // packetID should rarely take more than one byte (more than 127)
-		out.writeVarInt(id);
+		out.writeVarInt(info.packetID);
 		mp.write(out);
 		out.lock();
-		return new Packet250Fake(mp, channel, out.backingArray(), out.length());
+		return new Packet250Fake(mp, info, channel, out.backingArray(), out.length());
 	}
 
 	@Override
@@ -246,7 +246,7 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
         }
     }
 
-    private static final class ModPacketInfo {
+    static final class ModPacketInfo {
 
         private final PacketDirection.Dir direction;
         final int packetID;

@@ -10,7 +10,7 @@ import de.take_weiland.mods.commons.internal.sync.SyncType;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
-import de.take_weiland.mods.commons.syncx.SyncerCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncerCompanion;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;

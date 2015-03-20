@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.syncx;
+package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 
@@ -23,14 +23,26 @@ public interface SyncerFactory {
 
     final class Instance {
 
-        final MethodHandle checker;
-        final MethodHandle writer;
-        final MethodHandle reader;
+        private final MethodHandle checker;
+        private final MethodHandle writer;
+        private final MethodHandle reader;
 
         public Instance(MethodHandle checker, MethodHandle writer, MethodHandle reader) {
             this.checker = checker;
             this.writer = writer;
             this.reader = reader;
+        }
+
+        public MethodHandle getChecker() {
+            return checker;
+        }
+
+        public MethodHandle getWriter() {
+            return writer;
+        }
+
+        public MethodHandle getReader() {
+            return reader;
         }
     }
 
