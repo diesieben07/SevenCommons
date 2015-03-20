@@ -164,9 +164,7 @@ abstract class ReflectionStrategy {
 
 	public abstract <T> T createAccessor(Class<T> iface);
 
-	public abstract Class<?> defineDynClass(byte[] clazz, Class<?> context);
-
-	static class InterfaceInfo {
+    static class InterfaceInfo {
 
 		final Map<Method, Field> getters;
 		final Map<Method, Field> setters;

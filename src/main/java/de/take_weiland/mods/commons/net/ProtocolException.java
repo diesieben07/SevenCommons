@@ -8,7 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class ProtocolException extends Exception {
 
-	String playerKickMsg;
+	private String playerKickMsg;
 
 	public ProtocolException() {
 		super();
@@ -42,5 +42,9 @@ public class ProtocolException extends Exception {
 		playerKickMsg = checkNotNull(msg, "No kick message");
 		return this;
 	}
+
+    public final String getKickMessage() {
+        return playerKickMsg;
+    }
 
 }

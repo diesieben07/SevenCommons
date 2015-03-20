@@ -177,9 +177,7 @@ public interface MCDataInput extends ByteArrayDataInput {
 	 */
 	<E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass, @Nullable EnumSet<E> set);
 
-	<T> T read(ByteStreamSerializer<T> clazz);
-
-	/**
+    /**
 	 * <p>Read a set of coordinates from the buffer.</p>
 	 * <p>This method is equivalent to {@link de.take_weiland.mods.commons.util.BlockPos#fromByteStream(MCDataInputStream)}.</p>
 	 * @return BlockCoordinates

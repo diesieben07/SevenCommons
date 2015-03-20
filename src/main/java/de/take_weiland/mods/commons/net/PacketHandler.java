@@ -16,7 +16,7 @@ public interface PacketHandler {
 	 * @param packetId the packetId
 	 * @return an MCDataOutputStream
 	 */
-	MCDataOutputStream createStream(int packetId);
+	MCDataOutput createStream(int packetId);
 
 	/**
 	 * <p>Same functionality as {@link #createStream(int)}, but creates the stream with the given initial capacity.</p>
@@ -24,13 +24,13 @@ public interface PacketHandler {
 	 * @param initialCapacity the initial capacity for the stream
 	 * @return an MCDataOutputStream
 	 */
-	MCDataOutputStream createStream(int packetId, int initialCapacity);
+	MCDataOutput createStream(int packetId, int initialCapacity);
 
 	/**
 	 * <p>Create a {@code SimplePacket} from an {@code MCDataOutputStream} created by {@code createStream}.</p>
 	 * @param stream the MCDataOutputStream
 	 * @return a SimplePacket
 	 */
-	SimplePacket makePacket(MCDataOutputStream stream);
+	SimplePacket makePacket(MCDataOutput stream);
 
 }

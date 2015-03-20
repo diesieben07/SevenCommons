@@ -55,12 +55,7 @@ final class UnsafeStrategy extends ReflectionStrategy {
 		}
 	}
 
-	@Override
-	public Class<?> defineDynClass(byte[] clazz, Class<?> context) {
-		return unsafe.defineAnonymousClass(context, clazz, null);
-	}
-
-	private void makeConstructorBouncer(ClassWriter cw, Method boncer, Constructor<?> cstr) {
+    private void makeConstructorBouncer(ClassWriter cw, Method boncer, Constructor<?> cstr) {
 		String name = boncer.getName();
 		String desc = Type.getMethodDescriptor(boncer);
 

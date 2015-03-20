@@ -5,6 +5,7 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.CLASS;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * <p>Used to define an alternate corresponding setter for a getter.</p>
@@ -13,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *
  * @author diesieben07
  */
-@Retention(CLASS)
+@Retention(RUNTIME)
 @Target(METHOD)
 public @interface OverrideSetter {
 

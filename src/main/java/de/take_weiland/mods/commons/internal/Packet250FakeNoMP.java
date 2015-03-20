@@ -17,11 +17,11 @@ import java.io.IOException;
 /**
  * @author diesieben07
  */
-public class Packet250FakeNoMP extends Packet250CustomPayload implements SimplePacket {
+public final class Packet250FakeNoMP extends Packet250CustomPayload implements SimplePacket {
 
-	private final PacketHandlerProxy handler;
+	private final FMLPacketHandlerImpl handler;
 
-	public Packet250FakeNoMP(PacketHandlerProxy handler, String channel, byte[] bytes, int len) {
+	Packet250FakeNoMP(FMLPacketHandlerImpl handler, String channel, byte[] bytes, int len) {
 		this.handler = handler;
 		this.channel = channel;
 		this.data = bytes;
@@ -32,7 +32,7 @@ public class Packet250FakeNoMP extends Packet250CustomPayload implements SimpleP
 	public void writePacketData(DataOutput out) {
 		try {
 			writeString(channel, out);
-			ASMHooks.writeExtPacketLen(out, length);
+			out.writeShort(length);
 			out.write(data, 0, length);
 		} catch (IOException e) {
 			// stupid bug

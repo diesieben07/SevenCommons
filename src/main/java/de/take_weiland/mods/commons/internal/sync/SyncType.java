@@ -4,7 +4,7 @@ import de.take_weiland.mods.commons.asm.*;
 import de.take_weiland.mods.commons.internal.EntityProxy;
 import de.take_weiland.mods.commons.internal.SyncedEntityProperties;
 import de.take_weiland.mods.commons.net.MCDataInputStream;
-import de.take_weiland.mods.commons.net.MCDataOutputStream;
+import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.SimplePacket;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.Entity;
@@ -41,7 +41,7 @@ public enum SyncType {
 		}
 
 		@Override
-		public void writeObject(Object object, MCDataOutputStream out) {
+		public void writeObject(Object object, MCDataOutput out) {
 			TileEntity te = (TileEntity) object;
 			out.writeInt(te.xCoord);
 			out.writeByte(te.yCoord);
@@ -65,7 +65,7 @@ public enum SyncType {
 		}
 
 		@Override
-		public void writeObject(Object object, MCDataOutputStream out) {
+		public void writeObject(Object object, MCDataOutput out) {
 			out.writeInt(((Entity) object).entityId);
 		}
 
@@ -94,7 +94,7 @@ public enum SyncType {
 		}
 
 		@Override
-		public void writeObject(Object object, MCDataOutputStream out) {
+		public void writeObject(Object object, MCDataOutput out) {
 			out.writeByte(((Container) object).windowId);
 		}
 
@@ -155,7 +155,7 @@ public enum SyncType {
 		}
 
 		@Override
-		public void writeObject(Object object, MCDataOutputStream out) {
+		public void writeObject(Object object, MCDataOutput out) {
 			SyncedEntityProperties props = (SyncedEntityProperties) object;
 			out.writeInt(props._sc$syncprops$owner().entityId);
 			out.writeInt(props._sc$syncprops$index());
@@ -196,7 +196,7 @@ public enum SyncType {
 
 	public abstract void addSyncCall(ClassNode clazz, CodePiece call, boolean isSuperSynced);
 
-	public abstract void writeObject(Object object, MCDataOutputStream out);
+	public abstract void writeObject(Object object, MCDataOutput out);
 
 	public abstract void sendPacket(Object object, SimplePacket packet);
 

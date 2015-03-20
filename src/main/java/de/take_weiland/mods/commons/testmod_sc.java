@@ -5,13 +5,14 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.nbt.ToNbt;
+import de.take_weiland.mods.commons.sync.Sync;
+import de.take_weiland.mods.commons.syncx.SyncerCompanions;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -22,40 +23,25 @@ import net.minecraftforge.event.entity.EntityEvent;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Random;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @NetworkMod()
 public class testmod_sc {
 
-    private String enumSet;
+    private long test;
 
 	public static void main(@Nonnull String[] bar) throws Throwable {
-//        MethodHandles.Lookup lookup = MethodHandles.lookup();
-//
-//        String name = "enumSet";
-//        MethodType type = methodType(NBTBase.class, testmod_sc.class);
-//
-//        MethodHandle get = lookup.findGetter(testmod_sc.class, "enumSet", String.class);
-//        MethodHandle set = lookup.findSetter(testmod_sc.class, "enumSet", String.class);
-//
-//        testmod_sc inst = new testmod_sc();
-//        inst.enumSet = "hello";
-//
-////        CallSite callSite = ToNbtBootstrap.makeNBTWrite(lookup, name, type, 0, get, set);
-//        System.out.println(JavaUtils.defaultToString(callSite.getTarget().invoke(inst)));
-    }
+        SyncerCompanions s = SyncerCompanions.instance();
 
-    private static void doRead(NBTBase nbt, String s) {
-        System.out.println("reading now! " + nbt + ", old val " + s);
-    }
+        Object o = s.makeCompanion(3);
+        MethodHandle getter = s.makeGetter(String.class, 0);
+        MethodHandle setter = s.makeSetter(String.class, 0);
 
-    private String doGet() {
-        System.out.println("getting!");
-        return enumSet;
+        setter.invokeExact(o, "hello");
+        System.out.println((String) getter.invokeExact(o));
     }
 
 	@Mod.Instance
@@ -65,48 +51,39 @@ public class testmod_sc {
 
 	@Mod.EventHandler
 	public void preInit(FMLPostInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        GameRegistry.registerTileEntity(TestTE.class, "testtile");
-        NBTTagCompound nbt = new NBTTagCompound();
-        TestTE testTE = new TestTE();
-        testTE.list = new ArrayList<>();
-        testTE.list.add(Arrays.asList("foo", "bar"));
-        testTE.list.add(Arrays.asList("hello", "world"));
-
-        testTE.writeToNBT(nbt);
-
-        testTE.list = null;
-
-        testTE.readFromNBT(nbt);
-
-        System.out.println(testTE.list);
-
-        System.exit(0);
+//        TestTE te = new TestTE();
+//        SyncerCompanion companion = CompanionObjects.makeNewCompanion(te);
+//
+//        te.test = 123;
+//        companion.check(te, false);
+//
+//        System.exit(0);
     }
 
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent event) throws NoSuchMethodException, NoSuchFieldException, IOException {
 		myBlock = new Block(4000, Material.rock) {
 
-//			@Override
-//			public boolean hasTileEntity(int metadata) {
-//				return true;
-//			}
-//
-//			@Override
-//			public TileEntity createTileEntity(World world, int metadata) {
-//				return new TestTE();
-//			}
-
 			@Override
-			public boolean onBlockActivated(World world, int x, int par3, int par4, EntityPlayer player, int par6, float par7, float par8, float par9) {
-				PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
-				if (Sides.logical(world).isServer()) {
-					props.someString = "clickedX = " + x;
-				} else {
-					player.addChatMessage(props.someString + " on client");
-				}
+			public boolean hasTileEntity(int metadata) {
 				return true;
 			}
+
+			@Override
+			public TileEntity createTileEntity(World world, int metadata) {
+				return new TestTE();
+			}
+
+//			@Override
+//			public boolean onBlockActivated(World world, int x, int par3, int par4, EntityPlayer player, int par6, float par7, float par8, float par9) {
+//				PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
+//				if (Sides.logical(world).isServer()) {
+//					props.someString = "clickedX = " + x;
+//				} else {
+//					player.addChatMessage(props.someString + " on client");
+//				}
+//				return true;
+//			}
 		};
 
 		myBlock.setCreativeTab(CreativeTabs.tabBlock);
@@ -127,20 +104,22 @@ public class testmod_sc {
 
 	}
 
-	private static class TestTE extends SuperTE {
+	public static class TestTE extends SuperTE {
 
-//		@ToNbt
-		private int[] tank;
+        @Sync
+        public int test;
 
-        @ToNbt
-        List<List<String>> list;
-
-        @Override
-        public void readFromNBT(NBTTagCompound par1NBTTagCompound) {
-        }
+        private int tick;
 
         @Override
-        public void writeToNBT(NBTTagCompound par1NBTTagCompound) {
+        public void updateEntity() {
+            if (tick++ % 10 == 0) {
+                if (Sides.logical(this).isServer()) {
+                    test = new Random().nextInt(Integer.MAX_VALUE);
+                } else {
+                    System.out.println("client val is " + test);
+                }
+            }
         }
     }
 

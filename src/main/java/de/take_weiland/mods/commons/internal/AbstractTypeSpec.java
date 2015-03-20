@@ -6,12 +6,24 @@ import de.take_weiland.mods.commons.serialize.TypeSpecification;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 
 /**
  * @author diesieben07
  */
-abstract class AbstractTypeSpec<T, MEM extends Member & AnnotatedElement> implements TypeSpecification<T> {
+public abstract class AbstractTypeSpec<T, MEM extends Member & AnnotatedElement> implements TypeSpecification<T> {
+
+    public static <T> TypeSpecification<T> getSpec(Member member) {
+        if (member instanceof Field) {
+            return new FieldTypeSpec<>((Field) member);
+        } else if (member instanceof Method) {
+            return new MethodTypeSpec<>((Method) member);
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
 
     final MEM member;
     private final SerializationMethod.Method desiredMethod;

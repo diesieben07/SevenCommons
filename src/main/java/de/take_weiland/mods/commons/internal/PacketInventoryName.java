@@ -22,21 +22,21 @@ public class PacketInventoryName extends ModPacket {
 	}
 
 	@Override
-	protected void write(MCDataOutputStream out) {
+    public void write(MCDataOutputStream out) {
 		out.writeByte(windowId);
 		out.writeByte(invIdx);
 		out.writeString(name);
 	}
 
 	@Override
-	protected void read(MCDataInputStream in, EntityPlayer player, Side side) {
+    public void read(MCDataInputStream in, EntityPlayer player, Side side) {
 		windowId = in.readByte();
 		invIdx = in.readByte();
 		name = in.readString();
 	}
 
 	@Override
-	protected void execute(EntityPlayer player, Side side) throws ProtocolException {
+    public void execute(EntityPlayer player, Side side) throws ProtocolException {
 		if (player.openContainer.windowId == windowId) {
 			IInventory inv = JavaUtils.get(Containers.getInventories(player.openContainer).asList(), invIdx);
 			if (inv instanceof NameableInventory) {

@@ -1,15 +1,13 @@
 package de.take_weiland.mods.commons.net;
 
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Maps;
 import cpw.mods.fml.common.network.NetworkRegistry;
-import de.take_weiland.mods.commons.internal.ModPacketProxy;
+import de.take_weiland.mods.commons.internal.FMLPacketHandlerImpl;
 
 import java.util.BitSet;
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 /**
  * <p>A helper class for registering your Packet classes.</p>
@@ -22,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class PacketHandlerBuilder {
 
 	private final String channel;
-	private final Map<Integer, Class<? extends ModPacket>> packets = Maps.newHashMap();
+	private Map<Class<? extends ModPacket>, Integer> packets = Maps.newHashMap();
 	private final BitSet ids = new BitSet(64);
 
 	PacketHandlerBuilder(String channel) {
@@ -45,29 +43,25 @@ public final class PacketHandlerBuilder {
 	 * @return this builder, for convenience
 	 */
 	public PacketHandlerBuilder register(Class<? extends ModPacket> packet, int id) {
-		checkNotNull(packet, "packet");
+		checkNotBuilt();
+        checkNotNull(packet, "packet");
 		checkArgument(id >= 0, "id must be >= 0");
 		checkArgument(!ids.get(id), "id already taken");
-		packets.put(id, packet);
+		packets.put(packet, id);
 		ids.set(id);
 		return this;
 	}
+
+    private void checkNotBuilt() {
+        checkState(packets != null, "PacketHandlerBuilder already used");
+    }
 
 	/**
 	 * <p>Finish registering your packets and register the resulting PacketHandler to FML's network system.</p>
 	 */
 	public PacketHandler build() {
-		FMLPacketHandlerImpl handler = new FMLPacketHandlerImpl(channel, ImmutableBiMap.copyOf(packets));
-		for (Class<? extends ModPacket> packet : packets.values()) {
-			try {
-				ModPacketProxy instance = (ModPacketProxy) packet.newInstance();
-				checkArgument(instance._sc$handler() == null, "Packet %s already in use with another channel!", packet.getSimpleName());
-				instance._sc$setHandler(handler);
-			} catch (ReflectiveOperationException e) {
-				throw new RuntimeException(String.format("Packet transformer failed on %s", packet.getName()));
-			}
-		}
-
+		FMLPacketHandlerImpl handler = new FMLPacketHandlerImpl(channel, packets);
+        packets = null;
 		NetworkRegistry.instance().registerChannel(handler, channel);
 		return handler;
 	}

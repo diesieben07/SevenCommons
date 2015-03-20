@@ -45,12 +45,7 @@ final class PureJavaStrategy extends ReflectionStrategy {
 		});
 	}
 
-	@Override
-	public Class<?> defineDynClass(byte[] clazz, Class<?> context) {
-		return new AnonClassLoader(context.getClassLoader()).define(clazz);
-	}
-
-	private static class AnonClassLoader extends ClassLoader {
+    private static class AnonClassLoader extends ClassLoader {
 
 		AnonClassLoader(ClassLoader parent) {
 			super(parent);

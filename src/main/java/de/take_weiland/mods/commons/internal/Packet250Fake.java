@@ -28,7 +28,7 @@ public class Packet250Fake extends Packet250CustomPayload {
 	public void writePacketData(DataOutput out) {
 		try {
 			writeString(channel, out);
-			ASMHooks.writeExtPacketLen(out, length);
+			out.writeShort(length);
 			out.write(data, 0, length);
 		} catch (IOException e) {
 			// stupid bug
@@ -40,7 +40,7 @@ public class Packet250Fake extends Packet250CustomPayload {
 	public void processPacket(NetHandler nh) {
 		MCDataInputStream in = MCDataInputStream.create(data, 0, length);
 		in.readVarInt(); // skip packet ID
-		((ModPacketProxy) modPacket)._sc$handler().handlePacket(in, nh.getPlayer(), modPacket);
+        FMLPacketHandlerImpl.handlePacket(in, nh.getPlayer(), modPacket);
 	}
 
 	@Override

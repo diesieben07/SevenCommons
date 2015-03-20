@@ -409,6 +409,12 @@ public abstract class ClassInfo extends HasModifiers implements HasAnnotations {
 	 */
 	public abstract List<FieldInfo> getFields();
 
+    /**
+     * <p>Get the name of the source file this class was declared in.</p>
+     * @return the source file or null if unknown
+     */
+    public abstract String getSourceFile();
+
 	@Override
 	public boolean equals(Object o) {
 		return this == o || o instanceof ClassInfo && internalName().equals(((ClassInfo) o).internalName());

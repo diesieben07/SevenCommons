@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 		"de.take_weiland.mods.commons.internal.transformers.",
 		"de.take_weiland.mods.commons.internal.exclude.",
 		"de.take_weiland.mods.commons.util.JavaUtils",
+        "de.take_weiland.mods.commons.util.Logging",
 		"de.take_weiland.mods.commons.reflect.",
 		"de.take_weiland.mods.commons.sync.",
 		"de.take_weiland.mods.commons.nbt.ToNbt"
@@ -30,6 +31,7 @@ public final class SevenCommonsLoader implements IFMLLoadingPlugin {
 	public String[] getASMTransformerClass() {
 		return new String[] {
 				"de.take_weiland.mods.commons.internal.transformers.SCTransformerWrapper",
+                "de.take_weiland.mods.commons.internal.transformers.SCVisitorTransformerWrapper"
 		};
 	}
 

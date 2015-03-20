@@ -304,12 +304,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		return BufferUtils.enumSetHandler.update(enumClass, set, readLong());
 	}
 
-	@Override
-	public <T> T read(ByteStreamSerializer<T> serializer) {
-		return serializer.read(this);
-	}
-
-	private static final int BYTE_MSB = 0b1000_0000;
+    private static final int BYTE_MSB = 0b1000_0000;
 	private static final int SEVEN_BITS = 0b0111_1111;
 
 	@Override

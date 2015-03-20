@@ -1,15 +1,14 @@
 package de.take_weiland.mods.commons.internal.sync;
 
-import de.take_weiland.mods.commons.net.MCDataInputStream;
+import de.take_weiland.mods.commons.syncx.SyncerCompanion;
 
 /**
  * @author diesieben07
  */
 public interface SyncedObjectProxy {
 
-	String CLASS_NAME = "de/take_weiland/mods/commons/internal/sync/SyncedObjectProxy";
-	String READ = "_sc$sync$read";
+    String GET_COMPANION = "_sc$getCompanion";
 
-	int _sc$sync$read(MCDataInputStream in);
+    SyncerCompanion _sc$getCompanion();
 
 }

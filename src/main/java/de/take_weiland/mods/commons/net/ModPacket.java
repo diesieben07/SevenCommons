@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.ModPacketProxy;
+import de.take_weiland.mods.commons.internal.FMLPacketHandlerImpl;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -31,7 +31,7 @@ public abstract class ModPacket implements SimplePacket {
 	 * packet is received.</p>
 	 * @param out the stream
 	 */
-	protected abstract void write(MCDataOutputStream out);
+	public abstract void write(MCDataOutputStream out);
 
 	/**
 	 * <p>Read your packet data from the stream. The stream contains the data written in {@link #write(MCDataOutputStream)}.</p>
@@ -42,7 +42,7 @@ public abstract class ModPacket implements SimplePacket {
 	 * @throws IOException if an IOException occurs while reading the data
 	 * @throws ProtocolException if the data received violates the protocol
 	 */
-	protected abstract void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException;
+	public abstract void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException;
 
 	/**
 	 * <p>Execute this packet's action. This method is called when the packet is received, after the data has been read
@@ -51,14 +51,14 @@ public abstract class ModPacket implements SimplePacket {
 	 * @param side the logical side receiving the packet
 	 * @throws ProtocolException if the data received violates the protocol
 	 */
-	protected abstract void execute(EntityPlayer player, Side side) throws ProtocolException;
+	public abstract void execute(EntityPlayer player, Side side) throws ProtocolException;
 
 	/**
 	 * <p>An estimate of the size of this packet's data in bytes. Used to pre-size the byte buffer that this packet is
 	 * written to.</p>
 	 * @return an estimated size
 	 */
-	protected int expectedSize() {
+    public int expectedSize() {
 		return 32;
 	}
 
@@ -66,7 +66,7 @@ public abstract class ModPacket implements SimplePacket {
 
 	private Packet mcPacket;
 	private Packet build() {
-		return mcPacket == null ? (mcPacket = ((ModPacketProxy) this)._sc$handler().buildPacket(this)) : mcPacket;
+		return mcPacket == null ? (mcPacket = FMLPacketHandlerImpl.makePacketForModPacket(this)) : mcPacket;
 	}
 
 	@Override

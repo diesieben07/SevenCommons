@@ -1,9 +1,13 @@
 package de.take_weiland.mods.commons.asm.info;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
+import de.take_weiland.mods.commons.asm.ASMUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
 
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -209,4 +213,17 @@ final class ClassInfoReflect extends ClassInfo {
 		return this.clazz.isAssignableFrom(child.clazz);
 	}
 
+    private String sourceFileCache;
+
+    @Override
+    public String getSourceFile() {
+        if (sourceFileCache == null) {
+            try (InputStream in = clazz.getResourceAsStream('/' + clazz.getName().replace('.', '/') + ".class")) {
+                sourceFileCache = ASMUtils.getThinClassNode(ByteStreams.toByteArray(in)).sourceFile;
+            } catch (Exception e) {
+                sourceFileCache = ""; // empty = not known
+            }
+        }
+        return Strings.emptyToNull(sourceFileCache);
+    }
 }

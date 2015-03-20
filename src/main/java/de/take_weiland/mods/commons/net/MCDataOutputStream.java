@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
 
+import de.take_weiland.mods.commons.internal.FMLPacketHandlerImpl;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.OutputStream;
 

@@ -12,6 +12,7 @@ import de.take_weiland.mods.commons.reflect.Getter;
 import de.take_weiland.mods.commons.reflect.Invoke;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.jetbrains.annotations.NotNull;
+import org.objectweb.asm.Type;
 import sun.misc.JavaLangAccess;
 import sun.misc.SharedSecrets;
 
@@ -87,6 +88,14 @@ public final class JavaUtils {
 	public static String defaultToString(@Nullable Object o) {
 		return o == null ? "null" : o.getClass().getName() + '@' + Integer.toHexString(o.hashCode());
 	}
+
+    public static String getNiceSimpleName(Class<?> clazz) {
+        if (clazz.isPrimitive()) {
+            return Type.getType(clazz).getClassName();
+        } else {
+            return clazz.getSimpleName();
+        }
+    }
 
 	/**
 	 * <p>Returns the value at the given index in the arrayor null if the index is out of bounds.</p>

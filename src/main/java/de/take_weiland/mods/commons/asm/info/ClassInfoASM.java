@@ -156,4 +156,9 @@ final class ClassInfoASM extends ClassInfo {
 
 		return builder.build();
 	}
+
+    @Override
+    public String getSourceFile() {
+        return clazz.sourceFile;
+    }
 }

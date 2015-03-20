@@ -22,19 +22,19 @@ public final class PacketContainerButton extends ModPacket {
 	}
 
 	@Override
-	protected void write(MCDataOutputStream out) {
+    public void write(MCDataOutputStream out) {
 		out.writeByte(windowId);
 		out.writeVarInt(buttonId);
 	}
 
 	@Override
-	protected void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException {
+    public void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException {
 		windowId = in.readUnsignedByte();
 		buttonId = in.readVarInt();
 	}
 
 	@Override
-	protected void execute(EntityPlayer player, Side side) throws ProtocolException {
+    public void execute(EntityPlayer player, Side side) throws ProtocolException {
 		if (player.openContainer.windowId == windowId && player.openContainer instanceof ButtonContainer) {
 			((ButtonContainer) player.openContainer).onButtonClick(Side.SERVER, player, buttonId);
 		}

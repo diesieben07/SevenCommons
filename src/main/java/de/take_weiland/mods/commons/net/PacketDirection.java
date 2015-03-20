@@ -1,10 +1,12 @@
 package de.take_weiland.mods.commons.net;
 
+import cpw.mods.fml.relauncher.Side;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.CLASS;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * <p>Specify whether a {@link de.take_weiland.mods.commons.net.ModPacket} is send from the client to the server
@@ -14,26 +16,31 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *
  * @author diesieben07
  */
-@Retention(CLASS)
+@Retention(RUNTIME)
 @Target(TYPE)
 public @interface PacketDirection {
 
 	Dir value();
 
 	enum Dir {
-
 		/**
 		 * <p>The packet is only send from the client to the server.</p>
 		 */
-		TO_SERVER,
+		TO_SERVER(Side.SERVER),
 		/**
 		 * <p>The packet is only send from the server to the client.</p>
 		 */
-		TO_CLIENT,
+		TO_CLIENT(Side.CLIENT),
 		/**
 		 * <p>The packet can be send both ways. This is the default value.</p>
 		 */
-		BOTH_WAYS
+		BOTH_WAYS(null);
+
+        public final Side validTarget;
+
+        private Dir(Side validTarget) {
+            this.validTarget = validTarget;
+        }
 
 	}
 

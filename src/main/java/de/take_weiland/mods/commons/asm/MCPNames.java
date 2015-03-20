@@ -7,7 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
+import net.minecraft.launchwrapper.Launch;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,13 +23,16 @@ import java.util.NoSuchElementException;
  */
 public final class MCPNames {
 
-	private static final Map<String, String> fields;
+    private static final Map<String, String> fields;
 	private static final Map<String, String> methods;
 
 	private static final String SYS_PROP = "sevencommons.mappingsFile";
 
+    private static final boolean DEV_ENV;
+
 	static {
-		if (use()) {
+		DEV_ENV = (Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
+        if (use()) {
 			String mappingsDir;
 			String prop = System.getProperty(SYS_PROP);
 			if (prop == null) {
@@ -45,12 +48,12 @@ public final class MCPNames {
 		}
 	}
 
-	/**
+    /**
 	 * <p>Whether the code is running in a development environment or not.</p>
 	 * @return true if the code is running in development mode (use MCP instead of SRG names)
 	 */
 	public static boolean use() {
-		return SevenCommonsLoader.MCP_ENVIRONMENT;
+        return DEV_ENV;
 	}
 
 	/**
@@ -255,6 +258,14 @@ public final class MCPNames {
 	public static final String M_HANDLE_MOUSE_CLICK = "func_74191_a";
 
 	public static final String F_GUICONTAINER_THE_SLOT = "field_82320_o";
+
+    public static final String M_UPDATE_ENTITIES = "func_72939_s";
+
+    public static final String M_WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE = "func_72866_a";
+
+    public static final String F_ENTITY_TICKS_EXISTED = "field_70173_aa";
+
+    public static final String M_INIT_GUI = "func_73866_w_";
 
 	private MCPNames() { }
 

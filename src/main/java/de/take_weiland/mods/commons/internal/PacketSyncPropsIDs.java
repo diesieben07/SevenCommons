@@ -30,7 +30,7 @@ public final class PacketSyncPropsIDs extends ModPacket {
 	}
 
 	@Override
-	protected void write(MCDataOutputStream out) {
+    public void write(MCDataOutputStream out) {
 		out.writeInt(entity.entityId);
 
 		List<SyncedEntityProperties> properties = ((EntityProxy) entity)._sc$getSyncedProps();
@@ -45,7 +45,7 @@ public final class PacketSyncPropsIDs extends ModPacket {
 	}
 
 	@Override
-	protected void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException {
+    public void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException {
 		Entity entity = player.worldObj.getEntityByID(in.readInt());
 		if (entity == null) {
 			throw new ProtocolException("Received Unknown EntityID!");
@@ -69,5 +69,5 @@ public final class PacketSyncPropsIDs extends ModPacket {
 	}
 
 	@Override
-	protected void execute(EntityPlayer player, Side side) throws ProtocolException { }
+    public void execute(EntityPlayer player, Side side) throws ProtocolException { }
 }

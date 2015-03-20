@@ -10,6 +10,7 @@ import de.take_weiland.mods.commons.internal.sync.SyncType;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.net.MCDataOutputStream;
+import de.take_weiland.mods.commons.syncx.SyncerCompanion;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -45,8 +46,31 @@ public final class ASMHooks {
 	public static final String FIND_CONTAINER_INVS = "findContainerInvs";
 	public static final String ON_LISTENER_ADDED = "onListenerAdded";
 	public static final String IS_USEABLE_CLIENT = "isUseableClient";
+    public static final String INVOKE_SYNC_COMP_CHECK = "invokeSyncCompanionCheck";
+    public static final String ON_GUI_INIT = "onGuiInit";
 
     private ASMHooks() { }
+
+    public static void invokeSyncCompanionCheck(Object obj, SyncerCompanion companion) {
+        if (companion != null) companion.check(obj, false);
+    }
+
+    public static final String TICK_SYNC_PROPS = "tickSyncProps";
+
+    public static void tickSyncProps(List<SyncedEntityProperties> props) {
+        if (props != null) {
+            // put actual logic into different method, to make this method smaller and more likely
+            // to be inlined into the World class (called from there every tick for every entity!)
+            tickPropsNonNull(props);
+        }
+    }
+
+    private static void tickPropsNonNull(List<SyncedEntityProperties> props) {
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0, len = props.size(); i < len; i++) {
+            props.get(i)._sc$syncprops$tick();
+        }
+    }
 
     @SideOnly(Side.CLIENT)
 	public static boolean isUseableClient(Slot slot) {
@@ -80,7 +104,7 @@ public final class ASMHooks {
 	}
 
 	public static MCDataOutputStream newSyncStream(Object object, SyncType type) {
-		MCDataOutputStream out = SevenCommons.packets.createStream(SevenCommons.SYNC_PACKET_ID);
+		MCDataOutputStream out = (MCDataOutputStream) SevenCommons.packets.createStream(SevenCommons.SYNC_PACKET_ID);
 		out.writeEnum(type);
 		type.writeObject(object, out);
 		return out;
@@ -127,17 +151,6 @@ public final class ASMHooks {
 
 
 		syncedProps.add(syncedProp);
-	}
-
-	public static final String TICK_SYNC_PROPS = "tickSyncProps";
-
-	public static void tickSyncProps(List<SyncedEntityProperties> props) {
-		if (props != null) {
-			//noinspection ForLoopReplaceableByForEach
-			for (int i = 0, len = props.size(); i < len; i++) {
-				props.get(i)._sc$syncprops$tick();
-			}
-		}
 	}
 
 	private static final int SIGNED_SHORT_BITS = 0b0111_1111_1111_1111;

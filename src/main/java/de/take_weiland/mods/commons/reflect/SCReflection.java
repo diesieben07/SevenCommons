@@ -1,19 +1,27 @@
 package de.take_weiland.mods.commons.reflect;
 
+import com.google.common.base.Throwables;
 import com.google.common.io.Files;
+import com.google.common.reflect.Reflection;
+import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.asm.ASMUtils;
+import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.util.CheckClassAdapter;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
  * <p>Reflection utilities.</p>
@@ -44,43 +52,106 @@ public final class SCReflection {
 		return strategy.createAccessor(iface);
 	}
 
-	/**
-	 * <p>Define a new Class specified by the given bytes. If the class is no longer in use it will usually be
-	 * garbage collected.</p>
-	 *
-	 * @param clazz the bytes describing the class
-	 * @return the defined class
-	 */
-	public static Class<?> defineDynamicClass(byte[] clazz) {
-		return defineDynamicClass(clazz, SCReflection.class);
-	}
+    public static Method findSetter(Method getter) {
+        checkArgument(getter.getParameterTypes().length == 0);
+        Class<?> type = getter.getReturnType();
+        checkArgument(type != void.class);
+
+        String setterName;
+        OverrideSetter ann = getter.getAnnotation(OverrideSetter.class);
+        if (ann != null) {
+            setterName = ann.value();
+        } else {
+            String getterName = getter.getName();
+            if (getterName.startsWith("get") && getterName.length() >= 4 && Character.isUpperCase(getterName.charAt(3))) {
+                setterName = "set" + getterName.substring(3);
+            } else if (getterName.startsWith("is") && getterName.length() >= 3 && Character.isUpperCase(getterName.charAt(2))) {
+                setterName = "set" + getterName.substring(2);
+            } else if (isScala(getter.getDeclaringClass())) {
+                setterName = getterName + "_$eq";
+            } else {
+                setterName = getterName;
+            }
+        }
+
+        try {
+            return getter.getDeclaringClass().getDeclaredMethod(setterName, type);
+        } catch (NoSuchMethodException e) {
+            // no setter
+            return null;
+        }
+    }
+
+    public static boolean isScala(Class<?> clazz) {
+        try {
+            Class<?> scalaSigClazz = Class.forName("scala.reflect.ScalaSignature");
+            if (clazz.isAnnotationPresent(scalaSigClazz.asSubclass(Annotation.class))) {
+                return true;
+            }
+            scalaSigClazz = Class.forName("scala.reflect.ScalaLongSignature");
+            if (clazz.isAnnotationPresent(scalaSigClazz.asSubclass(Annotation.class))) {
+                return true;
+            }
+        } catch (ClassNotFoundException e) {
+            // ignored
+        }
+        return ClassInfo.of(clazz).getSourceFile().endsWith(".scala");
+    }
+
+    private static final MethodHandle CLASS_LOADER_DEFINE;
+
+    /**
+     * <p>Define a new Class specified by the given bytes.</p>
+     *
+     * @param bytes the bytes describing the class
+     * @return the defined class
+     */
+    public static Class<?> defineDynamicClass(byte[] bytes) {
+        return defineDynamicClass(bytes, SCReflection.class);
+    }
+
+    static {
+        try {
+            Method define = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
+            define.setAccessible(true);
+            CLASS_LOADER_DEFINE = publicLookup().unreflect(define);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("Could not find defineClass in ClassLoader!");
+        } catch (IllegalAccessException e) {
+            throw new AssertionError("impossible");
+        }
+    }
 
 	/**
-	 * <p>Define a new Class specified by the given bytes. If the class is no longer in use it will usually be
-	 * garbage collected.</p>
+	 * <p>Define a new Class specified by the given bytes.</p>
 	 *
-	 * @param clazz the bytes describing the class
+	 * @param bytes the bytes describing the class
 	 * @param context the class which to use as the context
 	 * @return the defined class
 	 */
-	public static Class<?> defineDynamicClass(byte[] clazz, Class<?> context) {
+	public static Class<?> defineDynamicClass(byte[] bytes, Class<?> context) {
 		if (DEBUG) {
 			try {
-				ClassNode node = ASMUtils.getThinClassNode(clazz);
+				ClassNode node = ASMUtils.getThinClassNode(bytes);
 				File file = new File("sevencommonsdyn/" + node.name + ".class");
 				Files.createParentDirs(file);
 				OutputStream out = new FileOutputStream(file);
-				out.write(clazz);
+				out.write(bytes);
 				out.close();
-
-				ClassReader cr = new ClassReader(clazz);
-				cr.accept(new CheckClassAdapter(new ClassNode(), true), 0);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
-		return strategy.defineDynClass(clazz, context);
-	}
+        ClassLoader cl = context.getClassLoader();
+        Class<?> clazz;
+        try {
+            clazz = (Class<?>) CLASS_LOADER_DEFINE.invokeExact(cl, (String) null, bytes, 0, bytes.length);
+        } catch (Throwable t) {
+            throw Throwables.propagate(t);
+        }
+        Reflection.initialize(clazz);
+        return clazz;
+    }
 
 	/**
 	 * <p>Get a new unique class name as an internal name.</p>

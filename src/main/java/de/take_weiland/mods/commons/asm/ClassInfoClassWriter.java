@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.asm;
 
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
 /**
@@ -14,7 +15,11 @@ public class ClassInfoClassWriter extends ClassWriter {
 		super(flags);
 	}
 
-	@Override
+    public ClassInfoClassWriter(ClassReader classReader, int flags) {
+        super(classReader, flags);
+    }
+
+    @Override
 	protected String getCommonSuperClass(String type1, String type2) {
 		ClassInfo cl1 = ClassInfo.of(type1);
 		ClassInfo cl2 = ClassInfo.of(type2);
