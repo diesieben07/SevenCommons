@@ -5,8 +5,6 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.nbt.ToNbt;
-import de.take_weiland.mods.commons.sync.Sync;
-import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
@@ -22,7 +20,6 @@ import net.minecraftforge.event.entity.EntityEvent;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Random;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @NetworkMod()
@@ -85,31 +82,12 @@ public class testmod_sc {
 		}
 	}
 
-	private static abstract class SuperTE extends TileEntity {
+	public static abstract class SuperTE extends TileEntity {
 
 
 	}
 
-	public static class TestTE extends SuperTE {
-
-        @Sync
-        public String test;
-
-        private int tick;
-
-        @Override
-        public void updateEntity() {
-            if (tick++ % 10 == 0) {
-                if (Sides.logical(this).isServer()) {
-                    test = String.valueOf(new Random().nextInt(Integer.MAX_VALUE));
-                } else {
-                    System.out.println("client val is " + test);
-                }
-            }
-        }
-    }
-
-	private static class PlayerProps implements IExtendedEntityProperties {
+    private static class PlayerProps implements IExtendedEntityProperties {
 
 		@ToNbt
 		String someString;

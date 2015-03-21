@@ -1,13 +1,14 @@
 package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import com.google.common.collect.ObjectArrays;
-import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
 import de.take_weiland.mods.commons.internal.sync.CompanionObjects;
+import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
 import de.take_weiland.mods.commons.internal.sync.SyncerCompanion;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
+
+import java.lang.invoke.CallSite;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -33,7 +34,7 @@ public final class CompanionFieldAdder extends ClassVisitor {
             interfaces = ObjectArrays.concat(newIFace, interfaces);
         }
 
-        super.visit(version, access, name, signature, superName, interfaces);
+        super.visit(V1_7, access, name, signature, superName, interfaces);
         className = name;
     }
 
@@ -88,18 +89,27 @@ public final class CompanionFieldAdder extends ClassVisitor {
             if (!done && opcode == INVOKESPECIAL) {
                 done = true;
 
+                Type callSiteType = Type.getType(CallSite.class);
+                Type lookupType = Type.getType(MethodHandles.Lookup.class);
+                Type stringType = Type.getType(String.class);
+                Type methodTypeType = Type.getType(MethodType.class);
+                Type classType = Type.getType(Class.class);
+                Type syncerCompanionType = Type.getType(SyncerCompanion.class);
+
                 super.visitVarInsn(ALOAD, 0);
                 super.visitVarInsn(ALOAD, 0);
+                super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "getClass", Type.getMethodDescriptor(classType));
 
-                Type companionType = Type.getType(SyncerCompanion.class);
-                Type objectType = Type.getType(Object.class);
+                Handle bootstrap = new Handle(H_INVOKESTATIC,
+                        Type.getInternalName(CompanionObjects.class),
+                        "bootstrap",
+                        Type.getMethodDescriptor(callSiteType, lookupType, stringType, methodTypeType));
 
-                String _owner = Type.getInternalName(CompanionObjects.class);
-                String _name = CompanionObjects.METHOD_NEW_COMPANION;
-                String _desc = Type.getMethodDescriptor(companionType, objectType);
-                super.visitMethodInsn(INVOKESTATIC, _owner, _name, _desc);
+                super.visitInvokeDynamicInsn("doNotCare",
+                        Type.getMethodDescriptor(syncerCompanionType, classType),
+                        bootstrap);
 
-                super.visitFieldInsn(PUTFIELD, className, COMPANION_FIELD, companionType.getDescriptor());
+                super.visitFieldInsn(PUTFIELD, className, COMPANION_FIELD, syncerCompanionType.getDescriptor());
             }
         }
     }
