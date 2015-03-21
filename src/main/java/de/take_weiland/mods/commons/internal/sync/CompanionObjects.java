@@ -2,11 +2,7 @@ package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 import de.take_weiland.mods.commons.internal.AbstractTypeSpec;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Sync;
@@ -16,6 +12,7 @@ import de.take_weiland.mods.commons.util.JavaUtils;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -23,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentMap;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.invoke.MethodType.methodType;
@@ -36,6 +34,8 @@ public final class CompanionObjects {
 
     public static final String METHOD_NEW_COMPANION = "makeNewCompanion";
 
+    private static final MethodHandle constNull = MethodHandles.constant(SyncerCompanion.class, null);
+
     private static Multimap<Class<?>, SyncerFactory> FACTORIES = ImmutableMultimap.<Class<?>, SyncerFactory>of(
             Object.class, new BuiltinSyncers()
     );
@@ -45,29 +45,43 @@ public final class CompanionObjects {
         protected MethodHandle computeValue(Class<?> type) {
             return compileCompanion(type);
         }
+
     };
 
-    public static SyncerCompanion makeNewCompanion(Object instance) {
-        try {
-            return (SyncerCompanion) CONSTRUCTORS.get(instance.getClass()).invokeExact();
-        } catch (Throwable t) {
-            throw Throwables.propagate(t);
-        }
+    public static SyncerCompanion makeNewCompanion(Object instance) throws Throwable {
+        return (SyncerCompanion) CONSTRUCTORS.get(instance.getClass()).invokeExact();
     }
 
+    private static final ConcurrentMap<Class<?>, MethodHandle> cstrBackup = new MapMaker().concurrencyLevel(2).makeMap();
+
     private static MethodHandle compileCompanion(Class<?> type) {
-        Iterable<? extends Member> fields = asList(type.getDeclaredFields());
-        Iterable<? extends Member> methods = asList(type.getDeclaredMethods());
+        synchronized (cstrBackup) {
+            // ensure we only generate one companion
+            MethodHandle cstr = cstrBackup.get(type);
+            if (cstr != null) {
+                return cstr;
+            }
 
-        // TODO use FluentIterable.append in newer guava
-        List<CompanionGenerator.SyncedMemberInfo> syncedMembers = FluentIterable.from(Iterables.concat(fields, methods))
-                .filter(isSynced())
-                .transform(getMemberInfo())
-                .toList();
+            Iterable<? extends Member> fields = asList(type.getDeclaredFields());
+            Iterable<? extends Member> methods = asList(type.getDeclaredMethods());
 
-        MethodHandle cstr = new BytecodeEmittingGenerator(type, syncedMembers).generateCompanionConstructor();
-        checkState(cstr.type().equals(methodType(SyncerCompanion.class)));
-        return cstr;
+            // TODO use FluentIterable.append in newer guava
+            List<CompanionGenerator.SyncedMemberInfo> syncedMembers = FluentIterable.from(Iterables.concat(fields, methods))
+                    .filter(isSynced())
+                    .transform(getMemberInfo())
+                    .toList();
+
+            if (syncedMembers.isEmpty()) {
+                return constNull;
+            }
+
+            cstr = new BytecodeEmittingGenerator(type, syncedMembers).generateCompanionConstructor();
+            checkState(cstr.type().equals(methodType(SyncerCompanion.class)));
+
+            cstrBackup.put(type, cstr);
+
+            return cstr;
+        }
     }
 
     private static Function<Member, CompanionGenerator.SyncedMemberInfo> getMemberInfo() {

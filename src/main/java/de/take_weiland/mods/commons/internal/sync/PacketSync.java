@@ -20,7 +20,7 @@ public class PacketSync extends ModPacket {
     public void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException {
 		SyncType type = in.readEnum(SyncType.class);
         Object object = type.readObject(player, in);
-        SyncerCompanion companion = ((SyncedObjectProxy) object)._sc$getCompanion();
+        SyncerCompanion companion = object == null ? null : ((SyncedObjectProxy) object)._sc$getCompanion();
         if (companion != null) {
 			companion.read(object, in);
 		} else {

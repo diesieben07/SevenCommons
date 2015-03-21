@@ -30,7 +30,6 @@ public final class SevenCommonsLoader implements IFMLLoadingPlugin {
 	@Override
 	public String[] getASMTransformerClass() {
 		return new String[] {
-				"de.take_weiland.mods.commons.internal.transformers.SCTransformerWrapper",
                 "de.take_weiland.mods.commons.internal.transformers.SCVisitorTransformerWrapper"
 		};
 	}
