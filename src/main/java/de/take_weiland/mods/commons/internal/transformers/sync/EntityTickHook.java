@@ -4,7 +4,7 @@ import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.internal.transformers.EntitySyncPropsHooks;
-import de.take_weiland.mods.commons.internal.sync.SyncerCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -54,7 +54,7 @@ public final class EntityTickHook extends ClassVisitor {
 
             String entityIntName = "net/minecraft/entity/Entity";
             if (foundIAdd && owner.equals(entityIntName) && name.equals(MCPNames.field(MCPNames.F_ENTITY_TICKS_EXISTED))) {
-                Type syncerCompanionType = Type.getType(SyncerCompanion.class);
+                Type syncerCompanionType = Type.getType(SyncCompanion.class);
                 Type worldType = Type.getObjectType("net/minecraft/world/World");
 
                 boolean client = FMLLaunchHandler.side().isClient();
@@ -72,7 +72,7 @@ public final class EntityTickHook extends ClassVisitor {
 
                 String hookClazz = Type.getInternalName(ASMHooks.class);
                 String invokeCheck = ASMHooks.INVOKE_SYNC_COMP_CHECK;
-                String invokeCheckDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), Type.getType(SyncerCompanion.class));
+                String invokeCheckDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), Type.getType(SyncCompanion.class));
                 super.visitMethodInsn(INVOKESTATIC, hookClazz, invokeCheck, invokeCheckDesc);
 
                 super.visitVarInsn(ALOAD, 1);

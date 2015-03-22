@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers.sync;
 import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.internal.sync.CompanionObjects;
 import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
-import de.take_weiland.mods.commons.internal.sync.SyncerCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import org.objectweb.asm.*;
 
 import java.lang.invoke.CallSite;
@@ -50,7 +50,7 @@ public final class CompanionFieldAdder extends ClassVisitor {
 
     @Override
     public void visitEnd() {
-        String desc = Type.getDescriptor(SyncerCompanion.class);
+        String desc = Type.getDescriptor(SyncCompanion.class);
         FieldVisitor fv = super.visitField(ACC_PUBLIC | ACC_FINAL, COMPANION_FIELD, desc, null, null);
         if (fv != null) {
             fv.visitEnd();
@@ -58,14 +58,14 @@ public final class CompanionFieldAdder extends ClassVisitor {
 
         int access = ACC_PUBLIC | ACC_FINAL;
         String name = SyncedObjectProxy.GET_COMPANION;
-        desc = Type.getMethodDescriptor(Type.getType(SyncerCompanion.class));
+        desc = Type.getMethodDescriptor(Type.getType(SyncCompanion.class));
 
         MethodVisitor mv = super.visitMethod(access, name, desc, null, null);
         if (mv != null) {
             mv.visitCode();
 
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, className, COMPANION_FIELD, Type.getDescriptor(SyncerCompanion.class));
+            mv.visitFieldInsn(GETFIELD, className, COMPANION_FIELD, Type.getDescriptor(SyncCompanion.class));
             mv.visitInsn(ARETURN);
 
             mv.visitMaxs(0, 0);
@@ -94,7 +94,7 @@ public final class CompanionFieldAdder extends ClassVisitor {
                 Type stringType = Type.getType(String.class);
                 Type methodTypeType = Type.getType(MethodType.class);
                 Type classType = Type.getType(Class.class);
-                Type syncerCompanionType = Type.getType(SyncerCompanion.class);
+                Type syncerCompanionType = Type.getType(SyncCompanion.class);
 
                 super.visitVarInsn(ALOAD, 0);
                 super.visitVarInsn(ALOAD, 0);

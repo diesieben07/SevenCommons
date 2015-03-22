@@ -12,12 +12,22 @@ import java.lang.reflect.Method;
 import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
+ * <p>Factory for creating Companion objects.</p>
  * @author diesieben07
  */
-interface CompanionGenerator {
+interface CompanionFactory {
 
-    public MethodHandle generateCompanionConstructor();
+    /**
+     * <p>Create a MethodHandle for creating a new companion object for the given class.</p>
+     * <p>This MethodHandle must have the exact type ()=>SyncCompanion.</p>
+     * @param clazz the class to generate a companion for
+     * @return a MethodHandle
+     */
+    MethodHandle getCompanionConstructor(Class<?> clazz);
 
+    /**
+     * <p>Info about a Member marked with @Sync.</p>
+     */
     final class SyncedMemberInfo {
 
         final Member member;
@@ -64,5 +74,4 @@ interface CompanionGenerator {
 
 
     }
-
 }

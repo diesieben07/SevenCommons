@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
-import de.take_weiland.mods.commons.internal.sync.SyncerCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
@@ -39,7 +39,7 @@ public final class ContainerTickHook extends ClassVisitor {
             super.visitCode();
 
             String containerIntName = "net/minecraft/inventory/Container";
-            Type syncerCompanionType = Type.getType(SyncerCompanion.class);
+            Type syncerCompanionType = Type.getType(SyncCompanion.class);
             super.visitVarInsn(ALOAD, 0);
             super.visitVarInsn(ALOAD, 0);
             super.visitFieldInsn(GETFIELD, containerIntName, CompanionFieldAdder.COMPANION_FIELD, syncerCompanionType.getDescriptor());

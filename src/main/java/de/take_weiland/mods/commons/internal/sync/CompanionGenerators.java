@@ -37,6 +37,8 @@ final class CompanionGenerators {
     );
 
     static ImmutableMap<Class<?>, MethodHandle> buildAllConstructors() {
+        final CompanionFactory factory = new DefaultCompanionFactory();
+
         Set<ASMDataTable.ASMData> all = SevenCommons.asmData.getAll(Sync.class.getName());
         ImmutableSet<Class<?>> allClasses = FluentIterable.from(all)
                 .transform(new Function<ASMDataTable.ASMData, Class<?>>() {
@@ -52,61 +54,48 @@ final class CompanionGenerators {
                 })
                 .toSet();
 
-        System.out.println("=== BUILDING ALL ===");
-        System.out.println(allClasses);
-        System.out.println("====================");
-
-        try {
-            Field field = ASMDataTable.class.getDeclaredField("globalAnnotationData");
-            field.setAccessible(true);
-            System.out.println("All data:");
-            System.out.println(field.get(SevenCommons.asmData));
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        System.out.println(SevenCommons.asmData);
-
         return Maps.toMap(allClasses, new Function<Class<?>, MethodHandle>() {
             @Nullable
             @Override
             public MethodHandle apply(@Nullable Class<?> input) {
-                return buildConstructor(input);
+                return buildConstructor(factory, input);
             }
         });
     }
 
-    private static MethodHandle buildConstructor(Class<?> type) {
-        Iterable<? extends Member> fields = asList(type.getDeclaredFields());
-        Iterable<? extends Member> methods = asList(type.getDeclaredMethods());
-
-        // TODO use FluentIterable.append in newer guava
-        List<CompanionGenerator.SyncedMemberInfo> syncedMembers = FluentIterable.from(Iterables.concat(fields, methods))
-                .filter(isSynced())
-                .transform(getMemberInfo())
-                .toList();
-
-        checkState(!syncedMembers.isEmpty());
-
-        MethodHandle cstr = new BytecodeEmittingGenerator(type, syncedMembers).generateCompanionConstructor();
-        checkState(cstr.type().equals(methodType(SyncerCompanion.class)));
-
+    private static MethodHandle buildConstructor(CompanionFactory factory, Class<?> clazz) {
+        MethodHandle cstr = factory.getCompanionConstructor(clazz);
+        checkState(cstr.type().equals(methodType(SyncCompanion.class)));
         return cstr;
     }
 
-    private static Function<Member, CompanionGenerator.SyncedMemberInfo> getMemberInfo() {
-        return new Function<Member, CompanionGenerator.SyncedMemberInfo>() {
+    static List<CompanionFactory.SyncedMemberInfo> getSyncedMemberInfo(Class<?> clazz) {
+        return getSyncedMembers(clazz)
+                .transform(getMemberInfo())
+                .toList();
+    }
+
+    static FluentIterable<Member> getSyncedMembers(Class<?> clazz) {
+        Iterable<? extends Member> fields = asList(clazz.getDeclaredFields());
+        Iterable<? extends Member> methods = asList(clazz.getDeclaredMethods());
+
+        // TODO use FluentIterable.append in newer guava
+        return FluentIterable.from(Iterables.concat(fields, methods))
+                .filter(isSynced());
+    }
+
+    private static Function<Member, CompanionFactory.SyncedMemberInfo> getMemberInfo() {
+        return new Function<Member, CompanionFactory.SyncedMemberInfo>() {
             @Override
-            public CompanionGenerator.SyncedMemberInfo apply(@Nullable Member member) {
+            public CompanionFactory.SyncedMemberInfo apply(@Nullable Member member) {
                 assert member != null;
                 SyncerFactory.Handle handle = getHandleFor(member);
-                return new CompanionGenerator.SyncedMemberInfo(member, handle);
+                return new CompanionFactory.SyncedMemberInfo(member, handle);
             }
         };
     }
 
-    static SyncerFactory.Handle getHandleFor(Member member) {
+    private static SyncerFactory.Handle getHandleFor(Member member) {
         Class<?> type = getType(member);
         if (type.isPrimitive()) type = Object.class;
 
@@ -148,5 +137,7 @@ final class CompanionGenerators {
             }
         };
     }
+
+    private CompanionGenerators() { }
 
 }

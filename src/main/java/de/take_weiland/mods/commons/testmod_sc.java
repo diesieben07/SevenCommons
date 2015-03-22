@@ -82,11 +82,6 @@ public class testmod_sc {
 		}
 	}
 
-	public static abstract class SuperTE extends TileEntity {
-
-
-	}
-
     private static class PlayerProps implements IExtendedEntityProperties {
 
 		@ToNbt

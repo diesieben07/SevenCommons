@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers.sync;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
-import de.take_weiland.mods.commons.internal.sync.SyncerCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -64,11 +64,11 @@ public final class TileEntityTickHook extends ClassVisitor {
 
                 super.visitVarInsn(ALOAD, lastLoadLocal);
                 super.visitVarInsn(ALOAD, lastLoadLocal);
-                super.visitFieldInsn(GETFIELD, teIntName, CompanionFieldAdder.COMPANION_FIELD, Type.getDescriptor(SyncerCompanion.class));
+                super.visitFieldInsn(GETFIELD, teIntName, CompanionFieldAdder.COMPANION_FIELD, Type.getDescriptor(SyncCompanion.class));
 
                 String hookClazz = Type.getInternalName(ASMHooks.class);
                 String invokeCheck = ASMHooks.INVOKE_SYNC_COMP_CHECK;
-                String invokeCheckDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), Type.getType(SyncerCompanion.class));
+                String invokeCheckDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), Type.getType(SyncCompanion.class));
                 super.visitMethodInsn(INVOKESTATIC, hookClazz, invokeCheck, invokeCheckDesc);
 
                 if (client) {

@@ -12,7 +12,7 @@ import java.util.logging.Logger;
  * @author diesieben07
  */
 @PacketDirection(PacketDirection.Dir.TO_CLIENT)
-public class PacketSync extends ModPacket {
+public final class PacketSync extends ModPacket {
 
 	private static final Logger logger = SevenCommonsLoader.scLogger("SyncSystem");
 
@@ -20,7 +20,7 @@ public class PacketSync extends ModPacket {
     public void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException {
 		SyncType type = in.readEnum(SyncType.class);
         Object object = type.readObject(player, in);
-        SyncerCompanion companion = object == null ? null : ((SyncedObjectProxy) object)._sc$getCompanion();
+        SyncCompanion companion = object == null ? null : ((SyncedObjectProxy) object)._sc$getCompanion();
         if (companion != null) {
 			companion.read(object, in);
 		} else {

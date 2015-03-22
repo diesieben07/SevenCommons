@@ -1,17 +1,18 @@
 package de.take_weiland.mods.commons.internal.sync;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.google.common.primitives.UnsignedBytes;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.sync.SyncerFactory;
-import net.minecraft.tileentity.TileEntityBeacon;
+import de.take_weiland.mods.commons.util.UnsignedShorts;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
+import org.objectweb.asm.commons.TableSwitchGenerator;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
@@ -19,9 +20,7 @@ import java.lang.reflect.Member;
 import java.util.List;
 import java.util.Map;
 
-import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodHandles.publicLookup;
-import static java.lang.invoke.MethodType.methodType;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -31,7 +30,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * @author diesieben07
  */
-final class BytecodeEmittingGenerator implements CompanionGenerator {
+final class BytecodeEmittingCompanionGenerator {
 
     private static final String COMPANION = "companion";
     private static final String CHECKER = "checker";
@@ -43,63 +42,46 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
     private static final String WRITER = "writer";
     private static final int WRITER_IN_ARR = 2;
 
+    private final DefaultCompanionFactory factory;
     private final Class<?> clazz;
 
     private String className;
     private String superName;
+    private Class<?> superClass;
     private ClassWriter cw;
-    private List<SyncedMemberInfo> handles;
+    private List<CompanionFactory.SyncedMemberInfo> handles;
+    private int firstID;
 
-    public static void main(String[] args) throws NoSuchFieldException {
-        Member member = String.class.getDeclaredField("value");
-        Member member2 = String.class.getDeclaredField("hash");
-        SyncerFactory.Handle handle = new SyncerFactory.Handle() {
-            @Override
-            public Class<?> getCompanionType() {
-                return int.class;
-            }
-
-            @Override
-            public SyncerFactory.Instance make(MethodHandle getter, MethodHandle setter, MethodHandle companionGet, MethodHandle companionSet) {
-                return new SyncerFactory.Instance(getter, getter, getter);
-            }
-        };
-
-        List<SyncedMemberInfo> infoList = ImmutableList.of(
-                new SyncedMemberInfo(member, handle),
-                new SyncedMemberInfo(member2, handle)
-        );
-        new BytecodeEmittingGenerator(TileEntityBeacon.class, infoList).generateCompanionConstructor();
-    }
-
-
-    BytecodeEmittingGenerator(Class<?> clazz, List<SyncedMemberInfo> handles) {
+    BytecodeEmittingCompanionGenerator(DefaultCompanionFactory factory, Class<?> clazz) {
+        this.factory = factory;
         this.clazz = clazz;
-        this.handles = handles;
     }
 
-    @Override
-    public MethodHandle generateCompanionConstructor() {
+    Class<?> generateCompanion() {
+        handles = factory.getSyncedMemberInfo(clazz);
+        if (handles.isEmpty()) {
+            return null;
+        }
         beginClass();
 
         makeMHFields();
         makeCLInit();
+        makeReadID();
         makeRead();
+
+        makeWriteID();
         makeCheck();
 
-        Class<?> clazz = finish();
-        try {
-            // constructors are package private so we can access them
-            return lookup().findConstructor(clazz, methodType(void.class)).asType(methodType(SyncerCompanion.class));
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-            throw new RuntimeException("Internal Error during companion generation", e);
-        }
+        return finish();
     }
 
     private void beginClass() {
-        className = SCReflection.nextDynamicClassName(BytecodeEmittingGenerator.class.getPackage());
+        className = SCReflection.nextDynamicClassName(BytecodeEmittingCompanionGenerator.class.getPackage());
 
-        superName = Type.getInternalName(SyncerCompanion.class);
+        superClass = findAppropriateSuperClass();
+        superName = Type.getInternalName(superClass);
+        firstID = factory.getNextFreeIDFor(clazz);
+
         cw = new ClassWriter(COMPUTE_FRAMES);
         cw.visit(V1_7, ACC_PUBLIC, className, null, superName, null);
 
@@ -111,8 +93,13 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
         gen.endMethod();
     }
 
+    private Class<?> findAppropriateSuperClass() {
+        Class<?> superClassCompanion = factory.getCompanionClass(clazz.getSuperclass());
+        return superClassCompanion == null ? SyncCompanion.class : superClassCompanion;
+    }
+
     private void makeMHFields() {
-        for (SyncedMemberInfo info : handles) {
+        for (CompanionFactory.SyncedMemberInfo info : handles) {
             String descMH = Type.getDescriptor(MethodHandle.class);
             String descCompanion = Type.getDescriptor(info.handle.getCompanionType());
 
@@ -124,37 +111,117 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
     }
 
     private void makeRead() {
-        Method method = getMethod("void read(Object, de.take_weiland.mods.commons.net.MCDataInput)");
-        GeneratorAdapter gen = new GeneratorAdapter(0, method, null, null, cw);
-        if (!superName.equals(Type.getInternalName(SyncerCompanion.class))) {
+        Method method = getMethod("int read(Object, de.take_weiland.mods.commons.net.MCDataInput)");
+        final GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
+
+        final Type myType = Type.getObjectType(className);
+        final Type mhType = Type.getType(MethodHandle.class);
+        final Type mcDataInType = Type.getType(MCDataInput.class);
+        final Type classToSyncType = Type.getType(clazz);
+
+        final int objectArg = 0;
+        final int inStreamArg = 1;
+        final int fieldID = gen.newLocal(Type.INT_TYPE);
+
+        if (!superName.equals(Type.getInternalName(SyncCompanion.class))) {
             gen.loadThis();
             gen.loadArg(0);
             gen.loadArg(1);
             gen.invokeConstructor(Type.getObjectType(superName), method);
-        }
-
-        Type myType = Type.getObjectType(className);
-        Type mhType = Type.getType(MethodHandle.class);
-        Type mcDataInType = Type.getType(MCDataInput.class);
-        Type classToSyncType = Type.getType(clazz);
-        Method invokeExact = new Method("invokeExact", VOID_TYPE, new Type[] { classToSyncType, myType, mcDataInType });
-
-        for (SyncedMemberInfo info : handles) {
-            gen.getStatic(myType, getMemberID(info.member, READER), mhType);
-            gen.loadArg(0);
-            gen.checkCast(classToSyncType);
+            gen.storeLocal(fieldID);
+        } else {
             gen.loadThis();
-            gen.loadArg(1);
-            gen.invokeVirtual(mhType, invokeExact);
+            gen.loadArg(inStreamArg);
+            gen.invokeVirtual(myType, readIDMethod());
+            gen.storeLocal(fieldID);
         }
 
+        final Method invokeExact = new Method("invokeExact", VOID_TYPE, new Type[] { classToSyncType, myType, mcDataInType });
+
+        Label start = gen.mark();
+
+        int keyCount = handles.size();
+        int[] keys = new int[keyCount];
+        for (int i = 0; i < keyCount; i++) {
+            keys[i] = i + firstID;
+        }
+
+        gen.loadLocal(fieldID);
+        gen.tableSwitch(keys, new TableSwitchGenerator() {
+            @Override
+            public void generateCase(int key, Label end) {
+                CompanionFactory.SyncedMemberInfo info = handles.get(key - firstID);
+
+                gen.getStatic(myType, getMemberID(info.member, READER), mhType);
+                gen.loadArg(objectArg);
+                gen.checkCast(classToSyncType);
+                gen.loadThis();
+                gen.loadArg(inStreamArg);
+                gen.invokeVirtual(mhType, invokeExact);
+                gen.goTo(end);
+            }
+
+            @Override
+            public void generateDefault() {
+                gen.loadLocal(fieldID); // unknown ID, either return control back to super caller or end of stream (-1)
+                gen.returnValue();
+            }
+        });
+
+        gen.loadThis();
+        gen.loadArg(inStreamArg);
+        gen.invokeVirtual(myType, readIDMethod());
+        gen.storeLocal(fieldID);
+        gen.goTo(start);
+
+        gen.endMethod();
+    }
+
+    private static Method readIDMethod() {
+        return getMethod("int readID(de.take_weiland.mods.commons.net.MCDataInput)");
+    }
+
+    private void makeReadID() {
+        Method method = readIDMethod();
+        GeneratorAdapter gen = new GeneratorAdapter(0, method, null, null, cw);
+
+        Method readMethod = new Method("read" + idSize(true), INT_TYPE, new Type[0]);
+        gen.loadArg(0);
+        gen.invokeInterface(Type.getType(MCDataInput.class), readMethod);
+        gen.returnValue();
+        gen.endMethod();
+    }
+
+    private String idSize(boolean read) {
+        int maxId = firstID + handles.size() - 1;
+        if (maxId <= UnsignedBytes.toInt(UnsignedBytes.MAX_VALUE)) {
+            return read ? "UnsignedByte" : "Byte";
+        } else if (maxId <= UnsignedShorts.MAX_VALUE) {
+            return read ? "UnsignedShort" : "Short";
+        } else {
+            return  "Int";
+        }
+    }
+
+    private static Method writeIDMethod() {
+        return getMethod("void writeID(de.take_weiland.mods.commons.net.MCDataOutput, int)");
+    }
+
+    private void makeWriteID() {
+        Method method = writeIDMethod();
+        GeneratorAdapter gen = new GeneratorAdapter(0, method, null, null, cw);
+
+        Method writeMethod = new Method("write" + idSize(false), VOID_TYPE, new Type[] { INT_TYPE });
+        gen.loadArg(0);
+        gen.loadArg(1);
+        gen.invokeInterface(Type.getType(MCDataOutput.class), writeMethod);
         gen.returnValue();
         gen.endMethod();
     }
 
     private void makeCheck() {
         Method method = getMethod("de.take_weiland.mods.commons.net.MCDataOutput check(Object, boolean)");
-        GeneratorAdapter gen = new GeneratorAdapter(0, method, null, null, cw);
+        GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
 
         Type methodHandleType = Type.getType(MethodHandle.class);
         Type mcDataOutType = Type.getType(MCDataOutput.class);
@@ -165,10 +232,11 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
         Type holderType = Type.getType(clazz);
 
         int outStream = gen.newLocal(mcDataOutType);
-        if (!superName.equals(Type.getInternalName(SyncerCompanion.class))) {
+
+        if (superClass != SyncCompanion.class) {
             gen.loadThis();
             gen.loadArg(0);
-            gen.push(false);
+            gen.push(true); // isSuperCall
             gen.invokeConstructor(getObjectType(superName), method);
         } else {
             gen.push((String) null); // don't care about the type
@@ -177,7 +245,9 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
 
         Label next = null;
 
-        for (SyncedMemberInfo info : handles) {
+        for (int index = 0, len = handles.size(); index < len; index++) {
+            CompanionFactory.SyncedMemberInfo info = handles.get(index);
+
             if (next != null) {
                 gen.mark(next);
             }
@@ -187,7 +257,7 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
             gen.loadArg(0);
             gen.checkCast(holderType);
             gen.loadThis();
-            gen.invokeVirtual(methodHandleType, new Method("invokeExact", BOOLEAN_TYPE, new Type[] { holderType, myType }));
+            gen.invokeVirtual(methodHandleType, new Method("invokeExact", BOOLEAN_TYPE, new Type[]{holderType, myType}));
             gen.ifZCmp(NE, next);
 
             Label nonNull = new Label();
@@ -196,16 +266,22 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
 
             gen.getStatic(syncTypeType, SyncHelpers.getSyncType(clazz).name(), syncTypeType);
             gen.loadArg(0);
-            gen.invokeStatic(syncHelpersType, new Method("newOutStream", mcDataOutType, new Type[]  { syncTypeType, objectType }));
+            gen.invokeStatic(syncHelpersType, new Method("newOutStream", mcDataOutType, new Type[]{syncTypeType, objectType}));
             gen.storeLocal(outStream);
 
             gen.mark(nonNull);
+
+            gen.loadThis();
+            gen.loadLocal(outStream);
+            gen.push(firstID + index);
+            gen.invokeVirtual(myType, writeIDMethod());
+
             getMH(gen, info.member, WRITER);
             gen.loadLocal(outStream);
             gen.loadArg(0);
             gen.checkCast(holderType);
             gen.loadThis();
-            gen.invokeVirtual(methodHandleType, new Method("invokeExact", VOID_TYPE, new Type[] { mcDataOutType, holderType, myType }));
+            gen.invokeVirtual(methodHandleType, new Method("invokeExact", VOID_TYPE, new Type[]{mcDataOutType, holderType, myType}));
         }
 
         if (next != null) {
@@ -216,6 +292,11 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
         gen.ifZCmp(NE, end);
         gen.loadLocal(outStream);
         gen.ifNull(end);
+
+        gen.loadThis();
+        gen.loadLocal(outStream);
+        gen.push(0);
+        gen.invokeVirtual(myType, writeIDMethod());
 
         gen.getStatic(syncTypeType, SyncHelpers.getSyncType(clazz).name(), syncTypeType);
         gen.loadArg(0);
@@ -242,11 +323,11 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
 
         int map = gen.newLocal(mapType);
         gen.push(myType);
-        gen.invokeStatic(Type.getType(BytecodeEmittingGenerator.class), getMethod("java.util.Map getMHMap(java.lang.Class)"));
+        gen.invokeStatic(Type.getType(BytecodeEmittingCompanionGenerator.class), getMethod("java.util.Map getMHMap(java.lang.Class)"));
         gen.storeLocal(map);
 
 
-        for (SyncedMemberInfo info : handles) {
+        for (CompanionFactory.SyncedMemberInfo info : handles) {
             gen.loadLocal(map);
             gen.push(getMemberID(info.member));
             gen.invokeInterface(mapType, getMethod("Object get(Object)"));
@@ -285,13 +366,13 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
         Class<?> cls;
 
         // gross hack, please close your eyes
-        synchronized (BytecodeEmittingGenerator.class) {
+        synchronized (BytecodeEmittingCompanionGenerator.class) {
             // <clinit> of generated class calls getMHMap
 
             staticHandles = handles;
             try {
                 cw.visitEnd();
-                cls = SCReflection.defineDynamicClass(cw.toByteArray(), BytecodeEmittingGenerator.class);
+                cls = SCReflection.defineDynamicClass(cw.toByteArray(), BytecodeEmittingCompanionGenerator.class);
             } finally{
                 staticHandles = null;
             }
@@ -300,14 +381,15 @@ final class BytecodeEmittingGenerator implements CompanionGenerator {
         return cls;
     }
 
-    private static List<SyncedMemberInfo> staticHandles;
+    private static List<CompanionFactory.SyncedMemberInfo> staticHandles;
 
     // called from <clinit> in generated classes, see #finish()
     static Map<String, MethodHandle[]> getMHMap(Class<?> companionClass) throws NoSuchFieldException, IllegalAccessException {
         Map<String, MethodHandle[]> map = Maps.newHashMapWithExpectedSize(staticHandles.size());
 
-        for (SyncedMemberInfo info : staticHandles) {
+        for (CompanionFactory.SyncedMemberInfo info : staticHandles) {
             // use reflection so we don't have to specify the (unknown) type of the field
+            // fields must also be private to avoid any name-clashes between super and subclasses
             Field companion = companionClass.getDeclaredField(getMemberID(info.member, COMPANION));
             companion.setAccessible(true);
             MethodHandle companionGetter = publicLookup().unreflectGetter(companion);

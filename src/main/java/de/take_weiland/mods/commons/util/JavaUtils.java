@@ -25,6 +25,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * <p>Various utility methods.</p>
  */
@@ -95,6 +97,16 @@ public final class JavaUtils {
         } else {
             return clazz.getSimpleName();
         }
+    }
+
+    public static int[] intRange(int from, int to) {
+        checkArgument(to > from, "to must be > from");
+        int size = to - from;
+        int[] arr = new int[size];
+        for (int i = 0; i < size; i++) {
+            arr[i] = i + from;
+        }
+        return arr;
     }
 
 	/**
