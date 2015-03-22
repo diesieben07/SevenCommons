@@ -100,7 +100,6 @@ public final class SevenCommons extends DummyModContainer {
 
 		packets = Network.newChannel("SevenCommons")
 				.register(PacketSync.class, SYNC_PACKET_ID)
-				.register(PacketSyncPropsIDs.class)
 				.register(PacketInventoryName.class)
 				.register(PacketContainerButton.class)
 				.build();

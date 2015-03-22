@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons;
+package de.take_weiland.mods.commons.internal.test;
 
 /**
  * @author diesieben07

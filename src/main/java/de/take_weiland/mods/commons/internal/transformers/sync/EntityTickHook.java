@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.transformers.sync;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
-import de.take_weiland.mods.commons.internal.transformers.EntitySyncPropsHooks;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
@@ -78,7 +77,7 @@ public final class EntityTickHook extends ClassVisitor {
                 super.visitVarInsn(ALOAD, 1);
                 super.visitFieldInsn(GETFIELD, entityIntName, EntitySyncPropsHooks.FIELD_NAME, Type.getDescriptor(List.class));
 
-                String tickSyncProps = ASMHooks.TICK_SYNC_PROPS;
+                String tickSyncProps = ASMHooks.TICK_IEEP_COMPANIONS;
                 String tickSyncPropsDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(List.class));
                 super.visitMethodInsn(INVOKESTATIC, hookClazz, tickSyncProps, tickSyncPropsDesc);
 

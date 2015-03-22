@@ -6,11 +6,11 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
-import de.take_weiland.mods.commons.internal.sync.SyncType;
+import de.take_weiland.mods.commons.internal.sync.CompanionObjects;
+import de.take_weiland.mods.commons.internal.sync.IEEPSyncCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.NameableInventory;
-import de.take_weiland.mods.commons.net.MCDataOutputStream;
-import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -55,21 +55,52 @@ public final class ASMHooks {
         if (companion != null) companion.check(obj, false);
     }
 
-    public static final String TICK_SYNC_PROPS = "tickSyncProps";
+    public static final String TICK_IEEP_COMPANIONS = "tickIEEPCompanions";
 
-    public static void tickSyncProps(List<SyncedEntityProperties> props) {
+    public static void tickIEEPCompanions(List<IEEPSyncCompanion> props) {
         if (props != null) {
             // put actual logic into different method, to make this method smaller and more likely
             // to be inlined into the World class (called from there every tick for every entity!)
-            tickPropsNonNull(props);
+            tickIEEPCompanionsNonNull(props);
         }
     }
 
-    private static void tickPropsNonNull(List<SyncedEntityProperties> props) {
+    private static void tickIEEPCompanionsNonNull(List<IEEPSyncCompanion> props) {
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0, len = props.size(); i < len; i++) {
-            props.get(i)._sc$syncprops$tick();
+            IEEPSyncCompanion companion = props.get(i);
+            companion.check(companion._sc$ieep, false);
         }
+    }
+
+    public static final String ON_NEW_ENTITY_PROPS = "onNewEntityProps";
+
+    public static void onNewEntityProps(Entity entity, IExtendedEntityProperties props, String identifier) throws Throwable {
+        IEEPSyncCompanion companion = (IEEPSyncCompanion) CompanionObjects.getCompanion(props.getClass());
+        if (companion == null) {
+            return;
+        }
+
+        List<IEEPSyncCompanion> companions = ((EntityProxy) entity)._sc$getPropsCompanions();
+        if (companions == null) {
+            companions = new ArrayList<>();
+            ((EntityProxy) entity)._sc$setPropsCompanions(companions);
+        }
+
+        companion._sc$ieep = props;
+        companion._sc$entity = entity;
+        companion._sc$ident = identifier;
+
+        // maintain ordering in the list
+        int len = companions.size();
+        int index = 0;
+        for (int i = 0; i < len; i++) {
+            if (companions.get(i)._sc$ident.compareTo(identifier) >= 0) {
+                index = i;
+                break;
+            }
+        }
+        companions.add(index, companion);
     }
 
     @SideOnly(Side.CLIENT)
@@ -103,18 +134,7 @@ public final class ASMHooks {
 		return builder.build();
 	}
 
-	public static MCDataOutputStream newSyncStream(Object object, SyncType type) {
-		MCDataOutputStream out = (MCDataOutputStream) SevenCommons.packets.createStream(SevenCommons.SYNC_PACKET_ID);
-		out.writeEnum(type);
-		type.writeObject(object, out);
-		return out;
-	}
-
-	public static void sendSyncStream(Object object, SyncType type, MCDataOutputStream out) {
-		type.sendPacket(object, SevenCommons.packets.makePacket(out));
-	}
-
-	public static void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {
+    public static void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {
 		MinecraftForge.EVENT_BUS.post(new PlayerCloneEvent(oldPlayer, newPlayer));
 	}
 
@@ -126,31 +146,7 @@ public final class ASMHooks {
 	public static void onStartTracking(EntityPlayer player, Entity tracked) {
 		MinecraftForge.EVENT_BUS.post(new PlayerStartTrackingEvent(player, tracked));
 
-		PacketSyncPropsIDs.sendToIfNeeded(player, tracked);
-	}
-
-	public static final String ON_NEW_ENTITY_PROPS = "onNewEntityProps";
-
-	public static void onNewEntityProps(Entity entity, IExtendedEntityProperties props, String identifier) {
-		if (entity.worldObj.isRemote || !(props instanceof SyncedEntityProperties)) {
-			return;
-		}
-		List<SyncedEntityProperties> syncedProps = ((EntityProxy) entity)._sc$getSyncedProps();
-		if (syncedProps == null) {
-			((EntityProxy) entity)._sc$setSyncedProps((syncedProps = new ArrayList<>()));
-		}
-		SyncedEntityProperties syncedProp = (SyncedEntityProperties) props;
-
-		if (syncedProp._sc$syncprops$name() != null) {
-			throw new IllegalArgumentException("@Sync used in IExtendedEntityProperties requires one instance per entity");
-		}
-
-		syncedProp._sc$syncprops$setName(identifier);
-		syncedProp._sc$syncprops$setOwner(entity);
-		syncedProp._sc$syncprops$setIndex(syncedProps.size());
-
-
-		syncedProps.add(syncedProp);
+//		PacketSyncPropsIDs.sendToIfNeeded(player, tracked);
 	}
 
 	private static final int SIGNED_SHORT_BITS = 0b0111_1111_1111_1111;

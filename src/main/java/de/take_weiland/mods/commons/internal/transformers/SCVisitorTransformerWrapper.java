@@ -2,10 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import com.google.common.base.Predicate;
 import de.take_weiland.mods.commons.asm.MCPNames;
-import de.take_weiland.mods.commons.internal.transformers.sync.CompanionFieldAdder;
-import de.take_weiland.mods.commons.internal.transformers.sync.ContainerTickHook;
-import de.take_weiland.mods.commons.internal.transformers.sync.EntityTickHook;
-import de.take_weiland.mods.commons.internal.transformers.sync.TileEntityTickHook;
+import de.take_weiland.mods.commons.internal.transformers.sync.*;
 
 /**
  * @author diesieben07

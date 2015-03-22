@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
+import de.take_weiland.mods.commons.internal.sync.IEEPSyncCompanion;
+
 import java.util.List;
 
 /**
@@ -8,10 +10,10 @@ import java.util.List;
 public interface EntityProxy {
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/EntityProxy";
-	public static final String GET_PROPERTIES = "_sc$getSyncedProps";
-	public static final String SET_PROPERTIES = "_sc$setSyncedProps";
+	public static final String GET_PROPERTIES = "_sc$getPropsCompanions";
+	public static final String SET_PROPERTIES = "_sc$setPropsCompanions";
 
-	List<SyncedEntityProperties> _sc$getSyncedProps();
-	void _sc$setSyncedProps(List<SyncedEntityProperties> props);
+	List<IEEPSyncCompanion> _sc$getPropsCompanions();
+	void _sc$setPropsCompanions(List<IEEPSyncCompanion> props);
 
 }

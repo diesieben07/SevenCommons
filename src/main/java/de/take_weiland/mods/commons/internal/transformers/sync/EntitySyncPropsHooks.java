@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.transformers;
+package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.internal.ASMHooks;

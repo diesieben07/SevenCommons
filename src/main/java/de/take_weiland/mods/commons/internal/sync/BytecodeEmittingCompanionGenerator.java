@@ -7,6 +7,10 @@ import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.sync.SyncerFactory;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
+import net.minecraft.entity.Entity;
+import net.minecraft.inventory.Container;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.IExtendedEntityProperties;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -83,6 +87,7 @@ final class BytecodeEmittingCompanionGenerator {
         firstID = factory.getNextFreeIDFor(clazz);
 
         cw = new ClassWriter(COMPUTE_FRAMES);
+
         cw.visit(V1_7, ACC_PUBLIC, className, null, superName, null);
 
         Method cstr = getMethod("void <init>()");
@@ -95,7 +100,15 @@ final class BytecodeEmittingCompanionGenerator {
 
     private Class<?> findAppropriateSuperClass() {
         Class<?> superClassCompanion = factory.getCompanionClass(clazz.getSuperclass());
-        return superClassCompanion == null ? SyncCompanion.class : superClassCompanion;
+        if (superClassCompanion == null) {
+            return isIEEP() ? IEEPSyncCompanion.class : SyncCompanion.class;
+        } else {
+            return superClassCompanion;
+        }
+    }
+
+    private boolean isIEEP() {
+        return IExtendedEntityProperties.class.isAssignableFrom(clazz);
     }
 
     private void makeMHFields() {
@@ -123,7 +136,7 @@ final class BytecodeEmittingCompanionGenerator {
         final int inStreamArg = 1;
         final int fieldID = gen.newLocal(Type.INT_TYPE);
 
-        if (!superName.equals(Type.getInternalName(SyncCompanion.class))) {
+        if (needCallSuper()) {
             gen.loadThis();
             gen.loadArg(0);
             gen.loadArg(1);
@@ -230,10 +243,14 @@ final class BytecodeEmittingCompanionGenerator {
         Type syncHelpersType = Type.getType(SyncHelpers.class);
         Type myType = Type.getObjectType(className);
         Type holderType = Type.getType(clazz);
+        Type entityType = Type.getType(Entity.class);
+        Type tileEntityType = Type.getType(TileEntity.class);
+        Type containerType = Type.getType(Container.class);
+        Type ieepCompType = Type.getType(IEEPSyncCompanion.class);
 
         int outStream = gen.newLocal(mcDataOutType);
 
-        if (superClass != SyncCompanion.class) {
+        if (needCallSuper()) {
             gen.loadThis();
             gen.loadArg(0);
             gen.push(true); // isSuperCall
@@ -244,6 +261,8 @@ final class BytecodeEmittingCompanionGenerator {
         gen.storeLocal(outStream);
 
         Label next = null;
+
+        SyncType syncType = SyncHelpers.getSyncType(clazz);
 
         for (int index = 0, len = handles.size(); index < len; index++) {
             CompanionFactory.SyncedMemberInfo info = handles.get(index);
@@ -264,9 +283,27 @@ final class BytecodeEmittingCompanionGenerator {
             gen.loadLocal(outStream);
             gen.ifNonNull(nonNull);
 
-            gen.getStatic(syncTypeType, SyncHelpers.getSyncType(clazz).name(), syncTypeType);
-            gen.loadArg(0);
-            gen.invokeStatic(syncHelpersType, new Method("newOutStream", mcDataOutType, new Type[]{syncTypeType, objectType}));
+            switch (syncType) {
+                case ENTITY:
+                    gen.loadArg(0);
+                    gen.checkCast(entityType);
+                    gen.invokeStatic(syncHelpersType, new Method("newOutStream", mcDataOutType, new Type[] { entityType }));
+                    break;
+                case TILE_ENTITY:
+                    gen.loadArg(0);
+                    gen.checkCast(tileEntityType);
+                    gen.invokeStatic(syncHelpersType, new Method("newOutStream", mcDataOutType, new Type[] { tileEntityType }));
+                    break;
+                case CONTAINER:
+                    gen.loadArg(0);
+                    gen.checkCast(containerType);
+                    gen.invokeStatic(syncHelpersType, new Method("newOutStream", mcDataOutType, new Type[] { containerType }));
+                    break;
+                case ENTITY_PROPS:
+                    gen.loadThis();
+                    gen.invokeStatic(syncHelpersType, new Method("newOutStream", mcDataOutType, new Type[] { ieepCompType }));
+                    break;
+            }
             gen.storeLocal(outStream);
 
             gen.mark(nonNull);
@@ -298,15 +335,41 @@ final class BytecodeEmittingCompanionGenerator {
         gen.push(0);
         gen.invokeVirtual(myType, writeIDMethod());
 
-        gen.getStatic(syncTypeType, SyncHelpers.getSyncType(clazz).name(), syncTypeType);
-        gen.loadArg(0);
-        gen.loadLocal(outStream);
-        gen.invokeStatic(syncHelpersType, new Method("sendStream", VOID_TYPE, new Type[] { syncTypeType, objectType, mcDataOutType }));
+        switch (syncType) {
+            case ENTITY:
+                gen.loadArg(0);
+                gen.checkCast(entityType);
+                gen.loadLocal(outStream);
+                gen.invokeStatic(syncHelpersType, new Method("sendStream", VOID_TYPE, new Type[] { entityType, mcDataOutType }));
+                break;
+            case TILE_ENTITY:
+                gen.loadArg(0);
+                gen.checkCast(tileEntityType);
+                gen.loadLocal(outStream);
+                gen.invokeStatic(syncHelpersType, new Method("sendStream", VOID_TYPE, new Type[] { tileEntityType, mcDataOutType }));
+                break;
+            case CONTAINER:
+                gen.loadArg(0);
+                gen.checkCast(containerType);
+                gen.loadLocal(outStream);
+                gen.invokeStatic(syncHelpersType, new Method("sendStream", VOID_TYPE, new Type[] { containerType, mcDataOutType }));
+                break;
+            case ENTITY_PROPS:
+                gen.loadThis();
+                gen.getField(ieepCompType, "_sc$entity", entityType);
+                gen.loadLocal(outStream);
+                gen.invokeStatic(syncHelpersType, new Method("sendStream", VOID_TYPE, new Type[] { entityType, mcDataOutType }));
+                break;
+        }
 
         gen.mark(end);
         gen.loadLocal(outStream);
         gen.returnValue();
         gen.endMethod();
+    }
+
+    private boolean needCallSuper() {
+        return superClass != SyncCompanion.class && superClass != IEEPSyncCompanion.class;
     }
 
     private void getMH(GeneratorAdapter gen, Member member, String role) {

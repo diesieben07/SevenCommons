@@ -87,7 +87,7 @@ public final class CompanionObjects {
         throw new RuntimeException("Impossible", t);
     }
 
-    private static SyncCompanion getCompanion(Class<?> clazz) throws Throwable {
+    public static SyncCompanion getCompanion(Class<?> clazz) throws Throwable {
         return getCompFromMap(cstrs, clazz);
     }
 

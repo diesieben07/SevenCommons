@@ -19,13 +19,9 @@ public final class PacketSync extends ModPacket {
 	@Override
     public void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException {
 		SyncType type = in.readEnum(SyncType.class);
-        Object object = type.readObject(player, in);
-        SyncCompanion companion = object == null ? null : ((SyncedObjectProxy) object)._sc$getCompanion();
-        if (companion != null) {
-			companion.read(object, in);
-		} else {
-			logger.warning("Received invalid object for syncing: " + object);
-		}
+        if (!type.doRead(player, in)) {
+            logger.warning("Received invalid object for syncing!");
+        }
 	}
 
 	@Override
