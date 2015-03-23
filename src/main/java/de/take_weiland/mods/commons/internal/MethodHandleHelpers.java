@@ -16,31 +16,22 @@ public final class MethodHandleHelpers {
 
     private static ConcurrentMap<Class<?>, MethodHandle> cache;
 
-    public static MethodHandle equal(Class<?> type) {
+    public static synchronized MethodHandle equal(Class<?> type) {
         checkArgument(type != void.class);
         Class<?> erased = type.isPrimitive() ? type : Object.class;
 
         if (cache == null) {
-            synchronized (MethodHandleHelpers.class) {
-                if (cache == null) {
-                    cache = new MapMaker().concurrencyLevel(2).makeMap();
-                }
-            }
+            cache = new MapMaker().concurrencyLevel(2).makeMap();
         }
         MethodHandle result = cache.get(erased);
 
         if (result == null) {
-            synchronized (MethodHandleHelpers.class) {
-                result = cache.get(type);
-                if (result == null) {
-                    try {
-                        result = lookup().findStatic(MethodHandleHelpers.class, "eq", methodType(boolean.class, erased, erased));
-                    } catch (NoSuchMethodException | IllegalAccessException e) {
-                        throw new AssertionError(); // these all exist
-                    }
-                    cache.put(erased, result);
-                }
+            try {
+                result = lookup().findStatic(MethodHandleHelpers.class, "eq", methodType(boolean.class, erased, erased));
+            } catch (NoSuchMethodException | IllegalAccessException e) {
+                throw new AssertionError(); // these all exist
             }
+            cache.put(erased, result);
         }
         return result.asType(methodType(boolean.class, type, type));
     }
