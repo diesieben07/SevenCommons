@@ -37,14 +37,20 @@ interface CompanionFactory {
         final MethodHandle getter;
         final MethodHandle setter;
 
-        SyncedMemberInfo(Member member, SyncerFactory.Handle handle) {
+        SyncedMemberInfo(Class<?> clazz, Member member, SyncerFactory.Handle handle) {
             this.member = member;
             this.handle = handle;
 
             ((AccessibleObject) member).setAccessible(true);
 
-            getter = getter();
-            setter = setter();
+            // need to potentially adjust the types in case the
+            // member is in an interface. in any case this is a null-conversion and does not occur any overhead
+            // except (potentially) changing the exact type of the MethodHandle
+            MethodHandle getter = getter();
+            this.getter = getter.asType(getter.type().changeParameterType(0, clazz));
+
+            MethodHandle setter = setter();
+            this.setter = setter.asType(setter.type().changeParameterType(0, clazz));
         }
 
         private MethodHandle getter() {

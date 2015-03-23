@@ -44,9 +44,9 @@ public class testmod_sc {
             public boolean onBlockActivated(World world, int par2, int par3, int par4, EntityPlayer player, int par6, float par7, float par8, float par9) {
                 PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
                 if (Sides.logical(world).isClient()) {
-                    player.addChatMessage("On client: " + props.someString);
+                    player.addChatMessage("On client: " + props.getSomeData());
                 } else {
-                    props.someString = String.valueOf(world.rand.nextFloat());
+                    props.setSomeData(String.valueOf(world.rand.nextFloat()));
                 }
 
                 return true;

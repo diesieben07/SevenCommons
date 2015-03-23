@@ -76,7 +76,7 @@ public final class ASMHooks {
     public static final String ON_NEW_ENTITY_PROPS = "onNewEntityProps";
 
     public static void onNewEntityProps(Entity entity, IExtendedEntityProperties props, String identifier) throws Throwable {
-        IEEPSyncCompanion companion = (IEEPSyncCompanion) CompanionObjects.getCompanion(props.getClass());
+        IEEPSyncCompanion companion = (IEEPSyncCompanion) CompanionObjects.newCompanion(props.getClass());
         if (companion == null) {
             return;
         }

@@ -2,11 +2,12 @@ package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
-import com.google.common.collect.*;
-import cpw.mods.fml.common.discovery.ASMDataTable;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.internal.AbstractTypeSpec;
-import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.SyncerFactory;
@@ -18,10 +19,10 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.invoke.MethodType.methodType;
@@ -36,34 +37,9 @@ final class CompanionGenerators {
             Object.class, new BuiltinSyncers()
     );
 
-    static ImmutableMap<Class<?>, MethodHandle> buildAllConstructors() {
-        final CompanionFactory factory = new DefaultCompanionFactory();
+    private static final CompanionFactory factory = new DefaultCompanionFactory();
 
-        Set<ASMDataTable.ASMData> all = SevenCommons.asmData.getAll(Sync.class.getName());
-        ImmutableSet<Class<?>> allClasses = FluentIterable.from(all)
-                .transform(new Function<ASMDataTable.ASMData, Class<?>>() {
-                    @Nullable
-                    @Override
-                    public Class<?> apply(ASMDataTable.ASMData input) {
-                        try {
-                            return Class.forName(input.getClassName());
-                        } catch (ClassNotFoundException e) {
-                            throw Throwables.propagate(e);
-                        }
-                    }
-                })
-                .toSet();
-
-        return Maps.toMap(allClasses, new Function<Class<?>, MethodHandle>() {
-            @Nullable
-            @Override
-            public MethodHandle apply(@Nullable Class<?> input) {
-                return buildConstructor(factory, input);
-            }
-        });
-    }
-
-    private static MethodHandle buildConstructor(CompanionFactory factory, Class<?> clazz) {
+    static synchronized MethodHandle makeConstructor(Class<?> clazz) {
         MethodHandle cstr = factory.getCompanionConstructor(clazz);
         checkState(cstr.type().equals(methodType(SyncCompanion.class)));
         return cstr;
@@ -71,11 +47,41 @@ final class CompanionGenerators {
 
     static List<CompanionFactory.SyncedMemberInfo> getSyncedMemberInfo(Class<?> clazz) {
         return getSyncedMembers(clazz)
-                .transform(getMemberInfo())
+                .transform(getMemberInfo(clazz))
                 .toList();
     }
 
     static FluentIterable<Member> getSyncedMembers(Class<?> clazz) {
+        Iterable<Member> ifaceMembers = getNewlyImplementedInterfaces(clazz)
+                .transformAndConcat(getSyncedMembers0());
+
+        return FluentIterable.from(Iterables.concat(ifaceMembers, getSyncedMembers0(clazz)));
+    }
+
+    private static FluentIterable<Class<?>> getNewlyImplementedInterfaces(Class<?> clazz) {
+        List<Class<?>> superInterfaces;
+        Class<?> superclass = clazz.getSuperclass();
+        if (superclass == null) {
+            superInterfaces = ImmutableList.of();
+        } else {
+            superInterfaces = Arrays.asList(superclass.getInterfaces());
+        }
+
+        return FluentIterable.from(Arrays.asList(clazz.getInterfaces()))
+                .filter(Predicates.not(Predicates.in(superInterfaces)));
+    }
+
+    private static Function<Class<?>, Iterable<Member>> getSyncedMembers0() {
+        return new Function<Class<?>, Iterable<Member>>() {
+            @Nullable
+            @Override
+            public Iterable<Member> apply(@Nullable Class<?> clazz) {
+                return getSyncedMembers0(clazz);
+            }
+        };
+    }
+
+    private static FluentIterable<Member> getSyncedMembers0(Class<?> clazz) {
         Iterable<? extends Member> fields = asList(clazz.getDeclaredFields());
         Iterable<? extends Member> methods = asList(clazz.getDeclaredMethods());
 
@@ -84,13 +90,13 @@ final class CompanionGenerators {
                 .filter(isSynced());
     }
 
-    private static Function<Member, CompanionFactory.SyncedMemberInfo> getMemberInfo() {
+    private static Function<Member, CompanionFactory.SyncedMemberInfo> getMemberInfo(final Class<?> clazz) {
         return new Function<Member, CompanionFactory.SyncedMemberInfo>() {
             @Override
             public CompanionFactory.SyncedMemberInfo apply(@Nullable Member member) {
                 assert member != null;
                 SyncerFactory.Handle handle = getHandleFor(member);
-                return new CompanionFactory.SyncedMemberInfo(member, handle);
+                return new CompanionFactory.SyncedMemberInfo(clazz, member, handle);
             }
         };
     }

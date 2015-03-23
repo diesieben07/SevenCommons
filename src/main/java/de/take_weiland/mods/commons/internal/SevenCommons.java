@@ -9,8 +9,6 @@ import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
-import cpw.mods.fml.common.discovery.ASMDataTable;
-import cpw.mods.fml.common.event.FMLConstructionEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -19,7 +17,6 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
-import de.take_weiland.mods.commons.internal.sync.CompanionObjects;
 import de.take_weiland.mods.commons.internal.sync.PacketSync;
 import de.take_weiland.mods.commons.nbt.BuiltinSerializers;
 import de.take_weiland.mods.commons.nbt.NBTSerializers;
@@ -41,9 +38,8 @@ public final class SevenCommons extends DummyModContainer {
 
 	public static SevenCommonsProxy proxy;
 	public static SevenCommons instance;
-    public static ASMDataTable asmData;
 
-//	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
+    //	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
 	// TODO
 	public static boolean updaterEnabled = true;
 
@@ -72,13 +68,6 @@ public final class SevenCommons extends DummyModContainer {
 		bus.register(this);
 		return true;
 	}
-
-    @Subscribe
-    public void construction(FMLConstructionEvent event) {
-        asmData = event.getASMHarvestedData();
-
-        CompanionObjects.grabAnnotationData();
-    }
 
 	@SideOnly(Side.CLIENT)
 	@Subscribe
