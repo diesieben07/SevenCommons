@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.SyncerFactory;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -64,5 +63,7 @@ public final class SyncerFactoryUtils {
         MethodHandle reader = MethodHandles.filterArguments(droppingSet, 2, read);
         return new SyncerFactory.Instance(checker, writer, reader);
     }
+
+    private SyncerFactoryUtils() { }
 
 }

@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.internal.AbstractTypeSpec;
+import de.take_weiland.mods.commons.net.MCDataInput;
+import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.SyncerFactory;
@@ -15,6 +17,7 @@ import de.take_weiland.mods.commons.util.JavaUtils;
 
 import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -24,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.invoke.MethodType.methodType;
 import static java.util.Arrays.asList;
@@ -31,7 +35,7 @@ import static java.util.Arrays.asList;
 /**
  * @author diesieben07
  */
-final class CompanionGenerators {
+final class CompanionFactories {
 
     private static final ImmutableMultimap<Class<?>, SyncerFactory> FACTORIES = ImmutableMultimap.<Class<?>, SyncerFactory>of(
             Object.class, new BuiltinSyncers()
@@ -43,6 +47,45 @@ final class CompanionGenerators {
         MethodHandle cstr = factory.getCompanionConstructor(clazz);
         checkState(cstr.type().equals(methodType(SyncCompanion.class)));
         return cstr;
+    }
+
+    static void validateInstance(CompanionFactory.SyncedMemberInfo info, SyncerFactory.Instance instance, Class<?> companionHolderType) {
+        MethodType checkerType = instance.getChecker().type();
+        MethodType writerType = instance.getWriter().type();
+        MethodType readerType = instance.getReader().type();
+
+        Class<?> valHoldType = info.getter.type().parameterType(0);
+
+        Class<?> companionType = info.handle.getCompanionType();
+        boolean hasCompanion = companionType != null;
+
+        checkArgument(checkerType.returnType() == boolean.class, "checker must return boolean");
+        checkArgument(writerType.returnType() == void.class, "writer must return void");
+        checkArgument(readerType.returnType() == void.class, "reader must return void");
+
+        String withWithout = hasCompanion ? "with" : "without";
+        int add = hasCompanion ? 1 : 0;
+        int arg;
+        checkArgument(checkerType.parameterCount() == (arg = 1 + add), "checker must take " + arg + " arguments " + withWithout + " companion");
+        checkArgument(readerType.parameterCount() == (arg = 2 + add), "reader must take " + arg + " arguments " + withWithout + " companion");
+        checkArgument(writerType.parameterCount() == (arg = 2 + add), "writer must take " + arg + " arguments " + withWithout + " companion");
+
+        checkArgument(checkerType.parameterType(0) == valHoldType, "checker must take VH as first argument");
+        if (hasCompanion) {
+            checkArgument(checkerType.parameterType(1) == companionHolderType, "checker must take CH as second argument");
+        }
+
+        checkArgument(readerType.parameterType(0) == valHoldType, "reader must take VH as first argument");
+        checkArgument(readerType.parameterType(1 + add) == MCDataInput.class, "reader must take MCDataInput as " + (hasCompanion ? "third" : "second") + " argument");
+        if (hasCompanion) {
+            checkArgument(readerType.parameterType(1) == companionHolderType, "reader must take CH as second argument");
+        }
+
+        checkArgument(writerType.parameterType(0) == MCDataOutput.class, "writer must take MCDataOutput as first argument");
+        checkArgument(writerType.parameterType(1) == valHoldType, "writer must take VH as second argument");
+        if (hasCompanion) {
+            checkArgument(writerType.parameterType(2) == companionHolderType, "writer must take CH as third argument");
+        }
     }
 
     static List<CompanionFactory.SyncedMemberInfo> getSyncedMemberInfo(Class<?> clazz) {
@@ -144,6 +187,5 @@ final class CompanionGenerators {
         };
     }
 
-    private CompanionGenerators() { }
-
+    private CompanionFactories() { }
 }

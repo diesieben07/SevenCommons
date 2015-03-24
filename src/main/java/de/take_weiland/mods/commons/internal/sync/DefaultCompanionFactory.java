@@ -48,7 +48,7 @@ final class DefaultCompanionFactory implements CompanionFactory {
     }
 
     List<SyncedMemberInfo> getSyncedMemberInfo(Class<?> clazz) {
-        return CompanionGenerators.getSyncedMemberInfo(clazz);
+        return CompanionFactories.getSyncedMemberInfo(clazz);
     }
 
     int getNextFreeIDFor(Class<?> clazz) {
@@ -56,7 +56,7 @@ final class DefaultCompanionFactory implements CompanionFactory {
             return 1; // ID 0 is taken for end of stream
         }
         Class<?> superclass = clazz.getSuperclass();
-        return getNextFreeIDFor(superclass) + CompanionGenerators.getSyncedMembers(superclass).size();
+        return getNextFreeIDFor(superclass) + CompanionFactories.getSyncedMembers(superclass).size();
     }
 
 }

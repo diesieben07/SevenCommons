@@ -114,12 +114,15 @@ final class BytecodeEmittingCompanionGenerator {
     private void makeMHFields() {
         for (CompanionFactory.SyncedMemberInfo info : handles) {
             String descMH = Type.getDescriptor(MethodHandle.class);
-            String descCompanion = Type.getDescriptor(info.handle.getCompanionType());
 
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, getMemberID(info.member, CHECKER), descMH, null, null);
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, getMemberID(info.member, READER), descMH, null, null);
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, getMemberID(info.member, WRITER), descMH, null, null);
-            cw.visitField(ACC_PRIVATE, getMemberID(info.member, COMPANION), descCompanion, null, null);
+
+            Class<?> companionType = info.handle.getCompanionType();
+            if (companionType != null) {
+                cw.visitField(ACC_PRIVATE, getMemberID(info.member, COMPANION), Type.getDescriptor(companionType), null, null);
+            }
         }
     }
 
@@ -149,8 +152,6 @@ final class BytecodeEmittingCompanionGenerator {
             gen.storeLocal(fieldID);
         }
 
-        final Method invokeExact = new Method("invokeExact", VOID_TYPE, new Type[] { classToSyncType, myType, mcDataInType });
-
         Label start = gen.mark();
 
         int keyCount = handles.size();
@@ -165,12 +166,23 @@ final class BytecodeEmittingCompanionGenerator {
             public void generateCase(int key, Label end) {
                 CompanionFactory.SyncedMemberInfo info = handles.get(key - firstID);
 
+                boolean hasCompanion = info.handle.getCompanionType() != null;
+
                 gen.getStatic(myType, getMemberID(info.member, READER), mhType);
                 gen.loadArg(objectArg);
                 gen.checkCast(classToSyncType);
-                gen.loadThis();
+
+                if (hasCompanion) {
+                    gen.loadThis();
+                }
+
                 gen.loadArg(inStreamArg);
-                gen.invokeVirtual(mhType, invokeExact);
+
+                if (hasCompanion) {
+                    gen.invokeVirtual(mhType, new Method("invokeExact", VOID_TYPE, new Type[]{classToSyncType, myType, mcDataInType}));
+                } else {
+                    gen.invokeVirtual(mhType, new Method("invokeExact", VOID_TYPE, new Type[]{classToSyncType, mcDataInType}));
+                }
                 gen.goTo(end);
             }
 
@@ -238,8 +250,6 @@ final class BytecodeEmittingCompanionGenerator {
 
         Type methodHandleType = Type.getType(MethodHandle.class);
         Type mcDataOutType = Type.getType(MCDataOutput.class);
-        Type syncTypeType = Type.getType(SyncType.class);
-        Type objectType = Type.getType(Object.class);
         Type syncHelpersType = Type.getType(SyncHelpers.class);
         Type myType = Type.getObjectType(className);
         Type holderType = Type.getType(clazz);
@@ -272,11 +282,19 @@ final class BytecodeEmittingCompanionGenerator {
             }
             next = new Label();
 
+            boolean hasCompanion = info.handle.getCompanionType() != null;
+
             getMH(gen, info.member, CHECKER);
             gen.loadArg(0);
             gen.checkCast(holderType);
-            gen.loadThis();
-            gen.invokeVirtual(methodHandleType, new Method("invokeExact", BOOLEAN_TYPE, new Type[]{holderType, myType}));
+
+            if (hasCompanion) {
+                gen.loadThis();
+                gen.invokeVirtual(methodHandleType, new Method("invokeExact", BOOLEAN_TYPE, new Type[]{holderType, myType}));
+            } else {
+                gen.invokeVirtual(methodHandleType, new Method("invokeExact", BOOLEAN_TYPE, new Type[]{holderType}));
+            }
+
             gen.ifZCmp(NE, next);
 
             Label nonNull = new Label();
@@ -317,8 +335,12 @@ final class BytecodeEmittingCompanionGenerator {
             gen.loadLocal(outStream);
             gen.loadArg(0);
             gen.checkCast(holderType);
-            gen.loadThis();
-            gen.invokeVirtual(methodHandleType, new Method("invokeExact", VOID_TYPE, new Type[]{mcDataOutType, holderType, myType}));
+            if (hasCompanion) {
+                gen.loadThis();
+                gen.invokeVirtual(methodHandleType, new Method("invokeExact", VOID_TYPE, new Type[]{mcDataOutType, holderType, myType}));
+            } else {
+                gen.invokeVirtual(methodHandleType, new Method("invokeExact", VOID_TYPE, new Type[]{mcDataOutType, holderType}));
+            }
         }
 
         if (next != null) {
@@ -451,14 +473,22 @@ final class BytecodeEmittingCompanionGenerator {
         Map<String, MethodHandle[]> map = Maps.newHashMapWithExpectedSize(staticHandles.size());
 
         for (CompanionFactory.SyncedMemberInfo info : staticHandles) {
-            // use reflection so we don't have to specify the (unknown) type of the field
-            // fields must also be private to avoid any name-clashes between super and subclasses
-            Field companion = companionClass.getDeclaredField(getMemberID(info.member, COMPANION));
-            companion.setAccessible(true);
-            MethodHandle companionGetter = publicLookup().unreflectGetter(companion);
-            MethodHandle companionSetter = publicLookup().unreflectSetter(companion);
+            MethodHandle companionGetter;
+            MethodHandle companionSetter;
+
+            if (info.handle.getCompanionType() == null) {
+                companionGetter = companionSetter = null;
+            } else {
+                // use reflection so we don't have to specify the (unknown) type of the field
+                // fields must also be private to avoid any name-clashes between super and subclasses
+                Field companion = companionClass.getDeclaredField(getMemberID(info.member, COMPANION));
+                companion.setAccessible(true);
+                companionGetter = publicLookup().unreflectGetter(companion);
+                companionSetter = publicLookup().unreflectSetter(companion);
+            }
 
             SyncerFactory.Instance instance = info.handle.make(info.getter, info.setter, companionGetter, companionSetter);
+            CompanionFactories.validateInstance(info, instance, companionClass);
 
             MethodHandle[] arr = new MethodHandle[3];
             arr[CHECKER_IN_ARR] = instance.getChecker();

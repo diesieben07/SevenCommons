@@ -17,7 +17,7 @@ public final class CompanionObjects {
     private static final ClassValue<MethodHandle> constructors = new ClassValue<MethodHandle>() {
         @Override
         protected MethodHandle computeValue(@Nonnull Class<?> type) {
-            return CompanionGenerators.makeConstructor(type);
+            return CompanionFactories.makeConstructor(type);
         }
     };
 
