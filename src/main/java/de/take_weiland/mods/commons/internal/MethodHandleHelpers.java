@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.MapMaker;
 
 import java.lang.invoke.MethodHandle;
@@ -7,6 +8,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.lang.invoke.MethodHandles.publicLookup;
 import static java.lang.invoke.MethodType.methodType;
 
 /**
@@ -34,6 +36,20 @@ public final class MethodHandleHelpers {
             cache.put(erased, result);
         }
         return result.asType(methodType(boolean.class, type, type));
+    }
+
+    private static MethodHandle objectEquals;
+
+    public static synchronized MethodHandle objectEquals(Class<?> clazz) {
+        checkArgument(!clazz.isPrimitive());
+        if (objectEquals == null) {
+            try {
+                objectEquals = publicLookup().findStatic(Objects.class, "equal", methodType(boolean.class, Object.class, Object.class));
+            } catch (NoSuchMethodException | IllegalAccessException e) {
+                throw new RuntimeException("missing method in guava", e);
+            }
+        }
+        return objectEquals.asType(methodType(boolean.class, clazz, clazz));
     }
 
     private static boolean eq(Object a, Object b) {

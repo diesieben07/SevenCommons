@@ -22,7 +22,7 @@ public interface SyncerFactory {
     /**
      * <p>A handler for some type.</p>
      */
-    public interface Handle {
+    interface Handle {
 
         /**
          * <p>The type of a potential companion field to allow the "has-changed" check.</p>
