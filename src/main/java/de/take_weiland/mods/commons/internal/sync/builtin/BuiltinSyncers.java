@@ -58,6 +58,9 @@ public final class BuiltinSyncers implements SyncerFactory {
                     return in.readUUID();
                 }
             };
+            // all this boxing below might seem expensive
+            // but in the generated companions the Syncer is a constant, therefor all these small methods
+            // are likely to be inlined into there, enabling the elemiation of the boxing
         } else if (type == boolean.class) {
             return new ForImmutable<Boolean>(boolean.class) {
                 @Override
