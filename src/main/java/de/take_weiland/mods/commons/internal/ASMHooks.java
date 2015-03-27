@@ -67,10 +67,13 @@ public final class ASMHooks {
 
     private static void tickIEEPCompanionsNonNull(List<IEEPSyncCompanion> props) {
         //noinspection ForLoopReplaceableByForEach
-        for (int i = 0, len = props.size(); i < len; i++) {
-            IEEPSyncCompanion companion = props.get(i);
-            companion.check(companion._sc$ieep, false);
-        }
+        int i = props.size();
+	    do {
+		    if (--i < 0) return;
+
+		    IEEPSyncCompanion companion = props.get(i);
+		    companion.check(companion._sc$ieep, false);
+	    } while (true);
     }
 
     public static final String ON_NEW_ENTITY_PROPS = "onNewEntityProps";
