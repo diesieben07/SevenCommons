@@ -2,19 +2,20 @@ package de.take_weiland.mods.commons.internal.test;
 
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.util.Sides;
+import net.minecraft.tileentity.TileEntity;
 
 import java.util.Random;
 
 /**
  * @author diesieben07
  */
-public class TestTE extends MiddleTE {
+public class TestTE extends TileEntity {
 
     @Sync
     public String test;
 
-    @Sync
     int foobarusMax;
+    float syncFoobar;
 
     private int tick;
 

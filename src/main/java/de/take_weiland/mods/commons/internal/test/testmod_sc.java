@@ -4,7 +4,6 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
@@ -42,12 +41,12 @@ public class testmod_sc {
 
             @Override
             public boolean onBlockActivated(World world, int par2, int par3, int par4, EntityPlayer player, int par6, float par7, float par8, float par9) {
-                PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
-                if (Sides.logical(world).isClient()) {
-                    player.addChatMessage("On client: " + props.getSomeData());
-                } else {
-                    props.setSomeData(String.valueOf(world.rand.nextFloat()));
-                }
+//                PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
+//                if (Sides.logical(world).isClient()) {
+//                    player.addChatMessage("On client: " + props.getSomeData());
+//                } else {
+//                    props.setSomeData(String.valueOf(world.rand.nextFloat()));
+//                }
 
                 return true;
             }
@@ -62,9 +61,9 @@ public class testmod_sc {
 
 	@ForgeSubscribe
 	public void onEntityConstruct(EntityEvent.EntityConstructing event) {
-		if (event.entity instanceof EntityPlayer) {
-			event.entity.registerExtendedProperties("testmod_sc", new PlayerProps());
-		}
+//		if (event.entity instanceof EntityPlayer) {
+//			event.entity.registerExtendedProperties("testmod_sc", new PlayerProps());
+//		}
 	}
 
 }
