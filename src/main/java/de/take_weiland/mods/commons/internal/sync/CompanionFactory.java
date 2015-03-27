@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.reflect.SCReflection;
-import de.take_weiland.mods.commons.sync.SyncerFactory;
+import de.take_weiland.mods.commons.sync.SimpleSyncer;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.AccessibleObject;
@@ -32,16 +32,22 @@ interface CompanionFactory {
     final class SyncedMemberInfo {
 
         final Member member;
-        final SyncerFactory.Handle handle;
+        final SimpleSyncer<?, ?> syncer;
+        final Method setterMethod;
 
         final MethodHandle getter;
         final MethodHandle setter;
 
-        SyncedMemberInfo(Class<?> clazz, Member member, SyncerFactory.Handle handle) {
+        SyncedMemberInfo(Class<?> clazz, Member member, SimpleSyncer<?, ?> syncer) {
             this.member = member;
-            this.handle = handle;
+            this.syncer = syncer;
 
             ((AccessibleObject) member).setAccessible(true);
+            if (member instanceof Field) {
+                setterMethod = null;
+            } else {
+                setterMethod = SCReflection.findSetter((Method) member);
+            }
 
             // need to potentially adjust the types in case the
             // member is in an interface. in any case this is a null-conversion and does not occur any overhead
@@ -51,6 +57,10 @@ interface CompanionFactory {
 
             MethodHandle setter = setter();
             this.setter = setter.asType(setter.type().changeParameterType(0, clazz));
+        }
+
+        Class<?> type() {
+            return member instanceof Field ? ((Field) member).getType() : ((Method) member).getReturnType();
         }
 
         private MethodHandle getter() {

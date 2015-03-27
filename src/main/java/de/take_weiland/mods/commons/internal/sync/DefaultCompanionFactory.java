@@ -3,10 +3,9 @@ package de.take_weiland.mods.commons.internal.sync;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import static java.lang.invoke.MethodHandles.lookup;
+import static java.lang.invoke.MethodHandles.publicLookup;
 import static java.lang.invoke.MethodType.methodType;
 
 /**
@@ -24,7 +23,7 @@ final class DefaultCompanionFactory implements CompanionFactory {
             return NULL_COMPANION;
         } else {
             try {
-                return lookup().findConstructor(companionClass, methodType(void.class))
+                return publicLookup().findConstructor(companionClass, methodType(void.class))
                         .asType(methodType(SyncCompanion.class));
             } catch (NoSuchMethodException | IllegalAccessException e) {
                 throw new RuntimeException(e); // impossible
@@ -45,10 +44,6 @@ final class DefaultCompanionFactory implements CompanionFactory {
             companionClasses.put(clazz, companionClass);
         }
         return companionClass;
-    }
-
-    List<SyncedMemberInfo> getSyncedMemberInfo(Class<?> clazz) {
-        return CompanionFactories.getSyncedMemberInfo(clazz);
     }
 
     int getNextFreeIDFor(Class<?> clazz) {

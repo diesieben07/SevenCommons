@@ -10,9 +10,9 @@ import net.minecraftforge.common.IExtendedEntityProperties;
 /**
  * @author diesieben07
  */
-final class SyncHelpers {
+public final class SyncHelpers {
 
-    static MCDataOutput newOutStream(TileEntity te) {
+    public static MCDataOutput newOutStream(TileEntity te) {
         MCDataOutput out = newStream(SyncType.TILE_ENTITY);
         out.writeInt(te.xCoord);
         out.writeByte(te.yCoord);
@@ -20,19 +20,19 @@ final class SyncHelpers {
         return out;
     }
 
-    static MCDataOutput newOutStream(Entity entity) {
+    public static MCDataOutput newOutStream(Entity entity) {
         MCDataOutput out = newStream(SyncType.ENTITY);
         out.writeInt(entity.entityId);
         return out;
     }
 
-    static MCDataOutput newOutStream(Container container) {
+    public static MCDataOutput newOutStream(Container container) {
         MCDataOutput out = newStream(SyncType.CONTAINER);
         out.writeByte(container.windowId);
         return out;
     }
 
-    static MCDataOutput newOutStream(IEEPSyncCompanion companion) {
+    public static MCDataOutput newOutStream(IEEPSyncCompanion companion) {
         MCDataOutput out = newStream(SyncType.ENTITY_PROPS);
         out.writeInt(companion._sc$entity.entityId);
         out.writeVarInt(companion._sc$id);
@@ -45,15 +45,15 @@ final class SyncHelpers {
         return out;
     }
 
-    static void sendStream(TileEntity te, MCDataOutput out) {
+    public static void sendStream(TileEntity te, MCDataOutput out) {
         SevenCommons.packets.makePacket(out).sendToAllTracking(te);
     }
 
-    static void sendStream(Entity entity, MCDataOutput out) {
+    public static void sendStream(Entity entity, MCDataOutput out) {
         SevenCommons.packets.makePacket(out).sendToAllAssociated(entity);
     }
 
-    static void sendStream(Container container, MCDataOutput out) {
+    public static void sendStream(Container container, MCDataOutput out) {
         SevenCommons.packets.makePacket(out).sendToViewing(container);
     }
 

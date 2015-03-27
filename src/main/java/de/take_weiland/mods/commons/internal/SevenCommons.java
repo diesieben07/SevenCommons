@@ -18,10 +18,12 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import de.take_weiland.mods.commons.internal.sync.PacketSync;
+import de.take_weiland.mods.commons.internal.sync.builtin.BuiltinSyncers;
 import de.take_weiland.mods.commons.nbt.BuiltinSerializers;
 import de.take_weiland.mods.commons.nbt.NBTSerializers;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
+import de.take_weiland.mods.commons.sync.Syncing;
 import de.take_weiland.mods.commons.util.Logging;
 import net.minecraftforge.common.Configuration;
 
@@ -108,7 +110,7 @@ public final class SevenCommons extends DummyModContainer {
             }
         }
 
-//		WatcherRegistry.register(Object.class, new DefaultWatcherSPI());
+		Syncing.registerFactory(Object.class, new BuiltinSyncers());
 	}
 
 	@Subscribe
