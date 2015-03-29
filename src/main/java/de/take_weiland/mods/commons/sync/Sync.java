@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.SerializationMethod;
-import de.take_weiland.mods.commons.internal.AnnotationNull;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -22,6 +21,7 @@ import java.lang.annotation.Target;
  *     <li>FluidTank (not IFluidTank!)</li>
  *     <li>FluidStack</li>
  *     <li>ItemStack</li>
+ *     <li>Item and Block</li>
  * </ul>
  *
  * @author diesieben07
@@ -29,13 +29,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD })
 public @interface Sync {
-
-	/**
-	 * <p>Override the type of the property. This will be used instead of the declared type to determine
-	 * how to sync the property.</p>
-	 * @return the type
-	 */
-	Class<?> as() default AnnotationNull.class;
 
 	/**
 	 * <p>Specify how the property should be synced.</p>

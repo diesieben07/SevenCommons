@@ -18,7 +18,7 @@ class StringSyncer extends SyncerDefaultEquals<String> {
     }
 
     @Override
-    public String read(String oldValue, String companion, MCDataInput in) {
+    public String read(String value, String companion, MCDataInput in) {
         return in.readString();
     }
 }

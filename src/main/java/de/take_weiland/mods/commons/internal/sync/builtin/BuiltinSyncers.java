@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.sync.builtin;
 
+import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.sync.SyncCapacity;
@@ -25,12 +26,18 @@ public final class BuiltinSyncers implements SyncerFactory {
     public <V, C> Syncer<V, C> getSyncer(TypeSpecification<V> type) {
         Class<? super V> raw = type.getRawType();
 
-        Syncer<?, ?> syncer = cache.get(raw);
-        if (syncer == null && !cache.containsKey(raw)) {
-            syncer = newSyncerForRawType(raw);
-            cache.put(raw, syncer);
+        Syncer<?, ?> syncer;
+        if (type.getDesiredMethod() != SerializationMethod.Method.CONTENTS) {
+            syncer = cache.get(raw);
+            if (syncer == null && !cache.containsKey(raw)) {
+                syncer = newSyncerForRawType(raw);
+                cache.put(raw, syncer);
+            }
+        } else {
+            syncer = null;
         }
-        if (syncer == null) {
+
+        if (syncer == null && type.getDesiredMethod() != SerializationMethod.Method.VALUE) {
             syncer = getSpecialSyncer(raw, type);
         }
         //noinspection unchecked
@@ -50,6 +57,9 @@ public final class BuiltinSyncers implements SyncerFactory {
             return new BlockSyncer();
         } else if (type == FluidStack.class) {
             return new FluidStackSyncer();
+        } else if (type.isEnum()) {
+            //noinspection unchecked
+            return new EnumSyncer(type);
         } else {
             return PrimitiveAndBoxSyncerFactory.createSyncer(type);
         }

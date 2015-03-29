@@ -44,15 +44,15 @@ public enum FluidTankAndCapacitySyncer implements Syncer<FluidTank, FluidTankAnd
     }
 
     @Override
-    public FluidTank read(FluidTank oldValue, Companion companion, MCDataInput in) {
+    public FluidTank read(FluidTank value, Companion companion, MCDataInput in) {
         int cap = in.readVarInt();
         FluidStack stack = in.readFluidStack();
 
-        if (oldValue != null) {
-            oldValue.setCapacity(cap);
-            oldValue.setFluid(stack);
+        if (value != null) {
+            value.setCapacity(cap);
+            value.setFluid(stack);
         }
-        return oldValue;
+        return value;
     }
 
     public static final class Companion {

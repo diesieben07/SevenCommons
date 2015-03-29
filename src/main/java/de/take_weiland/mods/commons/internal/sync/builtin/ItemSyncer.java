@@ -27,7 +27,7 @@ final class ItemSyncer implements Syncer<Item, Item> {
     }
 
     @Override
-    public Item read(Item oldValue, Item companion, MCDataInput in) {
+    public Item read(Item value, Item companion, MCDataInput in) {
         return in.readItem();
     }
 }

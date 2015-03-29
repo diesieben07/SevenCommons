@@ -32,9 +32,9 @@ enum FluidTankSyncer implements Syncer<FluidTank, FluidStack> {
     }
 
     @Override
-    public FluidTank read(FluidTank oldValue, FluidStack companion, MCDataInput in) {
-        oldValue.setFluid(in.readFluidStack());
-        return oldValue;
+    public FluidTank read(FluidTank value, FluidStack companion, MCDataInput in) {
+        value.setFluid(in.readFluidStack());
+        return value;
     }
 
 }

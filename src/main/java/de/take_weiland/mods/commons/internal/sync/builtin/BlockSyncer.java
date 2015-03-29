@@ -27,7 +27,7 @@ final class BlockSyncer implements Syncer<Block, Block> {
     }
 
     @Override
-    public Block read(Block oldValue, Block companion, MCDataInput in) {
+    public Block read(Block value, Block companion, MCDataInput in) {
         return in.readBlock();
     }
 }

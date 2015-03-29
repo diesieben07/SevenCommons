@@ -28,7 +28,7 @@ final class FluidStackSyncer implements Syncer<FluidStack, FluidStack> {
     }
 
     @Override
-    public FluidStack read(FluidStack oldValue, FluidStack companion, MCDataInput in) {
+    public FluidStack read(FluidStack value, FluidStack companion, MCDataInput in) {
         return in.readFluidStack();
     }
 }

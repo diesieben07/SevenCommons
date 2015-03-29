@@ -28,7 +28,7 @@ final class ItemStackSyncer implements Syncer<ItemStack, ItemStack> {
     }
 
     @Override
-    public ItemStack read(ItemStack oldValue, ItemStack companion, MCDataInput in) {
+    public ItemStack read(ItemStack value, ItemStack companion, MCDataInput in) {
         return in.readItemStack();
     }
 }

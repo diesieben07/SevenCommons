@@ -20,7 +20,7 @@ class UUIDSyncer extends SyncerDefaultEquals<UUID> {
     }
 
     @Override
-    public UUID read(UUID oldValue, UUID companion, MCDataInput in) {
+    public UUID read(UUID value, UUID companion, MCDataInput in) {
         return in.readUUID();
     }
 }
