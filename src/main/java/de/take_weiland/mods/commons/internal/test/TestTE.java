@@ -14,7 +14,9 @@ public class TestTE extends TileEntity {
     @Sync
     public String test;
 
-    int foobarusMax;
+    @Sync
+    Integer foobarusMax;
+    @Sync
     float syncFoobar;
 
     private int tick;

@@ -8,7 +8,7 @@ import java.util.UUID;
 /**
  * @author diesieben07
  */
-class UUIDSyncer extends SyncerForImmutable<UUID> {
+class UUIDSyncer extends SyncerDefaultEquals<UUID> {
     public UUIDSyncer() {
         super(UUID.class);
     }

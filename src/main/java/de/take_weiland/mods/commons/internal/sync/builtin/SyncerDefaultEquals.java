@@ -6,11 +6,11 @@ import de.take_weiland.mods.commons.sync.SimpleSyncer;
 /**
  * @author diesieben07
  */
-abstract class SyncerForImmutable<V> implements SimpleSyncer<V, V> {
+abstract class SyncerDefaultEquals<V> implements SimpleSyncer<V, V> {
 
     private final Class<V> type;
 
-    SyncerForImmutable(Class<V> type) {
+    SyncerDefaultEquals(Class<V> type) {
         this.type = type;
     }
 

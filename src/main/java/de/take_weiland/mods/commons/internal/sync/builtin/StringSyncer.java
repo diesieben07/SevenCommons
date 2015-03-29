@@ -6,7 +6,7 @@ import de.take_weiland.mods.commons.net.MCDataOutput;
 /**
  * @author diesieben07
  */
-class StringSyncer extends SyncerForImmutable<String> {
+class StringSyncer extends SyncerDefaultEquals<String> {
     public StringSyncer() {
         super(String.class);
     }

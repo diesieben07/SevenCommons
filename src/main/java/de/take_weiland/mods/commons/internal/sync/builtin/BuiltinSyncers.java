@@ -2,7 +2,13 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
 import de.take_weiland.mods.commons.sync.SimpleSyncer;
+import de.take_weiland.mods.commons.sync.SyncCapacity;
 import de.take_weiland.mods.commons.sync.SyncerFactory;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidTank;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,39 +27,44 @@ public final class BuiltinSyncers implements SyncerFactory {
 
         SimpleSyncer<?, ?> syncer = cache.get(raw);
         if (syncer == null && !cache.containsKey(raw)) {
-            syncer = newSyncer(raw);
+            syncer = newSyncerForRawType(raw);
             cache.put(raw, syncer);
+        }
+        if (syncer == null) {
+            syncer = getSpecialSyncer(raw, type);
         }
         //noinspection unchecked
         return (SimpleSyncer<V, C>) syncer;
     }
 
-    private static SimpleSyncer<?, ?> newSyncer(Class<?> type) {
+    private static SimpleSyncer<?, ?> newSyncerForRawType(Class<?> type) {
         if (type == String.class) {
             return new StringSyncer();
         } else if (type == UUID.class) {
             return new UUIDSyncer();
-            // all this boxing below might seem expensive
-            // but in the generated companions the Syncer is a constant, therefor all these small methods
-            // are likely to be inlined into there, enabling the elemiation of the boxing
-        } else if (type == boolean.class) {
-            return new BooleanSyncer();
-        } else if (type == byte.class) {
-            return new ByteSyncer();
-        } else if (type == short.class) {
-            return new ShortSyncer();
-        } else if (type == int.class) {
-            return new IntegerSyncer();
-        } else if (type == char.class) {
-            return new CharSyncer();
-        } else if (type == long.class) {
-            return new LongSyncer();
-        } else if (type == float.class) {
-            return new FloatSyncer();
-        } else if (type == double.class) {
-            return new DoubleSyncer();
+        } else if (type == ItemStack.class) {
+            return new ItemStackSyncer();
+        } else if (type == Item.class) {
+            return new ItemSyncer();
+        } else if (type == Block.class) {
+            return new BlockSyncer();
+        } else if (type == FluidStack.class) {
+            return new FluidStackSyncer();
+        } else {
+            return PrimitiveAndBoxSyncerFactory.createSyncer(type);
         }
-        return null;
+    }
+
+    private static SimpleSyncer<?, ?> getSpecialSyncer(Class<?> raw, TypeSpecification<?> spec) {
+        if (FluidTank.class.isAssignableFrom(raw)) {
+            if (spec.hasAnnotation(SyncCapacity.class)) {
+                return FluidTankAndCapacitySyncer.INSTANCE;
+            } else {
+                return FluidTankSyncer.INSTANCE;
+            }
+        } else {
+            return null;
+        }
     }
 
 }
