@@ -6,7 +6,7 @@ import com.google.common.primitives.UnsignedBytes;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.reflect.SCReflection;
-import de.take_weiland.mods.commons.sync.SimpleSyncer;
+import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
@@ -106,7 +106,7 @@ public final class BytecodeEmittingCompanionGenerator {
 
     private void makeFields() {
         for (CompanionFactory.SyncedMemberInfo info : handles) {
-            String descSyncer = Type.getDescriptor(SimpleSyncer.class);
+            String descSyncer = Type.getDescriptor(Syncer.class);
 
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, getMemberID(info.member, SYNCER), descSyncer, null, null);
 
@@ -123,7 +123,7 @@ public final class BytecodeEmittingCompanionGenerator {
 
         final Type myType = Type.getObjectType(className);
         final Type mcDataInType = Type.getType(MCDataInput.class);
-        final Type syncerType = Type.getType(SimpleSyncer.class);
+        final Type syncerType = Type.getType(Syncer.class);
         final Type objectType = Type.getType(Object.class);
         final Type valueHolderType = Type.getType(clazz);
 
@@ -287,7 +287,7 @@ public final class BytecodeEmittingCompanionGenerator {
         Type tileEntityType = Type.getType(TileEntity.class);
         Type containerType = Type.getType(Container.class);
         Type ieepCompType = Type.getType(IEEPSyncCompanion.class);
-        Type syncerType = Type.getType(SimpleSyncer.class);
+        Type syncerType = Type.getType(Syncer.class);
 
         int objectArg = 0;
         int superCallArg = 1;
@@ -473,7 +473,7 @@ public final class BytecodeEmittingCompanionGenerator {
 
         Type myType = getObjectType(className);
         Type mapType = Type.getType(Map.class);
-        Type syncerType = Type.getType(SimpleSyncer.class);
+        Type syncerType = Type.getType(Syncer.class);
 
         int map = gen.newLocal(mapType);
         gen.invokeStatic(Type.getType(BytecodeEmittingCompanionGenerator.class), getMethod("java.util.Map getSyncers()"));
@@ -521,8 +521,8 @@ public final class BytecodeEmittingCompanionGenerator {
     private static List<CompanionFactory.SyncedMemberInfo> staticHandles;
 
     // called from <clinit> in generated classes, see #finish()
-    public static Map<String, SimpleSyncer<?, ?>> getSyncers() throws NoSuchFieldException, IllegalAccessException {
-        Map<String, SimpleSyncer<?, ?>> map = Maps.newHashMapWithExpectedSize(staticHandles.size());
+    public static Map<String, Syncer<?, ?>> getSyncers() throws NoSuchFieldException, IllegalAccessException {
+        Map<String, Syncer<?, ?>> map = Maps.newHashMapWithExpectedSize(staticHandles.size());
 
         for (CompanionFactory.SyncedMemberInfo info : staticHandles) {
             map.put(getMemberID(info.member), info.syncer);

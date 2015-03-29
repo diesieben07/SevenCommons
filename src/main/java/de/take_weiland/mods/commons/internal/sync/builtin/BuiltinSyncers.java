@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
-import de.take_weiland.mods.commons.sync.SimpleSyncer;
+import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.sync.SyncCapacity;
 import de.take_weiland.mods.commons.sync.SyncerFactory;
 import net.minecraft.block.Block;
@@ -19,13 +19,13 @@ import java.util.UUID;
  */
 public final class BuiltinSyncers implements SyncerFactory {
 
-    private final Map<Class<?>, SimpleSyncer<?, ?>> cache = new HashMap<>();
+    private final Map<Class<?>, Syncer<?, ?>> cache = new HashMap<>();
 
     @Override
-    public <V, C> SimpleSyncer<V, C> getSyncer(TypeSpecification<V> type) {
+    public <V, C> Syncer<V, C> getSyncer(TypeSpecification<V> type) {
         Class<? super V> raw = type.getRawType();
 
-        SimpleSyncer<?, ?> syncer = cache.get(raw);
+        Syncer<?, ?> syncer = cache.get(raw);
         if (syncer == null && !cache.containsKey(raw)) {
             syncer = newSyncerForRawType(raw);
             cache.put(raw, syncer);
@@ -34,10 +34,10 @@ public final class BuiltinSyncers implements SyncerFactory {
             syncer = getSpecialSyncer(raw, type);
         }
         //noinspection unchecked
-        return (SimpleSyncer<V, C>) syncer;
+        return (Syncer<V, C>) syncer;
     }
 
-    private static SimpleSyncer<?, ?> newSyncerForRawType(Class<?> type) {
+    private static Syncer<?, ?> newSyncerForRawType(Class<?> type) {
         if (type == String.class) {
             return new StringSyncer();
         } else if (type == UUID.class) {
@@ -55,7 +55,7 @@ public final class BuiltinSyncers implements SyncerFactory {
         }
     }
 
-    private static SimpleSyncer<?, ?> getSpecialSyncer(Class<?> raw, TypeSpecification<?> spec) {
+    private static Syncer<?, ?> getSpecialSyncer(Class<?> raw, TypeSpecification<?> spec) {
         if (FluidTank.class.isAssignableFrom(raw)) {
             if (spec.hasAnnotation(SyncCapacity.class)) {
                 return FluidTankAndCapacitySyncer.INSTANCE;

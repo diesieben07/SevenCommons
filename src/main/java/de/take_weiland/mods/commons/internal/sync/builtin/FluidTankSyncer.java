@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.SimpleSyncer;
+import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
@@ -10,14 +10,9 @@ import net.minecraftforge.fluids.FluidTank;
 /**
  * @author diesieben07
  */
-enum FluidTankSyncer implements SimpleSyncer<FluidTank, FluidStack> {
+enum FluidTankSyncer implements Syncer<FluidTank, FluidStack> {
 
     INSTANCE;
-
-    @Override
-    public Class<FluidTank> getValueType() {
-        return FluidTank.class;
-    }
 
     @Override
     public Class<FluidStack> getCompanionType() {

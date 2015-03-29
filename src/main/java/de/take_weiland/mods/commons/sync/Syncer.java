@@ -6,9 +6,7 @@ import de.take_weiland.mods.commons.net.MCDataOutput;
 /**
  * @author diesieben07
  */
-public interface SimpleSyncer<V, C> {
-
-    Class<V> getValueType();
+public interface Syncer<V, C> {
 
     Class<C> getCompanionType();
 

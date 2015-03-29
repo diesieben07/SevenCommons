@@ -2,17 +2,13 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.SimpleSyncer;
+import de.take_weiland.mods.commons.sync.Syncer;
 import net.minecraft.block.Block;
 
 /**
  * @author diesieben07
  */
-final class BlockSyncer implements SimpleSyncer<Block, Block> {
-    @Override
-    public Class<Block> getValueType() {
-        return Block.class;
-    }
+final class BlockSyncer implements Syncer<Block, Block> {
 
     @Override
     public Class<Block> getCompanionType() {

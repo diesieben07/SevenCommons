@@ -4,7 +4,7 @@ import com.google.common.primitives.Primitives;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.reflect.SCReflection;
-import de.take_weiland.mods.commons.sync.SimpleSyncer;
+import de.take_weiland.mods.commons.sync.Syncer;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
@@ -21,7 +21,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
  */
 final class PrimitiveAndBoxSyncerFactory {
 
-    static <V> SimpleSyncer<V, V> createSyncer(Class<V> clazz) {
+    static <V> Syncer<V, V> createSyncer(Class<V> clazz) {
         if (clazz.isPrimitive() || Primitives.isWrapperType(clazz)) {
             return makeSyncer(clazz, !clazz.isPrimitive());
         } else {
@@ -29,7 +29,7 @@ final class PrimitiveAndBoxSyncerFactory {
         }
     }
 
-    static <V> SimpleSyncer<V, V> makeSyncer(Class<V> clazz, boolean box) {
+    static <V> Syncer<V, V> makeSyncer(Class<V> clazz, boolean box) {
         ClassWriter cw = newCW(clazz);
         Type boxed = Type.getType(Primitives.wrap(clazz));
         Type unboxed = Type.getType(Primitives.unwrap(clazz));
@@ -64,7 +64,7 @@ final class PrimitiveAndBoxSyncerFactory {
         Class<?> syncerClass = SCReflection.defineDynamicClass(cw.toByteArray());
         try {
             //noinspection unchecked
-            return (SimpleSyncer<V, V>) syncerClass.newInstance();
+            return (Syncer<V, V>) syncerClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e); // impossible
         }

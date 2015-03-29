@@ -6,7 +6,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.*;
 import de.take_weiland.mods.commons.internal.AbstractTypeSpec;
 import de.take_weiland.mods.commons.serialize.TypeSpecification;
-import de.take_weiland.mods.commons.sync.SimpleSyncer;
+import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.SyncerFactory;
 import de.take_weiland.mods.commons.util.JavaUtils;
@@ -101,7 +101,7 @@ public final class CompanionFactories {
         };
     }
 
-    private static SimpleSyncer<?, ?> getSyncerFor(Member member) {
+    private static Syncer<?, ?> getSyncerFor(Member member) {
         Class<?> type = getType(member);
         if (type.isPrimitive()) type = Object.class;
 
@@ -114,9 +114,9 @@ public final class CompanionFactories {
 
         for (Class<?> clazz : hierarchy) {
             Collection<SyncerFactory> factories = syncerFactories.get(clazz);
-            SimpleSyncer<?, ?> result = null;
+            Syncer<?, ?> result = null;
             for (SyncerFactory factory : factories) {
-                SimpleSyncer<?, ?> gen = factory.getSyncer(spec);
+                Syncer<?, ?> gen = factory.getSyncer(spec);
                 if (result == null) {
                     result = gen;
                 } else if (gen != null) {

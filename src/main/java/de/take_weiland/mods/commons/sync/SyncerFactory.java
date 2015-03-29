@@ -10,6 +10,6 @@ import de.take_weiland.mods.commons.serialize.TypeSpecification;
  */
 public interface SyncerFactory {
 
-    <V, C> SimpleSyncer<V, C> getSyncer(TypeSpecification<V> type);
+    <V, C> Syncer<V, C> getSyncer(TypeSpecification<V> type);
 
 }

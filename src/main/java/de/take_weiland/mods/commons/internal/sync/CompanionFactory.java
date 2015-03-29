@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.reflect.SCReflection;
-import de.take_weiland.mods.commons.sync.SimpleSyncer;
+import de.take_weiland.mods.commons.sync.Syncer;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.AccessibleObject;
@@ -32,13 +32,13 @@ interface CompanionFactory {
     final class SyncedMemberInfo {
 
         final Member member;
-        final SimpleSyncer<?, ?> syncer;
+        final Syncer<?, ?> syncer;
         final Method setterMethod;
 
         final MethodHandle getter;
         final MethodHandle setter;
 
-        SyncedMemberInfo(Class<?> clazz, Member member, SimpleSyncer<?, ?> syncer) {
+        SyncedMemberInfo(Class<?> clazz, Member member, Syncer<?, ?> syncer) {
             this.member = member;
             this.syncer = syncer;
 
