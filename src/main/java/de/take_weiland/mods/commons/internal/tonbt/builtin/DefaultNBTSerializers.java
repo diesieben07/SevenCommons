@@ -6,8 +6,6 @@ import de.take_weiland.mods.commons.nbt.NBTSerializerFactory;
 import de.take_weiland.mods.commons.serialize.Property;
 import net.minecraft.nbt.*;
 
-import java.lang.reflect.Member;
-
 /**
  * @author diesieben07
  */
@@ -35,6 +33,10 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
             result = ForDouble.INSTANCE;
         } else if (raw == String.class) {
             result = ForString.INSTANCE;
+        } else if (raw == CharSequence.class) {
+            result = ForCharSeq.INSTANCE;
+        } else if (raw.isEnum()) {
+            result = EnumSerializer.get(raw);
         } else {
             result = null;
         }
@@ -173,6 +175,21 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         @Override
         public String read(String value, NBTBase nbt) {
             return nbt.getId() == NBT.TAG_STRING ? ((NBTTagString) nbt).data : null;
+        }
+    }
+
+    private enum ForCharSeq implements NBTSerializer<CharSequence> {
+
+        INSTANCE;
+
+        @Override
+        public NBTBase write(CharSequence value) {
+            return new NBTTagString("", value.toString());
+        }
+
+        @Override
+        public CharSequence read(CharSequence value, NBTBase nbt) {
+            return nbt.getId()== NBT.TAG_STRING ? ((NBTTagString) nbt).data : null;
         }
     }
 
