@@ -13,6 +13,7 @@ import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.NameableInventory;
+import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -39,6 +40,7 @@ import java.util.List;
  *
  * @author diesieben07
  */
+@SuppressWarnings("unused")
 public final class ASMHooks {
 
 	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/ASMHooks";
@@ -124,6 +126,24 @@ public final class ASMHooks {
 		ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
 		if (handler != null) {
 			handler.read(obj, nbt);
+		}
+	}
+
+	public static final String IEEP_READ_NBT_HOOK = "readFromNBTIEEP";
+
+	public static void readFromNBTIEEP(Object obj, String ident, NBTTagCompound nbt) {
+		ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
+		if (handler != null) {
+			handler.read(obj, nbt.getCompoundTag(ident));
+		}
+	}
+
+	public static final String IEEP_WRITE_NBT_HOOK = "writeToNBTIEEP";
+
+	public static void writeToNBTIEEP(Object obj, String ident, NBTTagCompound nbt) {
+		ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
+		if (handler != null) {
+			handler.write(obj, NBT.getOrCreateCompound(nbt, ident));
 		}
 	}
 
