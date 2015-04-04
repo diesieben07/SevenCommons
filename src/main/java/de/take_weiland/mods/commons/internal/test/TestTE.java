@@ -2,12 +2,11 @@ package de.take_weiland.mods.commons.internal.test;
 
 import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.sync.Sync;
-import net.minecraft.tileentity.TileEntity;
 
 /**
  * @author diesieben07
  */
-public class TestTE extends TileEntity {
+public class TestTE extends SuperTE implements SyncedInterface {
 
     @Sync
     public String test = "__nullval__";
@@ -20,13 +19,14 @@ public class TestTE extends TileEntity {
 
     private int tick;
 
-    @ToNbt
-    private String getTest() {
+    @Override
+    public String getSomeData() {
         return test;
     }
 
-    private void setTest(String test) {
-        this.test = test;
+    @Override
+    public void setSomeData(String i) {
+        test = i;
     }
 
     @Override

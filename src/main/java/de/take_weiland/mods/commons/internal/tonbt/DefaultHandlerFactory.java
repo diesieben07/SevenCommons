@@ -12,11 +12,7 @@ final class DefaultHandlerFactory implements ToNbtHandlerFactory {
 
     @Override
     public ToNbtHandler getHandler(Class<?> clazz) {
-        Class<? extends ToNbtHandler> hClass = handlerClasses.get(clazz);
-        if (hClass == null) {
-            hClass = new BytecodeEmittingHandlerGenerator(clazz).generateHandler();
-            handlerClasses.put(clazz, hClass);
-        }
+        Class<? extends ToNbtHandler> hClass = getHandlerClass(clazz);
         try {
             return hClass == null ? null : hClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
@@ -24,5 +20,22 @@ final class DefaultHandlerFactory implements ToNbtHandlerFactory {
         }
     }
 
+    Class<? extends ToNbtHandler> getHandlerClass(Class<?> clazz) {
+        if (clazz == Object.class) {
+            return null;
+        }
+
+        Class<? extends ToNbtHandler> hClass;
+        if (!handlerClasses.containsKey(clazz)) {
+            hClass = new BytecodeEmittingHandlerGenerator(this, clazz).generateHandler();
+            if (hClass == null) {
+                hClass = getHandlerClass(clazz.getSuperclass());
+            }
+            handlerClasses.put(clazz, hClass);
+        } else {
+            hClass = handlerClasses.get(clazz);
+        }
+        return hClass;
+    }
 
 }

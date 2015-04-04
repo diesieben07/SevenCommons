@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.tonbt;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.internal.test.TestTE;
 import de.take_weiland.mods.commons.nbt.NBTSerializer;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.serialize.Property;
@@ -33,18 +32,16 @@ final class BytecodeEmittingHandlerGenerator {
     private static final String GETTER = "get";
     private static final String SETTER = "set";
 
+    private final DefaultHandlerFactory factory;
     private final Class<?> clazz;
     private ClassWriter cw;
     private String className;
     private String superName;
     private List<Property<?, ?>> properties;
 
-    BytecodeEmittingHandlerGenerator(Class<?> clazz) {
+    BytecodeEmittingHandlerGenerator(DefaultHandlerFactory factory, Class<?> clazz) {
+        this.factory = factory;
         this.clazz = clazz;
-    }
-
-    public static void main(String[] args) {
-        new BytecodeEmittingHandlerGenerator(TestTE.class).generateHandler();
     }
 
     Class<? extends ToNbtHandler> generateHandler() {
@@ -65,7 +62,7 @@ final class BytecodeEmittingHandlerGenerator {
 
     private void newClassWriter() {
         className = SCReflection.nextDynamicClassName(BytecodeEmittingHandlerGenerator.class.getPackage());
-        superName = Type.getInternalName(ToNbtHandler.class);
+        superName = chooseSuperName();
         cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         cw.visit(V1_7, 0, className, null, superName, null);
 
@@ -74,6 +71,15 @@ final class BytecodeEmittingHandlerGenerator {
         gen.invokeConstructor(Type.getObjectType(superName), getMethod("void <init>()"));
         gen.returnValue();
         gen.endMethod();
+    }
+
+    private String chooseSuperName() {
+        Class<?> superHClass = factory.getHandlerClass(clazz.getSuperclass());
+        return Type.getInternalName(superHClass == null ? ToNbtHandler.class : superHClass);
+    }
+
+    private boolean needCallSuper() {
+        return !superName.equals(Type.getInternalName(ToNbtHandler.class));
     }
 
     private void genFields() {
@@ -98,6 +104,7 @@ final class BytecodeEmittingHandlerGenerator {
         Method iterNext = getMethod("Object next()");
 
         GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC | ACC_STATIC, getMethod("void <clinit>()"), null, null, cw);
+        gen.visitCode();
 
         int iterLocal = gen.newLocal(iterType);
         gen.invokeStatic(generatorType, new Method("getStaticInfo", iterType, new Type[0]));
@@ -133,6 +140,14 @@ final class BytecodeEmittingHandlerGenerator {
     private void genWrite() {
         Method method = getMethod("void write(Object, net.minecraft.nbt.NBTTagCompound)");
         GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
+        gen.visitCode();
+
+        if (needCallSuper()) {
+            gen.loadThis();
+            gen.loadArg(0);
+            gen.loadArg(1);
+            gen.invokeConstructor(Type.getObjectType(superName), method);
+        }
 
         Type myType = Type.getObjectType(className);
         Type serializerType = Type.getType(NBTSerializer.class);
@@ -161,7 +176,16 @@ final class BytecodeEmittingHandlerGenerator {
     }
 
     private void genRead() {
-        GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, getMethod("void read(Object, net.minecraft.nbt.NBTTagCompound)"), null, null, cw);
+        Method method = getMethod("void read(Object, net.minecraft.nbt.NBTTagCompound)");
+        GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
+        gen.visitCode();
+
+        if (needCallSuper()) {
+            gen.loadThis();
+            gen.loadArg(0);
+            gen.loadArg(1);
+            gen.invokeConstructor(Type.getObjectType(superName), method);
+        }
 
         Type myType = Type.getObjectType(className);
         Type serializerType = Type.getType(NBTSerializer.class);
