@@ -8,7 +8,7 @@ import de.take_weiland.mods.commons.sync.Sync;
  */
 public class TestTE extends SuperTE implements SyncedInterface {
 
-    @Sync
+    @Sync @ToNbt
     public String test = "__nullval__";
 
     @Sync

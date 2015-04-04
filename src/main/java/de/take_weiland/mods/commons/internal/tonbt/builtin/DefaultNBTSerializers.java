@@ -6,9 +6,12 @@ import de.take_weiland.mods.commons.nbt.NBTSerializerFactory;
 import de.take_weiland.mods.commons.serialize.Property;
 import net.minecraft.nbt.*;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * @author diesieben07
  */
+@ParametersAreNonnullByDefault
 public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
     @Override
@@ -169,12 +172,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(String value) {
-            return new NBTTagString("", value);
+            return value.isEmpty() ? new NBTTagByte("", (byte) 0) : new NBTTagString("", value);
         }
 
         @Override
         public String read(String value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_STRING ? ((NBTTagString) nbt).data : null;
+            return nbt.getId() == NBT.TAG_STRING ? ((NBTTagString) nbt).data : "";
         }
     }
 
