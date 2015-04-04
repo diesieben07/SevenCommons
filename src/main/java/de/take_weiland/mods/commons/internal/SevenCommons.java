@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.primitives.Primitives;
 import cpw.mods.fml.client.FMLFileResourcePack;
 import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.common.DummyModContainer;
@@ -19,8 +18,8 @@ import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import de.take_weiland.mods.commons.internal.sync.PacketSync;
 import de.take_weiland.mods.commons.internal.sync.builtin.BuiltinSyncers;
-import de.take_weiland.mods.commons.nbt.BuiltinSerializers;
-import de.take_weiland.mods.commons.nbt.NBTSerializers;
+import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
+import de.take_weiland.mods.commons.internal.tonbt.builtin.DefaultNBTSerializers;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
 import de.take_weiland.mods.commons.sync.Syncing;
@@ -102,15 +101,8 @@ public final class SevenCommons extends DummyModContainer {
 
 		proxy.preInit(event);
 
-        BuiltinSerializers factory = new BuiltinSerializers();
-        NBTSerializers.register(Object.class, factory);
-        for (Class<?> prim : Primitives.allPrimitiveTypes()) {
-            if (prim != void.class) {
-                NBTSerializers.register(prim, factory);
-            }
-        }
-
 		Syncing.registerFactory(Object.class, new BuiltinSyncers());
+		ToNbtFactories.registerFactory(Object.class, new DefaultNBTSerializers());
 	}
 
 	@Subscribe

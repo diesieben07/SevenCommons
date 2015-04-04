@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.sync;
 
-import de.take_weiland.mods.commons.internal.sync.CompanionFactories;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanions;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -13,12 +13,14 @@ public final class Syncing {
 
     /**
      * <p>Register a {@link SyncerFactory}. This factory will get called back for any property that has type {@code baseClass}
-     * or a subclass or subinterface. If baseClass is Object, the factory will also receive callbacks for primitive types.</p>
+     * or a subclass or subinterface (e.g. a field of type {@code String} will query all factories registered for types
+     * {@code String}, {@code Serializable}, {@code Comparable}, {@code CharSequence}, {@code Object} in that order).
+     * If baseClass is Object, the factory will also receive callbacks for primitive types.</p>
      * @param baseClass the baseClass
      * @param factory the factory
      */
     public static void registerFactory(Class<?> baseClass, SyncerFactory factory) {
-        CompanionFactories.newFactory(baseClass, factory);
+        SyncCompanions.registerSyncerFactory(baseClass, factory);
     }
 
     private Syncing() { }

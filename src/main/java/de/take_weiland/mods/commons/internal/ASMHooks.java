@@ -6,9 +6,11 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.event.PlayerCloneEvent;
 import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
 import de.take_weiland.mods.commons.event.client.GuiInitEvent;
-import de.take_weiland.mods.commons.internal.sync.CompanionObjects;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanions;
 import de.take_weiland.mods.commons.internal.sync.IEEPSyncCompanion;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
+import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
+import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.util.SCReflector;
@@ -21,6 +23,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.packet.Packet250CustomPayload;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
@@ -79,7 +82,7 @@ public final class ASMHooks {
     public static final String ON_NEW_ENTITY_PROPS = "onNewEntityProps";
 
     public static void onNewEntityProps(Entity entity, IExtendedEntityProperties props, String identifier) throws Throwable {
-        IEEPSyncCompanion companion = (IEEPSyncCompanion) CompanionObjects.newCompanion(props.getClass());
+        IEEPSyncCompanion companion = (IEEPSyncCompanion) SyncCompanions.newCompanion(props.getClass());
         if (companion == null) {
             return;
         }
@@ -105,6 +108,24 @@ public final class ASMHooks {
         }
         companions.add(index, companion);
     }
+
+	public static final String WRITE_NBT_HOOK = "writeToNbtHook";
+
+	public static void writeToNbtHook(Object obj, NBTTagCompound nbt) {
+		ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
+		if (handler != null) {
+			handler.write(obj, nbt);
+		}
+	}
+
+	public static final String READ_NBT_HOOK = "readFromNbtHook";
+
+	public static void readFromNbtHook(Object obj, NBTTagCompound nbt) {
+		ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
+		if (handler != null) {
+			handler.read(obj, nbt);
+		}
+	}
 
     @SideOnly(Side.CLIENT)
 	public static boolean isUseableClient(Slot slot) {

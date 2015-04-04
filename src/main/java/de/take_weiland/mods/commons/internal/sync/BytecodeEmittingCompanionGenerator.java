@@ -1,11 +1,14 @@
 package de.take_weiland.mods.commons.internal.sync;
 
-import com.google.common.collect.Maps;
-import com.google.common.primitives.Primitives;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 import com.google.common.primitives.UnsignedBytes;
+import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.reflect.SCReflection;
+import de.take_weiland.mods.commons.serialize.Property;
 import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.UnsignedShorts;
 import net.minecraft.entity.Entity;
@@ -19,11 +22,13 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.commons.TableSwitchGenerator;
 
+import javax.annotation.Nullable;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
-import java.lang.reflect.Member;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 
+import static java.lang.invoke.MethodType.methodType;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -35,9 +40,10 @@ import static org.objectweb.asm.commons.Method.getMethod;
  */
 public final class BytecodeEmittingCompanionGenerator {
 
-    private static final String SYNCER = "syncer";
-
-    private static final String COMPANION = "companion";
+    private static final String SYNCER = "syn";
+    private static final String COMPANION = "com";
+    private static final String GETTER = "get";
+    private static final String SETTER = "set";
 
     private final DefaultCompanionFactory factory;
     private final Class<?> clazz;
@@ -46,19 +52,16 @@ public final class BytecodeEmittingCompanionGenerator {
     private String superName;
     private Class<?> superClass;
     private ClassWriter cw;
-    private List<CompanionFactory.SyncedMemberInfo> handles;
+    private final Map<Property<?, ?>, Syncer<?, ?>> properties;
     private int firstID;
 
-    BytecodeEmittingCompanionGenerator(DefaultCompanionFactory factory, Class<?> clazz) {
+    BytecodeEmittingCompanionGenerator(DefaultCompanionFactory factory, Class<?> clazz, Map<Property<?, ?>, Syncer<?, ?>> properties) {
         this.factory = factory;
         this.clazz = clazz;
+        this.properties = properties;
     }
 
     Class<?> generateCompanion() {
-        handles = CompanionFactories.getSyncedMemberInfo(clazz);
-        if (handles.isEmpty()) {
-            return null;
-        }
         beginClass();
 
         makeFields();
@@ -73,18 +76,18 @@ public final class BytecodeEmittingCompanionGenerator {
     }
 
     private void beginClass() {
-        className = SCReflection.nextDynamicClassName(clazz.getPackage());
+        className = SCReflection.nextDynamicClassName(BytecodeEmittingCompanionGenerator.class.getPackage());
 
         superClass = findAppropriateSuperClass();
         superName = Type.getInternalName(superClass);
         firstID = factory.getNextFreeIDFor(clazz);
 
         cw = new ClassWriter(COMPUTE_FRAMES);
-
         cw.visit(V1_7, ACC_PUBLIC, className, null, superName, null);
 
         Method cstr = getMethod("void <init>()");
         GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, cstr, null, null, cw);
+        gen.visitCode();
         gen.loadThis();
         gen.invokeConstructor(Type.getObjectType(superName), cstr);
         gen.returnValue();
@@ -105,14 +108,20 @@ public final class BytecodeEmittingCompanionGenerator {
     }
 
     private void makeFields() {
-        for (CompanionFactory.SyncedMemberInfo info : handles) {
+        for (Map.Entry<Property<?, ?>, Syncer<?, ?>> entry : properties.entrySet()) {
+            Property<?, ?> property = entry.getKey();
+            Syncer<?, ?> syncer = entry.getValue();
+
             String descSyncer = Type.getDescriptor(Syncer.class);
+            String descMH = Type.getDescriptor(MethodHandle.class);
 
-            cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, getMemberID(info.member, SYNCER), descSyncer, null, null);
+            cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, getPropertyID(property, SYNCER), descSyncer, null, null);
+            cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, getPropertyID(property, GETTER), descMH, null, null);
+            cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, getPropertyID(property, SETTER), descMH, null, null);
 
-            Class<?> companionType = info.syncer.getCompanionType();
+            Class<?> companionType = syncer.getCompanionType();
             if (companionType != null) {
-                cw.visitField(ACC_PRIVATE, getMemberID(info.member, COMPANION), Type.getDescriptor(companionType), null, null);
+                cw.visitField(ACC_PRIVATE, getPropertyID(property, COMPANION), Type.getDescriptor(companionType), null, null);
             }
         }
     }
@@ -120,6 +129,7 @@ public final class BytecodeEmittingCompanionGenerator {
     private void makeRead() {
         Method method = getMethod("int read(Object, de.take_weiland.mods.commons.net.MCDataInput)");
         final GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
+        gen.visitCode();
 
         final Type myType = Type.getObjectType(className);
         final Type mcDataInType = Type.getType(MCDataInput.class);
@@ -146,7 +156,7 @@ public final class BytecodeEmittingCompanionGenerator {
 
         Label start = gen.mark();
 
-        int keyCount = handles.size();
+        int keyCount = properties.size();
         int[] keys = new int[keyCount];
         for (int i = 0; i < keyCount; i++) {
             keys[i] = i + firstID;
@@ -156,27 +166,24 @@ public final class BytecodeEmittingCompanionGenerator {
         gen.tableSwitch(keys, new TableSwitchGenerator() {
             @Override
             public void generateCase(int key, Label end) {
-                CompanionFactory.SyncedMemberInfo info = handles.get(key - firstID);
-                boolean hasCompanion = info.syncer.getCompanionType() != null;
-                Type companionType = hasCompanion ? Type.getType(info.syncer.getCompanionType()) : null;
+                Map.Entry<Property<?, ?>, Syncer<?, ?>> entry = Iterables.get(properties.entrySet(), key - firstID);
+                Property<?, ?> property = entry.getKey();
+                Syncer<?, ?> syncer = entry.getValue();
 
-                gen.loadArg(objectArg); // for setter
-                gen.checkCast(valueHolderType);
+                boolean hasCompanion = syncer.getCompanionType() != null;
+                Type companionType = hasCompanion ? Type.getType(syncer.getCompanionType()) : null;
 
-                gen.getStatic(myType, getMemberID(info.member, SYNCER), syncerType);
-                gen.loadArg(objectArg);
-                gen.checkCast(valueHolderType);
-                loadMemberVal(gen, info.member);
-                if (info.type().isPrimitive()) {
-                    box(gen, info.type());
-                }
+                prepareSetValue(gen, property);
+
+                gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
+                loadValue(gen, property);
+
+                ASMUtils.convertTypes(gen, property.getRawType(), Object.class);
 
                 if (hasCompanion) {
                     gen.loadThis();
-                    gen.getField(myType, getMemberID(info.member, COMPANION), companionType);
-                    if (info.syncer.getCompanionType().isPrimitive()) {
-                        box(gen, info.syncer.getCompanionType());
-                    }
+                    gen.getField(myType, getPropertyID(property, COMPANION), companionType);
+                    ASMUtils.convertTypes(gen, syncer.getCompanionType(), Object.class);
                 } else {
                     gen.push((String) null); // type doesn't matter
                 }
@@ -184,11 +191,8 @@ public final class BytecodeEmittingCompanionGenerator {
 
                 gen.invokeInterface(syncerType, new Method("read", objectType, new Type[]{objectType, objectType, mcDataInType}));
 
-                gen.checkCast(Type.getType(Primitives.wrap(info.type())));
-                if (info.type().isPrimitive()) {
-                    unbox(gen, info.type());
-                }
-                storeMemberVal(gen, info);
+                ASMUtils.convertTypes(gen, Object.class, property.getRawType());
+                doSetValue(gen, property);
 
                 gen.goTo(end);
             }
@@ -209,28 +213,31 @@ public final class BytecodeEmittingCompanionGenerator {
         gen.endMethod();
     }
 
-    private static void loadMemberVal(GeneratorAdapter gen, Member member) {
-        if (member instanceof Field) {
-            gen.getField(Type.getType(member.getDeclaringClass()), member.getName(), Type.getType(((Field) member).getType()));
-        } else {
-            if (member.getDeclaringClass().isInterface()) {
-                gen.invokeInterface(Type.getType(member.getDeclaringClass()), getMethod((java.lang.reflect.Method) member));
-            } else {
-                gen.invokeVirtual(Type.getType(member.getDeclaringClass()), getMethod((java.lang.reflect.Method) member));
-            }
-        }
+    private void loadValue(GeneratorAdapter gen, Property<?, ?> property) {
+        Type myType = Type.getObjectType(className);
+        Type mhType = Type.getType(MethodHandle.class);
+        Type propertyType = Type.getType(property.getRawType());
+        Type objectType = Type.getType(Object.class);
+
+        gen.getStatic(myType, getPropertyID(property, GETTER), mhType);
+        gen.loadArg(0);
+        gen.invokeVirtual(mhType, new Method("invokeExact", propertyType, new Type[]{objectType}));
     }
 
-    private static void storeMemberVal(GeneratorAdapter gen, CompanionFactory.SyncedMemberInfo info) {
-        if (info.member instanceof Field) {
-            gen.putField(Type.getType(info.member.getDeclaringClass()), info.member.getName(), Type.getType(((Field) info.member).getType()));
-        } else {
-            if (info.setterMethod.getDeclaringClass().isInterface()) {
-                gen.invokeInterface(Type.getType(info.setterMethod.getDeclaringClass()), getMethod(info.setterMethod));
-            } else {
-                gen.invokeVirtual(Type.getType(info.setterMethod.getDeclaringClass()), getMethod(info.setterMethod));
-            }
-        }
+    private void prepareSetValue(GeneratorAdapter gen, Property<?, ?> property) {
+        Type myType = Type.getObjectType(className);
+        Type mhType = Type.getType(MethodHandle.class);
+
+        gen.getStatic(myType, getPropertyID(property, SETTER), mhType);
+        gen.loadArg(0);
+    }
+
+    private void doSetValue(GeneratorAdapter gen, Property<?, ?> property) {
+        Type mhType = Type.getType(MethodHandle.class);
+        Type propertyType = Type.getType(property.getRawType());
+        Type objectType = Type.getType(Object.class);
+
+        gen.invokeVirtual(mhType, new Method("invokeExact", Type.VOID_TYPE, new Type[] { objectType, propertyType }));
     }
 
     private static Method readIDMethod() {
@@ -240,6 +247,7 @@ public final class BytecodeEmittingCompanionGenerator {
     private void makeReadID() {
         Method method = readIDMethod();
         GeneratorAdapter gen = new GeneratorAdapter(0, method, null, null, cw);
+        gen.visitCode();
 
         Method readMethod = new Method("read" + idSize(true), INT_TYPE, new Type[0]);
         gen.loadArg(0);
@@ -249,7 +257,7 @@ public final class BytecodeEmittingCompanionGenerator {
     }
 
     private String idSize(boolean read) {
-        int maxId = firstID + handles.size() - 1;
+        int maxId = firstID + properties.size() - 1;
         if (maxId <= UnsignedBytes.toInt(UnsignedBytes.MAX_VALUE)) {
             return read ? "UnsignedByte" : "Byte";
         } else if (maxId <= UnsignedShorts.MAX_VALUE) {
@@ -266,6 +274,7 @@ public final class BytecodeEmittingCompanionGenerator {
     private void makeWriteID() {
         Method method = writeIDMethod();
         GeneratorAdapter gen = new GeneratorAdapter(0, method, null, null, cw);
+        gen.visitCode();
 
         Method writeMethod = new Method("write" + idSize(false), VOID_TYPE, new Type[] { INT_TYPE });
         gen.loadArg(0);
@@ -278,6 +287,7 @@ public final class BytecodeEmittingCompanionGenerator {
     private void makeCheck() {
         Method method = getMethod("de.take_weiland.mods.commons.net.MCDataOutput check(Object, boolean)");
         GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
+        gen.visitCode();
 
         Type mcDataOutType = Type.getType(MCDataOutput.class);
         Type syncHelpersType = Type.getType(SyncHelpers.class);
@@ -307,31 +317,27 @@ public final class BytecodeEmittingCompanionGenerator {
 
         SyncType syncType = SyncHelpers.getSyncType(clazz);
 
-        for (int index = 0, len = handles.size(); index < len; index++) {
-            CompanionFactory.SyncedMemberInfo info = handles.get(index);
+        int index = 0;
+        for (Map.Entry<Property<?, ?>, Syncer<?, ?>> entry : properties.entrySet()) {
+            Property<?, ?> property = entry.getKey();
+            Syncer<?, ?> syncer = entry.getValue();
 
             if (next != null) {
                 gen.mark(next);
             }
             next = new Label();
 
-            boolean hasCompanion = info.syncer.getCompanionType() != null;
-            Type companionType = hasCompanion ? Type.getType(info.syncer.getCompanionType()) : null;
+            boolean hasCompanion = syncer.getCompanionType() != null;
+            Type companionType = hasCompanion ? Type.getType(syncer.getCompanionType()) : null;
 
-            gen.getStatic(myType, getMemberID(info.member, SYNCER), syncerType);
-            gen.loadArg(objectArg);
-            gen.checkCast(valueHolderType);
-            loadMemberVal(gen, info.member);
-            if (info.type().isPrimitive()) {
-                box(gen, info.type());
-            }
+            gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
+            loadValue(gen, property);
+            ASMUtils.convertTypes(gen, property.getRawType(), Object.class);
 
             if (hasCompanion) {
                 gen.loadThis();
-                gen.getField(myType, getMemberID(info.member, COMPANION), companionType);
-                if (info.syncer.getCompanionType().isPrimitive()) {
-                    box(gen, info.syncer.getCompanionType());
-                }
+                gen.getField(myType, getPropertyID(property, COMPANION), companionType);
+                ASMUtils.convertTypes(gen, syncer.getCompanionType(), Object.class);
             } else {
                 gen.push((String) null); // type doesnt matter
             }
@@ -376,31 +382,22 @@ public final class BytecodeEmittingCompanionGenerator {
             if (hasCompanion) {
                 gen.loadThis(); // for companion set
             }
-            gen.getStatic(myType, getMemberID(info.member, SYNCER), syncerType);
-            gen.loadArg(objectArg);
-            gen.checkCast(valueHolderType);
-            loadMemberVal(gen, info.member);
-            if (info.type().isPrimitive()) {
-                box(gen, info.type());
-            }
+            gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
+            loadValue(gen, property);
+            ASMUtils.convertTypes(gen, property.getRawType(), Object.class);
 
             if (hasCompanion) {
                 gen.loadThis();
-                gen.getField(myType, getMemberID(info.member, COMPANION), companionType);
-                if (info.syncer.getCompanionType().isPrimitive()) {
-                    box(gen, info.syncer.getCompanionType());
-                }
+                gen.getField(myType, getPropertyID(property, COMPANION), companionType);
+                ASMUtils.convertTypes(gen, syncer.getCompanionType(), Object.class);
             } else {
                 gen.push((String) null);
             }
             gen.loadLocal(outStreamID);
             gen.invokeInterface(syncerType, getMethod("Object writeAndUpdate(Object, Object, de.take_weiland.mods.commons.net.MCDataOutput)"));
             if (hasCompanion) {
-                gen.checkCast(Type.getType(Primitives.wrap(info.syncer.getCompanionType())));
-                if (info.syncer.getCompanionType().isPrimitive()) {
-                    unbox(gen, info.syncer.getCompanionType());
-                }
-                gen.putField(myType, getMemberID(info.member, COMPANION), companionType);
+                ASMUtils.convertTypes(gen, Object.class, syncer.getCompanionType());
+                gen.putField(myType, getPropertyID(property, COMPANION), companionType);
             } else {
                 gen.pop();
             }
@@ -453,51 +450,61 @@ public final class BytecodeEmittingCompanionGenerator {
         gen.endMethod();
     }
 
-    private static void box(GeneratorAdapter gen, Class<?> primitive) {
-        Type wrapped = Type.getType(Primitives.wrap(primitive));
-        gen.invokeStatic(wrapped, new Method("valueOf", wrapped, new Type[] {  Type.getType(primitive) }));
-    }
-
-    private static void unbox(GeneratorAdapter gen, Class<?> primitive) {
-        Type wrapped = Type.getType(Primitives.wrap(primitive));
-        Type primType = Type.getType(primitive);
-        gen.invokeVirtual(wrapped, new Method(primType.getClassName() + "Value", primType, new Type[0]));
-    }
-
     private boolean needCallSuper() {
         return superClass != SyncCompanion.class && superClass != IEEPSyncCompanion.class;
     }
 
     private void makeCLInit() {
         GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC | ACC_STATIC, getMethod("void <clinit>()"), null, null, cw);
+        gen.visitCode();
 
         Type myType = getObjectType(className);
-        Type mapType = Type.getType(Map.class);
+        Type iteratorType = Type.getType(Iterator.class);
+        Type objectArrType = Type.getType(Object[].class);
+        Type objectType = Type.getType(Object.class);
+        Type methodHandleType = Type.getType(MethodHandle.class);
         Type syncerType = Type.getType(Syncer.class);
 
-        int map = gen.newLocal(mapType);
-        gen.invokeStatic(Type.getType(BytecodeEmittingCompanionGenerator.class), getMethod("java.util.Map getSyncers()"));
-        gen.storeLocal(map);
+        int iterator = gen.newLocal(iteratorType);
+        gen.invokeStatic(Type.getType(BytecodeEmittingCompanionGenerator.class), getMethod("java.util.Iterator getStaticData()"));
+        gen.storeLocal(iterator);
 
-        for (CompanionFactory.SyncedMemberInfo info : handles) {
-            gen.loadLocal(map);
-            gen.push(getMemberID(info.member));
-            gen.invokeInterface(mapType, getMethod("Object get(Object)"));
+        for (Property<?, ?> property : properties.keySet()) {
+            gen.loadLocal(iterator);
+            gen.invokeInterface(iteratorType, getMethod("Object next()"));
+            gen.checkCast(objectArrType);
+
+            gen.dup();
+            gen.push(0);
+            gen.arrayLoad(objectType);
             gen.checkCast(syncerType);
-            gen.putStatic(myType, getMemberID(info.member, SYNCER), syncerType);
+            gen.putStatic(myType, getPropertyID(property, SYNCER), syncerType);
+
+            gen.dup();
+            gen.push(1);
+            gen.arrayLoad(objectType);
+            gen.checkCast(methodHandleType);
+            gen.putStatic(myType, getPropertyID(property, GETTER), methodHandleType);
+
+            gen.push(2);
+            gen.arrayLoad(objectType);
+            gen.checkCast(methodHandleType);
+            gen.putStatic(myType, getPropertyID(property, SETTER), methodHandleType);
         }
 
         gen.returnValue();
         gen.endMethod();
     }
 
-    private static String getMemberID(Member member, String role) {
-        return getMemberID(member) + "$" + role;
+    private static String getPropertyID(Property<?, ?> property, String role) {
+        return getPropertyID(property) + "$" + role;
     }
 
-    private static String getMemberID(Member member) {
-        return member.getName() + (member instanceof Field ? "$f" : "$m");
+    private static String getPropertyID(Property<?, ?> property) {
+        return property.getName() + (property.getMember() instanceof Field ? "$f" : "$m");
     }
+
+    private static Map<Property<?, ?>, Syncer<?, ?>> staticProperties;
 
     private Class<?> finish() {
         Class<?> cls;
@@ -506,29 +513,37 @@ public final class BytecodeEmittingCompanionGenerator {
         synchronized (BytecodeEmittingCompanionGenerator.class) {
             // <clinit> of generated class calls getMHMap
 
-            staticHandles = handles;
+            staticProperties = properties;
             try {
                 cw.visitEnd();
                 cls = SCReflection.defineDynamicClass(cw.toByteArray(), BytecodeEmittingCompanionGenerator.class);
             } finally{
-                staticHandles = null;
+                staticProperties = null;
             }
         }
 
         return cls;
     }
 
-    private static List<CompanionFactory.SyncedMemberInfo> staticHandles;
-
     // called from <clinit> in generated classes, see #finish()
-    public static Map<String, Syncer<?, ?>> getSyncers() throws NoSuchFieldException, IllegalAccessException {
-        Map<String, Syncer<?, ?>> map = Maps.newHashMapWithExpectedSize(staticHandles.size());
+    @SuppressWarnings("unused")
+    static Iterator<Object[]> getStaticData() throws NoSuchFieldException, IllegalAccessException {
+        return FluentIterable.from(staticProperties.entrySet())
+                .transform(new Function<Map.Entry<Property<?,?>,Syncer<?,?>>, Object[]>() {
+                    @Nullable
+                    @Override
+                    public Object[] apply(Map.Entry<Property<?, ?>, Syncer<?, ?>> entry) {
+                        Property<?, ?> property = entry.getKey();
+                        Syncer<?, ?> syncer = entry.getValue();
 
-        for (CompanionFactory.SyncedMemberInfo info : staticHandles) {
-            map.put(getMemberID(info.member), info.syncer);
-        }
-
-        return map;
+                        return new Object[] {
+                                syncer,
+                                property.getGetter().asType(methodType(property.getRawType(), Object.class)),
+                                property.getSetter().asType(methodType(void.class, Object.class, property.getRawType()))
+                        };
+                    }
+                })
+                .iterator();
     }
 
 }

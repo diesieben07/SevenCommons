@@ -102,7 +102,7 @@ public abstract class VisitorBasedTransformer implements IClassTransformer {
             }
         }
         if (cv != null) {
-            cr.accept(cv, 0);
+            cr.accept(cv, ClassReader.SKIP_FRAMES); // skip frames since we compute them again anyways
             return cw.toByteArray();
         } else {
             return bytes;

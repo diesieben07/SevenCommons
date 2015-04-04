@@ -16,6 +16,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.tree.*;
 
 import javax.annotation.Nullable;
@@ -45,6 +46,49 @@ public final class ASMUtils {
 	 * <p>The {@code Object} class as an ASM Type.</p>
 	 */
 	public static final Type OBJECT_TYPE = Type.getType(Object.class);
+
+	public static void convertTypes(GeneratorAdapter gen, Class<?> from, Class<?> to) {
+		Type fromT = Type.getType(from);
+		Type toT = Type.getType(to);
+
+		if (from.isPrimitive() && to.isPrimitive()) {
+			gen.cast(fromT, toT);
+		} else {
+			if (from.isPrimitive()) {
+				Class<?> boxed = Primitives.wrap(from);
+				box(gen, boxed);
+				if (!to.isAssignableFrom(boxed)) {
+					gen.checkCast(toT);
+				}
+			} else if (to.isPrimitive()) {
+				Class<?> boxed = Primitives.wrap(to);
+				if (!boxed.isAssignableFrom(from)) {
+					gen.checkCast(Type.getType(boxed));
+				}
+				unbox(gen, to);
+			} else {
+				if (!to.isAssignableFrom(from)) {
+					gen.checkCast(toT);
+				}
+			}
+		}
+	}
+
+	private static void box(GeneratorAdapter gen, Class<?> boxed) {
+		Type boxedT = Type.getType(boxed);
+		Type primT = Type.getType(Primitives.unwrap(boxed));
+		org.objectweb.asm.commons.Method boxMethod = new org.objectweb.asm.commons.Method("valueOf", boxedT, new Type[] {primT});
+
+		gen.invokeStatic(boxedT, boxMethod);
+	}
+
+	private static void unbox(GeneratorAdapter gen, Class<?> primitive) {
+		Type boxedT = Type.getType(Primitives.wrap(primitive));
+		Type primT = Type.getType(primitive);
+
+		org.objectweb.asm.commons.Method unboxMethod = new org.objectweb.asm.commons.Method(primT.getClassName() + "Value", primT, new Type[0]);
+		gen.invokeVirtual(boxedT, unboxMethod);
+	}
 
 	// *** bytecode analyzing helpers *** //
 

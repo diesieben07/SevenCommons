@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
-import de.take_weiland.mods.commons.serialize.TypeSpecification;
+import de.take_weiland.mods.commons.serialize.Property;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -33,7 +33,7 @@ final class NBTSerializerMethods {
         try {
             MethodHandles.Lookup lookup = MethodHandles.lookup();
 
-            GET_RAW_TYPE = lookup.findVirtual(TypeSpecification.class, "getRawType", methodType(Class.class));
+            GET_RAW_TYPE = lookup.findVirtual(Property.class, "getRawType", methodType(Class.class));
 
             CLASS_EQUAL = lookup.findStatic(NBTSerializerMethods.class, "equal", methodType(boolean.class, Class.class, Class.class));
 

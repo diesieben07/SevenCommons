@@ -4,6 +4,7 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
@@ -41,6 +42,12 @@ public class testmod_sc {
 
             @Override
             public boolean onBlockActivated(World world, int par2, int par3, int par4, EntityPlayer player, int par6, float par7, float par8, float par9) {
+                if (Sides.logical(world).isServer()) {
+                    TestTE te = (TestTE) world.getBlockTileEntity(par2, par3, par4);
+                    player.addChatMessage("old val: " + te.test);
+                    te.test = String.valueOf(world.rand.nextFloat());
+                    player.addChatMessage("new val: " + te.test);
+                }
 //                PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
 //                if (Sides.logical(world).isClient()) {
 //                    player.addChatMessage("On client: " + props.getSomeData());

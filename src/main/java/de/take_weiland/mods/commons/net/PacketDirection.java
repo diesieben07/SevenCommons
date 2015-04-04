@@ -38,7 +38,7 @@ public @interface PacketDirection {
 
         public final Side validTarget;
 
-        private Dir(Side validTarget) {
+        Dir(Side validTarget) {
             this.validTarget = validTarget;
         }
 

@@ -4,22 +4,50 @@ import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Member;
 
 /**
  * <p>Information about a Property.</p>
  *
  * @author diesieben07
  */
-public interface TypeSpecification<T> {
+public interface Property<T, M extends AccessibleObject & Member & AnnotatedElement> {
 
 	/**
-	 * <p>Return a TypeToken representing the type of the property.</p>
+	 * <p>Get the underlying Member for this property. For a getter/setter based property this returns the getter method.</p>
+	 * @return the Member
+	 */
+	M getMember();
+
+	/**
+	 * <p>Get a MethodHandle that gets this property.</p>
+	 * @return a MethodHandle
+	 */
+	MethodHandle getGetter();
+
+	/**
+	 * <p>Get a MethodHandle that sets this property.</p>
+	 * @return a MethodHandle
+	 */
+	MethodHandle getSetter();
+
+	/**
+	 * <p>The name of this property.</p>
+	 * @return the name
+	 */
+	String getName();
+
+	/**
+	 * <p>Get a TypeToken representing the type of the property.</p>
 	 * @return a TypeToken
 	 */
 	TypeToken<T> getType();
 
 	/**
-	 * <p>Return the raw type of the property. The raw type of {@code List&lt;String&gt;} is {@code List}.</p>
+	 * <p>Get the raw type of the property. The raw type of {@code List&lt;String&gt;} is {@code List}.</p>
 	 * @return the raw type
 	 */
 	Class<? super T> getRawType();

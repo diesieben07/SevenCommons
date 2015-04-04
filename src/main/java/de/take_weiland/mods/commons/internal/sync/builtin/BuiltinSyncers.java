@@ -1,9 +1,9 @@
 package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.SerializationMethod;
-import de.take_weiland.mods.commons.serialize.TypeSpecification;
-import de.take_weiland.mods.commons.sync.Syncer;
+import de.take_weiland.mods.commons.serialize.Property;
 import de.take_weiland.mods.commons.sync.SyncCapacity;
+import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.sync.SyncerFactory;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -23,7 +23,7 @@ public final class BuiltinSyncers implements SyncerFactory {
     private final Map<Class<?>, Syncer<?, ?>> cache = new HashMap<>();
 
     @Override
-    public <V, C> Syncer<V, C> getSyncer(TypeSpecification<V> type) {
+    public <V, C> Syncer<V, C> getSyncer(Property<V, ?> type) {
         Class<? super V> raw = type.getRawType();
 
         Syncer<?, ?> syncer;
@@ -65,7 +65,7 @@ public final class BuiltinSyncers implements SyncerFactory {
         }
     }
 
-    private static Syncer<?, ?> getSpecialSyncer(Class<?> raw, TypeSpecification<?> spec) {
+    private static Syncer<?, ?> getSpecialSyncer(Class<?> raw, Property<?, ?> spec) {
         if (FluidTank.class.isAssignableFrom(raw)) {
             if (spec.hasAnnotation(SyncCapacity.class)) {
                 return FluidTankAndCapacitySyncer.INSTANCE;

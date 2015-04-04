@@ -267,6 +267,12 @@ public final class MCPNames {
 
     public static final String M_INIT_GUI = "func_73866_w_";
 
+	public static final String M_ENTITY_WRITE_NBT = "func_70109_d";
+	public static final String M_ENTITY_READ_NBT = "func_70020_e";
+
+	public static final String M_TILE_ENTITY_READ_NBT = "func_70307_a";
+	public static final String M_TILE_ENTITY_WRITE_NBT = "func_70310_b";
+
 	private MCPNames() { }
 
 }

@@ -3,6 +3,8 @@ package de.take_weiland.mods.commons.internal.transformers;
 import com.google.common.base.Predicate;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.transformers.sync.*;
+import de.take_weiland.mods.commons.internal.transformers.tonbt.EntityNBTHook;
+import de.take_weiland.mods.commons.internal.transformers.tonbt.TileEntityNBTHook;
 
 /**
  * @author diesieben07
@@ -15,11 +17,15 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
                 "net/minecraft/entity/Entity",
                 "net/minecraft/inventory/Container");
 
+        // @Sync hooks
         addEntry(TileEntityTickHook.class, "net/minecraft/world/World");
         addEntry(EntityTickHook.class, "net/minecraft/world/World");
         addEntry(ContainerTickHook.class, "net/minecraft/inventory/Container");
-
         addEntry(EntitySyncPropsHooks.class, "net/minecraft/entity/Entity");
+
+        // @ToNbt hooks
+        addEntry(EntityNBTHook.class, "net/minecraft/entity/Entity");
+        addEntry(TileEntityNBTHook.class, "net/minecraft/tileentity/TileEntity");
 
         addEntry(ContainerGetInventoriesSupport.class, "net/minecraft/inventory/Container");
 
