@@ -3,13 +3,12 @@ package de.take_weiland.mods.commons.internal;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.reflect.Reflection;
 import cpw.mods.fml.client.FMLFileResourcePack;
 import cpw.mods.fml.client.FMLFolderResourcePack;
-import cpw.mods.fml.common.DummyModContainer;
-import cpw.mods.fml.common.LoadController;
-import cpw.mods.fml.common.ModMetadata;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import cpw.mods.fml.common.*;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLStateEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
@@ -24,10 +23,13 @@ import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketHandler;
 import de.take_weiland.mods.commons.sync.Syncing;
 import de.take_weiland.mods.commons.util.Logging;
+import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraftforge.common.Configuration;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -47,7 +49,8 @@ public final class SevenCommons extends DummyModContainer {
 	public static PacketHandler packets;
 	public static final int SYNC_PACKET_ID = 0;
 
-	private static List<Runnable> postInitCallbacks = new ArrayList<>();
+	private static EnumMap<LoaderState.ModState, List<Runnable>> stateCallbacks = new EnumMap<>(LoaderState.ModState.class);
+	private static EnumSet<LoaderState.ModState> reachedStates = EnumSet.noneOf(LoaderState.ModState.class);
 
 	public SevenCommons() {
 		super(new ModMetadata());
@@ -96,6 +99,9 @@ public final class SevenCommons extends DummyModContainer {
 
 		ClassInfoUtil.preInit();
 
+		// initialize the lazy statics in the scheduler class
+		Reflection.initialize(Scheduler.class);
+
 		TickRegistry.registerTickHandler(new SCPlayerTicker(), Side.SERVER);
 		GameRegistry.registerPlayerTracker(new SCPlayerTracker());
 
@@ -103,16 +109,6 @@ public final class SevenCommons extends DummyModContainer {
 
 		Syncing.registerFactory(Object.class, new BuiltinSyncers());
 		ToNbtFactories.registerFactory(Object.class, new DefaultNBTSerializers());
-	}
-
-	@Subscribe
-	public void postInit(FMLPostInitializationEvent event) {
-		synchronized (SevenCommons.class) {
-			for (Runnable callback : postInitCallbacks) {
-				callback.run();
-			}
-			postInitCallbacks = null;
-		}
 	}
 
 	@Override
@@ -125,12 +121,35 @@ public final class SevenCommons extends DummyModContainer {
 		return getSource().isDirectory() ? FMLFolderResourcePack.class : FMLFileResourcePack.class;
 	}
 
-	public static void registerPostInitCallback(Runnable callback) {
+	@Subscribe
+	public void doStateCallback(FMLStateEvent event) {
 		synchronized (SevenCommons.class) {
-			if (postInitCallbacks == null) {
+			if (stateCallbacks != null) {
+				List<Runnable> list = stateCallbacks.remove(event.getModState());
+				if (list != null) {
+					for (Runnable runnable : list) {
+						runnable.run();
+					}
+				}
+				reachedStates.add(event.getModState());
+				if (event.getModState() == LoaderState.ModState.POSTINITIALIZED) {
+					stateCallbacks = null;
+					reachedStates = null;
+				}
+			}
+		}
+	}
+
+	public static void registerStateCallback(LoaderState.ModState state, Runnable callback) {
+		synchronized (SevenCommons.class) {
+			if (stateCallbacks == null || reachedStates.contains(state)) {
 				callback.run();
 			} else {
-				postInitCallbacks.add(callback);
+				List<Runnable> list = stateCallbacks.get(state);
+				if (list == null) {
+					stateCallbacks.put(state, list = new ArrayList<>());
+				}
+				list.add(callback);
 			}
 		}
 	}

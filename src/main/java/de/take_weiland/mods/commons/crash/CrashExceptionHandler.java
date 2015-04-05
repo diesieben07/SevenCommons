@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.crash;
 
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Scheduler;
+import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.util.ReportedException;
@@ -14,7 +16,7 @@ enum CrashExceptionHandler implements Thread.UncaughtExceptionHandler {
 
 	@Override
 	public void uncaughtException(Thread t, Throwable e) {
-		ReportedException re;
+		final ReportedException re;
 		if (e instanceof ReportedException) {
 			re = (ReportedException) e;
 		} else {
@@ -26,6 +28,11 @@ enum CrashExceptionHandler implements Thread.UncaughtExceptionHandler {
 			cat.addCrashSection("Thread Status", t.getState());
 			re = new ReportedException(cr);
 		}
-		Scheduler.forEnvironment().throwInMainThread(re);
+		Scheduler.forSide(Sides.environment()).execute(new Runnable() {
+			@Override
+			public void run() {
+				throw JavaUtils.throwUnchecked(re);
+			}
+		});
 	}
 }

@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.tonbt;
 
+import cpw.mods.fml.common.LoaderState;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.TypeToFactoryMap;
 import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
@@ -32,7 +33,7 @@ public final class ToNbtFactories {
     };
 
     static {
-        SevenCommons.registerPostInitCallback(new Runnable() {
+        SevenCommons.registerStateCallback(LoaderState.ModState.POSTINITIALIZED, new Runnable() {
             @Override
             public void run() {
                 serializerFactories.freeze();
