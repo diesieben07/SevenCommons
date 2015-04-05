@@ -1,31 +1,24 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.reflect.Getter;
 import de.take_weiland.mods.commons.reflect.Invoke;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.jetbrains.annotations.NotNull;
-import org.objectweb.asm.Type;
 import sun.misc.JavaLangAccess;
 import sun.misc.SharedSecrets;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
  * <p>Various utility methods.</p>
@@ -63,6 +56,12 @@ public final class JavaUtils {
 		}
 	}
 
+	/**
+	 * <p>Return a proper hashCode for the given object. If the object is an array, the appropriate hashCode method in
+	 * the {@link Arrays} class will be called.</p>
+	 * @param o the object
+	 * @return a hash code for the object
+	 */
 	public static int hashCode(Object o) {
 		if (o instanceof boolean[]) {
 			return Arrays.hashCode((boolean[]) o);
@@ -87,28 +86,6 @@ public final class JavaUtils {
 		}
 	}
 
-	public static String defaultToString(@Nullable Object o) {
-		return o == null ? "null" : o.getClass().getName() + '@' + Integer.toHexString(o.hashCode());
-	}
-
-    public static String getNiceSimpleName(Class<?> clazz) {
-        if (clazz.isPrimitive()) {
-            return Type.getType(clazz).getClassName();
-        } else {
-            return clazz.getSimpleName();
-        }
-    }
-
-    public static int[] intRange(int from, int to) {
-        checkArgument(to > from, "to must be > from");
-        int size = to - from;
-        int[] arr = new int[size];
-        for (int i = 0; i < size; i++) {
-            arr[i] = i + from;
-        }
-        return arr;
-    }
-
 	/**
 	 * <p>Returns the value at the given index in the arrayor null if the index is out of bounds.</p>
 	 * @param array the array
@@ -131,16 +108,6 @@ public final class JavaUtils {
 	}
 
 	/**
-	 * <p>Checks whether the given index exists in the given array.</p>
-	 * @param array the array
-	 * @param index the index
-	 * @return true if the index is not out of bounds
-	 */
-	public static boolean indexExists(Object[] array, int index) {
-		return index >= 0 && index < array.length;
-	}
-
-	/**
 	 * <p>Returns the value at the given index in the List or null if the index is out of bounds.</p>
 	 * @param list the List
 	 * @param index the index
@@ -159,16 +126,6 @@ public final class JavaUtils {
 	 */
 	public static <T, D extends T, V extends T> T get(List<V> list, int index, D defaultValue) {
 		return index >= 0 && index < list.size() ? list.get(index) : defaultValue;
-	}
-
-	/**
-	 * <p>Checks whether the given index exists in the given List.</p>
-	 * @param list the List
-	 * @param index the index
-	 * @return true if the index is not out of bounds
-	 */
-	public static boolean indexExists(List<?> list, int index) {
-		return index >= 0 && index < list.size();
 	}
 
 	/**
@@ -194,91 +151,6 @@ public final class JavaUtils {
 		}
 	}
 
-	/**
-	 * <p>Return the given List if it is not {@code null}, an empty, immutable List otherwise.</p>
-	 * @param list the List
-	 * @return {@code list} itself if it is not {@code null}, {@code Collections.emptyList()} otherwise.
-	 */
-	public static <T> List<T> nullToEmpty(@Nullable List<T> list) {
-		return list == null ? Collections.<T>emptyList() : list;
-	}
-
-	/**
-	 * <p>Concatenate the two Lists. The resulting List is an unmodifiable view.</p>
-	 * @param first the first List
-	 * @param second the second List
-	 * @return the concatenated List
-	 */
-	public static <T> List<T> concat(List<? extends T> first, List<? extends T> second) {
-		return new ConcatList<>(first, second);
-	}
-
-	/**
-	 * <p>Concatenate the two Lists, where {@code null} is considered an empty List.
-	 * The resulting List is an unmodifiable view.</p>
-	 * @param first the first List
-	 * @param second the second List
-	 * @return the concatenated List
-	 */
-	public static <T> List<T> concatNullable(@Nullable List<? extends T> first, @Nullable List<? extends T> second) {
-		if (first == null) {
-			return second == null ? Collections.<T>emptyList() : Collections.unmodifiableList(second);
-		} else if (second == null) {
-			return Collections.unmodifiableList(first);
-		} else {
-			return concat(first, second);
-		}
-	}
-
-	/**
-	 * <p>Concatenate the given Iterables, where {@code null} stands for an empty Iterable.</p>
-	 * @param first the first Iterable
-	 * @param second the second Iterable
-	 * @return {@code first} and {@code second} concatenated
-	 */
-	public static <T> Iterable<T> concatNullable(@Nullable Iterable<T> first, @Nullable Iterable<T> second) {
-		if (first == null) {
-			if (second == null) {
-				return Collections.emptyList();
-			} else {
-				return second;
-			}
-		} else if (second == null) {
-			return first;
-		} else {
-			return Iterables.concat(first, second);
-		}
-	}
-
-	/**
-	 * <p>Creates a new {@link com.google.common.base.Predicate} that returns true if the input is an instance
-	 * of the given class and the given predicate also applies to true.</p>
-	 *
-	 * @param clazz the Class to check for
-	 * @param predicate the Predicate
-	 * @return a new Predicate
-	 */
-	public static <T, F> Predicate<T> instanceOfAnd(final Class<F> clazz, final Predicate<? super F> predicate) {
-		return new Predicate<T>() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public boolean apply(@Nullable T input) {
-				// cast to F is safe because we check isInstance first
-				return clazz.isInstance(input) && predicate.apply((F) input);
-			}
-		};
-	}
-
-	public static <F, T> Function<F, T> doIfElse(final Predicate<? super F> condition, final Function<? super F, ? extends T> ifTrue, final Function<? super F, ? extends T> ifFalse) {
-		return new Function<F, T>() {
-			@Nullable
-			@Override
-			public T apply(@Nullable F input) {
-				return condition.apply(input) ? ifTrue.apply(input) : ifFalse.apply(input);
-			}
-		};
-	}
-
 	public static <T extends Cloneable> T clone(T t) {
 		try {
 			//noinspection unchecked
@@ -286,6 +158,15 @@ public final class JavaUtils {
 		} catch (CloneNotSupportedException e) {
 			throw new IllegalArgumentException("Tried to clone a non-cloneable object " + t, e);
 		}
+	}
+
+	private interface CloneableAcc {
+
+		CloneableAcc instance = SCReflection.createAccessor(CloneableAcc.class);
+
+		@Invoke(method = "clone")
+		Object clone(Object t) throws CloneNotSupportedException;
+
 	}
 
 	/**
@@ -324,9 +205,9 @@ public final class JavaUtils {
 	}
 
 	static final class InterfaceIterator extends AbstractIterator<Class<?>> {
-
 		private final Iterator<Class<?>> hierarchy;
 		private final Predicate<Class<?>> ifaceFilter;
+
 		private Iterator<Class<?>> currentIfaces;
 
 		InterfaceIterator(Iterator<Class<?>> hierarchy) {
@@ -340,7 +221,6 @@ public final class JavaUtils {
 				}
 			};
 		}
-
 		@Override
 		protected Class<?> computeNext() {
 			if (currentIfaces != null && currentIfaces.hasNext()) {
@@ -353,6 +233,7 @@ public final class JavaUtils {
 				return next;
 			}
 		}
+
 	}
 
 	static final class HierarchyIterator extends AbstractIterator<Class<?>> {
@@ -362,7 +243,6 @@ public final class JavaUtils {
 		HierarchyIterator(Class<?> root) {
 			this.current = root;
 		}
-
 		@Override
 		protected Class<?> computeNext() {
 			Class<?> next = current;
@@ -373,14 +253,6 @@ public final class JavaUtils {
 				return next;
 			}
 		}
-	}
-
-	private static interface CloneableAcc {
-
-		CloneableAcc instance = SCReflection.createAccessor(CloneableAcc.class);
-
-		@Invoke(method = "clone")
-		Object clone(Object t) throws CloneNotSupportedException;
 
 	}
 
@@ -404,47 +276,6 @@ public final class JavaUtils {
 		throw (T) t;
 	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static <T> Function<T, Class<? extends T>> getClassFunction() {
-		// T.getClass returns Class<T> or subclass
-		return (Function) GetClassFunc.INSTANCE;
-	}
-
-	private enum GetClassFunc implements Function<Object, Class<?>> {
-
-		INSTANCE;
-
-		@Nullable
-		@Override
-		public Class<?> apply(@Nullable Object input) {
-			assert input != null;
-			return input.getClass();
-		}
-
-	}
-	public static boolean isVisible(Class<? extends Annotation> annotationClass) {
-		Retention ret = annotationClass.getAnnotation(Retention.class);
-		return ret != null && ret.value() == RetentionPolicy.RUNTIME;
-	}
-
-	/**
-	 * <p>Get the number of dimensions of the given class if it represents an array or 0 otherwise.</p>
-	 * @param clazz the class
-	 * @return the number of dimensions
-	 */
-	public static int getDimensions(Class<?> clazz) {
-		int dims = 0;
-		String name = clazz.getName();
-		for (int i = 0, len = name.length(); i < len; i++) {
-			if (name.charAt(i) != '[') {
-				return dims;
-			} else {
-				dims++;
-			}
-		}
-		throw new AssertionError("Class.getName() is empty?!");
-	}
-
 	/**
 	 * <p>Get all constants defined in the given enum class. This is equivalent to {@code E.values()} except that the array
 	 * returned by this method is not cloned and as thus shared across the entire application. <strong>Therefor the
@@ -454,7 +285,48 @@ public final class JavaUtils {
 	 */
 	@Unsafe
 	public static <E extends Enum<E>> E[] getEnumConstantsShared(Class<E> clazz) {
-		return enumValuesGetter().getEnumValues(clazz);
+		return EnumValuesGetter.instance.getEnumValues(clazz);
+	}
+
+	abstract static class EnumValuesGetter {
+
+		static final EnumValuesGetter instance;
+
+		static {
+			EnumValuesGetter e;
+			try {
+				Class.forName("sun.misc.SharedSecrets");
+				e = (EnumValuesGetter) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").newInstance();
+			} catch (Throwable t) {
+				SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
+				e = new EnumGetterCloned();
+			}
+			instance = e;
+		}
+
+		abstract <T extends Enum<T>> T[] getEnumValues(Class<T> clazz);
+
+	}
+
+	final static class EnumGetterCloned extends EnumValuesGetter {
+
+		@Override
+		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
+			return clazz.getEnumConstants();
+		}
+
+	}
+
+	@SuppressWarnings("unused")
+	final static class EnumGetterShared extends EnumValuesGetter {
+
+		private static final JavaLangAccess langAcc = SharedSecrets.getJavaLangAccess();
+
+		@Override
+		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
+			return langAcc.getEnumConstantsShared(clazz);
+		}
+
 	}
 
 	/**
@@ -474,7 +346,38 @@ public final class JavaUtils {
 	 * @return the type of enum values
 	 */
 	public static <E extends Enum<E>> Class<E> getType(EnumSet<E> enumSet) {
-		return enumSetTypeGetter().getEnumType(enumSet);
+		try {
+			//noinspection unchecked
+			return (Class<E>) EnumSetAcc.getter.invokeExact(enumSet);
+		} catch (Throwable t) {
+			throw throwUnchecked(t);
+		}
+	}
+
+	@SuppressWarnings("UtilityClassWithoutPrivateConstructor")
+	static final class EnumSetAcc {
+
+		static final MethodHandle getter;
+
+		static {
+			Field result = null;
+			for (Field field : EnumSet.class.getDeclaredFields()) {
+				if (!Modifier.isStatic(field.getModifiers()) && field.getType() == Class.class) {
+					result = field;
+					break;
+				}
+			}
+			if (result == null) {
+				throw new RuntimeException("Failed to find type field in EnumSet!");
+			}
+			result.setAccessible(true);
+			try {
+				getter = publicLookup().unreflectGetter(result);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
 	}
 
 	/**
@@ -498,128 +401,36 @@ public final class JavaUtils {
 		initUnsafe();
 		return (T) unsafe;
 	}
-
 	private static Object unsafe;
-	private static boolean unsafeChecked;
+
+	private static volatile boolean unsafeChecked;
 
 	private static void initUnsafe() {
 		if (unsafeChecked) {
 			return;
 		}
-		unsafeChecked = true;
-		try {
-			Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
-			for (Field field : unsafeClass.getDeclaredFields()) {
-				if (!Modifier.isStatic(field.getModifiers())) {
-					continue;
-				}
-				field.setAccessible(true);
-				Object value = field.get(null);
-				if (unsafeClass.isInstance(value)) {
-					unsafe = value;
-					break;
-				}
-			}
-		} catch (Exception e) {
-			// no unsafe
-		}
-	}
+		synchronized (JavaUtils.class) {
+			if (unsafeChecked) return;
 
-	private static EnumValuesGetter enumValuesGetter;
-
-	private static EnumValuesGetter enumValuesGetter() {
-		EnumValuesGetter e = enumValuesGetter;
-		if (e != null) return e;
-
-		try {
-			Class.forName("sun.misc.SharedSecrets");
-			enumValuesGetter = (EnumValuesGetter) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").newInstance();
-		} catch (Throwable t) {
-			SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
-			enumValuesGetter = new EnumGetterCloned();
-		}
-		return enumValuesGetter;
-	}
-
-	private static EnumSetTypeGetter enumSetTypeGetter;
-
-	private static EnumSetTypeGetter enumSetTypeGetter() {
-		EnumSetTypeGetter e = enumSetTypeGetter;
-		if (e != null) return e;
-
-		Field result = null;
-		for (Field field : EnumSet.class.getDeclaredFields()) {
-			if (!Modifier.isStatic(field.getModifiers()) && field.getType() == Class.class) {
-				result = field;
-				break;
-			}
-		}
-		if (result == null) {
-			throw new RuntimeException("Failed to find type field in EnumSet!");
-		}
-		if (result.getName().equals("elementType")) {
-			enumSetTypeGetter = SCReflection.createAccessor(EnumSetTypeGetter.class);
-		} else {
-			enumSetTypeGetter = new EnumSetTypeGetterReflect(result);
-		}
-		return enumSetTypeGetter;
-	}
-
-	abstract static class EnumValuesGetter {
-
-		abstract <T extends Enum<T>> T[] getEnumValues(Class<T> clazz);
-
-	}
-
-	final static class EnumGetterCloned extends EnumValuesGetter {
-
-		@Override
-		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
-			return clazz.getEnumConstants();
-		}
-
-	}
-
-	final static class EnumGetterShared extends EnumValuesGetter {
-
-		private static final JavaLangAccess langAcc = SharedSecrets.getJavaLangAccess();
-
-		@Override
-		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
-			return langAcc.getEnumConstantsShared(clazz);
-		}
-
-	}
-
-	interface EnumSetTypeGetter {
-
-		@Getter(field = "elementType")
-		<E extends Enum<E>> Class<E> getEnumType(EnumSet<E> enumSet);
-
-	}
-
-
-	final static class EnumSetTypeGetterReflect implements EnumSetTypeGetter {
-
-		private final Field field;
-
-		EnumSetTypeGetterReflect(Field field) {
-			this.field = field;
-			field.setAccessible(true);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final <E extends Enum<E>> Class<E> getEnumType(EnumSet<E> set) {
+			unsafeChecked = true;
 			try {
-				return (Class<E>) field.get(set);
-			} catch (IllegalAccessException e) {
-				throw Throwables.propagate(e);
+				Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+				for (Field field : unsafeClass.getDeclaredFields()) {
+					if (!Modifier.isStatic(field.getModifiers())) {
+						continue;
+					}
+					field.setAccessible(true);
+					Object value = field.get(null);
+					if (unsafeClass.isInstance(value)) {
+						unsafe = value;
+						break;
+					}
+				}
+			} catch (Exception e) {
+				// no unsafe
 			}
 		}
 	}
-
-
 
 	private JavaUtils() { }
 
