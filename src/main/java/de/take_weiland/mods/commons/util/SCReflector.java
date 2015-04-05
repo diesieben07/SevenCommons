@@ -86,8 +86,8 @@ public interface SCReflector {
 	Map<ResourceLocation, TextureObject> getTexturesMap(TextureManager manager);
 
 	@Unsafe
-	@Getter(field = F_PACKET_CLASS_TO_ID_MAP, srg = true)
-	Map<Class<? extends Packet>, Integer> getClassToIdMap(Packet dummy);
+	@Getter(field = F_PACKET_CLASS_TO_ID_MAP, srg = true, target = Packet.class)
+	Map<Class<? extends Packet>, Integer> getClassToIdMap();
 
 	@SideOnly(Side.CLIENT)
 	@Getter(field = F_BUTTON_LIST, srg = true)
@@ -100,7 +100,7 @@ public interface SCReflector {
 	String getRawUnlocalizedName(Block block);
 
 	@Invoke(method = M_SET_HAS_SUBTYPES, srg = true)
-	Item setHasSubtypes(Item instance, boolean value);
+	Item setHasSubtypes(Item item, boolean value);
 
 	@Getter(field = F_ICON_STRING, srg = true)
 	String getRawIconName(Item item);

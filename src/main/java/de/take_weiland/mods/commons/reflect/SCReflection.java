@@ -30,18 +30,16 @@ import static java.lang.invoke.MethodHandles.publicLookup;
 @ParametersAreNonnullByDefault
 public final class SCReflection {
 
-	private SCReflection() { }
-
-	private static final boolean DEBUG;
-
-	static {
-		DEBUG = Boolean.getBoolean("sevencommons.reflect.debug");
-	}
+    private static final Logger logger = SevenCommonsLoader.scLogger("Reflection");
+    private static final ReflectionStrategy strategy = selectStrategy();
+    private static final AtomicInteger nextDynClassId = new AtomicInteger(0);
+	private static final boolean DEBUG = Boolean.getBoolean("sevencommons.reflect.debug");
 
 	/**
-	 * <p>Create an object that implements the given Accessor Interface. The result of this method should be permanently cached, because
-	 * this method defines a new class every time it is invoked.</p>
-	 * <p>The given class must be an interface. All methods must be marked with one of {@link de.take_weiland.mods.commons.reflect.Getter},
+	 * <p>Create an object that implements the given Accessor Interface. The result of this method should be permanently cached,
+     * because this operation is likely to be relatively expensive.</p>
+	 * <p>The given class must be an interface and must not extend any other interfaces.
+     * All methods must be marked with one of {@link de.take_weiland.mods.commons.reflect.Getter},
 	 * {@link de.take_weiland.mods.commons.reflect.Setter}, {@link de.take_weiland.mods.commons.reflect.Invoke} or {@link de.take_weiland.mods.commons.reflect.Construct}
 	 * and comply with the respective contract.</p>
 	 *
@@ -49,9 +47,14 @@ public final class SCReflection {
 	 * @return a newly created object, implementing the given interface
 	 */
 	public static <T> T createAccessor(Class<T> iface) {
-		return strategy.createAccessor(iface);
-	}
-
+        try {
+            return strategy.createAccessor(iface);
+        } catch (IllegalAccessorException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalAccessorException("Failed to parse accessor interface " + iface.getName(), e);
+        }
+    }
     public static Method findSetter(Method getter) {
         checkArgument(getter.getParameterTypes().length == 0);
         Class<?> type = getter.getReturnType();
@@ -82,33 +85,44 @@ public final class SCReflection {
         }
     }
 
+    private static Class<? extends Annotation> scalaSigClass;
+
+
+    private static Class<? extends Annotation> scalaLongSigClass;
+
+    /**
+     * <p>Tries to determine if the given class is a scala class.</p>
+     * <p>If this method returns true, the class is most definitely a scala class. If it however returns false,
+     * that is not an indication that the class is <i>not</i> a scala class.</p>
+     * @param clazz the class to check
+     * @return true if the class is a scala class
+     */
     public static boolean isScala(Class<?> clazz) {
         try {
-            Class<?> scalaSigClazz = Class.forName("scala.reflect.ScalaSignature");
-            if (clazz.isAnnotationPresent(scalaSigClazz.asSubclass(Annotation.class))) {
-                return true;
-            }
-            scalaSigClazz = Class.forName("scala.reflect.ScalaLongSignature");
-            if (clazz.isAnnotationPresent(scalaSigClazz.asSubclass(Annotation.class))) {
-                return true;
+            if (scalaSigClass == null) {
+                scalaSigClass = Class.forName("scala.reflect.ScalaSignature")
+                        .asSubclass(Annotation.class);
+
+                scalaLongSigClass = Class.forName("scala.reflect.ScalaLongSignature")
+                        .asSubclass(Annotation.class);
             }
         } catch (ClassNotFoundException e) {
             // ignored
         }
-        return ClassInfo.of(clazz).getSourceFile().endsWith(".scala");
+        // if these classes are not found use a dummy annotation that will never be present
+        // to avoid checking Class.forName over and over again
+        if (scalaSigClass == null) {
+            scalaSigClass = Override.class;
+        }
+        if (scalaLongSigClass == null) {
+            scalaLongSigClass = Override.class;
+        }
+        return clazz.isAnnotationPresent(scalaSigClass)
+                || clazz.isAnnotationPresent(scalaLongSigClass)
+                || ClassInfo.of(clazz).getSourceFile().endsWith(".scala");
     }
 
     private static final MethodHandle CLASS_LOADER_DEFINE;
-
-    /**
-     * <p>Define a new Class specified by the given bytes.</p>
-     *
-     * @param bytes the bytes describing the class
-     * @return the defined class
-     */
-    public static Class<?> defineDynamicClass(byte[] bytes) {
-        return defineDynamicClass(bytes, SCReflection.class);
-    }
 
     static {
         try {
@@ -120,6 +134,16 @@ public final class SCReflection {
         } catch (IllegalAccessException e) {
             throw new AssertionError("impossible");
         }
+    }
+
+    /**
+     * <p>Define a new Class specified by the given bytes.</p>
+     *
+     * @param bytes the bytes describing the class
+     * @return the defined class
+     */
+    public static Class<?> defineDynamicClass(byte[] bytes) {
+        return defineDynamicClass(bytes, SCReflection.class);
     }
 
 	/**
@@ -171,33 +195,19 @@ public final class SCReflection {
 	public static String nextDynamicClassName(Package pkg) {
 		return nextDynamicClassName(pkg.getName());
 	}
-
-	/**
+    /**
 	 * <p>Get a new unique class name in the given package as an internal name.</p>
 	 *
 	 * @param pkg the package
 	 * @return a unique name
 	 */
 	public static String nextDynamicClassName(String pkg) {
-		return ASMUtils.internalName(pkg) + "/_sc_dyn_" + nextId.getAndIncrement();
+		return ASMUtils.internalName(pkg) + "/_sc_dyn_" + nextDynClassId.getAndIncrement();
 	}
-
-	private static final Logger logger = SevenCommonsLoader.scLogger("Reflection");
-	private static final AtomicInteger nextId = new AtomicInteger(0);
-	private static final ReflectionStrategy strategy = selectStrategy();
-
 	private static ReflectionStrategy selectStrategy() {
-		try {
-			return (ReflectionStrategy) Class.forName("de.take_weiland.mods.commons.reflect.UnsafeStrategy")
-					.newInstance();
-		} catch (Throwable e) {
-			e.printStackTrace();
-			// then not
-		}
-
-		logger.warning("Using slow Strategy! This may lead to performance penalties. Please use Oracle's VM.");
-
-		return new PureJavaStrategy();
+        return new MethodHandleStrategy();
 	}
+
+    private SCReflection() { }
 
 }

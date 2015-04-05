@@ -11,11 +11,11 @@ import java.lang.annotation.Target;
  * @author diesieben07
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Target({ ElementType.METHOD, ElementType.PARAMETER })
 public @interface OverrideTarget {
 
 	/**
-	 * <p>The name of the class to use as the actual target for teh accessor method. The class must be a assignable to the
+	 * <p>The name of the class to use as the actual target for the accessor method. The class must be a assignable to the
 	 * target class used in the signature of the target method.</p>
 	 * @return a class name
 	 */

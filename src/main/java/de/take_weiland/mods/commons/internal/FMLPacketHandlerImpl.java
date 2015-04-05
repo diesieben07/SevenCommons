@@ -173,7 +173,7 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
 	}
 
     static {
-        Map<Class<? extends Packet>, Integer> classToIdMap = SCReflector.instance.getClassToIdMap(null);
+        Map<Class<? extends Packet>, Integer> classToIdMap = SCReflector.instance.getClassToIdMap();
         classToIdMap.put(Packet250Fake.class, 250);
         classToIdMap.put(Packet250FakeNoMP.class, 250);
     }

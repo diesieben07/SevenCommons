@@ -8,7 +8,7 @@ import de.take_weiland.mods.commons.reflect.SCReflection;
  */
 public interface InternalReflector {
 
-	public static final InternalReflector instance = SCReflection.createAccessor(InternalReflector.class);
+	InternalReflector instance = SCReflection.createAccessor(InternalReflector.class);
 
 	@Invoke(method = "findLoadedClass")
 	Class<?> findLoadedClass(ClassLoader classLoader, String name);

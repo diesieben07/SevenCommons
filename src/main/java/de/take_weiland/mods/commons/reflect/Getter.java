@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.reflect;
 
+import de.take_weiland.mods.commons.internal.AnnotationNull;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -7,15 +9,26 @@ import java.lang.annotation.Target;
 
 /**
  * <p>Define a method in an Accessor Interface as being a getter for a field.</p>
- * <p>The method must take exactly one non-primitive parameter, which defines the class that holds the field.
- * The return type of this method must match the field type.</p>
- * <p>When calling this method on a generated accessor instance, the parameter is ignored for static fields (pass null), otherwise it serves as the instance to get the field from.</p>
- * <p>Example:<pre><code>
- * &#0064;Getter(field = "foo")
- * int getFoo(T obj);
+ * <p>For static targets the method must take no parameters. For non-static targets the method must take exactly
+ * one parameter of a reference type specifying the instance to get the field from.</p>
+ * <p>For static targets {@link #target()} specifies the target class, otherwise the type of the parameter is used.</p>
+ * <p>{@link OverrideTarget &#0064;OverrideTarget} on the method may be used in any case to override the target class.</p>
+ * <p>The return type of the method must be {@linkplain Class#isAssignableFrom(Class) assignable from} or the same
+ * as the target field type.</p>
+ * <p>Examples (declaration as in the accessor interface and symbolic implementation):<pre><code>
+ * &#0064;Getter(field = "foo", target = FooBar.class)
+ * int getFoo();
  *
  * &#0064;Getter(field = "field_12345_a", srg = true)
- * int getBar(T obj);
+ * int getBar(FooBar obj);
+ *
+ * int getFoo() {
+ *     return FooBar.foo;
+ * }
+ *
+ * int getBar(FooBar obj) {
+ *     return obj.field_12345_a;
+ * }
  * </code></pre></p>
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -36,5 +49,7 @@ public @interface Getter {
 	 * @return true if it is a SRG field
 	 */
 	boolean srg() default false;
+
+	Class<?> target() default AnnotationNull.class;
 
 }

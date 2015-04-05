@@ -3,16 +3,21 @@ package de.take_weiland.mods.commons.asm.info;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import de.take_weiland.mods.commons.asm.ASMUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Type;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+
+import static org.objectweb.asm.Opcodes.*;
 
 /**
  * @author diesieben07
@@ -218,12 +223,35 @@ final class ClassInfoReflect extends ClassInfo {
     @Override
     public String getSourceFile() {
         if (sourceFileCache == null) {
-            try (InputStream in = clazz.getResourceAsStream('/' + clazz.getName().replace('.', '/') + ".class")) {
-                sourceFileCache = ASMUtils.getThinClassNode(ByteStreams.toByteArray(in)).sourceFile;
-            } catch (Exception e) {
-                sourceFileCache = ""; // empty = not known
-            }
+	        InputStream in = clazz.getResourceAsStream('/' + clazz.getName().replace('.', '/') + ".class");
+	        if (in != null) {
+		        try {
+			        ClassReader cr = new ClassReader(ByteStreams.toByteArray(in));
+			        SourceFileExtractor extractor = new SourceFileExtractor();
+			        cr.accept(extractor, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+			        sourceFileCache = Strings.nullToEmpty(extractor.sourceFile);
+		        } catch (IOException e) {
+			        sourceFileCache = "";
+		        } finally {
+			        IOUtils.closeQuietly(in);
+		        }
+	        }
         }
         return Strings.emptyToNull(sourceFileCache);
     }
+
+	private static final class SourceFileExtractor extends ClassVisitor {
+
+		String sourceFile;
+
+		SourceFileExtractor() {
+			super(ASM4, null);
+		}
+
+		@Override
+		public void visitSource(String source, String debug) {
+			sourceFile = source;
+			super.visitSource(source, debug);
+		}
+	}
 }

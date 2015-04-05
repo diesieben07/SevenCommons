@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.reflect;
 
+import de.take_weiland.mods.commons.internal.AnnotationNull;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -7,17 +9,26 @@ import java.lang.annotation.Target;
 
 /**
  * <p>Define a method in an Accessor Interface as being a setter for a field.</p>
- * <p>The method must take exactly two parameters. The first one, non-primitive, defines the class that holds the field.
- * The second parameter must match the field type.
- * The return type of the method must be void.</p>
- * <p>When calling this method on a generated accessor instance, the first parameter is ignored for static fields (pass null),
- * otherwise it serves as the instance to set the field on.</p>
- * <p>Example:<pre><code>
- * &#0064;Setter(field = "foo")
- * void setFoo(T obj, int foo);
+ * <p>For static targets the method must take one parameter. For non-static targets that parameter must be preceded
+ * by a reference type specifying the instance to set the field on.</p>
+ * <p>For static targets {@link #target()} specifies the target class, otherwise the type of the first parameter is used.</p>
+ * <p>{@link OverrideTarget &#0064;OverrideTarget} on the method may be used in any case to override the target class.</p>
+ * <p>The return type of the method must be {@code void}. The target field type must be {@linkplain Class#isAssignableFrom(Class) assignable from}
+ * or the same as the last parameter type.</p>
+ * <p>Examples (declaration as in the accessor interface and symbolic implementation):<pre><code>
+ * &#0064;Setter(field = "foo", target = FooBar.class)
+ * void setFoo(int foo);
  *
  * &#0064;Setter(field = "field_12345_a", srg = true)
- * void setBar(T obj, int bar);
+ * void setBar(FooBar obj, int bar);
+ *
+ * void setFoo(int foo) {
+ *     FooBar.foo = foo;
+ * }
+ *
+ * void setBar(FooBar obj, int bar) {
+ *     obj.field_12345_a = bar;
+ * }
  * </code></pre></p>
  */
 
@@ -40,4 +51,5 @@ public @interface Setter {
 	 */
 	boolean srg() default false;
 
+	Class<?> target() default AnnotationNull.class;
 }
