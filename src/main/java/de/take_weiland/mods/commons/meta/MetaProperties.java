@@ -39,11 +39,8 @@ public final class MetaProperties {
 		checkBit(startBit);
 		int len = checkNotNull(values, "values").length;
 		checkArgument(len >= 2, "Need at least 2 elements");
-		if (len == 2) {
-			return new DualValueProperty<>(startBit, values[0], values[1]);
-		} else {
-			return new RegularArrayProperty<>(startBit, values);
-		}
+
+		return new RegularArrayProperty<>(startBit, values);
 	}
 
 	/**
