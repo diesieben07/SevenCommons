@@ -1,7 +1,12 @@
 package de.take_weiland.mods.commons.meta;
 
+import com.google.common.collect.ContiguousSet;
+import com.google.common.collect.DiscreteDomain;
+import com.google.common.collect.Range;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+
+import java.util.Set;
 
 /**
  * @author diesieben07
@@ -10,10 +15,12 @@ class IntPropertyImpl extends GenericProperty<Integer> implements IntProperty {
 
 	private final int shift;
 	private final int mask;
+	private final Set<Integer> values;
 
 	IntPropertyImpl(int shift, int bits) {
 		this.shift = shift;
 		this.mask = (1 << bits) - 1;
+		values = ContiguousSet.create(Range.closedOpen(0, 1 << bits), DiscreteDomain.integers());
 	}
 
 	@Override
@@ -63,8 +70,8 @@ class IntPropertyImpl extends GenericProperty<Integer> implements IntProperty {
 	}
 
 	@Override
-	public Integer[] values() {
-		throw new UnsupportedOperationException();
+	public Set<Integer> values() {
+		return values;
 	}
 
 	@Override

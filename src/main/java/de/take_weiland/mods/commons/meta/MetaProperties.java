@@ -47,9 +47,18 @@ public final class MetaProperties {
 	}
 
 	/**
+	 * @deprecated use {@link #newProperty(int, Class)} for Enum properties
+	 */
+	@Deprecated
+	@SafeVarargs
+	public static <T extends Enum<T>> MetadataProperty<T> newProperty(int startBit, T... values) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
 	 * <p>Create a new MetadataProperty, representing a boolean value.</p>
 	 *
-	 * @param startBit the first bit containing the data (0-31)
+	 * @param startBit the bit containing the data (0-31)
 	 * @return a BooleanProperty
 	 */
 	public static BooleanProperty newBooleanProperty(int startBit) {
@@ -151,66 +160,7 @@ public final class MetaProperties {
 		return p3.toMeta(v3, p2.toMeta(v2, p1.toMeta(v1, meta)));
 	}
 
-	/**
-	 * <p>Create a metadata value that represents all four values.</p>
-	 *
-	 * @param p1 the first MetadataProperty
-	 * @param v1 the value for the first property
-	 * @param p2 the second MetadataProperty
-	 * @param v2 the value for the second property
-	 * @param p3 the third MetadataProperty
-	 * @param v3 the value for the third property
-	 * @param p4 the fourth MetadataProperty
-	 * @param v4 the value for the fourth property
-	 * @return a metadata value
-	 */
-	public static <A, B, C, D> int combine(MetadataProperty<? super A> p1, A v1, MetadataProperty<? super B> p2, B v2, MetadataProperty<? super C> p3, C v3, MetadataProperty<? super D> p4, D v4) {
-		return apply(0, p1, v1, p2, v2, p3, v3, p4, v4);
-	}
-
-	/**
-	 * <p>Apply all four values to the ItemStack.</p>
-	 *
-	 * @param p1 the first MetadataProperty
-	 * @param v1 the value for the first property
-	 * @param p2 the second MetadataProperty
-	 * @param v2 the value for the second property
-	 * @param p3 the third MetadataProperty
-	 * @param v3 the value for the third property
-	 * @param p4 the fourth MetadataProperty
-	 * @param v4 the value for the fourth property
-	 */
-	public static <A, B, C, D> void apply(ItemStack stack, MetadataProperty<? super A> p1, A v1, MetadataProperty<? super B> p2, B v2, MetadataProperty<? super C> p3, C v3, MetadataProperty<? super D> p4, D v4) {
-		stack.setItemDamage(apply(stack.getItemDamage(), p1, v1, p2, v2, p3, v3, p4, v4));
-	}
-
-	/**
-	 * <p>Apply all four value to the given metadata.</p>
-	 *
-	 * @param p1 the first MetadataProperty
-	 * @param v1 the value for the first property
-	 * @param p2 the second MetadataProperty
-	 * @param v2 the value for the second property
-	 * @param p3 the third MetadataProperty
-	 * @param v3 the value for the third property
-	 * @param p4 the fourth MetadataProperty
-	 * @param v4 the value for the fourth property
-	 * @return the new metadata
-	 */
-	public static <A, B, C, D> int apply(int base, MetadataProperty<? super A> p1, A v1, MetadataProperty<? super B> p2, B v2, MetadataProperty<? super C> p3, C v3, MetadataProperty<? super D> p4, D v4) {
-		return p4.toMeta(v4, p3.toMeta(v3, p2.toMeta(v2, p1.toMeta(v1, base))));
-	}
-
-	// going beyond 4 is madness, for anything more use the MetaBuilder
-
-	/**
-	 * @deprecated use {@link #newProperty(int, Class)} for Enum properties
-	 */
-	@Deprecated
-	@SafeVarargs
-	public static <T extends Enum<T>> MetadataProperty<T> newProperty(int shift, T... values) {
-		throw new UnsupportedOperationException();
-	}
+	// going beyond 3 is madness, for anything more use the MetaBuilder
 
 	private static int checkBit(int bit) {
 		checkArgument(bit >= 0 && bit <= 31, "Invalid start bit");

@@ -138,8 +138,7 @@ public final class ItemStacks {
 	@SuppressWarnings("unchecked")
 	static <T extends Enum<T> & Subtype> void registerSubstacks(String baseName, Item item) {
 		MetadataProperty<T> prop = ((HasSubtypes<T>) item).subtypeProperty();
-		T[] types = prop.values();
-		for (T type : types) {
+		for (T type : prop.values()) {
 			ItemStack stack = new ItemStack(item);
 			stack.setItemDamage(prop.toMeta(type, 0));
 

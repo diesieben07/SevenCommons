@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.meta;
 
 import java.lang.reflect.Array;
+import java.util.Set;
 
 /**
  * @author diesieben07
@@ -35,7 +36,7 @@ class DualValueProperty<T> extends GenericProperty<T> {
 	private T[] values;
 
 	@Override
-	public T[] values() {
+	public Set<T> values() {
 		return values == null ? (values = createValues()) : values;
 	}
 

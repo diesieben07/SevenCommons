@@ -40,7 +40,7 @@ abstract class GenericProperty<T> implements MetadataProperty<T> {
 	@Override
 	public <V> Map<T, V> createMap() {
 		if (hasDistinctValues()) {
-			return Maps.newHashMapWithExpectedSize(values().length);
+			return Maps.newHashMapWithExpectedSize(values().size());
 		} else {
 			return Maps.newHashMap();
 		}

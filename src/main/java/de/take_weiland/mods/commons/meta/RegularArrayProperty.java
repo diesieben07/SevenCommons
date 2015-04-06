@@ -10,7 +10,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author diesieben07
  */
-class RegularArrayProperty<T> extends AbstractArrayProperty<T> {
+final class RegularArrayProperty<T> extends AbstractArrayProperty<T> {
 
 	private final Map<T, Integer> lookup;
 

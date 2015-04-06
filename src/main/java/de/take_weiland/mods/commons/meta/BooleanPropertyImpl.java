@@ -1,7 +1,10 @@
 package de.take_weiland.mods.commons.meta;
 
+import com.google.common.collect.ImmutableSet;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+
+import java.util.Set;
 
 /**
  * @author diesieben07
@@ -10,7 +13,7 @@ final class BooleanPropertyImpl extends GenericProperty<Boolean> implements Bool
 
 	private static final BooleanPropertyImpl[] cache = new BooleanPropertyImpl[32];
 
-	static BooleanPropertyImpl get(int shift) {
+	static synchronized BooleanPropertyImpl get(int shift) {
 		if (cache[shift] == null) {
 			cache[shift] = new BooleanPropertyImpl(shift);
 		}
@@ -69,11 +72,11 @@ final class BooleanPropertyImpl extends GenericProperty<Boolean> implements Bool
 		return toMeta(value.booleanValue(), previousMeta);
 	}
 
-	private static Boolean[] values;
+	private static final Set<Boolean> values = ImmutableSet.of(Boolean.FALSE, Boolean.TRUE);
 
 	@Override
-	public Boolean[] values() {
-		return values == null ? (values = new Boolean[] { Boolean.FALSE, Boolean.TRUE }) : values;
+	public Set<Boolean> values() {
+		return values;
 	}
 
 	@Override

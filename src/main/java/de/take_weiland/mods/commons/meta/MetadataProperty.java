@@ -4,6 +4,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>A property of a Block or Item, encoded in it's metadata / damage value.</p>
@@ -94,8 +95,13 @@ public interface MetadataProperty<T> {
 	 * @return all possible values of this property
 	 * @throws java.lang.UnsupportedOperationException if this method doesn't have distinct values
 	 */
-	T[] values();
+	Set<T> values();
 
+	/**
+	 * <p>Create a mutable Map for mapping values of this property to objects of type {@code V}.</p>
+	 * <p>It is encouraged that implementations of this method choose an appropriate Map type based on the key type.</p>
+	 * @return a newly created, empty mutable Map
+	 */
 	<V> Map<T, V> createMap();
 
 }

@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.meta;
 
-import de.take_weiland.mods.commons.util.JavaUtils;
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -9,7 +11,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 abstract class AbstractArrayProperty<T> extends GenericProperty<T> {
 
-	final T[] values;
+	private final ImmutableSet<T> valuesSet;
 	private final int shift;
 	private final int mask;
 
@@ -19,12 +21,12 @@ abstract class AbstractArrayProperty<T> extends GenericProperty<T> {
 		int bitCount = Integer.numberOfTrailingZeros(Integer.highestOneBit(values.length - 1)) + 1;
 		checkArgument(shift >= bitCount + 1, "Too many values for given shift (need at least %s)", bitCount - 1);
 		this.mask = (1 << bitCount) - 1;
-		this.values = values;
+		valuesSet = ImmutableSet.copyOf(values);
 	}
 
 	@Override
-	public final T[] values() {
-		return values;
+	public final Set<T> values() {
+		return valuesSet;
 	}
 
 	@Override
@@ -34,7 +36,7 @@ abstract class AbstractArrayProperty<T> extends GenericProperty<T> {
 
 	@Override
 	public final T value(int metadata) {
-		return JavaUtils.get(values, (metadata >> shift) & mask);
+		return valuesSet.asList().get((metadata >> shift) & mask);
 	}
 
 	@Override
