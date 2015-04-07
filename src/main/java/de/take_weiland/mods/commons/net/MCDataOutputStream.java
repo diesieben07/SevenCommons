@@ -32,11 +32,7 @@ public abstract class MCDataOutputStream extends OutputStream implements MCDataO
 	 */
 	public static MCDataOutputStream create(int initialCapacity) {
 		checkArgument(initialCapacity >= 0, "initialCapacity must be >= 0");
-		if (BufferUtils.useUnsafe) {
-			return new MCDataOutputImplUnsafe(initialCapacity);
-		} else {
-			return new MCDataOutputImplNonUnsafe(initialCapacity);
-		}
+		return new MCDataOutputImplNonUnsafe(initialCapacity);
 	}
 
 	MCDataOutputStream() { }

@@ -22,14 +22,14 @@ public class PacketInventoryName extends ModPacket {
 	}
 
 	@Override
-    public void write(MCDataOutputStream out) {
+    public void write(MCDataOutput out) {
 		out.writeByte(windowId);
 		out.writeByte(invIdx);
 		out.writeString(name);
 	}
 
 	@Override
-    public void read(MCDataInputStream in, EntityPlayer player, Side side) {
+    public void read(MCDataInput in, EntityPlayer player, Side side) {
 		windowId = in.readByte();
 		invIdx = in.readByte();
 		name = in.readString();

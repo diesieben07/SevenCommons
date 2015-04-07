@@ -14,19 +14,6 @@ public abstract class MCDataOutputTest {
 	abstract MCDataOutputImpl newStream();
 	abstract MCDataOutputImpl newStream(int cap);
 
-	public static class ForUnsafe extends MCDataOutputTest {
-
-		@Override
-		MCDataOutputImpl newStream() {
-			return new MCDataOutputImplUnsafe(64);
-		}
-
-		@Override
-		MCDataOutputImpl newStream(int cap) {
-			return new MCDataOutputImplUnsafe(cap);
-		}
-	}
-
 	public static class NonUnsafe extends MCDataOutputTest {
 
 		@Override

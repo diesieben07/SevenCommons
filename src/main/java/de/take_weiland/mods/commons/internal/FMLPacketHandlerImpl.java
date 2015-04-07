@@ -96,7 +96,7 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
 
 	@Override
 	public void onPacketData(INetworkManager manager, Packet250CustomPayload packet, Player fmlPlayer) {
-		MCDataInputStream in = MCDataInputStream.create(packet.data, 0, packet.length);
+		MCDataInput in = Network.newDataInput(packet.data, 0, packet.length);
 		EntityPlayer player = (EntityPlayer) fmlPlayer;
 
 		int id = in.readVarInt();
@@ -105,16 +105,16 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
 		handlePacket(in, player, modPacket, packetInfo.get(modPacket.getClass()));
 	}
 
-	final void handlePacket(MCDataInputStream in, EntityPlayer player) {
+	final void handlePacket(MCDataInput in, EntityPlayer player) {
         ModPacket packet = newPacket(in.readVarInt());
         handlePacket(in, player, packet, packetInfo.get(packet.getClass()));
 	}
 
-	static void handlePacket(MCDataInputStream in, EntityPlayer player, ModPacket modPacket, ModPacketInfo info) {
+	static void handlePacket(MCDataInput in, EntityPlayer player, ModPacket modPacket, ModPacketInfo info) {
 		Side side = Sides.logical(player);
         try {
             if (!info.isValidTarget(side)) {
-				throw new ProtocolException(String.format("Packet received on wrong Side!"));
+				throw new ProtocolException("Packet received on wrong Side!");
 			}
 			modPacket.read(in, player, side);
 			modPacket.execute(player, side);

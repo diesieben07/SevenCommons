@@ -27,14 +27,14 @@ public abstract class ModPacket implements SimplePacket {
 
 	/**
 	 * <p>Write your packet data to the stream. A stream containing the same data will be passed to
-	 * {@link #read(MCDataInputStream, net.minecraft.entity.player.EntityPlayer, cpw.mods.fml.relauncher.Side)} when the
+	 * {@link #read(MCDataInput, EntityPlayer, Side)} when the
 	 * packet is received.</p>
 	 * @param out the stream
 	 */
-	public abstract void write(MCDataOutputStream out);
+	public abstract void write(MCDataOutput out);
 
 	/**
-	 * <p>Read your packet data from the stream. The stream contains the data written in {@link #write(MCDataOutputStream)}.</p>
+	 * <p>Read your packet data from the stream. The stream contains the data written in {@link #write(MCDataOutput)}.</p>
 	 * <p>On the server, the player is the player sending the packet, on the client it is the client player (receiving the packet).</p>
 	 * @param in the stream
 	 * @param player the context player
@@ -42,12 +42,12 @@ public abstract class ModPacket implements SimplePacket {
 	 * @throws IOException if an IOException occurs while reading the data
 	 * @throws ProtocolException if the data received violates the protocol
 	 */
-	public abstract void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException;
+	public abstract void read(MCDataInput in, EntityPlayer player, Side side) throws IOException, ProtocolException;
 
 	/**
 	 * <p>Execute this packet's action. This method is called when the packet is received, after the data has been read
-	 * with {@link #read(MCDataInputStream, net.minecraft.entity.player.EntityPlayer, cpw.mods.fml.relauncher.Side)}.</p>
-	 * @param player the context player (see {@link #read(MCDataInputStream, net.minecraft.entity.player.EntityPlayer, cpw.mods.fml.relauncher.Side)}
+	 * with {@link #read(MCDataInput, EntityPlayer, Side)}.</p>
+	 * @param player the context player (see {@link #read(MCDataInput, EntityPlayer, Side)}
 	 * @param side the logical side receiving the packet
 	 * @throws ProtocolException if the data received violates the protocol
 	 */

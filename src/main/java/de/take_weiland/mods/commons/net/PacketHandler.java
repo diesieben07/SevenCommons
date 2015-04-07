@@ -10,8 +10,8 @@ public interface PacketHandler {
 	/**
 	 * <p>Create a new MCDataOutputStream that can be used to send packets of the given ID. The ID must be one used when
 	 * this PacketHandler was created using {@link de.take_weiland.mods.commons.net.Network#newChannel(String)}.</p>
-	 * <p>If you use this method, the {@link de.take_weiland.mods.commons.net.ModPacket#write(MCDataOutputStream)} method
-	 * for the corresponding packet class will be bypassed. Only {@link de.take_weiland.mods.commons.net.ModPacket#read(MCDataInputStream, net.minecraft.entity.player.EntityPlayer, cpw.mods.fml.relauncher.Side)}
+	 * <p>If you use this method, the {@link ModPacket#write(MCDataOutput)} method
+	 * for the corresponding packet class will be bypassed. Only {@link ModPacket#read(MCDataInput, net.minecraft.entity.player.EntityPlayer, cpw.mods.fml.relauncher.Side)}
 	 * will be called when the packet is received.</p>
 	 * @param packetId the packetId
 	 * @return an MCDataOutputStream

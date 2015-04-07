@@ -22,13 +22,13 @@ public final class PacketContainerButton extends ModPacket {
 	}
 
 	@Override
-    public void write(MCDataOutputStream out) {
+    public void write(MCDataOutput out) {
 		out.writeByte(windowId);
 		out.writeVarInt(buttonId);
 	}
 
 	@Override
-    public void read(MCDataInputStream in, EntityPlayer player, Side side) throws IOException, ProtocolException {
+    public void read(MCDataInput in, EntityPlayer player, Side side) throws IOException, ProtocolException {
 		windowId = in.readUnsignedByte();
 		buttonId = in.readVarInt();
 	}

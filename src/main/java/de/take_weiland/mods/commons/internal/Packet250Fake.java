@@ -1,7 +1,8 @@
 package de.take_weiland.mods.commons.internal;
 
-import de.take_weiland.mods.commons.net.MCDataInputStream;
+import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.ModPacket;
+import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.network.packet.NetHandler;
 import net.minecraft.network.packet.Packet250CustomPayload;
@@ -40,7 +41,7 @@ public class Packet250Fake extends Packet250CustomPayload {
 
 	@Override
 	public void processPacket(NetHandler nh) {
-		MCDataInputStream in = MCDataInputStream.create(data, 0, length);
+		MCDataInput in = Network.newDataInput(data, 0, length);
 		in.readVarInt(); // skip packet ID
         FMLPacketHandlerImpl.handlePacket(in, nh.getPlayer(), modPacket, packetInfo);
 	}

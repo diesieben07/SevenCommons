@@ -21,7 +21,7 @@ import java.util.UUID;
  * <p>This interface is mostly intended for network communication purposes and <i>not</i> for reading data from disk.
  * Additionally this interface specifies <b>Little Endian</b> byte order, violating the contract of the DataInput interface,
  * to offer better performance on most systems.</p>
- * <p>An implementation is offered by {@link de.take_weiland.mods.commons.net.MCDataInputStream}.</p>
+ * <p>Instances of this interfaces can be obtained using {@link Network#newDataInput(byte[])}.</p>
  *
  * @author diesieben07
  */
@@ -178,7 +178,6 @@ public interface MCDataInput extends ByteArrayDataInput {
 
     /**
 	 * <p>Read a set of coordinates from the buffer.</p>
-	 * <p>This method is equivalent to {@link de.take_weiland.mods.commons.util.BlockPos#fromByteStream(MCDataInputStream)}.</p>
 	 * @return BlockCoordinates
 	 */
 	BlockPos readCoords();

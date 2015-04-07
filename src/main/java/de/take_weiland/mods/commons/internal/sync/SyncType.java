@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.internal.EntityProxy;
-import de.take_weiland.mods.commons.net.MCDataInputStream;
+import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -16,7 +16,7 @@ enum SyncType {
 
 	TILE_ENTITY {
         @Override
-        public boolean doRead(EntityPlayer player, MCDataInputStream in) {
+        public boolean doRead(EntityPlayer player, MCDataInput in) {
             SyncedObjectProxy te = (SyncedObjectProxy) player.worldObj.getBlockTileEntity(in.readInt(), in.readUnsignedByte(), in.readInt());
             if (te == null) {
                 return false;
@@ -32,7 +32,7 @@ enum SyncType {
     },
 	ENTITY {
         @Override
-        public boolean doRead(EntityPlayer player, MCDataInputStream in) {
+        public boolean doRead(EntityPlayer player, MCDataInput in) {
             SyncedObjectProxy entity = (SyncedObjectProxy) player.worldObj.getEntityByID(in.readInt());
             if (entity == null) {
                 return false;
@@ -48,7 +48,7 @@ enum SyncType {
     },
 	CONTAINER {
         @Override
-        public boolean doRead(EntityPlayer player, MCDataInputStream in) {
+        public boolean doRead(EntityPlayer player, MCDataInput in) {
             Container container = player.openContainer;
             SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();
             if (container.windowId != in.readByte() || companion == null) {
@@ -61,7 +61,7 @@ enum SyncType {
     },
 	ENTITY_PROPS {
         @Override
-        public boolean doRead(EntityPlayer player, MCDataInputStream in) {
+        public boolean doRead(EntityPlayer player, MCDataInput in) {
             int entityId = in.readInt();
             int propsId = in.readVarInt();
 
@@ -79,5 +79,5 @@ enum SyncType {
         }
     };
 
-    public abstract boolean doRead(EntityPlayer player, MCDataInputStream in);
+    public abstract boolean doRead(EntityPlayer player, MCDataInput in);
 }

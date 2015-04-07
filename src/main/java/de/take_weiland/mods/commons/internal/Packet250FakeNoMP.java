@@ -42,7 +42,7 @@ public final class Packet250FakeNoMP extends Packet250CustomPayload implements S
 
 	@Override
 	public void processPacket(NetHandler nh) {
-		handler.handlePacket(MCDataInputStream.create(data, 0, length), nh.getPlayer());
+		handler.handlePacket(Network.newDataInput(data, 0, length), nh.getPlayer());
 	}
 
 	@Override

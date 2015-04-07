@@ -12,6 +12,7 @@ import net.minecraftforge.fluids.FluidStack;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.DataInputStream;
@@ -29,19 +30,98 @@ import static de.take_weiland.mods.commons.net.MCDataOutputImpl.*;
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput {
+class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	private static final int NO_MARK = -1;
-
+	private static final int SEVEN_BITS = 0b0111_1111;
+	private static final int BYTE_MSB = 0b1000_0000;
 	final byte[] buf;
 	private final int maxLen;
 	private final int initialPos;
 	int pos;
+	private int markedPos = NO_MARK;
 
 	MCDataInputImpl(byte[] buf, int off, int len) {
 		this.buf = buf;
 		this.pos = this.initialPos = off;
 		this.maxLen = len;
+	}
+
+	@Override
+	public InputStream asInputStream() {
+		return this;
+	}
+
+	@Override
+	public int pos() {
+		return pos - initialPos;
+	}
+
+	@Override
+	public int len() {
+		return maxLen;
+	}
+
+	@Override
+	public int available() {
+		return maxLen - pos;
+	}
+
+	@Override
+	public void seek(int pos) {
+		if (pos < 0) {
+			throw new IllegalArgumentException("pos must be >= 0");
+		} else if (pos > maxLen) {
+			throw new IndexOutOfBoundsException("pos must be < length");
+		} else {
+			this.pos = (pos + initialPos);
+		}
+	}
+
+	@Override
+	public int skipBytes(int n) {
+		if (n <= 0) {
+			return 0;
+		}
+		int avail = maxLen - pos;
+		if (n > avail) n = avail;
+		pos += n;
+		return n;
+	}
+
+	@Override
+	public long skip(long n) {
+		return skipBytes(Ints.saturatedCast(n));
+	}
+
+	@Override
+	public boolean markSupported() {
+		return true;
+	}
+
+	@Override
+	public void mark(int readlimit) {
+		markedPos = pos;
+	}
+
+	@Override
+	public void reset() {
+		if (markedPos == NO_MARK) {
+			pos = initialPos;
+		} else {
+			pos = markedPos;
+		}
+	}
+
+	@Override
+	public void close() { }
+
+	// actual IO
+
+	final void checkAvailable(int bytes) {
+		if (maxLen - pos < bytes) {
+			throw new IllegalStateException("Read past end of buffer");
+		}
 	}
 
 	@Override
@@ -70,67 +150,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public void seek(int pos) {
-		if (pos < 0) {
-			throw new IllegalArgumentException("pos must be >= 0");
-		} else if (pos > maxLen) {
-			throw new IndexOutOfBoundsException("pos must be < length");
-		} else {
-			this.pos = (pos + initialPos);
-		}
-	}
-
-	@Override
-	public int pos() {
-		return pos - initialPos;
-	}
-
-	@Override
-	public int len() {
-		return maxLen;
-	}
-
-	@Override
-	public long skip(long n) {
-		return skipBytes(Ints.saturatedCast(n));
-	}
-
-	@Override
-	public int available() {
-		return maxLen - pos;
-	}
-
-	@Override
-	public void close() { }
-
-	private int markedPos = NO_MARK;
-
-	@Override
-	public void mark(int readlimit) {
-		markedPos = pos;
-	}
-
-	@Override
-	public void reset() {
-		if (markedPos == NO_MARK) {
-			pos = initialPos;
-		} else {
-			pos = markedPos;
-		}
-	}
-
-	final void checkAvailable(int bytes) {
-		if (maxLen - pos < bytes) {
-			throw new IllegalStateException("Read past end of buffer");
-		}
-	}
-
-	@Override
-	public InputStream asInputStream() {
-		return this;
-	}
-
-	@Override
+	@Nonnull
 	public String readUTF() {
 		try {
 			return DataInputStream.readUTF(this);
@@ -140,7 +160,6 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	@Deprecated
 	public String readLine() {
 		StringBuilder sb = new StringBuilder();
 
@@ -167,72 +186,11 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		return c == -1 && sb.length() == 0 ? null : sb.toString();
 	}
 
-	@Override
-	public double readDouble() {
-		return Double.longBitsToDouble(readLong());
-	}
+	// primitives
 
 	@Override
-	public float readFloat() {
-		return Float.intBitsToFloat(readInt());
-	}
-
-	@Override
-	public long readLong() {
-		checkAvailable(8);
-		byte[] buf = this.buf;
-		int pos = this.pos;
-		this.pos = pos + 8;
-		return (long) buf[pos] & 0xFF
-				| (long) (buf[pos + 1] & 0xFF) << 8
-				| (long) (buf[pos + 2] & 0xFF) << 16
-				| (long) (buf[pos + 3] & 0xFF) << 24
-				| (long) (buf[pos + 4] & 0xFF) << 32
-				| (long) (buf[pos + 5] & 0xFF) << 40
-				| (long) (buf[pos + 6] & 0xFF) << 48
-				| (long) (buf[pos + 7] & 0xFF) << 56;
-
-	}
-
-	@Override
-	public int readInt() {
-		checkAvailable(4);
-		byte[] buf = this.buf;
-		int pos = this.pos;
-		this.pos = pos + 4;
-		return (buf[pos] & 0xFF)
-				| (buf[pos + 1] & 0xFF) << 8
-				| (buf[pos + 2] & 0xFF) << 16
-				| (buf[pos + 3] & 0xFF) << 24;
-	}
-
-	@Override
-	public char readChar() {
-		checkAvailable(2);
-		byte[] buf = this.buf;
-		int pos = this.pos;
-		this.pos = pos + 2;
-		return (char) ((buf[pos] & 0xFF) | (buf[pos + 1] & 0xFF) << 8);
-	}
-
-	@Override
-	public int readUnsignedShort() {
-		return readShort() & 0xFFFF;
-	}
-
-	@Override
-	public short readShort() {
-		checkAvailable(2);
-		byte[] buf = this.buf;
-		int pos = this.pos;
-		this.pos = pos + 2;
-		return (short) (buf[pos] & 0xFF | buf[pos + 1] << 8);
-	}
-
-	@Override
-	public int readUnsignedByte() {
-		checkAvailable(1);
-		return buf[pos++] & 0xFF;
+	public boolean readBoolean() {
+		return readByte() != BOOLEAN_FALSE;
 	}
 
 	@Override
@@ -242,70 +200,84 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public boolean readBoolean() {
-		return readByte() != BOOLEAN_FALSE;
+	public int readUnsignedByte() {
+		return readByte() & 0xFF;
 	}
 
 	@Override
-	public int skipBytes(int n) {
-		if (n <= 0) {
-			return 0;
-		}
-		int avail = maxLen - pos;
-		if (n > avail) n = avail;
-		pos += n;
-		return n;
+	public short readShort() {
+		checkAvailable(2);
+		return readShortNBC();
+	}
+
+	final short readShortNBC() {
+		int pos = this.pos;
+		this.pos = pos + 2;
+		return (short) (this.buf[pos] & 0xFF | this.buf[pos + 1] << 8);
 	}
 
 	@Override
-	public void readFully(@NotNull byte[] b, int off, int len) {
-		checkPositionIndexes(off, off + len, b.length);
-		checkAvailable(len);
-		System.arraycopy(buf, pos, b, off, len);
-		pos += len;
+	public int readUnsignedShort() {
+		return readShort() & 0xFFFF;
 	}
 
 	@Override
-	public void readFully(@NotNull byte[] b) {
-		readFully(b, 0, b.length);
+	public char readChar() {
+		checkAvailable(2);
+		return readCharNBC();
+	}
+
+	final char readCharNBC() {
+		return (char) ((this.buf[pos++] & 0xFF) | (this.buf[pos++] & 0xFF) << 8);
 	}
 
 	@Override
-	public <E extends Enum<E>> E readEnum(Class<E> clazz) {
-		int e = readVarInt();
-		return e < 0 ? null : JavaUtils.byOrdinal(clazz, e);
+	public int readInt() {
+		checkAvailable(4);
+		return readIntNBC();
+	}
+
+	final int readIntNBC() {
+		return (this.buf[pos++] & 0xFF)
+				| (this.buf[pos++] & 0xFF) << 8
+				| (this.buf[pos++] & 0xFF) << 16
+				| (this.buf[pos++] & 0xFF) << 24;
 	}
 
 	@Override
-	public BitSet readBitSet() {
-		return readBitSet(null);
+	public long readLong() {
+		checkAvailable(8);
+		return readLongNBC();
+	}
+
+	final long readLongNBC() {
+		return (long) this.buf[this.pos++] & 0xFF
+				| (long) (this.buf[this.pos++] & 0xFF) << 8
+				| (long) (this.buf[this.pos++] & 0xFF) << 16
+				| (long) (this.buf[this.pos++] & 0xFF) << 24
+				| (long) (this.buf[this.pos++] & 0xFF) << 32
+				| (long) (this.buf[this.pos++] & 0xFF) << 40
+				| (long) (this.buf[this.pos++] & 0xFF) << 48
+				| (long) (this.buf[this.pos++] & 0xFF) << 56;
 	}
 
 	@Override
-	public BitSet readBitSet(@Nullable BitSet bitSet) {
-		long[] words = readLongs();
-		if (words == null) {
-			return null;
-		} else if (bitSet == null) {
-			return BufferUtils.bitSetHandler.createShared(words);
-		} else {
-			BufferUtils.bitSetHandler.updateInPlace(words, bitSet);
-			return bitSet;
-		}
+	public float readFloat() {
+		return Float.intBitsToFloat(readInt());
+	}
+
+	final float readFloatNBC() {
+		return Float.intBitsToFloat(readIntNBC());
 	}
 
 	@Override
-	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass) {
-		return BufferUtils.enumSetHandler.createShared(enumClass, readLong());
+	public double readDouble() {
+		return Double.longBitsToDouble(readLong());
 	}
 
-	@Override
-	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass, EnumSet<E> set) {
-		return BufferUtils.enumSetHandler.update(enumClass, set, readLong());
+	final double readDoubleNBC() {
+		return Double.longBitsToDouble(readLongNBC());
 	}
-
-    private static final int BYTE_MSB = 0b1000_0000;
-	private static final int SEVEN_BITS = 0b0111_1111;
 
 	@Override
 	public int readVarInt() {
@@ -321,112 +293,7 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		return res;
 	}
 
-	@Override
-	public String readString() {
-		int len = readVarInt();
-		if (len < 0) {
-			return null;
-		} else if (len == 0) {
-			return "";
-		} else {
-			checkAvailable(len << 1);
-			byte[] buf = this.buf;
-			int pos = this.pos;
-			char[] chars = new char[len];
-			for (int i = 0; i < len; ++i) {
-				chars[i] = (char) (buf[pos] | buf[pos + 1] << 8);
-				pos += 2;
-			}
-			this.pos = pos;
-			return SCReflector.instance.createStringShared(chars, true);
-		}
-	}
-
-	@Override
-	public ItemStack readItemStack() {
-		int id = readShort();
-		if (id < 0) {
-			return null;
-		} else {
-			int dmg = readShort();
-			int size = readByte();
-			ItemStack stack = new ItemStack(id, size, dmg);
-			stack.stackTagCompound = readNBT();
-			return stack;
-		}
-	}
-
-	@Override
-	public FluidStack readFluidStack() {
-		int id = readVarInt();
-		if (id < 0) {
-			return null;
-		} else {
-			return new FluidStack(id, readVarInt(), readNBT());
-		}
-	}
-
-
-
-	@Override
-	public UUID readUUID() {
-		long msb = readLong();
-		if (msb == UUID_NULL_MSB) {
-			return null;
-		} else {
-			return new UUID(msb, readLong());
-		}
-	}
-
-	@Override
-	public NBTTagCompound readNBT() {
-		int id = readByte();
-		if (id == -1) {
-			return null;
-		} else {
-			NBTTagCompound nbt = new NBTTagCompound();
-			Map<String, NBTBase> map = NBT.asMap(nbt);
-			try {
-				while (id != 0) {
-					String name = readString();
-					NBTBase tag = NBTBase.newTag((byte) id, name);
-					SCReflector.instance.load(nbt, this, 1);
-
-					map.put(tag.getName(), tag);
-					id = readByte();
-				}
-			} catch (IOException e) {
-				throw new IllegalStateException(e);
-			}
-			return nbt;
-		}
-	}
-
-	@Override
-	public Item readItem() {
-		int id = readVarInt();
-		try {
-			return id == BufferUtils.ITEM_NULL_ID ? null : Item.itemsList[id];
-		} catch (ArrayIndexOutOfBoundsException e) {
-			throw new IllegalStateException("Invalid ItemID " + id);
-		}
-	}
-
-	@Override
-	public Block readBlock() {
-		int id = readVarInt();
-		try {
-			return id == BufferUtils.BLOCK_NULL_ID ? null : Block.blocksList[id];
-		} catch (ArrayIndexOutOfBoundsException e) {
-			throw new IllegalStateException("Invalid BlockID " + id);
-		}
-	}
-
-	@Override
-	public BlockPos readCoords() {
-//		return BlockPos.streamSerializer().read(this);
-		throw new UnsupportedOperationException();
-	}
+	// primitive boxes
 
 	@Override
 	public Boolean readBooleanBox() {
@@ -497,8 +364,28 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 		}
 	}
 
+	// array stuff
+
 	@Override
-	public boolean[] readBooleans(boolean[] b) {
+	public void readFully(@NotNull byte[] b) {
+		readFully(b, 0, b.length);
+	}
+
+	@Override
+	public void readFully(@NotNull byte[] b, int off, int len) {
+		checkPositionIndexes(off, off + len, b.length);
+		checkAvailable(len);
+		System.arraycopy(buf, pos, b, off, len);
+		pos += len;
+	}
+
+	@Override
+	public boolean[] readBooleans() {
+		return readBooleans(null);
+	}
+
+	@Override
+	public boolean[] readBooleans(@Nullable boolean[] b) {
 		int len = readVarInt();
 		if (len < 0) {
 			return null;
@@ -508,30 +395,28 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 			if (b == null || b.length != len) {
 				b = new boolean[len];
 			}
-			int byteLen = (len - 1) / 8 + 1; // works for len > 0
-			checkAvailable(byteLen);
+			checkAvailable(((len - 1) >> 3) + 1); // works for len > 0
 
-			byte[] buf = this.buf;
-			int pos = this.pos;
-
-			int read = 0;
-			int mask = 0;
-			for (int idx = 0; idx < len; ++idx) {
-				if (idx % 8 == 0) {
-					read = buf[pos++] & 0xFF;
-					mask = 0b0000_0001;
+			int currentByte = 0;
+			for (int idx = 0; idx < len; idx++) {
+				int bit = (idx & 7); // idx % 8
+				if (bit == 0) {
+					currentByte = readUnsignedByte();
 				}
-				b[idx] = (read & mask) != 0;
-				mask <<= 1;
+				b[idx] = (currentByte & (1 << bit)) != 0;
 			}
-			this.pos = pos;
 
 			return b;
 		}
 	}
 
 	@Override
-	public byte[] readBytes(byte[] b) {
+	public byte[] readBytes() {
+		return readBytes(null);
+	}
+
+	@Override
+	public byte[] readBytes(@Nullable byte[] b) {
 		int len = readVarInt();
 		if (len < 0) {
 			return null;
@@ -549,18 +434,27 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
-	public boolean[] readBooleans() {
-		return readBooleans(null);
-	}
-
-	@Override
-	public byte[] readBytes() {
-		return readBytes(null);
-	}
-
-	@Override
 	public short[] readShorts() {
 		return readShorts(null);
+	}
+
+	@Override
+	public short[] readShorts(@Nullable short[] arr) {
+		int len = readVarInt();
+		if (len < 0) {
+			return null;
+		} else if (len == 0) {
+			return ArrayUtils.nullToEmpty(arr);
+		} else {
+			checkAvailable(len << 1);
+			if (arr == null || arr.length < len) {
+				arr = new short[len];
+			}
+			for (int i = 0; i < len; i++) {
+				arr[i] = readShortNBC();
+			}
+			return arr;
+		}
 	}
 
 	@Override
@@ -569,8 +463,46 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
+	public int[] readInts(@Nullable int[] arr) {
+		int len = readVarInt();
+		if (len < 0) {
+			return null;
+		} else if (len == 0) {
+			return ArrayUtils.nullToEmpty(arr);
+		} else {
+			checkAvailable(len << 2);
+			if (arr == null || arr.length < len) {
+				arr = new int[len];
+			}
+			for (int i = 0; i < len; i++) {
+				arr[i] = readIntNBC();
+			}
+			return arr;
+		}
+	}
+
+	@Override
 	public long[] readLongs() {
 		return readLongs(null);
+	}
+
+	@Override
+	public long[] readLongs(@Nullable long[] arr) {
+		int len = readVarInt();
+		if (len < 0) {
+			return null;
+		} else if (len == 0) {
+			return ArrayUtils.nullToEmpty(arr);
+		} else {
+			checkAvailable(len << 3);
+			if (arr == null || arr.length < len) {
+				arr = new long[len];
+			}
+			for (int i = 0; i < len; i++) {
+				arr[i] = readLongNBC();
+			}
+			return arr;
+		}
 	}
 
 	@Override
@@ -579,12 +511,212 @@ abstract class MCDataInputImpl extends MCDataInputStream implements MCDataInput 
 	}
 
 	@Override
+	public char[] readChars(@Nullable char[] arr) {
+		int len = readVarInt();
+		if (len < 0) {
+			return null;
+		} else if (len == 0) {
+			return ArrayUtils.nullToEmpty(arr);
+		} else {
+			checkAvailable(len << 1);
+			if (arr == null || arr.length < len) {
+				arr = new char[len];
+			}
+			for (int i = 0; i < len; ++i) {
+				arr[i] = readCharNBC();
+			}
+			return arr;
+		}
+	}
+
+	@Override
 	public float[] readFloats() {
 		return readFloats(null);
 	}
 
 	@Override
+	public float[] readFloats(@Nullable float[] arr) {
+		int len = readVarInt();
+		if (len < 0) {
+			return null;
+		} else if (len == 0) {
+			return ArrayUtils.nullToEmpty(arr);
+		} else {
+			checkAvailable(len << 2);
+			if (arr == null || arr.length < len) {
+				arr = new float[len];
+			}
+			for (int i = 0; i < len; ++i) {
+				arr[i] = readFloatNBC();
+			}
+			return arr;
+		}
+	}
+
+	@Override
 	public double[] readDoubles() {
 		return readDoubles(null);
+	}
+
+
+
+	@Override
+	public double[] readDoubles(@Nullable double[] b) {
+		int len = readVarInt();
+		if (len < 0) {
+			return null;
+		} else if (len == 0) {
+			return ArrayUtils.nullToEmpty(b);
+		} else {
+			checkAvailable(len << 3);
+			if (b == null || b.length < len) {
+				b = new double[len];
+			}
+			for (int i = 0; i < len; ++i) {
+				b[i] = readDoubleNBC();
+
+			}
+			return b;
+		}
+	}
+
+	// misc stuff
+	@Override
+	public <E extends Enum<E>> E readEnum(Class<E> clazz) {
+		int e = readVarInt();
+		return e < 0 ? null : JavaUtils.byOrdinal(clazz, e);
+	}
+
+	@Override
+	public BitSet readBitSet() {
+		return readBitSet(null);
+	}
+
+	@Override
+	public BitSet readBitSet(@Nullable BitSet bitSet) {
+		long[] words = readLongs();
+		if (words == null) {
+			return null;
+		} else if (bitSet == null) {
+			return BufferUtils.bitSetHandler.createShared(words);
+		} else {
+			BufferUtils.bitSetHandler.updateInPlace(words, bitSet);
+			return bitSet;
+		}
+	}
+
+	@Override
+	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass) {
+		return BufferUtils.enumSetHandler.createShared(enumClass, readLong());
+	}
+
+	@Override
+	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass, EnumSet<E> set) {
+		return BufferUtils.enumSetHandler.update(enumClass, set, readLong());
+	}
+
+	@Override
+	public String readString() {
+		int len = readVarInt();
+		if (len < 0) {
+			return null;
+		} else if (len == 0) {
+			return "";
+		} else {
+			checkAvailable(len << 1);
+			byte[] buf = this.buf;
+			int pos = this.pos;
+			char[] chars = new char[len];
+			for (int i = 0; i < len; ++i) {
+				chars[i] = (char) (buf[pos] | buf[pos + 1] << 8);
+				pos += 2;
+			}
+			this.pos = pos;
+			return SCReflector.instance.createStringShared(chars, true);
+		}
+	}
+
+	@Override
+	public ItemStack readItemStack() {
+		int id = readShort();
+		if (id < 0) {
+			return null;
+		} else {
+			int dmg = readShort();
+			int size = readByte();
+			ItemStack stack = new ItemStack(id, size, dmg);
+			stack.stackTagCompound = readNBT();
+			return stack;
+		}
+	}
+
+	@Override
+	public FluidStack readFluidStack() {
+		int id = readVarInt();
+		if (id < 0) {
+			return null;
+		} else {
+			return new FluidStack(id, readVarInt(), readNBT());
+		}
+	}
+
+	@Override
+	public UUID readUUID() {
+		long msb = readLong();
+		if (msb == UUID_NULL_MSB) {
+			return null;
+		} else {
+			return new UUID(msb, readLong());
+		}
+	}
+
+	@Override
+	public NBTTagCompound readNBT() {
+		int id = readByte();
+		if (id == -1) {
+			return null;
+		} else {
+			NBTTagCompound nbt = new NBTTagCompound();
+			Map<String, NBTBase> map = NBT.asMap(nbt);
+			try {
+				while (id != 0) {
+					String name = readString();
+					NBTBase tag = NBTBase.newTag((byte) id, name);
+					SCReflector.instance.load(nbt, this, 1);
+
+					map.put(tag.getName(), tag);
+					id = readByte();
+				}
+			} catch (IOException e) {
+				throw new IllegalStateException(e);
+			}
+			return nbt;
+		}
+	}
+
+	@Override
+	public Item readItem() {
+		int id = readVarInt();
+		try {
+			return id == BufferUtils.ITEM_NULL_ID ? null : Item.itemsList[id];
+		} catch (ArrayIndexOutOfBoundsException e) {
+			throw new IllegalStateException("Invalid ItemID " + id);
+		}
+	}
+
+	@Override
+	public Block readBlock() {
+		int id = readVarInt();
+		try {
+			return id == BufferUtils.BLOCK_NULL_ID ? null : Block.blocksList[id];
+		} catch (ArrayIndexOutOfBoundsException e) {
+			throw new IllegalStateException("Invalid BlockID " + id);
+		}
+	}
+
+	@Override
+	public BlockPos readCoords() {
+//		return BlockPos.streamSerializer().read(this);
+		throw new UnsupportedOperationException();
 	}
 }
