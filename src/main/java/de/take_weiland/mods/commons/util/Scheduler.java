@@ -60,9 +60,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
 
     @Override
     public void execute(Runnable task) {
-        synchronized (queue) {
-            queue.add(new Task(task, 1));
-        }
+        schedule(task, 0);
     }
 
     /**
@@ -72,18 +70,18 @@ public final class Scheduler extends AbstractListeningExecutorService {
      */
     public void schedule(Runnable task, long tickDelay) {
         checkArgument(tickDelay >= 0);
-        synchronized (queue) {
-            queue.add(new Task(task, tickDelay + 1));
+        synchronized (ticker.queue) {
+            ticker.queue.add(new Task(task, tickDelay + 1));
         }
     }
 
     static {
         if (FMLCommonHandler.instance().getSide().isClient()) {
-            client = new Scheduler();
+            client = new Scheduler(Side.CLIENT);
         } else {
             client = null;
         }
-        server = new Scheduler();
+        server = new Scheduler(Side.SERVER);
 
         SevenCommons.registerStateCallback(LoaderState.ModState.PREINITIALIZED, new Runnable() {
             @Override
@@ -96,12 +94,15 @@ public final class Scheduler extends AbstractListeningExecutorService {
         });
     }
 
-    private void registerTickHandler(Side side) {
-        TickRegistry.registerTickHandler(new Ticks(side), side);
+    private final Ticker ticker;
+
+    private Scheduler(Side side) {
+        this.ticker = new Ticker(side);
     }
 
-    final List<Task> queue = new ArrayList<>();
-    final List<Task> scheduledNow = new ArrayList<>();
+    private void registerTickHandler(Side side) {
+        TickRegistry.registerTickHandler(ticker, side);
+    }
 
     static final class Task {
 
@@ -115,34 +116,35 @@ public final class Scheduler extends AbstractListeningExecutorService {
 
     }
 
-    final class Ticks implements ITickHandler {
+    static final class Ticker implements ITickHandler {
 
+        final List<Task> queue = new ArrayList<>();
+        final List<Task> scheduledNow = new ArrayList<>();
         private final EnumSet<TickType> tickTypes;
 
-        Ticks(Side side) {
+        Ticker(Side side) {
             tickTypes = EnumSet.of(side.isClient() ? TickType.CLIENT : TickType.SERVER);
         }
 
         @Override
         public void tickStart(EnumSet<TickType> type, Object... tickData) {
-            List<Task> scheduledNow = Scheduler.this.scheduledNow;
-            List<Task> queue = Scheduler.this.queue;
+            List<Task> scheduledNow = this.scheduledNow;
+            List<Task> queue = this.queue;
             //noinspection SynchronizationOnLocalVariableOrMethodParameter
             synchronized (queue) {
                 int idx = queue.size();
-                do {
-                    idx--;
+                while (--idx >= 0) {
                     Task task = queue.get(idx);
                     if (--task.ticks == 0) {
                         queue.remove(idx);
                         scheduledNow.add(task);
                     }
-                } while (idx >= 0);
+                }
             }
             int idx = scheduledNow.size();
-            do {
-                scheduledNow.remove(--idx).r.run();
-            } while (idx >= 0);
+            while (--idx >= 0) {
+                scheduledNow.remove(idx).r.run();
+            }
         }
 
         @Override
@@ -195,8 +197,8 @@ public final class Scheduler extends AbstractListeningExecutorService {
     @Deprecated
     public List<Runnable> shutdownNow() {
         List<Runnable> result = new ArrayList<>();
-        synchronized (queue) {
-            for (Task task : queue) {
+        synchronized (ticker.queue) {
+            for (Task task : ticker.queue) {
                 result.add(task.r);
             }
         }
