@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.net;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.network.NetworkRegistry;
+import de.take_weiland.mods.commons.internal.FMLPacketHandlerImpl;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import de.take_weiland.mods.commons.util.SCReflector;
@@ -106,6 +107,25 @@ public final class Network {
 		checkArgument(off >= 0, "off must be >= 0");
 		checkPositionIndexes(off, off + len, checkNotNull(buf, "buf").length);
 		return new MCDataInputImpl(buf, off, len);
+	}
+
+	/**
+	 * <p>Create a new MCDataOutputStream with a default initial capacity.</p>
+	 * @return an MCDataOutputStream
+	 */
+	public static MCDataOutput newDataOutput() {
+		return newDataOutput(FMLPacketHandlerImpl.STREAMS_INITIAL_CAP);
+	}
+
+	/**
+	 * <p>Create a new MCDataOutputStream with the given initial capacity.</p>
+	 * @param initialCapacity the initial capacity for the backing byte array
+	 * @return an MCDataOuputStream
+	 */
+	public static MCDataOutput newDataOutput(int initialCapacity) {
+		checkArgument(initialCapacity >= 0, "initialCapacity must be >= 0");
+		final int initialCap = initialCapacity;
+		return new MCDataOutputImpl(initialCap);
 	}
 
 	static final Logger logger = SevenCommonsLoader.scLogger("Packet System");

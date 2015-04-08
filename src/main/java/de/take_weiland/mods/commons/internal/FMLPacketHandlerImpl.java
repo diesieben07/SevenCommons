@@ -135,7 +135,7 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
     }
 
 	private Packet buildPacket(ModPacket mp, ModPacketInfo info) {
-		MCDataOutputStream out = MCDataOutputStream.create(mp.expectedSize() + 1); // packetID should rarely take more than one byte (more than 127)
+		MCDataOutput out = Network.newDataOutput(mp.expectedSize() + 1); // packetID should rarely take more than one byte (more than 127)
 		out.writeVarInt(info.packetID);
 		mp.write(out);
 		out.lock();
@@ -149,7 +149,7 @@ public final class FMLPacketHandlerImpl implements IPacketHandler, PacketHandler
 
 	@Override
 	public MCDataOutput createStream(int packetId, int initialCapacity) {
-		MCDataOutputStream stream = MCDataOutputStream.create(initialCapacity + 1);
+		MCDataOutput stream = Network.newDataOutput(initialCapacity + 1);
 		stream.writeVarInt(packetId);
 		return stream;
 	}

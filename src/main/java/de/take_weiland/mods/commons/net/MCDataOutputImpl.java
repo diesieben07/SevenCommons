@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.BlockPos;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -28,18 +29,11 @@ import static com.google.common.base.Preconditions.checkPositionIndexes;
 /**
  * @author diesieben07
  */
-abstract class MCDataOutputImpl extends MCDataOutputStream {
-
-	static final int BOOLEAN_NULL = -1;
-	static final int BOOLEAN_TRUE = 1;
-	static final int BOOLEAN_FALSE = 0;
-
-	static final int BOX_NULL = 0;
-	static final int BOX_NONNULL = 1;
+final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
 
 	private boolean locked = false;
-	byte[] buf;
-	int count;
+	private byte[] buf;
+	private int count;
 
 	MCDataOutputImpl(int initialCap) {
 		checkArgument(initialCap >= 0, "negative initial size");
@@ -47,8 +41,28 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 	}
 
 	@Override
+	public int length() {
+		return count;
+	}
+
+	@Override
+	public void lock() {
+		locked = true;
+	}
+
+	@Override
+	public boolean isLocked() {
+		return locked;
+	}
+
+	@Override
 	public OutputStream asOutputStream() {
 		return this;
+	}
+
+	@Override
+	public byte[] backingArray() {
+		return buf;
 	}
 
 	@Override
@@ -74,26 +88,6 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 	@Override
 	public void writeTo(WritableByteChannel channel) throws IOException {
 		channel.write(ByteBuffer.wrap(buf, 0, count));
-	}
-
-	@Override
-	public byte[] backingArray() {
-		return buf;
-	}
-
-	@Override
-	public int length() {
-		return count;
-	}
-
-	@Override
-	public void lock() {
-		locked = true;
-	}
-
-	@Override
-	public boolean isLocked() {
-		return locked;
 	}
 
 	final void ensureWritable(int bytesToWrite) {
@@ -126,8 +120,7 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 
 	@Override
 	public void write(int b) {
-		ensureWritable(1);
-		buf[count++] = (byte) b;
+		writeByte(b);
 	}
 
 	@Override
@@ -150,53 +143,127 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 
 	@Override
 	public void writeBoolean(boolean v) {
-		write(v ? BOOLEAN_TRUE : BOOLEAN_FALSE);
+		write(v ? BufferConstants.BOOLEAN_TRUE : BufferConstants.BOOLEAN_FALSE);
 	}
 
 	@Override
-	public void writeByte(int v) {
-		write(v);
+	public void writeBooleanBox(Boolean b) {
+		writeByte(b == null ? BufferConstants.BOOLEAN_NULL : (b ? BufferConstants.BOOLEAN_TRUE : BufferConstants.BOOLEAN_FALSE));
 	}
 
 	@Override
-	public void writeShort(int v) {
+	public void writeByte(int b) {
+		ensureWritable(1);
+		writeByteNBC(b);
+	}
+
+	private void writeByteNBC(int b) {
+		buf[count++] = (byte) b;
+	}
+
+	@Override
+	public void writeByteBox(Byte b) {
+		if (b == null) {
+			writeByte(BufferConstants.BOX_NULL);
+		} else {
+			ensureWritable(2);
+			writeByteNBC(BufferConstants.BOX_NONNULL);
+			writeByteNBC(b);
+		}
+	}
+
+	@Override
+	public void writeShort(int s) {
 		ensureWritable(2);
-		buf[count++] = (byte) (v);
-		buf[count++] = (byte) (v >> 8);
+		writeShortNBC(s);
+	}
+
+	private void writeShortNBC(int s) {
+		writeByteNBC(s);
+		writeByteNBC(s >>> 8);
 	}
 
 	@Override
-	public void writeChar(int v) {
-		writeShort(v);
+	public void writeShortBox(Short s) {
+		if (s == null) {
+			writeByte(BufferConstants.BOX_NULL);
+		} else {
+			ensureWritable(3);
+			writeByteNBC(BufferConstants.BOX_NONNULL);
+			writeShortNBC(s);
+		}
 	}
 
 	@Override
-	public void writeInt(int v) {
+	public void writeChar(int c) {
+		writeShort(c);
+	}
+
+	private void writeCharNBC(int c) {
+		writeShortNBC(c);
+	}
+
+	@Override
+	public void writeCharBox(Character c) {
+		if (c == null) {
+			writeByte(BufferConstants.BOX_NULL);
+		} else {
+			ensureWritable(3);
+			writeByteNBC(BufferConstants.BOX_NONNULL);
+			writeCharNBC(c);
+		}
+	}
+
+	@Override
+	public void writeInt(int i) {
 		ensureWritable(4);
-		byte[] buf = this.buf;
-		int count = this.count;
-		buf[count++] = (byte) (v);
-		buf[count++] = (byte) (v >> 8);
-		buf[count++] = (byte) (v >> 16);
-		buf[count] = (byte) (v >> 24);
-		this.count = count + 1;
+		writeIntNBC(i);
+	}
 
+	private void writeIntNBC(int i) {
+		writeByteNBC(i);
+		writeByteNBC(i >>> 8);
+		writeByteNBC(i >>> 16);
+		writeByteNBC(i >>> 24);
+	}
+
+	@Override
+	public void writeIntBox(Integer i) {
+		if (i == null) {
+			writeByte(BufferConstants.BOX_NULL);
+		} else {
+			ensureWritable(5);
+			writeByteNBC(BufferConstants.BOX_NONNULL);
+			writeIntNBC(i);
+		}
 	}
 
 	@Override
 	public void writeLong(long v) {
 		ensureWritable(8);
-		byte[] buf = this.buf;
-		int count = this.count;
-		buf[count++] = (byte) (v);
-		buf[count++] = (byte) (v >> 8);
-		buf[count++] = (byte) (v >> 16);
-		buf[count++] = (byte) (v >> 24);
-		buf[count++] = (byte) (v >> 32);
-		buf[count++] = (byte) (v >> 40);
-		buf[count++] = (byte) (v >> 48);
-		buf[count] = (byte) (v >> 56);
-		this.count = count + 1;
+		writeLongNBC(v);
+	}
+
+	private void writeLongNBC(long v) {
+		writeByteNBC((int) v);
+		writeByteNBC((int) (v >>>  8));
+		writeByteNBC((int) (v >>> 16));
+		writeByteNBC((int) (v >>> 24));
+		writeByteNBC((int) (v >>> 32));
+		writeByteNBC((int) (v >>> 40));
+		writeByteNBC((int) (v >>> 48));
+		writeByteNBC((int) (v >>> 56));
+	}
+
+	@Override
+	public void writeLongBox(Long l) {
+		if (l == null) {
+			writeByte(BufferConstants.BOX_NULL);
+		} else {
+			ensureWritable(9);
+			writeByteNBC(BufferConstants.BOX_NONNULL);
+			writeLongNBC(l);
+		}
 	}
 
 	@Override
@@ -204,23 +271,47 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		writeInt(Float.floatToIntBits(v));
 	}
 
+	private void writeFloatNBC(float f) {
+		writeIntNBC(Float.floatToIntBits(f));
+	}
+	@Override
+	public void writeFloatBox(Float f) {
+		if (f == null) {
+			writeByte(BufferConstants.BOX_NULL);
+		} else {
+			ensureWritable(5);
+			writeByteNBC(BufferConstants.BOX_NONNULL);
+			writeFloatNBC(f);
+		}
+	}
+
 	@Override
 	public void writeDouble(double v) {
 		writeLong(Double.doubleToLongBits(v));
+	}
+
+	private void writeDoubleNBC(double v) {
+		writeLongNBC(Double.doubleToLongBits(v));
+	}
+
+	@Override
+	public void writeDoubleBox(Double d) {
+		if (d == null) {
+			writeByte(BufferConstants.BOX_NULL);
+		} else {
+			ensureWritable(9);
+			writeByteNBC(BufferConstants.BOX_NONNULL);
+			writeDoubleNBC(d);
+		}
 	}
 
 	@Override
 	public void writeChars(@NotNull String s) {
 		int len = s.length();
 		ensureWritable(len << 1);
-		int count = this.count;
-		byte[] buf = this.buf;
 		for (int i = 0; i < len; ++i) {
-			char c = s.charAt(i);
-			buf[count++] = (byte) (c);
-			buf[count++] = (byte) (c >> 8);
+			writeShortNBC(s.charAt(i));
 		}
-		this.count = count;
 	}
 
 	@Override
@@ -245,28 +336,24 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		writeShort(utfLen);
 		ensureWritable(utfLen);
 
-		byte[] buf = this.buf;
-		int count = this.count;
-
 		if (utfLen == strLen) {
 			for (i = 0; i < strLen; i++) {
-				buf[count++] = (byte) s.charAt(i);
+				writeByteNBC(s.charAt(i));
 			}
 		} else {
 			for (i = 0; i < strLen; i++) {
 				c = s.charAt(i);
 				if (c >= 0x0001 && c <= 0x007f) {
-					buf[count++] = (byte) c;
+					writeByteNBC(c);
 				} else if (c >= 0x800) {
-					buf[count++] = (byte) (0xE0 | ((c >> 12) & 0x0F));
-					buf[count++] = (byte) (0x80 | ((c >> 6) & 0x3F));
-					buf[count++] = (byte) (0x80 | (c & 0x3F));
+					writeByteNBC(0xE0 | ((c >> 12) & 0x0F));
+					writeByteNBC(0x80 | ((c >> 6) & 0x3F));
+					writeByteNBC(0x80 | (c & 0x3F));
 				} else {
-					buf[count++] = (byte) (0xC0 | ((c >> 6) & 0x1F));
-					buf[count++] = (byte) (0x80 | (c & 0x3F));
+					writeByteNBC(0xC0 | ((c >> 6) & 0x1F));
+					writeByteNBC(0x80 | (c & 0x3F));
 				}
 			}
-			this.count = count;
 		}
 	}
 
@@ -275,30 +362,54 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 	public void writeBytes(@NotNull String s) {
 		int len = s.length();
 		ensureWritable(len);
-		byte[] buf = this.buf;
-		int count = this.count;
-		for (int i = 0; i < len; ++i) {
-			buf[count++] = (byte) s.charAt(i);
+		for (int i = 0; i < len; i++) {
+			writeByteNBC(s.charAt(i));
 		}
-		this.count = count;
 	}
 
-	private static final int SEVEN_BITS = 0b0111_1111;
-	private static final int BYTE_MSB = 0b1000_0000;
+	private static int varIntLen(int i) {
+		return i < 0
+				? 5 // less than 0 always takes the full 32 bits (=5 bytes in VarInt)
+				: positiveVarIntLen(i);
+	}
+
+	private static int positiveVarIntLen(int i) {
+		return (i + 6) / 7; // divide by 7 and round up, see http://stackoverflow.com/a/7446742
+	}
 
 	@Override
 	public void writeVarInt(int i) {
-		while ((i & ~SEVEN_BITS) != 0) {
-			writeByte(i & SEVEN_BITS);
+		ensureWritable(varIntLen(i));
+		writeVarIntNBC(i);
+	}
+
+	private void writePositiveVarInt(int i) {
+		ensureWritable(positiveVarIntLen(i));
+		writeVarIntNBC(i);
+	}
+
+	private void writeNegativeVarInt(int i) {
+		ensureWritable(5);
+		writeVarIntNBC(i);
+	}
+
+	private void writeVarIntNBC(int i) {
+		while ((i & ~BufferConstants.SEVEN_BITS) != 0) {
+			writeByteNBC(i & BufferConstants.SEVEN_BITS);
 			i >>>= 7;
 		}
-		writeByte(i | (BYTE_MSB));
+		writeByteNBC(i | (BufferConstants.BYTE_MSB));
 	}
 
 	@Override
 	public void writeString(String s) {
-		writeVarInt(s.length());
-		writeChars(s);
+		int len = s.length();
+		ensureWritable(positiveVarIntLen(len) + len << 1);
+
+		writeVarIntNBC(len);
+		for (int i = 0; i < len; i++) {
+			writeShortNBC(s.charAt(i));
+		}
 	}
 
 	@Override
@@ -306,9 +417,10 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		if (stack == null) {
 			writeShort(-1);
 		} else {
-			writeShort(stack.itemID);
-			writeShort(stack.getItemDamage());
-			writeByte(stack.stackSize);
+			ensureWritable(6); // 2 +2 + 1 + 1 (NBT needs at least 1 byte)
+			writeShortNBC(stack.itemID);
+			writeShortNBC(stack.getItemDamage());
+			writeByteNBC(stack.stackSize);
 			writeNBT(stack.stackTagCompound);
 		}
 	}
@@ -318,8 +430,12 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		if (stack == null) {
 			writeVarInt(-1);
 		} else {
-			writeVarInt(stack.fluidID);
-			writeVarInt(stack.amount);
+			ensureWritable(varIntLen(stack.fluidID)
+					+ varIntLen(stack.amount) // technically amount is always >= 0, but we can't be sure
+					+ 1 /* NBT needs at least 1 byte*/ );
+
+			writeVarIntNBC(stack.fluidID);
+			writeVarIntNBC(stack.amount);
 			writeNBT(stack.tag);
 		}
 	}
@@ -343,12 +459,12 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 
 	@Override
 	public void writeItem(Item item) {
-		writeVarInt(item == null ? BufferUtils.ITEM_NULL_ID : item.itemID);
+		writePositiveVarInt(item == null ? BufferConstants.ITEM_NULL_ID : item.itemID);
 	}
 
 	@Override
 	public void writeBlock(Block block) {
-		writeVarInt(block == null ? BufferUtils.BLOCK_NULL_ID : block.blockID);
+		writePositiveVarInt(block == null ? BufferConstants.BLOCK_NULL_ID : block.blockID);
 	}
 
 	@Override
@@ -356,21 +472,24 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		BlockPos.toByteStream(this, x, y, z);
 	}
 
-	static final long UUID_NULL_MSB = 0xF000;
-
 	@Override
 	public void writeUUID(UUID uuid) {
 		if (uuid == null) {
-			writeLong(UUID_NULL_MSB);
+			writeLong(BufferConstants.UUID_NULL_MSB);
 		} else {
-			writeLong(uuid.getMostSignificantBits());
-			writeLong(uuid.getLeastSignificantBits());
+			ensureWritable(16);
+			writeLongNBC(uuid.getMostSignificantBits());
+			writeLongNBC(uuid.getLeastSignificantBits());
 		}
 	}
 
 	@Override
 	public <E extends Enum<E>> void writeEnum(E e) {
-		writeVarInt(e == null ? -1 : e.ordinal());
+		if (e != null) {
+			writePositiveVarInt(e.ordinal());
+		} else {
+			writeNegativeVarInt(-1);
+		}
 	}
 
 	@Override
@@ -378,93 +497,44 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		if (bitSet == null) {
 			writeLongs(null);
 		} else {
-			BufferUtils.bitSetHandler.writeTo(bitSet, this);
+			writeLongs(bitSet.toLongArray());
 		}
 	}
-
-	static final long ENUM_SET_NULL = 1L << 63L;
 
 	@Override
 	public <E extends Enum<E>> void writeEnumSet(EnumSet<E> enumSet) {
 		if (enumSet == null) {
-			writeLong(ENUM_SET_NULL);
+			writeByte(0);
 		} else {
-			writeLong(BufferUtils.enumSetHandler.asLong(enumSet));
+			int numEnums = JavaUtils.getEnumConstantsShared(JavaUtils.getType(enumSet)).length;
+
+			if (numEnums <= 7) {
+				int b = 0;
+				for (E e : enumSet) {
+					b |= 2 << e.ordinal(); // actually: 1 << (ordinal + 1)
+				}
+				writeByte(b);
+			} else {
+				int numBytes = 1 + (numEnums >>> 3);
+				ensureWritable(numBytes);
+				int off = count;
+
+				for (E e : enumSet) {
+					int ord = e.ordinal() + 1;
+					buf[off + (ord & 7)] |= 1 << ord;
+				}
+
+				count += numBytes;
+			}
 		}
 	}
 
 	@Override
-	public void writeBooleanBox(Boolean b) {
-		writeByte(b == null ? BOOLEAN_NULL : (b ? BOOLEAN_TRUE : BOOLEAN_FALSE));
-	}
-
-	@Override
-	public void writeByteBox(Byte b) {
-		if (b == null) {
-			writeByte(BOX_NULL);
+	public void writeBooleans(boolean[] booleans) {
+		if (booleans == null) {
+			writeNegativeVarInt(-1);
 		} else {
-			writeByte(BOX_NONNULL);
-			writeByte(b);
-		}
-	}
-
-	@Override
-	public void writeShortBox(Short s) {
-		if (s == null) {
-			writeByte(BOX_NULL);
-		} else {
-			writeByte(BOX_NONNULL);
-			writeShort(s);
-		}
-	}
-
-	@Override
-	public void writeCharBox(Character c) {
-		if (c == null) {
-			writeByte(BOX_NULL);
-		} else {
-			writeByte(BOX_NONNULL);
-			writeChar(c);
-		}
-	}
-
-	@Override
-	public void writeIntBox(Integer i) {
-		if (i == null) {
-			writeByte(BOX_NULL);
-		} else {
-			writeByte(BOX_NONNULL);
-			writeInt(i);
-		}
-	}
-
-	@Override
-	public void writeLongBox(Long l) {
-		if (l == null) {
-			writeByte(BOX_NULL);
-		} else {
-			writeByte(BOX_NONNULL);
-			writeLong(l);
-		}
-	}
-
-	@Override
-	public void writeFloatBox(Float f) {
-		if (f == null) {
-			writeByte(BOX_NULL);
-		} else {
-			writeByte(BOX_NONNULL);
-			writeFloat(f);
-		}
-	}
-
-	@Override
-	public void writeDoubleBox(Double d) {
-		if (d == null) {
-			writeByte(BOX_NULL);
-		} else {
-			writeByte(BOX_NONNULL);
-			writeDouble(d);
+			writeBooleans0(booleans, 0, booleans.length);
 		}
 	}
 
@@ -474,23 +544,34 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		writeBooleans0(booleans, off, len);
 	}
 
-	@Override
-	public void writeBooleans(boolean[] booleans) {
-		if (booleans == null) {
-			writeVarInt(-1);
-		} else {
-			writeBooleans0(booleans, 0, booleans.length);
+	private void writeBooleans0(boolean[] booleans, int off, int len) {
+		int bytesNeeded = (len + 7) >>> 3; // division by 8 and round up
+		ensureWritable(bytesNeeded + positiveVarIntLen(len));
+		writeVarIntNBC(len);
+
+		int currentByte = 0;
+		for (int idx = 0; idx < len; idx++) {
+			int bit = idx & 7;
+			currentByte |= (booleans[off + idx] ? 1 << bit : 0);
+
+			if (bit == 7) {
+				writeByteNBC(currentByte);
+				currentByte = 0;
+			}
+		}
+		if ((len & 7) != 0) {
+			writeByteNBC(currentByte);
 		}
 	}
 
-	private void writeBooleans0(boolean[] booleans, int off, int len) {
-		writeVarInt(len);
-		ensureWritable(len % 8 + 1);
-		writeBooleans00(booleans, off, len);
-		count += len % 8 + 1;
+	@Override
+	public void writeBytes(byte[] bytes) {
+		if (bytes == null) {
+			writeNegativeVarInt(-1);
+		} else {
+			writeBytes0(bytes, 0, bytes.length);
+		}
 	}
-
-	abstract void writeBooleans00(boolean[] booleans, int off, int len);
 
 	@Override
 	public void writeBytes(byte[] bytes, int off, int len) {
@@ -500,18 +581,9 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		writeBytes0(bytes, off, len);
 	}
 
-	@Override
-	public void writeBytes(byte[] bytes) {
-		if (bytes == null) {
-			writeVarInt(-1);
-		} else {
-			writeBytes0(bytes, 0, bytes.length);
-		}
-	}
-
 	private void writeBytes0(byte[] bytes, int off, int len) {
-		writeVarInt(len);
-		ensureWritable(len);
+		ensureWritable(len + positiveVarIntLen(len));
+		writeVarIntNBC(len);
 		System.arraycopy(bytes, off, buf, count, len);
 		count += len;
 	}
@@ -519,7 +591,7 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 	@Override
 	public void writeShorts(short[] shorts) {
 		if (shorts == null) {
-			writeVarInt(-1);
+			writeNegativeVarInt(-1);
 		} else {
 			writeShorts0(shorts, 0, shorts.length);
 		}
@@ -527,28 +599,24 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 
 	@Override
 	public void writeShorts(short[] shorts, int off, int len) {
-		if (shorts == null) {
-			writeVarInt(-1);
-		} else {
-			checkArgument(len >= 0, "len must be >= 0");
-			checkPositionIndexes(off, off + len, shorts.length);
-			writeShorts0(shorts, off, len);
-		}
+		checkArgument(len >= 0, "len must be >= 0");
+		checkPositionIndexes(off, off + len, shorts.length);
+		writeShorts0(shorts, off, len);
 	}
 
 	private void writeShorts0(short[] shorts, int off, int len) {
-		writeVarInt(len);
-		ensureWritable(len << 1);
-		writeShorts00(shorts, off, len);
-		count += len << 1;
-	}
+		ensureWritable(positiveVarIntLen(len) + len << 1);
+		writeVarIntNBC(len);
 
-	abstract void writeShorts00(short[] shorts, int off, int len);
+		for (int i = 0; i < len; i++) {
+			writeShortNBC(shorts[off + i]);
+		}
+	}
 
 	@Override
 	public void writeInts(int[] ints) {
 		if (ints == null) {
-			writeVarInt(-1);
+			writeNegativeVarInt(-1);
 		} else {
 			writeInts0(ints, 0, ints.length);
 		}
@@ -556,28 +624,23 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 
 	@Override
 	public void writeInts(int[] ints, int off, int len) {
-		if (ints == null) {
-			writeVarInt(-1);
-		} else {
-			checkArgument(len >= 0, "len must be >= 0");
-			checkPositionIndexes(off, off + len, ints.length);
-			writeInts0(ints, off, len);
-		}
+		checkArgument(len >= 0, "len must be >= 0");
+		checkPositionIndexes(off, off + len, ints.length);
+		writeInts0(ints, off, len);
 	}
 
 	private void writeInts0(int[] ints, int off, int len) {
-		writeVarInt(len);
-		ensureWritable(len << 2);
-		writeInts00(ints, off, len);
-		count += len << 2;
+		ensureWritable(positiveVarIntLen(len) + len << 2);
+		writeVarIntNBC(len);
+		for (int i = 0; i < len; i++) {
+			writeIntNBC(ints[i + off]);
+		}
 	}
-
-	abstract void writeInts00(int[] ints, int off, int len);
 
 	@Override
 	public void writeLongs(long[] longs) {
 		if (longs == null) {
-			writeVarInt(-1);
+			writeNegativeVarInt(-1);
 		} else {
 			writeLongs0(longs, 0, longs.length);
 		}
@@ -585,28 +648,24 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 
 	@Override
 	public void writeLongs(long[] longs, int off, int len) {
-		if (longs == null) {
-			writeVarInt(-1);
-		} else {
-			checkArgument(len >= 0, "len must be >= 0");
-			checkPositionIndexes(off, off + len, longs.length);
-			writeLongs0(longs, off, len);
-		}
+		checkArgument(len >= 0, "len must be >= 0");
+		checkPositionIndexes(off, off + len, longs.length);
+		writeLongs0(longs, off, len);
 	}
 
 	private void writeLongs0(long[] longs, int off, int len) {
-		writeVarInt(len);
-		ensureWritable(len << 3);
-		writeLongs00(longs, off, len);
-		count += len << 3;
-	}
+		ensureWritable(positiveVarIntLen(len) + len << 3);
+		writeVarIntNBC(len);
 
-	abstract void writeLongs00(long[] longs, int off, int len);
+		for (int i = 0; i < len; i++) {
+			writeLongNBC(longs[i + off]);
+		}
+	}
 
 	@Override
 	public void writeChars(char[] chars) {
 		if (chars == null) {
-			writeVarInt(-1);
+			writeNegativeVarInt(-1);
 		} else {
 			writeChars0(chars, 0, chars.length);
 		}
@@ -614,61 +673,42 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 
 	@Override
 	public void writeChars(char[] chars, int off, int len) {
-		if (chars == null) {
-			writeVarInt(-1);
-		} else {
-			checkArgument(len >= 0, "len must be >= 0");
-			checkPositionIndexes(off, off + len, chars.length);
-			writeChars0(chars, off, len);
-		}
+		checkArgument(len >= 0, "len must be >= 0");
+		checkPositionIndexes(off, off + len, chars.length);
+		writeChars0(chars, off, len);
 	}
 
 	private void writeChars0(char[] chars, int off, int len) {
-		writeVarInt(len);
-		ensureWritable(len << 1);
-		writeChars00(chars, off, len);
-		count += len << 1;
-	}
+		ensureWritable(positiveVarIntLen(len) + len << 1);
+		writeVarIntNBC(len);
 
-	abstract void writeChars00(char[] chars, int off, int len);
-
-	@Override
-	public void writeFloats(float[] floats, int off, int len) {
-		if (floats == null) {
-			writeVarInt(-1);
-		} else {
-			checkArgument(len >= 0, "len must be >= 0");
-			checkPositionIndexes(off, off + len, floats.length);
-			writeFloats0(floats, off, len);
+		for (int i = 0; i < len; i++) {
+			writeCharNBC(chars[i + off]);
 		}
 	}
 
 	@Override
 	public void writeFloats(float[] floats) {
 		if (floats == null) {
-			writeVarInt(-1);
+			writeNegativeVarInt(-1);
 		} else {
 			writeFloats0(floats, 0, floats.length);
 		}
 	}
 
-	private void writeFloats0(float[] floats, int off, int len) {
-		writeVarInt(len);
-		ensureWritable(len << 2);
-		writeFloats00(floats, off, len);
-		count += len << 2;
+	@Override
+	public void writeFloats(float[] floats, int off, int len) {
+		checkArgument(len >= 0, "len must be >= 0");
+		checkPositionIndexes(off, off + len, floats.length);
+		writeFloats0(floats, off, len);
 	}
 
-	abstract void writeFloats00(float[] floats, int off, int len);
+	private void writeFloats0(float[] floats, int off, int len) {
+		ensureWritable(positiveVarIntLen(len) + len << 2);
+		writeVarIntNBC(len);
 
-	@Override
-	public void writeDoubles(double[] doubles, int off, int len) {
-		if (doubles == null) {
-			writeVarInt(-1);
-		} else {
-			checkArgument(len >= 0, "len must be >= 0");
-			checkPositionIndexes(off, off + len, doubles.length);
-			writeDoubles0(doubles, off, len);
+		for (int i = 0; i < len; i++) {
+			writeFloatNBC(floats[i + off]);
 		}
 	}
 
@@ -681,13 +721,20 @@ abstract class MCDataOutputImpl extends MCDataOutputStream {
 		}
 	}
 
-	private void writeDoubles0(double[] doubles, int off, int len) {
-		writeVarInt(len);
-		ensureWritable(len << 3);
-		writeDoubles00(doubles, off, len);
-		count += len << 3;
+	@Override
+	public void writeDoubles(double[] doubles, int off, int len) {
+		checkArgument(len >= 0, "len must be >= 0");
+		checkPositionIndexes(off, off + len, doubles.length);
+		writeDoubles0(doubles, off, len);
 	}
 
-	abstract void writeDoubles00(double[] doubles, int off, int len);
+	private void writeDoubles0(double[] doubles, int off, int len) {
+		ensureWritable(positiveVarIntLen(len) + len << 3);
+		writeVarIntNBC(len);
+
+		for (int i = 0; i < len; i++) {
+			writeDoubleNBC(doubles[i + off]);
+		}
+	}
 
 }

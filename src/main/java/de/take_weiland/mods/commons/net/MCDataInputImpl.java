@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkPositionIndexes;
-import static de.take_weiland.mods.commons.net.MCDataOutputImpl.*;
 
 /**
  * @author diesieben07
@@ -32,14 +31,11 @@ import static de.take_weiland.mods.commons.net.MCDataOutputImpl.*;
 @ParametersAreNonnullByDefault
 class MCDataInputImpl extends InputStream implements MCDataInput {
 
-	private static final int NO_MARK = -1;
-	private static final int SEVEN_BITS = 0b0111_1111;
-	private static final int BYTE_MSB = 0b1000_0000;
-	final byte[] buf;
+	private final byte[] buf;
 	private final int maxLen;
 	private final int initialPos;
-	int pos;
-	private int markedPos = NO_MARK;
+	private int pos;
+	private int markedPos = BufferConstants.NO_MARK;
 
 	MCDataInputImpl(byte[] buf, int off, int len) {
 		this.buf = buf;
@@ -106,7 +102,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	@Override
 	public void reset() {
-		if (markedPos == NO_MARK) {
+		if (markedPos == BufferConstants.NO_MARK) {
 			pos = initialPos;
 		} else {
 			pos = markedPos;
@@ -190,7 +186,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	@Override
 	public boolean readBoolean() {
-		return readByte() != BOOLEAN_FALSE;
+		return readByte() != BufferConstants.BOOLEAN_FALSE;
 	}
 
 	@Override
@@ -287,9 +283,9 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 		do {
 			read = readByte();
-			res |= (read & SEVEN_BITS) << step;
+			res |= (read & BufferConstants.SEVEN_BITS) << step;
 			step += 7;
-		} while ((read & BYTE_MSB) == 0);
+		} while ((read & BufferConstants.BYTE_MSB) == 0);
 		return res;
 	}
 
@@ -298,12 +294,12 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 	@Override
 	public Boolean readBooleanBox() {
 		int b = readByte();
-		return b == BOOLEAN_NULL ? null : b != BOOLEAN_FALSE;
+		return b == BufferConstants.BOOLEAN_NULL ? null : b != BufferConstants.BOOLEAN_FALSE;
 	}
 
 	@Override
 	public Byte readByteBox() {
-		if (readByte() == BOX_NULL) {
+		if (readByte() == BufferConstants.BOX_NULL) {
 			return null;
 		} else {
 			return readByte();
@@ -312,7 +308,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	@Override
 	public Short readShortBox() {
-		if (readByte() == BOX_NULL) {
+		if (readByte() == BufferConstants.BOX_NULL) {
 			return null;
 		} else {
 			return readShort();
@@ -321,7 +317,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	@Override
 	public Character readCharBox() {
-		if (readByte() == BOX_NULL) {
+		if (readByte() == BufferConstants.BOX_NULL) {
 			return null;
 		} else {
 			return readChar();
@@ -330,7 +326,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	@Override
 	public Integer readIntBox() {
-		if (readByte() == BOX_NULL) {
+		if (readByte() == BufferConstants.BOX_NULL) {
 			return null;
 		} else {
 			return readInt();
@@ -339,7 +335,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	@Override
 	public Long readLongBox() {
-		if (readByte() == BOX_NULL) {
+		if (readByte() == BufferConstants.BOX_NULL) {
 			return null;
 		} else {
 			return readLong();
@@ -348,7 +344,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	@Override
 	public Float readFloatBox() {
-		if (readByte() == BOX_NULL) {
+		if (readByte() == BufferConstants.BOX_NULL) {
 			return null;
 		} else {
 			return readFloat();
@@ -357,7 +353,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	@Override
 	public Double readDoubleBox() {
-		if (readByte() == BOX_NULL) {
+		if (readByte() == BufferConstants.BOX_NULL) {
 			return null;
 		} else {
 			return readDouble();
@@ -589,30 +585,53 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	@Override
 	public BitSet readBitSet() {
-		return readBitSet(null);
-	}
-
-	@Override
-	public BitSet readBitSet(@Nullable BitSet bitSet) {
 		long[] words = readLongs();
 		if (words == null) {
 			return null;
-		} else if (bitSet == null) {
-			return BufferUtils.bitSetHandler.createShared(words);
 		} else {
-			BufferUtils.bitSetHandler.updateInPlace(words, bitSet);
-			return bitSet;
+			return BitSet.valueOf(words);
 		}
 	}
 
 	@Override
 	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass) {
-		return BufferUtils.enumSetHandler.createShared(enumClass, readLong());
-	}
+		int readByte = readByte();
+		if (readByte == 0) {
+			return null;
+		} else {
+			E[] universe = JavaUtils.getEnumConstantsShared(enumClass);
+			EnumSet<E> set = EnumSet.noneOf(enumClass);
 
-	@Override
-	public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> enumClass, EnumSet<E> set) {
-		return BufferUtils.enumSetHandler.update(enumClass, set, readLong());
+			int numEnums = universe.length;
+			int numExtraBytes = numEnums >>> 3;
+			readByte >>= 1;
+			if (numExtraBytes == 0) {
+				for (int i = 0; i < numEnums; i++) {
+					if ((readByte & (1 << i)) != 0) {
+						set.add(universe[i]);
+					}
+				}
+			} else {
+				for (int i = 0; i < 7; i++) {
+					if ((readByte & (1 << i)) != 0) {
+						set.add(universe[i]);
+					}
+				}
+				numEnums -= 7;
+				for (int b = 0; b < numExtraBytes; b++) {
+					readByte = readByte();
+					int left = Math.min(8, numEnums);
+					for (int i = 0; i < left; i++) {
+						if ((readByte & (1 << i)) != 0) {
+							set.add(universe[(b << 3) + i + 1]);
+						}
+					}
+
+					numEnums -= 8;
+				}
+			}
+			return set;
+		}
 	}
 
 	@Override
@@ -663,7 +682,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 	@Override
 	public UUID readUUID() {
 		long msb = readLong();
-		if (msb == UUID_NULL_MSB) {
+		if (msb == BufferConstants.UUID_NULL_MSB) {
 			return null;
 		} else {
 			return new UUID(msb, readLong());
@@ -698,7 +717,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 	public Item readItem() {
 		int id = readVarInt();
 		try {
-			return id == BufferUtils.ITEM_NULL_ID ? null : Item.itemsList[id];
+			return id == BufferConstants.ITEM_NULL_ID ? null : Item.itemsList[id];
 		} catch (ArrayIndexOutOfBoundsException e) {
 			throw new IllegalStateException("Invalid ItemID " + id);
 		}
@@ -708,7 +727,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 	public Block readBlock() {
 		int id = readVarInt();
 		try {
-			return id == BufferUtils.BLOCK_NULL_ID ? null : Block.blocksList[id];
+			return id == BufferConstants.BLOCK_NULL_ID ? null : Block.blocksList[id];
 		} catch (ArrayIndexOutOfBoundsException e) {
 			throw new IllegalStateException("Invalid BlockID " + id);
 		}

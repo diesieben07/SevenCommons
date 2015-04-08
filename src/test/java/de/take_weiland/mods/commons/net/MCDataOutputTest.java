@@ -3,43 +3,37 @@ package de.take_weiland.mods.commons.net;
 import org.junit.Test;
 
 import static de.take_weiland.mods.commons.net.MCDataInputTest.leArr;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author diesieben07
  */
-public abstract class MCDataOutputTest {
+public class MCDataOutputTest {
 
-	abstract MCDataOutputImpl newStream();
-	abstract MCDataOutputImpl newStream(int cap);
+	MCDataOutputImpl newStream() {
+        return new MCDataOutputImpl(64);
+    }
 
-	public static class NonUnsafe extends MCDataOutputTest {
-
-		@Override
-		MCDataOutputImpl newStream() {
-			return new MCDataOutputImplNonUnsafe(64);
-		}
-
-		@Override
-		MCDataOutputImpl newStream(int cap) {
-			return new MCDataOutputImplNonUnsafe(cap);
-		}
-	}
-
+	MCDataOutputImpl newStream(int cap) {
+        return new MCDataOutputImpl(cap);
+    }
 	@Test
 	public void testInitialCapacity() {
-		assertEquals("user provided capacity", 126, newStream(126).buf.length);
+		assertEquals("user provided capacity", 126, newStream(126).backingArray().length);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testIllegalInitialCapacity() {
-		MCDataOutputStream.create(-1);
+		Network.newDataOutput(-1);
 	}
 
 	@Test(expected = RuntimeException.class)
 	public void testLock() {
-		MCDataOutputStream stream = newStream();
+		MCDataOutput stream = newStream();
 		stream.lock();
 		stream.write(0);
 	}
@@ -173,37 +167,43 @@ public abstract class MCDataOutputTest {
 	public void testBooleans() {
 		MCDataOutputImpl stream = newStream();
 		stream.writeBooleans(new boolean[] { true, false, true, true, false, true, false, false, false, true }, 1, 9);
-		assertArrayEquals(new byte[] {
+		byte[] expected = {
 				(byte) 0b1000_1001,
 				(byte) 0b00010110,
 				(byte) 0b00000001
-		}, stream.toByteArray());
+		};
+		assertThat(stream.toByteArray(), is(equalTo(expected)));
 	}
 
 	@Test
 	public void testVarInt() {
-		assertArrayEquals(new byte[] {
+		byte[] expected = {
 				(byte) 0b1000_0000
-		}, varIntBytes(0));
+		};
+		assertThat(varIntBytes(0), is(equalTo(expected)));
 
-		assertArrayEquals(new byte[] {
+		expected = new byte[] {
 				(byte) 0b1000_0001
-		}, varIntBytes(1));
+		};
+		assertThat(varIntBytes(1), is(equalTo(expected)));
 
-		assertArrayEquals(new byte[] {
+		expected = new byte[] {
 				(byte) 0b0111_1111,
 				(byte) 0b1000_0001
-		}, varIntBytes(0xFF));
+		};
+		assertThat(varIntBytes(0xFF), is(equalTo(expected)));
 
-		assertArrayEquals(new byte[] {
+		expected = new byte[] {
 				(byte) 0b1111_1111
-		}, varIntBytes(0b0111_1111));
+		};
+		assertThat(varIntBytes(0b0111_1111), is(equalTo(expected)));
 
-		assertArrayEquals(new byte[] {
+		expected = new byte[] {
 				(byte) 0b0000_0000,
 				(byte) 0b0000_0000,
 				(byte) 0b1000_0001
-		}, varIntBytes(0b1_0000000_0000000));
+		};
+		assertThat(varIntBytes(0b1_0000000_0000000), is(equalTo(expected)));
 	}
 
 	private byte[] varIntBytes(int i) {

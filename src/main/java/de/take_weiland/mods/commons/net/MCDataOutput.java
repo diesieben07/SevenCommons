@@ -24,7 +24,7 @@ import java.util.UUID;
  * <p>This interface is mostly intended for network communication purposes and <i>not</i> for saving data to disk.
  * Additionally this interface specifies <b>Little Endian</b> byte order, violating the contract of the DataOutput interface,
  * to offer better performance on most systems.</p>
- * <p>An implementation is offered by {@link de.take_weiland.mods.commons.net.MCDataOutputStream}.</p>
+ * <p>Instances of this interfaces can be obtained using {@link Network#newDataOutput()}.</p>
  *
  * @author diesieben07
  */
