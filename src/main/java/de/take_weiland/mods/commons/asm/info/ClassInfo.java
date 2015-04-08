@@ -20,7 +20,7 @@ import static org.objectweb.asm.Type.*;
  *
  * @author diesieben07
  */
-public abstract class ClassInfo extends HasModifiers implements HasAnnotations {
+public abstract class ClassInfo extends HasModifiers {
 
 	private ClassInfo zuper;
 
@@ -195,6 +195,7 @@ public abstract class ClassInfo extends HasModifiers implements HasAnnotations {
 	 * @return true if the given class can be casted to this class
 	 */
 	public final boolean isAssignableFrom(ClassInfo child) {
+		// double dispatch
 		return child.callRightAssignableFrom(this);
 	}
 
@@ -264,29 +265,6 @@ public abstract class ClassInfo extends HasModifiers implements HasAnnotations {
 	}
 
 	/**
-	 * <p>Get the component type of this array class.</p>
-	 * <p>The component type of {@code int[][]} is {@code int[]}.</p>
-	 * @return the component type
-	 * @throws java.lang.IllegalStateException if this class is not an array
-	 */
-	public abstract Type getComponentType();
-
-	/**
-	 * <p>Get the root component type of this array class.</p>
-	 * <p>The root component type of {@code int[][]} is {@code int}.</p>
-	 * @return the root component type
-	 * @throws java.lang.IllegalStateException if this class is not an array
-	 */
-	public Type getRootComponentType() {
-		Type t = getComponentType();
-		if (t.getSort() == Type.ARRAY) {
-			return t.getElementType();
-		} else {
-			return t;
-		}
-	}
-
-	/**
 	 * <p>Determine if this class is an interface.</p>
 	 *
 	 * @return true if this class is an interface
@@ -325,91 +303,6 @@ public abstract class ClassInfo extends HasModifiers implements HasAnnotations {
 	}
 
 	/**
-	 * <p>Determine if a field with the given name is present in this class.</p>
-	 *
-	 * @param name the field name to check for
-	 * @return true if this class contains a field with the given name
-	 */
-	public abstract boolean hasField(String name);
-
-	/**
-	 * <p>Get a {@link de.take_weiland.mods.commons.asm.info.FieldInfo} that represents the field with the given name in this class.</p>
-	 *
-	 * @param name the field name
-	 * @return a FieldInfo or null if no such field was found
-	 */
-	public abstract FieldInfo getField(String name);
-
-	/**
-	 * <p>Determine if a method with the given name is present in this class.</p>
-	 *
-	 * @param name the method name to check for
-	 * @return true if this class contains a method with the given name
-	 */
-	public abstract boolean hasMethod(String name);
-
-	/**
-	 * <p>Determine if a method with the given name and descriptor is present in this class.</p>
-	 *
-	 * @param name the method name to check for
-	 * @param desc the method descriptor to check for
-	 * @return true if this class contains a method with the given name and descriptor
-	 */
-	public abstract boolean hasMethod(String name, String desc);
-
-	/**
-	 * <p>Get a {@link MethodInfo} that represents the first method in this
-	 * class that has the given name.</p>
-	 *
-	 * @param name the method name
-	 * @return a MethodInfo or null if no such method was found
-	 */
-	public abstract MethodInfo getMethod(String name);
-
-	/**
-	 * <p>Get a {@link MethodInfo} that represents the method with the given name and signature in this class.</p>
-	 *
-	 * @param name the method name
-	 * @param desc the method descriptor
-	 * @return a MethodInfo or null if no such method was found
-	 */
-	public abstract MethodInfo getMethod(String name, String desc);
-
-	/**
-	 * <p>Determine if a constructor with the given descriptor is present in this class.</p>
-	 *
-	 * @param desc the constructor descriptor
-	 * @return true if this class has a constructor with the given descriptor
-	 */
-	public abstract boolean hasConstructor(String desc);
-
-	/**
-	 * <p>Get a {@link de.take_weiland.mods.commons.asm.info.MethodInfo} that represents the constructor of this class with the given signature.</p>
-	 *
-	 * @param desc the constructor descriptor
-	 * @return a MethodInfo or null if no such constructor was found
-	 */
-	public abstract MethodInfo getConstructor(String desc);
-
-	/**
-	 * <p>Get a List of all methods present on this class.</p>
-	 * @return the list of methods
-	 */
-	public abstract List<MethodInfo> getMethods();
-
-	/**
-	 * <p>Get a List of all constructors present on this class.</p>
-	 * @return the list of constructors
-	 */
-	public abstract List<MethodInfo> getConstructors();
-
-	/**
-	 * <p>Get a List of all fields present on this class.</p>
-	 * @return the list of fields
-	 */
-	public abstract List<FieldInfo> getFields();
-
-    /**
      * <p>Get the name of the source file this class was declared in.</p>
      * @return the source file or null if unknown
      */
