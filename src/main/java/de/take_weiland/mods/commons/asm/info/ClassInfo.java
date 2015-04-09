@@ -2,18 +2,19 @@ package de.take_weiland.mods.commons.asm.info;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.MissingClassException;
-import de.take_weiland.mods.commons.internal.InternalReflector;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 
+import static java.lang.invoke.MethodHandles.publicLookup;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.*;
 
 /**
  * <p>Some information about a class, obtain via {@link ClassInfo#of(String)}, {@link ClassInfo#of(Class)} or {@link ClassInfo#of(org.objectweb.asm.tree.ClassNode)}.</p>
@@ -48,6 +49,19 @@ public abstract class ClassInfo extends HasModifiers {
 	}
 
 	/**
+	 * <p>Create a {@code ClassInfo} representing the given class.</p>
+	 * <p>This method will try to avoid loading actual classes into the JVM, but will instead use the ASM library
+	 * to analyze the raw class bytes if possible.</p>
+	 *
+	 * @param className the internal or binary name representing the class
+	 * @return a ClassInfo
+	 * @throws de.take_weiland.mods.commons.asm.MissingClassException if the class could not be found
+	 */
+	public static ClassInfo of(String className) {
+		return of(Type.getObjectType(ASMUtils.internalName(className)));
+	}
+
+	/**
 	 * <p>Create a {@code ClassInfo} representing the given Type.</p>
 	 * <p>This method will try to avoid loading actual classes into the JVM, but will instead use the ASM library
 	 * to analyze the raw class bytes if possible.</p>
@@ -58,67 +72,61 @@ public abstract class ClassInfo extends HasModifiers {
 	 */
 	public static ClassInfo of(Type type) {
 		switch (type.getSort()) {
-			case ARRAY:
-			case OBJECT:
-				// Type.getClassName incorrectly returns something like "java.lang.Object[][]" instead of "[[Ljava.lang.Object"
-				// so we have to convert the internal name (which is correct) manually
-				return create(ASMUtils.binaryName(type.getInternalName()));
-			case METHOD:
-				throw new IllegalArgumentException("Invalid Type!");
+			case Type.ARRAY:
+				Type rootType = type.getElementType();
+				int dimensions = type.getDimensions();
+				return new ClassInfoArray(dimensions, of(rootType));
+			case Type.OBJECT:
+				return ofObject(type.getClassName());
+			case Type.VOID:
+				return of(void.class);
+			case Type.BOOLEAN:
+				return of(boolean.class);
+			case Type.BYTE:
+				return of(byte.class);
+			case Type.SHORT:
+				return of(short.class);
+			case Type.CHAR:
+				return of(char.class);
+			case Type.INT:
+				return of(int.class);
+			case Type.LONG:
+				return of(long.class);
+			case Type.FLOAT:
+				return of(float.class);
+			case Type.DOUBLE:
+				return of(double.class);
+			case Type.METHOD:
+				throw new IllegalArgumentException("Cannot create ClassInfo of a Method Type!");
 			default:
-				// primitives
-				return create(type.getClassName());
+				throw new AssertionError();
 		}
 	}
 
-	/**
-	 * <p>Create a {@code ClassInfo} representing the given class.</p>
-	 * <p>This method will try to avoid loading actual classes into the JVM, but will instead use the ASM library
-	 * to analyze the raw class bytes if possible.</p>
-	 *
-	 * @param className the internal or binary name representing the class
-	 * @return a ClassInfo
-	 * @throws de.take_weiland.mods.commons.asm.MissingClassException if the class could not be found
-	 */
-	public static ClassInfo of(String className) {
-		return create(ASMUtils.binaryName(className));
+	// don't use the accessor interface mechanic
+	// this happens very early in startup
+	private static final MethodHandle findLoadedClass;
+	static {
+		try {
+			Method method = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+			method.setAccessible(true);
+			findLoadedClass = publicLookup().unreflect(method);
+		} catch (NoSuchMethodException | IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
 	}
-
-	static ClassInfo create(String className) {
-		switch (className) {
-			case "void":
-				return of(void.class);
-			case "boolean":
-				return of(boolean.class);
-			case "byte":
-				return of(byte.class);
-			case "short":
-				return of(short.class);
-			case "int":
-				return of(int.class);
-			case "long":
-				return of(long.class);
-			case "float":
-				return of(float.class);
-			case "double":
-				return of(double.class);
-			case "char":
-				return of(char.class);
-			default:
-				if (className.indexOf('[') >= 0) {
-					// array classes should always be accessible via Class.forName
-					// without loading the element-type class (Object[].class doesn't load Object.class)
-					return forceLoad(className);
-				} else {
-					return ofObject(className);
-				}
+	private static Class<?> findLoadedClass(ClassLoader cl, String name) {
+		try {
+			return (Class<?>) findLoadedClass.invokeExact(cl, name);
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
 		}
 	}
 
 	private static ClassInfo ofObject(String className) {
 		Class<?> clazz;
 		// first, try to get the class if it's already loaded
-		if ((clazz = InternalReflector.instance.findLoadedClass(Launch.classLoader, className)) != null) {
+		if ((clazz = findLoadedClass(Launch.classLoader, className)) != null) {
 			return new ClassInfoReflect(clazz);
 		} else {
 			try {

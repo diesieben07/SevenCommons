@@ -31,15 +31,23 @@ public final class ClassInfoUtil {
 		MinecraftForge.EVENT_BUS.unregister(this);
 	}
 
-	public static Map<String, Set<String>> superCache = Maps.newHashMap();
+	private static volatile Map<String, ImmutableSet<String>> superCache = Maps.newHashMap();
 
 	public static Set<String> getSupers(ClassInfo classInfo) {
 		// grab a local var in case of concurrency
-		Map<String, Set<String>> superCacheLocal = superCache;
+		Map<String, ImmutableSet<String>> superCacheLocal = superCache;
 		if (superCacheLocal != null) {
-			Set<String> supers = superCacheLocal.get(classInfo.internalName());
+			ImmutableSet<String> supers;
+			synchronized (ClassInfoUtil.class) {
+				supers = superCacheLocal.get(classInfo.internalName());
+			}
 			if (supers == null) {
-				superCacheLocal.put(classInfo.internalName(), (supers = buildSupers(classInfo)));
+				supers = buildSupers(classInfo);
+				synchronized (ClassInfoUtil.class) {
+					// in theory someone else might have done this already
+					// but oh well, the data is the same
+					superCacheLocal.put(classInfo.internalName(), supers);
+				}
 			}
 			return supers;
 		} else {
@@ -47,7 +55,7 @@ public final class ClassInfoUtil {
 		}
 	}
 
-	private static Set<String> buildSupers(ClassInfo classInfo) {
+	private static ImmutableSet<String> buildSupers(ClassInfo classInfo) {
 		Set<String> set = Sets.newHashSet();
 		String superName = classInfo.superName();
 		if (superName != null) {

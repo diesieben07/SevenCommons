@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraft.launchwrapper.IClassNameTransformer;
@@ -20,6 +19,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public final class ASMUtils {
 
 	private ASMUtils() { }
+
+	public static void convertTypes(GeneratorAdapter gen, Class<?> from, Class<?> to) {
+		convertTypes(gen, Type.getType(from), Type.getType(to));
+	}
 
 	/**
 	 * <p>Convert from one type to another.</p>
@@ -146,39 +149,6 @@ public final class ASMUtils {
 	// *** Misc Utils *** //
 
 	/**
-	 * <p>Create a ClassNode for the class specified by the given internal name. The class must be accessible
-	 * by the {@link net.minecraft.launchwrapper.Launch#classLoader LaunchClassLoader}.</p>
-	 * @param name the internal name
-	 * @return a ClassNode
-	 * @throws de.take_weiland.mods.commons.asm.MissingClassException if the class could not be found
-	 */
-	public static ClassNode getClassNode(String name) {
-		return getClassNode(name, 0);
-	}
-
-	/**
-	 * <p>Create a ClassNode for the class specified by the given internal name. The class must be accessible
-	 * by the {@link net.minecraft.launchwrapper.Launch#classLoader LaunchClassLoader}.</p>
-	 *
-	 * @param name the internal name
-	 * @param readerFlags the flags to pass to the {@link org.objectweb.asm.ClassReader}
-	 * @return a ClassNode
-	 * @throws de.take_weiland.mods.commons.asm.MissingClassException if the class could not be found
-	 */
-	public static ClassNode getClassNode(String name, int readerFlags) {
-		try {
-			byte[] bytes = Launch.classLoader.getClassBytes(untransformName(name));
-			if (bytes == null) {
-				throw new MissingClassException(name);
-			}
-			return getClassNode(bytes, readerFlags);
-		} catch (Exception e) {
-			Throwables.propagateIfInstanceOf(e, MissingClassException.class);
-			throw new MissingClassException(name, e);
-		}
-	}
-
-	/**
 	 * <p>Create a ClassNode for the class represented by the given bytes.</p>
 	 * @param bytes the class bytes
 	 * @return a ClassNode
@@ -202,19 +172,6 @@ public final class ASMUtils {
 	}
 
 	private static final int THIN_FLAGS = ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES;
-
-	/**
-	 * <p>Create a ClassNode for the class specified by the given internal name. The class must be accessible
-	 * by the {@link net.minecraft.launchwrapper.Launch#classLoader LaunchClassLoader}.</p>
-	 * <p>The ClassNode will only contain the rough outline of the class. It is read with {@code ClassReader.SKIP_CODE}, {@code ClassReader.SKIP_DEBUG}
-	 * {@code ClassReader.SKIP_FRAMES} set.</p>
-	 * @param name the internal name
-	 * @return a ClassNode
-	 *
-	 */
-	public static ClassNode getThinClassNode(String name) {
-		return getClassNode(name, THIN_FLAGS);
-	}
 
 	/**
 	 * <p>Create a ClassNode for the class represented by the given bytes.</p>
@@ -249,7 +206,16 @@ public final class ASMUtils {
 		return unboxedType(type) != type;
 	}
 
+	/**
+	 * <p>Get a Type representing the unboxed version of the given primitive wrapper type. If the given type is not
+	 * a primitive wrapper, the type itself will be returned.</p>
+	 * @param wrapper the wrapper
+	 * @return the unboxed version
+	 */
 	public static Type unboxedType(Type wrapper) {
+		if (isPrimitive(wrapper)) {
+			return wrapper;
+		}
 		switch (wrapper.getInternalName()) {
 			case "java/lang/Void":
 				return Type.VOID_TYPE;
@@ -274,6 +240,12 @@ public final class ASMUtils {
 		}
 	}
 
+	/**
+	 * <p>Get a Type representing the boxed version of the given primitive type. If the given type is not
+	 * a primitive, the type itself will be returned.</p>
+	 * @param primitive the primitive
+	 * @return the boxed version
+	 */
 	public static Type boxedType(Type primitive) {
 		switch (primitive.getSort()) {
 			case Type.VOID:
