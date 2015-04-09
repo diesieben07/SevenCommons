@@ -1,9 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 import de.take_weiland.mods.commons.serialize.Property;
 import de.take_weiland.mods.commons.util.JavaUtils;
 
@@ -18,22 +15,9 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public abstract class TypeToFactoryMap<F, FR> {
 
-    private Multimap<Class<?>, F> map = ArrayListMultimap.create();
+    private Multimap<Class<?>, F> map = Multimaps.synchronizedMultimap(ArrayListMultimap.<Class<?>, F>create());
 
     public final FR get(Property<?, ?> type) {
-        if (isFrozenNonLocking()) {
-            return getNonLocking(type);
-        } else {
-            synchronized (this) {
-                if (!isFrozenNonLocking()) {
-                    return getNonLocking(type);
-                }
-            }
-            return getNonLocking(type);
-        }
-    }
-
-    private FR getNonLocking(Property<?, ?> type) {
         Class<?> rawType = type.getRawType();
         Iterable<Class<?>> hierarchy;
         if (rawType.isPrimitive()) {
