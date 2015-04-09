@@ -15,6 +15,10 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public abstract class TypeToFactoryMap<F, FR> {
 
+    // lock on "this" guards writes to the map
+    // map must be synchronized as long as it's mutable as well,
+    // to exclude the "get" call, which does not synchronize on "this".
+
     private Multimap<Class<?>, F> map = Multimaps.synchronizedMultimap(ArrayListMultimap.<Class<?>, F>create());
 
     public final FR get(Property<?, ?> type) {
