@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.net;
 import com.google.common.primitives.Ints;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.*;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -12,10 +13,9 @@ import net.minecraftforge.fluids.FluidStack;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.io.DataInputStream;
+import java.io.DataInput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.BitSet;
@@ -29,18 +29,12 @@ import static com.google.common.base.Preconditions.checkPositionIndexes;
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-class MCDataInputImpl extends InputStream implements MCDataInput {
+class MCDataInputImpl implements MCDataInput, DataInput {
 
-	private final byte[] buf;
-	private final int maxLen;
-	private final int initialPos;
-	private int pos;
-	private int markedPos = BufferConstants.NO_MARK;
+	private final ByteBuf buf;
 
-	MCDataInputImpl(byte[] buf, int off, int len) {
+	MCDataInputImpl(ByteBuf buf) {
 		this.buf = buf;
-		this.pos = this.initialPos = off;
-		this.maxLen = len;
 	}
 
 	@Override
@@ -49,40 +43,13 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 	}
 
 	@Override
-	public int pos() {
-		return pos - initialPos;
-	}
-
-	@Override
-	public int len() {
-		return maxLen;
-	}
-
-	@Override
 	public int available() {
-		return maxLen - pos;
-	}
-
-	@Override
-	public void seek(int pos) {
-		if (pos < 0) {
-			throw new IllegalArgumentException("pos must be >= 0");
-		} else if (pos > maxLen) {
-			throw new IndexOutOfBoundsException("pos must be < length");
-		} else {
-			this.pos = (pos + initialPos);
-		}
+		return buf.readableBytes();
 	}
 
 	@Override
 	public int skipBytes(int n) {
-		if (n <= 0) {
-			return 0;
-		}
-		int avail = maxLen - pos;
-		if (n > avail) n = avail;
-		pos += n;
-		return n;
+		buf.skipBytes(n);
 	}
 
 	@Override
@@ -97,16 +64,12 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 
 	@Override
 	public void mark(int readlimit) {
-		markedPos = pos;
+		buf.markReaderIndex();
 	}
 
 	@Override
 	public void reset() {
-		if (markedPos == BufferConstants.NO_MARK) {
-			pos = initialPos;
-		} else {
-			pos = markedPos;
-		}
+		buf.resetReaderIndex();
 	}
 
 	@Override
@@ -115,44 +78,29 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
 	// actual IO
 
 	final void checkAvailable(int bytes) {
-		if (maxLen - pos < bytes) {
-			throw new IllegalStateException("Read past end of buffer");
-		}
 	}
 
 	@Override
 	public int read() {
-		return (pos + initialPos) < maxLen ? buf[pos++] & 0xFF : -1;
+		return buf.isReadable() ? buf.readByte() : -1;
 	}
 
 	@Override
 	public int read(byte[] b, int off, int len) {
-		checkPositionIndexes(off, off + len, buf.length);
-		int avail = maxLen - pos;
-		if (avail == 0) {
+		if (len == 0) {
+			return 0;
+		}
+		int readBytes = Math.min(len, buf.readableBytes());
+		if (readBytes == 0) {
 			return -1;
 		}
-		int actualLen = Math.min(len, avail);
-		if (actualLen != 0) {
-			System.arraycopy(buf, pos, b, off, actualLen);
-			pos += actualLen;
-		}
-		return actualLen;
+		buf.readBytes(b, off, readBytes);
+		return readBytes;
 	}
 
 	@Override
 	public int read(byte[] b) {
 		return read(b, 0, b.length);
-	}
-
-	@Override
-	@Nonnull
-	public String readUTF() {
-		try {
-			return DataInputStream.readUTF(this);
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
-		}
 	}
 
 	@Override

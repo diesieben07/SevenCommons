@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataInput;
 import de.take_weiland.mods.commons.util.BlockPos;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -10,6 +11,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.DataInput;
 import java.io.InputStream;
 import java.util.BitSet;
 import java.util.EnumSet;
@@ -19,46 +21,50 @@ import java.util.UUID;
  * <p>An extension to the DataInput interface which adds methods useful in the Minecraft environment.</p>
  * <p>This interface is intended to read from a memory-based buffer and thus does not throw IOExceptions.</p>
  * <p>This interface is mostly intended for network communication purposes and <i>not</i> for reading data from disk.
- * Additionally this interface specifies <b>Little Endian</b> byte order, violating the contract of the DataInput interface,
- * to offer better performance on most systems.</p>
  * <p>Instances of this interfaces can be obtained using {@link Network#newDataInput(byte[])}.</p>
  *
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-public interface MCDataInput extends ByteArrayDataInput {
+public interface MCDataInput {
 
 	/**
-	 * <p>Set the byte position pointer of this stream.</p>
-	 * <p>Valid positions reach from 0 through {@link #len()}. A position equal to {@code len()} defines that no further
-	 * bytes can be read from this stream.</p>
-	 * @param pos the new position
-	 * @throws java.lang.IllegalArgumentException if the argument is negative
-	 * @throws java.lang.IndexOutOfBoundsException if the argument is not a valid position
-	 * @see #skipBytes(int)
+	 * <p>Return the number of bytes that can still be read from this input.</p>
+	 * @return the number of bytes
 	 */
-	void seek(int pos);
-
-	/**
-	 * <p>Get the current byte position pointer of this stream.</p>
-	 * <p>Valid positions reach from 0 through {@link #len()}. A position equal to {@code len()} defines that no further
-	 * bytes can be read from this stream.</p>
-	 * @return the current position
-	 */
-	int pos();
-
-	/**
-	 * <p>Get the maximum number of bytes that can be read from this stream. This value is not affected by the current
-	 * position pointer.</p>
-	 * @return the total length of this stream
-	 */
-	int len();
+	int available();
 
 	/**
 	 * <p>Get an {@code InputStream} view of this stream. The created stream reads through to this stream.</p>
 	 * @return an InputStream
 	 */
 	InputStream asInputStream();
+
+	DataInput asDataInput();
+
+	ByteBuf asBuffer();
+
+	int skipBytes(int n);
+
+	boolean readBoolean();
+
+	byte readByte();
+
+	int readUnsignedByte();
+
+	short readShort();
+
+	int readUnsignedShort();
+
+	char readChar();
+
+	int readInt();
+
+	long readLong();
+
+	float readFloat();
+
+	double readDouble();
 
 	/**
 	 * <p>Read a VarInt from the buffer.</p>

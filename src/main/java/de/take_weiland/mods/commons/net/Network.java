@@ -6,6 +6,7 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import de.take_weiland.mods.commons.internal.FMLPacketHandlerImpl;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
+import de.take_weiland.mods.commons.netx.*;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.NetLoginHandler;
@@ -13,6 +14,7 @@ import net.minecraft.network.NetServerHandler;
 import net.minecraft.network.packet.NetHandler;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.reflect.Type;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -24,6 +26,8 @@ import static com.google.common.base.Preconditions.checkPositionIndexes;
  */
 @ParametersAreNonnullByDefault
 public final class Network {
+
+	static final Type paramType = de.take_weiland.mods.commons.netx.PacketHandler.class.getTypeParameters()[0];
 
 	/**
 	 * gets the INetworkManager associated with the given NetHandler
