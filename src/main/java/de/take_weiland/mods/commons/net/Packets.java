@@ -1,6 +1,9 @@
 package de.take_weiland.mods.commons.net;
 
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.reflect.Invoke;
+import de.take_weiland.mods.commons.reflect.OverrideTarget;
+import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.entity.Entity;
@@ -8,8 +11,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.server.management.PlayerInstance;
+import net.minecraft.network.Packet;
+import net.minecraft.server.management.PlayerManager;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -17,6 +20,7 @@ import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * <p>Utility class for sending Packets around.</p>
@@ -38,7 +42,7 @@ public final class Packets {
 	 * @param player the player
 	 */
 	public static void sendTo(Packet packet, EntityPlayer player) {
-		checkNotClient(player).playerNetServerHandler.sendPacketToPlayer(packet);
+		checkNotClient(player).playerNetServerHandler.sendPacket(packet);
 	}
 
 	/**
@@ -48,7 +52,7 @@ public final class Packets {
 	 */
 	public static void sendTo(Packet packet, Iterable<? extends EntityPlayer> players) {
 		for (EntityPlayer player : players) {
-			checkNotClient(player).playerNetServerHandler.sendPacketToPlayer(packet);
+			checkNotClient(player).playerNetServerHandler.sendPacket(packet);
 		}
 	}
 
@@ -59,7 +63,7 @@ public final class Packets {
 	 */
 	public static void sendTo(Packet packet, EntityPlayer... players) {
 		for (EntityPlayer player : players) {
-			checkNotClient(player).playerNetServerHandler.sendPacketToPlayer(packet);
+			checkNotClient(player).playerNetServerHandler.sendPacket(packet);
 		}
 	}
 
@@ -83,7 +87,25 @@ public final class Packets {
 	@SuppressWarnings("ForLoopReplaceableByForEach")
 	private static void sendToList(Packet packet, List<EntityPlayerMP> players) {
 		for (int i = 0, len = players.size(); i < len; i++) {
-			players.get(i).playerNetServerHandler.sendPacketToPlayer(packet);
+			players.get(i).playerNetServerHandler.sendPacket(packet);
+		}
+	}
+
+	public static void sendTo(Packet packet, Predicate<? super EntityPlayerMP> filter) {
+		sendToListFiltered(packet, filter, Players.getAll());
+	}
+
+	public static void sendTo(Packet packet, World world, Predicate<? super EntityPlayerMP> filter) {
+		sendToListFiltered(packet, filter, Players.allIn(checkNotClient(world)));
+	}
+
+	@SuppressWarnings("ForLoopReplaceableByForEach")
+	private static void sendToListFiltered(Packet packet, Predicate<? super EntityPlayerMP> filter, List<EntityPlayerMP> all) {
+		for (int i = 0, len = all.size(); i < len; i++) {
+			EntityPlayerMP player = all.get(i);
+			if (filter.test(player)) {
+				player.playerNetServerHandler.sendPacket(packet);
+			}
 		}
 	}
 
@@ -93,7 +115,7 @@ public final class Packets {
 	 * @param entity the entity
 	 */
 	public static void sendToAllTracking(Packet packet, Entity entity) {
-		checkNotClient(entity.worldObj).getEntityTracker().sendPacketToAllPlayersTrackingEntity(entity, packet);
+		checkNotClient(entity.worldObj).getEntityTracker().func_151247_a(entity, packet);
 	}
 
 	/**
@@ -102,7 +124,7 @@ public final class Packets {
 	 * @param entity the entity
 	 */
 	public static void sendToAllAssociated(Packet packet, Entity entity) {
-		checkNotClient(entity.worldObj).getEntityTracker().sendPacketToAllAssociatedPlayers(entity, packet);
+		checkNotClient(entity.worldObj).getEntityTracker().func_151248_b(entity, packet);
 	}
 
 	/**
@@ -111,7 +133,7 @@ public final class Packets {
 	 * @param te the TileEntity
 	 */
 	public static void sendToAllTracking(Packet packet, TileEntity te) {
-		sendToAllTrackingChunk(packet, te.worldObj, te.xCoord >> 4, te.zCoord >> 4);
+		sendToAllTrackingChunk(packet, te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4);
 	}
 
 	/**
@@ -122,10 +144,23 @@ public final class Packets {
 	 * @param chunkZ the chunk z coordinate
 	 */
 	public static void sendToAllTrackingChunk(Packet packet, World world, int chunkX, int chunkZ) {
-		PlayerInstance pi = checkNotClient(world).getPlayerManager().getOrCreateChunkWatcher(chunkX, chunkZ, false);
-		if (pi != null) {
-			pi.sendToAllPlayersWatchingChunk(packet);
+		Object playerInstance = ChunkWatcherAcc.instance.getPlayerInstance(checkNotClient(world).getPlayerManager(), chunkX, chunkZ, false);
+		if (playerInstance != null) {
+			ChunkWatcherAcc.instance.sendToAllWatchingChunk(playerInstance, packet);
 		}
+	}
+
+	private interface ChunkWatcherAcc {
+
+		ChunkWatcherAcc instance = SCReflection.createAccessor(ChunkWatcherAcc.class);
+
+		@Invoke(method = "func_72690_a", srg = true)
+		Object getPlayerInstance(PlayerManager playerManager, int chunkX, int chunkZ, boolean create);
+
+		@Invoke(method = "func_151251_a", srg = true)
+		@OverrideTarget("net.minecraft.server.management.PlayerManager$PlayerInstance")
+		void sendToAllWatchingChunk(Object playerInstance, Packet packet);
+
 	}
 
 	/**
@@ -147,7 +182,7 @@ public final class Packets {
 		for (int i = 0, len = crafters.size(); i < len; ++i) {
 			ICrafting crafter = crafters.get(i);
 			if (crafter instanceof EntityPlayerMP) {
-				((EntityPlayerMP) crafter).playerNetServerHandler.sendPacketToPlayer(packet);
+				((EntityPlayerMP) crafter).playerNetServerHandler.sendPacket(packet);
 				break;
 			}
 		}
@@ -173,7 +208,7 @@ public final class Packets {
 			double dy = y - player.posY;
 			double dz = z - player.posZ;
 			if (dx * dx + dy * dy + dz * dz < radius) {
-				player.playerNetServerHandler.sendPacketToPlayer(packet);
+				player.playerNetServerHandler.sendPacket(packet);
 			}
 		}
 	}
@@ -195,7 +230,7 @@ public final class Packets {
 	 * @param radius the radius
 	 */
 	public static void sendToAllNear(Packet packet, TileEntity te, double radius) {
-		sendToAllNear(packet, te.worldObj, te.xCoord, te.yCoord, te.zCoord, radius);
+		sendToAllNear(packet, te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, radius);
 	}
 
 	private static EntityPlayerMP checkNotClient(EntityPlayer player) {

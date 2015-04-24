@@ -142,7 +142,7 @@ final class BytecodeEmittingHandlerGenerator {
     }
 
     private void genWrite() {
-        Method method = getMethod("void write(Object, net.minecraft.nbt.NBTTagCompound)");
+        Method method = getMethod("void writeTo(Object, net.minecraft.nbt.NBTTagCompound)");
         GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
         gen.visitCode();
 
@@ -161,7 +161,7 @@ final class BytecodeEmittingHandlerGenerator {
         Type objectType = Type.getType(Object.class);
         Type nbtDataType = Type.getType(NBTData.class);
 
-        Method serializerWrite = getMethod("net.minecraft.nbt.NBTBase write(Object)");
+        Method serializerWrite = getMethod("net.minecraft.nbt.NBTBase writeTo(Object)");
         Method nbtCompoundSet = new Method(/* MCPNames.method(MCPNames.M_SET_TAG)*/ "setTag", Type.VOID_TYPE, new Type[] { stringType, nbtBaseType });
         Method serializedNull = new Method("serializedNull", nbtBaseType, new Type[0]);
 

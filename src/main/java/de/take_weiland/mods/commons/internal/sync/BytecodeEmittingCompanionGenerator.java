@@ -276,7 +276,7 @@ public final class BytecodeEmittingCompanionGenerator {
         GeneratorAdapter gen = new GeneratorAdapter(0, method, null, null, cw);
         gen.visitCode();
 
-        Method writeMethod = new Method("write" + idSize(false), VOID_TYPE, new Type[] { INT_TYPE });
+        Method writeMethod = new Method("writeTo" + idSize(false), VOID_TYPE, new Type[] { INT_TYPE });
         gen.loadArg(0);
         gen.loadArg(1);
         gen.invokeInterface(Type.getType(MCDataOutput.class), writeMethod);

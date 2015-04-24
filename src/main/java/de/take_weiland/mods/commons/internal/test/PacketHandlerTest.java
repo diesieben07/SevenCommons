@@ -20,7 +20,7 @@ public class PacketHandlerTest implements PacketHandler<TestPacket> {
 class TestPacket implements Packet {
 
     @Override
-    public void write(ByteBuf buf) {
+    public void writeTo(ByteBuf buf) {
 
     }
 }

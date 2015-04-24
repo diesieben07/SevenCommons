@@ -146,7 +146,7 @@ public final class Inventories {
 	 * {@link #readInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagList)}.</p>
 	 * @param stacks the inventory
 	 * @param nbt the NBTTagCompound
-	 * @param key the key to write to
+	 * @param key the key to writeTo to
 	 */
 	public static void writeInventory(ItemStack[] stacks, NBTTagCompound nbt, String key) {
 		nbt.setTag(key, writeInventory(stacks));

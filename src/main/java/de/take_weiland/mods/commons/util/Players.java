@@ -1,17 +1,19 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.mojang.authlib.GameProfile;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.ServerConfigurationManager;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Set;
+
+import static net.minecraft.server.MinecraftServer.getServer;
 
 /**
  * <p>Utilities for working with player entities.</p>
@@ -20,43 +22,23 @@ public final class Players {
 
 	@Nullable
 	public static EntityPlayerMP getSPOwner() {
-		MinecraftServer server = MinecraftServer.getServer();
-		if (server.isDedicatedServer()) {
+		if (getServer().isDedicatedServer()) {
 			return null;
 		}
-		return forName(server.getServerOwner());
+		return forName(getServer().getServerOwner());
 	}
 
 	public static boolean isSPOwner(EntityPlayer player) {
-		MinecraftServer server = MinecraftServer.getServer();
-		return !server.isDedicatedServer() && player.username.equals(server.getServerOwner());
+		return !getServer().isDedicatedServer() && player.getCommandSenderName().equals(getServer().getServerOwner());
 	}
 
 	/**
 	 * <p>Gets an Iterable containing all operators currently online on this server.</p>
-	 * <p>To get all operators, use {@link #getOpsRaw()}</p>
 	 *
 	 * @return all Operators
 	 */
 	public static Iterable<EntityPlayerMP> getOnlineOps() {
-		final Set<String> ops = getOpsRaw();
-		return Iterables.filter(getAll(), new Predicate<EntityPlayerMP>() {
-
-			@Override
-			public boolean apply(EntityPlayerMP player) {
-				return ops.contains(player.username.toLowerCase().trim());
-			}
-
-		});
-	}
-
-	/**
-	 * <p>Get the usernames of all operators on this server.</p>
-	 * @return a Set of all usernames
-	 */
-	@SuppressWarnings("unchecked")
-	public static Set<String> getOpsRaw() {
-		return MinecraftServer.getServer().getConfigurationManager().getOps();
+		return Iterables.filter(getAll(), Players::isOp);
 	}
 
 	/**
@@ -66,16 +48,11 @@ public final class Players {
 	 * @return true if the player is an operator
 	 */
 	public static boolean isOp(EntityPlayer player) {
-		return isOp(player.username);
+		return isOp(player.getGameProfile());
 	}
 
-	/**
-	 * <p>Check if the given username is an operator.</p>
-	 * @param username the username to check
-	 * @return true if the username is an operator
-	 */
-	public static boolean isOp(String username) {
-		return getOpsRaw().contains(username.toLowerCase().trim());
+	public static boolean isOp(GameProfile profile) {
+		return getSCM().func_152596_g(profile);
 	}
 
 	/**
@@ -84,7 +61,7 @@ public final class Players {
 	 */
 	@SuppressWarnings("unchecked")
 	public static List<EntityPlayerMP> getAll() {
-		return MinecraftServer.getServer().getConfigurationManager().playerEntityList;
+		return getSCM().playerEntityList;
 	}
 
 	/**
@@ -122,7 +99,11 @@ public final class Players {
 	 * @return the player entity or null if no such player was found
 	 */
 	public static EntityPlayerMP forName(String name) {
-		return MinecraftServer.getServer().getConfigurationManager().getPlayerForUsername(name);
+		return getSCM().func_152612_a(name);
+	}
+
+	private static ServerConfigurationManager getSCM() {
+		return MinecraftServer.getServer().getConfigurationManager();
 	}
 
 	private Players() { }

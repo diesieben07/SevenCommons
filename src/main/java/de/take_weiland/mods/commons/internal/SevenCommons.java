@@ -9,8 +9,6 @@ import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.common.*;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLStateEvent;
-import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
@@ -24,7 +22,7 @@ import de.take_weiland.mods.commons.net.PacketHandler;
 import de.take_weiland.mods.commons.sync.Syncing;
 import de.take_weiland.mods.commons.util.Logging;
 import de.take_weiland.mods.commons.util.Scheduler;
-import net.minecraftforge.common.Configuration;
+import net.minecraftforge.common.config.Configuration;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -102,8 +100,7 @@ public final class SevenCommons extends DummyModContainer {
 		// initialize the lazy statics in the scheduler class
 		Reflection.initialize(Scheduler.class);
 
-		TickRegistry.registerTickHandler(new SCPlayerTicker(), Side.SERVER);
-		GameRegistry.registerPlayerTracker(new SCPlayerTracker());
+		FMLCommonHandler.instance().bus().register(new FMLEventHandler());
 
 		proxy.preInit(event);
 

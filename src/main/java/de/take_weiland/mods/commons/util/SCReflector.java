@@ -1,20 +1,15 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.collect.Multimap;
-import cpw.mods.fml.common.network.IPacketHandler;
-import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.reflect.*;
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.client.renderer.texture.TextureObject;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
@@ -24,10 +19,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.packet.Packet;
 import net.minecraft.util.IntHashMap;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Timer;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -58,43 +51,12 @@ public interface SCReflector {
 	@Getter(field = F_TAG_MAP, srg = true)
 	Map<String, NBTBase> getWrappedMap(NBTTagCompound nbt);
 
-	@SideOnly(Side.CLIENT)
-	@Getter(field = F_FOV_MODIFIER_HAND, srg = true)
-	float getFovHand(EntityRenderer e);
-
-	@SideOnly(Side.CLIENT)
-	@Setter(field = F_FOV_MODIFIER_HAND, srg = true)
-	void setFovHand(EntityRenderer e, float fov);
-
-	@SideOnly(Side.CLIENT)
-	@Getter(field = F_FOV_MODIFIER_HAND_PREV, srg = true)
-	float getFovHandPrev(EntityRenderer e);
-
-	@SideOnly(Side.CLIENT)
-	@Setter(field = F_FOV_MODIFIER_HAND_PREV, srg = true)
-	void setFovHandPrev(EntityRenderer e, float fovPrev);
-
-	@SideOnly(Side.CLIENT)
-	@Getter(field = F_TIMER, srg = true)
-	Timer getTimer(Minecraft mc);
-
 	@Getter(field = F_TRACKED_ENTITY_IDS, srg = true)
 	IntHashMap getTrackerMap(EntityTracker tracker);
 
 	@SideOnly(Side.CLIENT)
 	@Getter(field = F_MAP_TEXTURE_OBJECTS, srg = true)
-	Map<ResourceLocation, TextureObject> getTexturesMap(TextureManager manager);
-
-	@Unsafe
-	@Getter(field = F_PACKET_CLASS_TO_ID_MAP, srg = true, target = Packet.class)
-	Map<Class<? extends Packet>, Integer> getClassToIdMap();
-
-	@SideOnly(Side.CLIENT)
-	@Getter(field = F_BUTTON_LIST, srg = true)
-	List<GuiButton> getButtonList(GuiScreen screen);
-
-	@Getter(field = F_ITEM_DAMAGE, srg = true)
-	int getRawDamage(ItemStack stack);
+	Map<ResourceLocation, ITextureObject> getTexturesMap(TextureManager manager);
 
 	@Getter(field = F_UNLOCALIZED_NAME_BLOCK, srg = true)
 	String getRawUnlocalizedName(Block block);
@@ -147,18 +109,6 @@ public interface SCReflector {
 
 	@Setter(field = F_ITEM_DAMAGE, srg = true)
 	void setRawDamage(ItemStack stack, int damage);
-
-	@Unsafe
-	@Getter(field = "clientPacketHandlers")
-	Multimap<String, IPacketHandler> getClientPacketHandlers(NetworkRegistry instance);
-
-	@Unsafe
-	@Getter(field = "serverPacketHandlers")
-	Multimap<String, IPacketHandler> getServerPacketHandlers(NetworkRegistry instance);
-
-	@Unsafe
-	@Getter(field = "universalPacketHandlers")
-	Multimap<String, IPacketHandler> getUniversalPacketHandlers(NetworkRegistry instance);
 
 	@Unsafe
 	@Construct

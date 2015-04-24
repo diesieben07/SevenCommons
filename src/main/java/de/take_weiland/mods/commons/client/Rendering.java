@@ -5,9 +5,9 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.client.renderer.texture.TextureObject;
-import net.minecraft.util.Icon;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.Fluid;
@@ -16,7 +16,7 @@ import net.minecraftforge.fluids.IFluidTank;
 
 import javax.annotation.Nullable;
 
-import static net.minecraftforge.common.ForgeDirection.*;
+import static net.minecraftforge.common.util.ForgeDirection.*;
 import static org.lwjgl.opengl.GL11.*;
 
 /**
@@ -27,15 +27,15 @@ import static org.lwjgl.opengl.GL11.*;
 public final class Rendering {
 
 	/**
-	 * <p>Fills a specified area on the screen with the provided {@link net.minecraft.util.Icon Icon}.</p>
+	 * <p>Fills a specified area on the screen with the provided {@link net.minecraft.util.IIcon Icon}.</p>
 	 *
-	 * @param icon   The {@link net.minecraft.util.Icon Icon} to be displayed
+	 * @param icon   The {@link net.minecraft.util.IIcon Icon} to be displayed
 	 * @param x      The X coordinate to start drawing from
 	 * @param y      The Y coordinate to start drawing form
 	 * @param width  The width of the provided icon to draw on the screen
 	 * @param height The height of the provided icon to draw on the screen
 	 */
-	public static void fillAreaWithIcon(Icon icon, int x, int y, int width, int height) {
+	public static void fillAreaWithIcon(IIcon icon, int x, int y, int width, int height) {
 		Tessellator t = Tessellator.instance;
 		t.startDrawingQuads();
 
@@ -120,7 +120,7 @@ public final class Rendering {
 
 		if (fluidStack != null) {
 			Fluid fluid = fluidStack.getFluid();
-			Icon fluidIcon = fluid.getStillIcon();
+			IIcon fluidIcon = fluid.getStillIcon();
 			int fluidHeight = MathHelper.ceiling_float_int((fluidStack.amount / (float) tankCapacity) * fullHeight);
 
 			glColor3f(1, 1, 1);
@@ -144,7 +144,7 @@ public final class Rendering {
 
 		if (fluidStack != null) {
 			Fluid fluid = fluidStack.getFluid();
-			Icon fluidIcon = fluid.getStillIcon();
+			IIcon fluidIcon = fluid.getStillIcon();
 			int fluidWidth = MathHelper.ceiling_float_int((fluidStack.amount / (float) tankCapacity) * fullWidth);
 
 			glColor3f(1, 1, 1);
@@ -623,7 +623,7 @@ public final class Rendering {
 	 * @param loc the ResourceLocation
 	 */
 	public static void unloadTexture(ResourceLocation loc) {
-		TextureObject tex = SCReflector.instance.getTexturesMap(Minecraft.getMinecraft().renderEngine).remove(loc);
+		ITextureObject tex = SCReflector.instance.getTexturesMap(Minecraft.getMinecraft().renderEngine).remove(loc);
 		if (tex != null) {
 			glDeleteTextures(tex.getGlTextureId());
 		}

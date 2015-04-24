@@ -1,22 +1,27 @@
 package de.take_weiland.mods.commons.netx;
 
+import cpw.mods.fml.relauncher.Side;
+import io.netty.buffer.ByteBuf;
+
+import java.util.function.Function;
+
 /**
- * <p>A builder for a {@link NetworkChannel}.</p>
+ * <p>A builder for a NetworkChannel.</p>
  * <p>This interface allows the following fluid-style initialization code:</p>
  * <p><pre><code>
- *     NetworkChannel channel = Network.newChannel("channel")
+ *     Network.newChannel("channel")
  *         .register(PacketA::new, PacketA::receive)
+ *         .register(...)
+ *         .build();
  * </code></pre></p>
  * @author diesieben07
  */
-public interface NetworkChannelBuilder {
+public interface NetworkChannelBuilder<P> {
 
-    <P extends Packet, H extends PacketHandler<P>> NetworkChannelBuilder register(PacketConstructor<P> packet, H handler);
-    <P extends Packet, H extends PacketHandler<P>> NetworkChannelBuilder register(int id, PacketConstructor<P> packet, H handler);
+    NetworkChannelBuilder<P> register(Side side, Function<? super ByteBuf, ? extends P> decoder);
 
-    <P extends Packet.WithResponse<R>, R extends Packet, H extends PacketHandler.WithResponse<P, R>> NetworkChannelBuilder register(PacketConstructor.ForWithResponse<P, R> packet, H handler);
-    <P extends Packet.WithResponse<R>, R extends Packet, H extends PacketHandler.WithResponse<P, R>> NetworkChannelBuilder register(int id, PacketConstructor.ForWithResponse<P, R> packet, H handler);
+    NetworkChannelBuilder<P> register(Side side, int id, Function<? super ByteBuf, ? extends P> decoder);
 
-    NetworkChannel build();
+    void build();
 
 }

@@ -121,7 +121,7 @@ public abstract class AbstractInventory extends FluentIterable<ItemStack> implem
 	 * <p>This method stores the inventory into the key {@code _sc$inventory} using
 	 * {@link de.take_weiland.mods.commons.inv.Inventories#writeInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound, String)}.</p>
 	 *
-	 * @param nbt the NBTTagCompound to write to
+	 * @param nbt the NBTTagCompound to writeTo to
 	 */
 	public void writeToNbt(NBTTagCompound nbt) {
 		Inventories.writeInventory(storage, nbt, NBT_KEY);

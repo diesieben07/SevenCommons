@@ -23,8 +23,6 @@ import java.util.logging.Logger;
 })
 public final class SevenCommonsLoader implements IFMLLoadingPlugin {
 
-	public static boolean MCP_ENVIRONMENT;
-
 	public static File source;
 
 	@Override
@@ -46,7 +44,6 @@ public final class SevenCommonsLoader implements IFMLLoadingPlugin {
 
 	@Override
 	public void injectData(Map<String, Object> data) {
-		MCP_ENVIRONMENT = !(Boolean) data.get("runtimeDeobfuscationEnabled");
 		source = (File) data.get("coremodLocation");
 		if (source == null) { // this is usually in a dev env
 			try {
@@ -55,6 +52,11 @@ public final class SevenCommonsLoader implements IFMLLoadingPlugin {
 				throw new RuntimeException("Failed to acquire source location for SevenCommons!", e);
 			}
 		}
+	}
+
+	@Override
+	public String getAccessTransformerClass() {
+		return null;
 	}
 
 	public static Logger scLogger(String channel) {

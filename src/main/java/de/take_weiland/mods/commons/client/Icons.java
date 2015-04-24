@@ -5,28 +5,28 @@ import de.take_weiland.mods.commons.meta.MetadataProperty;
 import de.take_weiland.mods.commons.meta.Subtype;
 import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.block.Block;
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.item.Item;
-import net.minecraft.util.Icon;
+import net.minecraft.util.IIcon;
 
 import java.util.Map;
 
 public final class Icons {
 
-	public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> Map<TYPE, Icon> registerMulti(ITEM item, IconRegister register) {
+	public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> Map<TYPE, IIcon> registerMulti(ITEM item, IIconRegister register) {
 		return registerMulti0(SCReflector.instance.getIconName(item) + ".", item, register);
 	}
 
-	public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> Map<TYPE, Icon> registerMulti(BLOCK block, IconRegister register) {
+	public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> Map<TYPE, IIcon> registerMulti(BLOCK block, IIconRegister register) {
 		return registerMulti0(SCReflector.instance.getIconName(block) + ".", block, register);
 	}
 
-	private static <TYPE extends Subtype> Map<TYPE, Icon> registerMulti0(String base, HasSubtypes<TYPE> element, IconRegister register) {
+	private static <TYPE extends Subtype> Map<TYPE, IIcon> registerMulti0(String base, HasSubtypes<TYPE> element, IIconRegister register) {
 		MetadataProperty<TYPE> property = element.subtypeProperty();
-		Map<TYPE, Icon> map = property.createMap();
+		Map<TYPE, IIcon> map = property.createMap();
 		for (TYPE type : property.values()) {
 			String name = base + type.subtypeName();
-			Icon icon = register.registerIcon(name);
+			IIcon icon = register.registerIcon(name);
 			map.put(type, icon);
 		}
 		return map;

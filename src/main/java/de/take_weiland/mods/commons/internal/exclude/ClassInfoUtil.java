@@ -1,9 +1,11 @@
 package de.take_weiland.mods.commons.internal.exclude;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.world.WorldEvent;
 
 import java.util.Map;
@@ -18,7 +20,7 @@ public final class ClassInfoUtil {
 		MinecraftForge.EVENT_BUS.register(new ClassInfoUtil());
 	}
 
-	@ForgeSubscribe
+	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load event) {
 		if (event.world.isRemote) {
 			return;

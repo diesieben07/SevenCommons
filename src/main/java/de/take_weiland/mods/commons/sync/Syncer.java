@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import io.netty.buffer.ByteBuf;
 
 /**
  * <p>Support for syncing of a Type {@code V}.</p>
@@ -26,14 +27,14 @@ public interface Syncer<V, C> {
     boolean equal(V value, C companion);
 
     /**
-     * <p>Called if {@link #equal(Object, Object)} returns {@code false}. This method needs to write any necessary data to the
+     * <p>Called if {@link #equal(Object, Object)} returns {@code false}. This method needs to writeTo any necessary data to the
      * MCDataOutput and update any data in the companion to ensure that {@code equal} returns false again until the next update.</p>
      * @param value the value
      * @param companion the companion
      * @param out the MCDataOutput
      * @return a potentially new value for the companion
      */
-    C writeAndUpdate(V value, C companion, MCDataOutput out);
+    C writeAndUpdate(V value, C companion, ByteBuf out);
 
     /**
      * <p>Called to read a new value from the MCDataInput.</p>
@@ -42,6 +43,6 @@ public interface Syncer<V, C> {
      * @param in the MCDataInput
      * @return a potentially new value
      */
-    V read(V value, C companion, MCDataInput in);
+    V read(V value, C companion, ByteBuf in);
 
 }

@@ -3,35 +3,24 @@ package de.take_weiland.mods.commons.internal;
 import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.event.PlayerCloneEvent;
-import de.take_weiland.mods.commons.event.PlayerStartTrackingEvent;
-import de.take_weiland.mods.commons.event.client.GuiInitEvent;
-import de.take_weiland.mods.commons.internal.sync.SyncCompanions;
 import de.take_weiland.mods.commons.internal.sync.IEEPSyncCompanion;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanions;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
 import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.packet.Packet250CustomPayload;
 import net.minecraftforge.common.IExtendedEntityProperties;
-import net.minecraftforge.common.MinecraftForge;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -158,7 +147,8 @@ public final class ASMHooks {
 			for (int i = 0, len = invs.size(); i < len; i++) {
 				IInventory inv = invs.get(i);
 				if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
-					new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
+					// TODO
+					//new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
 				}
 			}
 		}
@@ -176,60 +166,6 @@ public final class ASMHooks {
 			}
 		}
 		return builder.build();
-	}
-
-    public static void onPlayerClone(EntityPlayer oldPlayer, EntityPlayer newPlayer) {
-		MinecraftForge.EVENT_BUS.post(new PlayerCloneEvent(oldPlayer, newPlayer));
-	}
-
-	@SideOnly(Side.CLIENT)
-	public static void onGuiInit(GuiScreen gui) {
-		MinecraftForge.EVENT_BUS.post(new GuiInitEvent(gui, SCReflector.instance.getButtonList(gui)));
-	}
-
-	public static void onStartTracking(EntityPlayer player, Entity tracked) {
-		MinecraftForge.EVENT_BUS.post(new PlayerStartTrackingEvent(player, tracked));
-
-//		PacketSyncPropsIDs.sendToIfNeeded(player, tracked);
-	}
-
-	private static final int SIGNED_SHORT_BITS = 0b0111_1111_1111_1111;
-	private static final int SHORT_MS_BIT = 0b1000_0000_0000_0000;
-
-	public static void writeExtPacketLen(DataOutput out, int len) throws IOException {
-		int leftover = (len & ~SIGNED_SHORT_BITS) >>> 15;
-		if (leftover != 0) {
-			out.writeShort(len & SIGNED_SHORT_BITS | SHORT_MS_BIT);
-			out.writeByte(leftover);
-		} else {
-			out.writeShort(len & SIGNED_SHORT_BITS);
-		}
-	}
-
-	public static int readExtPacketLen(DataInput in) throws IOException {
-		int low = in.readUnsignedShort();
-		if ((low & SHORT_MS_BIT) != 0) {
-			int hi = in.readUnsignedByte();
-			return (low & SIGNED_SHORT_BITS) | (hi << 15);
-		} else {
-			return low;
-		}
-	}
-
-	public static int additionalPacketSize(Packet250CustomPayload packet) {
-		if ((packet.length & 0b0111_1111_1000_0000_0000_0000) != 0) {
-			return 1;
-		} else {
-			return 0;
-		}
-	}
-
-	public static int additionalPacketSize(int len) {
-		if ((len & 0b0111_1111_1000_0000_0000_0000) != 0) {
-			return 1;
-		} else {
-			return 0;
-		}
 	}
 
 }

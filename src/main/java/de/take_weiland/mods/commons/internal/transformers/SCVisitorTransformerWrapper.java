@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import com.google.common.base.Predicate;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.transformers.sync.*;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.EntityNBTHook;
@@ -29,21 +28,10 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
 
         addEntry(ContainerGetInventoriesSupport.class, "net/minecraft/inventory/Container");
 
-        addEntry(PlayerCloneHook.class, "net/minecraft/entity/player/EntityPlayer", MCPNames.method(MCPNames.M_CLONE_PLAYER));
-
         addEntry(InventoryNumberKeysFix.class, "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(MCPNames.M_CHECK_HOTBAR_KEYS));
 
-        addEntry(InitGuiHook.class, "net/minecraft/client/gui/GuiScreen", MCPNames.method(MCPNames.M_SET_WORLD_AND_RESOLUTION));
-
-        addEntry(EntityTrackingHook.class, "net/minecraft/entity/EntityTrackerEntry", MCPNames.method(MCPNames.M_TRY_START_WATCHING_THIS));
-
         if (ModPacketCstrAdder.isNeeded) {
-            addEntry(ModPacketCstrAdder.class, new Predicate<String>() {
-                @Override
-                public boolean apply(String input) {
-                    return !input.startsWith("net/minecraft");
-                }
-            });
+            addEntry(ModPacketCstrAdder.class, input -> !input.startsWith("net/minecraft"));
         }
     }
 }

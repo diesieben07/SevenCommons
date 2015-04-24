@@ -1,81 +1,56 @@
 package de.take_weiland.mods.commons.netx;
 
-import com.google.common.reflect.TypeToken;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.relauncher.Side;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.minecraft.entity.player.EntityPlayer;
-import org.objectweb.asm.Type;
 
 import javax.annotation.Nonnull;
-import java.lang.invoke.MethodHandleInfo;
-import java.lang.invoke.SerializedLambda;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.ToIntFunction;
 
 /**
  * @author diesieben07
  */
 public class Network {
 
-    private static final java.lang.reflect.Type function2ndParam = Function.class.getTypeParameters()[1];
+    public static final int DEFAULT_EXPECTED_SIZE = 32;
 
     @Nonnull
-    public static NetworkChannelBuilder newChannel(String channel) {
-        return new ChannelBuilderImpl(channel);
+    public static <P> NetworkChannelBuilder<P> newChannel(String channel, BiConsumer<? super P, ? super ByteBuf> encoder, ToIntFunction<? super P> idProvider) {
+        return newChannel(channel, encoder, idProvider, p -> DEFAULT_EXPECTED_SIZE);
     }
 
-    static <P extends Packet> Class<P> findPacketClassReflectively(PacketConstructor<P> constructor) {
-        Class<?> myClazz = constructor.getClass();
+    @Nonnull
+    public static <P> NetworkChannelBuilder<P> newChannel(String channel, BiConsumer<? super P, ? super ByteBuf> encoder, ToIntFunction<? super P> idProvider, ToIntFunction<? super P> sizeEstimate) {
+        return newChannel(channel, p -> {
+            ByteBuf buf = Unpooled.buffer(sizeEstimate.applyAsInt(p) + 1);
+            buf.writeByte(idProvider.applyAsInt(p));
+            encoder.accept(p, buf);
+            return buf;
+        });
+    }
 
-        TypeToken<?> type = TypeToken.of(myClazz);
-        Class<?> result;
-        result = type.resolveType(function2ndParam).getRawType();
-        if (!BasePacket.class.isAssignableFrom(result)) {
-            result = BasePacket.class;
-        }
+    public static NetworkChannelBuilder<Packet> newSimpleChannel(String channel) {
+        return newChannel(channel, packet -> {
+            ByteBuf buf = Unpooled.buffer(packet.expectedSize() + 1);
+            buf.writeByte(idFor(packet));
+            packet.writeTo(buf);
+            return buf;
+        });
+    }
 
-        if (result == BasePacket.class) { // class is not a real subtype of Packet, so did not find an actual type parameter
-            // try lambda-hackery now
-            try {
-                Method method = myClazz.getDeclaredMethod("writeReplace");
-                method.setAccessible(true);
-                Object serForm = method.invoke(constructor);
-                if (serForm instanceof SerializedLambda) {
-                    SerializedLambda serLambda = (SerializedLambda) serForm;
+    private static <P> NetworkChannelBuilder<P> newChannel(String channel, Function<? super P, ? extends ByteBuf> completeEncoder) {
+        return new BuilderImpl<>(channel, completeEncoder);
+    }
 
-                    Class<?> returnClass = Packet.class;
-                    switch (serLambda.getImplMethodKind()) {
-                        case MethodHandleInfo.REF_newInvokeSpecial:
-                            returnClass = Class.forName(Type.getObjectType(serLambda.getImplClass()).getClassName());
-                            break;
-                        case MethodHandleInfo.REF_invokeInterface:
-                        case MethodHandleInfo.REF_invokeSpecial:
-                        case MethodHandleInfo.REF_invokeStatic:
-                        case MethodHandleInfo.REF_invokeVirtual:
-                            returnClass = Class.forName(Type.getReturnType(serLambda.getImplMethodSignature()).getClassName());
-                            break;
-                    }
-
-                    if (BasePacket.class.isAssignableFrom(returnClass) && returnClass != BasePacket.class) {
-                        result = returnClass;
-                    }
-                }
-            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | ClassNotFoundException ignored) { }
-        }
-        if (result == BasePacket.class) {
-            throw new RuntimeException("Failed to reflectively find type argument of PacketConstructor. " +
-                    "Please either refactor your code according to the docs or override getPacketClass.");
-        }
-        //noinspection unchecked
-        return (Class<P>) result;
+    private static byte idFor(Packet packet) {
+        return 0; // TODO
     }
 
     public static void main(String[] args) {
-        Network.newChannel("channel")
-                .register((PacketConstructor<MyPacket>) MyPacket::new, MyPacket::handle)
-                .build();
     }
 
     private static class MyPacket implements Packet {
@@ -91,7 +66,7 @@ public class Network {
         }
 
         @Override
-        public void write(ByteBuf buf) {
+        public void writeTo(ByteBuf buf) {
             ByteBufUtils.writeUTF8String(buf, s);
         }
 

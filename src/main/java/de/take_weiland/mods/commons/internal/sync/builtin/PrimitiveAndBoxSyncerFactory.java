@@ -42,7 +42,7 @@ final class PrimitiveAndBoxSyncerFactory {
         if (!box) {
             unbox(gen, boxed, unboxed);
         }
-        Method writeMethod = new Method("write" + StringUtils.capitalize(unboxed.getClassName()) + (box ? "Box" : ""), VOID_TYPE, new Type[] {box ? boxed : unboxed});
+        Method writeMethod = new Method("writeTo" + StringUtils.capitalize(unboxed.getClassName()) + (box ? "Box" : ""), VOID_TYPE, new Type[] {box ? boxed : unboxed});
         gen.invokeInterface(Type.getType(MCDataOutput.class), writeMethod);
         gen.loadArg(0);
         gen.returnValue();
