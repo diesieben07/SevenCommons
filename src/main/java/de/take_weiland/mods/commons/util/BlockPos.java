@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
-import de.take_weiland.mods.commons.net.MCDataOutput;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -40,7 +40,7 @@ public final class BlockPos implements Comparable<BlockPos> {
 	}
 
 	public Block getBlock(World world) {
-		return Block.blocksList[world.getBlockId(x, y, z)];
+		return world.getBlock(x, y, z);
 	}
 
 	public int getMetadata(World world) {
@@ -48,7 +48,7 @@ public final class BlockPos implements Comparable<BlockPos> {
 	}
 
 	public TileEntity getTileEntity(World world) {
-		return world.getBlockTileEntity(x, y, z);
+		return world.getTileEntity(x, y, z);
 	}
 
 	public float distanceTo(int x, int y, int z) {
@@ -129,7 +129,7 @@ public final class BlockPos implements Comparable<BlockPos> {
 		return x ^ y ^ (z << 6);
 	}
 
-	public static void toByteStream(MCDataOutput out, int x, int y, int z) {
+	public static void toByteStream(ByteBuf out, int x, int y, int z) {
 		out.writeInt(x);
 		out.writeByte(y);
 		out.writeInt(z);

@@ -16,6 +16,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -54,7 +55,7 @@ public final class Inventories {
 				if (stack.stackSize == 0) {
 					inventory.setInventorySlotContents(slot, null);
 				} else {
-					inventory.onInventoryChanged();
+					inventory.markDirty();
 				}
 
 				return returnStack;
@@ -71,7 +72,7 @@ public final class Inventories {
 	 */
 	@SideOnly(Side.CLIENT)
 	public static String getDisplayName(IInventory inv) {
-		return inv.isInvNameLocalized() ? inv.getInvName() : I18n.translate(inv.getInvName());
+		return inv.hasCustomInventoryName() ? inv.getInventoryName() : I18n.translate(inv.getInventoryName());
 	}
 
 	/**
@@ -95,7 +96,7 @@ public final class Inventories {
 	 */
 	public static void spillIfInventory(TileEntity te) {
 		if (te instanceof IInventory) {
-			spill(te.worldObj, te.xCoord, te.yCoord, te.zCoord, (IInventory) te);
+			spill(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, (IInventory) te);
 		}
 	}
 
@@ -105,7 +106,7 @@ public final class Inventories {
 	 * @param te the TileEntity
 	 */
 	public static <T extends TileEntity & IInventory> void spill(T te) {
-		spill(te.worldObj, te.xCoord, te.yCoord, te.zCoord, te);
+		spill(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, te);
 	}
 
 	/**
@@ -183,7 +184,7 @@ public final class Inventories {
 	 * @param key the key to read from
 	 */
 	public static void readInventory(ItemStack[] stacks, NBTTagCompound nbt, String key) {
-		readInventory(stacks, nbt.getTagList(key));
+		readInventory(stacks, nbt.getTagList(key, Constants.NBT.TAG_COMPOUND));
 	}
 
 	/**
@@ -197,7 +198,7 @@ public final class Inventories {
 		int invSize = stacks.length;
 		int listLen = nbtList.tagCount();
 		for (int i = 0; i < listLen; i++) {
-			NBTTagCompound itemCompound = (NBTTagCompound) nbtList.tagAt(i);
+			NBTTagCompound itemCompound = nbtList.getCompoundTagAt(i);
 
 			ItemStack item = ItemStack.loadItemStackFromNBT(itemCompound);
 			int idx = itemCompound.getInteger("slot");

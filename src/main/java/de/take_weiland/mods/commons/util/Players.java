@@ -3,9 +3,14 @@ package de.take_weiland.mods.commons.util;
 import com.google.common.collect.Iterables;
 import com.mojang.authlib.GameProfile;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.reflect.Getter;
+import de.take_weiland.mods.commons.reflect.Invoke;
+import de.take_weiland.mods.commons.reflect.OverrideTarget;
+import de.take_weiland.mods.commons.reflect.SCReflection;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.PlayerManager;
 import net.minecraft.server.management.ServerConfigurationManager;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -30,6 +35,13 @@ public final class Players {
 
 	public static boolean isSPOwner(EntityPlayer player) {
 		return !getServer().isDedicatedServer() && player.getCommandSenderName().equals(getServer().getServerOwner());
+	}
+
+	public static EntityPlayerMP checkNotClient(EntityPlayer player) {
+		if (player.worldObj.isRemote) {
+			throw new IllegalStateException("Expected a serverside player!");
+		}
+		return (EntityPlayerMP) player;
 	}
 
 	/**
@@ -83,6 +95,27 @@ public final class Players {
 	public static List<EntityPlayerMP> allIn(WorldServer world) {
 		return world.playerEntities;
 	}
+
+	public static List<EntityPlayerMP> getTrackingChunk(World world, int chunkX, int chunkZ) {
+		if (world.isRemote) {
+            throw new IllegalArgumentException("Cannot get tracking players on the client");
+        }
+        Object playerInstance = PlayerManagerAccess.instance.getPlayerInstance(((WorldServer) world).getPlayerManager(), chunkX, chunkZ, false);
+        return PlayerManagerAccess.instance.getWatchers(playerInstance);
+    }
+
+    private interface PlayerManagerAccess {
+
+        PlayerManagerAccess instance = SCReflection.createAccessor(PlayerManagerAccess.class);
+
+        @Invoke(method = "func_72690_a", srg = true)
+        Object getPlayerInstance(PlayerManager playerManager, int chunkX, int chunkZ, boolean create);
+
+        @Getter(field = "field_73263_b", srg = true)
+        @OverrideTarget("net.minecraft.server.management.PlayerManager$PlayerInstance")
+        List<EntityPlayerMP> getWatchers(Object playerInstance);
+
+    }
 
 	/**
 	 * <p>Get the client player ({@link net.minecraft.client.Minecraft#thePlayer} in a safe manner. This method can

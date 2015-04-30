@@ -11,12 +11,8 @@ import net.minecraft.world.World;
 
 public class SCItemBlock<T extends Block> extends ItemBlock {
 
-	protected final T block;
-
-	@SuppressWarnings("unchecked")
-	public SCItemBlock(int itemId, Block block) {
-		super(itemId);
-		this.block = (T) block;
+	public SCItemBlock(Block block) {
+		super(block);
 	}
 
 	@Override
@@ -29,8 +25,8 @@ public class SCItemBlock<T extends Block> extends ItemBlock {
 	}
 
 	protected final void doSCPlaceFeatures(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int meta) {
-		if (stack.hasDisplayName() && block.hasTileEntity(meta)) {
-			TileEntity te = world.getBlockTileEntity(x, y, z);
+		if (stack.hasDisplayName() && field_150939_a.hasTileEntity(meta)) {
+			TileEntity te = world.getTileEntity(x, y, z);
 			if (te instanceof NameableInventory &&
 					(!(te instanceof TileAutoName) ||
 							((TileAutoName) te).shouldAutoname(player, stack, world, x, y, z))) {

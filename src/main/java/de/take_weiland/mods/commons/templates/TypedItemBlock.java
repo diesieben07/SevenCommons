@@ -5,21 +5,23 @@ import de.take_weiland.mods.commons.meta.Subtype;
 import de.take_weiland.mods.commons.meta.Subtypes;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Icon;
+import net.minecraft.util.IIcon;
 
 import java.util.List;
 
 public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extends Subtype> extends SCItemBlock<BLOCK> {
 
-	public TypedItemBlock(int itemId, Block block) {
-		super(itemId, block);
+	public TypedItemBlock(Block block) {
+		super(block);
 		setHasSubtypes(true);
 	}
 
 	@Override
-	public void getSubItems(int blockID, CreativeTabs tab, List list) {
-		Subtypes.getSubBlocksImpl(block, list);
+	public void getSubItems(Item item, CreativeTabs tab, List list) {
+		//noinspection unchecked
+		Subtypes.getSubBlocksImpl((BLOCK) field_150939_a, list);
 	}
 
 	@Override
@@ -29,12 +31,13 @@ public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extend
 
 	@Override
 	public String getUnlocalizedName(ItemStack stack) {
-		return block.getUnlocalizedName() + "." + block.subtypeProperty().value(stack).subtypeName();
+		//noinspection unchecked
+		return field_150939_a.getUnlocalizedName() + "." + ((BLOCK) field_150939_a).subtypeProperty().value(stack).subtypeName();
 	}
 
 	@Override
-	public Icon getIconFromDamage(int meta) {
-		return block.getIcon(0, meta);
+	public IIcon getIconFromDamage(int meta) {
+		return field_150939_a.getIcon(0, meta);
 	}
 
 }

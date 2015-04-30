@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -82,7 +83,7 @@ public abstract class AbstractInventory extends FluentIterable<ItemStack> implem
 		} else {
 			storage[slot] = stack;
 		}
-		onInventoryChanged();
+		markDirty();
 	}
 
 	@Override
@@ -91,10 +92,10 @@ public abstract class AbstractInventory extends FluentIterable<ItemStack> implem
 	}
 
 	@Override
-	public void openChest() { }
+	public void openInventory() { }
 
 	@Override
-	public void closeChest() { }
+	public void closeInventory() { }
 
 	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack item) {
@@ -102,7 +103,7 @@ public abstract class AbstractInventory extends FluentIterable<ItemStack> implem
 	}
 
 	@Override
-	public void onInventoryChanged() {
+	public void markDirty() {
 		if (listeners != null) {
 			for (Listener listener : listeners) {
 				listener.onChange(this);
@@ -135,7 +136,7 @@ public abstract class AbstractInventory extends FluentIterable<ItemStack> implem
 	 * @param nbt the NBTTagCompound to read from
 	 */
 	public void readFromNbt(NBTTagCompound nbt) {
-		Inventories.readInventory(storage, nbt.getTagList(NBT_KEY));
+		Inventories.readInventory(storage, nbt.getTagList(NBT_KEY, Constants.NBT.TAG_COMPOUND));
 	}
 
 	@Override

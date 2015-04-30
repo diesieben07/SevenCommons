@@ -1,11 +1,19 @@
 package de.take_weiland.mods.commons.net;
 
+import com.google.common.collect.Iterables;
+import de.take_weiland.mods.commons.util.Entities;
+import de.take_weiland.mods.commons.util.Players;
+import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+
+import java.util.Arrays;
+import java.util.function.Predicate;
 
 /**
  * <p>An interface defining utility methods for sending packets around.</p>
@@ -13,32 +21,74 @@ import net.minecraft.world.chunk.Chunk;
  */
 public interface SimplePacket {
 
-	SimplePacket sendToServer();
+	void sendToServer();
 
-	SimplePacket sendTo(EntityPlayer player);
+	void sendTo(EntityPlayer player);
 
-	SimplePacket sendTo(Iterable<? extends EntityPlayer> players);
+	void sendTo(Iterable<? extends EntityPlayer> players);
 
-	SimplePacket sendToAll();
+    void sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter);
 
-	SimplePacket sendToAllIn(World world);
+    default void sendTo(EntityPlayer... players) {
+        sendTo(Arrays.asList(players));
+    }
 
-	SimplePacket sendToAllNear(World world, double x, double y, double z, double radius);
+    default void sendTo(World world, Predicate<? super EntityPlayer> filter) {
+        sendTo(Players.allIn(world), filter);
+    }
 
-	SimplePacket sendToAllNear(Entity entity, double radius);
+    default void sendTo(Predicate<? super EntityPlayerMP> filter) {
+        sendTo(Players.getAll(), filter);
+    }
 
-	SimplePacket sendToAllNear(TileEntity te, double radius);
+    default void sendToAll() {
+        sendTo(Players.getAll());
+    }
 
-	SimplePacket sendToAllTracking(Entity entity);
+    default void sendToAllIn(World world) {
+        sendTo(Players.allIn(world));
+    }
 
-	SimplePacket sendToAllTracking(TileEntity te);
+    default void sendToAllNear(World world, double x, double y, double z, double radius) {
+        sendTo(Players.allIn(world), player -> player.getDistanceSq(x, y, z) <= radius);
+    }
 
-	SimplePacket sendToAllTrackingChunk(World world, int chunkX, int chunkZ);
+    default void sendToAllNear(Entity entity, double radius) {
+        sendToAllNear(entity.worldObj, entity.posX, entity.posY, entity.posZ, radius);
+    }
 
-	SimplePacket sendToAllTracking(Chunk chunk);
+    default void sendToAllNear(TileEntity te, double radius) {
+        sendToAllNear(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, radius);
+    }
 
-	SimplePacket sendToAllAssociated(Entity e);
+    default void sendToAllTracking(Entity entity) {
+        sendTo(Entities.getTrackingPlayers(entity));
+    }
 
-	SimplePacket sendToViewing(Container c);
+    default void sendToAllAssociated(Entity entity) {
+        sendToAllTracking(entity);
+        if (entity instanceof EntityPlayer) {
+            sendTo((EntityPlayer) entity);
+        }
+    }
+
+    default void sendToAllTracking(TileEntity te) {
+        sendToAllTrackingChunk(te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4);
+    }
+
+    default void sendToAllTracking(Chunk chunk) {
+        sendToAllTrackingChunk(chunk.worldObj, chunk.xPosition, chunk.zPosition);
+    }
+
+    default void sendToAllTrackingChunk(World world, int chunkX, int chunkZ) {
+        sendTo(Players.getTrackingChunk(world, chunkX, chunkZ));
+    }
+
+    default void sendToViewing(Container c) {
+        // the filter makes sure it only contains EntityPlayer's
+        //noinspection unchecked
+        sendTo((Iterable<? extends EntityPlayer>)
+                Iterables.filter(SCReflector.instance.getCrafters(c), it -> it instanceof EntityPlayer));
+    }
 
 }

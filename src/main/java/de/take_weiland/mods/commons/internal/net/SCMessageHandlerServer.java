@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.netx;
+package de.take_weiland.mods.commons.internal.net;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -8,17 +8,19 @@ import net.minecraft.network.play.client.C17PacketCustomPayload;
 /**
  * @author diesieben07
  */
-final class ServerInboundHandler extends ChannelInboundHandlerAdapter {
+public final class SCMessageHandlerServer extends ChannelInboundHandlerAdapter {
 
     private final EntityPlayerMP player;
 
-    ServerInboundHandler(EntityPlayerMP player) {
+    public SCMessageHandlerServer(EntityPlayerMP player) {
         this.player = player;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (!(msg instanceof C17PacketCustomPayload) || !NetworkImpl.handleServerCustomPacket(((C17PacketCustomPayload) msg), player)) {
+        if (msg instanceof MessageChannelPair) {
+            ((MessageChannelPair) msg).handle(player);
+        } else if (!(msg instanceof C17PacketCustomPayload) || !NetworkImpl.handleServerCustomPacket((C17PacketCustomPayload) msg, player)) {
             ctx.fireChannelRead(msg);
         }
     }

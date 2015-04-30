@@ -2,16 +2,15 @@ package de.take_weiland.mods.commons.util;
 
 import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.Packet;
 import net.minecraft.util.Direction;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.ForgeDirection;
+import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.Collections;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -70,7 +69,7 @@ public final class Entities {
 
 	/**
 	 * <p>Get all players tracking the given Entity.</p>
-	 * <p>To send a packet to all tracking players use {@link de.take_weiland.mods.commons.net.Packets#sendToAllTracking(net.minecraft.network.packet.Packet, net.minecraft.entity.Entity)} instead.</p>
+	 * <p>To send a packet to all tracking players use {@link de.take_weiland.mods.commons.net.Packets#sendToAllTracking(Packet, Entity)} instead.</p>
 	 * <p>This method must only be called on the logical server and the returned Set must not be modified.</p>
 	 *
 	 * @param entity the Entity
@@ -78,18 +77,18 @@ public final class Entities {
 	 */
 	@SuppressWarnings("unchecked")
 	public static Set<EntityPlayerMP> getTrackingPlayers(Entity entity) {
-		checkArgument(Sides.logical(entity).isServer(), "Cannot get tracking players on the client");
-		EntityTrackerEntry entry = (EntityTrackerEntry) SCReflector.instance.getTrackerMap(((WorldServer) entity.worldObj).getEntityTracker()).lookup(entity.entityId);
-		return entry == null ? Collections.emptySet() : entry.trackingPlayers;
-	}
+		checkArgument(!entity.worldObj.isRemote, "Cannot get tracking players on the client");
+        // we are on the server, this is safe
+        return ((Set) ((WorldServer) entity.worldObj).getEntityTracker().getTrackingPlayers(entity));
+    }
 
 	/**
 	 * <p>Get the cardinal direction the given Entity is facing towards.</p>
 	 *
 	 * @param entity the Entity
-	 * @return a cardinal direction (one of {@link net.minecraftforge.common.ForgeDirection#NORTH},
-	 * {@link net.minecraftforge.common.ForgeDirection#WEST}, {@link net.minecraftforge.common.ForgeDirection#SOUTH},
-	 * {@link net.minecraftforge.common.ForgeDirection#EAST})
+	 * @return a cardinal direction (one of {@link ForgeDirection#NORTH},
+	 * {@link ForgeDirection#WEST}, {@link ForgeDirection#SOUTH},
+	 * {@link ForgeDirection#EAST})
 	 */
 	public static ForgeDirection getFacing(Entity entity) {
 		int dir = MathHelper.floor_double((entity.rotationYaw * 4 / 360) + 0.5) & 3;
