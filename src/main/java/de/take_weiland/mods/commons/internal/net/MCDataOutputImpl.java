@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.net;
 import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.EnumUtils;
 import de.take_weiland.mods.commons.util.SCReflector;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
@@ -199,15 +199,29 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
 
     @Override
     public <E extends Enum<E>> void writeEnumSet(EnumSet<E> set) {
-        E[] universe = JavaUtils.getEnumConstantsShared(JavaUtils.getType(set));
-        if (universe.length > 64) {
-            throw new UnsupportedOperationException("Cannot encode EnumSet of Enum with > 64 values");
+        writeLong(EnumUtils.encodeAsLong(set));
+    }
+
+    private static RuntimeException makeEnumSetTooBigException(EnumSet<?> enumSet) {
+        String enumType = EnumUtils.getType(enumSet).getName();
+        throw new UnsupportedOperationException(String.format("Cannot encode EnumSet of EnumType %s. Only Enum types with <= 64 values are supported", enumType));
+    }
+
+    private static final ESEncoder enumSetEncoder;
+
+    static {
+        ESEncoder encoder;
+        try {
+            encoder = (ESEncoder) Class.forName("de.take_weiland.mods.commons.internal.net.MCDataOutputImpl$ESEncoderFast").newInstance();
+        } catch (Throwable e) {
+            encoder = new ESEncoderPureJava();
         }
+        enumSetEncoder = encoder;
     }
 
     private static abstract class ESEncoder {
 
-        abstract long encode(EnumSet<?> set);
+        abstract <E extends Enum<E>> long encode(EnumSet<E> set);
 
     }
 
@@ -237,12 +251,29 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
         }
 
         @Override
-        long encode(EnumSet<?> set) {
+        <E extends Enum<E>> long encode(EnumSet<E> set) {
             try {
                 return (long) getter.invokeExact(set);
+            } catch (ClassCastException cce) {
+                throw makeEnumSetTooBigException(set);
             } catch (Throwable e) {
                 throw Throwables.propagate(e);
             }
+        }
+    }
+
+    private static final class ESEncoderPureJava extends ESEncoder {
+
+        @Override
+        <E extends Enum<E>> long encode(EnumSet<E> set) {
+            if (EnumUtils.getEnumConstantsShared(EnumUtils.getType(set)).length > 64) {
+                throw makeEnumSetTooBigException(set);
+            }
+            long result = 0;
+            for (Enum<?> e : set){
+                result |= 1 << e.ordinal();
+            }
+            return result;
         }
     }
 

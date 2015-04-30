@@ -4,21 +4,15 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.reflect.Invoke;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.jetbrains.annotations.NotNull;
-import sun.misc.JavaLangAccess;
-import sun.misc.SharedSecrets;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
-
-import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
  * <p>Various utility methods.</p>
@@ -276,111 +270,7 @@ public final class JavaUtils {
 		throw (T) t;
 	}
 
-	/**
-	 * <p>Get all constants defined in the given enum class. This is equivalent to {@code E.values()} except that the array
-	 * returned by this method is not cloned and as thus shared across the entire application. <strong>Therefor the
-	 * array must not be modified!</strong></p>
-	 * @param clazz the enum class
-	 * @return all defined constants
-	 */
-	@Unsafe
-	public static <E extends Enum<E>> E[] getEnumConstantsShared(Class<E> clazz) {
-		return EnumValuesGetter.instance.getEnumValues(clazz);
-	}
-
-	abstract static class EnumValuesGetter {
-
-		static final EnumValuesGetter instance;
-
-		static {
-			EnumValuesGetter e;
-			try {
-				Class.forName("sun.misc.SharedSecrets");
-				e = (EnumValuesGetter) Class.forName("de.take_weiland.mods.commons.util.JavaUtils$EnumGetterShared").newInstance();
-			} catch (Throwable t) {
-				SevenCommons.LOGGER.info("sun.misc.SharedSecrets not found. Falling back to default EnumGetter");
-				e = new EnumGetterCloned();
-			}
-			instance = e;
-		}
-
-		abstract <T extends Enum<T>> T[] getEnumValues(Class<T> clazz);
-
-	}
-
-	final static class EnumGetterCloned extends EnumValuesGetter {
-
-		@Override
-		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
-			return clazz.getEnumConstants();
-		}
-
-	}
-
-	@SuppressWarnings("unused")
-	final static class EnumGetterShared extends EnumValuesGetter {
-
-		private static final JavaLangAccess langAcc = SharedSecrets.getJavaLangAccess();
-
-		@Override
-		<T extends Enum<T>> T[] getEnumValues(Class<T> clazz) {
-			return langAcc.getEnumConstantsShared(clazz);
-		}
-
-	}
-
-	/**
-	 * <p>Get the enum constant with the given ordinal value in the given enum class.</p>
-	 * <p>This method is equivalent to {@code E.values()[ordinal]}, but is potentially more efficient.</p>
-	 * @param clazz the enum class
-	 * @param ordinal the ordinal value
-	 * @return the enum constant
-	 */
-	public static <T extends Enum<T>> T byOrdinal(Class<T> clazz, int ordinal) {
-		return getEnumConstantsShared(clazz)[ordinal];
-	}
-
-	/**
-	 * <p>Get the type of enum values of the given EnumSet.</p>
-	 * @param enumSet the EnumSet
-	 * @return the type of enum values
-	 */
-	public static <E extends Enum<E>> Class<E> getType(EnumSet<E> enumSet) {
-		try {
-			//noinspection unchecked
-			return (Class<E>) EnumSetAcc.getter.invokeExact(enumSet);
-		} catch (Throwable t) {
-			throw throwUnchecked(t);
-		}
-	}
-
-	@SuppressWarnings("UtilityClassWithoutPrivateConstructor")
-	static final class EnumSetAcc {
-
-		static final MethodHandle getter;
-
-		static {
-			Field result = null;
-			for (Field field : EnumSet.class.getDeclaredFields()) {
-				if (!Modifier.isStatic(field.getModifiers()) && field.getType() == Class.class) {
-					result = field;
-					break;
-				}
-			}
-			if (result == null) {
-				throw new RuntimeException("Failed to find type field in EnumSet!");
-			}
-			result.setAccessible(true);
-			try {
-				getter = publicLookup().unreflectGetter(result);
-			} catch (IllegalAccessException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-	}
-
-	/**
+    /**
 	 * <p>Check if {@code sun.misc.Unsafe} is available on this JVM.</p>
 	 *
 	 * @return true if sun.misc.Unsafe was found

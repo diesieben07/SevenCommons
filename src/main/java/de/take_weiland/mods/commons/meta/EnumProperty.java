@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.meta;
 
 import com.google.common.collect.ImmutableSet;
-import de.take_weiland.mods.commons.util.JavaUtils;
+import de.take_weiland.mods.commons.util.EnumUtils;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -30,7 +30,7 @@ final class EnumProperty<T extends Enum<T>> extends GenericProperty<T> {
 
 	@Override
 	public T value(int metadata) {
-		return JavaUtils.byOrdinal(clazz, (metadata >>> shift) & mask);
+		return EnumUtils.byOrdinal(clazz, (metadata >>> shift) & mask);
 	}
 
 	@Override
