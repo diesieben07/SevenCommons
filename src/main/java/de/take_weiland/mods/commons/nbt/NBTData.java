@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.nbt;
 
-import de.take_weiland.mods.commons.util.Blocks;
-import de.take_weiland.mods.commons.util.Items;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -13,6 +11,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.BitSet;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -32,7 +31,7 @@ public final class NBTData {
      */
     @Nonnull
     public static NBTBase writeString(@Nullable String s) {
-        return s == null ? serializedNull() : new NBTTagString("", s);
+        return s == null ? serializedNull() : new NBTTagString(s);
     }
 
     /**
@@ -42,7 +41,7 @@ public final class NBTData {
      */
     @Nullable
     public static String readString(@Nullable NBTBase nbt) {
-        return isSerializedNull(nbt) ? null : ((NBTTagString) nbt).data;
+        return isSerializedNull(nbt) ? null : ((NBTTagString) nbt).func_150285_a_();
     }
 
     @Nonnull
@@ -50,7 +49,7 @@ public final class NBTData {
         if (block == null) {
             return serializedNull();
         } else {
-            return new NBTTagShort("", (short) block.blockID);
+            return new NBTTagString(Block.blockRegistry.getNameForObject(block));
         }
     }
 
@@ -59,7 +58,7 @@ public final class NBTData {
         if (isSerializedNull(nbt)) {
             return null;
         } else {
-            return Blocks.byID(((NBTTagShort) nbt).data);
+            return Block.getBlockFromName(((NBTTagString) nbt).func_150285_a_());
         }
     }
 
@@ -68,7 +67,7 @@ public final class NBTData {
         if (item == null) {
             return serializedNull();
         } else {
-            return new NBTTagShort("", (short) item.itemID);
+            return new NBTTagString(Item.itemRegistry.getNameForObject(item));
         }
     }
 
@@ -77,7 +76,7 @@ public final class NBTData {
         if (isSerializedNull(nbt)) {
             return null;
         } else {
-            return Items.byID(((NBTTagShort) nbt).data);
+            return (Item) Item.itemRegistry.getObject(((NBTTagString) nbt).func_150285_a_());
         }
     }
 
@@ -92,8 +91,8 @@ public final class NBTData {
             return serializedNull();
         } else {
             NBTTagList nbt = new NBTTagList();
-            nbt.appendTag(new NBTTagLong("", uuid.getMostSignificantBits()));
-            nbt.appendTag(new NBTTagLong("", uuid.getLeastSignificantBits()));
+            nbt.appendTag(new NBTTagLong(uuid.getMostSignificantBits()));
+            nbt.appendTag(new NBTTagLong(uuid.getLeastSignificantBits()));
             return nbt;
         }
     }
@@ -108,8 +107,8 @@ public final class NBTData {
         if (isSerializedNull(nbt) || nbt.getId() != NBT.TAG_LIST) {
             return null;
         } else {
-            NBTTagList list = (NBTTagList) nbt;
-            return new UUID(((NBTTagLong) list.tagAt(0)).data, ((NBTTagLong) list.tagAt(1)).data);
+            List<NBTBase> asList = NBT.asList((NBTTagList) nbt);
+            return new UUID(((NBTTagLong) asList.get(0)).func_150291_c(), ((NBTTagLong) asList.get(1)).func_150291_c());
         }
     }
 
@@ -163,7 +162,7 @@ public final class NBTData {
         if (e == null) {
             return serializedNull();
         } else {
-            return new NBTTagString("", e.name());
+            return new NBTTagString(e.name());
         }
     }
 
@@ -178,7 +177,7 @@ public final class NBTData {
         if (isSerializedNull(nbt)) {
             return null;
         } else {
-            return Enum.valueOf(clazz, ((NBTTagString) nbt).data);
+            return Enum.valueOf(clazz, ((NBTTagString) nbt).func_150285_a_());
         }
     }
 
@@ -189,7 +188,7 @@ public final class NBTData {
         } else {
             NBTTagList list = new NBTTagList();
             for (E e : enumSet) {
-                list.appendTag(new NBTTagString("", e.name()));
+                list.appendTag(new NBTTagString(e.name()));
             }
             return list;
         }
@@ -201,9 +200,9 @@ public final class NBTData {
             return null;
         } else {
             EnumSet<E> enumSet = EnumSet.noneOf(enumClass);
-            NBTTagList list = (NBTTagList) nbt;
-            for (int i = 0, len = list.tagCount(); i < len; i++) {
-                enumSet.add(Enum.valueOf(enumClass, ((NBTTagString) list.tagAt(i)).data));
+            List<NBTBase> list = NBT.asList(((NBTTagList) nbt));
+            for (int i = list.size() - 1; i >= 0; i--) {
+                enumSet.add(Enum.valueOf(enumClass, ((NBTTagString) list.get(i)).func_150285_a_()));
             }
             return enumSet;
         }
@@ -214,7 +213,7 @@ public final class NBTData {
         if (bitSet == null) {
             return serializedNull();
         } else {
-            return new NBTTagByteArray("", bitSet.toByteArray());
+            return new NBTTagByteArray(bitSet.toByteArray());
         }
     }
 
@@ -223,7 +222,7 @@ public final class NBTData {
         if (isSerializedNull(nbt)) {
             return null;
         } else {
-            return BitSet.valueOf(((NBTTagByteArray) nbt).byteArray);
+            return BitSet.valueOf(((NBTTagByteArray) nbt).func_150292_c());
         }
     }
 

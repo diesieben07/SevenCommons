@@ -1,9 +1,11 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.collect.ImmutableMap;
+import de.take_weiland.mods.commons.internal.net.NetworkImpl;
+import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
 import gnu.trove.map.hash.TByteObjectHashMap;
+import gnu.trove.map.hash.TObjectByteHashMap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.HashMap;
@@ -21,7 +23,8 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
     private final String channel;
     private TByteObjectHashMap<Function<? super ByteBuf, ? extends Packet>> constructors = new TByteObjectHashMap<>();
-    private Map<Class<? extends Packet>, BiConsumer<?, ? super EntityPlayer>> handlers = new HashMap<>();
+    private TObjectByteHashMap<Class<? extends Packet>> idLookup = new TObjectByteHashMap<>();
+    private Map<Class<? extends Packet>, BiConsumer<? super Packet, ? super EntityPlayer>> handlers = new HashMap<>();
 
     SimpleChannelBuilderImpl(String channel) {
         this.channel = channel;
@@ -36,7 +39,9 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         checkArgument(!handlers.containsKey(packetClass), "Duplicate packet class");
 
         constructors.put((byte) id, constructor);
-        handlers.put(packetClass, handler);
+        //noinspection unchecked
+        handlers.put(packetClass, (BiConsumer<? super Packet, ? super EntityPlayer>) handler);
+        idLookup.put(packetClass, (byte) id);
 
         return this;
     }
@@ -47,31 +52,15 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         TByteObjectHashMap<Function<? super ByteBuf, ? extends Packet>> constructors = this.constructors;
         constructors.compact();
 
-        Map<Class<? extends Packet>, BiConsumer<?, ? super EntityPlayer>> handlers = ImmutableMap.copyOf(this.handlers);
+        TObjectByteHashMap<Class<? extends Packet>> idLookup = this.idLookup;
+        idLookup.compact();
 
-        this.constructors = null;
-        this.handlers = null;
+        ImmutableMap<Class<? extends Packet>, BiConsumer<? super Packet, ? super EntityPlayer>> handlers = ImmutableMap.copyOf(this.handlers);
 
-        // these lambdas only capture local vars, therefor the builder can be gc'd
-        Network.<Packet>newChannel(channel,
-                // encoder
-                (packet) -> {
-                    ByteBuf buf = Unpooled.buffer(packet.expectedSize() + 1);
-                    buf.writeByte(0); // TODO
-                    packet.writeTo(buf);
-                    return buf;
-                },
-                // decoder
-                buf -> {
-                    byte id = buf.readByte();
-                    return constructors.get(id).apply(buf);
-                },
-                // handler
-                (packet, player) -> {
-                    // this is checked before, we only fill the map correctly
-                    //noinspection unchecked
-                    ((BiConsumer<Packet, EntityPlayer>) handlers.get(packet.getClass())).accept(packet, player);
-                });
+        SimplePacketCodec codec = new SimplePacketCodec(channel, constructors, handlers, idLookup);
+        // use the original keySet, avoid having the ImmutableMap keep it around
+        PacketToChannelMap.putAll(this.handlers.keySet(), codec);
+        NetworkImpl.register(channel, codec);
     }
 
     private void checkNotBuilt() {

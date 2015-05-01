@@ -6,9 +6,9 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.SCMessageHandlerClient;
 import de.take_weiland.mods.commons.internal.net.SCMessageHandlerServer;
-import de.take_weiland.mods.commons.internal.net.SCMessageEncoder;
 import de.take_weiland.mods.commons.util.Scheduler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
@@ -41,8 +41,7 @@ public final class FMLEventHandler {
         ChannelPipeline pipeline = handler.netManager.channel().pipeline();
 
         if (!event.isLocal) {
-            insertEncoder(pipeline);
-
+            insertEncoder(pipeline, NetworkImpl.TO_CLIENT_ENCODER);
         }
 
         insertHandler(pipeline, new SCMessageHandlerServer(handler.playerEntity));
@@ -56,7 +55,7 @@ public final class FMLEventHandler {
 
         if (!event.isLocal) {
             // only need the encoder when not connected locally
-            insertEncoder(pipeline);
+            insertEncoder(pipeline, NetworkImpl.TO_SERVER_ENCODER);
         }
         // handler handles both direct messages (for local) and the vanilla-payload packet
         insertHandler(pipeline, SCMessageHandlerClient.INSTANCE);
@@ -66,10 +65,10 @@ public final class FMLEventHandler {
         pipeline.addBefore("packet_handler", "sevencommons:handler", handler);
     }
 
-    private void insertEncoder(ChannelPipeline pipeline) {
+    private void insertEncoder(ChannelPipeline pipeline, ChannelHandler encoder) {
         // this is "backwards" - outbound messages travel "upwards" in the pipeline
         // so really the order is sevencommons:encoder and then vanilla's encoder
-        pipeline.addAfter("encoder", "sevencommons:encoder", SCMessageEncoder.INSTANCE);
+        pipeline.addAfter("encoder", "sevencommons:encoder", encoder);
     }
 
     static {

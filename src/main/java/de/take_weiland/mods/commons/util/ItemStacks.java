@@ -56,7 +56,7 @@ public final class ItemStacks {
 	}
 
 	private static boolean equalsImpl(ItemStack a, ItemStack b) {
-		return a.itemID == b.itemID && a.getItemDamage() == b.getItemDamage()
+		return a.getItem() == b.getItem() && a.getItemDamage() == b.getItemDamage()
 				&& Objects.equal(a.stackTagCompound, b.stackTagCompound);
 	}
 
@@ -69,7 +69,8 @@ public final class ItemStacks {
 		if (stack == null) {
 			return 0;
 		} else {
-			int result = stack.itemID | (stack.getItemDamage() << 16);
+			int result = stack.getItem().hashCode();
+			result = 31 * result + (stack.getItemDamage() << 16);
 			result = 31 * result + stack.stackSize;
 			result = 31 * result + (stack.stackTagCompound != null ? stack.stackTagCompound.hashCode() : 0);
 			return result;
@@ -100,7 +101,7 @@ public final class ItemStacks {
 	}
 
 	public static Block getBlock(ItemStack stack) {
-		return Block.blocksList[stack.itemID];
+		return Block.getBlockFromItem(stack.getItem());
 	}
 
 	@Contract("null -> null")
@@ -120,19 +121,19 @@ public final class ItemStacks {
 	}
 
 	public static boolean is(@Nullable ItemStack stack, Item item) {
-		return stack != null && stack.itemID == item.itemID;
+		return stack != null && stack.getItem() == item;
 	}
 
 	public static boolean is(@Nullable ItemStack stack, Item item, int meta) {
-		return stack != null && stack.itemID == item.itemID && stack.getItemDamage() == meta;
+		return stack != null && stack.getItem() == item && stack.getItemDamage() == meta;
 	}
 
 	public static boolean is(@Nullable ItemStack stack, Block block) {
-		return stack != null && stack.itemID == block.blockID;
+		return stack != null && getBlock(stack) == block;
 	}
 
 	public static boolean is(@Nullable ItemStack stack, Block block, int meta) {
-		return stack != null && stack.itemID == block.blockID && stack.getItemDamage() == meta;
+		return stack != null && getBlock(stack) == block && stack.getItemDamage() == meta;
 	}
 
 	@SuppressWarnings("unchecked")

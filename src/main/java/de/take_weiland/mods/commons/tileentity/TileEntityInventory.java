@@ -76,7 +76,7 @@ public abstract class TileEntityInventory extends TileEntity implements IInvento
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack item) {
 		storage[slot] = item;
-		onInventoryChanged();
+		markDirty();
 	}
 
 	@Override
@@ -85,12 +85,12 @@ public abstract class TileEntityInventory extends TileEntity implements IInvento
 	}
 
 	@Override
-	public String getInvName() {
+	public String getInventoryName() {
 		return hasCustomName() ? getCustomName() : unlocalizedName();
 	}
 
 	@Override
-	public boolean isInvNameLocalized() {
+	public boolean hasCustomInventoryName() {
 		return hasCustomName();
 	}
 
@@ -101,8 +101,8 @@ public abstract class TileEntityInventory extends TileEntity implements IInvento
 
 	@Override
 	public boolean isUseableByPlayer(EntityPlayer player) {
-		return worldObj.getBlockTileEntity(xCoord, yCoord, zCoord) == this && player.getDistanceSq(xCoord, yCoord, zCoord) <= 64;
-	}
+        return worldObj.getTileEntity(xCoord, yCoord, zCoord) == this && player.getDistanceSq(xCoord, yCoord, zCoord) <= 64;
+    }
 
 	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack item) {
@@ -127,13 +127,11 @@ public abstract class TileEntityInventory extends TileEntity implements IInvento
 		}
 	}
 
-	@Override
-	public void openChest() {
-	}
+    @Override
+    public void openInventory() { }
 
-	@Override
-	public void closeChest() {
-	}
+    @Override
+    public void closeInventory() { }
 
 	// NameableInventory
 	@Override

@@ -53,7 +53,7 @@ public final class NBT {
 
         private final Class<? extends NBTBase> clazz;
 
-        private Tag(Class<? extends NBTBase> clazz) {
+        Tag(Class<? extends NBTBase> clazz) {
             this.clazz = clazz;
         }
 
@@ -146,11 +146,7 @@ public final class NBT {
 	 */
 	@Nonnull
 	public static NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {
-		NBTTagCompound nbt = (NBTTagCompound) asMap(parent).get(key);
-		if (nbt == null) {
-			parent.setCompoundTag(key, (nbt = new NBTTagCompound()));
-		}
-		return nbt;
+		return (NBTTagCompound) asMap(parent).computeIfAbsent(key, s -> new NBTTagCompound());
 	}
 
 	/**
@@ -162,11 +158,7 @@ public final class NBT {
 	 */
 	@Nonnull
 	public static NBTTagList getOrCreateList(NBTTagCompound parent, String key) {
-		NBTTagList list = (NBTTagList) asMap(parent).get(key);
-		if (list == null) {
-			parent.setTag(key, (list = new NBTTagList()));
-		}
-		return list;
+		return (NBTTagList) asMap(parent).computeIfAbsent(key, s -> new NBTTagList());
 	}
 
 	/**
@@ -178,7 +170,7 @@ public final class NBT {
 	@Nullable
 	@Contract("null->null")
 	public static <T extends NBTBase> T copy(@Nullable T nbt) {
-		return nbt == null ? null : (T) nbt.copy();
+        return nbt == null ? null : (T) nbt.copy();
 	}
 
 	private NBT() { }

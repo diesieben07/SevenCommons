@@ -6,7 +6,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>An Exception to be thrown packet handling code to indicate a protocol violation.</p>
  * @author diesieben07
  */
-public class ProtocolException extends Exception {
+public class ProtocolException extends RuntimeException {
 
 	private String playerKickMsg;
 

@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.net;
 
-import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.util.EnumUtils;
@@ -11,18 +10,13 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+import javax.annotation.Nonnull;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UTFDataFormatException;
-import java.lang.invoke.MethodHandle;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.BitSet;
 import java.util.EnumSet;
-
-import static java.lang.invoke.MethodHandles.publicLookup;
-import static java.lang.invoke.MethodType.methodType;
 
 /**
  * @author diesieben07
@@ -202,81 +196,6 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
         writeLong(EnumUtils.encodeAsLong(set));
     }
 
-    private static RuntimeException makeEnumSetTooBigException(EnumSet<?> enumSet) {
-        String enumType = EnumUtils.getType(enumSet).getName();
-        throw new UnsupportedOperationException(String.format("Cannot encode EnumSet of EnumType %s. Only Enum types with <= 64 values are supported", enumType));
-    }
-
-    private static final ESEncoder enumSetEncoder;
-
-    static {
-        ESEncoder encoder;
-        try {
-            encoder = (ESEncoder) Class.forName("de.take_weiland.mods.commons.internal.net.MCDataOutputImpl$ESEncoderFast").newInstance();
-        } catch (Throwable e) {
-            encoder = new ESEncoderPureJava();
-        }
-        enumSetEncoder = encoder;
-    }
-
-    private static abstract class ESEncoder {
-
-        abstract <E extends Enum<E>> long encode(EnumSet<E> set);
-
-    }
-
-    private static final class ESEncoderFast extends ESEncoder {
-
-        private static final MethodHandle getter;
-
-        static {
-            try {
-                Field longField = null;
-                Class<?> regES = Class.forName("java.util.RegularEnumSet");
-                for (Field field : regES.getDeclaredFields()) {
-                    if (!Modifier.isStatic(field.getModifiers()) && field.getType() == long.class) {
-                        longField = field;
-                        break;
-                    }
-                }
-                if (longField != null) {
-                    longField.setAccessible(true);
-                    getter = publicLookup().unreflectGetter(longField).asType(methodType(long.class, EnumSet.class));
-                } else {
-                    throw new RuntimeException("");
-                }
-            } catch (ClassNotFoundException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        <E extends Enum<E>> long encode(EnumSet<E> set) {
-            try {
-                return (long) getter.invokeExact(set);
-            } catch (ClassCastException cce) {
-                throw makeEnumSetTooBigException(set);
-            } catch (Throwable e) {
-                throw Throwables.propagate(e);
-            }
-        }
-    }
-
-    private static final class ESEncoderPureJava extends ESEncoder {
-
-        @Override
-        <E extends Enum<E>> long encode(EnumSet<E> set) {
-            if (EnumUtils.getEnumConstantsShared(EnumUtils.getType(set)).length > 64) {
-                throw makeEnumSetTooBigException(set);
-            }
-            long result = 0;
-            for (Enum<?> e : set){
-                result |= 1 << e.ordinal();
-            }
-            return result;
-        }
-    }
-
     @Override
     public void writeBytes(byte[] arr, int off, int len) {
         buf.writeBytes(arr, off, len);
@@ -332,7 +251,7 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
     }
 
     @Override
-    public void writeBytes(String s) {
+    public void writeBytes(@Nonnull String s) {
         int len = s.length();
 
         buf.ensureWritable(len);
@@ -342,7 +261,7 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
     }
 
     @Override
-    public void writeChars(String s) {
+    public void writeChars(@Nonnull String s) {
         int len = s.length();
 
         buf.ensureWritable(len << 1);
@@ -352,7 +271,7 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
     }
 
     @Override
-    public void writeUTF(String s) throws IOException {
+    public void writeUTF(@Nonnull String s) throws IOException {
         if (s.length() >= 65535) {
             throw new UTFDataFormatException("String longer than maximum length");
         }

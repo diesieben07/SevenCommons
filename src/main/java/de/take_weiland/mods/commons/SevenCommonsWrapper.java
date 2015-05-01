@@ -8,9 +8,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
+import com.google.common.io.Resources;
 import com.google.common.primitives.Ints;
 import cpw.mods.fml.relauncher.CoreModManager;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
@@ -18,7 +17,9 @@ import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -27,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -127,12 +129,7 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 	}
 
 	private static Function<JarFile, Integer> getVersionFunc(final String key) {
-		return new Function<JarFile, Integer>() {
-			@Override
-			public Integer apply(JarFile input) {
-				return getVersion(input, key);
-			}
-		};
+		return input -> getVersion(input, key);
 	}
 
 	private static Iterable<JarFile> getAllMods() {
@@ -140,28 +137,22 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		File mods1 = new File(mcDir, "/mods/");
 		File mods2 = new File(mods1, "/" + MC_VERSION + "/");
 		Iterable<File> files = Iterables.concat(getMods(mods1), getMods(mods2));
-		return Iterables.transform(files, new Function<File, JarFile>() {
-			@Override
-			public JarFile apply(File input) {
-				try {
-					return new JarFile(input);
-				} catch (IOException e) {
-					throw Throwables.propagate(e);
-				}
-			}
-		});
+		return Iterables.transform(files, input -> {
+            try {
+                return new JarFile(input);
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
+            }
+        });
 	}
 
 	private static Iterable<File> getMods(File modDir) {
 		if (!modDir.isDirectory()) {
 			return ImmutableList.of();
 		} else {
-			return Arrays.asList(modDir.listFiles(new FilenameFilter() {
-				@Override
-				public boolean accept(File dir, String name) {
-					return name.toLowerCase().endsWith(".jar");
-				}
-			}));
+			return Arrays.asList(modDir.listFiles((dir, name) -> {
+                return name.toLowerCase().endsWith(".jar");
+            }));
 		}
 	}
 
@@ -277,17 +268,11 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		}
 
 		private static String getContents(final URL url) {
-			try {
-				return CharStreams.toString(new InputSupplier<Reader>() {
-
-					@Override
-					public Reader getInput() throws IOException {
-						return new InputStreamReader(url.openStream());
-					}
-				});
-			} catch (IOException e) {
-				throw Throwables.propagate(e);
-			}
+            try {
+                return Resources.toString(url, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 		}
 
 		private void error(String err) {
@@ -405,6 +390,11 @@ public final class SevenCommonsWrapper implements IFMLLoadingPlugin {
 		return null;
 	}
 
-	@Override
+    @Override
+    public String getAccessTransformerClass() {
+        return null;
+    }
+
+    @Override
 	public void injectData(Map<String, Object> data) { }
 }

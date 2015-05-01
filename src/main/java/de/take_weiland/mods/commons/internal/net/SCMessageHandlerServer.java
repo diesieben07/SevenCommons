@@ -18,8 +18,8 @@ public final class SCMessageHandlerServer extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof MessageChannelPair) {
-            ((MessageChannelPair) msg).handle(player);
+        if (msg instanceof PacketCodecPair) {
+            ((PacketCodecPair<?>) msg).handle(player);
         } else if (!(msg instanceof C17PacketCustomPayload) || !NetworkImpl.handleServerCustomPacket((C17PacketCustomPayload) msg, player)) {
             ctx.fireChannelRead(msg);
         }

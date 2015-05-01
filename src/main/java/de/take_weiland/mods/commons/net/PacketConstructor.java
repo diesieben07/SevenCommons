@@ -18,6 +18,6 @@ import java.util.function.Function;
 public interface PacketConstructor<P extends Packet> extends Function<ByteBuf, P>, Serializable {
 
     default Class<P> getPacketClass() {
-        return NicePacketSupport.findPacketClassReflectively(this);
+        return Network.findPacketClassReflectively(this);
     }
 }

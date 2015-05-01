@@ -1,9 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
-import cpw.mods.fml.common.FMLLog;
-import net.minecraft.launchwrapper.Launch;
-
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * <p>Logging utilities.</p>
@@ -16,10 +14,7 @@ public final class Logging {
 	 * @return a Logger
 	 */
 	public static Logger getLogger(String channel) {
-		if (Launch.classLoader != null) {
-			FMLLog.makeLog(channel);
-		}
-		return Logger.getLogger(channel);
+		return LogManager.getLogger(channel);
 	}
 
 	private Logging() { }

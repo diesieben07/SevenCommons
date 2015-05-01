@@ -16,8 +16,8 @@ public final class SCMessageHandlerClient extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof MessageChannelPair<?>) {
-            ((MessageChannelPair) msg).handle(Players.getClient());
+        if (msg instanceof PacketCodecPair<?>) {
+            ((PacketCodecPair<?>) msg).handle(Players.getClient());
         } else if (!(msg instanceof S3FPacketCustomPayload) || !NetworkImpl.handleClientCustomPacket((S3FPacketCustomPayload) msg)) {
             ctx.fireChannelRead(msg);
         }
