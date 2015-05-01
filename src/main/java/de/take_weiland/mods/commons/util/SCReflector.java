@@ -104,6 +104,9 @@ public interface SCReflector {
 	@Invoke(method = M_NBT_LOAD, srg = true)
 	void load(NBTBase nbt, DataInput in, int depth) throws IOException;
 
+    @Invoke(method = "func_150284_a", target = NBTBase.class)
+	NBTBase newNBTTag(byte id);
+
 	@Getter(field = F_ITEM_DAMAGE, srg = true)
 	int getRawItemDamage(ItemStack stack);
 

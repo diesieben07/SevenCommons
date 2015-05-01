@@ -12,9 +12,10 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import javax.annotation.Nonnull;
 import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UTFDataFormatException;
+import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 import java.util.EnumSet;
 
@@ -109,33 +110,13 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
 
     @Override
     public void writeString(String s) {
-        int len = s.length();
-
-        int lenIdx = buf.writerIndex();
-
-        buf.ensureWritable(2 + s.length())
-           .writerIndex(lenIdx + 2);
-
-        int utfLen = len;
-
-        for (int i = 0; i < len; i++) {
-            char c = s.charAt(i);
-            if (c >= '\u0001' && c <= '\u007f') {
-                buf.writeByte(c);
-            } else if (c >= '\u0800') {
-                buf.writeByte((0xe0 | (0x0f & (c >> 12))))
-                   .writeByte(0x80 | (0x3f & c >> 6))
-                   .writeByte(0x80 | 0x3f & c);
-
-                utfLen += 2;
-            } else {
-                buf.writeByte(0xc0 | 0x1f & c >> 6)
-                   .writeByte(0x80 | 0x3f & c);
-
-                utfLen++;
-            }
+        if (s == null) {
+            writeVarInt(-1);
+        } else {
+            byte[] encoded = s.getBytes(StandardCharsets.UTF_8);
+            writeVarInt(encoded.length);
+            buf.writeBytes(encoded);
         }
-        buf.setShort(lenIdx, utfLen);
     }
 
     @Override
@@ -143,7 +124,7 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
         writeVarInt(e == null ? -1 : e.ordinal());
     }
 
-    private static final short NULL_ID = (short) 0x8000;
+    static final short NULL_ID = (short) 0x8000;
 
     @Override
     public void writeItemStack(ItemStack stack) {
@@ -167,7 +148,7 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
         buf.writeShort(block == null ? NULL_ID : Block.getIdFromBlock(block));
     }
 
-    private static final byte NBT_NULL_ID = (byte) 0b1000;
+    static final byte NBT_NULL_ID = (byte) 0b1000;
 
     @Override
     public void writeNBT(NBTTagCompound nbtEntry) {
@@ -175,14 +156,15 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
             writeByte(NBT_NULL_ID);
         } else {
             NBT.asMap(nbtEntry).forEach((key, nbtBase) -> {
-                writeByte(nbtEntry.getId());
+                writeByte(nbtBase.getId());
                 writeString(key);
                 try {
-                    SCReflector.instance.write(nbtEntry, this);
+                    SCReflector.instance.write(nbtBase, this);
                 } catch (IOException e) {
                     throw new IllegalStateException("NBT write threw IOException");
                 }
             });
+            writeByte(0);
         }
     }
 
@@ -272,9 +254,7 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
 
     @Override
     public void writeUTF(@Nonnull String s) throws IOException {
-        if (s.length() >= 65535) {
-            throw new UTFDataFormatException("String longer than maximum length");
-        }
-        writeString(s);
+        // TODO
+        new DataOutputStream(this).writeUTF(s);
     }
 }
