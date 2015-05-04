@@ -2,7 +2,11 @@ package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import io.netty.buffer.ByteBuf;
+import org.omg.IOP.TAG_ORB_TYPE;
+
+import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * <p>Support for syncing of a Type {@code V}.</p>
@@ -10,39 +14,74 @@ import io.netty.buffer.ByteBuf;
  *
  * @author diesieben07
  */
-public interface Syncer<V, C> {
+public interface Syncer<T_VAL, T_DATA, T_COM> {
 
     /**
      * <p>The companion type for this Syncer.</p>
      * <p>The initial value for the companion will be {@code null} for reference types and {@code 0} for primitives.</p>
      */
-    Class<C> getCompanionType();
+    Class<T_COM> getCompanionType();
 
-    /**
-     * <p>Check if the value has changed since the last time {@link #writeAndUpdate(Object, Object, MCDataOutput)} was called.</p>
-     * @param value the value
-     * @param companion the companion
-     * @return false if the value has changed
-     */
-    boolean equal(V value, C companion);
+    <T_OBJ> Change<T_DATA> checkChange(T_OBJ obj, T_VAL value, T_COM companion, Consumer<T_COM> companionSetter);
 
-    /**
-     * <p>Called if {@link #equal(Object, Object)} returns {@code false}. This method needs to writeTo any necessary data to the
-     * MCDataOutput and update any data in the companion to ensure that {@code equal} returns false again until the next update.</p>
-     * @param value the value
-     * @param companion the companion
-     * @param out the MCDataOutput
-     * @return a potentially new value for the companion
-     */
-    C writeAndUpdate(V value, C companion, ByteBuf out);
+    void write(T_DATA value, MCDataOutput out);
 
-    /**
-     * <p>Called to read a new value from the MCDataInput.</p>
-     * @param value the value
-     * @param companion the companion
-     * @param in the MCDataInput
-     * @return a potentially new value
-     */
-    V read(V value, C companion, ByteBuf in);
+    T_DATA read(MCDataInput in);
+
+    <T_OBJ> void applyChange(T_OBJ obj, T_DATA data, T_VAL oldValue, BiConsumer<T_OBJ, T_VAL> setter);
+
+    default Change<T_DATA> noChange() {
+        return null;
+    }
+    default Change<T_DATA> newValue(T_DATA val) {
+        return new Change<>(this, val);
+    }
+
+    interface Simple<T_VAL, T_COM> extends Syncer<T_VAL, T_VAL, T_COM> {
+
+        @Override
+        default <T_OBJ> void applyChange(T_OBJ obj, T_VAL data, T_VAL oldValue, BiConsumer<T_OBJ, T_VAL> setter) {
+            setter.accept(obj, data);
+        }
+    }
+
+    interface ForImmutable<T_VAL> extends Syncer.Simple<T_VAL, T_VAL> {
+
+        @Override
+        default <T_OBJ> Change<T_VAL> checkChange(T_OBJ obj, T_VAL value, T_VAL companion, Consumer<T_VAL> companionSetter) {
+            if (Objects.equals(value, companion)) {
+                return noChange();
+            } else {
+                companionSetter.accept(value);
+                return newValue(value);
+            }
+        }
+    }
+
+    final class Change<T_DATA, T_OBJ> {
+
+        private int id;
+        private final Syncer<?, T_DATA, T_OBJ> syncer;
+        private final T_DATA val;
+
+        Change(Syncer<?, T_DATA, T_OBJ> syncer, T_DATA val) {
+            this.syncer = syncer;
+            this.val = val;
+        }
+
+        public T_DATA value() {
+            return val;
+        }
+
+        public void write(MCDataOutput out) {
+            out.writeVarInt(id);
+            syncer.write(val, out);
+        }
+
+        public void apply(T_OBJ obj) {
+            syncer.applyChange(obj, );
+        }
+
+    }
 
 }

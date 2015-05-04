@@ -8,12 +8,12 @@ import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 
-@PacketDirection(PacketDirection.Dir.TO_CLIENT)
-public class PacketInventoryName extends ModPacket {
+@Packet.Receiver(Side.CLIENT)
+public final class PacketInventoryName implements Packet {
 
-	private int windowId;
-	private int invIdx;
-	private String name;
+	private final int windowId;
+	private final int invIdx;
+	private final String name;
 
 	public PacketInventoryName(int windowId, int invIdx, String name) {
 		this.windowId = windowId;
@@ -21,22 +21,20 @@ public class PacketInventoryName extends ModPacket {
 		this.name = name;
 	}
 
-	@Override
-    public void write(MCDataOutput out) {
-		out.writeByte(windowId);
-		out.writeByte(invIdx);
-		out.writeString(name);
-	}
+    PacketInventoryName(MCDataInput in) {
+        windowId = in.readByte();
+        invIdx = in.readByte();
+        name = in.readString();
+    }
 
-	@Override
-    public void read(MCDataInput in, EntityPlayer player, Side side) {
-		windowId = in.readByte();
-		invIdx = in.readByte();
-		name = in.readString();
-	}
+    @Override
+    public void writeTo(MCDataOutput out) {
+        out.writeByte(windowId);
+        out.writeByte(invIdx);
+        out.writeString(name);
+    }
 
-	@Override
-    public void execute(EntityPlayer player, Side side) throws ProtocolException {
+    void handle(EntityPlayer player) {
 		if (player.openContainer.windowId == windowId) {
 			IInventory inv = JavaUtils.get(Containers.getInventories(player.openContainer).asList(), invIdx);
 			if (inv instanceof NameableInventory) {

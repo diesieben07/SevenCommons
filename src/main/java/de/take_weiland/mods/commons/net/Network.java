@@ -1,16 +1,14 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.reflect.TypeToken;
-import cpw.mods.fml.common.network.ByteBufUtils;
-import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.PacketCodecPair;
 import de.take_weiland.mods.commons.util.Players;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.NetworkManager;
 import org.objectweb.asm.Type;
 
 import java.lang.invoke.MethodHandleInfo;
@@ -33,18 +31,18 @@ public final class Network {
     }
 
     public static <P> PacketCodec<P> newChannel(String channel,
-                                                Function<? super P, ? extends ByteBuf> encoder,
-                                                Function<? super ByteBuf, ? extends P> decoder,
+                                                Function<? super P, ? extends byte[]> encoder,
+                                                Function<? super byte[], ? extends P> decoder,
                                                 BiConsumer<? super P, ? super EntityPlayer> handler) {
         return NetworkImpl.register(channel, new PacketCodec<P>() {
             @Override
-            public ByteBuf encode(P packet) {
+            public byte[] encode(P packet) {
                 return encoder.apply(packet);
             }
 
             @Override
-            public P decode(ByteBuf buf) {
-                return decoder.apply(buf);
+            public P decode(byte[] payload) {
+                return decoder.apply(payload);
             }
 
             @Override
@@ -64,9 +62,7 @@ public final class Network {
     }
 
     public static <P> void sendToServer(P packet, PacketCodec<P> codec) {
-        SevenCommons.proxy.getClientNetworkManager().channel()
-                .writeAndFlush(new PacketCodecPair<>(packet, codec))
-                .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+        send0(new PacketCodecPair<>(packet, codec), SevenCommons.proxy.getClientNetworkManager(), Players.getClient());
     }
 
     public static <P> void sendTo(PacketCodec<P> codec, P packet, EntityPlayer player) {
@@ -89,10 +85,16 @@ public final class Network {
         }
     }
 
-    public static <P> void sendToPlayer0(PacketCodecPair<P> pair, EntityPlayerMP player) {
-        player.playerNetServerHandler.netManager.channel()
-                .writeAndFlush(pair)
-                .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    private static <P> void sendToPlayer0(PacketCodecPair<P> pair, EntityPlayerMP player) {
+        send0(pair, player.playerNetServerHandler.netManager, player);
+    }
+
+    private static <P> void send0(PacketCodecPair<P> pair, NetworkManager manager, EntityPlayer player) {
+        if (!manager.isLocalChannel() || !pair.maybeDoCustomLocalHandling(player)) {
+            manager.channel()
+                    .writeAndFlush(pair)
+                    .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+        }
     }
 
     private static final java.lang.reflect.Type function2ndParam = Function.class.getTypeParameters()[1];
@@ -143,31 +145,4 @@ public final class Network {
         return (Class<P>) result;
     }
 
-    public static void main(String[] args) {
-        newSimpleChannel("helloWorld")
-                .register(0, MyPacket::new, MyPacket::handle)
-                .register(1, MyPacket::new, MyPacket::handle);
-    }
-
-    private static class MyPacket implements Packet {
-
-        private final String s;
-
-        MyPacket(String s) {
-            this.s = s;
-        }
-
-        MyPacket(ByteBuf buf) {
-            this.s = ByteBufUtils.readUTF8String(buf);
-        }
-
-        @Override
-        public void writeTo(MCDataOutput out) {
-
-        }
-
-        private void handle(EntityPlayer player, Side side) {
-            System.out.println(s);
-        }
-    }
 }

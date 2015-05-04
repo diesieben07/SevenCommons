@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.net;
 
-import io.netty.buffer.ByteBuf;
-
 import java.io.Serializable;
 import java.util.function.Function;
 
@@ -15,7 +13,7 @@ import java.util.function.Function;
  * @author diesieben07
  */
 @FunctionalInterface
-public interface PacketConstructor<P extends Packet> extends Function<ByteBuf, P>, Serializable {
+public interface PacketConstructor<P extends Packet> extends Function<MCDataInput, P>, Serializable {
 
     default Class<P> getPacketClass() {
         return Network.findPacketClassReflectively(this);

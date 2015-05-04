@@ -13,23 +13,21 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
-import de.take_weiland.mods.commons.internal.sync.PacketSync;
 import de.take_weiland.mods.commons.internal.sync.builtin.BuiltinSyncers;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.builtin.DefaultNBTSerializers;
 import de.take_weiland.mods.commons.net.Network;
-import de.take_weiland.mods.commons.net.PacketHandler;
 import de.take_weiland.mods.commons.sync.Syncing;
 import de.take_weiland.mods.commons.util.Logging;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraftforge.common.config.Configuration;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.logging.Logger;
 
 public final class SevenCommons extends DummyModContainer {
 
@@ -44,7 +42,6 @@ public final class SevenCommons extends DummyModContainer {
 	// TODO
 	public static boolean updaterEnabled = true;
 
-	public static PacketHandler packets;
 	public static final int SYNC_PACKET_ID = 0;
 
 	private static EnumMap<LoaderState.ModState, List<Runnable>> stateCallbacks = new EnumMap<>(LoaderState.ModState.class);
@@ -89,11 +86,15 @@ public final class SevenCommons extends DummyModContainer {
 	public void universalPreInit(FMLPreInitializationEvent event) {
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 
-		packets = Network.newChannel("SevenCommons")
-				.register(PacketSync.class, SYNC_PACKET_ID)
-				.register(PacketInventoryName.class)
-				.register(PacketContainerButton.class)
-				.build();
+		Network.newSimpleChannel("SevenCommons")
+                .register(0, PacketContainerButton::new, PacketContainerButton::handle)
+                .register(1, PacketInventoryName::new, PacketInventoryName::handle)
+                .build();
+//		packets = Network.newChannel("SevenCommons")
+//				.register(PacketSync.class, SYNC_PACKET_ID)
+//				.register(PacketInventoryName.class)
+//				.register(PacketContainerButton.class)
+//				.build();
 
 		ClassInfoUtil.preInit();
 

@@ -15,6 +15,6 @@ public interface SyncerFactory {
      * @param type the type
      * @return a Syncer or null
      */
-    <V, C> Syncer<V, C> getSyncer(Property<V, ?> type);
+    <V> Syncer<V, ?, ?> getSyncer(Property<V, ?> type);
 
 }

@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
-import io.netty.buffer.ByteBuf;
+import de.take_weiland.mods.commons.net.MCDataOutput;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -129,7 +129,7 @@ public final class BlockPos implements Comparable<BlockPos> {
 		return x ^ y ^ (z << 6);
 	}
 
-	public static void toByteStream(ByteBuf out, int x, int y, int z) {
+	public static void toByteStream(MCDataOutput out, int x, int y, int z) {
 		out.writeInt(x);
 		out.writeByte(y);
 		out.writeInt(z);

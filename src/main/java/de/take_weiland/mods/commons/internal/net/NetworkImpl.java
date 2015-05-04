@@ -5,7 +5,6 @@ import cpw.mods.fml.common.LoaderState;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.PacketCodec;
 import de.take_weiland.mods.commons.util.Players;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -79,7 +78,7 @@ public final class NetworkImpl {
     }
 
     static <P> void decodeAndHandle(PacketCodec<P> codec, byte[] payload, EntityPlayer player) {
-        codec.handle(codec.decode(Unpooled.wrappedBuffer(payload)), player);
+        codec.handle(codec.decode(payload), player);
     }
 
     // registering

@@ -5,7 +5,6 @@ import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
 import gnu.trove.map.hash.TByteObjectHashMap;
 import gnu.trove.map.hash.TObjectByteHashMap;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.HashMap;
@@ -22,7 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
     private final String channel;
-    private TByteObjectHashMap<Function<? super ByteBuf, ? extends Packet>> constructors = new TByteObjectHashMap<>();
+    private TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors = new TByteObjectHashMap<>();
     private TObjectByteHashMap<Class<? extends Packet>> idLookup = new TObjectByteHashMap<>();
     private Map<Class<? extends Packet>, BiConsumer<? super Packet, ? super EntityPlayer>> handlers = new HashMap<>();
 
@@ -49,7 +48,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
     @Override
     public void build() {
         checkNotBuilt();
-        TByteObjectHashMap<Function<? super ByteBuf, ? extends Packet>> constructors = this.constructors;
+        TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors = this.constructors;
         constructors.compact();
 
         TObjectByteHashMap<Class<? extends Packet>> idLookup = this.idLookup;

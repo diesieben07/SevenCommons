@@ -1,11 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.collect.ImmutableMap;
-import de.take_weiland.mods.commons.internal.net.MCDataOutputImpl;
 import gnu.trove.map.hash.TByteObjectHashMap;
 import gnu.trove.map.hash.TObjectByteHashMap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.function.BiConsumer;
@@ -17,11 +14,11 @@ import java.util.function.Function;
 final class SimplePacketCodec implements PacketCodec<Packet> {
 
     private final String channel;
-    private final TByteObjectHashMap<Function<? super ByteBuf, ? extends Packet>> constructors;
+    private final TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors;
     private final ImmutableMap<Class<? extends Packet>, BiConsumer<? super Packet, ? super EntityPlayer>> handlers;
     private final TObjectByteHashMap<Class<? extends Packet>> classToIdMap;
 
-    SimplePacketCodec(String channel, TByteObjectHashMap<Function<? super ByteBuf, ? extends Packet>> constructors, ImmutableMap<Class<? extends Packet>, BiConsumer<? super Packet, ? super EntityPlayer>> handlers, TObjectByteHashMap<Class<? extends Packet>> classToIdMap) {
+    SimplePacketCodec(String channel, TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors, ImmutableMap<Class<? extends Packet>, BiConsumer<? super Packet, ? super EntityPlayer>> handlers, TObjectByteHashMap<Class<? extends Packet>> classToIdMap) {
         this.channel = channel;
         this.constructors = constructors;
         this.handlers = handlers;
@@ -29,26 +26,28 @@ final class SimplePacketCodec implements PacketCodec<Packet> {
     }
 
     @Override
-    public ByteBuf encode(Packet packet) {
-        ByteBuf buf = Unpooled.buffer(packet.expectedSize() + 1);
+    public byte[] encode(Packet packet) {
+        MCDataOutputImpl out = new MCDataOutputImpl(packet.expectedSize() + 1);
 
         /**
          * We don't need to check for contains here, because this codec is only used through
          * PacketToChannelMap, so only valid packets can end up here.
          */
-        buf.writeByte(classToIdMap.get(packet.getClass()));
-        packet.writeTo(new MCDataOutputImpl(buf));
-        return buf;
+        out.writeByte(classToIdMap.get(packet.getClass()));
+        packet.writeTo(out);
+        // remove this copy in 1.8 by wrapping with a ByteBuf
+        // when the vanilla packet properly checks for limits on ByteBufs
+        return out.toByteArray();
     }
 
     @Override
-    public Packet decode(ByteBuf buf) {
-        byte id = buf.readByte();
-        Function<? super ByteBuf, ? extends Packet> cstr = constructors.get(id);
+    public Packet decode(byte[] payload) {
+        byte id = payload[0];
+        Function<? super MCDataInput, ? extends Packet> cstr = constructors.get(id);
         if (cstr == null) {
             throw new ProtocolException("Unknown PacketID " + id);
         }
-        return cstr.apply(buf);
+        return cstr.apply(new MCDataInputImpl(payload, 1, payload.length - 1));
     }
 
     @Override

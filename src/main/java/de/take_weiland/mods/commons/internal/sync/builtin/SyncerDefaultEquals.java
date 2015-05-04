@@ -1,12 +1,14 @@
 package de.take_weiland.mods.commons.internal.sync.builtin;
 
-import com.google.common.base.Objects;
 import de.take_weiland.mods.commons.sync.Syncer;
+
+import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * @author diesieben07
  */
-abstract class SyncerDefaultEquals<V> implements Syncer<V, V> {
+abstract class SyncerDefaultEquals<V> implements Syncer.Simple<V, V> {
 
     private final Class<V> type;
 
@@ -20,7 +22,12 @@ abstract class SyncerDefaultEquals<V> implements Syncer<V, V> {
     }
 
     @Override
-    public boolean equal(V value, V companion) {
-        return Objects.equal(value, companion);
+    public <T_OBJ> Change<V> checkChange(T_OBJ obj, V value, V companion, Consumer<V> companionSetter) {
+        if (Objects.equals(value, companion)) {
+            return noChange();
+        } else {
+            return newValue(companion);
+        }
     }
+
 }

@@ -7,10 +7,13 @@ import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 /**
  * @author diesieben07
  */
-enum FluidTankSyncer implements Syncer<FluidTank, FluidStack> {
+enum FluidTankSyncer implements Syncer<FluidTank, FluidStack, FluidStack> {
 
     INSTANCE;
 
@@ -20,21 +23,29 @@ enum FluidTankSyncer implements Syncer<FluidTank, FluidStack> {
     }
 
     @Override
-    public boolean equal(FluidTank value, FluidStack companion) {
-        return value != null && Fluids.identical(value.getFluid(), companion);
+    public <T_OBJ> Change<FluidStack> checkChange(T_OBJ obj, FluidTank value, FluidStack companion, Consumer<FluidStack> companionSetter) {
+        if (Fluids.identical(value.getFluid(), companion)) {
+            return noChange();
+        } else {
+            FluidStack clone = Fluids.clone(value.getFluid());
+            companionSetter.accept(clone);
+            return newValue(clone);
+        }
     }
 
     @Override
-    public FluidStack writeAndUpdate(FluidTank value, FluidStack companion, MCDataOutput out) {
-        FluidStack stack = value.getFluid();
-        out.writeFluidStack(stack);
-        return Fluids.clone(stack);
+    public void write(FluidStack value, MCDataOutput out) {
+        out.writeFluidStack(value);
     }
 
     @Override
-    public FluidTank read(FluidTank value, FluidStack companion, MCDataInput in) {
-        value.setFluid(in.readFluidStack());
-        return value;
+    public FluidStack read(MCDataInput in) {
+        return in.readFluidStack();
+    }
+
+    @Override
+    public <T_OBJ> void applyChange(T_OBJ obj, FluidStack fluidStack, FluidTank oldValue, BiConsumer<T_OBJ, FluidTank> setter) {
+        oldValue.setFluid(fluidStack);
     }
 
 }

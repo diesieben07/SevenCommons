@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.net;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
@@ -11,13 +10,17 @@ import java.util.function.Predicate;
  */
 public interface PacketCodec<P> {
 
-    ByteBuf encode(P packet);
+    byte[] encode(P packet);
 
-    P decode(ByteBuf buf);
+    P decode(byte[] payload);
 
     void handle(P packet, EntityPlayer player);
 
     String channel();
+
+    default boolean doCustomLocalHandling(P packet, EntityPlayer player) {
+       return false;
+    }
 
     default void sendToServer(P packet) {
         Network.sendToServer(packet, this);

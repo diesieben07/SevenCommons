@@ -31,4 +31,8 @@ public final class PacketCodecPair<P> {
     void handle(EntityPlayer player) {
         codec.handle(packet, player);
     }
+
+    public boolean maybeDoCustomLocalHandling(EntityPlayer player) {
+        return codec.doCustomLocalHandling(packet, player);
+    }
 }

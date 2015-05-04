@@ -6,10 +6,14 @@ import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.item.ItemStack;
 
+import java.util.function.Consumer;
+
 /**
  * @author diesieben07
  */
-final class ItemStackSyncer implements Syncer<ItemStack, ItemStack> {
+enum ItemStackSyncer implements Syncer.Simple<ItemStack, ItemStack> {
+
+    INSTANCE;
 
     @Override
     public Class<ItemStack> getCompanionType() {
@@ -17,18 +21,24 @@ final class ItemStackSyncer implements Syncer<ItemStack, ItemStack> {
     }
 
     @Override
-    public boolean equal(ItemStack value, ItemStack companion) {
-        return ItemStacks.identical(value, companion);
+    public <T_OBJ> Change<ItemStack> checkChange(T_OBJ obj, ItemStack value, ItemStack companion, Consumer<ItemStack> companionSetter) {
+        if (ItemStacks.identical(value, companion)) {
+            return noChange();
+        } else {
+            ItemStack clone = ItemStacks.clone(value);
+            companionSetter.accept(clone);
+            return newValue(clone);
+        }
     }
 
     @Override
-    public ItemStack writeAndUpdate(ItemStack value, ItemStack companion, MCDataOutput out) {
+    public void write(ItemStack value, MCDataOutput out) {
         out.writeItemStack(value);
-        return ItemStacks.clone(value);
     }
 
     @Override
-    public ItemStack read(ItemStack value, ItemStack companion, MCDataInput in) {
+    public ItemStack read(MCDataInput in) {
         return in.readItemStack();
     }
+
 }

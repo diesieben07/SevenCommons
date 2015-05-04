@@ -17,7 +17,7 @@ enum SyncType {
 	TILE_ENTITY {
         @Override
         public boolean doRead(EntityPlayer player, MCDataInput in) {
-            SyncedObjectProxy te = (SyncedObjectProxy) player.worldObj.getBlockTileEntity(in.readInt(), in.readUnsignedByte(), in.readInt());
+            SyncedObjectProxy te = (SyncedObjectProxy) player.worldObj.getTileEntity(in.readInt(), in.readUnsignedByte(), in.readInt());
             if (te == null) {
                 return false;
             }

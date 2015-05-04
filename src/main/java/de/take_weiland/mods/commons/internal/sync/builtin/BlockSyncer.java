@@ -5,10 +5,14 @@ import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.sync.Syncer;
 import net.minecraft.block.Block;
 
+import java.util.function.Consumer;
+
 /**
  * @author diesieben07
  */
-final class BlockSyncer implements Syncer<Block, Block> {
+enum BlockSyncer implements Syncer.Simple<Block, Block> {
+
+    INSTANCE;
 
     @Override
     public Class<Block> getCompanionType() {
@@ -16,18 +20,22 @@ final class BlockSyncer implements Syncer<Block, Block> {
     }
 
     @Override
-    public boolean equal(Block value, Block companion) {
-        return value == companion;
+    public <T_OBJ> Change<Block> checkChange(T_OBJ obj, Block value, Block companion, Consumer<Block> companionSetter) {
+        if (value == companion) {
+            return noChange();
+        } else {
+            companionSetter.accept(value);
+            return newValue(value);
+        }
     }
 
     @Override
-    public Block writeAndUpdate(Block value, Block companion, MCDataOutput out) {
+    public void write(Block value, MCDataOutput out) {
         out.writeBlock(value);
-        return value;
     }
 
     @Override
-    public Block read(Block value, Block companion, MCDataInput in) {
+    public Block read(MCDataInput in) {
         return in.readBlock();
     }
 }

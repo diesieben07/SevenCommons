@@ -14,4 +14,6 @@ public interface SyncedObjectProxy {
      */
     SyncCompanion _sc$getCompanion();
 
+    void _sc$writeIdentity();
+
 }

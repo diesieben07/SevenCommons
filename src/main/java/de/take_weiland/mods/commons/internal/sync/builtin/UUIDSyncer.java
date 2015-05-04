@@ -2,25 +2,29 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.sync.Syncer;
 
 import java.util.UUID;
 
 /**
  * @author diesieben07
  */
-class UUIDSyncer extends SyncerDefaultEquals<UUID> {
-    public UUIDSyncer() {
-        super(UUID.class);
+enum UUIDSyncer implements Syncer.ForImmutable<UUID> {
+
+    INSTANCE;
+
+    @Override
+    public Class<UUID> getCompanionType() {
+        return UUID.class;
     }
 
     @Override
-    public UUID writeAndUpdate(UUID value, UUID companion, MCDataOutput out) {
+    public void write(UUID value, MCDataOutput out) {
         out.writeUUID(value);
-        return value;
     }
 
     @Override
-    public UUID read(UUID value, UUID companion, MCDataInput in) {
+    public UUID read(MCDataInput in) {
         return in.readUUID();
     }
 }

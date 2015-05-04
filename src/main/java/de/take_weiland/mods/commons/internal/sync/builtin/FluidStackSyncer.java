@@ -6,10 +6,14 @@ import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 
+import java.util.function.Consumer;
+
 /**
  * @author diesieben07
  */
-final class FluidStackSyncer implements Syncer<FluidStack, FluidStack> {
+enum  FluidStackSyncer implements Syncer.Simple<FluidStack, FluidStack> {
+
+    INSTANCE;
 
     @Override
     public Class<FluidStack> getCompanionType() {
@@ -17,18 +21,23 @@ final class FluidStackSyncer implements Syncer<FluidStack, FluidStack> {
     }
 
     @Override
-    public boolean equal(FluidStack value, FluidStack companion) {
-        return Fluids.identical(value, companion);
+    public <T_OBJ> Change<FluidStack> checkChange(T_OBJ obj, FluidStack value, FluidStack companion, Consumer<FluidStack> companionSetter) {
+        if (Fluids.identical(value, companion)) {
+            return noChange();
+        } else {
+            FluidStack clone = Fluids.clone(value);
+            companionSetter.accept(clone);
+            return newValue(clone);
+        }
     }
 
     @Override
-    public FluidStack writeAndUpdate(FluidStack value, FluidStack companion, MCDataOutput out) {
+    public void write(FluidStack value, MCDataOutput out) {
         out.writeFluidStack(value);
-        return Fluids.clone(value);
     }
 
     @Override
-    public FluidStack read(FluidStack value, FluidStack companion, MCDataInput in) {
+    public FluidStack read(MCDataInput in) {
         return in.readFluidStack();
     }
 }

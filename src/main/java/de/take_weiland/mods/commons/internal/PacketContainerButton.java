@@ -2,39 +2,37 @@ package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.inv.ButtonContainer;
-import de.take_weiland.mods.commons.net.*;
+import de.take_weiland.mods.commons.net.MCDataInput;
+import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.net.Packet;
 import net.minecraft.entity.player.EntityPlayer;
-
-import java.io.IOException;
 
 /**
  * @author diesieben07
  */
-@PacketDirection(PacketDirection.Dir.TO_SERVER)
-public final class PacketContainerButton extends ModPacket {
+@Packet.Receiver(Side.SERVER)
+public final class PacketContainerButton implements Packet {
 
-	private int windowId;
-	private int buttonId;
+	private final int windowId;
+	private final int buttonId;
 
 	public PacketContainerButton(int windowId, int buttonId) {
 		this.windowId = windowId;
 		this.buttonId = buttonId;
 	}
 
-	@Override
-    public void write(MCDataOutput out) {
-		out.writeByte(windowId);
-		out.writeVarInt(buttonId);
-	}
+    PacketContainerButton(MCDataInput buf) {
+        this.windowId = buf.readByte();
+        this.buttonId = buf.readVarInt();
+    }
 
-	@Override
-    public void read(MCDataInput in, EntityPlayer player, Side side) throws IOException, ProtocolException {
-		windowId = in.readUnsignedByte();
-		buttonId = in.readVarInt();
-	}
+    @Override
+    public void writeTo(MCDataOutput out) {
+        out.writeByte(windowId);
+        out.writeVarInt(buttonId);
+    }
 
-	@Override
-    public void execute(EntityPlayer player, Side side) throws ProtocolException {
+    void handle(EntityPlayer player) {
 		if (player.openContainer.windowId == windowId && player.openContainer instanceof ButtonContainer) {
 			((ButtonContainer) player.openContainer).onButtonClick(Side.SERVER, player, buttonId);
 		}

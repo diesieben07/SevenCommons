@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
-import de.take_weiland.mods.commons.net.MCDataOutput;
 
 /**
  * <p>Base class for @Sync companion</p>
@@ -15,7 +14,7 @@ public abstract class SyncCompanion {
      * @param isSuperCall if this is a super call from an extending companion (used to prevent sending the packet prematurely)
      * @return the OutputStream that is being written to, might be null
      */
-    public abstract MCDataOutput check(Object instance, boolean isSuperCall);
+    public abstract void check(Object instance, boolean isSuperCall);
 
     /**
      * <p>Called to read the data on the client.</p>
@@ -24,5 +23,10 @@ public abstract class SyncCompanion {
      * @return last read ID, 0 for end of stream
      */
     public abstract int read(Object instance, MCDataInput in);
+
+    public final <T_OBJ, T_DATA> void applyChange(Object instance, ChangedValue<T_DATA> change) {
+        // TODO
+        change.syncer.applyChange(instance, change.data, null, null);
+    }
 
 }

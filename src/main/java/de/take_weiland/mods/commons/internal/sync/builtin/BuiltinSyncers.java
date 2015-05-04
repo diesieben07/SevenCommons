@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.sync.builtin;
 
+import com.google.common.primitives.Primitives;
 import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.serialize.Property;
 import de.take_weiland.mods.commons.sync.SyncCapacity;
@@ -10,6 +11,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,13 +22,13 @@ import java.util.UUID;
  */
 public final class BuiltinSyncers implements SyncerFactory {
 
-    private final Map<Class<?>, Syncer<?, ?>> cache = new HashMap<>();
+    private final Map<Class<?>, Syncer<?, ?, ?>> cache = new HashMap<>();
 
     @Override
-    public <V, C> Syncer<V, C> getSyncer(Property<V, ?> type) {
-        Class<? super V> raw = type.getRawType();
+    public <T_VAL> Syncer<T_VAL, ?, ?> getSyncer(Property<T_VAL, ?> type) {
+        Class<? super T_VAL> raw = type.getRawType();
 
-        Syncer<?, ?> syncer;
+        Syncer<?, ?, ?> syncer;
         if (type.getDesiredMethod() != SerializationMethod.Method.CONTENTS) {
             syncer = cache.get(raw);
             if (syncer == null && !cache.containsKey(raw)) {
@@ -41,31 +43,44 @@ public final class BuiltinSyncers implements SyncerFactory {
             syncer = getSpecialSyncer(raw, type);
         }
         //noinspection unchecked
-        return (Syncer<V, C>) syncer;
+        return (Syncer<T_VAL, ?, ?>) syncer;
     }
 
-    private static Syncer<?, ?> newSyncerForRawType(Class<?> type) {
+    private static Syncer<?, ?, ?> newSyncerForRawType(Class<?> type) {
         if (type == String.class) {
-            return new StringSyncer();
+            return StringSyncer.INSTANCE;
         } else if (type == UUID.class) {
-            return new UUIDSyncer();
+            return UUIDSyncer.INSTANCE;
         } else if (type == ItemStack.class) {
-            return new ItemStackSyncer();
+            return ItemStackSyncer.INSTANCE;
         } else if (type == Item.class) {
-            return new ItemSyncer();
+            return ItemStackSyncer.INSTANCE;
         } else if (type == Block.class) {
-            return new BlockSyncer();
+            return BlockSyncer.INSTANCE;
         } else if (type == FluidStack.class) {
-            return new FluidStackSyncer();
+            return FluidStackSyncer.INSTANCE;
         } else if (type.isEnum()) {
             //noinspection unchecked
             return new EnumSyncer(type);
+        } else if (type.isPrimitive() || Primitives.isWrapperType(type)){
+            String className = StringUtils.capitalize(Primitives.unwrap(type).getSimpleName());
+            if (!type.isPrimitive()) {
+                className += "Box";
+            }
+            className += "Syncer";
+            Class<?> clazz;
+            try {
+                clazz = Class.forName("de.take_weiland.mods.commons.internal.sync.builtin." + className);
+                return (Syncer<?, ?, ?>) clazz.getEnumConstants()[0];
+            } catch (ClassNotFoundException e) {
+                throw new AssertionError("Missing primitive type " + type);
+            }
         } else {
-            return PrimitiveAndBoxSyncerFactory.createSyncer(type);
+            return null;
         }
     }
 
-    private static Syncer<?, ?> getSpecialSyncer(Class<?> raw, Property<?, ?> spec) {
+    private static Syncer<?, ?, ?> getSpecialSyncer(Class<?> raw, Property<?, ?> spec) {
         if (FluidTank.class.isAssignableFrom(raw)) {
             if (spec.hasAnnotation(SyncCapacity.class)) {
                 return FluidTankAndCapacitySyncer.INSTANCE;
