@@ -1,12 +1,15 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
+import de.take_weiland.mods.commons.sync.Syncer;
 
 /**
  * <p>Base class for @Sync companion</p>
  * @author diesieben07
  */
 public abstract class SyncCompanion {
+
+    public static final int FIELD_ID_END = 0;
 
     /**
      * <p>Called to check for changes, does everything to make sure the client object is up to date.</p>
@@ -24,9 +27,15 @@ public abstract class SyncCompanion {
      */
     public abstract int read(Object instance, MCDataInput in);
 
-    public final <T_OBJ, T_DATA> void applyChange(Object instance, ChangedValue<T_DATA> change) {
-        // TODO
-        change.syncer.applyChange(instance, change.data, null, null);
+    public abstract void applyChanges(Object instance, ChangeIterator values);
+
+    public interface ChangeIterator {
+
+        int fieldId();
+
+        <T_DATA> T_DATA value(Syncer<?, T_DATA, ?> syncer);
+
+
     }
 
 }

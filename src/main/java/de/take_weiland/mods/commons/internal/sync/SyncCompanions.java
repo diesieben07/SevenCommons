@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.sync;
 
-import com.google.common.base.Function;
 import de.take_weiland.mods.commons.internal.TypeToFactoryMap;
 import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
 import de.take_weiland.mods.commons.serialize.Property;
@@ -9,7 +8,6 @@ import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.sync.SyncerFactory;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.util.Map;
 
@@ -33,9 +31,9 @@ public final class SyncCompanions {
         }
     };
 
-    private static final TypeToFactoryMap<SyncerFactory, Syncer<?, ?>> syncerFactories = new TypeToFactoryMap<SyncerFactory, Syncer<?, ?>>() {
+    private static final TypeToFactoryMap<SyncerFactory, Syncer<?, ?, ?>> syncerFactories = new TypeToFactoryMap<SyncerFactory, Syncer<?, ?, ?>>() {
         @Override
-        protected Syncer<?, ?> applyFactory(SyncerFactory factory, Property<?, ?> type) {
+        protected Syncer<?, ?, ?> applyFactory(SyncerFactory factory, Property<?, ?> type) {
             return factory.getSyncer(type);
         }
     };
@@ -58,19 +56,9 @@ public final class SyncCompanions {
         return (SyncCompanion) companionConstructors.get(clazz).invokeExact();
     }
 
-    static Map<Property<?, ?>, Syncer<?, ?>> getSyncedMemberInfo(Class<?> clazz) {
+    static Map<Property<?, ?>, Syncer<?, ?, ?>> getSyncedMemberInfo(Class<?> clazz) {
         return AbstractProperty.allPropertiesLazy(clazz, Sync.class)
-                .toMap(getSyncer());
-    }
-
-    private static Function<Property<?, ?>, Syncer<?, ?>> getSyncer() {
-        return new Function<Property<?, ?>, Syncer<?, ?>>() {
-            @Nullable
-            @Override
-            public Syncer<?, ?> apply(@Nullable Property<?, ?> property) {
-                return syncerFactories.get(property);
-            }
-        };
+                .toMap(syncerFactories::get);
     }
 
     private SyncCompanions() { }

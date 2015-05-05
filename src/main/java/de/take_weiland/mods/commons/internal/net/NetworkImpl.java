@@ -9,7 +9,6 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.client.C17PacketCustomPayload;
 import net.minecraft.network.play.server.S3FPacketCustomPayload;
@@ -61,7 +60,7 @@ public final class NetworkImpl {
         if (codec == null) {
             return false;
         } else {
-            decodeAndHandle(codec, mcPacket.func_149558_e(), player);
+            codec.decodeAndHandle(mcPacket.func_149558_e(), player);
             return true;
         }
     }
@@ -72,13 +71,9 @@ public final class NetworkImpl {
         if (codec == null) {
             return false;
         } else {
-            decodeAndHandle(codec, mcPacket.func_149168_d(), Players.getClient());
+            codec.decodeAndHandle(mcPacket.func_149168_d(), Players.getClient());
             return true;
         }
-    }
-
-    static <P> void decodeAndHandle(PacketCodec<P> codec, byte[] payload, EntityPlayer player) {
-        codec.handle(codec.decode(payload), player);
     }
 
     // registering

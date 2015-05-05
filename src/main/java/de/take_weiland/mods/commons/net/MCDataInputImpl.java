@@ -1,8 +1,12 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.primitives.Ints;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.util.*;
+import de.take_weiland.mods.commons.sync.Syncer;
+import de.take_weiland.mods.commons.util.BlockPos;
+import de.take_weiland.mods.commons.util.EnumUtils;
+import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -11,7 +15,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import org.apache.commons.lang3.ArrayUtils;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -30,7 +33,7 @@ import static com.google.common.base.Preconditions.checkPositionIndexes;
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-class MCDataInputImpl extends InputStream implements MCDataInput {
+class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.ChangeIterator {
 
     private final byte[] buf;
     private final int maxLen;
@@ -364,12 +367,12 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
     // array stuff
 
     @Override
-    public void readFully(@NotNull byte[] b) {
+    public void readFully(@Nonnull byte[] b) {
         readFully(b, 0, b.length);
     }
 
     @Override
-    public void readFully(@NotNull byte[] b, int off, int len) {
+    public void readFully(@Nonnull byte[] b, int off, int len) {
         checkPositionIndexes(off, off + len, b.length);
         checkAvailable(len);
         System.arraycopy(buf, pos, b, off, len);
@@ -555,8 +558,6 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
         return readDoubles(null);
     }
 
-
-
     @Override
     public double[] readDoubles(@Nullable double[] b) {
         int len = readVarInt();
@@ -730,5 +731,15 @@ class MCDataInputImpl extends InputStream implements MCDataInput {
     public BlockPos readCoords() {
 //		return BlockPos.streamSerializer().read(this);
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int fieldId() {
+        return readVarInt();
+    }
+
+    @Override
+    public <T_DATA> T_DATA value(Syncer<?, T_DATA, ?> syncer) {
+        return syncer.read(this);
     }
 }

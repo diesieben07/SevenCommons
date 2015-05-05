@@ -16,11 +16,11 @@ public interface PacketCodec<P> {
 
     void handle(P packet, EntityPlayer player);
 
-    String channel();
-
-    default boolean doCustomLocalHandling(P packet, EntityPlayer player) {
-       return false;
+    default void decodeAndHandle(byte[] payload, EntityPlayer player) {
+        handle(decode(payload), player);
     }
+
+    String channel();
 
     default void sendToServer(P packet) {
         Network.sendToServer(packet, this);

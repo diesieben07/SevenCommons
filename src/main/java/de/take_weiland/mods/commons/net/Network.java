@@ -26,6 +26,18 @@ public final class Network {
 
     public static final int DEFAULT_EXPECTED_SIZE = 32;
 
+    public static MCDataOutput newOutput() {
+        return new MCDataOutputImpl(DEFAULT_EXPECTED_SIZE);
+    }
+
+    public static MCDataOutput newOutput(int expectedSize) {
+        return new MCDataOutputImpl(expectedSize);
+    }
+
+    public static MCDataInput newInput(byte[] bytes) {
+        return new MCDataInputImpl(bytes, 0, bytes.length);
+    }
+
     public static <P> void newChannel(String channel, PacketCodec<P> codec) {
         NetworkImpl.register(channel, codec);
     }
@@ -62,7 +74,7 @@ public final class Network {
     }
 
     public static <P> void sendToServer(P packet, PacketCodec<P> codec) {
-        send0(new PacketCodecPair<>(packet, codec), SevenCommons.proxy.getClientNetworkManager(), Players.getClient());
+        send0(new PacketCodecPair<>(packet, codec), SevenCommons.proxy.getClientNetworkManager());
     }
 
     public static <P> void sendTo(PacketCodec<P> codec, P packet, EntityPlayer player) {
@@ -86,15 +98,13 @@ public final class Network {
     }
 
     private static <P> void sendToPlayer0(PacketCodecPair<P> pair, EntityPlayerMP player) {
-        send0(pair, player.playerNetServerHandler.netManager, player);
+        send0(pair, player.playerNetServerHandler.netManager);
     }
 
-    private static <P> void send0(PacketCodecPair<P> pair, NetworkManager manager, EntityPlayer player) {
-        if (!manager.isLocalChannel() || !pair.maybeDoCustomLocalHandling(player)) {
-            manager.channel()
-                    .writeAndFlush(pair)
-                    .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
-        }
+    private static <P> void send0(PacketCodecPair<P> pair, NetworkManager manager) {
+        manager.channel()
+            .writeAndFlush(pair)
+            .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 
     private static final java.lang.reflect.Type function2ndParam = Function.class.getTypeParameters()[1];

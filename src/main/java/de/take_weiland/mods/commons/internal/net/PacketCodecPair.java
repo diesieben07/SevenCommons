@@ -32,7 +32,4 @@ public final class PacketCodecPair<P> {
         codec.handle(packet, player);
     }
 
-    public boolean maybeDoCustomLocalHandling(EntityPlayer player) {
-        return codec.doCustomLocalHandling(packet, player);
-    }
 }

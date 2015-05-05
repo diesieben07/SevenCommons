@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.prop;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
@@ -8,7 +7,6 @@ import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.serialize.Property;
 
-import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.*;
@@ -21,7 +19,7 @@ import java.util.List;
  */
 public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member & AnnotatedElement> implements Property<T, MEM> {
 
-    public static <T> Property<T, ?> newProperty(Member member) {
+    public static Property<?, ?> newProperty(AnnotatedElement member) {
         if (member instanceof Field) {
             return new FieldProperty<>((Field) member);
         } else if (member instanceof Method) {
@@ -31,68 +29,41 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
         }
     }
 
-    public static Function<Member, Property<?, ?>> getPropertyFunction() {
-        return new Function<Member, Property<?, ?>>() {
-            @Override
-            public Property<?, ?> apply(Member input) {
-                return newProperty(input);
-            }
-        };
-    }
-
     public static List<Property<?, ?>> allProperties(Class<?> clazz, Class<? extends Annotation> annotation) {
         return allPropertiesLazy(clazz, annotation).toList();
     }
 
     public static FluentIterable<Property<?, ?>> allPropertiesLazy(Class<?> clazz, Class<? extends Annotation> annotation) {
         return getPropertySourceClasses(clazz)
-                .transformAndConcat(getDirectProperties(isAnnotatedWith(annotation)));
+                .transformAndConcat(sourceClass -> getDirectProperties(sourceClass, element -> element.isAnnotationPresent(annotation)));
     }
 
-    private static Function<Class<?>, Iterable<Property<?, ?>>> getDirectProperties(final Predicate<Member> filter) {
-        return new Function<Class<?>, Iterable<Property<?, ?>>>() {
-            @Nullable
-            @Override
-            public Iterable<Property<?, ?>> apply(Class<?> input) {
-                return getDirectProperties(input, filter);
-            }
-        };
-    }
-
-    private static Iterable<Property<?, ?>> getDirectProperties(Class<?> clazz, Predicate<Member> filter) {
-        Iterable<Member> methods = Arrays.<Member>asList(clazz.getDeclaredMethods());
-        Iterable<Member> fields = Arrays.<Member>asList(clazz.getDeclaredFields());
-
-        return FluentIterable.from(Iterables.concat(methods, fields))
+    private static Iterable<Property<?, ?>> getDirectProperties(Class<?> clazz, Predicate<AnnotatedElement> filter) {
+        Iterable<AnnotatedElement> methods = asFluent(clazz.getDeclaredMethods());
+        Iterable<AnnotatedElement> fields = asFluent(clazz.getDeclaredFields());
+        return concat(methods, fields)
                 .filter(filter)
-                .transform(getPropertyFunction());
-    }
-
-    private static Predicate<Member> isAnnotatedWith(final Class<? extends Annotation> annotation) {
-        return new Predicate<Member>() {
-            @Override
-            public boolean apply(Member input) {
-                return ((AnnotatedElement) input).isAnnotationPresent(annotation);
-            }
-        };
+                .transform(AbstractProperty::newProperty);
     }
 
     private static FluentIterable<Class<?>> getPropertySourceClasses(Class<?> clazz) {
-        FluentIterable<Class<?>> newIfaces = FluentIterable.from(Arrays.asList(clazz.getInterfaces()))
-                .filter(isNewInterface(clazz));
+        FluentIterable<Class<?>> newIfaces = asFluent(clazz.getInterfaces())
+                .filter(input -> !input.isAssignableFrom(clazz.getSuperclass()));
 
-        return FluentIterable.from(
-                Iterables.concat(Collections.singleton(clazz), newIfaces)
-        );
+        return concat(Collections.singleton(clazz), newIfaces);
     }
 
-    private static Predicate<Class<?>> isNewInterface(final Class<?> currentClass) {
-        return new Predicate<Class<?>>() {
-            @Override
-            public boolean apply(Class<?> input) {
-                return !input.isAssignableFrom(currentClass.getSuperclass());
-            }
-        };
+    private static <T> FluentIterable<T> asFluent(T... arr) {
+        return FluentIterable.from(Arrays.asList(arr));
+    }
+
+    private static <T> FluentIterable<T> asFluent(Iterable<? extends T> it) {
+        //noinspection unchecked
+        return FluentIterable.from((Iterable<T>) it);
+    }
+
+    private static <T> FluentIterable<T> concat(Iterable<T> a, Iterable<T> b) {
+        return asFluent(Iterables.concat(a, b));
     }
 
     final MEM member;

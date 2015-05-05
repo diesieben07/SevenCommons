@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.sync;
 
+import de.take_weiland.mods.commons.internal.sync.ChangedValue;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import org.omg.IOP.TAG_ORB_TYPE;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -33,8 +33,9 @@ public interface Syncer<T_VAL, T_DATA, T_COM> {
     default Change<T_DATA> noChange() {
         return null;
     }
+
     default Change<T_DATA> newValue(T_DATA val) {
-        return new Change<>(this, val);
+        return new ChangedValue<>(this, val);
     }
 
     interface Simple<T_VAL, T_COM> extends Syncer<T_VAL, T_VAL, T_COM> {
@@ -58,30 +59,6 @@ public interface Syncer<T_VAL, T_DATA, T_COM> {
         }
     }
 
-    final class Change<T_DATA, T_OBJ> {
-
-        private int id;
-        private final Syncer<?, T_DATA, T_OBJ> syncer;
-        private final T_DATA val;
-
-        Change(Syncer<?, T_DATA, T_OBJ> syncer, T_DATA val) {
-            this.syncer = syncer;
-            this.val = val;
-        }
-
-        public T_DATA value() {
-            return val;
-        }
-
-        public void write(MCDataOutput out) {
-            out.writeVarInt(id);
-            syncer.write(val, out);
-        }
-
-        public void apply(T_OBJ obj) {
-            syncer.applyChange(obj, );
-        }
-
-    }
+    interface Change<T_DATA> { }
 
 }

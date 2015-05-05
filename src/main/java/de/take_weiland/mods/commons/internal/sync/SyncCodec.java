@@ -1,34 +1,41 @@
 package de.take_weiland.mods.commons.internal.sync;
 
+import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketCodec;
 import net.minecraft.entity.player.EntityPlayer;
 
 /**
  * @author diesieben07
  */
-public final class SyncCodec implements PacketCodec<SyncCompanion> {
+public final class SyncCodec implements PacketCodec<SyncEvent> {
+
     @Override
-    public byte[] encode(SyncCompanion packet) {
-        return new byte[0];
+    public byte[] encode(SyncEvent packet) {
+        MCDataOutput out = Network.newOutput();
+        packet.writeTo(out);
+        return out.toByteArray();
     }
 
     @Override
-    public SyncCompanion decode(byte[] payload) {
-        return null;
+    public void decodeAndHandle(byte[] payload, EntityPlayer player) {
+        // caused when packet is received over actual wire
+        SyncEvent.readAndApply(player, Network.newInput(payload));
     }
 
     @Override
-    public void handle(SyncCompanion packet, EntityPlayer player) {
-
-    }
-
-    @Override
-    public boolean doCustomLocalHandling(SyncCompanion packet, EntityPlayer player) {
-        return false;
+    public void handle(SyncEvent packet, EntityPlayer player) {
+        // only called for local, direct connections, since we override decodeAndHandle
+        packet.applyDirect(player);
     }
 
     @Override
     public String channel() {
         return "SC|Sync";
+    }
+
+    @Override
+    public SyncEvent decode(byte[] payload) {
+        throw new AssertionError("not possible!");
     }
 }
