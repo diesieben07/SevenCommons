@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.sync;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.primitives.UnsignedBytes;
@@ -22,7 +21,6 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.commons.TableSwitchGenerator;
 
-import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.util.Iterator;
@@ -52,10 +50,10 @@ public final class BytecodeEmittingCompanionGenerator {
     private String superName;
     private Class<?> superClass;
     private ClassWriter cw;
-    private final Map<Property<?, ?>, Syncer<?, ?>> properties;
+    private final Map<Property<?, ?>, Syncer<?, ?, ?>> properties;
     private int firstID;
 
-    BytecodeEmittingCompanionGenerator(DefaultCompanionFactory factory, Class<?> clazz, Map<Property<?, ?>, Syncer<?, ?>> properties) {
+    BytecodeEmittingCompanionGenerator(DefaultCompanionFactory factory, Class<?> clazz, Map<Property<?, ?>, Syncer<?, ?, ?>> properties) {
         this.factory = factory;
         this.clazz = clazz;
         this.properties = properties;
@@ -108,9 +106,9 @@ public final class BytecodeEmittingCompanionGenerator {
     }
 
     private void makeFields() {
-        for (Map.Entry<Property<?, ?>, Syncer<?, ?>> entry : properties.entrySet()) {
+        for (Map.Entry<Property<?, ?>, Syncer<?, ?, ?>> entry : properties.entrySet()) {
             Property<?, ?> property = entry.getKey();
-            Syncer<?, ?> syncer = entry.getValue();
+            Syncer<?, ?, ?> syncer = entry.getValue();
 
             String descSyncer = Type.getDescriptor(Syncer.class);
             String descMH = Type.getDescriptor(MethodHandle.class);
@@ -166,9 +164,9 @@ public final class BytecodeEmittingCompanionGenerator {
         gen.tableSwitch(keys, new TableSwitchGenerator() {
             @Override
             public void generateCase(int key, Label end) {
-                Map.Entry<Property<?, ?>, Syncer<?, ?>> entry = Iterables.get(properties.entrySet(), key - firstID);
+                Map.Entry<Property<?, ?>, Syncer<?, ?, ?>> entry = Iterables.get(properties.entrySet(), key - firstID);
                 Property<?, ?> property = entry.getKey();
-                Syncer<?, ?> syncer = entry.getValue();
+                Syncer<?, ?, ?> syncer = entry.getValue();
 
                 boolean hasCompanion = syncer.getCompanionType() != null;
                 Type companionType = hasCompanion ? Type.getType(syncer.getCompanionType()) : null;
@@ -318,9 +316,9 @@ public final class BytecodeEmittingCompanionGenerator {
         SyncType syncType = SyncHelpers.getSyncType(clazz);
 
         int index = 0;
-        for (Map.Entry<Property<?, ?>, Syncer<?, ?>> entry : properties.entrySet()) {
+        for (Map.Entry<Property<?, ?>, Syncer<?, ?, ?>> entry : properties.entrySet()) {
             Property<?, ?> property = entry.getKey();
-            Syncer<?, ?> syncer = entry.getValue();
+            Syncer<?, ?, ?> syncer = entry.getValue();
 
             if (next != null) {
                 gen.mark(next);
@@ -504,7 +502,7 @@ public final class BytecodeEmittingCompanionGenerator {
         return property.getName() + (property.getMember() instanceof Field ? "$f" : "$m");
     }
 
-    private static Map<Property<?, ?>, Syncer<?, ?>> staticProperties;
+    private static Map<Property<?, ?>, Syncer<?, ?, ?>> staticProperties;
 
     private Class<?> finish() {
         Class<?> cls;
@@ -529,19 +527,15 @@ public final class BytecodeEmittingCompanionGenerator {
     @SuppressWarnings("unused")
     static Iterator<Object[]> getStaticData() throws NoSuchFieldException, IllegalAccessException {
         return FluentIterable.from(staticProperties.entrySet())
-                .transform(new Function<Map.Entry<Property<?,?>,Syncer<?,?>>, Object[]>() {
-                    @Nullable
-                    @Override
-                    public Object[] apply(Map.Entry<Property<?, ?>, Syncer<?, ?>> entry) {
-                        Property<?, ?> property = entry.getKey();
-                        Syncer<?, ?> syncer = entry.getValue();
+                .transform(entry -> {
+                    Property<?, ?> property = entry.getKey();
+                    Syncer<?, ?, ?> syncer = entry.getValue();
 
-                        return new Object[] {
-                                syncer,
-                                property.getGetter().asType(methodType(property.getRawType(), Object.class)),
-                                property.getSetter().asType(methodType(void.class, Object.class, property.getRawType()))
-                        };
-                    }
+                    return new Object[] {
+                            syncer,
+                            property.getGetter().asType(methodType(property.getRawType(), Object.class)),
+                            property.getSetter().asType(methodType(void.class, Object.class, property.getRawType()))
+                    };
                 })
                 .iterator();
     }

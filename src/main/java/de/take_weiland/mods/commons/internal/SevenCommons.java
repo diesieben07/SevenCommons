@@ -13,6 +13,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
+import de.take_weiland.mods.commons.internal.sync.SyncCodec;
 import de.take_weiland.mods.commons.internal.sync.builtin.BuiltinSyncers;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.builtin.DefaultNBTSerializers;
@@ -44,10 +45,12 @@ public final class SevenCommons extends DummyModContainer {
 
 	public static final int SYNC_PACKET_ID = 0;
 
-	private static EnumMap<LoaderState.ModState, List<Runnable>> stateCallbacks = new EnumMap<>(LoaderState.ModState.class);
-	private static EnumSet<LoaderState.ModState> reachedStates = EnumSet.noneOf(LoaderState.ModState.class);
+    private static SyncCodec syncCodec;
 
-	public SevenCommons() {
+    private static EnumMap<LoaderState.ModState, List<Runnable>> stateCallbacks = new EnumMap<>(LoaderState.ModState.class);
+    private static EnumSet<LoaderState.ModState> reachedStates = EnumSet.noneOf(LoaderState.ModState.class);
+
+    public SevenCommons() {
 		super(new ModMetadata());
 		ModMetadata meta = getMetadata();
 		meta.name = "SevenCommons";
@@ -90,6 +93,10 @@ public final class SevenCommons extends DummyModContainer {
                 .register(0, PacketContainerButton::new, PacketContainerButton::handle)
                 .register(1, PacketInventoryName::new, PacketInventoryName::handle)
                 .build();
+
+        syncCodec = new SyncCodec();
+        Network.newChannel(syncCodec);
+
 //		packets = Network.newChannel("SevenCommons")
 //				.register(PacketSync.class, SYNC_PACKET_ID)
 //				.register(PacketInventoryName.class)

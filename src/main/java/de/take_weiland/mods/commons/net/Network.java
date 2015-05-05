@@ -38,8 +38,8 @@ public final class Network {
         return new MCDataInputImpl(bytes, 0, bytes.length);
     }
 
-    public static <P> void newChannel(String channel, PacketCodec<P> codec) {
-        NetworkImpl.register(channel, codec);
+    public static <P> void newChannel(PacketCodec<P> codec) {
+        NetworkImpl.register(codec.channel(), codec);
     }
 
     public static <P> PacketCodec<P> newChannel(String channel,

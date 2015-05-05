@@ -45,7 +45,7 @@ final class DefaultCompanionFactory implements CompanionFactory {
         }
         CompanionClassInfo info;
         if (!companionClasses.containsKey(clazz)) {
-            Map<Property<?, ?>, Syncer<?, ?>> members = SyncCompanions.getSyncedMemberInfo(clazz);
+            Map<Property<?, ?>, Syncer<?, ?, ?>> members = SyncCompanions.getSyncedMemberInfo(clazz);
             if (members.isEmpty()) {
                 info = null;
             } else {
