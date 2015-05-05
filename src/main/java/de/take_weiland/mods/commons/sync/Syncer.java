@@ -1,12 +1,10 @@
 package de.take_weiland.mods.commons.sync;
 
-import de.take_weiland.mods.commons.internal.sync.ChangedValue;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 
-import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * <p>Support for syncing of a Type {@code V}.</p>
@@ -22,43 +20,34 @@ public interface Syncer<T_VAL, T_DATA, T_COM> {
      */
     Class<T_COM> getCompanionType();
 
-    <T_OBJ> Change<T_DATA> checkChange(T_OBJ obj, T_VAL value, T_COM companion, Consumer<T_COM> companionSetter);
+    <T_OBJ, T_COMP_H> ChangeEvent<T_DATA> hasChanged(T_OBJ obj, Function<T_OBJ, T_VAL> getter, BiConsumer<T_OBJ, T_VAL> setter,
+                                                     T_COMP_H companionHolder, Function<T_COMP_H, T_COM> companionGetter, BiConsumer<T_COMP_H, T_VAL> companionSetter);
 
-    void write(T_DATA value, MCDataOutput out);
+    void write(T_DATA data, MCDataOutput out);
 
     T_DATA read(MCDataInput in);
 
-    <T_OBJ> void applyChange(T_OBJ obj, T_DATA data, T_VAL oldValue, BiConsumer<T_OBJ, T_VAL> setter);
+    <T_OBJ, T_COMP_H> void apply(T_DATA data,
+                                 T_OBJ obj, Function<T_OBJ, T_VAL> getter, BiConsumer<T_OBJ, T_VAL> setter,
+                                 T_COMP_H companionHolder, Function<T_COMP_H, T_COM> companionGetter, BiConsumer<T_COMP_H, T_VAL> companionSetter);
 
-    default Change<T_DATA> noChange() {
+    default ChangeEvent<T_DATA> noChange() {
         return null;
     }
 
-    default Change<T_DATA> newValue(T_DATA val) {
-        return new ChangedValue<>(this, val);
+    default ChangeEvent<T_DATA> newValue(T_DATA data) {
+        return new ChangeEvent<>(this, data);
     }
 
-    interface Simple<T_VAL, T_COM> extends Syncer<T_VAL, T_VAL, T_COM> {
+    final class ChangeEvent<T_DATA> {
 
-        @Override
-        default <T_OBJ> void applyChange(T_OBJ obj, T_VAL data, T_VAL oldValue, BiConsumer<T_OBJ, T_VAL> setter) {
-            setter.accept(obj, data);
+        final Syncer<?, T_DATA, ?> syncer;
+        final T_DATA value;
+
+        public ChangeEvent(Syncer<?, T_DATA, ?> syncer, T_DATA value) {
+            this.syncer = syncer;
+            this.value = value;
         }
     }
-
-    interface ForImmutable<T_VAL> extends Syncer.Simple<T_VAL, T_VAL> {
-
-        @Override
-        default <T_OBJ> Change<T_VAL> checkChange(T_OBJ obj, T_VAL value, T_VAL companion, Consumer<T_VAL> companionSetter) {
-            if (Objects.equals(value, companion)) {
-                return noChange();
-            } else {
-                companionSetter.accept(value);
-                return newValue(value);
-            }
-        }
-    }
-
-    interface Change<T_DATA> { }
 
 }

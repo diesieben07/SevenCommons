@@ -20,7 +20,7 @@ enum ItemSyncer implements Syncer.Simple<Item, Item> {
     }
 
     @Override
-    public <T_OBJ> Change<Item> checkChange(T_OBJ obj, Item value, Item companion, Consumer<Item> companionSetter) {
+    public <T_OBJ> Change<Item, Item> checkChange(T_OBJ obj, Item value, Item companion, Consumer<Item> companionSetter) {
         if (value == companion) {
             return noChange();
         } else {

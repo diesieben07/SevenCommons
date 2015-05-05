@@ -8,6 +8,8 @@ import de.take_weiland.mods.commons.sync.Syncer;
  */
 public final class ChangedValue<T_DATA> implements Syncer.Change<T_DATA> {
 
+    private static final Object NULL = new Object();
+
     public int fieldId;
     public final Syncer<?, T_DATA, ?> syncer;
     public final T_DATA data;

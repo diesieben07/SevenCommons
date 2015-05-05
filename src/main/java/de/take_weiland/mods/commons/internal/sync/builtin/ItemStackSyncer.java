@@ -21,7 +21,7 @@ enum ItemStackSyncer implements Syncer.Simple<ItemStack, ItemStack> {
     }
 
     @Override
-    public <T_OBJ> Change<ItemStack> checkChange(T_OBJ obj, ItemStack value, ItemStack companion, Consumer<ItemStack> companionSetter) {
+    public <T_OBJ> Change<ItemStack, ItemStack> checkChange(T_OBJ obj, ItemStack value, ItemStack companion, Consumer<ItemStack> companionSetter) {
         if (ItemStacks.identical(value, companion)) {
             return noChange();
         } else {

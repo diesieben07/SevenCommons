@@ -10,6 +10,7 @@ import de.take_weiland.mods.commons.sync.Syncer;
 public abstract class SyncCompanion {
 
     public static final int FIELD_ID_END = 0;
+    public static final int FIRST_USEABLE_ID = 1;
 
     /**
      * <p>Called to check for changes, does everything to make sure the client object is up to date.</p>

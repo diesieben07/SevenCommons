@@ -22,7 +22,7 @@ abstract class SyncerDefaultEquals<V> implements Syncer.Simple<V, V> {
     }
 
     @Override
-    public <T_OBJ> Change<V> checkChange(T_OBJ obj, V value, V companion, Consumer<V> companionSetter) {
+    public <T_OBJ> Change<V, V> checkChange(T_OBJ obj, V value, V companion, Consumer<V> companionSetter) {
         if (Objects.equals(value, companion)) {
             return noChange();
         } else {
