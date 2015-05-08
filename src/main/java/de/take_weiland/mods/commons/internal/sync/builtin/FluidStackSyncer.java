@@ -2,44 +2,43 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.Syncer;
+import de.take_weiland.mods.commons.sync.AbstractSyncer;
+import de.take_weiland.mods.commons.sync.PropertyAccess;
 import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 
 /**
  * @author diesieben07
  */
-enum  FluidStackSyncer implements Syncer<FluidStack, FluidStack, FluidStack> {
+final class FluidStackSyncer extends AbstractSyncer.WithCompanion<FluidStack, FluidStack, FluidStack> {
 
-    INSTANCE;
-
-    @Override
-    public Class<FluidStack> getCompanionType() {
-        return FluidStack.class;
+    protected <OBJ> FluidStackSyncer(OBJ obj, PropertyAccess<OBJ, FluidStack> property) {
+        super(obj, property);
     }
 
     @Override
-    public boolean equals(FluidStack value, FluidStack companion) {
-        return Fluids.identical(value, companion);
+    protected Change<FluidStack> check(FluidStack value) {
+        if (Fluids.identical(value, companion)) {
+            return noChange();
+        } else {
+            FluidStack clone = Fluids.clone(value);
+            companion = clone;
+            return newValue(clone);
+        }
     }
 
     @Override
-    public FluidStack getData(FluidStack value) {
-        return Fluids.clone(value);
+    public void encode(FluidStack stack, MCDataOutput out) {
+        out.writeFluidStack(stack);
     }
 
     @Override
-    public FluidStack clone(FluidStack value) {
-        return Fluids.clone(value);
+    public void apply(FluidStack stack) {
+        set(stack);
     }
 
     @Override
-    public void write(FluidStack value, MCDataOutput out) {
-        out.writeFluidStack(value);
-    }
-
-    @Override
-    public FluidStack read(MCDataInput in) {
-        return in.readFluidStack();
+    public void apply(MCDataInput in) {
+        set(in.readFluidStack());
     }
 }

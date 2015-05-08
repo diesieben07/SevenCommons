@@ -2,43 +2,43 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.Syncer;
+import de.take_weiland.mods.commons.sync.AbstractSyncer;
+import de.take_weiland.mods.commons.sync.PropertyAccess;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.item.ItemStack;
-
-import java.util.function.Consumer;
 
 /**
  * @author diesieben07
  */
-enum ItemStackSyncer implements Syncer.Simple<ItemStack, ItemStack> {
+final class ItemStackSyncer extends AbstractSyncer.WithCompanion<ItemStack, ItemStack, ItemStack> {
 
-    INSTANCE;
-
-    @Override
-    public Class<ItemStack> getCompanionType() {
-        return ItemStack.class;
+    protected <OBJ> ItemStackSyncer(OBJ obj, PropertyAccess<OBJ, ItemStack> property) {
+        super(obj, property);
     }
 
     @Override
-    public <T_OBJ> Change<ItemStack, ItemStack> checkChange(T_OBJ obj, ItemStack value, ItemStack companion, Consumer<ItemStack> companionSetter) {
+    protected Change<ItemStack> check(ItemStack value) {
         if (ItemStacks.identical(value, companion)) {
             return noChange();
         } else {
             ItemStack clone = ItemStacks.clone(value);
-            companionSetter.accept(clone);
+            companion = clone;
             return newValue(clone);
         }
     }
 
     @Override
-    public void write(ItemStack value, MCDataOutput out) {
+    public void encode(ItemStack value, MCDataOutput out) {
         out.writeItemStack(value);
     }
 
     @Override
-    public ItemStack read(MCDataInput in) {
-        return in.readItemStack();
+    public void apply(ItemStack value) {
+        set(value);
     }
 
+    @Override
+    public void apply(MCDataInput in) {
+        set(in.readItemStack());
+    }
 }

@@ -2,27 +2,25 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.Syncer;
+import de.take_weiland.mods.commons.sync.AbstractSyncer;
+import de.take_weiland.mods.commons.sync.PropertyAccess;
 
 /**
  * @author diesieben07
  */
-enum StringSyncer implements Syncer.ForImmutable<String> {
+final class StringSyncer extends AbstractSyncer.ForImmutable<String> {
 
-    INSTANCE;
-
-    @Override
-    public Class<String> getCompanionType() {
-        return String.class;
+    protected <OBJ> StringSyncer(OBJ obj, PropertyAccess<OBJ, String> property) {
+        super(obj, property);
     }
 
     @Override
-    public void write(String value, MCDataOutput out) {
-        out.writeString(value);
-    }
-
-    @Override
-    public String read(MCDataInput in) {
+    protected String decode(MCDataInput in) {
         return in.readString();
+    }
+
+    @Override
+    public void encode(String value, MCDataOutput out) {
+        out.writeString(value);
     }
 }

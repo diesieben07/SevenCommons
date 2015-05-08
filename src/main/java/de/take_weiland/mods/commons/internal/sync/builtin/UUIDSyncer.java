@@ -2,29 +2,36 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.Syncer;
+import de.take_weiland.mods.commons.sync.AbstractSyncer;
+import de.take_weiland.mods.commons.sync.PropertyAccess;
+import de.take_weiland.mods.commons.sync.SyncerConstructor;
 
 import java.util.UUID;
 
 /**
  * @author diesieben07
  */
-enum UUIDSyncer implements Syncer.ForImmutable<UUID> {
+final class UUIDSyncer extends AbstractSyncer.ForImmutable<UUID> {
 
-    INSTANCE;
-
-    @Override
-    public Class<UUID> getCompanionType() {
-        return UUID.class;
+    protected <OBJ> UUIDSyncer(OBJ obj, PropertyAccess<OBJ, UUID> property) {
+        super(obj, property);
     }
 
     @Override
-    public void write(UUID value, MCDataOutput out) {
-        out.writeUUID(value);
-    }
-
-    @Override
-    public UUID read(MCDataInput in) {
+    protected UUID decode(MCDataInput in) {
         return in.readUUID();
+    }
+
+    @Override
+    public void encode(UUID uuid, MCDataOutput out) {
+        out.writeUUID(uuid);
+    }
+
+    public static void main(String[] args) {
+        foo(UUIDSyncer::new);
+    }
+
+    static void foo(SyncerConstructor<UUID> constructor) {
+
     }
 }

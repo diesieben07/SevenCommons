@@ -2,28 +2,26 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.Syncer;
+import de.take_weiland.mods.commons.sync.AbstractSyncer;
+import de.take_weiland.mods.commons.sync.PropertyAccess;
 import net.minecraft.block.Block;
 
 /**
  * @author diesieben07
  */
-enum BlockSyncer implements Syncer.ForImmutable<Block> {
+final class BlockSyncer extends AbstractSyncer.ForImmutable<Block> {
 
-    INSTANCE;
-
-    @Override
-    public Class<Block> getCompanionType() {
-        return Block.class;
+    public <OBJ> BlockSyncer(OBJ obj, PropertyAccess<OBJ, Block> property) {
+        super(obj, property);
     }
 
     @Override
-    public void write(Block value, MCDataOutput out) {
-        out.writeBlock(value);
+    public void encode(Block block, MCDataOutput out) {
+        out.writeBlock(block);
     }
 
     @Override
-    public Block read(MCDataInput in) {
+    protected Block decode(MCDataInput in) {
         return in.readBlock();
     }
 }
