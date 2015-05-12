@@ -1,12 +1,23 @@
 package de.take_weiland.mods.commons.internal.sync;
 
+import com.google.common.collect.Iterables;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.ProtocolException;
 import de.take_weiland.mods.commons.sync.Syncer;
+import de.take_weiland.mods.commons.util.Entities;
+import de.take_weiland.mods.commons.util.Players;
+import de.take_weiland.mods.commons.util.SCReflector;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.ICrafting;
+import net.minecraft.tileentity.TileEntity;
 
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * @author diesieben07
@@ -18,10 +29,25 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
     private static final int CONTAINER = 2;
 
     private int cursor = 0;
-    final List<ChangedValue<?>> changes;
+    ChangedValue<?>[] changes = new ChangedValue[3];
 
-    SyncEvent(List<ChangedValue<?>> changes) {
-        this.changes = changes;
+    public final void add(int fieldId, ChangedValue<?> changedValue) {
+        changedValue.fieldId = fieldId;
+        if (changes.length == cursor) {
+            grow();
+        }
+        changes[cursor++] = changedValue;
+    }
+
+    public final void done() {
+        cursor = 0;
+    }
+
+    private void grow() {
+        int currLen = changes.length;
+        ChangedValue<?>[] newArr = new ChangedValue[currLen + 2];
+        System.arraycopy(changes, 0, newArr, 0, currLen);
+        changes = newArr;
     }
 
     abstract void writeMetaInfoToStream(MCDataOutput out);
@@ -78,14 +104,17 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
 
     @Override
     public int fieldId() {
-        return cursor < changes.size() ? changes.get(cursor).fieldId : SyncCompanion.FIELD_ID_END;
+        return cursor < changes.length ? changes[cursor].fieldId : SyncCompanion.FIELD_ID_END;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public <T_DATA> T_DATA value(Syncer<?, T_DATA, ?> syncer) {
-        //noinspection unchecked
-        return (T_DATA) changes.get(cursor++).data;
+    public <T_DATA, T_OBJ, T_VAL> void apply(T_OBJ obj, Syncer<T_VAL, ?, T_DATA> syncer, Function<T_OBJ, T_VAL> getter, BiConsumer<T_OBJ, T_VAL> setter) {
+        ChangedValue change = changes[cursor++];
+        change.syncer.apply(change.data, obj, getter, setter);
     }
+
+    public abstract void send(Object obj);
 
     public static final class ForTE extends SyncEvent {
 
@@ -93,11 +122,11 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
         private final int y;
         private final int z;
 
-        public ForTE(int x, int y, int z, List<ChangedValue<?>> changes) {
-            super(changes);
-            this.x = x;
-            this.y = y;
-            this.z = z;
+        public ForTE(Object obj) {
+            TileEntity te = (TileEntity) obj;
+            this.x = te.xCoord;
+            this.y = te.yCoord;
+            this.z = te.zCoord;
         }
 
         static SyncedObjectProxy readObjectFromStream(EntityPlayer player, MCDataInput in) {
@@ -120,15 +149,20 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
             out.writeByte(y);
             out.writeInt(z);
         }
+
+        @Override
+        public void send(Object obj) {
+            TileEntity te = (TileEntity) obj;
+            SevenCommons.syncCodec.sendTo(this, Players.getTrackingChunk(te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4));
+        }
     }
 
     public static final class ForEntity extends SyncEvent {
 
         private final int entityID;
 
-        public ForEntity(int entityID, List<ChangedValue<?>> changes) {
-            super(changes);
-            this.entityID = entityID;
+        public ForEntity(Object obj) {
+            this.entityID = ((Entity) obj).getEntityId();
         }
 
         static SyncedObjectProxy readObjectFromStream(EntityPlayer player, MCDataInput in) {
@@ -145,15 +179,19 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
             out.writeByte(ENTITY);
             out.writeInt(entityID);
         }
+
+        @Override
+        public void send(Object obj) {
+            SevenCommons.syncCodec.sendTo(this, Entities.getTrackingPlayers((Entity) obj));
+        }
     }
 
     public static final class ForContainer extends SyncEvent {
 
         private final int windowId;
 
-        public ForContainer(int windowId, List<ChangedValue<?>> changes) {
-            super(changes);
-            this.windowId = windowId;
+        public ForContainer(Object obj) {
+            this.windowId = ((Container) obj).windowId;
         }
 
         static SyncedObjectProxy readObjectFromStream(EntityPlayer player, MCDataInput in) {
@@ -169,6 +207,13 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
         void writeMetaInfoToStream(MCDataOutput out) {
             out.writeByte(CONTAINER);
             out.writeByte(windowId);
+        }
+
+        @Override
+        public void send(Object obj) {
+            Container container = (Container) obj;
+            List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
+            SevenCommons.syncCodec.sendTo(this, Iterables.filter(crafters, EntityPlayer.class));
         }
     }
 

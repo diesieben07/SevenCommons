@@ -22,7 +22,7 @@ public interface Property<T, M extends AccessibleObject & Member & AnnotatedElem
 	 */
 	M getMember();
 
-	/**
+    /**
 	 * <p>Get a MethodHandle that gets this property.</p>
 	 * @return a MethodHandle
 	 */

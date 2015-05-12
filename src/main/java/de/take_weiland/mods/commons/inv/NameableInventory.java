@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.inv;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
 
 /**
  * <p>An inventory which can be named.</p>
@@ -33,5 +35,9 @@ public interface NameableInventory extends IInventory {
 	 * @return the custom name or null if none
 	 */
 	String getCustomName();
+
+	default boolean takeItemStackName(EntityPlayer player, ItemStack stack) {
+        return true;
+    }
 
 }

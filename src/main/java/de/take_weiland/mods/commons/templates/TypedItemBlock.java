@@ -11,7 +11,7 @@ import net.minecraft.util.IIcon;
 
 import java.util.List;
 
-public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extends Subtype> extends SCItemBlock<BLOCK> {
+public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extends Subtype> extends SCItemBlock {
 
 	public TypedItemBlock(Block block) {
 		super(block);

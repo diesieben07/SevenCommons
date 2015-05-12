@@ -2,29 +2,34 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.AbstractSyncer;
-import de.take_weiland.mods.commons.sync.PropertyAccess;
+import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.Fluids;
 import net.minecraftforge.fluids.FluidStack;
+
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * @author diesieben07
  */
-final class FluidStackSyncer extends AbstractSyncer.WithCompanion<FluidStack, FluidStack, FluidStack> {
+enum FluidStackSyncer implements Syncer.Simple<FluidStack, FluidStack, FluidStack> {
 
-    protected <OBJ> FluidStackSyncer(OBJ obj, PropertyAccess<OBJ, FluidStack> property) {
-        super(obj, property);
-    }
+    INSTANCE;
 
     @Override
-    protected Change<FluidStack> check(FluidStack value) {
+    public <OBJ> Change<FluidStack> check(FluidStack value, FluidStack companion, OBJ obj, BiConsumer<OBJ, FluidStack> setter, BiConsumer<OBJ, FluidStack> cSetter) {
         if (Fluids.identical(value, companion)) {
             return noChange();
         } else {
             FluidStack clone = Fluids.clone(value);
-            companion = clone;
+            cSetter.accept(obj, clone);
             return newValue(clone);
         }
+    }
+
+    @Override
+    public Class<FluidStack> companionType() {
+        return FluidStack.class;
     }
 
     @Override
@@ -33,12 +38,12 @@ final class FluidStackSyncer extends AbstractSyncer.WithCompanion<FluidStack, Fl
     }
 
     @Override
-    public void apply(FluidStack stack) {
-        set(stack);
+    public <OBJ> void apply(FluidStack fluidStack, OBJ obj, Function<OBJ, FluidStack> getter, BiConsumer<OBJ, FluidStack> setter) {
+        setter.accept(obj, Fluids.clone(fluidStack));
     }
 
     @Override
-    public void apply(MCDataInput in) {
-        set(in.readFluidStack());
+    public <OBJ> void apply(MCDataInput in, OBJ obj, Function<OBJ, FluidStack> getter, BiConsumer<OBJ, FluidStack> setter) {
+        setter.accept(obj, in.readFluidStack());
     }
 }

@@ -81,10 +81,10 @@ public final class Blocks {
 		checkPhase("Block");
 
 		if (SCReflector.instance.getRawIconName(block) == null) {
-			block.setTextureName(modId + ":" + baseName);
+			block.setBlockTextureName(modId + ":" + baseName);
 		}
 		if (SCReflector.instance.getRawUnlocalizedName(block) == null) {
-			block.setUnlocalizedName(modId + "." + baseName);
+			block.setBlockName(modId + "." + baseName);
 		}
 
 		GameRegistry.registerBlock(block, getItemBlockClass(block, itemClass), baseName);
@@ -95,12 +95,12 @@ public final class Blocks {
 	}
 
 	public static Item getItem(Block block) {
-		return Item.itemsList[block.blockID];
+		return Item.getItemFromBlock(block);
 	}
 
 	public static Block fromItem(Item item) {
 		if (item instanceof ItemBlock) {
-			return Block.blocksList[((ItemBlock) item).getBlockID()];
+			return Block.getBlockFromItem(item);
 		} else {
 			throw new IllegalArgumentException("Not an ItemBlock");
 		}
@@ -119,7 +119,7 @@ public final class Blocks {
 	 */
 	public static void genericBreak(Block block, World world, int x, int y, int z, int meta) {
 		if (block.hasTileEntity(meta)) {
-			Inventories.spillIfInventory(world.getBlockTileEntity(x, y, z));
+			Inventories.spillIfInventory(world.getTileEntity(x, y, z));
 		}
 	}
 
@@ -144,7 +144,7 @@ public final class Blocks {
 	}
 
 	public static Block byID(int id) {
-		return Block.blocksList[id];
+		return Block.getBlockById(id);
 	}
 
 	private static Class<? extends ItemBlock> getItemBlockClass(Block block, @Nullable Class<? extends ItemBlock> itemBlock) {
@@ -153,7 +153,7 @@ public final class Blocks {
 			return defaultClass;
 		}
 		if (!defaultClass.isAssignableFrom(itemBlock)) {
-			SevenCommons.LOGGER.warning(String.format("ItemBlock class %s should extend %s to enable all SevenCommons features!", itemBlock.getName(), defaultClass.getSimpleName()));
+			SevenCommons.LOGGER.warn(String.format("ItemBlock class %s should extend %s to enable all SevenCommons features!", itemBlock.getName(), defaultClass.getSimpleName()));
 		}
 
 		return itemBlock;
@@ -162,7 +162,5 @@ public final class Blocks {
 	private static Class<? extends ItemBlock> getDefaultItemBlock(Block block) {
 		return block instanceof HasSubtypes ? TypedItemBlock.class : SCItemBlock.class;
 	}
-
-	private static final short BLOCK_NULL_ID = -1;
 
 }

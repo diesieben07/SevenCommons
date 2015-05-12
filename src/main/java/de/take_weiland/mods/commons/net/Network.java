@@ -109,7 +109,7 @@ public final class Network {
 
     private static final java.lang.reflect.Type function2ndParam = Function.class.getTypeParameters()[1];
 
-    static <P extends Packet> Class<P>    findPacketClassReflectively(PacketConstructor<P> constructor) {
+    static <P extends Packet> Class<P> findPacketClassReflectively(PacketConstructor<P> constructor) {
         Class<?> myClazz = constructor.getClass();
 
         TypeToken<?> type = TypeToken.of(myClazz);

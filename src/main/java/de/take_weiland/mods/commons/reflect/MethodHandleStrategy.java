@@ -42,7 +42,7 @@ final class MethodHandleStrategy extends ReflectionStrategy {
                     @Nullable
                     @Override
                     public MethodHandle apply(Method input) {
-                        return AccessorMemberParser.getTarget(input);
+                        return AccessorMemberParser_OLD.getTarget(input);
                     }
                 });
 

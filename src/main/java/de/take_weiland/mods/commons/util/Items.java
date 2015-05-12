@@ -74,7 +74,7 @@ public final class Items {
 	}
 
 	public static Item byID(int id) {
-		return Item.itemsList[id];
+		return Item.getItemById(id);
 	}
 
 	private static final short ITEM_NULL_ID = -1;

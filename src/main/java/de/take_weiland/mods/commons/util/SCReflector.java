@@ -17,6 +17,7 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.IntHashMap;
@@ -78,7 +79,7 @@ public interface SCReflector {
 	String getIconName(Item item);
 
     @SideOnly(Side.CLIENT)
-	@Invoke(method = M_GET_TEXTURE_NAME, srg = true)
+	@Invoke(method = M_BLOCK_GET_TEXTURE_NAME, srg = true)
 	String getIconName(Block block);
 
 	@SideOnly(Side.CLIENT)
@@ -102,7 +103,7 @@ public interface SCReflector {
 	void write(NBTBase nbt, DataOutput out) throws IOException;
 
 	@Invoke(method = M_NBT_LOAD, srg = true)
-	void load(NBTBase nbt, DataInput in, int depth) throws IOException;
+	void load(NBTBase nbt, DataInput in, int depth, NBTSizeTracker tracker) throws IOException;
 
     @Invoke(method = "func_150284_a", target = NBTBase.class)
 	NBTBase newNBTTag(byte id);

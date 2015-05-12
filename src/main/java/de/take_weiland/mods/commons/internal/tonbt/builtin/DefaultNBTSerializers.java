@@ -55,12 +55,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(Boolean value) {
-            return new NBTTagByte("", value ? TRUE : FALSE);
+            return new NBTTagByte(value ? TRUE : FALSE);
         }
 
         @Override
         public Boolean read(Boolean value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_BYTE && ((NBTTagByte) nbt).data == TRUE;
+            return nbt.getId() == NBT.TAG_BYTE && ((NBTTagByte) nbt).func_150290_f() == TRUE;
         }
     }
 
@@ -69,12 +69,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(Byte value) {
-            return new NBTTagByte("", value);
+            return new NBTTagByte(value);
         }
 
         @Override
         public Byte read(Byte value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_BYTE ? ((NBTTagByte) nbt).data : 0;
+            return nbt.getId() == NBT.TAG_BYTE ? ((NBTTagByte) nbt).func_150290_f() : 0;
         }
     }
 
@@ -84,12 +84,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(Short value) {
-            return new NBTTagShort("", value);
+            return new NBTTagShort(value);
         }
 
         @Override
         public Short read(Short value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_SHORT ? ((NBTTagShort) nbt).data : 0;
+            return nbt.getId() == NBT.TAG_SHORT ? ((NBTTagShort) nbt).func_150289_e() : 0;
         }
     }
 
@@ -99,12 +99,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(Character value) {
-            return new NBTTagShort("", (short) value.charValue());
+            return new NBTTagShort((short) value.charValue());
         }
 
         @Override
         public Character read(Character value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_SHORT ? (char) ((NBTTagShort) nbt).data : 0;
+            return nbt.getId() == NBT.TAG_SHORT ? (char) ((NBTTagShort) nbt).func_150289_e() : 0;
         }
     }
 
@@ -113,12 +113,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(Integer value) {
-            return new NBTTagInt("", value);
+            return new NBTTagInt(value);
         }
 
         @Override
         public Integer read(Integer value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_INT ? ((NBTTagInt) nbt).data : 0;
+            return nbt.getId() == NBT.TAG_INT ? ((NBTTagInt) nbt).func_150287_d() : 0;
         }
     }
 
@@ -128,12 +128,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(Long value) {
-            return new NBTTagLong("", value);
+            return new NBTTagLong(value);
         }
 
         @Override
         public Long read(Long value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_LONG ? ((NBTTagLong) nbt).data : 0;
+            return nbt.getId() == NBT.TAG_LONG ? ((NBTTagLong) nbt).func_150291_c() : 0;
         }
     }
 
@@ -143,12 +143,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(Float value) {
-            return new NBTTagFloat("", value);
+            return new NBTTagFloat(value);
         }
 
         @Override
         public Float read(Float value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_FLOAT ? ((NBTTagFloat) nbt).data  : 0f;
+            return nbt.getId() == NBT.TAG_FLOAT ? ((NBTTagFloat) nbt).func_150288_h()  : 0f;
         }
     }
 
@@ -158,12 +158,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(Double value) {
-            return new NBTTagDouble("", value);
+            return new NBTTagDouble(value);
         }
 
         @Override
         public Double read(Double value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_DOUBLE ? ((NBTTagDouble) nbt).data : 0d;
+            return nbt.getId() == NBT.TAG_DOUBLE ? ((NBTTagDouble) nbt).func_150286_g() : 0d;
         }
     }
 
@@ -172,12 +172,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(String value) {
-            return value.isEmpty() ? new NBTTagByte("", (byte) 0) : new NBTTagString("", value);
+            return value.isEmpty() ? new NBTTagByte((byte) 0) : new NBTTagString(value);
         }
 
         @Override
         public String read(String value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_STRING ? ((NBTTagString) nbt).data : "";
+            return nbt.getId() == NBT.TAG_STRING ? ((NBTTagString) nbt).func_150285_a_() : "";
         }
     }
 
@@ -187,12 +187,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public NBTBase write(CharSequence value) {
-            return new NBTTagString("", value.toString());
+            return new NBTTagString(value.toString());
         }
 
         @Override
         public CharSequence read(CharSequence value, NBTBase nbt) {
-            return nbt.getId()== NBT.TAG_STRING ? ((NBTTagString) nbt).data : null;
+            return nbt.getId()== NBT.TAG_STRING ? ((NBTTagString) nbt).func_150285_a_() : null;
         }
     }
 

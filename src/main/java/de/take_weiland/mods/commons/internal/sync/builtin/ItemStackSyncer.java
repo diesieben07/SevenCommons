@@ -2,43 +2,47 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.AbstractSyncer;
-import de.take_weiland.mods.commons.sync.PropertyAccess;
+import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.item.ItemStack;
+
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * @author diesieben07
  */
-final class ItemStackSyncer extends AbstractSyncer.WithCompanion<ItemStack, ItemStack, ItemStack> {
-
-    protected <OBJ> ItemStackSyncer(OBJ obj, PropertyAccess<OBJ, ItemStack> property) {
-        super(obj, property);
-    }
+enum ItemStackSyncer implements Syncer.Simple<ItemStack, ItemStack, ItemStack> {
+    INSTANCE;
 
     @Override
-    protected Change<ItemStack> check(ItemStack value) {
+    public <OBJ> Change<ItemStack> check(ItemStack value, ItemStack companion, OBJ obj, BiConsumer<OBJ, ItemStack> setter, BiConsumer<OBJ, ItemStack> cSetter) {
         if (ItemStacks.identical(value, companion)) {
             return noChange();
         } else {
             ItemStack clone = ItemStacks.clone(value);
-            companion = clone;
+            cSetter.accept(obj, clone);
             return newValue(clone);
         }
     }
 
     @Override
-    public void encode(ItemStack value, MCDataOutput out) {
-        out.writeItemStack(value);
+    public void encode(ItemStack itemStack, MCDataOutput out) {
+        out.writeItemStack(itemStack);
     }
 
     @Override
-    public void apply(ItemStack value) {
-        set(value);
+    public <OBJ> void apply(ItemStack itemStack, OBJ obj, Function<OBJ, ItemStack> getter, BiConsumer<OBJ, ItemStack> setter) {
+        setter.accept(obj, ItemStacks.clone(itemStack));
     }
 
     @Override
-    public void apply(MCDataInput in) {
-        set(in.readItemStack());
+    public <OBJ> void apply(MCDataInput in, OBJ obj, Function<OBJ, ItemStack> getter, BiConsumer<OBJ, ItemStack> setter) {
+        setter.accept(obj, in.readItemStack());
+    }
+
+    @Override
+    public Class<ItemStack> companionType() {
+        return ItemStack.class;
     }
 }

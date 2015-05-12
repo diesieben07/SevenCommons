@@ -33,13 +33,13 @@ final class EnumSerializer<E extends Enum<E>> implements NBTSerializer<E> {
 
     @Override
     public NBTBase write(E value) {
-        return new NBTTagString("", value.name());
+        return new NBTTagString(value.name());
     }
 
     @Override
     public E read(E value, NBTBase nbt) {
         try {
-            return nbt.getId() == NBT.TAG_STRING ? Enum.valueOf(clazz, ((NBTTagString) nbt).data) : null;
+            return nbt.getId() == NBT.TAG_STRING ? Enum.valueOf(clazz, ((NBTTagString) nbt).func_150285_a_()) : null;
         } catch (IllegalArgumentException e) {
             return null;
         }

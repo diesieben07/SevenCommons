@@ -53,6 +53,7 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
         return concat(Collections.singleton(clazz), newIfaces);
     }
 
+    @SafeVarargs
     private static <T> FluentIterable<T> asFluent(T... arr) {
         return FluentIterable.from(Arrays.asList(arr));
     }

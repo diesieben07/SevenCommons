@@ -3,6 +3,9 @@ package de.take_weiland.mods.commons.internal.sync;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.sync.Syncer;
 
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
 /**
  * <p>Base class for @Sync companion</p>
  * @author diesieben07
@@ -18,7 +21,9 @@ public abstract class SyncCompanion {
      * @param isSuperCall if this is a super call from an extending companion (used to prevent sending the packet prematurely)
      * @return the OutputStream that is being written to, might be null
      */
-    public abstract void check(Object instance, boolean isSuperCall);
+    public abstract SyncEvent check(Object instance, boolean isSuperCall);
+
+    public abstract void applyChanges(Object instance, ChangeIterator values);
 
     /**
      * <p>Called to read the data on the client.</p>
@@ -28,13 +33,11 @@ public abstract class SyncCompanion {
      */
     public abstract int read(Object instance, MCDataInput in);
 
-    public abstract void applyChanges(Object instance, ChangeIterator values);
-
     public interface ChangeIterator {
 
         int fieldId();
 
-        <T_DATA> T_DATA value(Syncer<?, T_DATA, ?> syncer);
+        <T_DATA, T_OBJ, T_VAL> void apply(T_OBJ obj, Syncer<T_VAL, ?, T_DATA> syncer, Function<T_OBJ, T_VAL> getter, BiConsumer<T_OBJ, T_VAL> setter);
 
 
     }

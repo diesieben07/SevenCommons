@@ -2,28 +2,37 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.sync.AbstractSyncer;
-import de.take_weiland.mods.commons.sync.PropertyAccess;
+import de.take_weiland.mods.commons.sync.Syncer;
 
 /**
  * @author diesieben07
  */
-final class EnumSyncer<E extends Enum<E>> extends AbstractSyncer.ForImmutable<E> {
+@SuppressWarnings({"rawtypes", "unchecked"})
+final class EnumSyncer implements Syncer.ForImmutable<Enum> {
 
-    private final Class<E> clazz;
+    private final Class clazz;
 
-    protected <OBJ> EnumSyncer(OBJ obj, PropertyAccess<OBJ, E> property) {
-        super(obj, property);
-        this.clazz = property.getType();
+    private EnumSyncer(Class clazz) {
+        this.clazz = clazz;
     }
 
     @Override
-    protected E decode(MCDataInput in) {
+    public Enum decode(MCDataInput in) {
         return in.readEnum(clazz);
     }
 
     @Override
-    public void encode(E e, MCDataOutput out) {
+    public void encode(Enum e, MCDataOutput out) {
         out.writeEnum(e);
+    }
+
+    @Override
+    public Class<Enum> companionType() {
+        return clazz;
+    }
+
+    static Syncer<?, ?, ?> get(Class<?> type) {
+        //noinspection unchecked,rawtypes
+        return BuiltinSyncers.getOrCreateSyncer(type, EnumSyncer::new);
     }
 }

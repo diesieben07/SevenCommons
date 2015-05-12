@@ -91,7 +91,7 @@ public final class NetworkImpl {
     }
 
     private static void checkNotFrozen() {
-        checkState(channels instanceof ImmutableMap, "Must register packets before postInit");
+        checkState(!(channels instanceof ImmutableMap), "Must register packets before postInit");
     }
 
     static {

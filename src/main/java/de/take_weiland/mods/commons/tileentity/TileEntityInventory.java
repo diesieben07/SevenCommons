@@ -140,7 +140,7 @@ public abstract class TileEntityInventory extends TileEntity implements IInvento
 	}
 
 	@Override
-	public void setCustomName(String name) {
+	public void setCustomName(@Nonnull String name) {
 		hasName = true;
 		this.name = name;
 	}

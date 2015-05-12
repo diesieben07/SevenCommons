@@ -89,26 +89,26 @@ public class ItemInventory extends AbstractInventory {
 	}
 
 	@Override
-	public void onInventoryChanged() {
-		super.onInventoryChanged();
+	public void markDirty() {
+		super.markDirty();
 		saveData();
 	}
 
 	@Override
-	public void closeChest() {
-		super.closeChest();
+	public void closeInventory() {
+		super.closeInventory();
 		if (stack.stackTagCompound != null) {
 			stack.stackTagCompound.removeTag(NBT_UUID_KEY);
 		}
 	}
 
 	@Override
-	public String getInvName() {
+	public String getInventoryName() {
 		return stack.getDisplayName();
 	}
 
 	@Override
-	public boolean isInvNameLocalized() {
+	public boolean hasCustomInventoryName() {
 		return true;
 	}
 

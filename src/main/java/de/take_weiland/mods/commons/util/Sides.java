@@ -32,7 +32,7 @@ public final class Sides {
 	 * convenience method. Identical to {@link Sides#logical(World) Sides.logical(tileEntity.worldObj)}
 	 */
 	public static Side logical(TileEntity tileEntity) {
-		return logical(tileEntity.worldObj);
+		return logical(tileEntity.getWorldObj());
 	}
 
 	/**

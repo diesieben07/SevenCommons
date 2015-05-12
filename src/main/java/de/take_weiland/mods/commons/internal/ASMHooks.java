@@ -6,6 +6,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.sync.IEEPSyncCompanion;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanions;
+import de.take_weiland.mods.commons.internal.sync.SyncEvent;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
 import de.take_weiland.mods.commons.inv.Containers;
@@ -46,7 +47,12 @@ public final class ASMHooks {
     private ASMHooks() { }
 
     public static void invokeSyncCompanionCheck(Object obj, SyncCompanion companion) {
-        if (companion != null) companion.check(obj, false);
+        if (companion != null) {
+            SyncEvent event = companion.check(obj, false);
+            if (event != null) {
+                event.send(obj);
+            }
+        }
     }
 
     public static final String TICK_IEEP_COMPANIONS = "tickIEEPCompanions";
@@ -60,7 +66,6 @@ public final class ASMHooks {
     }
 
     private static void tickIEEPCompanionsNonNull(List<IEEPSyncCompanion> props) {
-        //noinspection ForLoopReplaceableByForEach
         int i = props.size();
 	    do {
 		    if (--i < 0) return;

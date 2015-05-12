@@ -87,8 +87,7 @@ public interface SimplePacket {
     default void sendToViewing(Container c) {
         // the filter makes sure it only contains EntityPlayer's
         //noinspection unchecked
-        sendTo((Iterable<? extends EntityPlayer>)
-                Iterables.filter(SCReflector.instance.getCrafters(c), it -> it instanceof EntityPlayer));
+        sendTo(Iterables.filter(SCReflector.instance.getCrafters(c), EntityPlayer.class));
     }
 
 }

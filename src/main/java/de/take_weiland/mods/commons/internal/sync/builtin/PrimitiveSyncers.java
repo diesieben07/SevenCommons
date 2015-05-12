@@ -9,60 +9,59 @@ enum BooleanSyncer implements Syncer.ForImmutable<Boolean> {
     INSTANCE;
 
     @Override
-    public Class<Boolean> getCompanionType() {
-        return boolean.class;
-    }
-
-    @Override
-    public void write(Boolean value, MCDataOutput out) {
-        out.writeBoolean(value);
-    }
-
-    @Override
-    public Boolean read(MCDataInput in) {
+    public Boolean decode(MCDataInput in) {
         return in.readBoolean();
     }
 
+    @Override
+    public void encode(Boolean val, MCDataOutput out) {
+        out.writeBoolean(val);
+    }
+
+    @Override
+    public Class<Boolean> companionType() {
+        return boolean.class;
+    }
 }
+
 enum ByteSyncer implements Syncer.ForImmutable<Byte> {
 
     INSTANCE;
 
     @Override
-    public Class<Byte> getCompanionType() {
-        return byte.class;
-    }
-
-    @Override
-    public void write(Byte value, MCDataOutput out) {
-        out.writeByte(value);
-    }
-
-    @Override
-    public Byte read(MCDataInput in) {
+    public Byte decode(MCDataInput in) {
         return in.readByte();
     }
 
+    @Override
+    public void encode(Byte val, MCDataOutput out) {
+        out.writeByte(val);
+    }
+
+    @Override
+    public Class<Byte> companionType() {
+        return byte.class;
+    }
 }
+
 enum ShortSyncer implements Syncer.ForImmutable<Short> {
 
     INSTANCE;
 
     @Override
-    public Class<Short> getCompanionType() {
-        return short.class;
-    }
-
-    @Override
-    public void write(Short value, MCDataOutput out) {
-        out.writeShort(value);
-    }
-
-    @Override
-    public Short read(MCDataInput in) {
+    public Short decode(MCDataInput in) {
         return in.readShort();
     }
 
+    @Override
+    public void encode(Short val, MCDataOutput out) {
+        out.writeShort(val);
+    }
+
+    @Override
+    public Class<Short> companionType() {
+        return short.class;
+    }
 }
 
 enum CharSyncer implements Syncer.ForImmutable<Character> {
@@ -70,37 +69,37 @@ enum CharSyncer implements Syncer.ForImmutable<Character> {
     INSTANCE;
 
     @Override
-    public Class<Character> getCompanionType() {
-        return char.class;
-    }
-
-    @Override
-    public void write(Character value, MCDataOutput out) {
-        out.writeChar(value);
-    }
-
-    @Override
-    public Character read(MCDataInput in) {
+    public Character decode(MCDataInput in) {
         return in.readChar();
+    }
+
+    @Override
+    public void encode(Character val, MCDataOutput out) {
+        out.writeChar(val);
+    }
+
+    @Override
+    public Class<Character> companionType() {
+        return char.class;
     }
 }
 
 enum IntSyncer implements Syncer.ForImmutable<Integer> {
+
     INSTANCE;
 
     @Override
-    public Class<Integer> getCompanionType() {
-        return int.class;
-    }
-
-    @Override
-    public void write(Integer value, MCDataOutput out) {
-        out.writeInt(value);
-    }
-
-    @Override
-    public Integer read(MCDataInput in) {
+    public Integer decode(MCDataInput in) {
         return in.readInt();
+    }
+
+    @Override
+    public void encode(Integer val, MCDataOutput out) {
+        out.writeInt(val);
+    }
+    @Override
+    public Class<Integer> companionType() {
+        return int.class;
     }
 }
 
@@ -109,18 +108,18 @@ enum LongSyncer implements Syncer.ForImmutable<Long> {
     INSTANCE;
 
     @Override
-    public Class<Long> getCompanionType() {
-        return long.class;
-    }
-
-    @Override
-    public void write(Long value, MCDataOutput out) {
-        out.writeLong(value);
-    }
-
-    @Override
-    public Long read(MCDataInput in) {
+    public Long decode(MCDataInput in) {
         return in.readLong();
+    }
+
+    @Override
+    public void encode(Long val, MCDataOutput out) {
+        out.writeLong(val);
+    }
+
+    @Override
+    public Class<Long> companionType() {
+        return long.class;
     }
 }
 
@@ -129,18 +128,18 @@ enum FloatSyncer implements Syncer.ForImmutable<Float> {
     INSTANCE;
 
     @Override
-    public Class<Float> getCompanionType() {
-        return float.class;
-    }
-
-    @Override
-    public void write(Float value, MCDataOutput out) {
-        out.writeFloat(value);
-    }
-
-    @Override
-    public Float read(MCDataInput in) {
+    public Float decode(MCDataInput in) {
         return in.readFloat();
+    }
+
+    @Override
+    public void encode(Float val, MCDataOutput out) {
+        out.writeFloat(val);
+    }
+
+    @Override
+    public Class<Float> companionType() {
+        return float.class;
     }
 }
 
@@ -149,18 +148,18 @@ enum DoubleSyncer implements Syncer.ForImmutable<Double> {
     INSTANCE;
 
     @Override
-    public Class<Double> getCompanionType() {
-        return double.class;
-    }
-
-    @Override
-    public void write(Double value, MCDataOutput out) {
-        out.writeDouble(value);
-    }
-
-    @Override
-    public Double read(MCDataInput in) {
+    public Double decode(MCDataInput in) {
         return in.readDouble();
+    }
+
+    @Override
+    public void encode(Double val, MCDataOutput out) {
+        out.writeDouble(val);
+    }
+
+    @Override
+    public Class<Double> companionType() {
+        return double.class;
     }
 }
 
@@ -169,60 +168,59 @@ enum BooleanBoxSyncer implements Syncer.ForImmutable<Boolean> {
     INSTANCE;
 
     @Override
-    public Class<Boolean> getCompanionType() {
-        return boolean.class;
+    public Boolean decode(MCDataInput in) {
+        return in.readBooleanBox();
     }
 
     @Override
-    public void write(Boolean value, MCDataOutput out) {
-        out.writeBooleanBox(value);
+    public void encode(Boolean val, MCDataOutput out) {
+        out.writeBooleanBox(val);
     }
 
     @Override
-    public Boolean read(MCDataInput in) {
-        return in.readBoolean();
+    public Class<Boolean> companionType() {
+        return Boolean.class;
     }
-
 }
+
 enum ByteBoxSyncer implements Syncer.ForImmutable<Byte> {
 
     INSTANCE;
 
     @Override
-    public Class<Byte> getCompanionType() {
-        return byte.class;
+    public Byte decode(MCDataInput in) {
+        return in.readByteBox();
     }
 
     @Override
-    public void write(Byte value, MCDataOutput out) {
-        out.writeByteBox(value);
+    public void encode(Byte val, MCDataOutput out) {
+        out.writeByteBox(val);
     }
 
     @Override
-    public Byte read(MCDataInput in) {
-        return in.readByte();
+    public Class<Byte> companionType() {
+        return Byte.class;
     }
-
 }
+
 enum ShortBoxSyncer implements Syncer.ForImmutable<Short> {
 
     INSTANCE;
 
     @Override
-    public Class<Short> getCompanionType() {
-        return short.class;
+    public Short decode(MCDataInput in) {
+        return in.readShortBox();
     }
 
     @Override
-    public void write(Short value, MCDataOutput out) {
-        out.writeShortBox(value);
+    public void encode(Short val, MCDataOutput out) {
+        out.writeShortBox(val);
     }
 
     @Override
-    public Short read(MCDataInput in) {
-        return in.readShort();
+    public Class<Short> companionType() {
+        return Short.class;
     }
-
 }
 
 enum CharBoxSyncer implements Syncer.ForImmutable<Character> {
@@ -230,37 +228,38 @@ enum CharBoxSyncer implements Syncer.ForImmutable<Character> {
     INSTANCE;
 
     @Override
-    public Class<Character> getCompanionType() {
-        return char.class;
+    public Character decode(MCDataInput in) {
+        return in.readCharBox();
     }
 
     @Override
-    public void write(Character value, MCDataOutput out) {
-        out.writeCharBox(value);
+    public void encode(Character val, MCDataOutput out) {
+        out.writeCharBox(val);
     }
 
     @Override
-    public Character read(MCDataInput in) {
-        return in.readChar();
+    public Class<Character> companionType() {
+        return Character.class;
     }
 }
 
 enum IntBoxSyncer implements Syncer.ForImmutable<Integer> {
+
     INSTANCE;
 
     @Override
-    public Class<Integer> getCompanionType() {
-        return int.class;
+    public Integer decode(MCDataInput in) {
+        return in.readIntBox();
     }
 
     @Override
-    public void write(Integer value, MCDataOutput out) {
-        out.writeIntBox(value);
+    public void encode(Integer val, MCDataOutput out) {
+        out.writeIntBox(val);
     }
 
     @Override
-    public Integer read(MCDataInput in) {
-        return in.readInt();
+    public Class<Integer> companionType() {
+        return Integer.class;
     }
 }
 
@@ -269,18 +268,18 @@ enum LongBoxSyncer implements Syncer.ForImmutable<Long> {
     INSTANCE;
 
     @Override
-    public Class<Long> getCompanionType() {
-        return long.class;
+    public Long decode(MCDataInput in) {
+        return in.readLongBox();
     }
 
     @Override
-    public void write(Long value, MCDataOutput out) {
-        out.writeLongBox(value);
+    public void encode(Long val, MCDataOutput out) {
+        out.writeLongBox(val);
     }
 
     @Override
-    public Long read(MCDataInput in) {
-        return in.readLong();
+    public Class<Long> companionType() {
+        return Long.class;
     }
 }
 
@@ -289,18 +288,18 @@ enum FloatBoxSyncer implements Syncer.ForImmutable<Float> {
     INSTANCE;
 
     @Override
-    public Class<Float> getCompanionType() {
-        return float.class;
+    public Float decode(MCDataInput in) {
+        return in.readFloatBox();
     }
 
     @Override
-    public void write(Float value, MCDataOutput out) {
-        out.writeFloatBox(value);
+    public void encode(Float val, MCDataOutput out) {
+        out.writeFloatBox(val);
     }
 
     @Override
-    public Float read(MCDataInput in) {
-        return in.readFloat();
+    public Class<Float> companionType() {
+        return Float.class;
     }
 }
 
@@ -309,17 +308,17 @@ enum DoubleBoxSyncer implements Syncer.ForImmutable<Double> {
     INSTANCE;
 
     @Override
-    public Class<Double> getCompanionType() {
-        return double.class;
+    public Double decode(MCDataInput in) {
+        return in.readDoubleBox();
     }
 
     @Override
-    public void write(Double value, MCDataOutput out) {
-        out.writeDoubleBox(value);
+    public void encode(Double val, MCDataOutput out) {
+        out.writeDoubleBox(val);
     }
 
     @Override
-    public Double read(MCDataInput in) {
-        return in.readDouble();
+    public Class<Double> companionType() {
+        return Double.class;
     }
 }

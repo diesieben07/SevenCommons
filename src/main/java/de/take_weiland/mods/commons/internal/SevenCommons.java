@@ -20,6 +20,7 @@ import de.take_weiland.mods.commons.internal.tonbt.builtin.DefaultNBTSerializers
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.sync.Syncing;
 import de.take_weiland.mods.commons.util.Logging;
+import de.take_weiland.mods.commons.util.SCReflector;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraftforge.common.config.Configuration;
 import org.apache.logging.log4j.Logger;
@@ -45,7 +46,7 @@ public final class SevenCommons extends DummyModContainer {
 
 	public static final int SYNC_PACKET_ID = 0;
 
-    private static SyncCodec syncCodec;
+    public static SyncCodec syncCodec;
 
     private static EnumMap<LoaderState.ModState, List<Runnable>> stateCallbacks = new EnumMap<>(LoaderState.ModState.class);
     private static EnumSet<LoaderState.ModState> reachedStates = EnumSet.noneOf(LoaderState.ModState.class);
@@ -114,6 +115,7 @@ public final class SevenCommons extends DummyModContainer {
 
 		Syncing.registerFactory(Object.class, new BuiltinSyncers());
 		ToNbtFactories.registerFactory(Object.class, new DefaultNBTSerializers());
+		Reflection.initialize(SCReflector.class);
 	}
 
 	@Override

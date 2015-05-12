@@ -1,16 +1,17 @@
 package de.take_weiland.mods.commons.asm;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
+import cpw.mods.fml.common.launcher.FMLTweaker;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import net.minecraft.launchwrapper.Launch;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -36,13 +37,14 @@ public final class MCPNames {
 			String mappingsDir;
 			String prop = System.getProperty(SYS_PROP);
 			if (prop == null) {
-				mappingsDir = "./../build/unpacked/mappings/";
-			} else {
+                File forgeJar = new File(FMLTweaker.getJarLocation());
+                mappingsDir = forgeJar.getParent() + "/unpacked/conf/";
+            } else {
 				mappingsDir = prop;
 			}
 
-			fields = readMappings(new File(mappingsDir + "fields.csv"));
-			methods = readMappings(new File(mappingsDir + "methods.csv"));
+			fields = readMappings(new File(mappingsDir + "/fields.csv"));
+			methods = readMappings(new File(mappingsDir + "/methods.csv"));
 		} else {
 			methods = fields = null;
 		}
@@ -63,12 +65,7 @@ public final class MCPNames {
 	 */
 	public static String field(String srg) {
 		if (use()) {
-			String mcp = fields.get(srg);
-			if (mcp == null) {
-				// no mapping
-				return srg;
-			}
-			return mcp;
+            return fields.getOrDefault(srg, srg);
 		} else {
 			return srg;
 		}
@@ -81,12 +78,7 @@ public final class MCPNames {
 	 */
 	public static String method(String srg) {
 		if (use()) {
-			String mcp = methods.get(srg);
-			if (mcp == null) {
-				// no mapping
-				return srg;
-			}
-			return mcp;
+			return methods.getOrDefault(srg, srg);
 		} else {
 			return srg;
 		}
@@ -97,8 +89,8 @@ public final class MCPNames {
 			throw new RuntimeException("Couldn't find MCP mappings. Please provide system property " + SYS_PROP);
 		}
 		try {
-			SevenCommons.LOGGER.fine("Reading SRG->MCP mappings from " + file);
-			return Files.readLines(file, Charsets.UTF_8, new MCPFileParser());
+			SevenCommons.LOGGER.trace("Reading SRG->MCP mappings from " + file);
+			return Files.readLines(file, StandardCharsets.UTF_8, new MCPFileParser());
 		} catch (IOException e) {
 			throw new RuntimeException("Couldn't read SRG->MCP mappings", e);
 		}
@@ -121,9 +113,7 @@ public final class MCPNames {
 			try {
 				String srg = splitted.next();
 				String mcp = splitted.next();
-				if (!map.containsKey(srg)) {
-					map.put(srg, mcp);
-				}
+                map.putIfAbsent(srg, mcp);
 			} catch (NoSuchElementException e) {
 				throw new IOException("Invalid Mappings file!", e);
 			}
@@ -213,9 +203,9 @@ public final class MCPNames {
 
 	public static final String F_UNLOCALIZED_NAME_ITEM = "field_77774_bZ";
 
-	public static final String F_TEXTURE_NAME_BLOCK = "field_111026_f";
+	public static final String F_TEXTURE_NAME_BLOCK = "field_149768_d";
 
-	public static final String M_ACTION_PERFORMED = "func_73875_a";
+	public static final String M_ACTION_PERFORMED = "func_146284_a";
 
 	public static final String F_Z_LEVEL = "field_73735_i";
 
@@ -227,11 +217,11 @@ public final class MCPNames {
 
 	public static final String M_GET_ICON_STRING = "func_111208_A";
 
-	public static final String M_GET_TEXTURE_NAME = "func_111023_E";
+	public static final String M_BLOCK_GET_TEXTURE_NAME = "func_149641_N";
 
 	public static final String M_NBT_WRITE = "func_74734_a";
 
-	public static final String M_NBT_LOAD = "func_74735_a";
+	public static final String M_NBT_LOAD = "func_152446_a";
 
 	public static final String F_NBT_STRING_DATA = "field_74751_a";
 	public static final String F_NBT_BYTE_DATA = "field_74756_a";
@@ -272,6 +262,10 @@ public final class MCPNames {
 
 	public static final String M_TILE_ENTITY_READ_NBT = "func_70307_a";
 	public static final String M_TILE_ENTITY_WRITE_NBT = "func_70310_b";
+
+    public static final String M_TRANSLATE_KEY_PRIVATE = "func_135026_c";
+
+    public static final String F_CURRENT_LOCALE = "field_135049_a";
 
 	private MCPNames() { }
 

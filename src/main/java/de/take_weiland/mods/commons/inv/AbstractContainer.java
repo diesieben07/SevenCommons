@@ -39,7 +39,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 		if (playerInventoryX >= 0) {
 			Containers.addPlayerInventory(this, player.inventory, playerInventoryX, playerInventoryY);
 		}
-		inventory.openChest();
+		inventory.openInventory();
 	}
 
 	/**
@@ -86,7 +86,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 	 */
 	@SuppressWarnings("unchecked")
 	public AbstractContainer(World world, int x, int y, int z, EntityPlayer player, int playerInventoryX, int playerInventoryY) {
-		this((T) world.getBlockTileEntity(x, y, z), player, playerInventoryX, playerInventoryY);
+		this((T) world.getTileEntity(x, y, z), player, playerInventoryX, playerInventoryY);
 	}
 
 	/**
@@ -106,6 +106,6 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 
 	@Override
 	public void onContainerClosed(EntityPlayer player) {
-		inventory.closeChest();
+		inventory.closeInventory();
 	}
 }

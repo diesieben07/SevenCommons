@@ -7,6 +7,7 @@ import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -18,7 +19,6 @@ import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.invoke.MethodHandles.publicLookup;

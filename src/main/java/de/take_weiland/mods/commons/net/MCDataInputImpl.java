@@ -11,6 +11,7 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -26,6 +27,8 @@ import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkPositionIndexes;
 
@@ -703,7 +706,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
                 while (id != 0) {
                     String name = readString();
                     NBTBase tag = SCReflector.instance.newNBTTag((byte) id);
-                    SCReflector.instance.load(nbt, this, 1);
+                    SCReflector.instance.load(nbt, this, 1, NBTSizeTracker.field_152451_a);
 
                     map.put(name, tag);
                     id = readByte();
@@ -739,7 +742,8 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
     }
 
     @Override
-    public <T_DATA> T_DATA value(Syncer<?, T_DATA, ?> syncer) {
-        return syncer.read(this);
+    public <T_DATA, T_OBJ, T_VAL> void apply(T_OBJ obj, Syncer<T_VAL, ?, T_DATA> syncer, Function<T_OBJ, T_VAL> getter, BiConsumer<T_OBJ, T_VAL> setter) {
+        syncer.apply(this, obj, getter, setter);
     }
+
 }

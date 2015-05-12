@@ -16,37 +16,35 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * @author diesieben07
  */
 public final class BuiltinSyncers implements SyncerFactory {
 
-    private final Map<Class<?>, Syncer<?, ?, ?>> cache = new HashMap<>();
-
+    @SuppressWarnings("unchecked")
     @Override
-    public <T_VAL> Syncer<T_VAL, ?, ?> getSyncer(Property<T_VAL, ?> type) {
-        Class<? super T_VAL> raw = type.getRawType();
+    public <VAL> Syncer<VAL, ?, ?> getSyncer(Property<VAL, ?> property) {
+        Class<? super VAL> type = property.getRawType();
+        Syncer<VAL, ?, ?> syncer = null;
 
-        Syncer<?, ?, ?> syncer;
-        if (type.getDesiredMethod() != SerializationMethod.Method.CONTENTS) {
-            syncer = cache.get(raw);
-            if (syncer == null && !cache.containsKey(raw)) {
-                syncer = newSyncerForRawType(raw);
-                cache.put(raw, syncer);
-            }
-        } else {
-            syncer = null;
+        if (property.getDesiredMethod() != SerializationMethod.Method.CONTENTS) {
+            syncer = (Syncer<VAL, ?, ?>) getValueSyncer(type);
         }
-
-        if (syncer == null && type.getDesiredMethod() != SerializationMethod.Method.VALUE) {
-            syncer = getSpecialSyncer(raw, type);
+        if (syncer == null && property.getDesiredMethod() != SerializationMethod.Method.VALUE) {
+            syncer = (Syncer<VAL, ?, ?>) getContentsSyncer(type, property);
         }
-        //noinspection unchecked
-        return (Syncer<T_VAL, ?, ?>) syncer;
+        return syncer;
     }
 
-    private static Syncer<?, ?, ?> newSyncerForRawType(Class<?> type) {
+    private static final Map<Class<?>, Syncer<?, ?, ?>> cache = new HashMap<>();
+
+    static synchronized Syncer<?, ?, ?> getOrCreateSyncer(Class<?> clazz, Function<Class<?>, Syncer<?, ?, ?>> func) {
+        return cache.computeIfAbsent(clazz, func);
+    }
+
+    private static Syncer<?, ?, ?> getValueSyncer(Class<?> type) {
         if (type == String.class) {
             return StringSyncer.INSTANCE;
         } else if (type == UUID.class) {
@@ -54,36 +52,38 @@ public final class BuiltinSyncers implements SyncerFactory {
         } else if (type == ItemStack.class) {
             return ItemStackSyncer.INSTANCE;
         } else if (type == Item.class) {
-            return ItemStackSyncer.INSTANCE;
+            return ItemSyncer.INSTANCE;
         } else if (type == Block.class) {
             return BlockSyncer.INSTANCE;
         } else if (type == FluidStack.class) {
             return FluidStackSyncer.INSTANCE;
         } else if (type.isEnum()) {
-            //noinspection unchecked
-            return new EnumSyncer(type);
+            return EnumSyncer.get(type);
         } else if (type.isPrimitive() || Primitives.isWrapperType(type)){
-            String className = StringUtils.capitalize(Primitives.unwrap(type).getSimpleName());
-            if (!type.isPrimitive()) {
-                className += "Box";
-            }
-            className += "Syncer";
-            Class<?> clazz;
-            try {
-                clazz = Class.forName("de.take_weiland.mods.commons.internal.sync.builtin." + className);
-                return (Syncer<?, ?, ?>) clazz.getEnumConstants()[0];
-            } catch (ClassNotFoundException e) {
-                throw new AssertionError("Missing primitive type " + type);
-            }
+            return getOrCreateSyncer(type, type0 -> {
+                Class<?> primitive = Primitives.unwrap(type0);
+                String prefix = "de.take_weiland.mods.commons.internal.sync.builtin.";
+                String syncerName = StringUtils.capitalize(primitive.getSimpleName());
+                if (!type0.isPrimitive()) {
+                    syncerName += "Box";
+                }
+                String postfix = "Syncer";
+                try {
+                    Class<?> clazz = Class.forName(prefix + syncerName + postfix);
+                    return (Syncer<?, ?, ?>) clazz.getEnumConstants()[0];
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         } else {
             return null;
         }
     }
 
-    private static Syncer<?, ?, ?> getSpecialSyncer(Class<?> raw, Property<?, ?> spec) {
+    private static Syncer<?, ?, ?> getContentsSyncer(Class<?> raw, Property<?, ?> spec) {
         if (FluidTank.class.isAssignableFrom(raw)) {
             if (spec.hasAnnotation(SyncCapacity.class)) {
-                return FluidTankAndCapacitySyncer.INSTANCE;
+                return FluidTankSyncer.WithCapacity.INSTANCE;
             } else {
                 return FluidTankSyncer.INSTANCE;
             }
