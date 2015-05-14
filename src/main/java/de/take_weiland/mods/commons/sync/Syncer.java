@@ -76,7 +76,7 @@ public interface Syncer<VAL, COM, DATA> {
 
     /**
      * <p>To be returned by {@link #check(Object, Function, BiConsumer, Function, BiConsumer)} when the property has not changed.</p>
-     * <p>This method should usually not be overwritten.</p>
+     * <p>This method usually not be overwritten.</p>
      * @return always null
      */
     default Change<DATA> noChange() {
@@ -86,7 +86,7 @@ public interface Syncer<VAL, COM, DATA> {
     /**
      * <p>To be returned by {@link #check(Object, Function, BiConsumer, Function, BiConsumer)} when the property has changed.</p>
      * <p>The data value will then be passed to {@link #apply(Object, Object, Function, BiConsumer)} or be sent to the client via a packet.</p>
-     * <p>This method should usually not be overwritten.</p>
+     * <p>This method should not be overwritten.</p>
      * @param data the data value representing the change
      * @return an object representing the changed value
      */
@@ -94,14 +94,32 @@ public interface Syncer<VAL, COM, DATA> {
         return new Change<>(this, data);
     }
 
+    /**
+     * <p>Representation of a changed value. Obtain via {@link #noChange()} or {@link #newValue(Object)}.</p>
+     */
     final class Change<T_DATA> extends ChangedValue<T_DATA> {
+
+        // no instances for anyone else but me :D
         Change(Syncer<?, ?, T_DATA> syncer, T_DATA data) {
             super(syncer, data);
         }
     }
 
+    /**
+     * <p>Small helper interface for implementing a Syncer.</p>
+     */
     interface Simple<VAL, COM, DATA> extends Syncer<VAL, COM, DATA> {
 
+        /**
+         * <p>Same functionality as {@link Syncer#check(Object, Function, BiConsumer, Function, BiConsumer)}, but with
+         * getter and setter already applied.</p>
+         * @param value the value of the property
+         * @param companion the value of the companion
+         * @param obj the object
+         * @param setter the setter for the property
+         * @param cSetter the setter for the companion
+         * @return {@link #noChange()} or {@link #newValue(Object)}
+         */
         <OBJ> Change<DATA> check(VAL value, COM companion, OBJ obj, BiConsumer<OBJ, VAL> setter, BiConsumer<OBJ, COM> cSetter);
 
         @Override
@@ -110,6 +128,11 @@ public interface Syncer<VAL, COM, DATA> {
         }
     }
 
+    /**
+     * <p>Skeletal implementation for Syncers of immutable types (like {@link java.util.UUID}.</p>
+     * <p>This implementation uses the same type for companion, data and value and uses {@link Objects#equals(Object, Object)}
+     * to check for changes.</p>
+     */
     interface ForImmutable<VAL> extends Syncer.Simple<VAL, VAL, VAL> {
 
         @Override
@@ -132,6 +155,11 @@ public interface Syncer<VAL, COM, DATA> {
             setter.accept(obj, val);
         }
 
+        /**
+         * <p>Decode a value from the input stream. The stream contains the data as it was written by {@link #encode(Object, MCDataOutput)}.</p>
+         * @param in the input stream
+         * @return the data
+         */
         VAL decode(MCDataInput in);
     }
 
