@@ -15,6 +15,17 @@ import java.util.function.Function;
  * of type {@code COM} in that field.</p>
  * <p>Changes to the field are represented as type {@code DATA}, which should be immutable or at least semi-immutable,
  * since these change values are passed across the client-server boundary.</p>
+ * <p>This methods of this interfaces will be called in the following manner:</p>
+ * <ul>
+ *     <li>{@link #companionType()} - should return a constant value, may be called at any time depending on the
+ *     underlying implementation.</li>
+ *     <li>{@link #check(Object, Function, BiConsumer, Function, BiConsumer)} - always called on the server and may be
+ *     called very often, usually every game tick. If this method returns {@link #newValue(Object)}, the represented data
+ *     will be passed to the client either directly using {@link #apply(Object, Object, Function, BiConsumer)}
+ *     or indirectly by encoding and decoding via {@link #encode(Object, MCDataOutput)} and then
+ *     {@link #apply(MCDataInput, Object, Function, BiConsumer)}.</li>
+ *     <li>In either case both versions of {@code apply} are always called on the client thread.</li>
+ * </ul>
  *
  * @author diesieben07
  */
