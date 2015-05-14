@@ -1,8 +1,10 @@
-package de.take_weiland.mods.commons.reflect;
+package de.take_weiland.mods.commons.internal.reflect;
 
-abstract class ReflectionStrategy {
+import de.take_weiland.mods.commons.reflect.IllegalAccessorException;
 
-	static void validateInterface(Class<?> iface) {
+public abstract class ReflectionStrategy {
+
+	protected static void validateInterface(Class<?> iface) {
 		if (!iface.isInterface()) {
 			throw new IllegalAccessorException("Accessor interface must be an interface");
 		}

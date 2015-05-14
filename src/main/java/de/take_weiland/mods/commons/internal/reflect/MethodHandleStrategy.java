@@ -1,12 +1,14 @@
-package de.take_weiland.mods.commons.reflect;
+package de.take_weiland.mods.commons.internal.reflect;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
+import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -18,13 +20,13 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * @author diesieben07
  */
-final class MethodHandleStrategy extends ReflectionStrategy {
+public final class MethodHandleStrategy extends ReflectionStrategy {
 
     @Override
     public <T> T createAccessor(Class<T> iface) {
         validateInterface(iface);
 
-        String className = SCReflection.nextDynamicClassName(MethodHandleStrategy.class.getPackage());
+        String className = SCReflection.nextDynamicClassName(iface.getPackage());
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         cw.visit(V1_7, ACC_FINAL, className, null, "java/lang/Object", new String[] { Type.getInternalName(iface) });
 
@@ -45,7 +47,6 @@ final class MethodHandleStrategy extends ReflectionStrategy {
         for (Map.Entry<Method, MethodHandle> entry : handles.entrySet()) {
             Method method = entry.getKey();
             MethodHandle methodHandle = entry.getValue();
-            System.out.println("method: " + method.getName());
 
             gen = new GeneratorAdapter(ACC_PUBLIC, getMethod(method), null, null, cw);
             gen.visitCode();
@@ -56,8 +57,8 @@ final class MethodHandleStrategy extends ReflectionStrategy {
             Type retType = Type.getType(methodHandle.type().returnType());
 
             for (int param = 0; param < methodHandle.type().parameterCount(); param++) {
-                gen.loadArg(param);
                 paramTypes[param] = Type.getType(methodHandle.type().parameterType(param));
+                gen.loadArg(param);
             }
 
             gen.invokeVirtual(mhType, new org.objectweb.asm.commons.Method("invokeExact", retType, paramTypes));
@@ -90,9 +91,12 @@ final class MethodHandleStrategy extends ReflectionStrategy {
         synchronized (MethodHandleStrategy.class) {
             staticData = handles.values().iterator();
             try {
+                Class<?> genClass = SCReflection.defineDynamicClass(cw.toByteArray());
+                Constructor<?> cstr = genClass.getDeclaredConstructor();
+                cstr.setAccessible(true);
                 //noinspection unchecked
-                return (T) SCReflection.defineDynamicClass(cw.toByteArray()).newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
+                return (T) cstr.newInstance();
+            } catch (ReflectiveOperationException e) {
                 throw new RuntimeException(e);
             } finally {
                 staticData = null;
@@ -100,6 +104,6 @@ final class MethodHandleStrategy extends ReflectionStrategy {
         }
     }
 
-    static Iterator<?> staticData;
+    public static Iterator<?> staticData;
 
 }

@@ -17,7 +17,7 @@ import static org.objectweb.asm.Opcodes.*;
 public final class TileEntityTickHook extends ClassVisitor {
 
     public TileEntityTickHook(ClassVisitor cv) {
-        super(ASM4, cv);
+        super(ASM5, cv);
     }
 
     @Override
@@ -47,8 +47,8 @@ public final class TileEntityTickHook extends ClassVisitor {
         }
 
         @Override
-        public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-            super.visitMethodInsn(opcode, owner, name, desc);
+        public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
             String teIntName = "net/minecraft/tileentity/TileEntity";
             Type worldType = Type.getObjectType("net/minecraft/world/World");
 
@@ -69,7 +69,7 @@ public final class TileEntityTickHook extends ClassVisitor {
                 String hookClazz = Type.getInternalName(ASMHooks.class);
                 String invokeCheck = ASMHooks.INVOKE_SYNC_COMP_CHECK;
                 String invokeCheckDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), Type.getType(SyncCompanion.class));
-                super.visitMethodInsn(INVOKESTATIC, hookClazz, invokeCheck, invokeCheckDesc);
+                super.visitMethodInsn(INVOKESTATIC, hookClazz, invokeCheck, invokeCheckDesc, false);
 
                 if (client) {
                     super.visitLabel(after);

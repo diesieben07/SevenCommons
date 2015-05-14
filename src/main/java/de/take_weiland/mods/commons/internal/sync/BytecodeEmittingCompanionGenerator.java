@@ -79,7 +79,7 @@ public final class BytecodeEmittingCompanionGenerator {
         firstID = factory.getNextFreeIDFor(clazz);
 
         cw = new ClassWriter(COMPUTE_FRAMES);
-        cw.visit(V1_7, ACC_PUBLIC, className, null, superName, null);
+        cw.visit(V1_8, ACC_PUBLIC, className, null, superName, null);
 
         Method cstr = getMethod("void <init>()");
         GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, cstr, null, null, cw);
@@ -182,6 +182,7 @@ public final class BytecodeEmittingCompanionGenerator {
                 gen.getStatic(myType, getPropertyID(property, SETTER), biConsumerType);
                 gen.invokeInterface(changeItType, new Method("apply", VOID_TYPE,
                         new Type[]{objectType, syncerType, functionType, biConsumerType}));
+                gen.goTo(end);
             }
 
             @Override
@@ -266,7 +267,7 @@ public final class BytecodeEmittingCompanionGenerator {
             gen.loadLocal(eventSlot);
             gen.ifNonNull(eventNotNull);
 
-            gen.newInstance(syncEventType);
+            gen.newInstance(syncEventSubclass);
             gen.dup();
             gen.loadArg(0);
             gen.invokeConstructor(syncEventSubclass, getMethod("void <init>(Object)"));
@@ -280,6 +281,10 @@ public final class BytecodeEmittingCompanionGenerator {
             gen.invokeVirtual(syncEventType, new Method("add", VOID_TYPE, new Type[]{INT_TYPE, changedValueType}));
 
             fieldIndex++;
+        }
+
+        if (next != null) {
+            gen.mark(next);
         }
 
         Label end = new Label();

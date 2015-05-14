@@ -159,7 +159,7 @@ public final class MCPNames {
 
 	public static final String M_ON_UPDATE = "func_70071_h_";
 
-	public static final String M_UPDATE_ENTITY = "func_70316_g";
+	public static final String M_UPDATE_ENTITY = "func_145845_h";
 
 	public static final String M_DETECT_AND_SEND_CHANGES = "func_75142_b";
 

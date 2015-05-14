@@ -39,11 +39,13 @@ public class testmod_sc {
 
             @Override
             public boolean onBlockActivated(World world, int par2, int par3, int par4, EntityPlayer player, int par6, float par7, float par8, float par9) {
+                TestTE te = (TestTE) world.getTileEntity(par2, par3, par4);
                 if (Sides.logical(world).isServer()) {
-                    TestTE te = (TestTE) world.getTileEntity(par2, par3, par4);
                     player.addChatMessage(new ChatComponentText("old val: " + te.test));
                     te.test = String.valueOf(world.rand.nextFloat());
                     player.addChatMessage(new ChatComponentText("new val: " + te.test));
+                } else {
+                    player.addChatMessage(new ChatComponentText("on client: " + te.test));
                 }
 //                PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
 //                if (Sides.logical(world).isClient()) {

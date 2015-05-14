@@ -16,6 +16,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 
 import static net.minecraft.server.MinecraftServer.getServer;
@@ -101,7 +102,11 @@ public final class Players {
             throw new IllegalArgumentException("Cannot get tracking players on the client");
         }
         Object playerInstance = PlayerManagerAccess.instance.getPlayerInstance(((WorldServer) world).getPlayerManager(), chunkX, chunkZ, false);
-        return PlayerManagerAccess.instance.getWatchers(playerInstance);
+        if (playerInstance == null) {
+            return Collections.emptyList();
+        } else {
+            return PlayerManagerAccess.instance.getWatchers(playerInstance);
+        }
     }
 
     private interface PlayerManagerAccess {

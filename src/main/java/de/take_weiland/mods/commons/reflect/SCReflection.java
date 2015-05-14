@@ -7,6 +7,8 @@ import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
+import de.take_weiland.mods.commons.internal.reflect.MethodHandleStrategy;
+import de.take_weiland.mods.commons.internal.reflect.ReflectionStrategy;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
 
