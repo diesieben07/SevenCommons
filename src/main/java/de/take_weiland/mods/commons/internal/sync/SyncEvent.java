@@ -39,7 +39,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
         changes[cursor++] = changedValue;
     }
 
-    public final void done() {
+    final void done() {
         cursor = 0;
     }
 
@@ -64,8 +64,8 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
         out.writeVarInt(0);
     }
 
-    public final void applyDirect(EntityPlayer player) {
-        SyncedObjectProxy obj = getObjectDirect(player);
+    public final void applyDirect() {
+        SyncedObjectProxy obj = getObjectDirect(Players.getClient());
         if (obj != null) {
             SyncCompanion companion = obj._sc$getCompanion();
             if (companion != null) {
@@ -74,7 +74,8 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
         }
     }
 
-    public static void readAndApply(EntityPlayer player, MCDataInput in) {
+    public static void readAndApply(MCDataInput in) {
+        EntityPlayer player = Players.getClient();
         int type = in.readByte();
         SyncedObjectProxy obj;
         switch (type) {
@@ -104,7 +105,11 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
 
     @Override
     public int fieldId() {
-        return cursor < changes.length ? changes[cursor].fieldId : SyncCompanion.FIELD_ID_END;
+        if (cursor >= changes.length) {
+            return SyncCompanion.FIELD_ID_END;
+        }
+        ChangedValue<?> change = changes[cursor];
+        return change == null ? SyncCompanion.FIELD_ID_END : change.fieldId;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -152,6 +157,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
 
         @Override
         public void send(Object obj) {
+            done();
             TileEntity te = (TileEntity) obj;
             SevenCommons.syncCodec.sendTo(this, Players.getTrackingChunk(te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4));
         }
@@ -182,6 +188,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
 
         @Override
         public void send(Object obj) {
+            done();
             SevenCommons.syncCodec.sendTo(this, Entities.getTrackingPlayers((Entity) obj));
         }
     }
@@ -211,6 +218,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
 
         @Override
         public void send(Object obj) {
+            done();
             Container container = (Container) obj;
             List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
             SevenCommons.syncCodec.sendTo(this, Iterables.filter(crafters, EntityPlayer.class));

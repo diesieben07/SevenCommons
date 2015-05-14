@@ -23,7 +23,7 @@ public abstract class SyncCompanion {
      */
     public abstract SyncEvent check(Object instance, boolean isSuperCall);
 
-    public abstract void applyChanges(Object instance, ChangeIterator values);
+    public abstract int applyChanges(Object instance, ChangeIterator values);
 
     /**
      * <p>Called to read the data on the client.</p>

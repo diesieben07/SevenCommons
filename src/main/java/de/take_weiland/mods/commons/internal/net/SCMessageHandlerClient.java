@@ -22,4 +22,11 @@ public final class SCMessageHandlerClient extends ChannelInboundHandlerAdapter {
             ctx.fireChannelRead(msg);
         }
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        System.err.println("Exception in netty pipeline on client!");
+        cause.printStackTrace();
+        ctx.fireExceptionCaught(cause);
+    }
 }

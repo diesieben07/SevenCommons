@@ -1,8 +1,10 @@
 package de.take_weiland.mods.commons.internal.sync;
 
+import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketCodec;
+import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.entity.player.EntityPlayer;
 
 /**
@@ -20,13 +22,14 @@ public final class SyncCodec implements PacketCodec<SyncEvent> {
     @Override
     public void decodeAndHandle(byte[] payload, EntityPlayer player) {
         // caused when packet is received over actual wire
-        SyncEvent.readAndApply(player, Network.newInput(payload));
+        MCDataInput stream = Network.newInput(payload);
+        Scheduler.client().execute(() -> SyncEvent.readAndApply(stream));
     }
 
     @Override
     public void handle(SyncEvent packet, EntityPlayer player) {
         // only called for local, direct connections, since we override decodeAndHandle
-        packet.applyDirect(player);
+        Scheduler.client().execute(packet::applyDirect);
     }
 
     @Override

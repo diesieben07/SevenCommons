@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.collect.ImmutableMap;
+import de.take_weiland.mods.commons.util.Scheduler;
 import gnu.trove.map.hash.TByteObjectHashMap;
 import gnu.trove.map.hash.TObjectByteHashMap;
 import net.minecraft.entity.player.EntityPlayer;
@@ -52,7 +53,8 @@ final class SimplePacketCodec implements PacketCodec<Packet> {
 
     @Override
     public void handle(Packet packet, EntityPlayer player) {
-        handlers.get(packet.getClass()).accept(packet, player);
+        BiConsumer<? super Packet, ? super EntityPlayer> handler = handlers.get(packet.getClass());
+        (player.worldObj.isRemote ? Scheduler.client() : Scheduler.server()).execute(() -> handler.accept(packet, player));
     }
 
     @Override
