@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
 import gnu.trove.map.hash.TByteObjectHashMap;
-import gnu.trove.map.hash.TObjectByteHashMap;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.HashMap;
@@ -22,8 +21,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
     private final String channel;
     private TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors = new TByteObjectHashMap<>();
-    private TObjectByteHashMap<Class<? extends Packet>> idLookup = new TObjectByteHashMap<>();
-    private Map<Class<? extends Packet>, BiConsumer<? super Packet, ? super EntityPlayer>> handlers = new HashMap<>();
+    private Map<Class<? extends Packet>, HandlerIDPair> handlers = new HashMap<>();
 
     SimpleChannelBuilderImpl(String channel) {
         this.channel = channel;
@@ -39,8 +37,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
         constructors.put((byte) id, constructor);
         //noinspection unchecked
-        handlers.put(packetClass, (BiConsumer<? super Packet, ? super EntityPlayer>) handler);
-        idLookup.put(packetClass, (byte) id);
+        handlers.put(packetClass, new HandlerIDPair((BiConsumer<? super Packet, ? super EntityPlayer>) handler, (byte) id));
 
         return this;
     }
@@ -51,12 +48,10 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors = this.constructors;
         constructors.compact();
 
-        TObjectByteHashMap<Class<? extends Packet>> idLookup = this.idLookup;
-        idLookup.compact();
+        ImmutableMap<Class<? extends Packet>, HandlerIDPair> handlers = ImmutableMap.copyOf(this.handlers);
+        this.handlers = null;
 
-        ImmutableMap<Class<? extends Packet>, BiConsumer<? super Packet, ? super EntityPlayer>> handlers = ImmutableMap.copyOf(this.handlers);
-
-        SimplePacketCodec codec = new SimplePacketCodec(channel, constructors, handlers, idLookup);
+        SimplePacketCodec codec = new SimplePacketCodec(channel, constructors, handlers);
         // use the original keySet, avoid having the ImmutableMap keep it around
         PacketToChannelMap.putAll(this.handlers.keySet(), codec);
         NetworkImpl.register(channel, codec);
