@@ -226,7 +226,7 @@ public final class BytecodeEmittingCompanionGenerator {
         Type changedValueType = Type.getType(ChangedValue.class);
 
         int eventSlot = gen.newLocal(syncEventType);
-        int changeSlot = gen.newLocal(syncerChangeType);
+        int changeSlot = gen.newLocal(changedValueType);
 
         if (hasDefaultSuper()) {
             gen.push((String) null);
@@ -277,7 +277,6 @@ public final class BytecodeEmittingCompanionGenerator {
             gen.loadLocal(eventSlot);
             gen.push(firstID + fieldIndex);
             gen.loadLocal(changeSlot);
-            gen.checkCast(changedValueType);
             gen.invokeVirtual(syncEventType, new Method("add", VOID_TYPE, new Type[]{INT_TYPE, changedValueType}));
 
             fieldIndex++;
