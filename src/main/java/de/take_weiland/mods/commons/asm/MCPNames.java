@@ -195,7 +195,7 @@ public final class MCPNames {
 
 	public static final String M_GET_PACKET_SIZE = "func_73284_a";
 
-	public static final String F_UNLOCALIZED_NAME_BLOCK = "field_71968_b";
+	public static final String F_UNLOCALIZED_NAME_BLOCK = "field_149770_b";
 
 	public static final String M_SET_HAS_SUBTYPES = "func_77627_a";
 

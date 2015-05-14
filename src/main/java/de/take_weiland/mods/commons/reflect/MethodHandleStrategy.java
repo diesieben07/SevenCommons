@@ -1,13 +1,11 @@
 package de.take_weiland.mods.commons.reflect;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -38,13 +36,7 @@ final class MethodHandleStrategy extends ReflectionStrategy {
         gen.endMethod();
 
         ImmutableMap<Method, MethodHandle> handles = FluentIterable.from(Arrays.asList(iface.getDeclaredMethods()))
-                .toMap(new Function<Method, MethodHandle>() {
-                    @Nullable
-                    @Override
-                    public MethodHandle apply(Method input) {
-                        return AccessorMemberParser_OLD.getTarget(input);
-                    }
-                });
+                .toMap(AccessorMemberParser::getTarget);
 
         Type myType = Type.getObjectType(className);
         Type mhType = Type.getType(MethodHandle.class);
@@ -53,6 +45,7 @@ final class MethodHandleStrategy extends ReflectionStrategy {
         for (Map.Entry<Method, MethodHandle> entry : handles.entrySet()) {
             Method method = entry.getKey();
             MethodHandle methodHandle = entry.getValue();
+            System.out.println("method: " + method.getName());
 
             gen = new GeneratorAdapter(ACC_PUBLIC, getMethod(method), null, null, cw);
             gen.visitCode();
