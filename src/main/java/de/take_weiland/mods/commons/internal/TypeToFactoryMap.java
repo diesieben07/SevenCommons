@@ -4,9 +4,8 @@ import com.google.common.collect.*;
 import de.take_weiland.mods.commons.serialize.Property;
 import de.take_weiland.mods.commons.util.JavaUtils;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -19,7 +18,7 @@ public abstract class TypeToFactoryMap<F, FR> {
     // map must be synchronized as long as it's mutable as well,
     // to exclude the "get" call, which does not synchronize on "this".
 
-    private Multimap<Class<?>, F> map = Multimaps.synchronizedMultimap(ArrayListMultimap.<Class<?>, F>create());
+    private Map<Class<?>, Collection<F>> map = new ConcurrentHashMap<>();
 
     public final FR get(Property<?, ?> type) {
         Class<?> rawType = type.getRawType();
@@ -46,22 +45,23 @@ public abstract class TypeToFactoryMap<F, FR> {
 
     public final synchronized void register(Class<?> base, F factory) {
         checkNotFrozen();
-        map.put(base, factory);
+        map.computeIfAbsent(base, k -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+                .add(factory);
     }
 
     public final synchronized void freeze() {
         checkNotFrozen();
-        map = ImmutableMultimap.copyOf(map);
-    }
-
-    public final synchronized boolean isFrozen() {
-        return isFrozenNonLocking();
+        ImmutableMap.Builder<Class<?>, Collection<F>> builder = ImmutableMap.builder();
+        for (Map.Entry<Class<?>, Collection<F>> entry : map.entrySet()) {
+            builder.put(entry.getKey(), ImmutableList.copyOf(entry.getValue()));
+        }
+        map = builder.build();
     }
 
     protected abstract FR applyFactory(F factory, Property<?, ?> type);
 
     private boolean isFrozenNonLocking() {
-        return map instanceof ImmutableMultimap;
+        return map instanceof ImmutableMap;
     }
 
     private void checkNotFrozen() {
