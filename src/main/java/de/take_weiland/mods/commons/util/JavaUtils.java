@@ -170,6 +170,7 @@ public final class JavaUtils {
 	 * @param interfaceBehavior whether or not to include interfaces
 	 * @return an Iterable
 	 */
+	// need this because we actually only have Apache Commons 3.1, not 3.2
 	public static Iterable<Class<?>> hierarchy(final Class<?> clazz, final Interfaces interfaceBehavior) {
 		return () -> {
             Iterator<Class<?>> hierarchy = new HierarchyIterator(clazz);
