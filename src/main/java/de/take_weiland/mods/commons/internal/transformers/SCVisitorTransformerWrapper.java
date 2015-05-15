@@ -11,25 +11,26 @@ import de.take_weiland.mods.commons.internal.transformers.tonbt.TileEntityNBTHoo
 public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
     @Override
     protected void addEntries() {
-        addEntry(CompanionFieldAdder.class,
+        addEntry(CompanionFieldAdder::new,
                 "net/minecraft/tileentity/TileEntity",
                 "net/minecraft/entity/Entity",
                 "net/minecraft/inventory/Container");
 
         // @Sync hooks
-        addEntry(TileEntityTickHook.class, "net/minecraft/world/World");
-        addEntry(EntityTickHook.class, "net/minecraft/world/World");
-        addEntry(ContainerTickHook.class, "net/minecraft/inventory/Container");
-        addEntry(EntitySyncPropsHooks.class, "net/minecraft/entity/Entity");
+        addEntry(TileEntityTickHook::new, "net/minecraft/world/World");
+        addEntry(EntityTickHook::new, "net/minecraft/world/World");
+        addEntry(ContainerTickHook::new, "net/minecraft/inventory/Container");
+        addEntry(EntitySyncPropsHooks::new, "net/minecraft/entity/Entity");
 
         // @ToNbt hooks
-        addEntry(EntityNBTHook.class, "net/minecraft/entity/Entity");
-        addEntry(TileEntityNBTHook.class, "net/minecraft/tileentity/TileEntity");
+        addEntry(EntityNBTHook::new, "net/minecraft/entity/Entity");
+        addEntry(TileEntityNBTHook::new, "net/minecraft/tileentity/TileEntity");
 
-        addEntry(ContainerGetInventoriesSupport.class, "net/minecraft/inventory/Container");
+        addEntry(ContainerGetInventoriesSupport::new, "net/minecraft/inventory/Container");
 
-        addEntry(InventoryNumberKeysFix.class, "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(MCPNames.M_CHECK_HOTBAR_KEYS));
+        addEntry(InventoryNumberKeysFix::new,
+                "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(MCPNames.M_CHECK_HOTBAR_KEYS));
 
-        addEntry(MessageSerializerFixer.class, "net/minecraft/util/MessageSerializer");
+        addEntry(MessageSerializerFixer::new, "net/minecraft/util/MessageSerializer");
     }
 }
