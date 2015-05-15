@@ -6,7 +6,6 @@ import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.Unsafe;
 import de.take_weiland.mods.commons.reflect.Invoke;
 import de.take_weiland.mods.commons.reflect.SCReflection;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -172,14 +171,10 @@ public final class JavaUtils {
 	 * @return an Iterable
 	 */
 	public static Iterable<Class<?>> hierarchy(final Class<?> clazz, final Interfaces interfaceBehavior) {
-		return new Iterable<Class<?>>() {
-			@NotNull
-			@Override
-			public Iterator<Class<?>> iterator() {
-				Iterator<Class<?>> hierarchy = new HierarchyIterator(clazz);
-				return interfaceBehavior == Interfaces.IGNORE ? hierarchy : new InterfaceIterator(hierarchy);
-			}
-		};
+		return () -> {
+            Iterator<Class<?>> hierarchy = new HierarchyIterator(clazz);
+            return interfaceBehavior == Interfaces.IGNORE ? hierarchy : new InterfaceIterator(hierarchy);
+        };
 	}
 
 	/**
@@ -207,13 +202,7 @@ public final class JavaUtils {
 		InterfaceIterator(Iterator<Class<?>> hierarchy) {
 			this.hierarchy = hierarchy;
 			final Set<Class<?>> seenInterfaces = new HashSet<>();
-			ifaceFilter = new Predicate<Class<?>>() {
-				@Override
-				public boolean apply(@Nullable Class<?> input) {
-					assert input != null;
-					return seenInterfaces.add(input);
-				}
-			};
+			ifaceFilter = seenInterfaces::add;
 		}
 		@Override
 		protected Class<?> computeNext() {
