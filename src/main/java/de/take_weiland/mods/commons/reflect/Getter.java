@@ -18,14 +18,14 @@ import java.lang.annotation.Target;
  * <p>Examples (declaration as in the accessor interface and symbolic implementation):<pre><code>
  * &#0064;Getter(field = "foo", target = FooBar.class)
  * int getFoo();
- *
+ * <p>
  * &#0064;Getter(field = "field_12345_a", srg = true)
  * int getBar(FooBar obj);
- *
+ * <p>
  * int getFoo() {
  *     return FooBar.foo;
  * }
- *
+ * <p>
  * int getBar(FooBar obj) {
  *     return obj.field_12345_a;
  * }
@@ -35,21 +35,21 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Getter {
 
-	/**
-	 * <p>The field to get. If it is an obfuscated field, provide the SRG name (e.g. {@code field_12345_a})
-	 * and set {@link #srg()} to true.</p>
-	 *
-	 * @return the field to get
-	 */
-	String field();
+    /**
+     * <p>The field to get. If it is an obfuscated field, provide the SRG name (e.g. {@code field_12345_a})
+     * and set {@link #srg()} to true.</p>
+     *
+     * @return the field to get
+     */
+    String field();
 
-	/**
-	 * <p>Set this to true if the field name provided by {@link #field()} is an SRG name.</p>
-	 *
-	 * @return true if it is a SRG field
-	 */
-	boolean srg() default false;
+    /**
+     * <p>Set this to true if the field name provided by {@link #field()} is an SRG name.</p>
+     *
+     * @return true if it is a SRG field
+     */
+    boolean srg() default false;
 
-	Class<?> target() default AnnotationNull.class;
+    Class<?> target() default AnnotationNull.class;
 
 }

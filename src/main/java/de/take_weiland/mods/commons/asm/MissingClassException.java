@@ -7,11 +7,11 @@ package de.take_weiland.mods.commons.asm;
  */
 public class MissingClassException extends RuntimeException {
 
-	MissingClassException(String message) {
-		super(message);
-	}
+    MissingClassException(String message) {
+        super(message);
+    }
 
-	public MissingClassException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public MissingClassException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

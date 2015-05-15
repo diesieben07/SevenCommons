@@ -10,6 +10,6 @@ import net.minecraft.entity.player.EntityPlayer;
  */
 public interface ButtonContainer {
 
-	void onButtonClick(Side side, EntityPlayer player, int buttonId);
+    void onButtonClick(Side side, EntityPlayer player, int buttonId);
 
 }

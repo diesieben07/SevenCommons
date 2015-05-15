@@ -22,12 +22,14 @@ import static java.lang.invoke.MethodType.methodType;
 public final class EnumUtils {
 
 
-    private EnumUtils() { }
+    private EnumUtils() {
+    }
 
     /**
      * <p>Get all constants defined in the given enum class. This is equivalent to {@code E.values()} except that the array
      * returned by this method is not cloned and as thus shared across the entire application. <strong>Therefor the
      * array must not be modified!</strong></p>
+     *
      * @param clazz the enum class
      * @return all defined constants
      */
@@ -44,7 +46,8 @@ public final class EnumUtils {
     /**
      * <p>Get the enum constant with the given ordinal value in the given enum class.</p>
      * <p>This method is equivalent to {@code E.values()[ordinal]}, but is potentially more efficient.</p>
-     * @param clazz the enum class
+     *
+     * @param clazz   the enum class
      * @param ordinal the ordinal value
      * @return the enum constant
      */
@@ -54,6 +57,7 @@ public final class EnumUtils {
 
     /**
      * <p>Get the type of enum values of the given EnumSet.</p>
+     *
      * @param enumSet the EnumSet
      * @return the type of enum values
      */
@@ -118,7 +122,8 @@ public final class EnumUtils {
                     break;
                 }
             }
-        } catch (IllegalAccessException ignored) { }
+        } catch (IllegalAccessException ignored) {
+        }
 
         if (esTypeGetter == null) {
             throw new RuntimeException("Could not find a type field in EnumSet!");
@@ -144,7 +149,8 @@ public final class EnumUtils {
                     break;
                 }
             }
-        } catch (ClassNotFoundException | IllegalAccessException ignored) {}
+        } catch (ClassNotFoundException | IllegalAccessException ignored) {
+        }
 
         boolean invalid;
         if (esLongEnc == null) {

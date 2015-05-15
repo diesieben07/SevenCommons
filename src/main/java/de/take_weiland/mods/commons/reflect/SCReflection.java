@@ -35,20 +35,20 @@ public final class SCReflection {
     private static final Logger logger = SevenCommonsLoader.scLogger("Reflection");
     private static final ReflectionStrategy strategy = selectStrategy();
     private static final AtomicInteger nextDynClassId = new AtomicInteger(0);
-	private static final boolean DEBUG = Boolean.getBoolean("sevencommons.reflect.debug");
+    private static final boolean DEBUG = Boolean.getBoolean("sevencommons.reflect.debug");
 
-	/**
-	 * <p>Create an object that implements the given Accessor Interface. The result of this method should be permanently cached,
+    /**
+     * <p>Create an object that implements the given Accessor Interface. The result of this method should be permanently cached,
      * because this operation is likely to be relatively expensive.</p>
-	 * <p>The given class must be an interface and must not extend any other interfaces.
+     * <p>The given class must be an interface and must not extend any other interfaces.
      * All methods must be marked with one of {@link de.take_weiland.mods.commons.reflect.Getter},
-	 * {@link de.take_weiland.mods.commons.reflect.Setter}, {@link de.take_weiland.mods.commons.reflect.Invoke} or {@link de.take_weiland.mods.commons.reflect.Construct}
-	 * and comply with the respective contract.</p>
-	 *
-	 * @param iface the Accessor Interface
-	 * @return a newly created object, implementing the given interface
-	 */
-	public static <T> T createAccessor(Class<T> iface) {
+     * {@link de.take_weiland.mods.commons.reflect.Setter}, {@link de.take_weiland.mods.commons.reflect.Invoke} or {@link de.take_weiland.mods.commons.reflect.Construct}
+     * and comply with the respective contract.</p>
+     *
+     * @param iface the Accessor Interface
+     * @return a newly created object, implementing the given interface
+     */
+    public static <T> T createAccessor(Class<T> iface) {
         try {
             return strategy.createAccessor(iface);
         } catch (IllegalAccessorException e) {
@@ -57,6 +57,7 @@ public final class SCReflection {
             throw new IllegalAccessorException("Failed to parse accessor interface " + iface.getName(), e);
         }
     }
+
     public static Method findSetter(Method getter) {
         checkArgument(getter.getParameterTypes().length == 0);
         Class<?> type = getter.getReturnType();
@@ -96,6 +97,7 @@ public final class SCReflection {
      * <p>Tries to determine if the given class is a scala class.</p>
      * <p>If this method returns true, the class is most definitely a scala class. If it however returns false,
      * that is not an indication that the class is <i>not</i> a scala class.</p>
+     *
      * @param clazz the class to check
      * @return true if the class is a scala class
      */
@@ -148,26 +150,26 @@ public final class SCReflection {
         return defineDynamicClass(bytes, SCReflection.class);
     }
 
-	/**
-	 * <p>Define a new Class specified by the given bytes.</p>
-	 *
-	 * @param bytes the bytes describing the class
-	 * @param context the class which to use as the context
-	 * @return the defined class
-	 */
-	public static Class<?> defineDynamicClass(byte[] bytes, Class<?> context) {
-		if (DEBUG) {
-			try {
-				ClassNode node = ASMUtils.getThinClassNode(bytes);
-				File file = new File("sevencommonsdyn/" + node.name + ".class");
-				Files.createParentDirs(file);
-				OutputStream out = new FileOutputStream(file);
-				out.write(bytes);
-				out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+    /**
+     * <p>Define a new Class specified by the given bytes.</p>
+     *
+     * @param bytes   the bytes describing the class
+     * @param context the class which to use as the context
+     * @return the defined class
+     */
+    public static Class<?> defineDynamicClass(byte[] bytes, Class<?> context) {
+        if (DEBUG) {
+            try {
+                ClassNode node = ASMUtils.getThinClassNode(bytes);
+                File file = new File("sevencommonsdyn/" + node.name + ".class");
+                Files.createParentDirs(file);
+                OutputStream out = new FileOutputStream(file);
+                out.write(bytes);
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         ClassLoader cl = context.getClassLoader();
         Class<?> clazz;
         try {
@@ -179,37 +181,40 @@ public final class SCReflection {
         return clazz;
     }
 
-	/**
-	 * <p>Get a new unique class name as an internal name.</p>
-	 *
-	 * @return a unique name
-	 */
-	public static String nextDynamicClassName() {
-		return nextDynamicClassName("de/take_weiland/mods/commons/reflect/dyn");
-	}
-
-	/**
-	 * <p>Get a new unique class name in the given package as an internal name.</p>
-	 *
-	 * @param pkg the package
-	 * @return a unique name
-	 */
-	public static String nextDynamicClassName(Package pkg) {
-		return nextDynamicClassName(pkg.getName());
-	}
     /**
-	 * <p>Get a new unique class name in the given package as an internal name.</p>
-	 *
-	 * @param pkg the package
-	 * @return a unique name
-	 */
-	public static String nextDynamicClassName(String pkg) {
-		return ASMUtils.internalName(pkg) + "/_sc_dyn_" + nextDynClassId.getAndIncrement();
-	}
-	private static ReflectionStrategy selectStrategy() {
-        return new MethodHandleStrategy();
-	}
+     * <p>Get a new unique class name as an internal name.</p>
+     *
+     * @return a unique name
+     */
+    public static String nextDynamicClassName() {
+        return nextDynamicClassName("de/take_weiland/mods/commons/reflect/dyn");
+    }
 
-    private SCReflection() { }
+    /**
+     * <p>Get a new unique class name in the given package as an internal name.</p>
+     *
+     * @param pkg the package
+     * @return a unique name
+     */
+    public static String nextDynamicClassName(Package pkg) {
+        return nextDynamicClassName(pkg.getName());
+    }
+
+    /**
+     * <p>Get a new unique class name in the given package as an internal name.</p>
+     *
+     * @param pkg the package
+     * @return a unique name
+     */
+    public static String nextDynamicClassName(String pkg) {
+        return ASMUtils.internalName(pkg) + "/_sc_dyn_" + nextDynClassId.getAndIncrement();
+    }
+
+    private static ReflectionStrategy selectStrategy() {
+        return new MethodHandleStrategy();
+    }
+
+    private SCReflection() {
+    }
 
 }

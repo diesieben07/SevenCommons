@@ -23,17 +23,17 @@ import net.minecraft.network.NetHandlerPlayServer;
 public final class FMLEventHandler {
 
     public static final String SCHEDULER_TEMP_KEY = "__sc_temp_scheduler_runnables";
-	public static final String INV_IN_USE_KEY = "_sc$iteminv$inUse";
+    public static final String INV_IN_USE_KEY = "_sc$iteminv$inUse";
 
-	@SubscribeEvent
-	public void playerTick(TickEvent.PlayerTickEvent event) {
-		if (event.phase == TickEvent.Phase.START && event.side.isServer() && event.player.openContainer == event.player.inventoryContainer) {
-			ItemStack current = event.player.inventory.getCurrentItem();
-			if (current != null && current.stackTagCompound != null) {
-				current.stackTagCompound.removeTag(INV_IN_USE_KEY);
-			}
-		}
-	}
+    @SubscribeEvent
+    public void playerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase == TickEvent.Phase.START && event.side.isServer() && event.player.openContainer == event.player.inventoryContainer) {
+            ItemStack current = event.player.inventory.getCurrentItem();
+            if (current != null && current.stackTagCompound != null) {
+                current.stackTagCompound.removeTag(INV_IN_USE_KEY);
+            }
+        }
+    }
 
     @SubscribeEvent
     public void serverConnectionFromClient(FMLNetworkEvent.ServerConnectionFromClientEvent event) {
@@ -81,7 +81,7 @@ public final class FMLEventHandler {
     private static final Runnable serverTick;
     private static final Runnable clientTick;
 
-	@SubscribeEvent
+    @SubscribeEvent
     public void serverTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
             serverTick.run();

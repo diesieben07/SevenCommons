@@ -16,7 +16,8 @@ import static java.lang.invoke.MethodType.methodType;
  */
 final class ArrayConversions {
 
-    private ArrayConversions() { }
+    private ArrayConversions() {
+    }
 
     static MethodHandle getReader(Class<?> arrClass) {
         Class<?> repr;
@@ -225,7 +226,9 @@ final class ArrayConversions {
         int n = value.length;
         byte[] bytes = new byte[n];
         for (int i = 0; i < n; i++) {
-            if (value[i]) bytes[i] = 1;
+            if (value[i]) {
+                bytes[i] = 1;
+            }
         }
         return bytes;
     }
@@ -235,7 +238,9 @@ final class ArrayConversions {
         boolean[] booleans = new boolean[n];
 
         for (int i = 0; i < n; i++) {
-            if (bytes[i] != 0) booleans[i] = true;
+            if (bytes[i] != 0) {
+                booleans[i] = true;
+            }
         }
         return booleans;
     }

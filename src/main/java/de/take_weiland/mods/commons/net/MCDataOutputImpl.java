@@ -99,11 +99,13 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
     private void grow(int minCapacity) {
         int oldCapacity = buf.length;
         int newCapacity = oldCapacity << 1;
-        if (newCapacity - minCapacity < 0)
+        if (newCapacity - minCapacity < 0) {
             newCapacity = minCapacity;
+        }
         if (newCapacity < 0) {
-            if (minCapacity < 0)
+            if (minCapacity < 0) {
                 throw new OutOfMemoryError();
+            }
             newCapacity = Integer.MAX_VALUE;
         }
         buf = Arrays.copyOf(buf, newCapacity);
@@ -133,10 +135,12 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
     }
 
     @Override
-    public void flush() { }
+    public void flush() {
+    }
 
     @Override
-    public void close() { }
+    public void close() {
+    }
 
     @Override
     public void writeBoolean(boolean v) {
@@ -243,7 +247,7 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
 
     private void writeLongNBC(long v) {
         writeByteNBC((int) v);
-        writeByteNBC((int) (v >>>  8));
+        writeByteNBC((int) (v >>> 8));
         writeByteNBC((int) (v >>> 16));
         writeByteNBC((int) (v >>> 24));
         writeByteNBC((int) (v >>> 32));
@@ -271,6 +275,7 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
     private void writeFloatNBC(float f) {
         writeIntNBC(Float.floatToIntBits(f));
     }
+
     @Override
     public void writeFloatBox(Float f) {
         if (f == null) {
@@ -429,7 +434,7 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
         } else {
             ensureWritable(varIntLen(stack.getFluidID())
                     + varIntLen(stack.amount) // technically amount is always >= 0, but we can't be sure
-                    + 1 /* NBT needs at least 1 byte*/ );
+                    + 1 /* NBT needs at least 1 byte*/);
 
             writeVarIntNBC(stack.getFluidID());
             writeVarIntNBC(stack.amount);

@@ -48,6 +48,7 @@ public final class PacketToChannelMap {
         SevenCommons.registerStateCallback(LoaderState.ModState.POSTINITIALIZED, PacketToChannelMap::freeze);
     }
 
-    private PacketToChannelMap() { }
+    private PacketToChannelMap() {
+    }
 
 }

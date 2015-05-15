@@ -9,22 +9,23 @@ import net.minecraft.client.gui.GuiScreen;
  */
 public abstract class GuiScreenWithParent extends GuiScreen implements ScreenWithParent {
 
-	/**
-	 * <p>The parent screen</p>
-	 */
-	protected final GuiScreen parent;
+    /**
+     * <p>The parent screen</p>
+     */
+    protected final GuiScreen parent;
 
-	/**
-	 * <p>Create a new GuiScreenWithParent.</p>
-	 * @param parent the parent screen
-	 */
-	public GuiScreenWithParent(GuiScreen parent) {
-		this.parent = parent;
-	}
+    /**
+     * <p>Create a new GuiScreenWithParent.</p>
+     *
+     * @param parent the parent screen
+     */
+    public GuiScreenWithParent(GuiScreen parent) {
+        this.parent = parent;
+    }
 
-	@Override
-	public final GuiScreen getParentScreen() {
-		return parent;
-	}
+    @Override
+    public final GuiScreen getParentScreen() {
+        return parent;
+    }
 
 }

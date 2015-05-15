@@ -124,6 +124,7 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
     abstract TypeToken<?> resolveType();
 
     abstract MethodHandle resolveGetter() throws IllegalAccessException;
+
     abstract MethodHandle resolveSetter() throws IllegalAccessException;
 
     @Override

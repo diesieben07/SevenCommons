@@ -5,7 +5,7 @@ package de.take_weiland.mods.commons;
  */
 public class CannotSerializeException extends RuntimeException {
 
-	public CannotSerializeException(Class<?> toSerialize) {
-		super("No serialization method for " + toSerialize.getName());
-	}
+    public CannotSerializeException(Class<?> toSerialize) {
+        super("No serialization method for " + toSerialize.getName());
+    }
 }

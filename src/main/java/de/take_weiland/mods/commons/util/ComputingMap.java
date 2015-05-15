@@ -23,44 +23,44 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public final class ComputingMap<K, V> extends ForwardingMap<K, V> implements Map<K, V> {
 
-	public static <K, V> ComputingMap<K, V> of(@NotNull Function<? super K, ? extends V> function) {
-		return of(new HashMap<K, V>(), function);
-	}
+    public static <K, V> ComputingMap<K, V> of(@NotNull Function<? super K, ? extends V> function) {
+        return of(new HashMap<K, V>(), function);
+    }
 
-	public static <K, V> ComputingMap<K, V> of(@NotNull Map<K, V> map, @NotNull Function<? super K, ? extends V> function) {
-		return new ComputingMap<>(checkNotNull(map), checkNotNull(function));
-	}
+    public static <K, V> ComputingMap<K, V> of(@NotNull Map<K, V> map, @NotNull Function<? super K, ? extends V> function) {
+        return new ComputingMap<>(checkNotNull(map), checkNotNull(function));
+    }
 
-	public static <K, V> ComputingMap<K, V> of(@NotNull Map<K, V> map, @NotNull Supplier<? extends V> supplier) {
-		return new ComputingMap<>(checkNotNull(map), Functions.forSupplier(supplier));
-	}
+    public static <K, V> ComputingMap<K, V> of(@NotNull Map<K, V> map, @NotNull Supplier<? extends V> supplier) {
+        return new ComputingMap<>(checkNotNull(map), Functions.forSupplier(supplier));
+    }
 
-	private final Map<K, V> delegate;
-	private final Function<? super K, ? extends V> function;
+    private final Map<K, V> delegate;
+    private final Function<? super K, ? extends V> function;
 
-	private ComputingMap(Map<K, V> delegate, Function<? super K, ? extends V> function) {
-		this.delegate = delegate;
-		this.function = function;
-	}
+    private ComputingMap(Map<K, V> delegate, Function<? super K, ? extends V> function) {
+        this.delegate = delegate;
+        this.function = function;
+    }
 
-	@Override
-	protected Map<K, V> delegate() {
-		return delegate;
-	}
+    @Override
+    protected Map<K, V> delegate() {
+        return delegate;
+    }
 
-	@Override
-	public V get(Object key) {
-		V value = delegate.get(key);
-		if (value != null || delegate.containsKey(key)) {
-			return value;
-		}
-		try {
-			//noinspection unchecked
-			delegate.put((K) key, (value = function.apply(((K) key))));
-		} catch (ClassCastException e) {
-			return null;
-		}
-		return value;
-	}
+    @Override
+    public V get(Object key) {
+        V value = delegate.get(key);
+        if (value != null || delegate.containsKey(key)) {
+            return value;
+        }
+        try {
+            //noinspection unchecked
+            delegate.put((K) key, (value = function.apply(((K) key))));
+        } catch (ClassCastException e) {
+            return null;
+        }
+        return value;
+    }
 
 }

@@ -7,11 +7,11 @@ package de.take_weiland.mods.commons.meta;
  */
 public interface HasSubtypes<T extends Subtype> {
 
-	/**
-	 * <p>Return the MetadataProperty that represents the subtypes of ths Block or Item.</p>
-	 *
-	 * @return a MetadataProperty
-	 */
-	MetadataProperty<T> subtypeProperty();
+    /**
+     * <p>Return the MetadataProperty that represents the subtypes of ths Block or Item.</p>
+     *
+     * @return a MetadataProperty
+     */
+    MetadataProperty<T> subtypeProperty();
 
 }

@@ -16,6 +16,7 @@ import static java.lang.invoke.MethodType.methodType;
 
 /**
  * <p>Factory for @SyncCompanions.</p>
+ *
  * @author diesieben07
  */
 public final class SyncCompanions {
@@ -40,7 +41,8 @@ public final class SyncCompanions {
 
     /**
      * <p>Register a new SyncerFactory.</p>
-     * @param clazz the base class
+     *
+     * @param clazz   the base class
      * @param factory the factory
      */
     public static void registerSyncerFactory(Class<?> clazz, SyncerFactory factory) {
@@ -49,6 +51,7 @@ public final class SyncCompanions {
 
     /**
      * <p>Create a new SyncCompanion for the given class.</p>
+     *
      * @param clazz the class
      * @return a SyncCompanion
      */
@@ -61,5 +64,6 @@ public final class SyncCompanions {
                 .toMap(syncerFactories::get);
     }
 
-    private SyncCompanions() { }
+    private SyncCompanions() {
+    }
 }

@@ -28,7 +28,7 @@ public final class MethodHandleStrategy extends ReflectionStrategy {
 
         String className = SCReflection.nextDynamicClassName(iface.getPackage());
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        cw.visit(V1_7, ACC_FINAL, className, null, "java/lang/Object", new String[] { Type.getInternalName(iface) });
+        cw.visit(V1_7, ACC_FINAL, className, null, "java/lang/Object", new String[]{Type.getInternalName(iface)});
 
         GeneratorAdapter gen = new GeneratorAdapter(0, getMethod("void <init>()"), null, null, cw);
         gen.visitCode();
@@ -82,7 +82,7 @@ public final class MethodHandleStrategy extends ReflectionStrategy {
         gen.returnValue();
         gen.endMethod();
 
-        for (idx = 0; idx < handles.size(); idx++){
+        for (idx = 0; idx < handles.size(); idx++) {
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, "h" + idx, mhType.getDescriptor(), null, null);
         }
 

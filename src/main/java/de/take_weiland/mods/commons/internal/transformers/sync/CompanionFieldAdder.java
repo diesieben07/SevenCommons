@@ -28,7 +28,7 @@ public final class CompanionFieldAdder extends ClassVisitor {
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         String newIFace = Type.getInternalName(SyncedObjectProxy.class);
         if (interfaces == null) {
-            interfaces = new String[] { newIFace };
+            interfaces = new String[]{newIFace};
         } else {
             interfaces = ObjectArrays.concat(newIFace, interfaces);
         }

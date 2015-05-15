@@ -9,7 +9,7 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public final class MessageSerializerFixer extends ClassVisitor {
 
-   private boolean hasAccept = false;
+    private boolean hasAccept = false;
 
     public MessageSerializerFixer(ClassVisitor cv) {
         super(Opcodes.ASM5, cv);

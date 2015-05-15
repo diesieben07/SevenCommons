@@ -384,7 +384,7 @@ public final class BytecodeEmittingCompanionGenerator {
             try {
                 cw.visitEnd();
                 cls = SCReflection.defineDynamicClass(cw.toByteArray(), BytecodeEmittingCompanionGenerator.class);
-            } finally{
+            } finally {
                 staticProperties = null;
             }
         }
@@ -416,7 +416,8 @@ public final class BytecodeEmittingCompanionGenerator {
                         }
                     } else {
                         compGetter = o -> null;
-                        compSetter = (o, o2) -> { };
+                        compSetter = (o, o2) -> {
+                        };
                     }
 
                     return new Object[]{

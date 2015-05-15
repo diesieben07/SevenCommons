@@ -7,14 +7,14 @@ import net.minecraft.network.Packet;
 
 public interface SevenCommonsProxy {
 
-	void preInit(FMLPreInitializationEvent event);
+    void preInit(FMLPreInitializationEvent event);
 
-	void sendPacketToServer(Packet p);
+    void sendPacketToServer(Packet p);
 
-	EntityPlayer getClientPlayer();
+    EntityPlayer getClientPlayer();
 
-	String translate(String key);
+    String translate(String key);
 
-	NetworkManager getClientNetworkManager();
+    NetworkManager getClientNetworkManager();
 
 }

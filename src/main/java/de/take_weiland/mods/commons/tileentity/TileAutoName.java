@@ -9,13 +9,14 @@ import net.minecraft.item.ItemStack;
  */
 public interface TileAutoName extends NameableInventory {
 
-	/**
-	 * <p>Return false from here if you don't want this inventory to be automatically named when placed by a renamed
-	 * ItemStack.</p>
-	 * @param player the player
-	 * @param stack the ItemStack
-	 * @return true if this TileEntity should take a renamed ItemStack's name
-	 */
-	boolean shouldAutoname(EntityPlayer player, ItemStack stack);
+    /**
+     * <p>Return false from here if you don't want this inventory to be automatically named when placed by a renamed
+     * ItemStack.</p>
+     *
+     * @param player the player
+     * @param stack  the ItemStack
+     * @return true if this TileEntity should take a renamed ItemStack's name
+     */
+    boolean shouldAutoname(EntityPlayer player, ItemStack stack);
 
 }

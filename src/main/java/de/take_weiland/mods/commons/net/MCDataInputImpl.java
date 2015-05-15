@@ -87,7 +87,9 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
             return 0;
         }
         int avail = maxLen - pos;
-        if (n > avail) n = avail;
+        if (n > avail) {
+            n = avail;
+        }
         pos += n;
         return n;
     }
@@ -117,7 +119,8 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
     }
 
     @Override
-    public void close() { }
+    public void close() {
+    }
 
     // actual IO
 

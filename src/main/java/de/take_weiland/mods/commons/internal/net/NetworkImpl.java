@@ -20,8 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- *
- *
  * @author diesieben07
  */
 public final class NetworkImpl {

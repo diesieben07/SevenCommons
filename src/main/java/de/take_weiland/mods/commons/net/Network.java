@@ -103,8 +103,8 @@ public final class Network {
 
     private static <P> void send0(PacketCodecPair<P> pair, NetworkManager manager) {
         manager.channel()
-            .writeAndFlush(pair)
-            .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+                .writeAndFlush(pair)
+                .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 
     private static final java.lang.reflect.Type function2ndParam = Function.class.getTypeParameters()[1];
@@ -145,7 +145,8 @@ public final class Network {
                         result = returnClass;
                     }
                 }
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+            }
         }
         if (result == Packet.class) {
             throw new RuntimeException("Failed to reflectively find type argument of PacketConstructor. " +

@@ -13,13 +13,13 @@ import net.minecraft.entity.player.EntityPlayer;
 @Packet.Receiver(Side.SERVER)
 public final class PacketContainerButton implements Packet {
 
-	private final int windowId;
-	private final int buttonId;
+    private final int windowId;
+    private final int buttonId;
 
-	public PacketContainerButton(int windowId, int buttonId) {
-		this.windowId = windowId;
-		this.buttonId = buttonId;
-	}
+    public PacketContainerButton(int windowId, int buttonId) {
+        this.windowId = windowId;
+        this.buttonId = buttonId;
+    }
 
     PacketContainerButton(MCDataInput buf) {
         this.windowId = buf.readByte();
@@ -33,8 +33,8 @@ public final class PacketContainerButton implements Packet {
     }
 
     void handle(EntityPlayer player) {
-		if (player.openContainer.windowId == windowId && player.openContainer instanceof ButtonContainer) {
-			((ButtonContainer) player.openContainer).onButtonClick(Side.SERVER, player, buttonId);
-		}
-	}
+        if (player.openContainer.windowId == windowId && player.openContainer instanceof ButtonContainer) {
+            ((ButtonContainer) player.openContainer).onButtonClick(Side.SERVER, player, buttonId);
+        }
+    }
 }

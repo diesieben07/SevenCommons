@@ -31,6 +31,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
 
     /**
      * <p>Return a Scheduler that executes tasks on the main server thread.</p>
+     *
      * @return a Scheduler
      */
     public static Scheduler server() {
@@ -39,6 +40,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
 
     /**
      * <p>The Scheduler that executes tasks on the main client thread. On a dedicated server this method will return null.</p>
+     *
      * @return a Scheduler or null
      */
     public static Scheduler client() {
@@ -47,6 +49,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
 
     /**
      * <p>Return {@link #client()} if {@code side} is {@code Side.CLIENT}, {@link #server()} otherwise.</p>
+     *
      * @param side the side
      * @return a Scheduler for the side
      */
@@ -61,7 +64,8 @@ public final class Scheduler extends AbstractListeningExecutorService {
 
     /**
      * <p>Execute the given task after {@code tickDelay} ticks have passed.</p>
-     * @param task the task
+     *
+     * @param task      the task
      * @param tickDelay the delay, in ticks
      */
     public void schedule(Runnable task, long tickDelay) {
@@ -102,13 +106,14 @@ public final class Scheduler extends AbstractListeningExecutorService {
         }
         server = new Scheduler();
 
-        Launch.blackboard.put(FMLEventHandler.SCHEDULER_TEMP_KEY, new Runnable[] {
-            server::tick,
-            client == null ? null : client::tick
+        Launch.blackboard.put(FMLEventHandler.SCHEDULER_TEMP_KEY, new Runnable[]{
+                server::tick,
+                client == null ? null : client::tick
         });
     }
 
-    private Scheduler() { }
+    private Scheduler() {
+    }
 
     static final class Task {
 
@@ -123,8 +128,8 @@ public final class Scheduler extends AbstractListeningExecutorService {
     }
 
     /**
-     * @deprecated always false, this ExecutorService cannot be shut down
      * @return always false
+     * @deprecated always false, this ExecutorService cannot be shut down
      */
     @Override
     @Deprecated
@@ -133,8 +138,8 @@ public final class Scheduler extends AbstractListeningExecutorService {
     }
 
     /**
-     * @deprecated always false, this ExecutorService cannot be shut down
      * @return always false
+     * @deprecated always false, this ExecutorService cannot be shut down
      */
     @Override
     @Deprecated
@@ -147,11 +152,12 @@ public final class Scheduler extends AbstractListeningExecutorService {
      */
     @Override
     @Deprecated
-    public void shutdown() { }
+    public void shutdown() {
+    }
 
     /**
-     * @deprecated this ExecutorService cannot be shut down
      * @return a list of all waiting tasks
+     * @deprecated this ExecutorService cannot be shut down
      */
     @Nonnull
     @Override
@@ -167,12 +173,12 @@ public final class Scheduler extends AbstractListeningExecutorService {
     }
 
     /**
-     * @deprecated this ExecutorService cannot be shut down, always returns false after sleeping for the specified
-     * amount of time
      * @param timeout the timeout
-     * @param unit TimeUnit
+     * @param unit    TimeUnit
      * @return always false
      * @throws InterruptedException
+     * @deprecated this ExecutorService cannot be shut down, always returns false after sleeping for the specified
+     * amount of time
      */
     @Override
     @Deprecated

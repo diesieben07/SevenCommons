@@ -10,12 +10,12 @@ import java.io.IOException;
  */
 public class TempClassCleaner {
 
-	public static void main(String[] args) throws IOException {
-		File[] dirs = new File("./eclipse/").listFiles(
-				(dir, name) -> name.startsWith("CLASSLOADER_TEMP") || name.startsWith("sevencommonsdyn"));
-		for (File dir : dirs) {
-			FileUtils.deleteDirectory(dir);
-		}
-	}
+    public static void main(String[] args) throws IOException {
+        File[] dirs = new File("./eclipse/").listFiles(
+                (dir, name) -> name.startsWith("CLASSLOADER_TEMP") || name.startsWith("sevencommonsdyn"));
+        for (File dir : dirs) {
+            FileUtils.deleteDirectory(dir);
+        }
+    }
 
 }

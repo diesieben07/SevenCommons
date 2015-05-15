@@ -17,9 +17,10 @@ public interface SimplePacketHandler<P> extends BiConsumer<P, EntityPlayer> {
     /**
      * <p>Called when a packet is received.</p>
      * <p>On the client the client player will be passed, on the server the player sending the packet will be passed.</p>
+     *
      * @param packet the packet
      * @param player the player
-     * @param side the logical side
+     * @param side   the logical side
      */
     void handle(P packet, EntityPlayer player, Side side);
 

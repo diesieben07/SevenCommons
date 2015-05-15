@@ -29,7 +29,7 @@ public class EntitySyncPropsHooks extends ClassVisitor {
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         String iface = Type.getInternalName(EntityProxy.class);
         if (interfaces == null) {
-            interfaces = new String[] { iface };
+            interfaces = new String[]{iface};
         } else {
             interfaces = ObjectArrays.concat(interfaces, iface);
         }

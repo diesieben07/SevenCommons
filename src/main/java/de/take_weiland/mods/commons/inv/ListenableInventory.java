@@ -10,14 +10,16 @@ import javax.annotation.Nullable;
  */
 public interface ListenableInventory extends IInventory {
 
-	void addListener(Listener listener);
-	void removeListener(Listener listener);
+    void addListener(Listener listener);
 
-	interface Listener {
+    void removeListener(Listener listener);
 
-		void onChange(ListenableInventory inv);
-		void slotChange(ListenableInventory inv, int slot, @Nullable ItemStack oldStack, @Nullable ItemStack newStack);
+    interface Listener {
 
-	}
+        void onChange(ListenableInventory inv);
+
+        void slotChange(ListenableInventory inv, int slot, @Nullable ItemStack oldStack, @Nullable ItemStack newStack);
+
+    }
 
 }

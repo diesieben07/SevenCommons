@@ -18,14 +18,14 @@ import java.lang.annotation.Target;
  * <p>Examples (declaration as in the accessor interface and symbolic implementation):<pre><code>
  * &#0064;Setter(field = "foo", target = FooBar.class)
  * void setFoo(int foo);
- *
+ * <p>
  * &#0064;Setter(field = "field_12345_a", srg = true)
  * void setBar(FooBar obj, int bar);
- *
+ * <p>
  * void setFoo(int foo) {
  *     FooBar.foo = foo;
  * }
- *
+ * <p>
  * void setBar(FooBar obj, int bar) {
  *     obj.field_12345_a = bar;
  * }
@@ -36,20 +36,20 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Setter {
 
-	/**
-	 * <p>The field to set. If it is an obfuscated field, provide the SRG name (e.g. field_12345_a)
-	 * and set {@link #srg()} to true.</p>
-	 *
-	 * @return the field to set
-	 */
-	String field();
+    /**
+     * <p>The field to set. If it is an obfuscated field, provide the SRG name (e.g. field_12345_a)
+     * and set {@link #srg()} to true.</p>
+     *
+     * @return the field to set
+     */
+    String field();
 
-	/**
-	 * <p>Set this to true if the field name provided by {@link #field()} is an SRG name.</p>
-	 *
-	 * @return true if it is a SRG field
-	 */
-	boolean srg() default false;
+    /**
+     * <p>Set this to true if the field name provided by {@link #field()} is an SRG name.</p>
+     *
+     * @return true if it is a SRG field
+     */
+    boolean srg() default false;
 
-	Class<?> target() default AnnotationNull.class;
+    Class<?> target() default AnnotationNull.class;
 }

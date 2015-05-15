@@ -18,11 +18,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(METHOD)
 public @interface OverrideSetter {
 
-	String value();
+    String value();
 
-	@Retention(CLASS)
-	@Target(METHOD)
-	@interface ScalaSetter {
-	}
+    @Retention(CLASS)
+    @Target(METHOD)
+    @interface ScalaSetter {
+    }
 
 }

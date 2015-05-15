@@ -59,7 +59,7 @@ public final class BuiltinSyncers implements SyncerFactory {
             return FluidStackSyncer.INSTANCE;
         } else if (type.isEnum()) {
             return EnumSyncer.get(type);
-        } else if (type.isPrimitive() || Primitives.isWrapperType(type)){
+        } else if (type.isPrimitive() || Primitives.isWrapperType(type)) {
             return getOrCreateSyncer(type, type0 -> {
                 Class<?> primitive = Primitives.unwrap(type0);
                 String prefix = "de.take_weiland.mods.commons.internal.sync.builtin.";

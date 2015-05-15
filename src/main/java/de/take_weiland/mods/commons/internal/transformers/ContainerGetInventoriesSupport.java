@@ -26,7 +26,7 @@ public final class ContainerGetInventoriesSupport extends ClassVisitor {
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         String newIface = Type.getInternalName(ContainerProxy.class);
         if (interfaces == null) {
-            interfaces = new String[] { newIface };
+            interfaces = new String[]{newIface};
         } else {
             interfaces = ObjectArrays.concat(newIface, interfaces);
         }
@@ -78,7 +78,7 @@ public final class ContainerGetInventoriesSupport extends ClassVisitor {
 
             gen.mark(nullPath);
             gen.loadThis();
-            gen.invokeStatic(asmHooksType, new Method(ASMHooks.FIND_CONTAINER_INVS, immutableSetType, new Type[] { myType }));
+            gen.invokeStatic(asmHooksType, new Method(ASMHooks.FIND_CONTAINER_INVS, immutableSetType, new Type[]{myType}));
             gen.storeLocal(temp);
 
             gen.loadThis();

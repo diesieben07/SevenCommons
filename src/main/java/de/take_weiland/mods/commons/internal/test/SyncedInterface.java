@@ -8,7 +8,8 @@ import de.take_weiland.mods.commons.sync.Sync;
  */
 interface SyncedInterface {
 
-    @Sync @ToNbt
+    @Sync
+    @ToNbt
     String getSomeData();
 
     void setSomeData(String i);

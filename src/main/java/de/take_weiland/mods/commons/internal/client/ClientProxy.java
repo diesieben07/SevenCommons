@@ -16,35 +16,35 @@ import static net.minecraft.client.Minecraft.getMinecraft;
 
 public final class ClientProxy implements SevenCommonsProxy {
 
-	@Override
-	public void preInit(FMLPreInitializationEvent event) {
-		MinecraftForge.EVENT_BUS.register(this);
-	}
+    @Override
+    public void preInit(FMLPreInitializationEvent event) {
+        MinecraftForge.EVENT_BUS.register(this);
+    }
 
-	@SubscribeEvent
-	public void onOpenGui(GuiOpenEvent event) {
-		if (event.gui == null && getMinecraft().currentScreen instanceof ScreenWithParent) {
-			event.gui = ((ScreenWithParent) getMinecraft().currentScreen).getParentScreen();
-		}
-	}
+    @SubscribeEvent
+    public void onOpenGui(GuiOpenEvent event) {
+        if (event.gui == null && getMinecraft().currentScreen instanceof ScreenWithParent) {
+            event.gui = ((ScreenWithParent) getMinecraft().currentScreen).getParentScreen();
+        }
+    }
 
-	@Override
-	public void sendPacketToServer(Packet p) {
-		getMinecraft().getNetHandler().addToSendQueue(p);
-	}
+    @Override
+    public void sendPacketToServer(Packet p) {
+        getMinecraft().getNetHandler().addToSendQueue(p);
+    }
 
-	@Override
-	public EntityPlayer getClientPlayer() {
-		return getMinecraft().thePlayer;
-	}
+    @Override
+    public EntityPlayer getClientPlayer() {
+        return getMinecraft().thePlayer;
+    }
 
-	@Override
-	public String translate(String key) {
-		return I18n.format(key, ArrayUtils.EMPTY_OBJECT_ARRAY);
-	}
+    @Override
+    public String translate(String key) {
+        return I18n.format(key, ArrayUtils.EMPTY_OBJECT_ARRAY);
+    }
 
-	@Override
-	public NetworkManager getClientNetworkManager() {
-		return getMinecraft().getNetHandler().getNetworkManager();
-	}
+    @Override
+    public NetworkManager getClientNetworkManager() {
+        return getMinecraft().getNetHandler().getNetworkManager();
+    }
 }

@@ -12,7 +12,7 @@ import static java.lang.annotation.ElementType.*;
  * @author diesieben07
  */
 @Retention(RetentionPolicy.SOURCE)
-@Target({ TYPE, METHOD, CONSTRUCTOR, FIELD, PACKAGE })
+@Target({TYPE, METHOD, CONSTRUCTOR, FIELD, PACKAGE})
 public @interface Internal {
 
 }

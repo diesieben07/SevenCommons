@@ -14,24 +14,26 @@ import net.minecraft.client.resources.Locale;
  */
 public final class I18n {
 
-	/**
-	 * <p>Translate the given key.</p>
-	 * @param key the key to translate
-	 * @return the translation
-	 */
-	public static String translate(String key) {
-		return LocaleAcc.instance.translate(LocaleAcc.instance.getCurrentLocale(), key);
-	}
+    /**
+     * <p>Translate the given key.</p>
+     *
+     * @param key the key to translate
+     * @return the translation
+     */
+    public static String translate(String key) {
+        return LocaleAcc.instance.translate(LocaleAcc.instance.getCurrentLocale(), key);
+    }
 
-	/**
-	 * <p>Translate the given key and pass the result to {@link String#format(String, Object...)} with the given args.</p>
-	 * @param key the key to translate
-	 * @param args the formatting arguments
-	 * @return the translation
-	 */
-	public static String translate(String key, Object... args) {
-		return LocaleAcc.instance.getCurrentLocale().formatMessage(key, args);
-	}
+    /**
+     * <p>Translate the given key and pass the result to {@link String#format(String, Object...)} with the given args.</p>
+     *
+     * @param key  the key to translate
+     * @param args the formatting arguments
+     * @return the translation
+     */
+    public static String translate(String key, Object... args) {
+        return LocaleAcc.instance.getCurrentLocale().formatMessage(key, args);
+    }
 
     private interface LocaleAcc {
 
@@ -45,5 +47,6 @@ public final class I18n {
 
     }
 
-	private I18n() { }
+    private I18n() {
+    }
 }

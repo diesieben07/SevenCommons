@@ -18,11 +18,12 @@ import java.lang.annotation.Target;
  * <p>Example:<pre><code>
  * &#0064;Construct
  * FooBar newFoobar(int a, String b);
- *
+ * <p>
  * FooBar newFoobar(int a, String b) {
  *     return new FooBar(a, b);
  * }
  * </code></pre></p>
+ *
  * @author diesieben07
  */
 @Retention(RetentionPolicy.RUNTIME)

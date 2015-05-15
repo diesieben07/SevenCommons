@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * @author diesieben07
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.METHOD })
+@Target({ElementType.FIELD, ElementType.METHOD})
 public @interface SerializationMethod {
 
     SerializationMethod.Method value();

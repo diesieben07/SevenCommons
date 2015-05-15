@@ -5,236 +5,247 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * <p>A target for shift-clicks, used with {@link de.take_weiland.mods.commons.inv.SpecialShiftClick}.</p>
  * <p>Instances of this class must <i>not</i> be reused.</p>
+ *
  * @author diesieben07
  */
 public abstract class ShiftClickTarget {
 
-	/**
-	 * <p>Tries to merge the stack with one of the Slots between {@code from} and {@code to} (inclusive).</p>
-	 * <p>If {@code from} is greater than {@code to}, the range will be iterated in reverse ({@code to} to {@code from}).</p>
-	 * @param from first slot
-	 * @param to last slot
-	 * @return a ShiftClickTarget
-	 */
-	public static ShiftClickTarget range(int from, int to) {
-		checkArgument(from >= 0 && to >= 0, "to and from must be >= 0");
-		if (to == from) {
-			return of(to);
-		} else if (to > from) {
-			return new RevRange(from, to);
-		} else {
-			return new Range(from, to);
-		}
-	}
+    /**
+     * <p>Tries to merge the stack with one of the Slots between {@code from} and {@code to} (inclusive).</p>
+     * <p>If {@code from} is greater than {@code to}, the range will be iterated in reverse ({@code to} to {@code from}).</p>
+     *
+     * @param from first slot
+     * @param to   last slot
+     * @return a ShiftClickTarget
+     */
+    public static ShiftClickTarget range(int from, int to) {
+        checkArgument(from >= 0 && to >= 0, "to and from must be >= 0");
+        if (to == from) {
+            return of(to);
+        } else if (to > from) {
+            return new RevRange(from, to);
+        } else {
+            return new Range(from, to);
+        }
+    }
 
-	/**
-	 * <p>Discard the shift-click, don't move the ItemStack at all.</p>
-	 * @return a ShiftClickTarget
-	 */
-	public static ShiftClickTarget none() {
-		return None.INSTANCE;
-	}
+    /**
+     * <p>Discard the shift-click, don't move the ItemStack at all.</p>
+     *
+     * @return a ShiftClickTarget
+     */
+    public static ShiftClickTarget none() {
+        return None.INSTANCE;
+    }
 
-	/**
-	 * <p>Use the default behavior.</p>
-	 * @return a ShiftClickTarget
-	 */
-	public static ShiftClickTarget standard() {
-		return Standard.INSTANCE;
-	}
+    /**
+     * <p>Use the default behavior.</p>
+     *
+     * @return a ShiftClickTarget
+     */
+    public static ShiftClickTarget standard() {
+        return Standard.INSTANCE;
+    }
 
-	/**
-	 * <p>Tries to merge the stack with the single given slot.</p>
-	 * @param slot the slot
-	 * @return a ShiftClickTarget
-	 */
-	public static ShiftClickTarget of(int slot) {
-		return new One(slot);
-	}
+    /**
+     * <p>Tries to merge the stack with the single given slot.</p>
+     *
+     * @param slot the slot
+     * @return a ShiftClickTarget
+     */
+    public static ShiftClickTarget of(int slot) {
+        return new One(slot);
+    }
 
-	/**
-	 * <p>Tries to merge the stack with the given slots in the order provided.</p>
-	 * @param slots the slots
-	 * @return a ShiftClickTarget
-	 */
-	public static ShiftClickTarget of(int... slots) {
-		int len = slots.length;
-		if (len == 0) {
-			return none();
-		} else if (len == 1) {
-			return of(slots[0]);
-		}
-		return new ForArray(slots);
-	}
+    /**
+     * <p>Tries to merge the stack with the given slots in the order provided.</p>
+     *
+     * @param slots the slots
+     * @return a ShiftClickTarget
+     */
+    public static ShiftClickTarget of(int... slots) {
+        int len = slots.length;
+        if (len == 0) {
+            return none();
+        } else if (len == 1) {
+            return of(slots[0]);
+        }
+        return new ForArray(slots);
+    }
 
-	ShiftClickTarget() { }
+    ShiftClickTarget() {
+    }
 
-	abstract boolean hasNext();
-	abstract int next();
-	abstract void reset();
-	boolean isStandard() {
-		return false;
-	}
+    abstract boolean hasNext();
 
-	boolean isNone() {
-		return false;
-	}
+    abstract int next();
 
-	private static final class Range extends ShiftClickTarget {
+    abstract void reset();
 
-		private final int from;
-		private final int to;
-		private int next;
+    boolean isStandard() {
+        return false;
+    }
 
-		Range(int from, int to) {
-			this.from = from;
-			this.to = to;
+    boolean isNone() {
+        return false;
+    }
 
-			this.next = from;
-		}
+    private static final class Range extends ShiftClickTarget {
 
-		@Override
-		boolean hasNext() {
-			return next <= to;
-		}
+        private final int from;
+        private final int to;
+        private int next;
 
-		@Override
-		int next() {
-			return next++;
-		}
+        Range(int from, int to) {
+            this.from = from;
+            this.to = to;
 
-		@Override
-		void reset() {
-			next = from;
-		}
-	}
+            this.next = from;
+        }
 
-	private static final class RevRange extends ShiftClickTarget {
+        @Override
+        boolean hasNext() {
+            return next <= to;
+        }
 
-		private final int from;
-		private final int to;
-		private int next;
+        @Override
+        int next() {
+            return next++;
+        }
 
-		RevRange(int from, int to) {
-			this.from = from;
-			this.to = to;
+        @Override
+        void reset() {
+            next = from;
+        }
+    }
 
-			this.next = to;
-		}
+    private static final class RevRange extends ShiftClickTarget {
 
-		@Override
-		boolean hasNext() {
-			return next >= from;
-		}
+        private final int from;
+        private final int to;
+        private int next;
 
-		@Override
-		int next() {
-			return next--;
-		}
+        RevRange(int from, int to) {
+            this.from = from;
+            this.to = to;
 
-		@Override
-		void reset() {
-			next = to;
-		}
+            this.next = to;
+        }
 
-	}
+        @Override
+        boolean hasNext() {
+            return next >= from;
+        }
 
-	private static final class ForArray extends ShiftClickTarget {
+        @Override
+        int next() {
+            return next--;
+        }
 
-		private final int[] slots;
-		private int curr;
+        @Override
+        void reset() {
+            next = to;
+        }
 
-		ForArray(int[] slots) {
-			this.slots = slots;
-		}
+    }
 
-		@Override
-		boolean hasNext() {
-			return curr != slots.length;
-		}
+    private static final class ForArray extends ShiftClickTarget {
 
-		@Override
-		int next() {
-			return slots[curr++];
-		}
+        private final int[] slots;
+        private int curr;
 
-		@Override
-		void reset() {
-			curr = 0;
-		}
-	}
+        ForArray(int[] slots) {
+            this.slots = slots;
+        }
 
-	private static final class One extends ShiftClickTarget {
+        @Override
+        boolean hasNext() {
+            return curr != slots.length;
+        }
 
-		private final int slot;
-		private boolean done;
+        @Override
+        int next() {
+            return slots[curr++];
+        }
 
-		One(int slot) {
-			this.slot = slot;
-		}
+        @Override
+        void reset() {
+            curr = 0;
+        }
+    }
 
-		@Override
-		boolean hasNext() {
-			return !done;
-		}
+    private static final class One extends ShiftClickTarget {
 
-		@Override
-		int next() {
-			return slot;
-		}
+        private final int slot;
+        private boolean done;
 
-		@Override
-		void reset() {
-			done = false;
-		}
-	}
+        One(int slot) {
+            this.slot = slot;
+        }
 
-	private static final class None extends ShiftClickTarget {
+        @Override
+        boolean hasNext() {
+            return !done;
+        }
 
-		static final None INSTANCE = new None();
+        @Override
+        int next() {
+            return slot;
+        }
 
-		@Override
-		boolean hasNext() {
-			return false;
-		}
+        @Override
+        void reset() {
+            done = false;
+        }
+    }
 
-		@Override
-		int next() {
-			throw new AssertionError();
-		}
+    private static final class None extends ShiftClickTarget {
 
-		@Override
-		void reset() { }
+        static final None INSTANCE = new None();
 
-		@Override
-		boolean isNone() {
-			return true;
-		}
-	}
+        @Override
+        boolean hasNext() {
+            return false;
+        }
 
-	private static final class Standard extends ShiftClickTarget {
+        @Override
+        int next() {
+            throw new AssertionError();
+        }
 
-		static final Standard INSTANCE = new Standard();
+        @Override
+        void reset() {
+        }
 
-		@Override
-		boolean hasNext() {
-			throw new AssertionError();
-		}
+        @Override
+        boolean isNone() {
+            return true;
+        }
+    }
 
-		@Override
-		int next() {
-			throw new AssertionError();
-		}
+    private static final class Standard extends ShiftClickTarget {
 
-		@Override
-		void reset() {
-			throw new AssertionError();
-		}
+        static final Standard INSTANCE = new Standard();
 
-		@Override
-		boolean isStandard() {
-			return true;
-		}
-	}
+        @Override
+        boolean hasNext() {
+            throw new AssertionError();
+        }
+
+        @Override
+        int next() {
+            throw new AssertionError();
+        }
+
+        @Override
+        void reset() {
+            throw new AssertionError();
+        }
+
+        @Override
+        boolean isStandard() {
+            return true;
+        }
+    }
 
 }

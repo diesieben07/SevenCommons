@@ -18,13 +18,13 @@ import java.lang.reflect.InvocationTargetException;
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 public class testmod_sc {
 
-	@Mod.Instance
-	public static testmod_sc instance;
+    @Mod.Instance
+    public static testmod_sc instance;
 
-	private static Block myBlock;
+    private static Block myBlock;
 
-	@Mod.EventHandler
-	public void preInit(FMLPostInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    @Mod.EventHandler
+    public void preInit(FMLPostInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         myBlock = new Block(Material.rock) {
 
             @Override

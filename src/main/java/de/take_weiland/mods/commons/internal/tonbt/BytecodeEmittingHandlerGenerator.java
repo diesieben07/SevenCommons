@@ -162,7 +162,7 @@ final class BytecodeEmittingHandlerGenerator {
         Type nbtDataType = Type.getType(NBTData.class);
 
         Method serializerWrite = getMethod("net.minecraft.nbt.NBTBase writeTo(Object)");
-        Method nbtCompoundSet = new Method(/* MCPNames.method(MCPNames.M_SET_TAG)*/ "setTag", Type.VOID_TYPE, new Type[] { stringType, nbtBaseType });
+        Method nbtCompoundSet = new Method(/* MCPNames.method(MCPNames.M_SET_TAG)*/ "setTag", Type.VOID_TYPE, new Type[]{stringType, nbtBaseType});
         Method serializedNull = new Method("serializedNull", nbtBaseType, new Type[0]);
 
         int valueSlot = -1;
@@ -229,9 +229,9 @@ final class BytecodeEmittingHandlerGenerator {
         Type nbtDataType = Type.getType(NBTData.class);
         Type objectType = Type.getType(Object.class);
 
-        Method nbtCompGetTag = new Method("getTag", nbtBaseType, new Type[] { stringType });
-        Method serializerRead = new Method("read", objectType, new Type[] { objectType, nbtBaseType });
-        Method isSerNull = new Method("isSerializedNull", BOOLEAN_TYPE, new Type[] { nbtBaseType });
+        Method nbtCompGetTag = new Method("getTag", nbtBaseType, new Type[]{stringType});
+        Method serializerRead = new Method("read", objectType, new Type[]{objectType, nbtBaseType});
+        Method isSerNull = new Method("isSerializedNull", BOOLEAN_TYPE, new Type[]{nbtBaseType});
 
         final int nbtTagSlot = gen.newLocal(nbtBaseType);
 
@@ -312,7 +312,7 @@ final class BytecodeEmittingHandlerGenerator {
         Type objectType = Type.getType(Object.class);
         Type methodHandleType = Type.getType(MethodHandle.class);
 
-        gen.invokeVirtual(methodHandleType, new Method("invokeExact", VOID_TYPE, new Type[] { objectType, propertyType }));
+        gen.invokeVirtual(methodHandleType, new Method("invokeExact", VOID_TYPE, new Type[]{objectType, propertyType}));
     }
 
     private Class<? extends ToNbtHandler> finish() {

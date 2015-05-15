@@ -13,6 +13,7 @@ import java.util.function.BiConsumer;
  *         .register(...)
  *         .build();
  * </code></pre></p>
+ *
  * @author diesieben07
  */
 public interface SimpleChannelBuilder {

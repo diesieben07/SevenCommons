@@ -9,11 +9,12 @@ import java.util.List;
  */
 public interface EntityProxy {
 
-	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/EntityProxy";
-	public static final String GET_PROPERTIES = "_sc$getPropsCompanions";
-	public static final String SET_PROPERTIES = "_sc$setPropsCompanions";
+    public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/EntityProxy";
+    public static final String GET_PROPERTIES = "_sc$getPropsCompanions";
+    public static final String SET_PROPERTIES = "_sc$setPropsCompanions";
 
-	List<IEEPSyncCompanion> _sc$getPropsCompanions();
-	void _sc$setPropsCompanions(List<IEEPSyncCompanion> props);
+    List<IEEPSyncCompanion> _sc$getPropsCompanions();
+
+    void _sc$setPropsCompanions(List<IEEPSyncCompanion> props);
 
 }

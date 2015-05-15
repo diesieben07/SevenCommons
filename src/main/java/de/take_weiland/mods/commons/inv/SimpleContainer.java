@@ -9,27 +9,28 @@ import net.minecraft.inventory.Slot;
  */
 public class SimpleContainer<T extends IInventory> extends AbstractContainer<T> {
 
-	public SimpleContainer(T upper, EntityPlayer player) {
-		// suppress player inventory addition
-		super(upper, player, -1, -1);
-	}
+    public SimpleContainer(T upper, EntityPlayer player) {
+        // suppress player inventory addition
+        super(upper, player, -1, -1);
+    }
 
-	@Override
-	protected final void addSlots() { }
+    @Override
+    protected final void addSlots() {
+    }
 
-	public final SimpleContainer<T> addSlot(Slot slot) {
-		addSlotToContainer(slot);
-		return this;
-	}
+    public final SimpleContainer<T> addSlot(Slot slot) {
+        addSlotToContainer(slot);
+        return this;
+    }
 
-	public final SimpleContainer<T> addPlayerInventory() {
-		Containers.addPlayerInventory(this, player.inventory);
-		return this;
-	}
+    public final SimpleContainer<T> addPlayerInventory() {
+        Containers.addPlayerInventory(this, player.inventory);
+        return this;
+    }
 
-	public final SimpleContainer<T> addPlayerInventory(int x, int y) {
-		Containers.addPlayerInventory(this, player.inventory, x, y);
-		return this;
-	}
+    public final SimpleContainer<T> addPlayerInventory(int x, int y) {
+        Containers.addPlayerInventory(this, player.inventory, x, y);
+        return this;
+    }
 
 }

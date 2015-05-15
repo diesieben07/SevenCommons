@@ -6,13 +6,13 @@ import net.minecraft.item.ItemStack;
 
 public class BasicSlot extends Slot {
 
-	public BasicSlot(IInventory inventory, int index, int x, int y) {
-		super(inventory, index, x, y);
-	}
+    public BasicSlot(IInventory inventory, int index, int x, int y) {
+        super(inventory, index, x, y);
+    }
 
-	@Override
-	public boolean isItemValid(ItemStack stack) {
-		return inventory.isItemValidForSlot(slotNumber, stack);
-	}
+    @Override
+    public boolean isItemValid(ItemStack stack) {
+        return inventory.isItemValidForSlot(slotNumber, stack);
+    }
 
 }

@@ -8,15 +8,17 @@ import org.apache.logging.log4j.Logger;
  */
 public final class Logging {
 
-	/**
-	 * <p>Create a new Logger suitable for use in Minecraft using the given channel.</p>
-	 * @param channel the logging channel
-	 * @return a Logger
-	 */
-	public static Logger getLogger(String channel) {
-		return LogManager.getLogger(channel);
-	}
+    /**
+     * <p>Create a new Logger suitable for use in Minecraft using the given channel.</p>
+     *
+     * @param channel the logging channel
+     * @return a Logger
+     */
+    public static Logger getLogger(String channel) {
+        return LogManager.getLogger(channel);
+    }
 
-	private Logging() { }
+    private Logging() {
+    }
 
 }

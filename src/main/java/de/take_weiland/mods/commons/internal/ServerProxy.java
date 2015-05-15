@@ -7,27 +7,27 @@ import net.minecraft.network.Packet;
 
 public class ServerProxy implements SevenCommonsProxy {
 
-	@Override
-	public void preInit(FMLPreInitializationEvent event) {
-	}
+    @Override
+    public void preInit(FMLPreInitializationEvent event) {
+    }
 
-	@Override
-	public void sendPacketToServer(Packet p) {
-		throw new IllegalStateException("Server cannot send Packet to itself!");
-	}
+    @Override
+    public void sendPacketToServer(Packet p) {
+        throw new IllegalStateException("Server cannot send Packet to itself!");
+    }
 
-	@Override
-	public EntityPlayer getClientPlayer() {
-		throw new IllegalStateException("Server has no client player!");
-	}
+    @Override
+    public EntityPlayer getClientPlayer() {
+        throw new IllegalStateException("Server has no client player!");
+    }
 
-	@Override
-	public String translate(String key) {
-		throw new IllegalStateException("Tried to translate on the server, use ChatMessageComponent or translate on the client");
-	}
+    @Override
+    public String translate(String key) {
+        throw new IllegalStateException("Tried to translate on the server, use ChatMessageComponent or translate on the client");
+    }
 
-	@Override
-	public NetworkManager getClientNetworkManager() {
-		throw new IllegalStateException("Tried to send packet to the server on the server!");
-	}
+    @Override
+    public NetworkManager getClientNetworkManager() {
+        throw new IllegalStateException("Tried to send packet to the server on the server!");
+    }
 }

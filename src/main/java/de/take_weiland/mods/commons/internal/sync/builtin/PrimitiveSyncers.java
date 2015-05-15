@@ -97,6 +97,7 @@ enum IntSyncer implements Syncer.ForImmutable<Integer> {
     public void encode(Integer val, MCDataOutput out) {
         out.writeInt(val);
     }
+
     @Override
     public Class<Integer> companionType() {
         return int.class;

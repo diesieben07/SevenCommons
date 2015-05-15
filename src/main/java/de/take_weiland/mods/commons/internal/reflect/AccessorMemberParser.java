@@ -124,7 +124,8 @@ final class AccessorMemberParser {
             if (!Modifier.isStatic(instanceMethod.getModifiers())) {
                 return instanceMethod;
             }
-        } catch (NoSuchMethodException ignored) { }
+        } catch (NoSuchMethodException ignored) {
+        }
 
         Class<?>[] params = getParameterTypes(method, 0);
         try {
@@ -132,7 +133,8 @@ final class AccessorMemberParser {
             if (Modifier.isStatic(staticMethod.getModifiers())) {
                 return staticMethod;
             }
-        } catch (NoSuchMethodException ignored) { }
+        } catch (NoSuchMethodException ignored) {
+        }
         throw new IllegalAccessorException("No suitable target method found");
     }
 

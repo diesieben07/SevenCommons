@@ -7,11 +7,11 @@ package de.take_weiland.mods.commons.meta;
  */
 public interface Subtype {
 
-	/**
-	 * <p>The name of this subtype. Will be used with the Block's or Item's unlocalized name to construct the full name.</p>
-	 *
-	 * @return a name for this subtype
-	 */
-	String subtypeName();
+    /**
+     * <p>The name of this subtype. Will be used with the Block's or Item's unlocalized name to construct the full name.</p>
+     *
+     * @return a name for this subtype
+     */
+    String subtypeName();
 
 }

@@ -6,8 +6,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
 /**
-* @author diesieben07
-*/
+ * @author diesieben07
+ */
 public class PlayerProps implements IExtendedEntityProperties, SyncedInterface {
 
     private String someString;

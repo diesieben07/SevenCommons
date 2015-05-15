@@ -11,13 +11,15 @@ import java.util.Random;
  */
 public class TestTE extends SuperTE implements SyncedInterface {
 
-    @Sync @ToNbt
+    @Sync
+    @ToNbt
     public String test = "__nullval__";
 
     @Sync
     Integer foobarusMax;
 
-    @Sync @ToNbt
+    @Sync
+    @ToNbt
     float syncFoobar;
 
     private int tick;

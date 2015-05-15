@@ -33,18 +33,19 @@ import java.util.List;
 @SuppressWarnings("unused")
 public final class ASMHooks {
 
-	public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/ASMHooks";
-	public static final String ON_START_TRACKING = "onStartTracking";
-	public static final String ON_PLAYER_CLONE = "onPlayerClone";
-	public static final String NEW_SYNC_STREAM = "newSyncStream";
-	public static final String SEND_SYNC_STREAM = "sendSyncStream";
-	public static final String FIND_CONTAINER_INVS = "findContainerInvs";
-	public static final String ON_LISTENER_ADDED = "onListenerAdded";
-	public static final String IS_USEABLE_CLIENT = "isUseableClient";
+    public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/ASMHooks";
+    public static final String ON_START_TRACKING = "onStartTracking";
+    public static final String ON_PLAYER_CLONE = "onPlayerClone";
+    public static final String NEW_SYNC_STREAM = "newSyncStream";
+    public static final String SEND_SYNC_STREAM = "sendSyncStream";
+    public static final String FIND_CONTAINER_INVS = "findContainerInvs";
+    public static final String ON_LISTENER_ADDED = "onListenerAdded";
+    public static final String IS_USEABLE_CLIENT = "isUseableClient";
     public static final String INVOKE_SYNC_COMP_CHECK = "invokeSyncCompanionCheck";
     public static final String ON_GUI_INIT = "onGuiInit";
 
-    private ASMHooks() { }
+    private ASMHooks() {
+    }
 
     public static void invokeSyncCompanionCheck(Object obj, SyncCompanion companion) {
         if (companion != null) {
@@ -67,12 +68,14 @@ public final class ASMHooks {
 
     private static void tickIEEPCompanionsNonNull(List<IEEPSyncCompanion> props) {
         int i = props.size();
-	    do {
-		    if (--i < 0) return;
+        do {
+            if (--i < 0) {
+                return;
+            }
 
-		    IEEPSyncCompanion companion = props.get(i);
-		    companion.check(companion._sc$ieep, false);
-	    } while (true);
+            IEEPSyncCompanion companion = props.get(i);
+            companion.check(companion._sc$ieep, false);
+        } while (true);
     }
 
     public static final String ON_NEW_ENTITY_PROPS = "onNewEntityProps";
@@ -105,72 +108,72 @@ public final class ASMHooks {
         companions.add(index, companion);
     }
 
-	public static final String WRITE_NBT_HOOK = "writeToNbtHook";
+    public static final String WRITE_NBT_HOOK = "writeToNbtHook";
 
-	public static void writeToNbtHook(Object obj, NBTTagCompound nbt) {
-		ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
-		if (handler != null) {
-			handler.write(obj, nbt);
-		}
-	}
+    public static void writeToNbtHook(Object obj, NBTTagCompound nbt) {
+        ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
+        if (handler != null) {
+            handler.write(obj, nbt);
+        }
+    }
 
-	public static final String READ_NBT_HOOK = "readFromNbtHook";
+    public static final String READ_NBT_HOOK = "readFromNbtHook";
 
-	public static void readFromNbtHook(Object obj, NBTTagCompound nbt) {
-		ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
-		if (handler != null) {
-			handler.read(obj, nbt);
-		}
-	}
+    public static void readFromNbtHook(Object obj, NBTTagCompound nbt) {
+        ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
+        if (handler != null) {
+            handler.read(obj, nbt);
+        }
+    }
 
-	public static final String IEEP_READ_NBT_HOOK = "readFromNBTIEEP";
+    public static final String IEEP_READ_NBT_HOOK = "readFromNBTIEEP";
 
-	public static void readFromNBTIEEP(Object obj, String ident, NBTTagCompound nbt) {
-		ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
-		if (handler != null) {
-			handler.read(obj, nbt.getCompoundTag(ident));
-		}
-	}
+    public static void readFromNBTIEEP(Object obj, String ident, NBTTagCompound nbt) {
+        ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
+        if (handler != null) {
+            handler.read(obj, nbt.getCompoundTag(ident));
+        }
+    }
 
-	public static final String IEEP_WRITE_NBT_HOOK = "writeToNBTIEEP";
+    public static final String IEEP_WRITE_NBT_HOOK = "writeToNBTIEEP";
 
-	public static void writeToNBTIEEP(Object obj, String ident, NBTTagCompound nbt) {
-		ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
-		if (handler != null) {
-			handler.write(obj, NBT.getOrCreateCompound(nbt, ident));
-		}
-	}
+    public static void writeToNBTIEEP(Object obj, String ident, NBTTagCompound nbt) {
+        ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
+        if (handler != null) {
+            handler.write(obj, NBT.getOrCreateCompound(nbt, ident));
+        }
+    }
 
     @SideOnly(Side.CLIENT)
-	public static boolean isUseableClient(Slot slot) {
-		return slot != null && slot.canTakeStack(Minecraft.getMinecraft().thePlayer);
-	}
+    public static boolean isUseableClient(Slot slot) {
+        return slot != null && slot.canTakeStack(Minecraft.getMinecraft().thePlayer);
+    }
 
-	public static void onListenerAdded(Container container, ICrafting listener) {
-		if (listener instanceof EntityPlayerMP) {
-			List<IInventory> invs = Containers.getInventories(container).asList();
-			for (int i = 0, len = invs.size(); i < len; i++) {
-				IInventory inv = invs.get(i);
-				if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
-					// TODO
-					//new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
-				}
-			}
-		}
-	}
+    public static void onListenerAdded(Container container, ICrafting listener) {
+        if (listener instanceof EntityPlayerMP) {
+            List<IInventory> invs = Containers.getInventories(container).asList();
+            for (int i = 0, len = invs.size(); i < len; i++) {
+                IInventory inv = invs.get(i);
+                if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
+                    // TODO
+                    //new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
+                }
+            }
+        }
+    }
 
-	public static ImmutableSet<IInventory> findContainerInvs(Container container) {
-		IInventory last = null;
-		ImmutableSet.Builder<IInventory> builder = ImmutableSet.builder();
+    public static ImmutableSet<IInventory> findContainerInvs(Container container) {
+        IInventory last = null;
+        ImmutableSet.Builder<IInventory> builder = ImmutableSet.builder();
 
-		@SuppressWarnings("unchecked")
-		List<Slot> slots = container.inventorySlots;
-		for (Slot slot : slots) {
-			if (slot.inventory != last) {
-				builder.add((last = slot.inventory));
-			}
-		}
-		return builder.build();
-	}
+        @SuppressWarnings("unchecked")
+        List<Slot> slots = container.inventorySlots;
+        for (Slot slot : slots) {
+            if (slot.inventory != last) {
+                builder.add((last = slot.inventory));
+            }
+        }
+        return builder.build();
+    }
 
 }

@@ -11,12 +11,13 @@ import javax.annotation.Nullable;
  */
 public interface ScreenWithParent {
 
-	/**
-	 * <p>The parent screen to open when this GuiScreen closes.</p>
-	 * <p>You can return null from this method to indicate that no screen should be opened.</p>
-	 * @return the parent screen
-	 */
-	@Nullable
-	GuiScreen getParentScreen();
+    /**
+     * <p>The parent screen to open when this GuiScreen closes.</p>
+     * <p>You can return null from this method to indicate that no screen should be opened.</p>
+     *
+     * @return the parent screen
+     */
+    @Nullable
+    GuiScreen getParentScreen();
 
 }

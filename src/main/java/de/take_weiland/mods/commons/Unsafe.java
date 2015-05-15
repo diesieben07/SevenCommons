@@ -11,7 +11,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  *
  * @author diesieben07
  */
-@Target({ TYPE, METHOD, CONSTRUCTOR, FIELD })
+@Target({TYPE, METHOD, CONSTRUCTOR, FIELD})
 @Retention(SOURCE)
 public @interface Unsafe {
 

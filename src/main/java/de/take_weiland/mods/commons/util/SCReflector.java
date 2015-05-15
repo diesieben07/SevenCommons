@@ -39,83 +39,83 @@ import static de.take_weiland.mods.commons.asm.MCPNames.*;
  */
 public interface SCReflector {
 
-	SCReflector instance = SCReflection.createAccessor(SCReflector.class);
+    SCReflector instance = SCReflection.createAccessor(SCReflector.class);
 
-	/**
-	 * For cleaner code use {@link de.take_weiland.mods.commons.nbt.NBT#asList(net.minecraft.nbt.NBTTagList)}
-	 */
-	@Unsafe
-	@Getter(field = F_TAG_LIST, srg = true)
-	<T extends NBTBase> List<T> getWrappedList(NBTTagList list);
+    /**
+     * For cleaner code use {@link de.take_weiland.mods.commons.nbt.NBT#asList(net.minecraft.nbt.NBTTagList)}
+     */
+    @Unsafe
+    @Getter(field = F_TAG_LIST, srg = true)
+    <T extends NBTBase> List<T> getWrappedList(NBTTagList list);
 
-	@Unsafe
-	@Getter(field = F_TAG_MAP, srg = true)
-	Map<String, NBTBase> getWrappedMap(NBTTagCompound nbt);
+    @Unsafe
+    @Getter(field = F_TAG_MAP, srg = true)
+    Map<String, NBTBase> getWrappedMap(NBTTagCompound nbt);
 
-	@Getter(field = F_TRACKED_ENTITY_IDS, srg = true)
-	IntHashMap getTrackerMap(EntityTracker tracker);
-
-	@SideOnly(Side.CLIENT)
-	@Getter(field = F_MAP_TEXTURE_OBJECTS, srg = true)
-	Map<ResourceLocation, ITextureObject> getTexturesMap(TextureManager manager);
-
-	@Getter(field = F_UNLOCALIZED_NAME_BLOCK, srg = true)
-	String getRawUnlocalizedName(Block block);
-
-	@Invoke(method = M_SET_HAS_SUBTYPES, srg = true)
-	Item setHasSubtypes(Item item, boolean value);
-
-	@Getter(field = F_ICON_STRING, srg = true)
-	String getRawIconName(Item item);
-
-	@Getter(field = F_UNLOCALIZED_NAME_ITEM, srg = true)
-	String getRawUnlocalizedName(Item item);
-
-	@Getter(field = F_TEXTURE_NAME_BLOCK, srg = true)
-	String getRawIconName(Block block);
+    @Getter(field = F_TRACKED_ENTITY_IDS, srg = true)
+    IntHashMap getTrackerMap(EntityTracker tracker);
 
     @SideOnly(Side.CLIENT)
-	@Invoke(method = M_GET_ICON_STRING, srg = true)
-	String getIconName(Item item);
+    @Getter(field = F_MAP_TEXTURE_OBJECTS, srg = true)
+    Map<ResourceLocation, ITextureObject> getTexturesMap(TextureManager manager);
+
+    @Getter(field = F_UNLOCALIZED_NAME_BLOCK, srg = true)
+    String getRawUnlocalizedName(Block block);
+
+    @Invoke(method = M_SET_HAS_SUBTYPES, srg = true)
+    Item setHasSubtypes(Item item, boolean value);
+
+    @Getter(field = F_ICON_STRING, srg = true)
+    String getRawIconName(Item item);
+
+    @Getter(field = F_UNLOCALIZED_NAME_ITEM, srg = true)
+    String getRawUnlocalizedName(Item item);
+
+    @Getter(field = F_TEXTURE_NAME_BLOCK, srg = true)
+    String getRawIconName(Block block);
 
     @SideOnly(Side.CLIENT)
-	@Invoke(method = M_BLOCK_GET_TEXTURE_NAME, srg = true)
-	String getIconName(Block block);
+    @Invoke(method = M_GET_ICON_STRING, srg = true)
+    String getIconName(Item item);
 
-	@SideOnly(Side.CLIENT)
-	@Invoke(method = M_ACTION_PERFORMED, srg = true)
-	void actionPerformed(GuiScreen screen, GuiButton button);
+    @SideOnly(Side.CLIENT)
+    @Invoke(method = M_BLOCK_GET_TEXTURE_NAME, srg = true)
+    String getIconName(Block block);
 
-	@SideOnly(Side.CLIENT)
-	@Getter(field = F_Z_LEVEL, srg = true)
-	float getZLevel(Gui gui);
+    @SideOnly(Side.CLIENT)
+    @Invoke(method = M_ACTION_PERFORMED, srg = true)
+    void actionPerformed(GuiScreen screen, GuiButton button);
 
-	@Invoke(method = M_ADD_SLOT_TO_CONTAINER, srg = true)
-	Slot addSlot(Container container, Slot slot);
+    @SideOnly(Side.CLIENT)
+    @Getter(field = F_Z_LEVEL, srg = true)
+    float getZLevel(Gui gui);
 
-	@Invoke(method = M_MERGE_ITEM_STACK, srg = true)
-	boolean mergeItemStack(Container container, ItemStack stack, int slotStart, int slotEnd, boolean direction);
+    @Invoke(method = M_ADD_SLOT_TO_CONTAINER, srg = true)
+    Slot addSlot(Container container, Slot slot);
 
-	@Getter(field = F_CRAFTERS, srg = true)
-	List<ICrafting> getCrafters(Container container);
+    @Invoke(method = M_MERGE_ITEM_STACK, srg = true)
+    boolean mergeItemStack(Container container, ItemStack stack, int slotStart, int slotEnd, boolean direction);
 
-	@Invoke(method = M_NBT_WRITE, srg = true)
-	void write(NBTBase nbt, DataOutput out) throws IOException;
+    @Getter(field = F_CRAFTERS, srg = true)
+    List<ICrafting> getCrafters(Container container);
 
-	@Invoke(method = M_NBT_LOAD, srg = true)
-	void load(NBTBase nbt, DataInput in, int depth, NBTSizeTracker tracker) throws IOException;
+    @Invoke(method = M_NBT_WRITE, srg = true)
+    void write(NBTBase nbt, DataOutput out) throws IOException;
+
+    @Invoke(method = M_NBT_LOAD, srg = true)
+    void load(NBTBase nbt, DataInput in, int depth, NBTSizeTracker tracker) throws IOException;
 
     @Invoke(method = "func_150284_a", target = NBTBase.class)
-	NBTBase newNBTTag(byte id);
+    NBTBase newNBTTag(byte id);
 
-	@Getter(field = F_ITEM_DAMAGE, srg = true)
-	int getRawItemDamage(ItemStack stack);
+    @Getter(field = F_ITEM_DAMAGE, srg = true)
+    int getRawItemDamage(ItemStack stack);
 
-	@Setter(field = F_ITEM_DAMAGE, srg = true)
-	void setRawDamage(ItemStack stack, int damage);
+    @Setter(field = F_ITEM_DAMAGE, srg = true)
+    void setRawDamage(ItemStack stack, int damage);
 
-	@Unsafe
-	@Construct
-	String createStringShared(char[] arr, boolean dummy);
+    @Unsafe
+    @Construct
+    String createStringShared(char[] arr, boolean dummy);
 
 }

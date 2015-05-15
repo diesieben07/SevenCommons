@@ -8,9 +8,9 @@ import net.minecraft.inventory.IInventory;
  */
 public interface ContainerProxy {
 
-	String CLASS_NAME = "de/take_weiland/mods/commons/internal/ContainerProxy";
-	String GET_INVENTORIES = "_sc$getInventories";
+    String CLASS_NAME = "de/take_weiland/mods/commons/internal/ContainerProxy";
+    String GET_INVENTORIES = "_sc$getInventories";
 
-	ImmutableSet<IInventory> _sc$getInventories();
+    ImmutableSet<IInventory> _sc$getInventories();
 
 }

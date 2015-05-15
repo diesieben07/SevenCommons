@@ -26,10 +26,10 @@ public abstract class TypeToFactoryMap<F, FR> {
         if (rawType.isPrimitive()) {
             hierarchy = Arrays.asList(rawType, Object.class);
         } else if (rawType.isInterface()) {
-           hierarchy = Iterables.concat(
-                   JavaUtils.hierarchy(rawType, JavaUtils.Interfaces.INCLUDE),
-                   Collections.singleton(Object.class)
-           );
+            hierarchy = Iterables.concat(
+                    JavaUtils.hierarchy(rawType, JavaUtils.Interfaces.INCLUDE),
+                    Collections.singleton(Object.class)
+            );
         } else {
             hierarchy = JavaUtils.hierarchy(rawType, JavaUtils.Interfaces.INCLUDE);
         }

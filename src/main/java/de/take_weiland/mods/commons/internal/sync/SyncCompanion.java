@@ -8,6 +8,7 @@ import java.util.function.Function;
 
 /**
  * <p>Base class for @Sync companion</p>
+ *
  * @author diesieben07
  */
 public abstract class SyncCompanion {
@@ -17,7 +18,8 @@ public abstract class SyncCompanion {
 
     /**
      * <p>Called to check for changes, does everything to make sure the client object is up to date.</p>
-     * @param instance the actual object
+     *
+     * @param instance    the actual object
      * @param isSuperCall if this is a super call from an extending companion (used to prevent sending the packet prematurely)
      * @return the OutputStream that is being written to, might be null
      */
@@ -27,8 +29,9 @@ public abstract class SyncCompanion {
 
     /**
      * <p>Called to read the data on the client.</p>
+     *
      * @param instance the actual object
-     * @param in the InputStream
+     * @param in       the InputStream
      * @return last read ID, 0 for end of stream
      */
     public abstract int read(Object instance, MCDataInput in);

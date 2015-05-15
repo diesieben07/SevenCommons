@@ -14,7 +14,7 @@ import java.util.List;
  */
 enum SyncType {
 
-	TILE_ENTITY {
+    TILE_ENTITY {
         @Override
         public boolean doRead(EntityPlayer player, MCDataInput in) {
             SyncedObjectProxy te = (SyncedObjectProxy) player.worldObj.getTileEntity(in.readInt(), in.readUnsignedByte(), in.readInt());
@@ -30,7 +30,7 @@ enum SyncType {
         }
 
     },
-	ENTITY {
+    ENTITY {
         @Override
         public boolean doRead(EntityPlayer player, MCDataInput in) {
             SyncedObjectProxy entity = (SyncedObjectProxy) player.worldObj.getEntityByID(in.readInt());
@@ -46,7 +46,7 @@ enum SyncType {
         }
 
     },
-	CONTAINER {
+    CONTAINER {
         @Override
         public boolean doRead(EntityPlayer player, MCDataInput in) {
             Container container = player.openContainer;
@@ -59,7 +59,7 @@ enum SyncType {
         }
 
     },
-	ENTITY_PROPS {
+    ENTITY_PROPS {
         @Override
         public boolean doRead(EntityPlayer player, MCDataInput in) {
             int entityId = in.readInt();

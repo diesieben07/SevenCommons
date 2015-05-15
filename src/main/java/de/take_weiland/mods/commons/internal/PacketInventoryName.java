@@ -11,15 +11,15 @@ import net.minecraft.inventory.IInventory;
 @Packet.Receiver(Side.CLIENT)
 public final class PacketInventoryName implements Packet {
 
-	private final int windowId;
-	private final int invIdx;
-	private final String name;
+    private final int windowId;
+    private final int invIdx;
+    private final String name;
 
-	public PacketInventoryName(int windowId, int invIdx, String name) {
-		this.windowId = windowId;
-		this.invIdx = invIdx;
-		this.name = name;
-	}
+    public PacketInventoryName(int windowId, int invIdx, String name) {
+        this.windowId = windowId;
+        this.invIdx = invIdx;
+        this.name = name;
+    }
 
     PacketInventoryName(MCDataInput in) {
         windowId = in.readByte();
@@ -35,11 +35,11 @@ public final class PacketInventoryName implements Packet {
     }
 
     void handle(EntityPlayer player) {
-		if (player.openContainer.windowId == windowId) {
-			IInventory inv = JavaUtils.get(Containers.getInventories(player.openContainer).asList(), invIdx);
-			if (inv instanceof NameableInventory) {
-				((NameableInventory) inv).setCustomName(name);
-			}
-		}
-	}
+        if (player.openContainer.windowId == windowId) {
+            IInventory inv = JavaUtils.get(Containers.getInventories(player.openContainer).asList(), invIdx);
+            if (inv instanceof NameableInventory) {
+                ((NameableInventory) inv).setCustomName(name);
+            }
+        }
+    }
 }

@@ -22,10 +22,12 @@ public final class NBTData {
     public static final byte NULL = -1;
     public static final String NULL_KEY = "_sc$null";
 
-    private NBTData() { }
+    private NBTData() {
+    }
 
     /**
      * <p>Write the given String to NBT.</p>
+     *
      * @param s the String
      * @return NBT data
      */
@@ -36,6 +38,7 @@ public final class NBTData {
 
     /**
      * <p>Read a String from NBT.</p>
+     *
      * @param nbt the NBT data
      * @return a String
      */
@@ -82,6 +85,7 @@ public final class NBTData {
 
     /**
      * <p>Write the given UUID to NBT.</p>
+     *
      * @param uuid the UUID
      * @return NBT data
      */
@@ -99,6 +103,7 @@ public final class NBTData {
 
     /**
      * <p>Read an UUID from NBT.</p>
+     *
      * @param nbt the NBT data
      * @return an UUID
      */
@@ -114,6 +119,7 @@ public final class NBTData {
 
     /**
      * <p>Write the given ItemStack to NBT.</p>
+     *
      * @param stack the ItemStack
      * @return NBT data
      */
@@ -124,6 +130,7 @@ public final class NBTData {
 
     /**
      * <p>Read an ItemStack from NBT.</p>
+     *
      * @param nbt the NBT data
      * @return an ItemStack
      */
@@ -134,6 +141,7 @@ public final class NBTData {
 
     /**
      * <p>Write the given FluidStack to NBT.</p>
+     *
      * @param stack the FluidStack
      * @return NBT data
      */
@@ -144,6 +152,7 @@ public final class NBTData {
 
     /**
      * <p>Read a FluidStack from NBT.</p>
+     *
      * @param nbt the NBT data
      * @return a FluidStack
      */
@@ -154,6 +163,7 @@ public final class NBTData {
 
     /**
      * <p>Write the given Enum to NBT.</p>
+     *
      * @param e the Enum
      * @return NBT data
      */
@@ -168,7 +178,8 @@ public final class NBTData {
 
     /**
      * <p>Read an Enum of the given Class from NBT.</p>
-     * @param nbt the NBT data
+     *
+     * @param nbt   the NBT data
      * @param clazz the Class of the Enum to read
      * @return an Enum
      */
@@ -228,6 +239,7 @@ public final class NBTData {
 
     /**
      * <p>Get an NBT Tag that represents {@code null}.</p>
+     *
      * @return NBT data
      * @see #isSerializedNull(net.minecraft.nbt.NBTBase)
      */
@@ -240,6 +252,7 @@ public final class NBTData {
 
     /**
      * <p>Check if the given NBT Tag is null or represents a serialized {@code null} reference.</p>
+     *
      * @param nbt the NBT data
      * @return true if the NBT data represents null
      * @see #serializedNull()

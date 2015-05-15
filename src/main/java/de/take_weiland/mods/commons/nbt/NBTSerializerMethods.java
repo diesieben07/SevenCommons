@@ -47,7 +47,7 @@ final class NBTSerializerMethods {
             IS_ID = lookup.findStatic(NBTSerializerMethods.class, "isDesiredID", methodType(boolean.class, NBTBase.class, int.class));
             IS_NONNULL_AND_ID = lookup.findStatic(NBTSerializerMethods.class, "isNonnullAndID", methodType(boolean.class, NBTBase.class, int.class));
             IS_NONNULL_AND_NOT_SERNULL = lookup.findStatic(NBTSerializerMethods.class, "isNonNullAndNotSerNull", methodType(boolean.class, NBTBase.class));
-        } catch(ReflectiveOperationException e) {
+        } catch (ReflectiveOperationException e) {
             throw Throwables.propagate(e);
         }
     }
@@ -86,5 +86,6 @@ final class NBTSerializerMethods {
         return nbt != null && (nbt.getId() != NBT.TAG_COMPOUND || ((NBTTagCompound) nbt).getByte(NBTData.NULL_KEY) == NBTData.NULL);
     }
 
-    private NBTSerializerMethods() { }
+    private NBTSerializerMethods() {
+    }
 }

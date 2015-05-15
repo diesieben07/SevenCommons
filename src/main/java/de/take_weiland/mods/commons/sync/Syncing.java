@@ -6,6 +6,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * <p>Registry for SyncerFactory.</p>
+ *
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
@@ -16,12 +17,14 @@ public final class Syncing {
      * or a subclass or subinterface (e.g. a field of type {@code String} will query all factories registered for types
      * {@code String}, {@code Serializable}, {@code Comparable}, {@code CharSequence}, {@code Object} in that order).
      * If baseClass is Object, the factory will also receive callbacks for primitive types.</p>
+     *
      * @param baseClass the baseClass
-     * @param factory the factory
+     * @param factory   the factory
      */
     public static void registerFactory(Class<?> baseClass, SyncerFactory factory) {
         SyncCompanions.registerSyncerFactory(baseClass, factory);
     }
 
-    private Syncing() { }
+    private Syncing() {
+    }
 }

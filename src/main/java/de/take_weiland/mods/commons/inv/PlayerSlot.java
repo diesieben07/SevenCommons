@@ -14,20 +14,20 @@ import java.util.UUID;
  */
 final class PlayerSlot extends Slot {
 
-	private final Set<UUID> itemInvUUIDs;
+    private final Set<UUID> itemInvUUIDs;
 
-	PlayerSlot(IInventory playerInv, int slot, int x, int y, Set<UUID> itemInvUUIDs) {
-		super(playerInv, slot, x, y);
-		this.itemInvUUIDs = itemInvUUIDs;
-	}
+    PlayerSlot(IInventory playerInv, int slot, int x, int y, Set<UUID> itemInvUUIDs) {
+        super(playerInv, slot, x, y);
+        this.itemInvUUIDs = itemInvUUIDs;
+    }
 
-	@Override
-	public boolean canTakeStack(EntityPlayer player) {
-		ItemStack stack = getStack();
-		if (stack == null || stack.stackTagCompound == null) {
-			return true;
-		}
-		UUID stackUUID = NBTData.readUUID(stack.stackTagCompound.getTag(ItemInventory.NBT_UUID_KEY));
-		return stackUUID == null || itemInvUUIDs.contains(stackUUID);
-	}
+    @Override
+    public boolean canTakeStack(EntityPlayer player) {
+        ItemStack stack = getStack();
+        if (stack == null || stack.stackTagCompound == null) {
+            return true;
+        }
+        UUID stackUUID = NBTData.readUUID(stack.stackTagCompound.getTag(ItemInventory.NBT_UUID_KEY));
+        return stackUUID == null || itemInvUUIDs.contains(stackUUID);
+    }
 }

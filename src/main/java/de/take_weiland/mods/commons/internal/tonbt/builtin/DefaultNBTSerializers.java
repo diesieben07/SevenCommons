@@ -148,7 +148,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public Float read(Float value, NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_FLOAT ? ((NBTTagFloat) nbt).func_150288_h()  : 0f;
+            return nbt.getId() == NBT.TAG_FLOAT ? ((NBTTagFloat) nbt).func_150288_h() : 0f;
         }
     }
 
@@ -192,7 +192,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public CharSequence read(CharSequence value, NBTBase nbt) {
-            return nbt.getId()== NBT.TAG_STRING ? ((NBTTagString) nbt).func_150285_a_() : null;
+            return nbt.getId() == NBT.TAG_STRING ? ((NBTTagString) nbt).func_150285_a_() : null;
         }
     }
 

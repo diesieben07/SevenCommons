@@ -12,54 +12,54 @@ import java.util.Map;
 @MCVersion("1.7.10")
 @IFMLLoadingPlugin.SortingIndex(1001) // get after deobfuscation
 @IFMLLoadingPlugin.TransformerExclusions({
-		"de.take_weiland.mods.commons.asm.",
-		"de.take_weiland.mods.commons.internal.transformers.",
-		"de.take_weiland.mods.commons.internal.exclude.",
-		"de.take_weiland.mods.commons.util.JavaUtils",
+        "de.take_weiland.mods.commons.asm.",
+        "de.take_weiland.mods.commons.internal.transformers.",
+        "de.take_weiland.mods.commons.internal.exclude.",
+        "de.take_weiland.mods.commons.util.JavaUtils",
         "de.take_weiland.mods.commons.util.Logging",
-		"de.take_weiland.mods.commons.reflect.",
-		"de.take_weiland.mods.commons.sync.",
-		"de.take_weiland.mods.commons.nbt.ToNbt"
+        "de.take_weiland.mods.commons.reflect.",
+        "de.take_weiland.mods.commons.sync.",
+        "de.take_weiland.mods.commons.nbt.ToNbt"
 })
 public final class SevenCommonsLoader implements IFMLLoadingPlugin {
 
-	public static File source;
+    public static File source;
 
-	@Override
-	public String[] getASMTransformerClass() {
-		return new String[] {
+    @Override
+    public String[] getASMTransformerClass() {
+        return new String[]{
                 "de.take_weiland.mods.commons.internal.transformers.SCVisitorTransformerWrapper"
-		};
-	}
+        };
+    }
 
-	@Override
-	public String getModContainerClass() {
-		return "de.take_weiland.mods.commons.internal.SevenCommons";
-	}
+    @Override
+    public String getModContainerClass() {
+        return "de.take_weiland.mods.commons.internal.SevenCommons";
+    }
 
-	@Override
-	public String getSetupClass() {
-		return null;
-	}
+    @Override
+    public String getSetupClass() {
+        return null;
+    }
 
-	@Override
-	public void injectData(Map<String, Object> data) {
-		source = (File) data.get("coremodLocation");
-		if (source == null) { // this is usually in a dev env
-			try {
-				source = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
-			} catch (URISyntaxException e) {
-				throw new RuntimeException("Failed to acquire source location for SevenCommons!", e);
-			}
-		}
-	}
+    @Override
+    public void injectData(Map<String, Object> data) {
+        source = (File) data.get("coremodLocation");
+        if (source == null) { // this is usually in a dev env
+            try {
+                source = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
+            } catch (URISyntaxException e) {
+                throw new RuntimeException("Failed to acquire source location for SevenCommons!", e);
+            }
+        }
+    }
 
-	@Override
-	public String getAccessTransformerClass() {
-		return null;
-	}
+    @Override
+    public String getAccessTransformerClass() {
+        return null;
+    }
 
-	public static Logger scLogger(String channel) {
-		return Logging.getLogger("SC|" + channel);
-	}
+    public static Logger scLogger(String channel) {
+        return Logging.getLogger("SC|" + channel);
+    }
 }

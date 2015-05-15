@@ -57,6 +57,7 @@ public final class PropertySupport {
         };
     }
 
-    private PropertySupport() { }
+    private PropertySupport() {
+    }
 
 }

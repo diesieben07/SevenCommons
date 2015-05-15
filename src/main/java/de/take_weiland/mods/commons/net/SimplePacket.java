@@ -21,11 +21,11 @@ import java.util.function.Predicate;
  */
 public interface SimplePacket {
 
-	void sendToServer();
+    void sendToServer();
 
-	void sendTo(EntityPlayer player);
+    void sendTo(EntityPlayer player);
 
-	void sendTo(Iterable<? extends EntityPlayer> players);
+    void sendTo(Iterable<? extends EntityPlayer> players);
 
     void sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter);
 

@@ -24,14 +24,14 @@ import java.lang.annotation.Target;
  * @author diesieben07
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD, ElementType.METHOD })
+@Target({ElementType.FIELD, ElementType.METHOD})
 public @interface ToNbt {
 
-	/**
-	 * the key to use for this field. Empty String (default) uses the field/method name
-	 */
-	String key() default "";
+    /**
+     * the key to use for this field. Empty String (default) uses the field/method name
+     */
+    String key() default "";
 
-	SerializationMethod.Method method() default SerializationMethod.Method.DEFAULT;
+    SerializationMethod.Method method() default SerializationMethod.Method.DEFAULT;
 
 }

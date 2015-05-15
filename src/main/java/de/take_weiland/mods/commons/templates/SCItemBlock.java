@@ -10,31 +10,31 @@ import net.minecraft.world.World;
 
 public class SCItemBlock extends ItemBlock {
 
-	public SCItemBlock(Block block) {
-		super(block);
-	}
+    public SCItemBlock(Block block) {
+        super(block);
+    }
 
-	@Override
-	public boolean placeBlockAt(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, int metadata) {
-		boolean result;
-		if ((result = super.placeBlockAt(stack, player, world, x, y, z, side, hitX, hitY, hitZ, metadata))) {
-			doSCPlaceFeatures(stack, player, world, x, y, z, side);
-		}
-		return result;
-	}
+    @Override
+    public boolean placeBlockAt(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, int metadata) {
+        boolean result;
+        if ((result = super.placeBlockAt(stack, player, world, x, y, z, side, hitX, hitY, hitZ, metadata))) {
+            doSCPlaceFeatures(stack, player, world, x, y, z, side);
+        }
+        return result;
+    }
 
-	protected final void doSCPlaceFeatures(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int meta) {
-		if (stack.hasDisplayName() && field_150939_a.hasTileEntity(meta)) {
-			TileEntity te = world.getTileEntity(x, y, z);
-			if (te instanceof NameableInventory && ((NameableInventory) te).takeItemStackName(player, stack)) {
-				((NameableInventory) te).setCustomName(stack.getDisplayName());
-			}
-		}
-	}
+    protected final void doSCPlaceFeatures(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int meta) {
+        if (stack.hasDisplayName() && field_150939_a.hasTileEntity(meta)) {
+            TileEntity te = world.getTileEntity(x, y, z);
+            if (te instanceof NameableInventory && ((NameableInventory) te).takeItemStackName(player, stack)) {
+                ((NameableInventory) te).setCustomName(stack.getDisplayName());
+            }
+        }
+    }
 
-	@Override
-	public String getUnlocalizedNameInefficiently(ItemStack item) {
-		return getUnlocalizedName(item); // some optimization
-	}
+    @Override
+    public String getUnlocalizedNameInefficiently(ItemStack item) {
+        return getUnlocalizedName(item); // some optimization
+    }
 
 }
