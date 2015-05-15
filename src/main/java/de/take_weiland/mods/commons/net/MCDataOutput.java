@@ -149,7 +149,7 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 
     /**
      * <p>Write the given boolean array to the stream.</p>
-     * <p>Ìf the array is null, this method writes a VarInt -1. Otherwise this method first writes the length of the array
+     * <p>If the array is null, this method writes a VarInt -1. Otherwise this method first writes the length of the array
      * as a VarInt and then the booleans as a series of {@code booleans.length %8 + 1} bytes. 8 elements are written as
      * one byte, each bit in the byte representing one element, least significant bits first.
      * True is represented by a set bit, false by an unset bit.</p>

@@ -70,7 +70,7 @@ processResources
 }
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '1.11'
+  gradleVersion = '2.4'
 }
 
 task deobfJar(type: Jar) {
