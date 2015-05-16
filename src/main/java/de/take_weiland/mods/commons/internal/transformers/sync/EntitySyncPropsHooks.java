@@ -102,7 +102,7 @@ public class EntitySyncPropsHooks extends ClassVisitor {
             super.visitVarInsn(ALOAD, 0);
             super.visitVarInsn(ALOAD, 2);
             super.visitVarInsn(ALOAD, 1);
-            super.visitMethodInsn(INVOKESTATIC, asmHooks, ASMHooks.ON_NEW_ENTITY_PROPS, Type.getMethodDescriptor(VOID_TYPE, entityType, entityPropsType, stringType));
+            super.visitMethodInsn(INVOKESTATIC, asmHooks, ASMHooks.ON_NEW_ENTITY_PROPS, Type.getMethodDescriptor(VOID_TYPE, entityType, entityPropsType, stringType), false);
         }
     }
 

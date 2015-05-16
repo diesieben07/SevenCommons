@@ -83,8 +83,8 @@ public final class CompanionFieldAdder extends ClassVisitor {
         }
 
         @Override
-        public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-            super.visitMethodInsn(opcode, owner, name, desc);
+        public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
             if (!done && opcode == INVOKESPECIAL) {
                 done = true;
 
@@ -93,11 +93,11 @@ public final class CompanionFieldAdder extends ClassVisitor {
 
                 super.visitVarInsn(ALOAD, 0);
                 super.visitVarInsn(ALOAD, 0);
-                super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "getClass", Type.getMethodDescriptor(classType));
+                super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "getClass", Type.getMethodDescriptor(classType), false);
 
                 super.visitMethodInsn(INVOKESTATIC, Type.getInternalName(SyncCompanions.class),
                         "newCompanion",
-                        Type.getMethodDescriptor(syncCompanionType, classType));
+                        Type.getMethodDescriptor(syncCompanionType, classType), false);
 
                 super.visitFieldInsn(PUTFIELD, className, COMPANION_FIELD, syncCompanionType.getDescriptor());
             }

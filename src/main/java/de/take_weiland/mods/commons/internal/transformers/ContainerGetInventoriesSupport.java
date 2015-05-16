@@ -112,7 +112,7 @@ public final class ContainerGetInventoriesSupport extends ClassVisitor {
             String owner = Type.getInternalName(ASMHooks.class);
             String name = ASMHooks.ON_LISTENER_ADDED;
             String desc = Type.getMethodDescriptor(Type.VOID_TYPE, containerType, iCraftingType);
-            super.visitMethodInsn(INVOKESTATIC, owner, name, desc);
+            super.visitMethodInsn(INVOKESTATIC, owner, name, desc, false);
         }
     }
 }

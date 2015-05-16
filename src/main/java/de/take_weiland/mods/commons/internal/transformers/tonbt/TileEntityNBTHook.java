@@ -51,7 +51,7 @@ public final class TileEntityNBTHook extends ClassVisitor {
 
             String owner = Type.getInternalName(ASMHooks.class);
             String desc = Type.getMethodDescriptor(VOID_TYPE, objectType, nbtCompType);
-            super.visitMethodInsn(INVOKESTATIC, owner, targetMethodName, desc);
+            super.visitMethodInsn(INVOKESTATIC, owner, targetMethodName, desc, false);
         }
     }
 }

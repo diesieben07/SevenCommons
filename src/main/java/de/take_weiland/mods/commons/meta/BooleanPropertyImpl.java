@@ -9,6 +9,7 @@ import java.util.Set;
 /**
  * @author diesieben07
  */
+@SuppressWarnings("deprecation")
 final class BooleanPropertyImpl extends GenericProperty<Boolean> implements BooleanProperty {
 
     private static final BooleanPropertyImpl[] cache = new BooleanPropertyImpl[32];

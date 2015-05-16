@@ -64,7 +64,7 @@ public final class EntityNBTHook extends ClassVisitor {
                 super.visitMethodInsn(INVOKESTATIC,
                         asmHooksType.getInternalName(),
                         entityHookMethod,
-                        Type.getMethodDescriptor(VOID_TYPE, objectType, nbtCompType));
+                        Type.getMethodDescriptor(VOID_TYPE, objectType, nbtCompType), false);
 
                 didEntityHook = true;
             }
@@ -81,8 +81,8 @@ public final class EntityNBTHook extends ClassVisitor {
         }
 
         @Override
-        public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-            super.visitMethodInsn(opcode, owner, name, desc);
+        public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
             if (opcode == INVOKEINTERFACE
                     && owner.equals(Type.getInternalName(IExtendedEntityProperties.class))
                     && name.equals(ieepMethod)) {
@@ -98,7 +98,7 @@ public final class EntityNBTHook extends ClassVisitor {
                 super.visitMethodInsn(INVOKESTATIC,
                         Type.getInternalName(ASMHooks.class),
                         ieepHookMethod,
-                        Type.getMethodDescriptor(VOID_TYPE, objectType, stringType, nbtCompType));
+                        Type.getMethodDescriptor(VOID_TYPE, objectType, stringType, nbtCompType), false);
             }
         }
 

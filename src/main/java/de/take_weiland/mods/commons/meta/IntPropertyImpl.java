@@ -11,7 +11,8 @@ import java.util.Set;
 /**
  * @author diesieben07
  */
-class IntPropertyImpl extends GenericProperty<Integer> implements IntProperty {
+@SuppressWarnings("deprecation")
+final class IntPropertyImpl extends GenericProperty<Integer> implements IntProperty {
 
     private final int shift;
     private final int mask;

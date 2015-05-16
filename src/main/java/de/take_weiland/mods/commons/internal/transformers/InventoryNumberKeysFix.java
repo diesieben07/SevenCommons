@@ -30,7 +30,7 @@ public class InventoryNumberKeysFix extends MethodVisitor {
 
         super.visitVarInsn(ALOAD, 0);
         super.visitFieldInsn(GETFIELD, guiContainerType.getInternalName(), MCPNames.field(MCPNames.F_GUICONTAINER_THE_SLOT), slotType.getDescriptor());
-        super.visitMethodInsn(INVOKESTATIC, asmHooksType.getInternalName(), ASMHooks.IS_USEABLE_CLIENT, Type.getMethodDescriptor(BOOLEAN_TYPE, slotType));
+        super.visitMethodInsn(INVOKESTATIC, asmHooksType.getInternalName(), ASMHooks.IS_USEABLE_CLIENT, Type.getMethodDescriptor(BOOLEAN_TYPE, slotType), false);
         super.visitJumpInsn(IFNE, after);
 
         super.visitInsn(ICONST_0);

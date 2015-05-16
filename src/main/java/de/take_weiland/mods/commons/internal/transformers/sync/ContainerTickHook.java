@@ -47,7 +47,7 @@ public final class ContainerTickHook extends ClassVisitor {
             String hookClazz = Type.getInternalName(ASMHooks.class);
             String invokeCheck = ASMHooks.INVOKE_SYNC_COMP_CHECK;
             String invokeCheckDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), syncerCompanionType);
-            super.visitMethodInsn(INVOKESTATIC, hookClazz, invokeCheck, invokeCheckDesc);
+            super.visitMethodInsn(INVOKESTATIC, hookClazz, invokeCheck, invokeCheckDesc, false);
         }
     }
 }
