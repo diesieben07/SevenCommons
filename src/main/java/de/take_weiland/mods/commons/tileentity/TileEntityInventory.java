@@ -19,8 +19,8 @@ import java.util.Iterator;
  * <p>Note that this class implements {@link de.take_weiland.mods.commons.inv.NameableInventory}, so if you
  * use {@link Blocks#init} on your block (or
  * use {@link de.take_weiland.mods.commons.templates.SCItemBlock} as your custom ItemBlock class), this TileEntity
- * will automatically take the name of a renamed ItemStack when placed. To control that behavior, implement
- * {@link de.take_weiland.mods.commons.tileentity.TileAutoName}.</p>
+ * will automatically take the name of a renamed ItemStack when placed. To control that behavior, override
+ * {@link #takeItemStackName(EntityPlayer, ItemStack)}.</p>
  */
 public abstract class TileEntityInventory extends TileEntity implements IInventory, NameableInventory, Iterable<ItemStack> {
 
