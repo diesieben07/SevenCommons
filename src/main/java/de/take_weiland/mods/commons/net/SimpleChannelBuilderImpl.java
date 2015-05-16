@@ -49,12 +49,13 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         constructors.compact();
 
         ImmutableMap<Class<? extends Packet>, HandlerIDPair> handlers = ImmutableMap.copyOf(this.handlers);
-        this.handlers = null;
 
         SimplePacketCodec codec = new SimplePacketCodec(channel, constructors, handlers);
         // use the original keySet, avoid having the ImmutableMap keep it around
         PacketToChannelMap.putAll(this.handlers.keySet(), codec);
         NetworkImpl.register(channel, codec);
+
+        this.handlers = null;
     }
 
     private void checkNotBuilt() {

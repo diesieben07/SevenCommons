@@ -70,6 +70,9 @@ public abstract class TypeToFactoryMap<F, FR> {
 
     private FR resultFromList(Property<?, ?> type, Collection<F> list) {
         FR result = null;
+        if (list == null) {
+            return null;
+        }
         for (F factory : list) {
             if (result == null) {
                 result = applyFactory(factory, type);

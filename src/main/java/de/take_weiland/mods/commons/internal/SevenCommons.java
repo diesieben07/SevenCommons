@@ -74,16 +74,26 @@ public final class SevenCommons extends DummyModContainer {
     @SideOnly(Side.CLIENT)
     @Subscribe
     public void clientPreInit(FMLPreInitializationEvent event) {
-        proxy = new ClientProxy();
-        clientMainThreadID = Thread.currentThread().getId();
-        universalPreInit(event);
+        try {
+            proxy = new ClientProxy();
+            clientMainThreadID = Thread.currentThread().getId();
+            universalPreInit(event);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     @SideOnly(Side.SERVER)
     @Subscribe
     public void serverPreInit(FMLPreInitializationEvent event) {
-        proxy = new ServerProxy();
-        universalPreInit(event);
+        try {
+            proxy = new ServerProxy();
+            universalPreInit(event);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     public void universalPreInit(FMLPreInitializationEvent event) {
