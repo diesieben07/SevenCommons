@@ -30,7 +30,5 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
 
         addEntry(InventoryNumberKeysFix::new,
                 "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(MCPNames.M_CHECK_HOTBAR_KEYS));
-
-        addEntry(MessageSerializerFixer::new, "net/minecraft/util/MessageSerializer");
     }
 }
