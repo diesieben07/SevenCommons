@@ -1,19 +1,23 @@
 package de.take_weiland.mods.commons.util;
 
+import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.nbt.NBT;
+import de.take_weiland.mods.commons.reflect.Getter;
+import de.take_weiland.mods.commons.reflect.SCReflection;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityTracker;
+import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.util.Direction;
+import net.minecraft.util.IntHashMap;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import java.util.Set;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * <p>Utilities regarding Entities.</p>
@@ -77,9 +81,21 @@ public final class Entities {
      */
     @SuppressWarnings("unchecked")
     public static Set<EntityPlayerMP> getTrackingPlayers(Entity entity) {
-        checkArgument(!entity.worldObj.isRemote, "Cannot get tracking players on the client");
-        // we are on the server, this is safe
-        return ((Set) ((WorldServer) entity.worldObj).getEntityTracker().getTrackingPlayers(entity));
+        if (entity.worldObj.isRemote) {
+            throw new IllegalArgumentException("Cannot get tracking players on the client");
+        }
+        IntHashMap trackerMap = EntityTrackerAcc.instance.getTrackerMap(((WorldServer) entity.worldObj).getEntityTracker());
+        EntityTrackerEntry entry = (EntityTrackerEntry) trackerMap.lookup(entity.getEntityId());
+        return entry == null ? null : entry.trackingPlayers;
+    }
+
+    private interface EntityTrackerAcc {
+
+        EntityTrackerAcc instance = SCReflection.createAccessor(EntityTrackerAcc.class);
+
+        @Getter(field = MCPNames.F_TRACKED_ENTITY_IDS, srg = true)
+        IntHashMap getTrackerMap(EntityTracker tracker);
+
     }
 
     /**
@@ -91,7 +107,7 @@ public final class Entities {
      * {@link ForgeDirection#EAST})
      */
     public static ForgeDirection getFacing(Entity entity) {
-        int dir = MathHelper.floor_double((entity.rotationYaw * 4 / 360) + 0.5) & 3;
+        int dir = MathHelper.floor_double((entity.rotationYaw / 90) + 0.5) & 3;
         return ForgeDirection.VALID_DIRECTIONS[Direction.directionToFacing[dir]];
     }
 
