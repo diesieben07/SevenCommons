@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
@@ -29,7 +30,7 @@ public class InventoryNumberKeysFix extends MethodVisitor {
         Label after = new Label();
 
         super.visitVarInsn(ALOAD, 0);
-        super.visitFieldInsn(GETFIELD, guiContainerType.getInternalName(), MCPNames.field(MCPNames.F_GUICONTAINER_THE_SLOT), slotType.getDescriptor());
+        super.visitFieldInsn(GETFIELD, guiContainerType.getInternalName(), MCPNames.field(SRGConstants.F_GUICONTAINER_THE_SLOT), slotType.getDescriptor());
         super.visitMethodInsn(INVOKESTATIC, asmHooksType.getInternalName(), ASMHooks.IS_USEABLE_CLIENT, Type.getMethodDescriptor(BOOLEAN_TYPE, slotType), false);
         super.visitJumpInsn(IFNE, after);
 

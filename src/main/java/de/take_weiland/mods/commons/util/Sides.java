@@ -6,41 +6,66 @@ import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+/**
+ * <p>Helper methods for distinguishing between client and server.</p>
+ */
 public final class Sides {
 
-    private Sides() {
-    }
-
     /**
-     * gets the logical side (ServerThread/ClientThread) based on the given world
+     * <p>Get the logical side (based on {@link World#isRemote}) of the given World.</p>
+     * <p>This method is best used with a static import like so:<code><pre>
+     *     if (sideOf(world).isClient()) {
+     *         // do client-only things
+     *     }
+     * </pre></code></p>
      *
-     * @param world the world to check
+     * @param world the World
      * @return the logical side
      */
-    public static Side logical(World world) {
+    public static Side sideOf(World world) {
         return world.isRemote ? Side.CLIENT : Side.SERVER;
     }
 
     /**
-     * convenience method. Identical to {@link Sides#logical(World) Sides.logical(entity.worldObj)}
-     */
-    public static Side logical(Entity entity) {
-        return logical(entity.worldObj);
-    }
-
-    /**
-     * convenience method. Identical to {@link Sides#logical(World) Sides.logical(tileEntity.worldObj)}
-     */
-    public static Side logical(TileEntity tileEntity) {
-        return logical(tileEntity.getWorldObj());
-    }
-
-    /**
-     * Determine the Environment, not the logical side (Integrated Server is still on the Minecraft Client)
+     * <p>Get the logical side (based on {@link World#isRemote}) of the given Entity.</p>
+     * <p>This method is best used with a static import like so:<code><pre>
+     *     if (sideOf(entity).isClient()) {
+     *         // do client-only things
+     *     }
+     * </pre></code></p>
      *
-     * @return Side.SERVER for a Dedicated Server, Side.CLIENT for the Minecraft client
+     * @param entity the Entity
+     * @return the logical side
+     */
+    public static Side sideOf(Entity entity) {
+        return sideOf(entity.worldObj);
+    }
+
+    /**
+     * <p>Get the logical side (based on {@link World#isRemote}) of the given TileEntity.</p>
+     * <p>This method is best used with a static import like so:<code><pre>
+     *     if (sideOf(tileEntity).isClient()) {
+     *         // do client-only things
+     *     }
+     * </pre></code></p>
+     *
+     * @param tileEntity the TileEntity
+     * @return the logical side
+     */
+    public static Side sideOf(TileEntity tileEntity) {
+        return sideOf(tileEntity.getWorldObj());
+    }
+
+    /**
+     * <p>Get the environment we are running on. {@code Side.SERVER} for a dedicated server or
+     * {@code Side.CLIENT} for the client.</p>
+     *
+     * @return the environment
      */
     public static Side environment() {
         return FMLCommonHandler.instance().getSide();
+    }
+
+    private Sides() {
     }
 }

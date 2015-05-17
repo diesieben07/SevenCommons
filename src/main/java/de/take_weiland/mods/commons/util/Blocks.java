@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.util;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
@@ -19,7 +20,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
-import static de.take_weiland.mods.commons.util.RegistrationUtil.checkPhase;
+import static de.take_weiland.mods.commons.util.Items.checkPhase;
 
 @ParametersAreNonnullByDefault
 public final class Blocks {

@@ -73,7 +73,7 @@ public final class FMLEventHandler {
 
     static {
         Reflection.initialize(Scheduler.class);
-        Runnable[] tickers = (Runnable[]) Launch.blackboard.get(SCHEDULER_TEMP_KEY);
+        Runnable[] tickers = (Runnable[]) Launch.blackboard.remove(SCHEDULER_TEMP_KEY);
         serverTick = tickers[0];
         clientTick = tickers[1];
     }

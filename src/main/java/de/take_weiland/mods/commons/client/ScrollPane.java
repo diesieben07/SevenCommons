@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.client;
 
 import com.google.common.collect.Lists;
-import de.take_weiland.mods.commons.util.SCReflector;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;

@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.client;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
 import de.take_weiland.mods.commons.meta.Subtype;
-import de.take_weiland.mods.commons.util.SCReflector;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.item.Item;

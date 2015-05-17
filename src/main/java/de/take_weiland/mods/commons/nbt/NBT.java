@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.collect.ImmutableMap;
-import de.take_weiland.mods.commons.util.SCReflector;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import net.minecraft.nbt.*;
 import org.jetbrains.annotations.Contract;
 

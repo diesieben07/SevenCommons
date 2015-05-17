@@ -2,22 +2,21 @@ package de.take_weiland.mods.commons.util;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import static de.take_weiland.mods.commons.util.RegistrationUtil.checkPhase;
+import static com.google.common.base.Preconditions.checkState;
+import static cpw.mods.fml.common.LoaderState.PREINITIALIZATION;
 
 @ParametersAreNonnullByDefault
 public final class Items {
 
-    private Items() {
-    }
-
     /**
-     * <p>Equivalent to {@link #init(net.minecraft.item.Item, String, String)} with the currently active ModId.</p>
+     * <p>Equivalent to {@link #init(Item, String, String)} with the currently active ModId.</p>
      *
      * @param item     the Item instance
      * @param baseName base name for this Item
@@ -33,7 +32,7 @@ public final class Items {
      * <ul>
      * <li>Sets the Item's texture to <tt>modId:baseName</tt>, unless it is already set</li>
      * <li>Sets the Item's unlocalized name to <tt>modId.baseName</tt>, unless it is already set</li>
-     * <li>Register the Item with {@link cpw.mods.fml.common.registry.GameRegistry#registerItem(net.minecraft.item.Item, String, String)}</li>
+     * <li>Register the Item with {@link GameRegistry#registerItem(Item, String)}</li>
      * <li>If the Item has subtypes (implementing {@link de.take_weiland.mods.commons.meta.HasSubtypes}):
      * <ul>
      * <li>Call {@link Item#setHasSubtypes(boolean) setHasSubtypes(true)}</li>
@@ -78,6 +77,10 @@ public final class Items {
         return Item.getItemById(id);
     }
 
-    private static final short ITEM_NULL_ID = -1;
+    private Items() {
+    }
 
+    static void checkPhase(String type) {
+        checkState(Loader.instance().isInState(PREINITIALIZATION), "Mod %s tried to register a %s outside of the preInit phase", Loader.instance().activeModContainer().getModId(), type);
+    }
 }

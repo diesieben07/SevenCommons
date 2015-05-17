@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.client;
 
-import de.take_weiland.mods.commons.util.SCReflector;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;

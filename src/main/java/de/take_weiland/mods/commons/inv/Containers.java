@@ -6,7 +6,7 @@ import de.take_weiland.mods.commons.internal.ContainerProxy;
 import de.take_weiland.mods.commons.internal.PacketContainerButton;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.ItemStacks;
-import de.take_weiland.mods.commons.util.SCReflector;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;

@@ -26,6 +26,6 @@ public interface SimplePacketHandler<P> extends BiConsumer<P, EntityPlayer> {
 
     @Override
     default void accept(P packet, EntityPlayer player) {
-        handle(packet, player, Sides.logical(player));
+        handle(packet, player, Sides.sideOf(player));
     }
 }

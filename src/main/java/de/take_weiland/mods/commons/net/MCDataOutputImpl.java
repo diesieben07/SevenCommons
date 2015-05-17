@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.net;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.BlockPos;
 import de.take_weiland.mods.commons.util.EnumUtils;
-import de.take_weiland.mods.commons.util.SCReflector;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;

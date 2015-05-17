@@ -7,7 +7,6 @@ import com.google.common.collect.UnmodifiableIterator;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.client.I18n;
-import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.IInventory;
@@ -23,6 +22,8 @@ import javax.annotation.Nonnull;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Random;
+
+import static de.take_weiland.mods.commons.util.Sides.sideOf;
 
 /**
  * A collection of static utility methods regarding implementors of {@link IInventory}
@@ -120,7 +121,7 @@ public final class Inventories {
      * @param inventory the inventory
      */
     public static void spill(World world, int x, int y, int z, IInventory inventory) {
-        if (Sides.logical(world).isServer()) {
+        if (sideOf(world).isServer()) {
             Random rand = world.rand;
             for (ItemStack stack : iterate(inventory, false)) {
                 float xRand = rand.nextFloat() * 0.8F + 0.1F;

@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.MCPNames;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.transformers.sync.*;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.EntityNBTHook;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.TileEntityNBTHook;
@@ -29,6 +30,6 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(ContainerGetInventoriesSupport::new, "net/minecraft/inventory/Container");
 
         addEntry(InventoryNumberKeysFix::new,
-                "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(MCPNames.M_CHECK_HOTBAR_KEYS));
+                "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(SRGConstants.M_CHECK_HOTBAR_KEYS));
     }
 }

@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.Unsafe;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.ElementType;
 import java.lang.invoke.MethodHandle;
@@ -21,9 +20,6 @@ import static java.lang.invoke.MethodType.methodType;
  */
 public final class EnumUtils {
 
-
-    private EnumUtils() {
-    }
 
     /**
      * <p>Get all constants defined in the given enum class. This is equivalent to {@code E.values()} except that the array
@@ -80,7 +76,6 @@ public final class EnumUtils {
         }
     }
 
-    @NotNull
     private static IllegalArgumentException makeESTooBigExc() {
         return new IllegalArgumentException("Cannot encode EnumSet of Enum type with > 64 values");
     }
@@ -186,5 +181,8 @@ public final class EnumUtils {
             res |= 1 << e.ordinal();
         }
         return res;
+    }
+
+    private EnumUtils() {
     }
 }

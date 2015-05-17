@@ -1,11 +1,8 @@
 package de.take_weiland.mods.commons.util;
 
-import de.take_weiland.mods.commons.asm.MCPNames;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.reflect.Getter;
-import de.take_weiland.mods.commons.reflect.SCReflection;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -84,18 +81,9 @@ public final class Entities {
         if (entity.worldObj.isRemote) {
             throw new IllegalArgumentException("Cannot get tracking players on the client");
         }
-        IntHashMap trackerMap = EntityTrackerAcc.instance.getTrackerMap(((WorldServer) entity.worldObj).getEntityTracker());
+        IntHashMap trackerMap = SCReflector.instance.getTrackerMap(((WorldServer) entity.worldObj).getEntityTracker());
         EntityTrackerEntry entry = (EntityTrackerEntry) trackerMap.lookup(entity.getEntityId());
         return entry == null ? null : entry.trackingPlayers;
-    }
-
-    private interface EntityTrackerAcc {
-
-        EntityTrackerAcc instance = SCReflection.createAccessor(EntityTrackerAcc.class);
-
-        @Getter(field = MCPNames.F_TRACKED_ENTITY_IDS, srg = true)
-        IntHashMap getTrackerMap(EntityTracker tracker);
-
     }
 
     /**

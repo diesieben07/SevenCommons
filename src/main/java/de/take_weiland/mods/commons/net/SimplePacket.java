@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.net;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.util.Entities;
 import de.take_weiland.mods.commons.util.Players;
-import de.take_weiland.mods.commons.util.SCReflector;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;

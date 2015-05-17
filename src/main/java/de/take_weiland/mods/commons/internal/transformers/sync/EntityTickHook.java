@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers.sync;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
@@ -25,7 +26,7 @@ public final class EntityTickHook extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (name.equals(MCPNames.method(MCPNames.M_WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE))) {
+        if (name.equals(MCPNames.method(SRGConstants.M_WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE))) {
             return new UpdateEntityTransformer(mv);
         } else {
             return mv;
@@ -52,7 +53,7 @@ public final class EntityTickHook extends ClassVisitor {
             super.visitFieldInsn(opcode, owner, name, desc);
 
             String entityIntName = "net/minecraft/entity/Entity";
-            if (foundIAdd && owner.equals(entityIntName) && name.equals(MCPNames.field(MCPNames.F_ENTITY_TICKS_EXISTED))) {
+            if (foundIAdd && owner.equals(entityIntName) && name.equals(MCPNames.field(SRGConstants.F_ENTITY_TICKS_EXISTED))) {
                 Type syncerCompanionType = Type.getType(SyncCompanion.class);
                 Type worldType = Type.getObjectType("net/minecraft/world/World");
 
@@ -61,7 +62,7 @@ public final class EntityTickHook extends ClassVisitor {
                 Label after = new Label();
                 if (client) {
                     super.visitVarInsn(ALOAD, 0);
-                    super.visitFieldInsn(GETFIELD, worldType.getInternalName(), MCPNames.field(MCPNames.F_IS_REMOTE), Type.BOOLEAN_TYPE.getDescriptor());
+                    super.visitFieldInsn(GETFIELD, worldType.getInternalName(), MCPNames.field(SRGConstants.F_IS_REMOTE), Type.BOOLEAN_TYPE.getDescriptor());
                     super.visitJumpInsn(IFNE, after);
                 }
 

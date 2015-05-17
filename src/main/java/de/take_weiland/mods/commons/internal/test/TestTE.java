@@ -37,7 +37,7 @@ public class TestTE extends SuperTE implements SyncedInterface {
     @Override
     public void updateEntity() {
         if (tick++ % 10 == 0) {
-            if (Sides.logical(this).isServer()) {
+            if (Sides.sideOf(this).isServer()) {
                 test = String.valueOf(new Random().nextInt(Integer.MAX_VALUE));
                 syncFoobar = new Random().nextFloat();
             } else {

@@ -1,18 +1,14 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.reflect.Invoke;
-import de.take_weiland.mods.commons.reflect.OverrideTarget;
-import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.util.Players;
-import de.take_weiland.mods.commons.util.SCReflector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.network.Packet;
-import net.minecraft.server.management.PlayerManager;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -154,23 +150,10 @@ public final class Packets {
      * @param chunkZ the chunk z coordinate
      */
     public static void sendToAllTrackingChunk(Packet packet, World world, int chunkX, int chunkZ) {
-        Object playerInstance = ChunkWatcherAcc.instance.getPlayerInstance(checkNotClient(world).getPlayerManager(), chunkX, chunkZ, false);
+        Object playerInstance = SCReflector.instance.getPlayerInstance(checkNotClient(world).getPlayerManager(), chunkX, chunkZ, false);
         if (playerInstance != null) {
-            ChunkWatcherAcc.instance.sendToAllWatchingChunk(playerInstance, packet);
+            SCReflector.instance.sendToAllWatchingChunk(playerInstance, packet);
         }
-    }
-
-    private interface ChunkWatcherAcc {
-
-        ChunkWatcherAcc instance = SCReflection.createAccessor(ChunkWatcherAcc.class);
-
-        @Invoke(method = "func_72690_a", srg = true)
-        Object getPlayerInstance(PlayerManager playerManager, int chunkX, int chunkZ, boolean create);
-
-        @Invoke(method = "func_151251_a", srg = true)
-        @OverrideTarget("net.minecraft.server.management.PlayerManager$PlayerInstance")
-        void sendToAllWatchingChunk(Object playerInstance, Packet packet);
-
     }
 
     /**

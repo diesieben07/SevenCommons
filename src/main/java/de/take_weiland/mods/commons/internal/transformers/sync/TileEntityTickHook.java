@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.transformers.sync;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
@@ -23,7 +24,7 @@ public final class TileEntityTickHook extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (name.equals(MCPNames.method(MCPNames.M_UPDATE_ENTITIES))) {
+        if (name.equals(MCPNames.method(SRGConstants.M_UPDATE_ENTITIES))) {
             return new UpdateEntitiesTransformer(mv);
         } else {
             return mv;
@@ -52,13 +53,13 @@ public final class TileEntityTickHook extends ClassVisitor {
             String teIntName = "net/minecraft/tileentity/TileEntity";
             Type worldType = Type.getObjectType("net/minecraft/world/World");
 
-            if (owner.equals(teIntName) && name.equals(MCPNames.method(MCPNames.M_UPDATE_ENTITY))) {
+            if (owner.equals(teIntName) && name.equals(MCPNames.method(SRGConstants.M_UPDATE_ENTITY))) {
                 boolean client = FMLLaunchHandler.side().isClient();
 
                 Label after = new Label();
                 if (client) {
                     super.visitVarInsn(ALOAD, 0);
-                    super.visitFieldInsn(GETFIELD, worldType.getInternalName(), MCPNames.field(MCPNames.F_IS_REMOTE), Type.BOOLEAN_TYPE.getDescriptor());
+                    super.visitFieldInsn(GETFIELD, worldType.getInternalName(), MCPNames.field(SRGConstants.F_IS_REMOTE), Type.BOOLEAN_TYPE.getDescriptor());
                     super.visitJumpInsn(IFNE, after);
                 }
 

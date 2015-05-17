@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.transformers.tonbt;
 
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
@@ -21,9 +22,9 @@ public final class TileEntityNBTHook extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (name.equals(MCPNames.method(MCPNames.M_TILE_ENTITY_READ_NBT))) {
+        if (name.equals(MCPNames.method(SRGConstants.M_TILE_ENTITY_READ_NBT))) {
             return new Hook(mv, ASMHooks.READ_NBT_HOOK);
-        } else if (name.equals(MCPNames.method(MCPNames.M_TILE_ENTITY_WRITE_NBT))) {
+        } else if (name.equals(MCPNames.method(SRGConstants.M_TILE_ENTITY_WRITE_NBT))) {
             return new Hook(mv, ASMHooks.WRITE_NBT_HOOK);
         } else {
             return mv;

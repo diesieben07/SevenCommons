@@ -5,6 +5,7 @@ import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.internal.ContainerProxy;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
@@ -36,7 +37,7 @@ public final class ContainerGetInventoriesSupport extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (name.equals(MCPNames.method(MCPNames.M_ADD_CRAFTING_TO_CRAFTERS))) {
+        if (name.equals(MCPNames.method(SRGConstants.M_ADD_CRAFTING_TO_CRAFTERS))) {
             return new AddListenerTransformer(mv);
         } else {
             return mv;

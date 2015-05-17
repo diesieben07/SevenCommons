@@ -4,8 +4,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.reflect.Invoke;
-import de.take_weiland.mods.commons.reflect.SCReflection;
+import de.take_weiland.mods.commons.internal.SCReflector;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -155,19 +154,10 @@ public final class JavaUtils {
     public static <T extends Cloneable> T clone(T t) {
         try {
             //noinspection unchecked
-            return (T) CloneableAcc.instance.clone(t);
+            return (T) SCReflector.instance.clone(t);
         } catch (CloneNotSupportedException e) {
             throw new IllegalArgumentException("Tried to clone a non-cloneable object " + t, e);
         }
-    }
-
-    private interface CloneableAcc {
-
-        CloneableAcc instance = SCReflection.createAccessor(CloneableAcc.class);
-
-        @Invoke(method = "clone")
-        Object clone(Object t) throws CloneNotSupportedException;
-
     }
 
     /**

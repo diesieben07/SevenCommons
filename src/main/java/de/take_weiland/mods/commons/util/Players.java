@@ -2,15 +2,11 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.collect.Iterables;
 import com.mojang.authlib.GameProfile;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.reflect.Getter;
-import de.take_weiland.mods.commons.reflect.Invoke;
-import de.take_weiland.mods.commons.reflect.OverrideTarget;
-import de.take_weiland.mods.commons.reflect.SCReflection;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerManager;
 import net.minecraft.server.management.ServerConfigurationManager;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -104,25 +100,12 @@ public final class Players {
         if (world.isRemote) {
             throw new IllegalArgumentException("Cannot get tracking players on the client");
         }
-        Object playerInstance = PlayerManagerAccess.instance.getPlayerInstance(((WorldServer) world).getPlayerManager(), chunkX, chunkZ, false);
+        Object playerInstance = SCReflector.instance.getPlayerInstance(((WorldServer) world).getPlayerManager(), chunkX, chunkZ, false);
         if (playerInstance == null) {
             return Collections.emptyList();
         } else {
-            return PlayerManagerAccess.instance.getWatchers(playerInstance);
+            return SCReflector.instance.getWatchers(playerInstance);
         }
-    }
-
-    private interface PlayerManagerAccess {
-
-        PlayerManagerAccess instance = SCReflection.createAccessor(PlayerManagerAccess.class);
-
-        @Invoke(method = "func_72690_a", srg = true)
-        Object getPlayerInstance(PlayerManager playerManager, int chunkX, int chunkZ, boolean create);
-
-        @Getter(field = "field_73263_b", srg = true)
-        @OverrideTarget("net.minecraft.server.management.PlayerManager$PlayerInstance")
-        List<EntityPlayerMP> getWatchers(Object playerInstance);
-
     }
 
     /**
