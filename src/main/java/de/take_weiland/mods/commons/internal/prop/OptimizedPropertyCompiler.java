@@ -37,7 +37,7 @@ final class OptimizedPropertyCompiler {
     private static PropertyAccess<?> compileClass(Member member, Method setter) throws ReflectiveOperationException {
         String name = SCReflection.nextDynamicClassName(OptimizedPropertyCompiler.class.getPackage());
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        cw.visit(V1_8, ACC_FINAL, name, null, "java/lang/Object", new String[] { Type.getInternalName(PropertyAccess.class) });
+        cw.visit(V1_8, ACC_FINAL, name, null, "java/lang/Object", new String[]{Type.getInternalName(PropertyAccess.class)});
 
         generateConstructor(cw);
 
@@ -104,7 +104,7 @@ final class OptimizedPropertyCompiler {
             gen.loadArg(0);
             Class<?> paramType = getMH.type().parameterType(0);
             castIfNeeded(gen, paramType);
-            gen.invokeVirtual(methodHandleType, new org.objectweb.asm.commons.Method("invokeExact", Type.getType(getMH.type().returnType()), new Type[] { Type.getType(paramType) }));
+            gen.invokeVirtual(methodHandleType, new org.objectweb.asm.commons.Method("invokeExact", Type.getType(getMH.type().returnType()), new Type[]{Type.getType(paramType)}));
         } else {
             gen.loadArg(0);
             Class<?> ownerClass = member.getDeclaringClass();

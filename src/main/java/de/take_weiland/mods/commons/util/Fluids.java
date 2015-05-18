@@ -27,6 +27,7 @@ public final class Fluids {
     /**
      * <p>Clone the given FluidStack.</p>
      * <p>This is a null-guarded call to {@link FluidStack#clone()}.</p>
+     *
      * @param stack the FluidStack
      * @return a clone
      */

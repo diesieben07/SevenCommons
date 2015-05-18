@@ -12,6 +12,7 @@ public interface NBTSerializerFactory {
     /**
      * <p>Get a {@code NBTSerializer} for the given property. If this factory cannot provide a serializer for
      * the property, {@code null} should be returned.</p>
+     *
      * @param property the property
      * @return an NBTSerializer
      */

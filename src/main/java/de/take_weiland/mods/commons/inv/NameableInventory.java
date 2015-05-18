@@ -39,8 +39,9 @@ public interface NameableInventory extends IInventory {
     /**
      * <p>Whether this inventory should take the name of a renamed ItemStack when created by a player.
      * This should be called when e.g. a TileEntity implementing this interface is placed or an Entity is spawned, etc.</p>
+     *
      * @param player the player
-     * @param stack the ItemStack
+     * @param stack  the ItemStack
      * @return true to take the name
      */
     default boolean takeItemStackName(EntityPlayer player, ItemStack stack) {

@@ -8,6 +8,7 @@ import java.util.function.Function;
 
 /**
  * <p>A serializer to encode and decode values of type {@code T} to NBT.</p>
+ *
  * @author diesieben07
  */
 public interface NBTSerializer<T> {
