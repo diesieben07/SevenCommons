@@ -9,6 +9,12 @@ import de.take_weiland.mods.commons.serialize.Property;
  */
 public interface NBTSerializerFactory {
 
-    <T> NBTSerializer<?> get(Property<T, ?> typeSpec);
+    /**
+     * <p>Get a {@code NBTSerializer} for the given property. If this factory cannot provide a serializer for
+     * the property, {@code null} should be returned.</p>
+     * @param property the property
+     * @return an NBTSerializer
+     */
+    <T> NBTSerializer<?> get(Property<T, ?> property);
 
 }

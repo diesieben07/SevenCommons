@@ -1,14 +1,16 @@
 package de.take_weiland.mods.commons.internal.tonbt;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import de.take_weiland.mods.commons.asm.ASMUtils;
+import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
 import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.nbt.NBTSerializer;
+import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.serialize.Property;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.FluidTank;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -18,7 +20,9 @@ import org.objectweb.asm.commons.Method;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Member;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static java.lang.invoke.MethodType.methodType;
 import static org.objectweb.asm.Opcodes.*;
@@ -41,7 +45,7 @@ final class BytecodeEmittingHandlerGenerator {
     private ClassWriter cw;
     private String className;
     private String superName;
-    private List<Property<?, ?>> properties;
+    private Map<Property<?, ?>, NBTSerializer<?>> properties;
 
     BytecodeEmittingHandlerGenerator(DefaultHandlerFactory factory, Class<?> clazz) {
         this.factory = factory;
@@ -49,7 +53,8 @@ final class BytecodeEmittingHandlerGenerator {
     }
 
     Class<? extends ToNbtHandler> generateHandler() {
-        properties = ToNbtFactories.getProperties(clazz);
+        properties = AbstractProperty.allPropertiesLazy(clazz, ToNbt.class)
+                .toMap(ToNbtFactories::serializerFor);
         if (properties.isEmpty()) {
             return null;
         }
@@ -88,9 +93,17 @@ final class BytecodeEmittingHandlerGenerator {
 
     private void genFields() {
         String nbtSerializerDesc = Type.getDescriptor(NBTSerializer.class);
+        String nbtSerializerValDesc = Type.getDescriptor(NBTSerializer.ForValue.class);
+        String nbtSerializerContDesc = Type.getDescriptor(NBTSerializer.ForContainer.class);
         String methodHandleDesc = Type.getDescriptor(MethodHandle.class);
-        for (Property<?, ?> property : properties) {
-            cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, identFor(property, SERIALIZER), nbtSerializerDesc, null, null).visitEnd();
+
+        for (Map.Entry<Property<?, ?>, NBTSerializer<?>> entry : properties.entrySet()) {
+            Property<?, ?> property = entry.getKey();
+            NBTSerializer<?> ser = entry.getValue();
+            String serFieldDesc = ser instanceof NBTSerializer.ForValue ? nbtSerializerValDesc
+                    : ser instanceof NBTSerializer.ForContainer ? nbtSerializerContDesc
+                    : nbtSerializerDesc;
+            cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, identFor(property, SERIALIZER), serFieldDesc, null, null).visitEnd();
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, identFor(property, GETTER), methodHandleDesc, null, null).visitEnd();
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, identFor(property, SETTER), methodHandleDesc, null, null).visitEnd();
         }
@@ -114,7 +127,7 @@ final class BytecodeEmittingHandlerGenerator {
         gen.invokeStatic(generatorType, new Method("getStaticInfo", iterType, new Type[0]));
         gen.storeLocal(iterLocal);
 
-        for (Property<?, ?> property : properties) {
+        for (Property<?, ?> property : properties.keySet()) {
             gen.loadLocal(iterLocal);
             gen.invokeInterface(iterType, iterNext);
             gen.checkCast(objectArrType);
@@ -167,7 +180,7 @@ final class BytecodeEmittingHandlerGenerator {
 
         int valueSlot = -1;
 
-        for (Property<?, ?> property : properties) {
+        for (Property<?, ?> property : properties.keySet()) {
             gen.loadArg(1);
             gen.push(property.getName());
 
@@ -235,7 +248,7 @@ final class BytecodeEmittingHandlerGenerator {
 
         final int nbtTagSlot = gen.newLocal(nbtBaseType);
 
-        for (Property<?, ?> property : properties) {
+        for (Property<?, ?> property : properties.keySet()) {
             prepareSetValue(gen, property);
 
             gen.loadArg(1);
@@ -328,23 +341,28 @@ final class BytecodeEmittingHandlerGenerator {
         return result;
     }
 
-    private static List<Property<?, ?>> staticProperties;
+    private static Map<Property<?, ?>, NBTSerializer<?>> staticProperties;
 
     @SuppressWarnings("unused") // called by the dynamic classes
     static Iterator<Object[]> getStaticInfo() {
-        return FluentIterable.from(staticProperties)
-                .transform(new Function<Property<?, ?>, Object[]>() {
-                    @Override
-                    public Object[] apply(Property<?, ?> property) {
-                        Class<?> rawType = property.getRawType();
-                        return new Object[]{
-                                ToNbtFactories.serializerFor(property),
-                                property.getGetter().asType(methodType(rawType, Object.class)),
-                                property.getSetter().asType(methodType(void.class, Object.class, rawType))
-                        };
-                    }
+        return FluentIterable.from(staticProperties.entrySet())
+                .transform(entry -> {
+                    Property<?, ?> property = entry.getKey();
+                    NBTSerializer<?> serializer = entry.getValue();
+
+                    Class<?> rawType = property.getRawType();
+                    return new Object[]{
+                            serializer,
+                            property.getGetter().asType(methodType(rawType, Object.class)),
+                            property.getSetter().asType(methodType(void.class, Object.class, rawType))
+                    };
                 })
                 .iterator();
+    }
+
+    public static void main(String[] args) {
+        BiFunction<FluidTank, NBTTagCompound, NBTTagCompound> func = FluidTank::writeToNBT;
+        Function<FluidTank, NBTTagCompound> ser = fluidTank -> func.apply(fluidTank, new NBTTagCompound());
     }
 
     private String identFor(Property<?, ?> property, String type) {

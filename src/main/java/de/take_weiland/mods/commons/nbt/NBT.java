@@ -67,7 +67,7 @@ public final class NBT {
         }
 
         /**
-         * <p>Get the tag class corresponding to this tag type.</p>
+         * <p>Get the tag class corresponding to this tag type (e.g. {@link NBTTagString} for {@code STRING}).</p>
          *
          * @return the class
          */

@@ -33,12 +33,7 @@ public final class ToNbtFactories {
     };
 
     static {
-        SevenCommons.registerStateCallback(LoaderState.ModState.POSTINITIALIZED, new Runnable() {
-            @Override
-            public void run() {
-                serializerFactories.freeze();
-            }
-        });
+        SevenCommons.registerStateCallback(LoaderState.ModState.POSTINITIALIZED, serializerFactories::freeze);
     }
 
     public static void registerFactory(Class<?> baseType, NBTSerializerFactory factory) {

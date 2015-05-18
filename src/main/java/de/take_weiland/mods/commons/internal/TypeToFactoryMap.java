@@ -60,12 +60,8 @@ public abstract class TypeToFactoryMap<F, FR> {
 
     protected abstract FR applyFactory(F factory, Property<?, ?> type);
 
-    private boolean isFrozenNonLocking() {
-        return map instanceof ImmutableMap;
-    }
-
     private void checkNotFrozen() {
-        checkState(!isFrozenNonLocking(), "Map frozen");
+        checkState(!(map instanceof ImmutableMap), "Map frozen");
     }
 
     private FR resultFromList(Property<?, ?> type, Collection<F> list) {

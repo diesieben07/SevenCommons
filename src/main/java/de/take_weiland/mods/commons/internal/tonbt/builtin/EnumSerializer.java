@@ -5,24 +5,20 @@ import de.take_weiland.mods.commons.nbt.NBTSerializer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagString;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author diesieben07
  */
-final class EnumSerializer<E extends Enum<E>> implements NBTSerializer<E> {
+final class EnumSerializer<E extends Enum<E>> implements NBTSerializer.ForValue<E> {
 
     private static final Map<Class<?>, NBTSerializer<?>> cache = new HashMap<>();
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     static NBTSerializer<?> get(Class<?> clazz) {
-        NBTSerializer<?> serializer = cache.get(clazz);
-        if (serializer == null) {
-            //noinspection unchecked,rawtypes
-            serializer = new EnumSerializer<>((Class) clazz);
-            cache.put(clazz, serializer);
-        }
-        return serializer;
+        return cache.computeIfAbsent(clazz, k -> new EnumSerializer((Class) k));
     }
 
     private final Class<E> clazz;
@@ -32,12 +28,12 @@ final class EnumSerializer<E extends Enum<E>> implements NBTSerializer<E> {
     }
 
     @Override
-    public NBTBase write(E value) {
+    public NBTBase write(@Nonnull E value) {
         return new NBTTagString(value.name());
     }
 
     @Override
-    public E read(E value, NBTBase nbt) {
+    public E read(@Nonnull NBTBase nbt) {
         try {
             return nbt.getId() == NBT.TAG_STRING ? Enum.valueOf(clazz, ((NBTTagString) nbt).func_150285_a_()) : null;
         } catch (IllegalArgumentException e) {
