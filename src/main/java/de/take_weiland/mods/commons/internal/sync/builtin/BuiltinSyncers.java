@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import com.google.common.primitives.Primitives;
 import de.take_weiland.mods.commons.SerializationMethod;
-import de.take_weiland.mods.commons.serialize.Property;
+import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.sync.SyncCapacity;
 import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.sync.SyncerFactory;

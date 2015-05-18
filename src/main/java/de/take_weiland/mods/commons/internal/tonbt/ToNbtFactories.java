@@ -7,7 +7,7 @@ import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
 import de.take_weiland.mods.commons.nbt.NBTSerializer;
 import de.take_weiland.mods.commons.nbt.NBTSerializerFactory;
 import de.take_weiland.mods.commons.nbt.ToNbt;
-import de.take_weiland.mods.commons.serialize.Property;
+import de.take_weiland.mods.commons.reflect.Property;
 
 import javax.annotation.Nonnull;
 import java.util.List;

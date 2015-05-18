@@ -4,7 +4,7 @@ import com.google.common.primitives.Primitives;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.nbt.NBTSerializer;
 import de.take_weiland.mods.commons.nbt.NBTSerializerFactory;
-import de.take_weiland.mods.commons.serialize.Property;
+import de.take_weiland.mods.commons.reflect.Property;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
 import net.minecraftforge.fluids.FluidStack;

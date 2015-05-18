@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.sync;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.reflect.SCReflection;
-import de.take_weiland.mods.commons.serialize.Property;
+import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.sync.Syncer;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;

@@ -4,6 +4,7 @@ import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.internal.AnnotationNull;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.reflect.Property;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

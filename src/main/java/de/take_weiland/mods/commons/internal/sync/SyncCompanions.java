@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.internal.TypeToFactoryMap;
 import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
-import de.take_weiland.mods.commons.serialize.Property;
+import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.sync.SyncerFactory;

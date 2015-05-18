@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.serialize;
+package de.take_weiland.mods.commons.reflect;
 
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
@@ -14,7 +14,7 @@ import java.lang.reflect.Member;
  *
  * @author diesieben07
  */
-public interface Property<T, M extends AccessibleObject & Member & AnnotatedElement> {
+public interface Property<T, M extends AccessibleObject & Member & AnnotatedElement> extends PropertyAccess<T> {
 
     /**
      * <p>Get the underlying Member for this property. For a getter/setter based property this returns the getter method.</p>
@@ -36,6 +36,29 @@ public interface Property<T, M extends AccessibleObject & Member & AnnotatedElem
      * @return a MethodHandle
      */
     MethodHandle getSetter();
+
+    @Override
+    default T get(Object o) {
+        try {
+            //noinspection unchecked
+            return (T) getGetter().invoke(o);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    default void set(Object o, T val) {
+        try {
+            getSetter().invoke(o, val);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    default PropertyAccess<T> optimize() {
+        return this;
+    }
 
     /**
      * <p>The name of this property.</p>

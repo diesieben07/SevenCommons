@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.nbt;
 
-import de.take_weiland.mods.commons.serialize.Property;
+import de.take_weiland.mods.commons.reflect.Property;
 
 /**
  * <p>A factory for generating NBT serializers for {@link de.take_weiland.mods.commons.nbt.ToNbt @ToNbt}.</p>

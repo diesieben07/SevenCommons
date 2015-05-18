@@ -5,7 +5,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
-import de.take_weiland.mods.commons.serialize.Property;
+import de.take_weiland.mods.commons.reflect.Property;
+import de.take_weiland.mods.commons.reflect.PropertyAccess;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
@@ -72,6 +73,7 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
     private TypeToken<T> genericType;
     private MethodHandle getter;
     private MethodHandle setter;
+    private PropertyAccess<T> optimized;
 
     AbstractProperty(MEM member) {
         this.member = member;
@@ -94,6 +96,17 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
     public final TypeToken<T> getType() {
         return genericType == null ? (genericType = (TypeToken<T>) resolveType()) : genericType;
     }
+
+    @Override
+    public synchronized PropertyAccess<T> optimize() {
+        if (optimized == null) {
+            //noinspection unchecked
+            optimized = (PropertyAccess<T>) doOptimize();
+        }
+        return optimized;
+    }
+
+    abstract PropertyAccess<?> doOptimize();
 
     @Override
     public final MethodHandle getGetter() {

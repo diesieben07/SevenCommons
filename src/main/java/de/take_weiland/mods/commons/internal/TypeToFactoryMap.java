@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
 import com.google.common.collect.*;
-import de.take_weiland.mods.commons.serialize.Property;
+import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.util.JavaUtils;
 
 import java.util.*;
