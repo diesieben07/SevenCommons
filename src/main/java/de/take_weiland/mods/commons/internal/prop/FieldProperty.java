@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal.prop;
 
 import com.google.common.reflect.TypeToken;
-import de.take_weiland.mods.commons.reflect.PropertyAccess;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
@@ -34,11 +33,6 @@ final class FieldProperty<T> extends AbstractProperty<T, Field> {
         } catch (IllegalAccessException e) {
             throw new AssertionError(e);
         }
-    }
-
-    @Override
-    PropertyAccess<?> doOptimize() {
-        return OptimizedPropertyCompiler.optimize(member);
     }
 
     @Override

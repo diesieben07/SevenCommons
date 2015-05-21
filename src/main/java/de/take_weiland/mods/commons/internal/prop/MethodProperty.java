@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal.prop;
 
 import com.google.common.reflect.TypeToken;
-import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.apache.commons.lang3.StringUtils;
 
@@ -50,11 +49,6 @@ final class MethodProperty<T> extends AbstractProperty<T, Method> {
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e.getCause());
         }
-    }
-
-    @Override
-    PropertyAccess<?> doOptimize() {
-        return OptimizedPropertyCompiler.optimize(member, SCReflection.findSetter(member));
     }
 
     @Override

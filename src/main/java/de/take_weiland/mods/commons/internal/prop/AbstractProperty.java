@@ -7,6 +7,7 @@ import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
+import de.take_weiland.mods.commons.util.JavaUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
@@ -14,6 +15,8 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import static java.lang.invoke.MethodType.methodType;
 
 /**
  * @author diesieben07
@@ -102,12 +105,35 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
     public synchronized PropertyAccess<T> optimize() {
         if (optimized == null) {
             //noinspection unchecked
-            optimized = (PropertyAccess<T>) doOptimize();
+            optimized = doOptimize();
         }
         return optimized;
     }
 
-    abstract PropertyAccess<?> doOptimize();
+    PropertyAccess<T> doOptimize() {
+        MethodHandle get = getGetter().asType(methodType(Object.class, Object.class));
+        MethodHandle set = getSetter().asType(methodType(void.class, Object.class, Object.class));
+        return new PropertyAccess<T>() {
+            @Override
+            public T get(Object o) {
+                try {
+                    //noinspection unchecked
+                    return (T) get.invokeExact(o);
+                } catch (Throwable t) {
+                    throw JavaUtils.throwUnchecked(t);
+                }
+            }
+
+            @Override
+            public void set(Object o, T val) {
+                try {
+                    set.invokeExact(o, val);
+                } catch (Throwable t) {
+                    throw JavaUtils.throwUnchecked(t);
+                }
+            }
+        };
+    }
 
     @Override
     public final MethodHandle getGetter() {

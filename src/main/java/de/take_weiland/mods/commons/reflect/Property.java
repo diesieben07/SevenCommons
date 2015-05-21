@@ -37,9 +37,7 @@ public interface Property<T, M extends AccessibleObject & Member & AnnotatedElem
      */
     MethodHandle getSetter();
 
-    default PropertyAccess<T> optimize() {
-        return this;
-    }
+    PropertyAccess<T> optimize();
 
     /**
      * <p>The name of this property.</p>
