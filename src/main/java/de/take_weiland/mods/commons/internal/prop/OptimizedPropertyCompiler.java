@@ -10,6 +10,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.*;
 
 import static java.lang.invoke.MethodHandles.publicLookup;
+import static java.lang.invoke.MethodType.methodType;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.commons.Method.getMethod;
 
@@ -33,6 +34,9 @@ final class OptimizedPropertyCompiler {
             throw new RuntimeException(e);
         }
     }
+
+    static MethodHandle getterMHTemp;
+    static MethodHandle setterMHTemp;
 
     private static PropertyAccess<?> compileClass(Member member, Method setter) throws ReflectiveOperationException {
         String name = SCReflection.nextDynamicClassName(OptimizedPropertyCompiler.class.getPackage());
@@ -66,7 +70,7 @@ final class OptimizedPropertyCompiler {
         } else {
             if (!canAccessDirectly(member)) {
                 ((AccessibleObject) member).setAccessible(true);
-                getMH = publicLookup().unreflect((Method) member);
+                getMH = publicLookup().unreflect((Method) member).asType(methodType(Object.class, Object.class));
             }
             if (canSet && !canAccessDirectly(setter)) {
                 setter.setAccessible(true);
@@ -75,9 +79,11 @@ final class OptimizedPropertyCompiler {
         }
 
         if (getMH != null) {
+            getMH = getMH.asType(methodType(Object.class, Object.class));
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, "mh0", methodHandleType.getDescriptor(), null, null);
         }
         if (setMH != null) {
+            setMH = setMH.asType(methodType(void.class, Object.class, Object.class));
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, "mh1", methodHandleType.getDescriptor(), null, null);
         }
 
@@ -100,11 +106,12 @@ final class OptimizedPropertyCompiler {
         GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, getMethod("Object get(Object)"), null, null, cw);
         gen.visitCode();
         if (getMH != null) {
+            Type objectType = Type.getType(Object.class);
+
             gen.getStatic(myType, "mh0", methodHandleType);
             gen.loadArg(0);
-            Class<?> paramType = getMH.type().parameterType(0);
-            castIfNeeded(gen, paramType);
-            gen.invokeVirtual(methodHandleType, new org.objectweb.asm.commons.Method("invokeExact", Type.getType(getMH.type().returnType()), new Type[]{Type.getType(paramType)}));
+
+            gen.invokeVirtual(methodHandleType, new org.objectweb.asm.commons.Method("invokeExact", objectType, new Type[]{objectType}));
         } else {
             gen.loadArg(0);
             Class<?> ownerClass = member.getDeclaringClass();
@@ -122,33 +129,36 @@ final class OptimizedPropertyCompiler {
         gen.returnValue();
         gen.endMethod();
 
-        gen = new GeneratorAdapter(ACC_PUBLIC, getMethod("void set(Object, Object"), null, null, cw);
+        gen = new GeneratorAdapter(ACC_PUBLIC, getMethod("void set(Object, Object)"), null, null, cw);
         gen.visitCode();
         if (!canSet) {
             gen.throwException(Type.getType(UnsupportedOperationException.class), "Cannot set final property");
         } else {
             if (setMH != null) {
-                Class<?> p0 = setMH.type().parameterType(0);
-                Class<?> p1 = setMH.type().parameterType(1);
+                Type objectType = Type.getType(Object.class);
 
                 gen.getStatic(myType, "mh1", methodHandleType);
                 gen.loadArg(0);
-                castIfNeeded(gen, p0);
                 gen.loadArg(1);
-                castIfNeeded(gen, p1);
-                gen.invokeVirtual(methodHandleType, new org.objectweb.asm.commons.Method("invokeExact", Type.VOID_TYPE, new Type[]{Type.getType(p0), Type.getType(p1)}));
+                gen.invokeVirtual(methodHandleType, new org.objectweb.asm.commons.Method("invokeExact", Type.VOID_TYPE, new Type[]{objectType, objectType}));
             } else {
-                Class<?> p0 = setter.getDeclaringClass();
-                Class<?> p1 = setter.getParameterTypes()[0];
+                boolean isField = member instanceof Field;
+                Class<?> p0 = (isField ? member : setter).getDeclaringClass();
+                Class<?> p1 = isField ? ((Field) member).getType() : setter.getParameterTypes()[0];
 
                 gen.loadArg(0);
                 castIfNeeded(gen, p0);
                 gen.loadArg(1);
                 castIfNeeded(gen, p1);
-                if (p0.isInterface()) {
-                    gen.invokeInterface(Type.getType(p0), new org.objectweb.asm.commons.Method(setter.getName(), Type.getMethodDescriptor(setter)));
+
+                if (isField) {
+                    gen.putField(Type.getType(p0), member.getName(), Type.getType(p1));
                 } else {
-                    gen.invokeVirtual(Type.getType(p0), new org.objectweb.asm.commons.Method(setter.getName(), Type.getMethodDescriptor(setter)));
+                    if (p0.isInterface()) {
+                        gen.invokeInterface(Type.getType(p0), new org.objectweb.asm.commons.Method(setter.getName(), Type.getMethodDescriptor(setter)));
+                    } else {
+                        gen.invokeVirtual(Type.getType(p0), new org.objectweb.asm.commons.Method(setter.getName(), Type.getMethodDescriptor(setter)));
+                    }
                 }
             }
 
@@ -157,11 +167,21 @@ final class OptimizedPropertyCompiler {
         gen.endMethod();
         cw.visitEnd();
 
-        return (PropertyAccess<?>) SCReflection.defineDynamicClass(cw.toByteArray()).newInstance();
+        synchronized (PropertyAccess.class) {
+            getterMHTemp = getMH;
+            setterMHTemp = setMH;
+            try {
+                return (PropertyAccess<?>) SCReflection.defineDynamicClass(cw.toByteArray()).newInstance();
+            } finally {
+                getterMHTemp = setterMHTemp = null;
+            }
+        }
     }
 
     private static boolean canAccessDirectly(Member member) {
-        return Modifier.isPublic(member.getModifiers());
+        boolean a = Modifier.isPublic(member.getDeclaringClass().getModifiers());
+        boolean b = Modifier.isPublic(member.getModifiers());
+        return a && b;
     }
 
     private static void castIfNeeded(GeneratorAdapter gen, Class<?> target) {

@@ -19,7 +19,6 @@ public class TestTE extends SuperTE implements SyncedInterface {
     Integer foobarusMax;
 
     @Sync
-    @ToNbt
     float syncFoobar;
 
     private int tick;

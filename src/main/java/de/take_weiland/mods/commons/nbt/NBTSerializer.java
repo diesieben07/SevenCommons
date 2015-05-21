@@ -19,6 +19,15 @@ public interface NBTSerializer<T> {
 
     void read(NBTBase nbt, Object obj, Function<Object, ? extends T> getter, BiConsumer<Object, ? super T> setter);
 
+    default NBTBase write(Object obj, PropertyAccess<T> property) {
+        return write(obj, property, property);
+    }
+
+    default NBTBase write(Object obj, Function<Object, ? extends T> getter, BiConsumer<Object, ? super T> setter) {
+        T value = getter.apply(obj);
+        return value == null ? NBTData.serializedNull() : write(value);
+    }
+
     NBTBase write(T value);
 
     interface ForValue<T> extends NBTSerializer<T> {
@@ -27,13 +36,13 @@ public interface NBTSerializer<T> {
 
         @Override
         default void read(NBTBase nbt, Object obj, Function<Object, ? extends T> getter, BiConsumer<Object, ? super T> setter) {
-            setter.accept(obj, read(nbt));
+            if (NBTData.isSerializedNull(nbt)) {
+                setter.accept(obj, null);
+            } else {
+                setter.accept(obj, read(nbt));
+            }
         }
 
-        @Override
-        default void read(NBTBase nbt, Object obj, PropertyAccess<T> property) {
-            property.set(obj, read(nbt));
-        }
     }
 
     interface ForContainer<T> extends NBTSerializer<T> {
@@ -42,12 +51,9 @@ public interface NBTSerializer<T> {
 
         @Override
         default void read(NBTBase nbt, Object obj, Function<Object, ? extends T> getter, BiConsumer<Object, ? super T> setter) {
-            read(nbt, getter.apply(obj));
-        }
-
-        @Override
-        default void read(NBTBase nbt, Object obj, PropertyAccess<T> property) {
-            read(nbt, property.get(obj));
+            if (!NBTData.isSerializedNull(nbt)) {
+                read(nbt, getter.apply(obj));
+            }
         }
     }
 

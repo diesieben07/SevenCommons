@@ -35,8 +35,8 @@ public interface SRGConstants {
     String M_NEW_NBT_TAG = "func_150284_a";
     String M_ENTITY_WRITE_NBT = "func_70109_d";
     String M_ENTITY_READ_NBT = "func_70020_e";
-    String M_TILE_ENTITY_READ_NBT = "func_70307_a";
-    String M_TILE_ENTITY_WRITE_NBT = "func_70310_b";
+    String M_TILE_ENTITY_READ_NBT = "func_145839_a";
+    String M_TILE_ENTITY_WRITE_NBT = "func_145841_b";
     String M_TRANSLATE_KEY_PRIVATE = "func_135026_c";
     String F_CURRENT_LOCALE = "field_135049_a";
 }
