@@ -1,10 +1,8 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
+import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.Syncer;
-
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 /**
  * <p>Base class for @Sync companion</p>
@@ -40,7 +38,7 @@ public abstract class SyncCompanion {
 
         int fieldId();
 
-        <T_DATA, T_OBJ, T_VAL> void apply(T_OBJ obj, Syncer<T_VAL, ?, T_DATA> syncer, Function<T_OBJ, T_VAL> getter, BiConsumer<T_OBJ, T_VAL> setter);
+        <T_DATA, T_VAL, T_COM> void apply(Object obj, Syncer<T_VAL, T_COM, T_DATA> syncer, PropertyAccess<T_VAL> property, PropertyAccess<T_COM> companion);
 
 
     }

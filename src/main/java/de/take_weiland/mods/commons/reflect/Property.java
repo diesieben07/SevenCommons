@@ -37,25 +37,6 @@ public interface Property<T, M extends AccessibleObject & Member & AnnotatedElem
      */
     MethodHandle getSetter();
 
-    @Override
-    default T get(Object o) {
-        try {
-            //noinspection unchecked
-            return (T) getGetter().invoke(o);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
-    }
-
-    @Override
-    default void set(Object o, T val) {
-        try {
-            getSetter().invoke(o, val);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
-    }
-
     default PropertyAccess<T> optimize() {
         return this;
     }

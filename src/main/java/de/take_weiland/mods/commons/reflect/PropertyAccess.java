@@ -21,4 +21,14 @@ public interface PropertyAccess<T> extends Function<Object, T>, BiConsumer<Objec
     default T apply(Object o) {
         return get(o);
     }
+
+    PropertyAccess<Object> EMPTY = new PropertyAccess<Object>() {
+        @Override
+        public Object get(Object o) {
+            return null;
+        }
+
+        @Override
+        public void set(Object o, Object val) { }
+    };
 }

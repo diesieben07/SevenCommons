@@ -6,6 +6,7 @@ import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import static java.lang.invoke.MethodHandles.publicLookup;
@@ -15,8 +16,40 @@ import static java.lang.invoke.MethodHandles.publicLookup;
  */
 final class MethodProperty<T> extends AbstractProperty<T, Method> {
 
+    private final Method setter;
+
     MethodProperty(Method member) {
         super(member);
+        setter = SCReflection.findSetter(member);
+        if (setter != null) {
+            setter.setAccessible(true);
+        }
+    }
+
+    @Override
+    public T get(Object o) {
+        try {
+            //noinspection unchecked
+            return (T) member.invoke(o);
+        } catch (IllegalAccessException e) {
+            throw new AssertionError(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e.getCause());
+        }
+    }
+
+    @Override
+    public void set(Object o, T val) {
+        if (setter == null) {
+            throw new UnsupportedOperationException("No setter");
+        }
+        try {
+            setter.invoke(o, val);
+        } catch (IllegalAccessException e) {
+            throw new AssertionError(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e.getCause());
+        }
     }
 
     @Override

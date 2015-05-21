@@ -79,6 +79,7 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
         this.member = member;
         SerializationMethod annotation = member.getAnnotation(SerializationMethod.class);
         desiredMethod = annotation == null ? SerializationMethod.Method.DEFAULT : annotation.value();
+        member.setAccessible(true);
     }
 
     @Override
@@ -111,7 +112,6 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
     @Override
     public final MethodHandle getGetter() {
         if (getter == null) {
-            member.setAccessible(true);
             try {
                 getter = resolveGetter();
             } catch (IllegalAccessException e) {
@@ -124,7 +124,6 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
     @Override
     public MethodHandle getSetter() {
         if (setter == null) {
-            member.setAccessible(true);
             try {
                 setter = resolveSetter();
             } catch (IllegalAccessException e) {

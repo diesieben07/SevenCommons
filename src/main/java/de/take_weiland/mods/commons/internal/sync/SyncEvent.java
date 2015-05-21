@@ -1,14 +1,15 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.collect.Iterables;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.ProtocolException;
+import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.Entities;
 import de.take_weiland.mods.commons.util.Players;
-import de.take_weiland.mods.commons.internal.SCReflector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -16,8 +17,6 @@ import net.minecraft.inventory.ICrafting;
 import net.minecraft.tileentity.TileEntity;
 
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 /**
  * @author diesieben07
@@ -112,11 +111,11 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
         return change == null ? SyncCompanion.FIELD_ID_END : change.fieldId;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public <T_DATA, T_OBJ, T_VAL> void apply(T_OBJ obj, Syncer<T_VAL, ?, T_DATA> syncer, Function<T_OBJ, T_VAL> getter, BiConsumer<T_OBJ, T_VAL> setter) {
-        ChangedValue change = changes[cursor++];
-        change.syncer.apply(change.data, obj, getter, setter);
+    public <T_DATA, T_VAL, T_COM> void apply(Object obj, Syncer<T_VAL, T_COM, T_DATA> syncer, PropertyAccess<T_VAL> property, PropertyAccess<T_COM> companion) {
+        @SuppressWarnings("unchecked")
+        ChangedValue<T_DATA> change = (ChangedValue<T_DATA>) changes[cursor++];
+        syncer.apply(change.data, obj, property, companion);
     }
 
     public abstract void send(Object obj);

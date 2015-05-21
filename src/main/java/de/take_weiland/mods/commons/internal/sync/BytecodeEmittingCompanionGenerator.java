@@ -2,8 +2,9 @@ package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
-import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.reflect.Property;
+import de.take_weiland.mods.commons.reflect.PropertyAccess;
+import de.take_weiland.mods.commons.reflect.SCReflection;
 import de.take_weiland.mods.commons.sync.Syncer;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Container;
@@ -20,10 +21,9 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import static java.lang.invoke.MethodHandles.publicLookup;
+import static java.lang.invoke.MethodType.methodType;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -38,10 +38,8 @@ public final class BytecodeEmittingCompanionGenerator {
     public static final int PRV_STC_FNL = ACC_PRIVATE | ACC_STATIC | ACC_FINAL;
     private static final String SYNCER = "syn";
     private static final String COMPANION = "com";
-    private static final String GETTER = "get";
-    private static final String SETTER = "set";
-    private static final String COMP_GETTER = "cgt";
-    private static final String COMP_SETTER = "cst";
+    private static final String PROP_ACC = "prp";
+    private static final String COMP_ACC = "cop";
 
     private final DefaultCompanionFactory factory;
     private final Class<?> clazz;
@@ -113,17 +111,14 @@ public final class BytecodeEmittingCompanionGenerator {
             Syncer<?, ?, ?> syncer = entry.getValue();
 
             String descSyncer = Type.getDescriptor(Syncer.class);
-            String descFunction = Type.getDescriptor(Function.class);
-            String descBiConsumer = Type.getDescriptor(BiConsumer.class);
+            String descPropAcc = Type.getDescriptor(PropertyAccess.class);
 
             cw.visitField(PRV_STC_FNL, getPropertyID(property, SYNCER), descSyncer, null, null);
-            cw.visitField(PRV_STC_FNL, getPropertyID(property, GETTER), descFunction, null, null);
-            cw.visitField(PRV_STC_FNL, getPropertyID(property, SETTER), descBiConsumer, null, null);
+            cw.visitField(PRV_STC_FNL, getPropertyID(property, PROP_ACC), descPropAcc, null, null);
 
             Class<?> companionType = syncer.companionType();
             if (companionType != null) {
-                cw.visitField(PRV_STC_FNL, getPropertyID(property, COMP_GETTER), descFunction, null, null);
-                cw.visitField(PRV_STC_FNL, getPropertyID(property, COMP_SETTER), descBiConsumer, null, null);
+                cw.visitField(PRV_STC_FNL, getPropertyID(property, COMP_ACC), descPropAcc, null, null);
 
                 cw.visitField(ACC_PRIVATE, getPropertyID(property, COMPANION), Type.getDescriptor(companionType), null, null);
             }
@@ -140,9 +135,7 @@ public final class BytecodeEmittingCompanionGenerator {
         final Type changeItType = Type.getType(SyncCompanion.ChangeIterator.class);
         final Type syncerType = Type.getType(Syncer.class);
         final Type objectType = Type.getType(Object.class);
-        final Type valueHolderType = Type.getType(clazz);
-        final Type functionType = Type.getType(Function.class);
-        final Type biConsumerType = Type.getType(BiConsumer.class);
+        final Type propertyAccessType = Type.getType(PropertyAccess.class);
 
         final int inStreamArg = 1;
         final int fieldID = gen.newLocal(Type.INT_TYPE);
@@ -178,10 +171,10 @@ public final class BytecodeEmittingCompanionGenerator {
                 gen.loadArg(1);
                 gen.loadArg(0);
                 gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
-                gen.getStatic(myType, getPropertyID(property, GETTER), functionType);
-                gen.getStatic(myType, getPropertyID(property, SETTER), biConsumerType);
+                gen.getStatic(myType, getPropertyID(property, PROP_ACC), propertyAccessType);
+                gen.getStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
                 gen.invokeInterface(changeItType, new Method("apply", VOID_TYPE,
-                        new Type[]{objectType, syncerType, functionType, biConsumerType}));
+                        new Type[]{objectType, syncerType, propertyAccessType, propertyAccessType}));
                 gen.goTo(end);
             }
 
@@ -220,10 +213,9 @@ public final class BytecodeEmittingCompanionGenerator {
             throw new RuntimeException("NYI");
         }
         Type syncerType = Type.getType(Syncer.class);
-        Type functionType = Type.getType(Function.class);
-        Type biConsumerType = Type.getType(BiConsumer.class);
         Type syncerChangeType = Type.getType(Syncer.Change.class);
         Type changedValueType = Type.getType(ChangedValue.class);
+        Type propertyAccessType = Type.getType(PropertyAccess.class);
 
         int eventSlot = gen.newLocal(syncEventType);
         int changeSlot = gen.newLocal(changedValueType);
@@ -250,14 +242,11 @@ public final class BytecodeEmittingCompanionGenerator {
 
             gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
             gen.loadArg(0);
-            gen.getStatic(myType, getPropertyID(property, GETTER), functionType);
-            gen.getStatic(myType, getPropertyID(property, SETTER), biConsumerType);
-
-            gen.getStatic(myType, getPropertyID(property, COMP_GETTER), functionType);
-            gen.getStatic(myType, getPropertyID(property, COMP_SETTER), biConsumerType);
+            gen.getStatic(myType, getPropertyID(property, PROP_ACC), propertyAccessType);
+            gen.getStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
 
             gen.invokeInterface(syncerType, new Method("check", syncerChangeType,
-                    new Type[]{objectType, functionType, biConsumerType, functionType, biConsumerType}));
+                    new Type[]{objectType, propertyAccessType, propertyAccessType}));
             gen.storeLocal(changeSlot);
 
             gen.loadLocal(changeSlot);
@@ -314,9 +303,8 @@ public final class BytecodeEmittingCompanionGenerator {
         Type iteratorType = Type.getType(Iterator.class);
         Type objectArrType = Type.getType(Object[].class);
         Type objectType = Type.getType(Object.class);
-        Type functionType = Type.getType(Function.class);
-        Type biConsumerType = Type.getType(BiConsumer.class);
         Type syncerType = Type.getType(Syncer.class);
+        Type propertyAccessType  = Type.getType(PropertyAccess.class);
 
         int iterator = gen.newLocal(iteratorType);
 
@@ -338,25 +326,14 @@ public final class BytecodeEmittingCompanionGenerator {
             gen.dup();
             gen.push(1);
             gen.arrayLoad(objectType);
-            gen.checkCast(functionType);
-            gen.putStatic(myType, getPropertyID(property, GETTER), functionType);
+            gen.checkCast(propertyAccessType);
+            gen.putStatic(myType, getPropertyID(property, PROP_ACC), propertyAccessType);
 
-            gen.dup();
             gen.push(2);
             gen.arrayLoad(objectType);
-            gen.checkCast(biConsumerType);
-            gen.putStatic(myType, getPropertyID(property, SETTER), biConsumerType);
+            gen.checkCast(propertyAccessType);
+            gen.putStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
 
-            gen.dup();
-            gen.push(3);
-            gen.arrayLoad(objectType);
-            gen.checkCast(functionType);
-            gen.putStatic(myType, getPropertyID(property, COMP_GETTER), functionType);
-
-            gen.push(4);
-            gen.arrayLoad(objectType);
-            gen.checkCast(biConsumerType);
-            gen.putStatic(myType, getPropertyID(property, COMP_SETTER), biConsumerType);
         }
 
         gen.returnValue();
@@ -400,32 +377,45 @@ public final class BytecodeEmittingCompanionGenerator {
                     Property<?, ?> property = entry.getKey();
                     Syncer<?, ?, ?> syncer = entry.getValue();
 
-                    Function<?, ?> compGetter;
-                    BiConsumer<?, ?> compSetter;
+                    PropertyAccess<?> propertyAccess = property.optimize();
+                    PropertyAccess<?> compAccess;
                     if (syncer.companionType() != null) {
                         Field compField = null;
                         try {
                             compField = generatedClass.getDeclaredField(getPropertyID(property, COMPANION));
                             compField.setAccessible(true);
-                            MethodHandle cGet = publicLookup().unreflectGetter(compField);
-                            MethodHandle cSet = publicLookup().unreflectSetter(compField);
-                            compGetter = PropertySupport.makeCompanionGetter(cGet);
-                            compSetter = PropertySupport.makeCompanionSetter(cSet);
+                            MethodHandle cGet = publicLookup().unreflectGetter(compField).asType(methodType(Object.class, Object.class));
+                            MethodHandle cSet = publicLookup().unreflectSetter(compField).asType(methodType(void.class, Object.class, Object.class));
+                            compAccess = new PropertyAccess<Object>() {
+                                @Override
+                                public Object get(Object o) {
+                                    try {
+                                        return cGet.invokeExact((Object) ((SyncedObjectProxy) o)._sc$getCompanion());
+                                    } catch (Throwable e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+
+                                @Override
+                                public void set(Object o, Object val) {
+                                    try {
+                                        cSet.invokeExact((Object) ((SyncedObjectProxy) o)._sc$getCompanion(), val);
+                                    } catch (Throwable e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                            };
                         } catch (ReflectiveOperationException e) {
                             throw new IllegalStateException(e);
                         }
                     } else {
-                        compGetter = o -> null;
-                        compSetter = (o, o2) -> {
-                        };
+                        compAccess = PropertyAccess.EMPTY;
                     }
 
                     return new Object[]{
                             syncer,
-                            PropertySupport.makeGetter(property.getGetter()),
-                            PropertySupport.makeSetter(property.getSetter()),
-                            compGetter,
-                            compSetter
+                            propertyAccess,
+                            compAccess
                     };
                 })
                 .iterator();

@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.sync;
 import de.take_weiland.mods.commons.internal.sync.ChangedValue;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.reflect.PropertyAccess;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -39,6 +40,10 @@ public interface Syncer<VAL, COM, DATA> {
      */
     Class<COM> companionType();
 
+    default Change<DATA> check(Object obj, PropertyAccess<VAL> property, PropertyAccess<COM> companion) {
+        return check(obj, property, property, companion, companion);
+    }
+
     /**
      * <p>Check if the property represented by the given getters and setters has changed.</p>
      * <p>This method must return one of {@link #noChange()} or {@link #newValue(Object)}.</p>
@@ -66,6 +71,10 @@ public interface Syncer<VAL, COM, DATA> {
      */
     void encode(DATA data, MCDataOutput out);
 
+    default void apply(DATA data, Object obj, PropertyAccess<VAL> property, PropertyAccess<COM> companion) {
+        apply(data, obj, property, property);
+    }
+
     /**
      * <p>Called when the client receives a direct update for the field represented by the given getter and setter.</p>
      * <p>This method must perform any actions necessary to apply the given data to the field.</p>
@@ -77,6 +86,10 @@ public interface Syncer<VAL, COM, DATA> {
      * @param setter the setter for the property
      */
     <OBJ> void apply(DATA data, OBJ obj, Function<OBJ, VAL> getter, BiConsumer<OBJ, VAL> setter);
+
+    default void apply(MCDataInput in, Object obj, PropertyAccess<VAL> property, PropertyAccess<COM> companion) {
+        apply(in, obj, property, property);
+    }
 
     /**
      * <p>Called when the client receives an update for the field represented by the given getter and setter.</p>

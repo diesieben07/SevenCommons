@@ -18,6 +18,25 @@ final class FieldProperty<T> extends AbstractProperty<T, Field> {
     }
 
     @Override
+    public T get(Object o) {
+        try {
+            //noinspection unchecked
+            return (T) member.get(o);
+        } catch (IllegalAccessException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Override
+    public void set(Object o, T val) {
+        try {
+            member.set(o, val);
+        } catch (IllegalAccessException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Override
     PropertyAccess<?> doOptimize() {
         return OptimizedPropertyCompiler.optimize(member);
     }

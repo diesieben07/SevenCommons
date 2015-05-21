@@ -1,12 +1,13 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.primitives.Ints;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import de.take_weiland.mods.commons.nbt.NBT;
+import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.BlockPos;
 import de.take_weiland.mods.commons.util.EnumUtils;
-import de.take_weiland.mods.commons.internal.SCReflector;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -27,8 +28,6 @@ import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkPositionIndexes;
 
@@ -745,8 +744,8 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
     }
 
     @Override
-    public <T_DATA, T_OBJ, T_VAL> void apply(T_OBJ obj, Syncer<T_VAL, ?, T_DATA> syncer, Function<T_OBJ, T_VAL> getter, BiConsumer<T_OBJ, T_VAL> setter) {
-        syncer.apply(this, obj, getter, setter);
+    public <T_DATA, T_VAL, T_COM> void apply(Object obj, Syncer<T_VAL, T_COM, T_DATA> syncer, PropertyAccess<T_VAL> property, PropertyAccess<T_COM> companion) {
+        syncer.apply(this, obj, property, companion);
     }
 
 }
