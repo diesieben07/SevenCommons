@@ -113,26 +113,7 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
     PropertyAccess<T> doOptimize() {
         MethodHandle get = getGetter().asType(methodType(Object.class, Object.class));
         MethodHandle set = getSetter().asType(methodType(void.class, Object.class, Object.class));
-        return new PropertyAccess<T>() {
-            @Override
-            public T get(Object o) {
-                try {
-                    //noinspection unchecked
-                    return (T) get.invokeExact(o);
-                } catch (Throwable t) {
-                    throw JavaUtils.throwUnchecked(t);
-                }
-            }
-
-            @Override
-            public void set(Object o, T val) {
-                try {
-                    set.invokeExact(o, val);
-                } catch (Throwable t) {
-                    throw JavaUtils.throwUnchecked(t);
-                }
-            }
-        };
+        return new OptimizedVersion<>(get, set);
     }
 
     @Override
@@ -180,4 +161,32 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
         return "TypeSpec of type " + getType();
     }
 
+    private static final class OptimizedVersion<T> implements PropertyAccess<T> {
+        private final MethodHandle get;
+        private final MethodHandle set;
+
+        public OptimizedVersion(MethodHandle get, MethodHandle set) {
+            this.get = get;
+            this.set = set;
+        }
+
+        @Override
+        public T get(Object o) {
+            try {
+                //noinspection unchecked
+                return (T) get.invokeExact(o);
+            } catch (Throwable t) {
+                throw JavaUtils.throwUnchecked(t);
+            }
+        }
+
+        @Override
+        public void set(Object o, T val) {
+            try {
+                set.invokeExact(o, val);
+            } catch (Throwable t) {
+                throw JavaUtils.throwUnchecked(t);
+            }
+        }
+    }
 }
