@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal.prop;
 
 import com.google.common.reflect.TypeToken;
+import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.apache.commons.lang3.StringUtils;
 
@@ -23,6 +24,12 @@ final class MethodProperty<T> extends AbstractProperty<T, Method> {
         if (setter != null) {
             setter.setAccessible(true);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    PropertyAccess<T> doOptimize() {
+        return (PropertyAccess<T>) OptimizedPropertyCompiler.optimize(member, setter);
     }
 
     @Override
