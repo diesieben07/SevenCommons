@@ -10,6 +10,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
@@ -38,6 +39,7 @@ public final class MethodHandleStrategy extends ReflectionStrategy {
         gen.endMethod();
 
         ImmutableMap<Method, MethodHandle> handles = FluentIterable.from(Arrays.asList(iface.getDeclaredMethods()))
+                .filter(m -> Modifier.isAbstract(m.getModifiers()))
                 .toMap(AccessorMemberParser::getTarget);
 
         Type myType = Type.getObjectType(className);
