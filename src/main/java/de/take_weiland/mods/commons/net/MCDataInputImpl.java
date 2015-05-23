@@ -744,8 +744,8 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
     }
 
     @Override
-    public <T_DATA, T_VAL, T_COM> void apply(Object obj, Syncer<T_VAL, T_COM, T_DATA> syncer, PropertyAccess<T_VAL> property, PropertyAccess<T_COM> companion) {
-        syncer.apply(this, obj, property, companion);
+    public <T_DATA, T_VAL, T_COM> void apply(Syncer<T_VAL, T_COM, T_DATA> syncer, Object obj, PropertyAccess<T_VAL> property, Object cObj, PropertyAccess<T_COM> companion) {
+        syncer.apply(this, obj, property, cObj, companion);
     }
 
 }

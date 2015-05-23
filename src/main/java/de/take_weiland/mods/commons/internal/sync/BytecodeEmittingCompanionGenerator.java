@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
+import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
 import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.reflect.SCReflection;
@@ -17,13 +18,10 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.commons.TableSwitchGenerator;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.Map;
 
-import static java.lang.invoke.MethodHandles.publicLookup;
-import static java.lang.invoke.MethodType.methodType;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -120,7 +118,7 @@ public final class BytecodeEmittingCompanionGenerator {
             if (companionType != null) {
                 cw.visitField(PRV_STC_FNL, getPropertyID(property, COMP_ACC), descPropAcc, null, null);
 
-                cw.visitField(ACC_PRIVATE, getPropertyID(property, COMPANION), Type.getDescriptor(companionType), null, null);
+                cw.visitField(ACC_PUBLIC, getPropertyID(property, COMPANION), Type.getDescriptor(companionType), null, null);
             }
         }
     }
@@ -169,12 +167,13 @@ public final class BytecodeEmittingCompanionGenerator {
                 Syncer<?, ?, ?> syncer = entry.getValue();
 
                 gen.loadArg(1);
-                gen.loadArg(0);
                 gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
+                gen.loadArg(0);
                 gen.getStatic(myType, getPropertyID(property, PROP_ACC), propertyAccessType);
+                gen.loadThis();
                 gen.getStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
                 gen.invokeInterface(changeItType, new Method("apply", VOID_TYPE,
-                        new Type[]{objectType, syncerType, propertyAccessType, propertyAccessType}));
+                        new Type[]{syncerType, objectType, propertyAccessType, objectType, propertyAccessType}));
                 gen.goTo(end);
             }
 
@@ -243,10 +242,11 @@ public final class BytecodeEmittingCompanionGenerator {
             gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
             gen.loadArg(0);
             gen.getStatic(myType, getPropertyID(property, PROP_ACC), propertyAccessType);
+            gen.loadThis();
             gen.getStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
 
             gen.invokeInterface(syncerType, new Method("check", syncerChangeType,
-                    new Type[]{objectType, propertyAccessType, propertyAccessType}));
+                    new Type[]{objectType, propertyAccessType, objectType, propertyAccessType}));
             gen.storeLocal(changeSlot);
 
             gen.loadLocal(changeSlot);
@@ -380,31 +380,9 @@ public final class BytecodeEmittingCompanionGenerator {
                     PropertyAccess<?> propertyAccess = property.optimize();
                     PropertyAccess<?> compAccess;
                     if (syncer.companionType() != null) {
-                        Field compField = null;
                         try {
-                            compField = generatedClass.getDeclaredField(getPropertyID(property, COMPANION));
-                            compField.setAccessible(true);
-                            MethodHandle cGet = publicLookup().unreflectGetter(compField).asType(methodType(Object.class, Object.class));
-                            MethodHandle cSet = publicLookup().unreflectSetter(compField).asType(methodType(void.class, Object.class, Object.class));
-                            compAccess = new PropertyAccess<Object>() {
-                                @Override
-                                public Object get(Object o) {
-                                    try {
-                                        return cGet.invokeExact((Object) ((SyncedObjectProxy) o)._sc$getCompanion());
-                                    } catch (Throwable e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                }
-
-                                @Override
-                                public void set(Object o, Object val) {
-                                    try {
-                                        cSet.invokeExact((Object) ((SyncedObjectProxy) o)._sc$getCompanion(), val);
-                                    } catch (Throwable e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                }
-                            };
+                            Field compField = generatedClass.getDeclaredField(getPropertyID(property, COMPANION));
+                            compAccess = AbstractProperty.newProperty(compField).optimize();
                         } catch (ReflectiveOperationException e) {
                             throw new IllegalStateException(e);
                         }

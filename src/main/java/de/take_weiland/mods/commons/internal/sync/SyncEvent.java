@@ -112,10 +112,10 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
     }
 
     @Override
-    public <T_DATA, T_VAL, T_COM> void apply(Object obj, Syncer<T_VAL, T_COM, T_DATA> syncer, PropertyAccess<T_VAL> property, PropertyAccess<T_COM> companion) {
+    public <T_DATA, T_VAL, T_COM> void apply(Syncer<T_VAL, T_COM, T_DATA> syncer, Object obj, PropertyAccess<T_VAL> property, Object cObj, PropertyAccess<T_COM> companion) {
         @SuppressWarnings("unchecked")
         ChangedValue<T_DATA> change = (ChangedValue<T_DATA>) changes[cursor++];
-        syncer.apply(change.data, obj, property, companion);
+        syncer.apply(change.data, obj, property, cObj, companion);
     }
 
     public abstract void send(Object obj);

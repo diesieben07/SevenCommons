@@ -2,26 +2,26 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.item.ItemStack;
 
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
 /**
  * @author diesieben07
  */
-enum ItemStackSyncer implements Syncer.Simple<ItemStack, ItemStack, ItemStack> {
+enum ItemStackSyncer implements Syncer<ItemStack, ItemStack, ItemStack> {
+
     INSTANCE;
 
     @Override
-    public <OBJ> Change<ItemStack> check(ItemStack value, ItemStack companion, OBJ obj, BiConsumer<OBJ, ItemStack> setter, BiConsumer<OBJ, ItemStack> cSetter) {
-        if (ItemStacks.identical(value, companion)) {
+    public Change<ItemStack> check(Object obj, PropertyAccess<ItemStack> property, Object cObj, PropertyAccess<ItemStack> companion) {
+        ItemStack value = property.get(obj);
+        if (ItemStacks.identical(value, companion.get(cObj))) {
             return noChange();
         } else {
             ItemStack clone = ItemStacks.clone(value);
-            cSetter.accept(obj, clone);
+            companion.set(obj, clone);
             return newValue(clone);
         }
     }
@@ -32,13 +32,13 @@ enum ItemStackSyncer implements Syncer.Simple<ItemStack, ItemStack, ItemStack> {
     }
 
     @Override
-    public <OBJ> void apply(ItemStack itemStack, OBJ obj, Function<OBJ, ItemStack> getter, BiConsumer<OBJ, ItemStack> setter) {
-        setter.accept(obj, ItemStacks.clone(itemStack));
+    public void apply(ItemStack itemStack, Object obj, PropertyAccess<ItemStack> property, Object cObj, PropertyAccess<ItemStack> companion) {
+        property.set(obj, ItemStacks.clone(itemStack));
     }
 
     @Override
-    public <OBJ> void apply(MCDataInput in, OBJ obj, Function<OBJ, ItemStack> getter, BiConsumer<OBJ, ItemStack> setter) {
-        setter.accept(obj, in.readItemStack());
+    public void apply(MCDataInput in, Object obj, PropertyAccess<ItemStack> property, Object cObj, PropertyAccess<ItemStack> companion) {
+        property.set(obj, in.readItemStack());
     }
 
     @Override
