@@ -59,7 +59,37 @@ public abstract class ClassInfo extends HasModifiers {
      * @throws de.take_weiland.mods.commons.asm.MissingClassException if the class could not be found
      */
     public static ClassInfo of(String className) {
-        return of(Type.getObjectType(ASMUtils.internalName(className)));
+        switch (className) {
+            case "void":
+            case "V":
+                return of(void.class);
+            case "boolean":
+            case "Z":
+                return of(boolean.class);
+            case "byte":
+            case "B":
+                return of(byte.class);
+            case "short":
+            case "S":
+                return of(short.class);
+            case "char":
+            case "C":
+                return of(char.class);
+            case "int":
+            case "I":
+                return of(int.class);
+            case "long":
+            case "J":
+                return of(long.class);
+            case "float":
+            case "F":
+                return of(float.class);
+            case "double":
+            case "D":
+                return of(double.class);
+            default:
+                return fromObjectClassName(className);
+        }
     }
 
     /**
@@ -77,10 +107,8 @@ public abstract class ClassInfo extends HasModifiers {
                 Type rootType = type.getElementType();
                 int dimensions = type.getDimensions();
                 return new ClassInfoArray(dimensions, of(rootType));
-            case Type.OBJECT:
-                return ofObject(type.getClassName());
-            case Type.VOID:
-                return of(void.class);
+            case Type.METHOD:
+                throw new IllegalArgumentException("Cannot create ClassInfo of a Method Type!");
             case Type.BOOLEAN:
                 return of(boolean.class);
             case Type.BYTE:
@@ -97,10 +125,33 @@ public abstract class ClassInfo extends HasModifiers {
                 return of(float.class);
             case Type.DOUBLE:
                 return of(double.class);
-            case Type.METHOD:
-                throw new IllegalArgumentException("Cannot create ClassInfo of a Method Type!");
+            case Type.VOID:
+                return of(void.class);
             default:
-                throw new AssertionError();
+                return fromObjectClassName(type.getClassName());
+        }
+    }
+
+    private static ClassInfo fromObjectClassName(String className) {
+        Class<?> clazz;
+        if ((clazz = findLoadedClass(Launch.classLoader, className)) != null) {
+            return new ClassInfoReflect(clazz);
+        } else {
+            try {
+                // the class is not loaded, try get it's bytes
+                byte[] bytes = Launch.classLoader.getClassBytes(ASMUtils.untransformName(className));
+                // somehow we can't access the class bytes (happens for classes not on the LaunchClassLoader)
+                // we try and load the class now
+                if (bytes == null) {
+                    return forceLoad(className);
+                } else {
+                    // we found the bytes, lets use them
+                    return new ClassInfoASM(ASMUtils.getThinClassNode(bytes));
+                }
+            } catch (IOException e) {
+                // something went wrong getting the class bytes. try and load it
+                return forceLoad(className);
+            }
         }
     }
 
@@ -123,30 +174,6 @@ public abstract class ClassInfo extends HasModifiers {
             return (Class<?>) findLoadedClass.invokeExact(cl, name);
         } catch (Throwable e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private static ClassInfo ofObject(String className) {
-        Class<?> clazz;
-        // first, try to get the class if it's already loaded
-        if ((clazz = findLoadedClass(Launch.classLoader, className)) != null) {
-            return new ClassInfoReflect(clazz);
-        } else {
-            try {
-                // the class is not loaded, try get it's bytes
-                byte[] bytes = Launch.classLoader.getClassBytes(ASMUtils.untransformName(className));
-                // somehow we can't access the class bytes (happens for JDK classes for example)
-                // we try and load the class now
-                if (bytes == null) {
-                    return forceLoad(className);
-                } else {
-                    // we found the bytes, lets use them
-                    return new ClassInfoASM(ASMUtils.getThinClassNode(bytes));
-                }
-            } catch (IOException e) {
-                // something went wrong getting the class bytes. try and load it
-                return forceLoad(className);
-            }
         }
     }
 
@@ -312,13 +339,6 @@ public abstract class ClassInfo extends HasModifiers {
     public boolean isEnum() {
         return hasModifier(ACC_ENUM) && superName().equals("java/lang/Enum");
     }
-
-    /**
-     * <p>Get the name of the source file this class was declared in.</p>
-     *
-     * @return the source file or null if unknown
-     */
-    public abstract String getSourceFile();
 
     @Override
     public boolean equals(Object o) {

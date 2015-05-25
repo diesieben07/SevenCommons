@@ -5,7 +5,6 @@ import com.google.common.io.Files;
 import com.google.common.reflect.Reflection;
 import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import de.take_weiland.mods.commons.internal.reflect.MethodHandleStrategy;
 import de.take_weiland.mods.commons.internal.reflect.ReflectionStrategy;
@@ -27,7 +26,8 @@ import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
  * <p>Reflection utilities.</p>
- * <p>This class provides an alternative to using traditional reflection to access inaccessible fields and methods.</p>
+ * <p>Among other things this class provides a way to access private fields, methods and classes without the performance
+ * penalty of traditional reflection and while maintaining type-safety as much as possible. See {@link #createAccessor(Class)}.</p>
  */
 @ParametersAreNonnullByDefault
 public final class SCReflection {
@@ -41,27 +41,41 @@ public final class SCReflection {
      * <p>Create an object that implements the given Accessor Interface. The result of this method should be permanently cached,
      * because this operation is likely to be relatively expensive.</p>
      * <p>The given class must be an interface and must not extend any other interfaces.
-     * All methods must be marked with one of {@link de.take_weiland.mods.commons.reflect.Getter},
+     * All abstract methods must be marked with one of {@link de.take_weiland.mods.commons.reflect.Getter},
      * {@link de.take_weiland.mods.commons.reflect.Setter}, {@link de.take_weiland.mods.commons.reflect.Invoke} or {@link de.take_weiland.mods.commons.reflect.Construct}
      * and comply with the respective contract.</p>
      *
-     * @param iface the Accessor Interface
+     * @param clazz the Accessor Interface
      * @return a newly created object, implementing the given interface
      */
-    public static <T> T createAccessor(Class<T> iface) {
+    public static <T> T createAccessor(Class<T> clazz) {
         try {
-            return strategy.createAccessor(iface);
+            return strategy.createAccessor(clazz);
         } catch (IllegalAccessorException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalAccessorException("Failed to parse accessor interface " + iface.getName(), e);
+            throw new IllegalAccessorException("Failed to parse accessor interface " + clazz.getName(), e);
         }
     }
 
+    /**
+     * <p>Will try to find the corresponding setter method to the given method.</p>
+     * <p>If the method is annotated with {@link OverrideSetter} the method specified there will be returned,
+     * provided it is a valid setter.</p>
+     * <p>Otherwise the following rules apply:</p>
+     * <ul>
+     *     <li>{@code getFoo} ⇒ {@code setFoo}</li>
+     *     <li>{@code isFoo} ⇒ {@code setFoo}</li>
+     *     <li>{@code foo} ⇒ {@code foo_$eq} (if the class is {@linkplain #isScala(Class) likely a scala class})</li>
+     *     <li>{@code foo} ⇒ {@code foo}</li>
+     * </ul>
+     * @param getter the getter method
+     * @return the setter method or {@code null} if no setter was found
+     */
     public static Method findSetter(Method getter) {
-        checkArgument(getter.getParameterTypes().length == 0);
+        checkArgument(getter.getParameterTypes().length == 0, "Getters cannot take parameters");
         Class<?> type = getter.getReturnType();
-        checkArgument(type != void.class);
+        checkArgument(type != void.class, "Getters must not return void");
 
         String setterName;
         OverrideSetter ann = getter.getAnnotation(OverrideSetter.class);
@@ -80,17 +94,20 @@ public final class SCReflection {
             }
         }
 
+        Method setter;
         try {
-            return getter.getDeclaringClass().getDeclaredMethod(setterName, type);
+            setter = getter.getDeclaringClass().getDeclaredMethod(setterName, type);
         } catch (NoSuchMethodException e) {
             // no setter
             return null;
         }
+        if (setter.getReturnType() != void.class) {
+            return null;
+        }
+        return setter;
     }
 
     private static Class<? extends Annotation> scalaSigClass;
-
-
     private static Class<? extends Annotation> scalaLongSigClass;
 
     /**
@@ -121,9 +138,17 @@ public final class SCReflection {
         if (scalaLongSigClass == null) {
             scalaLongSigClass = Override.class;
         }
-        return clazz.isAnnotationPresent(scalaSigClass)
-                || clazz.isAnnotationPresent(scalaLongSigClass)
-                || ClassInfo.of(clazz).getSourceFile().endsWith(".scala");
+        return clazz.isAnnotationPresent(scalaSigClass) || clazz.isAnnotationPresent(scalaLongSigClass);
+    }
+
+    /**
+     * <p>Define a new Class specified by the given bytes.</p>
+     *
+     * @param bytes the bytes describing the class
+     * @return the defined class
+     */
+    public static Class<?> defineDynamicClass(byte[] bytes) {
+        return defineDynamicClass(bytes, SCReflection.class);
     }
 
     private static final MethodHandle CLASS_LOADER_DEFINE;
@@ -143,18 +168,8 @@ public final class SCReflection {
     /**
      * <p>Define a new Class specified by the given bytes.</p>
      *
-     * @param bytes the bytes describing the class
-     * @return the defined class
-     */
-    public static Class<?> defineDynamicClass(byte[] bytes) {
-        return defineDynamicClass(bytes, SCReflection.class);
-    }
-
-    /**
-     * <p>Define a new Class specified by the given bytes.</p>
-     *
      * @param bytes   the bytes describing the class
-     * @param context the class which to use as the context
+     * @param context the class whose class loader to use
      * @return the defined class
      */
     public static Class<?> defineDynamicClass(byte[] bytes, Class<?> context) {
@@ -163,9 +178,9 @@ public final class SCReflection {
                 ClassNode node = ASMUtils.getThinClassNode(bytes);
                 File file = new File("sevencommonsdyn/" + node.name + ".class");
                 Files.createParentDirs(file);
-                OutputStream out = new FileOutputStream(file);
-                out.write(bytes);
-                out.close();
+                try (OutputStream out = new FileOutputStream(file)) {
+                    out.write(bytes);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

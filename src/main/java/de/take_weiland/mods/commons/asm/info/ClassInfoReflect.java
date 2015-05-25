@@ -1,19 +1,14 @@
 package de.take_weiland.mods.commons.asm.info;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
-import org.apache.commons.io.IOUtils;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Type;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import static org.objectweb.asm.Opcodes.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author diesieben07
@@ -21,21 +16,17 @@ import static org.objectweb.asm.Opcodes.*;
 final class ClassInfoReflect extends ClassInfo {
 
     private final Class<?> clazz;
-    private List<String> interfaces;
+    private final List<String> interfaces;
 
     ClassInfoReflect(Class<?> clazz) {
-        this.clazz = clazz;
+        this.clazz = checkNotNull(clazz, "clazz");
+        interfaces = Lists.transform(
+                Collections.unmodifiableList(Arrays.asList(clazz.getInterfaces())),
+                Type::getInternalName);
     }
 
     @Override
     public List<String> interfaces() {
-        if (interfaces == null) {
-            ImmutableList.Builder<String> builder = ImmutableList.builder();
-            for (Class<?> iface : clazz.getInterfaces()) {
-                builder.add(Type.getInternalName(iface));
-            }
-            interfaces = builder.build();
-        }
         return interfaces;
     }
 
@@ -75,40 +66,4 @@ final class ClassInfoReflect extends ClassInfo {
         return this.clazz.isAssignableFrom(child.clazz);
     }
 
-    private String sourceFileCache;
-
-    @Override
-    public String getSourceFile() {
-        if (sourceFileCache == null) {
-            InputStream in = clazz.getResourceAsStream('/' + clazz.getName().replace('.', '/') + ".class");
-            if (in != null) {
-                try {
-                    ClassReader cr = new ClassReader(ByteStreams.toByteArray(in));
-                    SourceFileExtractor extractor = new SourceFileExtractor();
-                    cr.accept(extractor, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-                    sourceFileCache = Strings.nullToEmpty(extractor.sourceFile);
-                } catch (IOException e) {
-                    sourceFileCache = "";
-                } finally {
-                    IOUtils.closeQuietly(in);
-                }
-            }
-        }
-        return Strings.emptyToNull(sourceFileCache);
-    }
-
-    private static final class SourceFileExtractor extends ClassVisitor {
-
-        String sourceFile;
-
-        SourceFileExtractor() {
-            super(ASM4, null);
-        }
-
-        @Override
-        public void visitSource(String source, String debug) {
-            sourceFile = source;
-            super.visitSource(source, debug);
-        }
-    }
 }

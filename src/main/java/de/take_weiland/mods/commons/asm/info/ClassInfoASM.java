@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.asm.info;
 
 import org.objectweb.asm.tree.ClassNode;
 
+import java.util.Collections;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -12,14 +13,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 final class ClassInfoASM extends ClassInfo {
 
     private final ClassNode clazz;
+    private final List<String> interfaces;
 
     ClassInfoASM(ClassNode clazz) {
         this.clazz = checkNotNull(clazz, "ClassNode");
+        this.interfaces = Collections.unmodifiableList(clazz.interfaces);
     }
 
     @Override
     public List<String> interfaces() {
-        return clazz.interfaces;
+        return interfaces;
     }
 
     @Override
@@ -43,8 +46,4 @@ final class ClassInfoASM extends ClassInfo {
         return 0;
     }
 
-    @Override
-    public String getSourceFile() {
-        return clazz.sourceFile;
-    }
 }

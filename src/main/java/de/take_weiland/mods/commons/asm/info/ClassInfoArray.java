@@ -18,13 +18,15 @@ final class ClassInfoArray extends ClassInfo {
     ClassInfoArray(int dimensions, ClassInfo rootType) {
         this.dimensions = dimensions;
 
-        StringBuilder sb = new StringBuilder();
+        String rootIntName = rootType.internalName();
+
+        StringBuilder sb = new StringBuilder(rootIntName.length() + dimensions + 1);
         for (int i = 0; i < dimensions; i++) {
             sb.append('[');
         }
         sb.append('L');
-        sb.append(rootType.internalName());
-        internalName = sb.toString();
+        sb.append(rootIntName);
+        this.internalName = sb.toString();
 
         // see Class.getModifiers
         this.modifiers = rootType.modifiers() & (ACC_PUBLIC | ACC_PROTECTED | ACC_PRIVATE) | ACC_FINAL;
@@ -37,6 +39,7 @@ final class ClassInfoArray extends ClassInfo {
 
     @Override
     public String superName() {
+        // see Class.getSuperClass
         return "java/lang/Object";
     }
 
@@ -48,11 +51,6 @@ final class ClassInfoArray extends ClassInfo {
     @Override
     public int getDimensions() {
         return dimensions;
-    }
-
-    @Override
-    public String getSourceFile() {
-        return null;
     }
 
     @Override

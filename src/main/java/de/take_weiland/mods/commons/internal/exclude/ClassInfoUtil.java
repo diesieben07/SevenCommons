@@ -1,15 +1,15 @@
 package de.take_weiland.mods.commons.internal.exclude;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author diesieben07
@@ -33,44 +33,47 @@ public final class ClassInfoUtil {
         MinecraftForge.EVENT_BUS.unregister(this);
     }
 
-    private static volatile Map<String, ImmutableSet<String>> superCache = Maps.newHashMap();
+    private static Map<String, ImmutableSet<String>> superCache = new ConcurrentHashMap<>();
 
     public static Set<String> getSupers(ClassInfo classInfo) {
         // grab a local var in case of concurrency
         Map<String, ImmutableSet<String>> superCacheLocal = superCache;
         if (superCacheLocal != null) {
-            ImmutableSet<String> supers;
-            synchronized (ClassInfoUtil.class) {
-                supers = superCacheLocal.get(classInfo.internalName());
-            }
-            if (supers == null) {
-                supers = buildSupers(classInfo);
-                synchronized (ClassInfoUtil.class) {
-                    // in theory someone else might have done this already
-                    // but oh well, the data is the same
-                    superCacheLocal.put(classInfo.internalName(), supers);
-                }
-            }
-            return supers;
+            return superCacheLocal.computeIfAbsent(classInfo.internalName(), cl -> buildSupers(classInfo));
         } else {
             return buildSupers(classInfo);
         }
     }
 
+    private static Set<String> getSupers(String clazz) {
+        Map<String, ImmutableSet<String>> superCacheLocal = superCache;
+        if (superCacheLocal != null) {
+            return superCacheLocal.computeIfAbsent(clazz, ClassInfoUtil::buildSupers);
+        } else {
+            return buildSupers(clazz);
+        }
+    }
+
+    private static ImmutableSet<String> buildSupers(String clazz) {
+        return buildSupers(ClassInfo.of(clazz));
+    }
+
     private static ImmutableSet<String> buildSupers(ClassInfo classInfo) {
-        Set<String> set = Sets.newHashSet();
-        String superName = classInfo.superName();
+        return buildSupers(classInfo.superName(), classInfo.interfaces());
+    }
+
+    private static ImmutableSet<String> buildSupers(String superName, Iterable<String> interfaces) {
+        Set<String> set = new HashSet<>();
         if (superName != null) {
             set.add(superName);
-            set.addAll(classInfo.superclass().getSupers());
+            set.addAll(getSupers(superName));
         }
-        for (String iface : classInfo.interfaces()) {
+
+        for (String iface : interfaces) {
             if (set.add(iface)) {
-                set.addAll(ClassInfo.of(iface).getSupers());
+                set.addAll(getSupers(iface));
             }
         }
-        // use immutable set to reduce memory footprint and potentially increase performance
-        // cannot use builder because we need the boolean return from set.add
         return ImmutableSet.copyOf(set);
     }
 
