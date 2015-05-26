@@ -8,15 +8,17 @@ import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
 import de.take_weiland.mods.commons.internal.reflect.MethodHandleStrategy;
 import de.take_weiland.mods.commons.internal.reflect.ReflectionStrategy;
+import net.minecraft.launchwrapper.Launch;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
+import scala.reflect.ScalaLongSignature;
+import scala.reflect.ScalaSignature;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -107,9 +109,6 @@ public final class SCReflection {
         return setter;
     }
 
-    private static Class<? extends Annotation> scalaSigClass;
-    private static Class<? extends Annotation> scalaLongSigClass;
-
     /**
      * <p>Tries to determine if the given class is a scala class.</p>
      * <p>If this method returns true, the class is most definitely a scala class. If it however returns false,
@@ -119,26 +118,7 @@ public final class SCReflection {
      * @return true if the class is a scala class
      */
     public static boolean isScala(Class<?> clazz) {
-        try {
-            if (scalaSigClass == null) {
-                scalaSigClass = Class.forName("scala.reflect.ScalaSignature")
-                        .asSubclass(Annotation.class);
-
-                scalaLongSigClass = Class.forName("scala.reflect.ScalaLongSignature")
-                        .asSubclass(Annotation.class);
-            }
-        } catch (ClassNotFoundException e) {
-            // ignored
-        }
-        // if these classes are not found use a dummy annotation that will never be present
-        // to avoid checking Class.forName over and over again
-        if (scalaSigClass == null) {
-            scalaSigClass = Override.class;
-        }
-        if (scalaLongSigClass == null) {
-            scalaLongSigClass = Override.class;
-        }
-        return clazz.isAnnotationPresent(scalaSigClass) || clazz.isAnnotationPresent(scalaLongSigClass);
+        return clazz.isAnnotationPresent(ScalaSignature.class) || clazz.isAnnotationPresent(ScalaLongSignature.class);
     }
 
     /**
@@ -148,7 +128,37 @@ public final class SCReflection {
      * @return the defined class
      */
     public static Class<?> defineDynamicClass(byte[] bytes) {
-        return defineDynamicClass(bytes, SCReflection.class);
+        return defineDynamicClass(bytes, Launch.classLoader);
+    }
+
+    /**
+     * <p>Define a new Class specified by the given bytes.</p>
+     *
+     * @param bytes   the bytes describing the class
+     * @param loader the class loader to use
+     * @return the defined class
+     */
+    public static Class<?> defineDynamicClass(byte[] bytes, ClassLoader loader) {
+        if (DEBUG) {
+            try {
+                ClassNode node = ASMUtils.getThinClassNode(bytes);
+                File file = new File("sevencommonsdyn/" + node.name + ".class");
+                Files.createParentDirs(file);
+                try (OutputStream out = new FileOutputStream(file)) {
+                    out.write(bytes);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        Class<?> clazz;
+        try {
+            clazz = (Class<?>) CLASS_LOADER_DEFINE.invokeExact(loader, (String) null, bytes, 0, bytes.length);
+        } catch (Throwable t) {
+            throw Throwables.propagate(t);
+        }
+        Reflection.initialize(clazz);
+        return clazz;
     }
 
     private static final MethodHandle CLASS_LOADER_DEFINE;
@@ -163,37 +173,6 @@ public final class SCReflection {
         } catch (IllegalAccessException e) {
             throw new AssertionError("impossible");
         }
-    }
-
-    /**
-     * <p>Define a new Class specified by the given bytes.</p>
-     *
-     * @param bytes   the bytes describing the class
-     * @param context the class whose class loader to use
-     * @return the defined class
-     */
-    public static Class<?> defineDynamicClass(byte[] bytes, Class<?> context) {
-        if (DEBUG) {
-            try {
-                ClassNode node = ASMUtils.getThinClassNode(bytes);
-                File file = new File("sevencommonsdyn/" + node.name + ".class");
-                Files.createParentDirs(file);
-                try (OutputStream out = new FileOutputStream(file)) {
-                    out.write(bytes);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        ClassLoader cl = context.getClassLoader();
-        Class<?> clazz;
-        try {
-            clazz = (Class<?>) CLASS_LOADER_DEFINE.invokeExact(cl, (String) null, bytes, 0, bytes.length);
-        } catch (Throwable t) {
-            throw Throwables.propagate(t);
-        }
-        Reflection.initialize(clazz);
-        return clazz;
     }
 
     /**

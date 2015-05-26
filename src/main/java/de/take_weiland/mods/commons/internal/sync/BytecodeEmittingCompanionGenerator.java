@@ -360,7 +360,7 @@ public final class BytecodeEmittingCompanionGenerator {
             staticProperties = properties;
             try {
                 cw.visitEnd();
-                cls = SCReflection.defineDynamicClass(cw.toByteArray(), BytecodeEmittingCompanionGenerator.class);
+                cls = SCReflection.defineDynamicClass(cw.toByteArray());
             } finally {
                 staticProperties = null;
             }
