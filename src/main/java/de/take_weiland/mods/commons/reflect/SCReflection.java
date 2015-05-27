@@ -65,10 +65,9 @@ public final class SCReflection {
      * <p>Will try to find the corresponding setter method to the given method.</p>
      * <p>If the method is annotated with {@link OverrideSetter} the method specified there will be returned,
      * provided it is a valid setter.</p>
-     * <p>Otherwise the following rules apply:</p>
+     * <p>Otherwise the following rules apply in this order:</p>
      * <ul>
-     *     <li>{@code getFoo} ⇒ {@code setFoo}</li>
-     *     <li>{@code isFoo} ⇒ {@code setFoo}</li>
+     *     <li>{@code getFoo} / {@code isFoo} ⇒ {@code setFoo}</li>
      *     <li>{@code foo} ⇒ {@code foo_$eq} (if the class is {@linkplain #isScala(Class) likely a scala class})</li>
      *     <li>{@code foo} ⇒ {@code foo}</li>
      * </ul>
