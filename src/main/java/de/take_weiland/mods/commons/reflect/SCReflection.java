@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -79,34 +80,57 @@ public final class SCReflection {
         Class<?> type = getter.getReturnType();
         checkArgument(type != void.class, "Getters must not return void");
 
-        String setterName;
         OverrideSetter ann = getter.getAnnotation(OverrideSetter.class);
         if (ann != null) {
-            setterName = ann.value();
+            try {
+                return getter.getDeclaringClass().getDeclaredMethod(ann.value(), type);
+            } catch (NoSuchMethodException e) {
+                throw new IllegalStateException(String.format("@OverrideSetter on %s in %s points to non-existing setter", getter.getName(), getter.getDeclaringClass().getName()));
+            }
         } else {
+            String setterName = null;
             String getterName = getter.getName();
             if (getterName.startsWith("get") && getterName.length() >= 4 && Character.isUpperCase(getterName.charAt(3))) {
                 setterName = "set" + getterName.substring(3);
             } else if (getterName.startsWith("is") && getterName.length() >= 3 && Character.isUpperCase(getterName.charAt(2))) {
                 setterName = "set" + getterName.substring(2);
-            } else if (isScala(getter.getDeclaringClass())) {
-                setterName = getterName + "_$eq";
-            } else {
-                setterName = getterName;
+            }
+            if (setterName != null) {
+                try {
+                    Method setter = getter.getDeclaringClass().getDeclaredMethod(setterName, type);
+                    if (isValidGetSetPair(getter, setter)) {
+                        return setter;
+                    }
+                } catch (NoSuchMethodException e) {
+                    // ignored
+                }
+            }
+
+            if (isScala(getter.getDeclaringClass())) {
+                try {
+                    Method setter = getter.getDeclaringClass().getDeclaredMethod(getterName + "_$eq", type);
+                    if (isValidGetSetPair(getter, setter)) {
+                        return setter;
+                    }
+                } catch (NoSuchMethodException e) {
+                    // ignored
+                }
+            }
+            try {
+                Method setter = getter.getDeclaringClass().getDeclaredMethod(getterName, type);
+                if (isValidGetSetPair(getter, setter)) {
+                    return setter;
+                } else {
+                    return null;
+                }
+            } catch (NoSuchMethodException e) {
+                return null;
             }
         }
+    }
 
-        Method setter;
-        try {
-            setter = getter.getDeclaringClass().getDeclaredMethod(setterName, type);
-        } catch (NoSuchMethodException e) {
-            // no setter
-            return null;
-        }
-        if (setter.getReturnType() != void.class) {
-            return null;
-        }
-        return setter;
+    private static boolean isValidGetSetPair(Method getter, Method setter) {
+        return Modifier.isStatic(getter.getModifiers()) == Modifier.isStatic(setter.getModifiers());
     }
 
     /**
