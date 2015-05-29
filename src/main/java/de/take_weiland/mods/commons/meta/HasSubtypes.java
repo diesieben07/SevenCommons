@@ -41,12 +41,29 @@ public interface HasSubtypes<T extends Subtype> {
         return subtypeProperty().value(stack);
     }
 
+    /**
+     * <p>Create an ItemStack of the given type.</p>
+     *
+     * @param type the type
+     * @return an ItemStack
+     */
     default ItemStack getStack(T type) {
+        return getStack(type, 1);
+    }
+
+    /**
+     * <p>Create an ItemStack of the given type and size.</p>
+     *
+     * @param type the type
+     * @param size the size
+     * @return an ItemStack
+     */
+    default ItemStack getStack(T type, int size) {
         if (this instanceof Block) {
-            return new ItemStack((Block) this, 1, subtypeProperty().toMeta(type));
+            return new ItemStack((Block) this, size, subtypeProperty().toMeta(type));
         } else {
             try {
-                return new ItemStack((Item) this, 1, subtypeProperty().toMeta(type));
+                return new ItemStack((Item) this, size, subtypeProperty().toMeta(type));
             } catch (ClassCastException e) {
                 throw new UnsupportedOperationException("HasSubtypes implemented on something that is not Item or Block!");
             }
