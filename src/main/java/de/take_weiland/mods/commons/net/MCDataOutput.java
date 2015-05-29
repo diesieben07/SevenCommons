@@ -9,10 +9,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.ParametersAreNullableByDefault;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.BitSet;
 import java.util.EnumSet;
@@ -403,6 +402,22 @@ public interface MCDataOutput extends ByteArrayDataOutput {
      * @param channel the channel to write to
      */
     void writeTo(WritableByteChannel channel) throws IOException;
+
+    /**
+     * <p>Copy all data from the InputStream into this buffer.</p>
+     * @param in the InputStream
+     * @return the number of bytes copied
+     */
+    int copyFrom(InputStream in) throws IOException;
+
+    /**
+     * <p>Copy the given number of bytes from the InputStream into this buffer.</p>
+     *
+     * @param in    the InputStream
+     * @param bytes the number of bytes to copy
+     * @throws EOFException when the InputStream ends before the requested number of bytes have been read
+     */
+    void copyFrom(InputStream in, int bytes) throws IOException;
 
     /**
      * <p>The number of bytes written to this stream to far.</p>

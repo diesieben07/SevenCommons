@@ -12,10 +12,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UTFDataFormatException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
@@ -85,6 +82,36 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
     @Override
     public void writeTo(WritableByteChannel channel) throws IOException {
         channel.write(ByteBuffer.wrap(buf, 0, count));
+    }
+
+    @Override
+    public int copyFrom(InputStream in) throws IOException {
+        int numRead = 0;
+        int read;
+        do {
+            ensureWritable(Math.min(Network.DEFAULT_EXPECTED_SIZE, in.available()));
+            read = in.read(buf, count, buf.length - count);
+            if (read == -1) {
+                return numRead;
+            } else {
+                numRead += read;
+            }
+        } while (true);
+    }
+
+    @Override
+    public void copyFrom(InputStream in, int bytes) throws IOException {
+        int numRead = 0;
+        while (numRead < bytes) {
+            int avail = in.available();
+            ensureWritable(avail);
+            int read = in.read(buf, count, buf.length - count);
+            if (read == -1) {
+                throw new EOFException(String.format("Expected to find %d bytes, but only got %d", bytes, numRead));
+            } else {
+                numRead += read;
+            }
+        }
     }
 
     final void ensureWritable(int bytesToWrite) {
