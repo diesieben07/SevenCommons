@@ -41,6 +41,18 @@ public interface HasSubtypes<T extends Subtype> {
         return subtypeProperty().value(stack);
     }
 
+    default ItemStack getStack(T type) {
+        if (this instanceof Block) {
+            return new ItemStack((Block) this, 1, subtypeProperty().toMeta(type));
+        } else {
+            try {
+                return new ItemStack((Item) this, 1, subtypeProperty().toMeta(type));
+            } catch (ClassCastException e) {
+                throw new UnsupportedOperationException("HasSubtypes implemented on something that is not Item or Block!");
+            }
+        }
+    }
+
     /**
      * <p>Get a combined name for the given Item and it's subtype.</p>
      * <p>The result of this method is equivalent to {@code item.getUnlocalizedName() + "." + type.subtypeName()}.</p>
