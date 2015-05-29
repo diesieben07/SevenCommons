@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * @author diesieben07
  */
-final class EnumProperty<T extends Enum<T>> extends GenericProperty<T> {
+final class EnumProperty<T extends Enum<T>> implements MetadataProperty<T> {
 
     private final int shift;
     private final int mask;

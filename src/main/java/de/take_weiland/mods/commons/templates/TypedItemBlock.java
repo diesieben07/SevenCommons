@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.templates;
 
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.Subtype;
-import de.take_weiland.mods.commons.meta.Subtypes;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -21,7 +20,7 @@ public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extend
     @Override
     public void getSubItems(Item item, CreativeTabs tab, List list) {
         //noinspection unchecked
-        Subtypes.getSubBlocksImpl((BLOCK) field_150939_a, list);
+        HasSubtypes.getSubBlocksImpl((BLOCK) field_150939_a, list);
     }
 
     @Override

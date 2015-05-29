@@ -10,7 +10,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author diesieben07
  */
-final class RegularArrayProperty<T> extends GenericProperty<T> {
+final class RegularArrayProperty<T> implements MetadataProperty<T> {
 
     private final ImmutableMap<T, Integer> lookup;
     private final int shift;

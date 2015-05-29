@@ -12,7 +12,7 @@ import java.util.Set;
  * @author diesieben07
  */
 @SuppressWarnings("deprecation")
-final class IntPropertyImpl extends GenericProperty<Integer> implements IntProperty {
+final class IntPropertyImpl implements IntProperty, MetadataProperty<Integer> {
 
     private final int shift;
     private final int mask;

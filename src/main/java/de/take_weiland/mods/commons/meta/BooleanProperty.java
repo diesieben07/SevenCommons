@@ -24,7 +24,9 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      * @param stack the ItemStack
      * @return the value of this property
      */
-    boolean booleanValue(ItemStack stack);
+    default boolean booleanValue(ItemStack stack) {
+        return booleanValue(stack.getItemDamage());
+    }
 
     /**
      * <p>Get the boolean value of this property as set for the Block at the given location.</p>
@@ -35,7 +37,9 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      * @param z     the z coordinate
      * @return the value of this property
      */
-    boolean booleanValue(World world, int x, int y, int z);
+    default boolean booleanValue(World world, int x, int y, int z) {
+        return booleanValue(world.getBlockMetadata(x, y, z));
+    }
 
     /**
      * <p>Encodes the given value into the given metadata.</p>
@@ -53,7 +57,10 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      * @param stack the ItemStack
      * @return the same ItemStack, for convenience
      */
-    ItemStack apply(boolean value, ItemStack stack);
+    default ItemStack apply(boolean value, ItemStack stack) {
+        stack.setItemDamage(toMeta(value, stack.getItemDamage()));
+        return stack;
+    }
 
     /**
      * <p>Apply the given value to the Block at the given location in the world.</p>
@@ -64,7 +71,9 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      * @param y     the y coordinate
      * @param z     the z coordinate
      */
-    void apply(boolean value, World world, int x, int y, int z);
+    default void apply(boolean value, World world, int x, int y, int z) {
+        world.setBlockMetadataWithNotify(x, y, z, toMeta(value, world.getBlockMetadata(x, y, z)), 3);
+    }
 
     /**
      * <p>Apply the given value to the Block at the given location in the world.</p>
@@ -76,7 +85,9 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      * @param z           the z coordinate
      * @param notifyFlags the notify flags to pass to {@link net.minecraft.world.World#setBlockMetadataWithNotify(int, int, int, int, int)} (see there for documentation)
      */
-    void apply(boolean value, World world, int x, int y, int z, int notifyFlags);
+    default void apply(boolean value, World world, int x, int y, int z, int notifyFlags) {
+        world.setBlockMetadataWithNotify(x, y, z, toMeta(value, world.getBlockMetadata(x, y, z)), notifyFlags);
+    }
 
     /**
      * {@inheritDoc}
@@ -85,7 +96,9 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      */
     @Deprecated
     @Override
-    Boolean value(ItemStack stack);
+    default Boolean value(ItemStack stack) {
+        return booleanValue(stack);
+    }
 
     /**
      * {@inheritDoc}
@@ -94,7 +107,9 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      */
     @Deprecated
     @Override
-    Boolean value(World world, int x, int y, int z);
+    default Boolean value(World world, int x, int y, int z) {
+        return booleanValue(world, x, y, z);
+    }
 
     /**
      * {@inheritDoc}
@@ -103,7 +118,9 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      */
     @Deprecated
     @Override
-    Boolean value(int metadata);
+    default Boolean value(int metadata) {
+        return booleanValue(metadata);
+    }
 
     /**
      * {@inheritDoc}
@@ -112,7 +129,9 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      */
     @Deprecated
     @Override
-    int toMeta(Boolean value, int previousMeta);
+    default int toMeta(Boolean value, int previousMeta) {
+        return toMeta((boolean) value, previousMeta);
+    }
 
     /**
      * {@inheritDoc}
@@ -121,7 +140,9 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      */
     @Deprecated
     @Override
-    ItemStack apply(Boolean value, ItemStack stack);
+    default ItemStack apply(Boolean value, ItemStack stack) {
+        return apply((boolean) value, stack);
+    }
 
     /**
      * {@inheritDoc}
@@ -130,7 +151,9 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      */
     @Deprecated
     @Override
-    void apply(Boolean value, World world, int x, int y, int z);
+    default void apply(Boolean value, World world, int x, int y, int z) {
+        apply((boolean) value, world, x, y, z);
+    }
 
     /**
      * {@inheritDoc}
@@ -139,5 +162,7 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      */
     @Deprecated
     @Override
-    void apply(Boolean value, World world, int x, int y, int z, int notifyFlags);
+    default void apply(Boolean value, World world, int x, int y, int z, int notifyFlags) {
+        apply((boolean) value, world, x, y, z, notifyFlags);
+    }
 }

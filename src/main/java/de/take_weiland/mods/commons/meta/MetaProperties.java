@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.meta;
 import net.minecraft.item.ItemStack;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * <p>Factory methods for MetadataProperties.</p>
@@ -12,67 +11,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @see de.take_weiland.mods.commons.meta.MetadataProperty
  */
 public final class MetaProperties {
-
-    /**
-     * <p>Create a MetadataProperty, whose values are the constants of the given enum class.</p>
-     *
-     * @param startBit the first bit containing the data (0-31)
-     * @param clazz    the enum class
-     * @param <T>      the type of the values
-     * @return a MetadataProperty
-     */
-    public static <T extends Enum<T>> MetadataProperty<T> newProperty(int startBit, Class<T> clazz) {
-        return new EnumProperty<>(checkBit(startBit), checkNotNull(clazz, "clazz"));
-    }
-
-    /**
-     * <p>Create a MetadataProperty, whose values are given those of the given array.</p>
-     * <p>The array must not be modified after being passed to this method.</p>
-     *
-     * @param startBit the first bit containing the data (0-31)
-     * @param values   the values for this property
-     * @param <T>      the type of the values
-     * @return a MetadataProperty
-     */
-    @SafeVarargs
-    public static <T> MetadataProperty<T> newProperty(int startBit, T... values) {
-        checkBit(startBit);
-        int len = checkNotNull(values, "values").length;
-        checkArgument(len >= 2, "Need at least 2 elements");
-
-        return new RegularArrayProperty<>(startBit, values);
-    }
-
-    /**
-     * @deprecated use {@link #newProperty(int, Class)} for Enum properties
-     */
-    @Deprecated
-    @SafeVarargs
-    public static <T extends Enum<T>> MetadataProperty<T> newProperty(int startBit, T... values) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * <p>Create a new MetadataProperty, representing a boolean value.</p>
-     *
-     * @param startBit the bit containing the data (0-31)
-     * @return a BooleanProperty
-     */
-    public static BooleanProperty newBooleanProperty(int startBit) {
-        return BooleanPropertyImpl.get(checkBit(startBit));
-    }
-
-    /**
-     * <p>Create a new MetadataProperty, representing an integer value</p>
-     * <p>This property can hold values from 0 through 2<sup>bits</sup> - 1</p>
-     *
-     * @param startBit the first bit containing the data (0-31)
-     * @param bits     the number of bits to reserve (1-32)
-     * @return an IntProperty
-     */
-    public static IntProperty newIntProperty(int startBit, int bits) {
-        return new IntPropertyImpl(checkBit(startBit), checkBitCount(bits));
-    }
 
     /**
      * <p>Create a metadata value that represents both the first and then second value.</p>
@@ -159,12 +97,12 @@ public final class MetaProperties {
 
     // going beyond 3 is madness, for anything more use the MetaBuilder
 
-    private static int checkBit(int bit) {
+    static int checkBit(int bit) {
         checkArgument(bit >= 0 && bit <= 31, "Invalid start bit");
         return bit;
     }
 
-    private static int checkBitCount(int bits) {
+    static int checkBitCount(int bits) {
         checkArgument(bits >= 1 && bits <= 32, "Invalid bit count");
         return bits;
     }
