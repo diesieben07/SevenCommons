@@ -18,11 +18,19 @@ import java.util.function.BiConsumer;
  */
 public interface SimpleChannelBuilder {
 
+    <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<? extends P> constructor, BiConsumer<? super P, ? super EntityPlayer> handler);
+
+    default <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor.Simple<? extends P> constructor, BiConsumer<? super P, ? super EntityPlayer> handler) {
+        return register(id, ((PacketConstructor<? extends P>) constructor), handler);
+    }
+
     default <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<? extends P> constructor, SimplePacketHandler<? super P> handler) {
         return register(id, constructor, (BiConsumer<? super P, EntityPlayer>) handler);
     }
 
-    <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<? extends P> constructor, BiConsumer<? super P, ? super EntityPlayer> handler);
+    default <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor.Simple<? extends P> constructor, SimplePacketHandler<? super P> handler) {
+        return register(id, ((PacketConstructor<? extends P>) constructor), (BiConsumer<? super P, EntityPlayer>) handler);
+    }
 
     void build();
 

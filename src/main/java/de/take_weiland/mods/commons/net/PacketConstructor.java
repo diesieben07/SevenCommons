@@ -1,7 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
+import net.minecraft.entity.player.EntityPlayer;
+
 import java.io.Serializable;
-import java.util.function.Function;
 
 /**
  * <p>A PacketConstructor is used to instantiate a Packet object when it is received.</p>
@@ -13,9 +14,21 @@ import java.util.function.Function;
  * @author diesieben07
  */
 @FunctionalInterface
-public interface PacketConstructor<P extends Packet> extends Function<MCDataInput, P>, Serializable {
+public interface PacketConstructor<P extends Packet> extends Serializable {
+
+    P construct(MCDataInput in, EntityPlayer player);
 
     default Class<P> getPacketClass() {
         return Network.findPacketClassReflectively(this);
+    }
+
+    interface Simple<P extends Packet> extends PacketConstructor<P> {
+
+        P construct(MCDataInput in);
+
+        @Override
+        default P construct(MCDataInput in, EntityPlayer player) {
+            return construct(in);
+        }
     }
 }
