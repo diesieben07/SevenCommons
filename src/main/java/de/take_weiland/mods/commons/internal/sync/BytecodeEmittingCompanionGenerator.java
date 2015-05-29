@@ -304,7 +304,7 @@ public final class BytecodeEmittingCompanionGenerator {
         Type objectArrType = Type.getType(Object[].class);
         Type objectType = Type.getType(Object.class);
         Type syncerType = Type.getType(Syncer.class);
-        Type propertyAccessType  = Type.getType(PropertyAccess.class);
+        Type propertyAccessType = Type.getType(PropertyAccess.class);
 
         int iterator = gen.newLocal(iteratorType);
 

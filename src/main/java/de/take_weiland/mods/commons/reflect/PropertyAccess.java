@@ -101,6 +101,7 @@ public interface PropertyAccess<T> extends Function<Object, T>, BiConsumer<Objec
         }
 
         @Override
-        public void set(Object o, Object val) { }
+        public void set(Object o, Object val) {
+        }
     };
 }

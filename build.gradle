@@ -21,12 +21,12 @@ apply plugin: 'maven'
 version = "0.1"
 def ENV = System.getenv()
 if (ENV.DRONE_BUILD_NUMBER) {
-	version += "." + ENV.DRONE_BUILD_NUMBER
+    version += "." + ENV.DRONE_BUILD_NUMBER
 } else {
-	version += ".local"
+    version += ".local"
 }
 
-group= "de.take_weiland.mods.commons" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group = "de.take_weiland.mods.commons" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "SevenCommons"
 
 sourceCompatibility = 1.8
@@ -36,13 +36,13 @@ compileJava.options.encoding = 'UTF-8'
 minecraft {
     version = "1.7.10-10.13.3.1370-1.7.10"
     runDir = "eclipse"
-	
-	replaceIn "internal/SevenCommons.java"
-	replace "@VERSION@", project.version
+
+    replaceIn "internal/SevenCommons.java"
+    replace "@VERSION@", project.version
 }
 
 jar {
-	manifest {
+    manifest {
         attributes 'FMLCorePlugin': 'de.take_weiland.mods.commons.internal.SevenCommonsLoader'
         attributes 'SevenCommonsInstalledVersion': '0'
     }
@@ -51,27 +51,27 @@ jar {
 tasks.build.dependsOn('sourceJar', 'deobfJar')
 
 processResources
-{
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+        {
+            // this will ensure that this task is redone when the versions change.
+            inputs.property "version", project.version
+            inputs.property "mcversion", project.minecraft.version
 
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-                
-        // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
-    }
-        
-    // copy everything else, thats not the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
-}
+            // replace stuff in mcmod.info, nothing else
+            from(sourceSets.main.resources.srcDirs) {
+                include 'mcmod.info'
+
+                // replace version and mcversion
+                expand 'version': project.version, 'mcversion': project.minecraft.version
+            }
+
+            // copy everything else, thats not the mcmod.info
+            from(sourceSets.main.resources.srcDirs) {
+                exclude 'mcmod.info'
+            }
+        }
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '2.4'
+    gradleVersion = '2.4'
 }
 
 task deobfJar(type: Jar) {
@@ -86,9 +86,9 @@ task sourceJar(type: Jar) {
 
 
 artifacts {
-	archives deobfJar 
-	archives sourceJar
-	archives jar
+    archives deobfJar
+    archives sourceJar
+    archives jar
 }
 
 configurations {
@@ -107,12 +107,12 @@ dependencies {
 }
 
 if (ENV.SC_MAVEN_URL) {
-	uploadArchives {
-		repositories.mavenDeployer {
-			configuration = configurations.deployerJars
-			repository(url: ENV.SC_MAVEN_URL) {
-				authentication(userName: ENV.SC_MAVEN_USER, password: ENV.SC_MAVEN_PASS)
-			}
-		}
-	}
+    uploadArchives {
+        repositories.mavenDeployer {
+            configuration = configurations.deployerJars
+            repository(url: ENV.SC_MAVEN_URL) {
+                authentication(userName: ENV.SC_MAVEN_USER, password: ENV.SC_MAVEN_PASS)
+            }
+        }
+    }
 }

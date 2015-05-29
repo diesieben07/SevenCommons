@@ -67,10 +67,11 @@ public final class SCReflection {
      * provided it is a valid setter.</p>
      * <p>Otherwise the following rules apply in this order:</p>
      * <ul>
-     *     <li>{@code getFoo} / {@code isFoo} ⇒ {@code setFoo}</li>
-     *     <li>{@code foo} ⇒ {@code foo_$eq} (if the class is {@linkplain #isScala(Class) likely a scala class})</li>
-     *     <li>{@code foo} ⇒ {@code foo}</li>
+     * <li>{@code getFoo} / {@code isFoo} ⇒ {@code setFoo}</li>
+     * <li>{@code foo} ⇒ {@code foo_$eq} (if the class is {@linkplain #isScala(Class) likely a scala class})</li>
+     * <li>{@code foo} ⇒ {@code foo}</li>
      * </ul>
+     *
      * @param getter the getter method
      * @return the setter method or {@code null} if no setter was found
      */
@@ -157,7 +158,7 @@ public final class SCReflection {
     /**
      * <p>Define a new Class specified by the given bytes.</p>
      *
-     * @param bytes   the bytes describing the class
+     * @param bytes  the bytes describing the class
      * @param loader the class loader to use
      * @return the defined class
      */

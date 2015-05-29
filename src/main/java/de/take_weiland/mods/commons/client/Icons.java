@@ -19,22 +19,24 @@ import java.util.Map;
  */
 public final class Icons {
 
-	/**
-	 * <p>Register an Icon for each of the Item's subtypes.</p>
-	 * @param item the Item
-	 * @param register the icon registry
-	 * @return a Map mapping Subtypes to Icons
-	 */
+    /**
+     * <p>Register an Icon for each of the Item's subtypes.</p>
+     *
+     * @param item     the Item
+     * @param register the icon registry
+     * @return a Map mapping Subtypes to Icons
+     */
     public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> Map<TYPE, IIcon> registerMulti(ITEM item, IIconRegister register) {
         return registerMulti0(SCReflector.instance.getIconName(item) + ".", item, register);
     }
 
-	/**
-	 * <p>Register an Icon for each of the Block's subtypes.</p>
-	 * @param block the Block
-	 * @param register the icon registry
-	 * @return a Map mapping Subtypes to Icons
-	 */
+    /**
+     * <p>Register an Icon for each of the Block's subtypes.</p>
+     *
+     * @param block    the Block
+     * @param register the icon registry
+     * @return a Map mapping Subtypes to Icons
+     */
     public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> Map<TYPE, IIcon> registerMulti(BLOCK block, IIconRegister register) {
         return registerMulti0(SCReflector.instance.getIconName(block) + ".", block, register);
     }

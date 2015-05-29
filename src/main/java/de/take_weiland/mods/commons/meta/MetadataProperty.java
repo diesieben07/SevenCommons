@@ -18,76 +18,76 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public interface MetadataProperty<T> {
 
-	/**
-	 * <p>Create a MetadataProperty, whose values are given those of the given array.</p>
-	 * <p>The array must not be modified after being passed to this method.</p>
-	 *
-	 * @param startBit the first bit containing the data (0-31)
-	 * @param values   the values for this property
-	 * @param <T>      the type of the values
-	 * @return a MetadataProperty
-	 */
-	@SafeVarargs
-	static <T> MetadataProperty<T> newProperty(int startBit, T... values) {
-	    MetaProperties.checkBit(startBit);
-	    int len = checkNotNull(values, "values").length;
-	    checkArgument(len >= 2, "Need at least 2 elements");
+    /**
+     * <p>Create a MetadataProperty, whose values are given those of the given array.</p>
+     * <p>The array must not be modified after being passed to this method.</p>
+     *
+     * @param startBit the first bit containing the data (0-31)
+     * @param values   the values for this property
+     * @param <T>      the type of the values
+     * @return a MetadataProperty
+     */
+    @SafeVarargs
+    static <T> MetadataProperty<T> newProperty(int startBit, T... values) {
+        MetaProperties.checkBit(startBit);
+        int len = checkNotNull(values, "values").length;
+        checkArgument(len >= 2, "Need at least 2 elements");
 
-	    return new RegularArrayProperty<>(startBit, values);
-	}
+        return new RegularArrayProperty<>(startBit, values);
+    }
 
-	/**
-	 * <p>Create a MetadataProperty, whose values are the constants of the given enum class.</p>
-	 *
-	 * @param startBit the first bit containing the data (0-31)
-	 * @param clazz    the enum class
-	 * @param <T>      the type of the values
-	 * @return a MetadataProperty
-	 */
-	static <T extends Enum<T>> MetadataProperty<T> newProperty(int startBit, Class<T> clazz) {
-		return new EnumProperty<>(MetaProperties.checkBit(startBit), checkNotNull(clazz, "clazz"));
-	}
+    /**
+     * <p>Create a MetadataProperty, whose values are the constants of the given enum class.</p>
+     *
+     * @param startBit the first bit containing the data (0-31)
+     * @param clazz    the enum class
+     * @param <T>      the type of the values
+     * @return a MetadataProperty
+     */
+    static <T extends Enum<T>> MetadataProperty<T> newProperty(int startBit, Class<T> clazz) {
+        return new EnumProperty<>(MetaProperties.checkBit(startBit), checkNotNull(clazz, "clazz"));
+    }
 
-	/**
-	 * @deprecated use {@link #newProperty(int, Class)} for Enum properties
-	 */
-	@Deprecated
-	@SafeVarargs
-	static <T extends Enum<T>> MetadataProperty<T> newProperty(int startBit, T... values) {
-	    throw new UnsupportedOperationException();
-	}
+    /**
+     * @deprecated use {@link #newProperty(int, Class)} for Enum properties
+     */
+    @Deprecated
+    @SafeVarargs
+    static <T extends Enum<T>> MetadataProperty<T> newProperty(int startBit, T... values) {
+        throw new UnsupportedOperationException();
+    }
 
-	/**
-	 * <p>Create a new MetadataProperty, representing a boolean value.</p>
-	 *
-	 * @param startBit the bit containing the data (0-31)
-	 * @return a BooleanProperty
-	 */
-	static BooleanProperty newBooleanProperty(int startBit) {
-	    return BooleanPropertyImpl.get(MetaProperties.checkBit(startBit));
-	}
+    /**
+     * <p>Create a new MetadataProperty, representing a boolean value.</p>
+     *
+     * @param startBit the bit containing the data (0-31)
+     * @return a BooleanProperty
+     */
+    static BooleanProperty newBooleanProperty(int startBit) {
+        return BooleanPropertyImpl.get(MetaProperties.checkBit(startBit));
+    }
 
-	/**
-	 * <p>Create a new MetadataProperty, representing an integer value</p>
-	 * <p>This property can hold values from 0 through 2<sup>bits</sup> - 1</p>
-	 *
-	 * @param startBit the first bit containing the data (0-31)
-	 * @param bits     the number of bits to reserve (1-32)
-	 * @return an IntProperty
-	 */
-	static IntProperty newIntProperty(int startBit, int bits) {
-	    return new IntPropertyImpl(MetaProperties.checkBit(startBit), MetaProperties.checkBitCount(bits));
-	}
+    /**
+     * <p>Create a new MetadataProperty, representing an integer value</p>
+     * <p>This property can hold values from 0 through 2<sup>bits</sup> - 1</p>
+     *
+     * @param startBit the first bit containing the data (0-31)
+     * @param bits     the number of bits to reserve (1-32)
+     * @return an IntProperty
+     */
+    static IntProperty newIntProperty(int startBit, int bits) {
+        return new IntPropertyImpl(MetaProperties.checkBit(startBit), MetaProperties.checkBitCount(bits));
+    }
 
-	/**
-	 * <p>Get the value of this property as represented by the given metadata value.</p>
-	 *
-	 * @param metadata the metadata
-	 * @return the value of this property
-	 */
-	T value(int metadata);
+    /**
+     * <p>Get the value of this property as represented by the given metadata value.</p>
+     *
+     * @param metadata the metadata
+     * @return the value of this property
+     */
+    T value(int metadata);
 
-	/**
+    /**
      * <p>Get the value of this property as set in the given ItemStack.</p>
      *
      * @param stack the ItemStack
@@ -110,18 +110,18 @@ public interface MetadataProperty<T> {
         return value(world.getBlockMetadata(x, y, z));
     }
 
-	default int toMeta(T value) {
-		return toMeta(value, 0);
-	}
+    default int toMeta(T value) {
+        return toMeta(value, 0);
+    }
 
-	/**
-	 * <p>Encodes the given value into the given metadata.</p>
-	 *
-	 * @param value        the value to store
-	 * @param previousMeta the previous metadata, possibly containing information about other properties
-	 * @return the new metadata value, now containing the given value
-	 */
-	int toMeta(T value, int previousMeta);
+    /**
+     * <p>Encodes the given value into the given metadata.</p>
+     *
+     * @param value        the value to store
+     * @param previousMeta the previous metadata, possibly containing information about other properties
+     * @return the new metadata value, now containing the given value
+     */
+    int toMeta(T value, int previousMeta);
 
     /**
      * <p>Apply the given value to the ItemStack.</p>
@@ -132,7 +132,7 @@ public interface MetadataProperty<T> {
      */
     default ItemStack apply(T value, ItemStack stack) {
         stack.setItemDamage(toMeta(value, stack.getItemDamage()));
-	    return stack;
+        return stack;
     }
 
     /**
@@ -184,11 +184,11 @@ public interface MetadataProperty<T> {
      * @return a newly created, empty mutable Map
      */
     default <V> Map<T, V> createMap() {
-	    if (hasDistinctValues()) {
-		    return Maps.newHashMapWithExpectedSize(values().size());
-	    } else {
-		    return Maps.newHashMap();
-	    }
+        if (hasDistinctValues()) {
+            return Maps.newHashMapWithExpectedSize(values().size());
+        } else {
+            return Maps.newHashMap();
+        }
     }
 
 }

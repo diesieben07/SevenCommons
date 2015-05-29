@@ -15,7 +15,7 @@ import java.util.List;
  */
 public final class Subtypes {
 
-	private Subtypes() {
+    private Subtypes() {
     }
 
 }

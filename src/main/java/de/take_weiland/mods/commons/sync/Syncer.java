@@ -47,9 +47,9 @@ public interface Syncer<VAL, COM, DATA> {
      * will be {@code null}.</p>
      * <p>This method is always called on the server.</p>
      *
-     * @param obj     the object to access the property
-     * @param property the property
-     * @param cObj the object to access the companion
+     * @param obj       the object to access the property
+     * @param property  the property
+     * @param cObj      the object to access the companion
      * @param companion the companion property
      * @return {@link #noChange()} or {@link #newValue(Object)}
      */
@@ -70,10 +70,10 @@ public interface Syncer<VAL, COM, DATA> {
      * <p>This method must perform any actions necessary to apply the given data to the field.</p>
      * <p>This method is always called on the client.</p>
      *
-     * @param data   the data value as returned by {@link #check(Object, PropertyAccess, Object, PropertyAccess)}
-     * @param obj    the object to access the property
-     * @param property the property
-     * @param cObj the object to access the companion
+     * @param data      the data value as returned by {@link #check(Object, PropertyAccess, Object, PropertyAccess)}
+     * @param obj       the object to access the property
+     * @param property  the property
+     * @param cObj      the object to access the companion
      * @param companion the companion property
      */
     void apply(DATA data, Object obj, PropertyAccess<VAL> property, Object cObj, PropertyAccess<COM> companion);
@@ -84,10 +84,10 @@ public interface Syncer<VAL, COM, DATA> {
      * <p>This method must perform any actions necessary to apply the given data to the field.</p>
      * <p>This method is always called on the client.</p>
      *
-     * @param in     the input stream containing the data as written by {@link #encode(Object, MCDataOutput)}
-     * @param obj    the object to access the property
-     * @param property the property
-     * @param cObj the object to access the companion
+     * @param in        the input stream containing the data as written by {@link #encode(Object, MCDataOutput)}
+     * @param obj       the object to access the property
+     * @param property  the property
+     * @param cObj      the object to access the companion
      * @param companion the companion property
      */
     void apply(MCDataInput in, Object obj, PropertyAccess<VAL> property, Object cObj, PropertyAccess<COM> companion);
