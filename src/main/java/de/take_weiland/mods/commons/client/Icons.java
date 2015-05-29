@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.client;
 
+import com.google.common.collect.ImmutableMap;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
 import de.take_weiland.mods.commons.meta.Subtype;
@@ -9,14 +10,31 @@ import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.item.Item;
 import net.minecraft.util.IIcon;
 
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Map;
 
+/**
+ * <p>Utilities for registering Icons.</p>
+ */
 public final class Icons {
 
+	/**
+	 * <p>Register an Icon for each of the Item's subtypes.</p>
+	 * @param item the Item
+	 * @param register the icon registry
+	 * @return a Map mapping Subtypes to Icons
+	 */
     public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> Map<TYPE, IIcon> registerMulti(ITEM item, IIconRegister register) {
         return registerMulti0(SCReflector.instance.getIconName(item) + ".", item, register);
     }
 
+	/**
+	 * <p>Register an Icon for each of the Block's subtypes.</p>
+	 * @param block the Block
+	 * @param register the icon registry
+	 * @return a Map mapping Subtypes to Icons
+	 */
     public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> Map<TYPE, IIcon> registerMulti(BLOCK block, IIconRegister register) {
         return registerMulti0(SCReflector.instance.getIconName(block) + ".", block, register);
     }
@@ -29,7 +47,7 @@ public final class Icons {
             IIcon icon = register.registerIcon(name);
             map.put(type, icon);
         }
-        return map;
+        return map instanceof EnumMap ? Collections.unmodifiableMap(map) : ImmutableMap.copyOf(map);
     }
 
     private Icons() {

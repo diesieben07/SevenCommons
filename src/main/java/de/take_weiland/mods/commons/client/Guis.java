@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.client;
 
 import de.take_weiland.mods.commons.inv.Inventories;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.inventory.IInventory;
 
 /**
@@ -38,24 +39,13 @@ public final class Guis {
     /**
      * <p>Computes the current GUI scale. Calling this method is equivalent to the following:<pre><code>
      * Minecraft mc = Minecraft.getMinecraft();
-     * int scale = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight).getScaleFactor();</code></pre></p>
+     * int scale = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();</code></pre></p>
      *
      * @return the current GUI scale
      */
     public static int computeGuiScale() {
         Minecraft mc = Minecraft.getMinecraft();
-        int scaleFactor = 1;
-
-        int k = mc.gameSettings.guiScale;
-
-        if (k == 0) {
-            k = 1000;
-        }
-
-        while (scaleFactor < k && mc.displayWidth / (scaleFactor + 1) >= 320 && mc.displayHeight / (scaleFactor + 1) >= 240) {
-            ++scaleFactor;
-        }
-        return scaleFactor;
+        return new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();
     }
 
     /**
