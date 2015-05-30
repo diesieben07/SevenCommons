@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.test;
 
 import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.sync.Sync;
+import de.take_weiland.mods.commons.util.Listenable;
 import de.take_weiland.mods.commons.util.Sides;
 
 import java.util.Random;
@@ -9,7 +10,7 @@ import java.util.Random;
 /**
  * @author diesieben07
  */
-public class TestTE extends SuperTE implements SyncedInterface {
+public class TestTE extends SuperTE implements SyncedInterface, Listenable<String> {
 
     @Sync
     @ToNbt

@@ -17,6 +17,7 @@ import java.util.Map;
         "de.take_weiland.mods.commons.internal.exclude.",
         "de.take_weiland.mods.commons.util.JavaUtils",
         "de.take_weiland.mods.commons.util.Logging",
+        "de.take_weiland.mods.commons.util.Listenable",
         "de.take_weiland.mods.commons.reflect.",
         "de.take_weiland.mods.commons.sync.",
         "de.take_weiland.mods.commons.nbt.ToNbt"
