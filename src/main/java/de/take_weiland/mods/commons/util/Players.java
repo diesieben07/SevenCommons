@@ -14,6 +14,8 @@ import net.minecraft.world.WorldServer;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 import static net.minecraft.server.MinecraftServer.getServer;
 
@@ -126,6 +128,21 @@ public final class Players {
      */
     public static EntityPlayerMP forName(String name) {
         return getSCM().func_152612_a(name);
+    }
+
+    /**
+     * <p>Get the serverside player entity for the given UUID.</p>
+     *
+     * @param uuid the UUID
+     * @return the player entity or null if no such player was found
+     */
+    public static EntityPlayerMP forUUID(UUID uuid) {
+        for (EntityPlayerMP player : getAll()) {
+            if (Objects.equals(player.getUniqueID(), uuid)) {
+                return player;
+            }
+        }
+        return null;
     }
 
     private static ServerConfigurationManager getSCM() {
