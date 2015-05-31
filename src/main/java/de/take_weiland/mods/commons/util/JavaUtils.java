@@ -11,6 +11,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * <p>Various utility methods.</p>
@@ -78,6 +82,38 @@ public final class JavaUtils {
         } else {
             return Objects.hashCode(o);
         }
+    }
+
+    /**
+     * <p>Run the given {@code Callable} asynchronously. The future returned by this method is then either completed
+     * with the result of the {@code Callable} or completed exceptionally when the {@code Callable} throws
+     * an exception.</p>
+     *
+     * @param callable the Callable
+     * @return a CompletableFuture
+     */
+    public static <T> CompletableFuture<T> asFuture(Callable<? extends T> callable) {
+        return asFuture(callable, ForkJoinPool.commonPool());
+    }
+
+    /**
+     * <p>Run the given {@code Callable} asynchronously using the given Executor. The future returned by this method is then either completed
+     * with the result of the {@code Callable} or completed exceptionally when the {@code Callable} throws
+     * an exception.</p>
+     *
+     * @param callable the Callable
+     * @return a CompletableFuture
+     */
+    public static <T> CompletableFuture<T> asFuture(Callable<? extends T> callable, Executor executor) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        executor.execute(() -> {
+            try {
+                future.complete(callable.call());
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
+        });
+        return future;
     }
 
     /**
