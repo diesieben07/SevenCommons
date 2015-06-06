@@ -8,6 +8,10 @@ import java.util.function.Function;
 @FunctionalInterface
 public interface FunctionX<T, R> {
 
+    static <T, R> FunctionX<T, R> of(FunctionX<T, R> f) {
+        return f;
+    }
+
     R apply(T t) throws Exception;
 
     default Function<T, R> catching(Function<? super Throwable, ? extends R> handler) {
