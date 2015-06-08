@@ -13,8 +13,6 @@ public interface SevenCommonsProxy {
 
     EntityPlayer getClientPlayer();
 
-    String translate(String key);
-
     NetworkManager getClientNetworkManager();
 
 }

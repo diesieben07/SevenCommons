@@ -22,11 +22,6 @@ public class ServerProxy implements SevenCommonsProxy {
     }
 
     @Override
-    public String translate(String key) {
-        throw new IllegalStateException("Tried to translate on the server, use ChatMessageComponent or translate on the client");
-    }
-
-    @Override
     public NetworkManager getClientNetworkManager() {
         throw new IllegalStateException("Tried to send packet to the server on the server!");
     }

@@ -1,8 +1,11 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.UnsignedBytes;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
+import gnu.trove.iterator.TByteObjectIterator;
+import gnu.trove.map.TByteObjectMap;
 import gnu.trove.map.hash.TByteObjectHashMap;
 import net.minecraft.entity.player.EntityPlayer;
 
@@ -20,8 +23,8 @@ import static com.google.common.base.Preconditions.checkState;
 final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
     private final String channel;
-    private TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors = new TByteObjectHashMap<>();
-    private Map<Class<? extends Packet>, HandlerIDPair> handlers = new HashMap<>();
+    private final TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors = new TByteObjectHashMap<>();
+    private final Map<Class<? extends Packet>, HandlerIDPair> handlers = new HashMap<>();
 
     SimpleChannelBuilderImpl(String channel) {
         this.channel = channel;
@@ -45,17 +48,32 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
     @Override
     public void build() {
         checkNotBuilt();
-        TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors = this.constructors;
-        constructors.compact();
-
         ImmutableMap<Class<? extends Packet>, HandlerIDPair> handlers = ImmutableMap.copyOf(this.handlers);
 
-        SimplePacketCodec codec = new SimplePacketCodec(channel, constructors, handlers);
+        Function<? super MCDataInput, ? extends Packet>[] packedCstrs = pack(constructors);
+
+        SimplePacketCodec codec = new SimplePacketCodec(channel, packedCstrs, handlers);
         // use the original keySet, avoid having the ImmutableMap keep it around
         PacketToChannelMap.putAll(this.handlers.keySet(), codec);
         NetworkImpl.register(channel, codec);
+    }
 
-        this.handlers = null;
+    private static Function<? super MCDataInput, ? extends Packet>[] pack(TByteObjectMap<Function<? super MCDataInput, ? extends Packet>> map) {
+        int maxId = 0;
+        for (byte b : map.keys()) {
+            int asInt = UnsignedBytes.toInt(b);
+            if (asInt > maxId) {
+                maxId = asInt;
+            }
+        }
+        @SuppressWarnings("unchecked")
+        Function<? super MCDataInput, ? extends Packet>[] arr = new Function[maxId + 1];
+        TByteObjectIterator<Function<? super MCDataInput, ? extends Packet>> it = map.iterator();
+        while (it.hasNext()) {
+            it.advance();
+            arr[UnsignedBytes.toInt(it.key())] = it.value();
+        }
+        return arr;
     }
 
     private void checkNotBuilt() {

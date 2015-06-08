@@ -3,9 +3,6 @@ package de.take_weiland.mods.commons.net;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.UnsignedBytes;
 import de.take_weiland.mods.commons.util.Scheduler;
-import gnu.trove.iterator.TByteObjectIterator;
-import gnu.trove.map.TByteObjectMap;
-import gnu.trove.map.hash.TByteObjectHashMap;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.function.BiConsumer;
@@ -20,28 +17,10 @@ final class SimplePacketCodec implements PacketCodec<Packet> {
     private final Function<? super MCDataInput, ? extends Packet>[] constructors;
     private final ImmutableMap<Class<? extends Packet>, HandlerIDPair> handlers;
 
-    SimplePacketCodec(String channel, TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors, ImmutableMap<Class<? extends Packet>, HandlerIDPair> handlers) {
+    SimplePacketCodec(String channel, Function<? super MCDataInput, ? extends Packet>[] constructors, ImmutableMap<Class<? extends Packet>, HandlerIDPair> handlers) {
         this.channel = channel;
-        this.constructors = pack(constructors);
+        this.constructors = constructors;
         this.handlers = handlers;
-    }
-
-    private static Function<? super MCDataInput, ? extends Packet>[] pack(TByteObjectMap<Function<? super MCDataInput, ? extends Packet>> map) {
-        int maxId = 0;
-        for (byte b : map.keys()) {
-            int asInt = UnsignedBytes.toInt(b);
-            if (asInt > maxId) {
-                maxId = asInt;
-            }
-        }
-        @SuppressWarnings("unchecked")
-        Function<? super MCDataInput, ? extends Packet>[] arr = new Function[maxId + 1];
-        TByteObjectIterator<Function<? super MCDataInput, ? extends Packet>> it = map.iterator();
-        while (it.hasNext()) {
-            it.advance();
-            arr[UnsignedBytes.toInt(it.key())] = it.value();
-        }
-        return arr;
     }
 
     @Override

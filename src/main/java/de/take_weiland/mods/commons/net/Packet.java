@@ -57,4 +57,19 @@ public interface Packet extends SimplePacket {
     default void sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
         getChannel(this).sendTo(this, players, filter);
     }
+
+    abstract class WithResponse<R> implements Packet {
+
+        @Override
+        public final void writeTo(MCDataOutput out) {
+
+        }
+
+        protected abstract void write(MCDataOutput out);
+
+        public abstract R getResponse();
+
+        public abstract void writeResponse(R response, MCDataOutput out);
+
+    }
 }
