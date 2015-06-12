@@ -33,7 +33,7 @@ public final class Players {
     }
 
     public static boolean isSPOwner(EntityPlayer player) {
-        return !getServer().isDedicatedServer() && player.getCommandSenderName().equals(getServer().getServerOwner());
+        return player.worldObj.isRemote && getServer() != null;
     }
 
     public static EntityPlayerMP checkNotClient(EntityPlayer player) {

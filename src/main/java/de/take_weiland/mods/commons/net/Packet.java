@@ -20,12 +20,16 @@ public interface Packet extends SimplePacket {
 
     void writeTo(MCDataOutput out);
 
+    default void writeToPlayer(MCDataOutput out, EntityPlayerMP player) {
+        writeTo(out);
+    }
+
     default int expectedSize() {
         return Network.DEFAULT_EXPECTED_SIZE;
     }
 
-    default Side receivingSide() {
-        return Optional.ofNullable(getClass().getAnnotation(Receiver.class))
+    static Side receivingSide(Class<? extends Packet> clazz) {
+        return Optional.ofNullable(clazz.getAnnotation(Receiver.class))
                 .map(Receiver::value)
                 .orElseThrow(() -> new IllegalStateException("Packet missing @Receiver annotation"));
     }
@@ -58,18 +62,21 @@ public interface Packet extends SimplePacket {
         getChannel(this).sendTo(this, players, filter);
     }
 
-    abstract class WithResponse<R> implements Packet {
+    abstract class WithResponse<R extends Packet> implements Packet {
 
         @Override
         public final void writeTo(MCDataOutput out) {
 
         }
 
+        @Override
+        public final void writeToPlayer(MCDataOutput out, EntityPlayerMP player) {
+
+        }
+
         protected abstract void write(MCDataOutput out);
 
         public abstract R getResponse();
-
-        public abstract void writeResponse(R response, MCDataOutput out);
 
     }
 }

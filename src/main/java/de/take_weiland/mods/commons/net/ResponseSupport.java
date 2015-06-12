@@ -8,6 +8,7 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * @author diesieben07
@@ -54,6 +55,27 @@ final class ResponseSupport {
             next = prev + 1;
         } while (!U.compareAndSwapInt(this, NEXT_ID_OFFSET, prev, next));
         return prev;
+    }
+
+    static <P extends Packet> BiConsumer<? super P, ? super EntityPlayer> wrapHandler(Class<P> packetClass, BiConsumer<? super P, ? super EntityPlayer> handler) {
+        switch (Packet.receivingSide(packetClass)) {
+            case CLIENT:
+                return (packet, player) -> {
+
+                    handler.accept(packet, player);
+                    Object r = ((Packet.WithResponse<?>) packet).getResponse();
+                    if (r != null) {
+                        MCDataOutput out = Network.newOutput();
+                        //noinspection unchecked
+                        ((Packet.WithResponse) packet).writeResponse(r, out);
+
+                    }
+                };
+            case SERVER:
+                return (packet, player) -> {
+
+                }
+        }
     }
 
 }

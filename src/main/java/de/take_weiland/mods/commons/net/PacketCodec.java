@@ -12,12 +12,16 @@ public interface PacketCodec<P> {
 
     byte[] encode(P packet);
 
-    P decode(byte[] payload);
+    default byte[] encodeToPlayer(P packet, EntityPlayerMP player) {
+        return encode(packet);
+    }
+
+    P decode(MCDataInput in);
 
     void handle(P packet, EntityPlayer player);
 
-    default void decodeAndHandle(byte[] payload, EntityPlayer player) {
-        handle(decode(payload), player);
+    default void decodeAndHandle(MCDataInput in, EntityPlayer player) {
+        handle(decode(in), player);
     }
 
     String channel();

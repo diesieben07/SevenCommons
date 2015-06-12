@@ -6,16 +6,12 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.internal.net.NetworkImpl;
-import de.take_weiland.mods.commons.internal.net.SCMessageHandlerClient;
-import de.take_weiland.mods.commons.internal.net.SCMessageHandlerServer;
+import de.take_weiland.mods.commons.internal.net.*;
 import de.take_weiland.mods.commons.util.Scheduler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
-import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.launchwrapper.Launch;
-import net.minecraft.network.NetHandlerPlayServer;
 
 /**
  * @author diesieben07
@@ -37,38 +33,13 @@ public final class FMLEventHandler {
 
     @SubscribeEvent
     public void serverConnectionFromClient(FMLNetworkEvent.ServerConnectionFromClientEvent event) {
-        NetHandlerPlayServer handler = (NetHandlerPlayServer) event.handler;
-        ChannelPipeline pipeline = handler.netManager.channel().pipeline();
-
-        if (!event.isLocal) {
-            insertEncoder(pipeline, NetworkImpl.TO_CLIENT_ENCODER);
-        }
-
-        insertHandler(pipeline, new SCMessageHandlerServer(handler.playerEntity));
+        NetworkImpl.handleServersideConnection(event);
     }
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public void clientConnectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        NetHandlerPlayClient handler = (NetHandlerPlayClient) event.handler;
-        ChannelPipeline pipeline = handler.getNetworkManager().channel().pipeline();
-
-        if (!event.isLocal) {
-            // only need the encoder when not connected locally
-            insertEncoder(pipeline, NetworkImpl.TO_SERVER_ENCODER);
-        }
-        // handler handles both direct messages (for local) and the vanilla-payload packet
-        insertHandler(pipeline, SCMessageHandlerClient.INSTANCE);
-    }
-
-    private void insertHandler(ChannelPipeline pipeline, ChannelHandler handler) {
-        pipeline.addBefore("packet_handler", "sevencommons:handler", handler);
-    }
-
-    private void insertEncoder(ChannelPipeline pipeline, ChannelHandler encoder) {
-        // this is "backwards" - outbound messages travel "upwards" in the pipeline
-        // so really the order is sevencommons:encoder and then vanilla's encoder
-        pipeline.addAfter("encoder", "sevencommons:encoder", encoder);
+        NetworkImpl.handleClientsideConnection(event);
     }
 
     static {

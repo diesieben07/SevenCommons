@@ -20,7 +20,7 @@ public final class SyncCodec implements PacketCodec<SyncEvent> {
     }
 
     @Override
-    public void decodeAndHandle(byte[] payload, EntityPlayer player) {
+    public void decodeAndHandle(MCDataInput in, EntityPlayer player) {
         // caused when packet is received over actual wire
         MCDataInput stream = Network.newInput(payload);
         Scheduler.client().execute(() -> SyncEvent.readAndApply(stream));
@@ -38,7 +38,7 @@ public final class SyncCodec implements PacketCodec<SyncEvent> {
     }
 
     @Override
-    public SyncEvent decode(byte[] payload) {
+    public SyncEvent decode(MCDataInput in) {
         throw new AssertionError("not possible!");
     }
 }

@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.UnsignedBytes;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -25,13 +27,7 @@ final class SimplePacketCodec implements PacketCodec<Packet> {
 
     @Override
     public byte[] encode(Packet packet) {
-        MCDataOutputImpl out = new MCDataOutputImpl(packet.expectedSize() + 1);
-
-        /**
-         * We don't need to check for contains here, because this codec is only used through
-         * PacketToChannelMap, so only valid packets can end up here.
-         */
-        out.writeByte(handlers.get(packet.getClass()).id);
+        MCDataOutput out = prepareOut(packet);
         packet.writeTo(out);
         // remove this copy in 1.8 by wrapping with a ByteBuf
         // when the vanilla packet properly checks for limits on ByteBufs
@@ -39,13 +35,28 @@ final class SimplePacketCodec implements PacketCodec<Packet> {
     }
 
     @Override
-    public Packet decode(byte[] payload) {
-        byte id = payload[0];
+    public byte[] encodeToPlayer(Packet packet, EntityPlayerMP player) {
+        MCDataOutput out = prepareOut(packet);
+        packet.writeToPlayer(out, player);
+        return out.toByteArray();
+    }
+
+    @NotNull
+    private MCDataOutput prepareOut(Packet packet) {
+        MCDataOutput out = new MCDataOutputImpl(packet.expectedSize() + 1);
+        // don't need to check for null, packet comes through PacketToChannelMap
+        out.writeByte(handlers.get(packet.getClass()).id);
+        return out;
+    }
+
+    @Override
+    public Packet decode(MCDataInput in) {
+        byte id = in[0];
         Function<? super MCDataInput, ? extends Packet> cstr = constructors[UnsignedBytes.toInt(id)];
         if (cstr == null) {
             throw new ProtocolException("Unknown PacketID " + id);
         }
-        return cstr.apply(new MCDataInputImpl(payload, 1, payload.length - 1));
+        return cstr.apply(new MCDataInputImpl(in, 1, in.length - 1));
     }
 
     @Override

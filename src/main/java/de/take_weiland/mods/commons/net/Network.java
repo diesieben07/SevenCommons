@@ -2,20 +2,21 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.net.NettyBlob;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
-import de.take_weiland.mods.commons.internal.net.PacketCodecPair;
 import de.take_weiland.mods.commons.util.Players;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.client.C17PacketCustomPayload;
+import net.minecraft.network.play.server.S3FPacketCustomPayload;
 import org.objectweb.asm.Type;
 
 import java.lang.invoke.MethodHandleInfo;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
-import java.util.Iterator;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -25,6 +26,8 @@ import java.util.function.Predicate;
 public final class Network {
 
     public static final int DEFAULT_EXPECTED_SIZE = 32;
+
+    private static final GenericFutureListener<?>[] EMPTY_LISTENERS = {};
 
     public static MCDataOutput newOutput() {
         return new MCDataOutputImpl(DEFAULT_EXPECTED_SIZE);
@@ -38,73 +41,53 @@ public final class Network {
         return new MCDataInputImpl(bytes, 0, bytes.length);
     }
 
-    public static <P> void newChannel(PacketCodec<P> codec) {
-        NetworkImpl.register(codec.channel(), codec);
+    public static void register(String channel, BiConsumer<? super byte[], ? super EntityPlayer> handler) {
+        NetworkImpl.register(channel, handler);
     }
 
-    public static <P> PacketCodec<P> newChannel(String channel,
-                                                Function<? super P, ? extends byte[]> encoder,
-                                                Function<? super byte[], ? extends P> decoder,
-                                                BiConsumer<? super P, ? super EntityPlayer> handler) {
-        return NetworkImpl.register(channel, new PacketCodec<P>() {
-            @Override
-            public byte[] encode(P packet) {
-                return encoder.apply(packet);
-            }
-
-            @Override
-            public P decode(byte[] payload) {
-                return decoder.apply(payload);
-            }
-
-            @Override
-            public void handle(P packet, EntityPlayer player) {
-                handler.accept(packet, player);
-            }
-
-            @Override
-            public String channel() {
-                return channel;
-            }
-        });
+    public static void sendToServer(String channel, byte[] data) {
+        SevenCommons.proxy.getClientNetworkManager()
+                .scheduleOutboundPacket(new S3FPacketCustomPayload(channel, data), EMPTY_LISTENERS);
     }
 
-    public static SimpleChannelBuilder newSimpleChannel(String channel) {
-        return new SimpleChannelBuilderImpl(channel);
+    public static void sendToPlayer(EntityPlayer player, String channel, byte[] data) {
+        sendToPlayer(player, new C17PacketCustomPayload(channel, data));
     }
 
-    public static <P> void sendToServer(P packet, PacketCodec<P> codec) {
-        send0(new PacketCodecPair<>(packet, codec), SevenCommons.proxy.getClientNetworkManager());
-    }
-
-    public static <P> void sendTo(PacketCodec<P> codec, P packet, EntityPlayer player) {
-        sendToPlayer0(new PacketCodecPair<>(packet, codec), Players.checkNotClient(player));
-    }
-
-    public static <P> void sendTo(PacketCodec<P> codec, P packet, Iterable<? extends EntityPlayer> players) {
-        sendTo(codec, packet, players, null);
-    }
-
-    public static <P> void sendTo(PacketCodec<P> codec, P packet, Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
-        Iterator<? extends EntityPlayer> it = players.iterator();
-        PacketCodecPair<P> pair = new PacketCodecPair<>(packet, codec);
-
-        while (it.hasNext()) {
-            EntityPlayerMP player = Players.checkNotClient(it.next());
-            if (filter == null || filter.test(player)) {
-                sendToPlayer0(pair, player);
+    public static void sendToPlayers(Iterable<? extends EntityPlayer> players, String channel, byte[] data, Predicate<? super EntityPlayer> filter) {
+        if (filter == null) {
+            sendToPlayers(players, channel, data);
+        } else {
+            C17PacketCustomPayload packet = new C17PacketCustomPayload(channel, data);
+            for (EntityPlayer player : players) {
+                if (filter.test(player)) {
+                    sendToPlayer(player, packet);
+                }
             }
         }
     }
 
-    private static <P> void sendToPlayer0(PacketCodecPair<P> pair, EntityPlayerMP player) {
-        send0(pair, player.playerNetServerHandler.netManager);
+    public static void sendToPlayers(Iterable<? extends EntityPlayer> players, String channel, byte[] data) {
+        C17PacketCustomPayload packet = new C17PacketCustomPayload(channel, data);
+
+        for (EntityPlayer player : players) {
+            sendToPlayer(player, packet);
+        }
     }
 
-    private static <P> void send0(PacketCodecPair<P> pair, NetworkManager manager) {
-        manager.channel()
-                .writeAndFlush(pair)
+    private static void sendToPlayer(EntityPlayer player, net.minecraft.network.Packet packet) {
+        Players.checkNotClient(player).playerNetServerHandler.netManager.scheduleOutboundPacket(packet, EMPTY_LISTENERS);
+    }
+
+    public static <P> void sendToPlayer(EntityPlayer player, String channel, P packet, BiConsumer<? super P, ? super EntityPlayer> handler, BiFunction<? super P, ? super EntityPlayer, ? extends byte[]> encoder) {
+        Players.checkNotClient(player).playerNetServerHandler.netManager.channel()
+                .writeAndFlush(new NettyBlob<>(channel, packet, handler, encoder))
                 .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    }
+
+
+    public static SimpleChannelBuilder newSimpleChannel(String channel) {
+        return new SimpleChannelBuilderImpl(channel);
     }
 
     private static final java.lang.reflect.Type function2ndParam = Function.class.getTypeParameters()[1];

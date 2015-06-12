@@ -107,6 +107,7 @@ public final class SevenCommons extends DummyModContainer {
         syncCodec = new SyncCodec();
         Network.newChannel(syncCodec);
 
+
 //		packets = Network.newChannel("SevenCommons")
 //				.register(PacketSync.class, SYNC_PACKET_ID)
 //				.register(PacketInventoryName.class)
