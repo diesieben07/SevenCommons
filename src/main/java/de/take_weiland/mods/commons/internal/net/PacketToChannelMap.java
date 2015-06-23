@@ -1,10 +1,12 @@
 package de.take_weiland.mods.commons.internal.net;
 
 import com.google.common.collect.ImmutableMap;
+import com.oracle.webservices.internal.api.message.BasePropertySet;
 import cpw.mods.fml.common.LoaderState;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.Packet;
 import de.take_weiland.mods.commons.net.PacketCodec;
+import de.take_weiland.mods.commons.net.SimplePacket;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,7 +18,7 @@ public final class PacketToChannelMap {
 
     private static Map<Class<? extends Packet>, PacketCodec<Packet>> channels = new ConcurrentHashMap<>();
 
-    public static PacketCodec<Packet> getChannel(Packet packet) {
+    public static <P extends BasePacket> SimplePacketData<P> getData(P packet) {
         PacketCodec<Packet> codec = channels.get(packet.getClass());
         if (codec == null) {
             throw new IllegalStateException(String.format("Cannot send unregistered Packet %s", packet.getClass().getName()));

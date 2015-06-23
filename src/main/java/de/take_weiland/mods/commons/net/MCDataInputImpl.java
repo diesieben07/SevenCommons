@@ -44,6 +44,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
     private int markedPos = BufferConstants.NO_MARK;
 
     MCDataInputImpl(byte[] buf, int off, int len) {
+        checkPositionIndexes(off, off + len, buf.length);
         this.buf = buf;
         this.pos = this.initialPos = off;
         this.maxLen = len;

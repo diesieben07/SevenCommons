@@ -21,4 +21,4 @@ public class NettyBlob<P> {
         this.handler = handler;
         this.encoder = encoder;
     }
-
+}

@@ -23,7 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
     private final String channel;
-    private final TByteObjectHashMap<Function<? super MCDataInput, ? extends Packet>> constructors = new TByteObjectHashMap<>();
+    private final TByteObjectHashMap<Function<? super MCDataInput, ? extends BasePacket>> constructors = new TByteObjectHashMap<>();
     private final Map<Class<? extends Packet>, HandlerIDPair> handlers = new HashMap<>();
 
     SimpleChannelBuilderImpl(String channel) {

@@ -1,8 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.util.Entities;
 import de.take_weiland.mods.commons.util.Players;
@@ -14,7 +13,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
@@ -27,14 +28,35 @@ public interface SimplePacket {
 
     void sendToServer();
 
-    void sendTo(EntityPlayer player);
+    void sendTo(EntityPlayerMP player);
 
-    void sendTo(Iterable<? extends EntityPlayer> players);
+    default void sendTo(Iterator<? extends EntityPlayer> it, Predicate<? super EntityPlayerMP> filter) {
+        while (it.hasNext()) {
+            EntityPlayerMP player = Players.checkNotClient(it.next());
+            if (filter == null || filter.test(player)) {
+                sendTo(player);
+            }
+        }
+    }
 
-    void sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter);
+    default void sendTo(EntityPlayer player) {
+        sendTo(Players.checkNotClient(player));
+    }
 
     default void sendTo(EntityPlayer... players) {
-        sendTo(Arrays.asList(players));
+        sendTo(Iterators.forArray(players), null);
+    }
+
+    default void sendTo(Iterable<? extends EntityPlayer> players) {
+        sendTo(players.iterator(), null);
+    }
+
+    default void sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
+        sendTo(players.iterator(), filter);
+    }
+
+    default void sendTo(Iterator<? extends EntityPlayer> it) {
+        sendTo(it, null);
     }
 
     default void sendTo(World world, Predicate<? super EntityPlayer> filter) {
@@ -96,6 +118,10 @@ public interface SimplePacket {
 
     interface WithResponse<R> {
 
+        default SimplePacket discardResponse() {
+            return new DiscardResponseAdapter(this);
+        }
+
         CompletableFuture<R> sendToServer();
 
         CompletableFuture<R> sendTo(EntityPlayerMP player);
@@ -104,25 +130,33 @@ public interface SimplePacket {
             return sendTo(Players.checkNotClient(player));
         }
 
-        default Map<EntityPlayerMP, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players, com.google.common.base.Predicate<? super EntityPlayerMP> filter) {
-            return FluentIterable.from(players)
-                    .transform(Players::checkNotClient)
-                    .filter(filter)
-                    .toMap(this::sendTo);
-
-            ImmutableMap.Builder<EntityPlayer, CompletableFuture<R>> b = ImmutableMap.builder();
-
-            for (EntityPlayer p : players) {
-                EntityPlayerMP player = Players.checkNotClient(p);
+        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterator<? extends EntityPlayer> it, Predicate<? super EntityPlayerMP> filter) {
+            HashMap<EntityPlayerMP, CompletableFuture<R>> map = new HashMap<>();
+            while (it.hasNext()) {
+                EntityPlayerMP player = Players.checkNotClient(it.next());
                 if (filter == null || filter.test(player)) {
-                    b.put(player, sendTo(player));
+                    map.computeIfAbsent(player, this::sendTo);
                 }
             }
-            return b.build();
+
+            return Collections.unmodifiableMap(map);
         }
 
+        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterator<? extends EntityPlayer> it) {
+            return sendTo(it, null);
+        }
+
+        default Map<EntityPlayer, CompletableFuture<R>> sendTo(EntityPlayer... players) {
+            return sendTo(Iterators.forArray(players), null);
+        }
+
+
         default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players) {
-            return sendTo(players, null);
+            return sendTo(players.iterator(), null);
+        }
+
+        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
+            return sendTo(players.iterator(), filter);
         }
 
         default Map<EntityPlayer, CompletableFuture<R>> sendTo(Predicate<? super EntityPlayerMP> filter) {
@@ -149,12 +183,18 @@ public interface SimplePacket {
             return sendToAllNear(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, radius);
         }
 
+        default Map<EntityPlayer, CompletableFuture<R>> sendToAllAssociated(Entity entity) {
+            Iterator<EntityPlayerMP> players = Entities.getTrackingPlayers(entity).iterator();
+            if (entity instanceof EntityPlayer) {
+                players = new OnePlusIterator<>(players, Players.checkNotClient((EntityPlayer) entity));
+            }
+            return sendTo(players, null);
+        }
+
         default Map<EntityPlayer, CompletableFuture<R>> sendToAllNear(World world, double x, double y, double z, double radius) {
             double rSq = radius * radius;
             return sendTo(Players.allIn(world), p -> p.getDistanceSq(x, y, z) <= rSq);
         }
-
-        n
 
         default Map<EntityPlayer, CompletableFuture<R>> sendToAllTracking(TileEntity te) {
             return sendToAllTrackingChunk(te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4);
@@ -170,6 +210,10 @@ public interface SimplePacket {
 
         default Map<EntityPlayer, CompletableFuture<R>> sendToAllTracking(Entity entity) {
             return sendTo(Entities.getTrackingPlayers(entity), null);
+        }
+
+        default Map<EntityPlayer, CompletableFuture<R>> sendToViewing(Container c) {
+            return sendTo(Iterables.filter(SCReflector.instance.getCrafters(c), EntityPlayerMP.class), null);
         }
     }
 

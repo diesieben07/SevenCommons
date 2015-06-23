@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.net;
 
+import de.take_weiland.mods.commons.net.RawPacket;
 import de.take_weiland.mods.commons.util.Players;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -16,8 +17,8 @@ public final class SCMessageHandlerClient extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof PacketCodecPair<?>) {
-            ((PacketCodecPair<?>) msg).handle(Players.getClient());
+        if (msg instanceof RawPacket) {
+            ((RawPacket) msg).handle(Players.getClient());
         } else if (!(msg instanceof S3FPacketCustomPayload) || !NetworkImpl.handleClientCustomPacket((S3FPacketCustomPayload) msg)) {
             ctx.fireChannelRead(msg);
         }

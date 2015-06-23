@@ -5,6 +5,9 @@ import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+
+import static de.take_weiland.mods.commons.util.Sides.sideOf;
 
 /**
  * <p>A base interface for a packet handler. Instances of this interface act as a {@code BiConsumer<P, EntityPlayer}.</p>
@@ -27,5 +30,15 @@ public interface SimplePacketHandler<P> extends BiConsumer<P, EntityPlayer> {
     @Override
     default void accept(P packet, EntityPlayer player) {
         handle(packet, player, Sides.sideOf(player));
+    }
+
+    interface WithResponse<P extends Packet.WithResponse<R>, R extends Packet> extends BiFunction<P, EntityPlayer, R> {
+
+        R handle(P packet, EntityPlayer player, Side side);
+
+        @Override
+        default R apply(P packet, EntityPlayer player) {
+            return handle(packet, player, sideOf(player.worldObj));
+        }
     }
 }

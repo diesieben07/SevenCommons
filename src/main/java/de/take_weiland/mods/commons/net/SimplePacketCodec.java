@@ -13,20 +13,20 @@ import java.util.function.Function;
 /**
  * @author diesieben07
  */
-final class SimplePacketCodec implements PacketCodec<Packet> {
+final class SimplePacketCodec {
 
     private final String channel;
-    private final Function<? super MCDataInput, ? extends Packet>[] constructors;
-    private final ImmutableMap<Class<? extends Packet>, HandlerIDPair> handlers;
+    private final Function<? super MCDataInput, ? extends BasePacket>[] constructors;
+    private final ImmutableMap<Class<? extends BasePacket>, HandlerIDPair> handlers;
 
-    SimplePacketCodec(String channel, Function<? super MCDataInput, ? extends Packet>[] constructors, ImmutableMap<Class<? extends Packet>, HandlerIDPair> handlers) {
+    SimplePacketCodec(String channel, Function<? super MCDataInput, ? extends BasePacket>[] constructors, ImmutableMap<Class<? extends BasePacket>, HandlerIDPair> handlers) {
         this.channel = channel;
         this.constructors = constructors;
         this.handlers = handlers;
     }
 
-    @Override
-    public byte[] encode(Packet packet) {
+
+    public byte[] encode(BasePacket packet) {
         MCDataOutput out = prepareOut(packet);
         packet.writeTo(out);
         // remove this copy in 1.8 by wrapping with a ByteBuf
@@ -35,14 +35,14 @@ final class SimplePacketCodec implements PacketCodec<Packet> {
     }
 
     @Override
-    public byte[] encodeToPlayer(Packet packet, EntityPlayerMP player) {
+    public byte[] encodeToPlayer(BasePacket packet, EntityPlayerMP player) {
         MCDataOutput out = prepareOut(packet);
         packet.writeToPlayer(out, player);
         return out.toByteArray();
     }
 
     @NotNull
-    private MCDataOutput prepareOut(Packet packet) {
+    private MCDataOutput prepareOut(BasePacket packet) {
         MCDataOutput out = new MCDataOutputImpl(packet.expectedSize() + 1);
         // don't need to check for null, packet comes through PacketToChannelMap
         out.writeByte(handlers.get(packet.getClass()).id);

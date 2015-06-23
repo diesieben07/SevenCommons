@@ -13,7 +13,7 @@ import java.util.function.Function;
  * @author diesieben07
  */
 @FunctionalInterface
-public interface PacketConstructor<P extends Packet> extends Function<MCDataInput, P>, Serializable {
+public interface PacketConstructor<P extends BasePacket> extends Function<MCDataInput, P>, Serializable {
 
     default Class<P> getPacketClass() {
         return Network.findPacketClassReflectively(this);

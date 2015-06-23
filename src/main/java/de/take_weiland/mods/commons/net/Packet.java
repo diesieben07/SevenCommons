@@ -1,6 +1,9 @@
 package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.net.BasePacket;
+import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
+import de.take_weiland.mods.commons.internal.net.SimplePacketData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
@@ -11,19 +14,17 @@ import java.lang.annotation.Target;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import static de.take_weiland.mods.commons.internal.net.PacketToChannelMap.getChannel;
+import static de.take_weiland.mods.commons.internal.net.PacketToChannelMap.getData;
 
 /**
  * @author diesieben07
  */
-public interface Packet extends SimplePacket {
+public interface Packet extends BasePacket, SimplePacket {
 
+    @Override
     void writeTo(MCDataOutput out);
 
-    default void writeToPlayer(MCDataOutput out, EntityPlayerMP player) {
-        writeTo(out);
-    }
-
+    @Override
     default int expectedSize() {
         return Network.DEFAULT_EXPECTED_SIZE;
     }
@@ -44,39 +45,48 @@ public interface Packet extends SimplePacket {
 
     @Override
     default void sendToServer() {
-        getChannel(this).sendToServer(this);
+        SimplePacketData data = PacketToChannelMap.getData(this);
+        data.sendToServer(this);
+        Network.sendToServer(new RawPacket.UsingCustomPayload() {
+            @Override
+            public void handle(EntityPlayer player) {
+                data.handler.accept(Packet.this, player);
+            }
+
+            @Override
+            public String channel() {
+                return data.channel;
+            }
+
+            @Override
+            public byte[] write() {
+                MCDataOutput out = Network.newOutput(expectedSize());
+                out.writeByte(data.packetID);
+                writeTo(out);
+                return out.toByteArray();
+            }
+        });
     }
 
     @Override
     default void sendTo(EntityPlayer player) {
-        getChannel(this).sendTo(this, player);
+        getData(this).sendTo(this, player);
     }
 
     @Override
     default void sendTo(Iterable<? extends EntityPlayer> players) {
-        getChannel(this).sendTo(this, players);
+        getData(this).sendTo(this, players);
     }
 
     @Override
     default void sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
-        getChannel(this).sendTo(this, players, filter);
+        getData(this).sendTo(this, players, filter);
     }
 
-    abstract class WithResponse<R extends Packet> implements Packet {
+    interface WithResponse<R extends Packet> extends BasePacket, SimplePacket.WithResponse<R> {
 
         @Override
-        public final void writeTo(MCDataOutput out) {
-
-        }
-
-        @Override
-        public final void writeToPlayer(MCDataOutput out, EntityPlayerMP player) {
-
-        }
-
-        protected abstract void write(MCDataOutput out);
-
-        public abstract R getResponse();
+        void writeTo(MCDataOutput out);
 
     }
 }
