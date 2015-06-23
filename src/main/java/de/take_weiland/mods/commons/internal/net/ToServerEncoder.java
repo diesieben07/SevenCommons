@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.net;
 
-import de.take_weiland.mods.commons.net.RawPacket;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -15,8 +14,8 @@ public final class ToServerEncoder extends ChannelOutboundHandlerAdapter {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (msg instanceof RawPacket) {
-            ctx.write(((RawPacket) msg).encode(), promise);
+        if (msg instanceof BaseNettyPacket) {
+            ctx.write(((BaseNettyPacket) msg)._sc$encode(), promise);
         } else {
             ctx.write(msg, promise);
         }

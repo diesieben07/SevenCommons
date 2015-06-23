@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal.net;
 
 import com.google.common.collect.ImmutableMap;
-import com.oracle.webservices.internal.api.message.BasePropertySet;
 import cpw.mods.fml.common.LoaderState;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.Packet;
@@ -16,14 +15,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class PacketToChannelMap {
 
-    private static Map<Class<? extends Packet>, PacketCodec<Packet>> channels = new ConcurrentHashMap<>();
+    private static Map<Class<? extends BaseModPacket>, SimplePacketData<?>> channels = new ConcurrentHashMap<>();
 
-    public static <P extends BasePacket> SimplePacketData<P> getData(P packet) {
-        PacketCodec<Packet> codec = channels.get(packet.getClass());
-        if (codec == null) {
+    public static <P extends BaseModPacket> SimplePacketData<P> getData(P packet) {
+        SimplePacketData<?> data = channels.get(packet.getClass());
+        if (data == null) {
             throw new IllegalStateException(String.format("Cannot send unregistered Packet %s", packet.getClass().getName()));
         }
-        return codec;
+        //noinspection unchecked
+        return (SimplePacketData<P>) data;
     }
 
     static synchronized void put(Class<? extends Packet> packetClass, PacketCodec<Packet> codec) {
@@ -31,6 +31,10 @@ public final class PacketToChannelMap {
         if (oldCodec != null) {
             throw new IllegalStateException(String.format("Packet %s already in use with channel %s", packetClass.getName(), oldCodec.channel()));
         }
+    }
+
+    public static synchronized void register(Class<? extends BaseModPacket> clazz, String channel, int id) {
+        channels.putIfAbsent(clazz, new SimplePacketData<>())
     }
 
     public static synchronized void putAll(Iterable<Class<? extends Packet>> packets, PacketCodec<Packet> codec) {

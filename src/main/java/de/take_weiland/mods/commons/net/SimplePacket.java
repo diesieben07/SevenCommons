@@ -13,11 +13,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -130,33 +128,30 @@ public interface SimplePacket {
             return sendTo(Players.checkNotClient(player));
         }
 
-        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterator<? extends EntityPlayer> it, Predicate<? super EntityPlayerMP> filter) {
+        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players, int sizeHint, Predicate<? super EntityPlayerMP> filter) {
             HashMap<EntityPlayerMP, CompletableFuture<R>> map = new HashMap<>();
-            while (it.hasNext()) {
-                EntityPlayerMP player = Players.checkNotClient(it.next());
-                if (filter == null || filter.test(player)) {
-                    map.computeIfAbsent(player, this::sendTo);
+            Function<EntityPlayerMP, CompletableFuture<R>> sender = this::sendTo;
+
+            for (EntityPlayer player : players) {
+                EntityPlayerMP mp = Players.checkNotClient(player);
+                if (filter == null || filter.test(mp)) {
+                    map.computeIfAbsent(mp, sender);
                 }
             }
-
             return Collections.unmodifiableMap(map);
         }
 
-        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterator<? extends EntityPlayer> it) {
-            return sendTo(it, null);
+        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
+            int sizeHint = players instanceof Collection ? ((Collection) players).size() : -1;
+            return sendTo(players, sizeHint, filter);
         }
 
         default Map<EntityPlayer, CompletableFuture<R>> sendTo(EntityPlayer... players) {
-            return sendTo(Iterators.forArray(players), null);
+            return sendTo(Arrays.asList(players), null);
         }
-
 
         default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players) {
-            return sendTo(players.iterator(), null);
-        }
-
-        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
-            return sendTo(players.iterator(), filter);
+            return sendTo(players, null);
         }
 
         default Map<EntityPlayer, CompletableFuture<R>> sendTo(Predicate<? super EntityPlayerMP> filter) {
@@ -184,9 +179,10 @@ public interface SimplePacket {
         }
 
         default Map<EntityPlayer, CompletableFuture<R>> sendToAllAssociated(Entity entity) {
-            Iterator<EntityPlayerMP> players = Entities.getTrackingPlayers(entity).iterator();
+            Iterable<EntityPlayerMP> players = Entities.getTrackingPlayers(entity);
             if (entity instanceof EntityPlayer) {
-                players = new OnePlusIterator<>(players, Players.checkNotClient((EntityPlayer) entity));
+                Iterable<EntityPlayerMP> playersFinal = players;
+                players = () -> new OnePlusIterator<>(playersFinal.iterator(), Players.checkNotClient((EntityPlayer) entity));
             }
             return sendTo(players, null);
         }

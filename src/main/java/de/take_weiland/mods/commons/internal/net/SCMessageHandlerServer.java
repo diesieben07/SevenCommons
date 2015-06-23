@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.net;
 
-import de.take_weiland.mods.commons.net.RawPacket;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -19,8 +18,8 @@ public final class SCMessageHandlerServer extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof RawPacket) {
-            ((RawPacket) msg).handle(player);
+        if (msg instanceof BaseNettyPacket) {
+            ((BaseNettyPacket) msg)._sc$handle(player);
         } else if (!(msg instanceof C17PacketCustomPayload) || !NetworkImpl.handleServerCustomPacket((C17PacketCustomPayload) msg, player)) {
             ctx.fireChannelRead(msg);
         }

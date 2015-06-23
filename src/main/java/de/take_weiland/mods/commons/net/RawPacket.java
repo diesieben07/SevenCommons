@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.net;
 
-import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
@@ -10,17 +10,38 @@ import net.minecraft.network.play.server.S3FPacketCustomPayload;
 /**
  * @author diesieben07
  */
-public interface RawPacket {
+public interface RawPacket extends BaseNettyPacket {
 
     void handle(EntityPlayer player);
 
-    net.minecraft.network.Packet encodeToPlayer(EntityPlayerMP player);
+    Packet encodeToPlayer(EntityPlayerMP player);
 
-    net.minecraft.network.Packet encode();
+    Packet encode();
+
+    @Override
+    default void _sc$handle(EntityPlayer player) {
+        handle(player);
+    }
+
+    @Override
+    default Packet _sc$encodeToPlayer(EntityPlayerMP player) {
+        return encodeToPlayer(player);
+    }
+
+    @Override
+    default Packet _sc$encode() {
+        return encode();
+    }
 
     interface UsingCustomPayload extends RawPacket {
 
         String channel();
+
+        byte[] write();
+
+        default byte[] writeToPlayer(EntityPlayerMP player) {
+            return write();
+        }
 
         @Override
         default Packet encodeToPlayer(EntityPlayerMP player) {
@@ -31,12 +52,6 @@ public interface RawPacket {
         default Packet encode() {
             return new C17PacketCustomPayload(channel(), write());
         }
-
-        default byte[] writeToPlayer(EntityPlayerMP player) {
-            return write();
-        }
-
-        byte[] write();
     }
 
 }

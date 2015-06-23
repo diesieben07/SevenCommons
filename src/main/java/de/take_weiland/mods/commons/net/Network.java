@@ -2,10 +2,13 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.net.BaseModPacket;
+import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.util.Players;
 import io.netty.channel.ChannelFutureListener;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import org.objectweb.asm.Type;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -43,13 +46,13 @@ public final class Network {
         NetworkImpl.register(channel, handler);
     }
 
-    public static void sendToPlayer(EntityPlayer player, RawPacket packet) {
-        Players.checkNotClient(player).playerNetServerHandler.netManager.channel()
+    public static void sendToPlayer(EntityPlayerMP player, BaseNettyPacket packet) {
+        player.playerNetServerHandler.netManager.channel()
                 .writeAndFlush(packet)
                 .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 
-    public static void sendToServer(RawPacket packet) {
+    public static void sendToServer(BaseNettyPacket packet) {
         SevenCommons.proxy.getClientNetworkManager().channel()
                 .writeAndFlush(packet)
                 .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
@@ -61,17 +64,17 @@ public final class Network {
 
     private static final java.lang.reflect.Type function2ndParam = Function.class.getTypeParameters()[1];
 
-    static <P extends BasePacket> Class<P> findPacketClassReflectively(PacketConstructor<P> constructor) {
+    static <P extends BaseModPacket> Class<P> findPacketClassReflectively(PacketConstructor<P> constructor) {
         Class<?> myClazz = constructor.getClass();
 
         TypeToken<?> type = TypeToken.of(myClazz);
         Class<?> result;
         result = type.resolveType(function2ndParam).getRawType();
-        if (!BasePacket.class.isAssignableFrom(result)) {
-            result = BasePacket.class;
+        if (!BaseModPacket.class.isAssignableFrom(result)) {
+            result = BaseModPacket.class;
         }
 
-        if (result == BasePacket.class) { // class is not a real subtype of Packet, so did not find an actual type parameter
+        if (result == BaseModPacket.class) { // class is not a real subtype of Packet, so did not find an actual type parameter
             // try lambda-hackery now
             try {
                 Method method = myClazz.getDeclaredMethod("writeReplace");
@@ -93,14 +96,14 @@ public final class Network {
                             break;
                     }
 
-                    if (BasePacket.class.isAssignableFrom(returnClass) && returnClass != BasePacket.class) {
+                    if (BaseModPacket.class.isAssignableFrom(returnClass) && returnClass != BaseModPacket.class) {
                         result = returnClass;
                     }
                 }
             } catch (Exception ignored) {
             }
         }
-        if (result == BasePacket.class) {
+        if (result == BaseModPacket.class) {
             throw new RuntimeException("Failed to reflectively find type argument of PacketConstructor. " +
                     "Please either refactor your code according to the docs or override getPacketClass.");
         }
