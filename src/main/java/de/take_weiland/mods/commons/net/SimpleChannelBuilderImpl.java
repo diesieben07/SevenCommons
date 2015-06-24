@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.UnsignedBytes;
+import de.take_weiland.mods.commons.internal.net.BaseModPacket;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
 import gnu.trove.iterator.TByteObjectIterator;
@@ -12,6 +13,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -23,7 +25,7 @@ import static com.google.common.base.Preconditions.checkState;
 final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
     private final String channel;
-    private final TByteObjectHashMap<Function<? super MCDataInput, ? extends BasePacket>> constructors = new TByteObjectHashMap<>();
+    private final TByteObjectHashMap<Function<? super MCDataInput, ? extends BaseModPacket>> constructors = new TByteObjectHashMap<>();
     private final Map<Class<? extends Packet>, HandlerIDPair> handlers = new HashMap<>();
 
     SimpleChannelBuilderImpl(String channel) {
@@ -43,6 +45,13 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         handlers.put(packetClass, new HandlerIDPair((BiConsumer<? super Packet, ? super EntityPlayer>) handler, (byte) id));
 
         return this;
+    }
+
+    @Override
+    public <P extends Packet.WithResponse<R>, R extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> respCstr, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+        return register(id, constructor, (packet, player) -> {
+
+        });
     }
 
     @Override
