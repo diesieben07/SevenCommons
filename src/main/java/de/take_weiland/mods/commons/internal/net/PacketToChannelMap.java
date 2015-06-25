@@ -32,7 +32,7 @@ public final class PacketToChannelMap {
         return data;
     }
 
-    public static <P extends Packet.WithResponse<R>, R extends Packet> SimplePacketData.WithResponse<P, R> getData(P packet) {
+    public static <P extends Packet.WithResponse<R>, R extends Packet.Response> SimplePacketData.WithResponse<P, R> getData(P packet) {
         //noinspection unchecked
         return (SimplePacketData.WithResponse<P, R>) getDataInternal(packet);
     }
@@ -41,7 +41,7 @@ public final class PacketToChannelMap {
         channels.putIfAbsent(clazz, new SimplePacketData.Normal<>(channel, id, constructor, handler));
     }
 
-    public static synchronized <P extends Packet.WithResponse<R>, R extends Packet> void register(Class<P> clazz, String channel, int id, BiFunction<? super MCDataInput, ? super EntityPlayer, ? extends P> constructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+    public static synchronized <P extends Packet.WithResponse<R>, R extends Packet.Response> void register(Class<P> clazz, String channel, int id, BiFunction<? super MCDataInput, ? super EntityPlayer, ? extends P> constructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
         channels.putIfAbsent(clazz, new SimplePacketData.WithResponse<>(channel, id, constructor, handler));
     }
 

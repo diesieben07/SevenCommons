@@ -36,7 +36,7 @@ public abstract class SimplePacketData<P extends BaseModPacket> {
         }
     }
 
-    public static final class WithResponse<P extends Packet.WithResponse<R>, R extends Packet> extends SimplePacketData<P> {
+    public static final class WithResponse<P extends Packet.WithResponse<R>, R extends Packet.Response> extends SimplePacketData<P> {
 
         final BiFunction<? super P, ? super EntityPlayer, ? extends R> handler;
         final AtomicInteger nextID = new AtomicInteger();

@@ -182,7 +182,8 @@ public interface SimplePacket {
             Iterable<EntityPlayerMP> players = Entities.getTrackingPlayers(entity);
             if (entity instanceof EntityPlayer) {
                 Iterable<EntityPlayerMP> playersFinal = players;
-                players = () -> new OnePlusIterator<>(playersFinal.iterator(), Players.checkNotClient((EntityPlayer) entity));
+                EntityPlayerMP mp = Players.checkNotClient((EntityPlayer) entity);
+                players = () -> new OnePlusIterator<>(playersFinal.iterator(), mp);
             }
             return sendTo(players, null);
         }

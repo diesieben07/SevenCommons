@@ -69,7 +69,7 @@ public interface Packet extends BaseModPacket, BaseNettyPacket, SimplePacket {
         return constructor.apply(data.channel, out.toByteArray());
     }
 
-    interface WithResponse<R extends Packet> extends SimplePacket.WithResponse<R>, BaseModPacket {
+    interface WithResponse<R extends Packet.Response> extends SimplePacket.WithResponse<R>, BaseModPacket {
 
         void writeTo(MCDataOutput out);
 
@@ -86,6 +86,12 @@ public interface Packet extends BaseModPacket, BaseNettyPacket, SimplePacket {
             Network.sendToPlayer(player, new ResponseNettyVersion<>(this, future));
             return future;
         }
+    }
+
+    interface Response extends BaseModPacket {
+
+        void writeTo(MCDataOutput out);
+
     }
 
 }

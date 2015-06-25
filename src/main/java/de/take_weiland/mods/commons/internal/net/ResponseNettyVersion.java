@@ -14,7 +14,7 @@ import java.util.function.BiFunction;
 /**
  * @author diesieben07
  */
-public final class ResponseNettyVersion<R extends Packet> implements BaseNettyPacket {
+public final class ResponseNettyVersion<R extends Packet.Response> implements BaseNettyPacket {
 
     private final Packet.WithResponse<R> original;
     private final CompletableFuture<R> future;
