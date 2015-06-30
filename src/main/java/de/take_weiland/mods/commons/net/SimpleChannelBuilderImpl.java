@@ -46,7 +46,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
     }
 
     @Override
-    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> respCstr, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
         validate(id);
 
         Class<P> packetClass = constructor.getPacketClass();
@@ -62,7 +62,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
                 if (future != null) {
                     try {
-                        future.complete(respCstr.apply(in, player));
+                        future.complete(responseConstructor.apply(in, player));
                     } catch (Throwable t) {
                         future.completeExceptionally(t);
                     }

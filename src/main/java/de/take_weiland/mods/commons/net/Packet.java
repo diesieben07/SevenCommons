@@ -21,6 +21,8 @@ import java.util.concurrent.CompletableFuture;
  * <p>If a packet is send through the local channel on SSP <i>the same instance</i> will be received on the other side.</p>
  *
  * @see SimpleChannelBuilder
+ * @see SimplePacket
+ *
  * @author diesieben07
  */
 public interface Packet extends BaseModPacket, SimplePacket {
@@ -59,6 +61,7 @@ public interface Packet extends BaseModPacket, SimplePacket {
     /**
      * <p>A version of {@code Packet} that has a response. The response class needs to implement {@link de.take_weiland.mods.commons.net.Packet.Response}.</p>
      * <p>The response is supplied in form of a {@link CompletableFuture} when an instance of this packet is sent.</p>
+     * @see de.take_weiland.mods.commons.net.SimplePacket.WithResponse
      */
     interface WithResponse<R extends Packet.Response> extends SimplePacket.WithResponse<R>, BaseModPacket {
 
@@ -84,8 +87,16 @@ public interface Packet extends BaseModPacket, SimplePacket {
         }
     }
 
+    /**
+     * <p>The response for a {@code Packet.WithResponse}.</p>
+     */
     interface Response extends BaseModPacket {
 
+        /**
+         * <p>Write this packet's data to the output stream.</p>
+         *
+         * @param out the output stream
+         */
         void writeTo(MCDataOutput out);
 
     }

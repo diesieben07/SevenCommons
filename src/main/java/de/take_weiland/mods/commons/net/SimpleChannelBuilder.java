@@ -71,38 +71,38 @@ public interface SimpleChannelBuilder {
      * <p>Register a Packet with a response using the given constructor and handler.</p>
      * @param id the packet ID
      * @param constructor the constructor for the packet
-     * @param respCstr the constructor for the response
+     * @param responseConstructor the constructor for the response
      * @param handler the handler for the packet
      * @return this, for convenience
      */
-    <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> respCstr, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler);
+    <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler);
 
-    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> respCstr, SimplePacketHandler.WithResponse<? super P, ? extends R> handler) {
-        return register(id, constructor, respCstr, (BiFunction<? super P, ? super EntityPlayer, ? extends R>) handler);
+    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, SimplePacketHandler.WithResponse<? super P, ? extends R> handler) {
+        return register(id, constructor, responseConstructor, (BiFunction<? super P, ? super EntityPlayer, ? extends R>) handler);
     }
 
-    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor.WithoutPlayer<P> constructor, PacketConstructor<R> respCstr, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
-        return register(id, (PacketConstructor<P>) constructor, respCstr, handler);
+    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor.WithoutPlayer<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+        return register(id, (PacketConstructor<P>) constructor, responseConstructor, handler);
     }
 
-    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor.WithoutPlayer<P> constructor, PacketConstructor<R> respCstr, SimplePacketHandler.WithResponse<? super P, ? extends R> handler) {
-        return register(id, (PacketConstructor<P>) constructor, respCstr, (BiFunction<? super P, ? super EntityPlayer, ? extends R>) handler);
+    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor.WithoutPlayer<P> constructor, PacketConstructor<R> responseConstructor, SimplePacketHandler.WithResponse<? super P, ? extends R> handler) {
+        return register(id, (PacketConstructor<P>) constructor, responseConstructor, (BiFunction<? super P, ? super EntityPlayer, ? extends R>) handler);
     }
 
-    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor.WithoutPlayer<R> respCstr, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
-        return register(id, constructor, (PacketConstructor<R>) respCstr, handler);
+    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor.WithoutPlayer<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+        return register(id, constructor, (PacketConstructor<R>) responseConstructor, handler);
     }
 
-    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor.WithoutPlayer<R> respCstr, SimplePacketHandler.WithResponse<? super P, ? extends R> handler) {
-        return register(id, constructor, (PacketConstructor<R>) respCstr, (BiFunction<? super P, ? super EntityPlayer, ? extends R>) handler);
+    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor.WithoutPlayer<R> responseConstructor, SimplePacketHandler.WithResponse<? super P, ? extends R> handler) {
+        return register(id, constructor, (PacketConstructor<R>) responseConstructor, (BiFunction<? super P, ? super EntityPlayer, ? extends R>) handler);
     }
 
-    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor.WithoutPlayer<P> constructor, PacketConstructor.WithoutPlayer<R> respCstr, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
-        return register(id, (PacketConstructor<P>) constructor, (PacketConstructor<R>) respCstr, handler);
+    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor.WithoutPlayer<P> constructor, PacketConstructor.WithoutPlayer<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+        return register(id, (PacketConstructor<P>) constructor, (PacketConstructor<R>) responseConstructor, handler);
     }
 
-    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor.WithoutPlayer<P> constructor, PacketConstructor.WithoutPlayer<R> respCstr, SimplePacketHandler.WithResponse<? super P, ? extends R> handler) {
-        return register(id, (PacketConstructor<P>) constructor, (PacketConstructor<R>) respCstr, (BiFunction<? super P, ? super EntityPlayer, ? extends R>) handler);
+    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor.WithoutPlayer<P> constructor, PacketConstructor.WithoutPlayer<R> responseConstructor, SimplePacketHandler.WithResponse<? super P, ? extends R> handler) {
+        return register(id, (PacketConstructor<P>) constructor, (PacketConstructor<R>) responseConstructor, (BiFunction<? super P, ? super EntityPlayer, ? extends R>) handler);
     }
 
     void build();

@@ -13,6 +13,8 @@ import java.util.concurrent.CompletableFuture;
 import static org.objectweb.asm.Opcodes.*;
 
 /**
+ * <p>adds all the methods in SimplePacket to SimplePacket.WithResponse. This is in a transformer because java doesn't allow different return-type methods in the same
+ * class, but the JVM does.</p>
  * @author diesieben07
  */
 public class SimplePacketWithResponseTransformer extends ClassVisitor {
@@ -52,6 +54,7 @@ public class SimplePacketWithResponseTransformer extends ClassVisitor {
             }
             mv.visitMethodInsn(INVOKEINTERFACE, name, method.getName(), descWithResponse, true);
 //            mv.visitInsn(POP);
+            // RETURN also POPs
             mv.visitInsn(RETURN);
 
             mv.visitMaxs(0, 0);
