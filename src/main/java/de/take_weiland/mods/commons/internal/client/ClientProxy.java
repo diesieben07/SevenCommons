@@ -48,4 +48,9 @@ public final class ClientProxy implements SevenCommonsProxy {
     public BiFunction<String, byte[], ? extends Packet> getC17PacketCstr() {
         return C17PacketCustomPayload::new;
     }
+
+    @Override
+    public Packet makeC17Packet(String channel, byte[] data) {
+        return new C17PacketCustomPayload(channel, data);
+    }
 }

@@ -1,11 +1,10 @@
 package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.internal.net.*;
-import net.minecraft.entity.player.EntityPlayer;
+import de.take_weiland.mods.commons.internal.net.BaseModPacket;
+import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
+import de.take_weiland.mods.commons.internal.net.ResponseNettyVersion;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.play.server.S3FPacketCustomPayload;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,13 +12,24 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
 
 /**
+ * <p>A simple interface for implementing custom packets for your Mod. They will be registered using {@link Network#newSimpleChannel(String)}
+ * and will be a sent using the vanilla custom payload packets.</p>
+ * <p>An instance of {@code Packet} must never carry mutable state that is referenced outside of it unless it is ensured that the state
+ * can be accessed from multiple threads concurrently.</p>
+ * <p>If a packet is send through the local channel on SSP <i>the same instance</i> will be received on the other side.</p>
+ *
+ * @see SimpleChannelBuilder
  * @author diesieben07
  */
-public interface Packet extends BaseModPacket, BaseNettyPacket, SimplePacket {
+public interface Packet extends BaseModPacket, SimplePacket {
 
+    /**
+     * <p>Encode this packet to the output stream.</p>
+     *
+     * @param out the output stream
+     */
     void writeTo(MCDataOutput out);
 
     static Side receivingSide(Class<? extends Packet> clazz) {
@@ -38,39 +48,25 @@ public interface Packet extends BaseModPacket, BaseNettyPacket, SimplePacket {
 
     @Override
     default void sendToServer() {
-        Network.sendToServer(this);
+        Network.sendToServer((BaseNettyPacket) this);
     }
 
     @Override
     default void sendTo(EntityPlayerMP player) {
-        Network.sendToPlayer(player, this);
+        Network.sendToPlayer(player, (BaseNettyPacket) this);
     }
 
-    @Override
-    default void _sc$handle(EntityPlayer player) {
-        PacketToChannelMap.getData(this).handler.accept(this, player);
-    }
-
-    @Override
-    default net.minecraft.network.Packet _sc$encodeToPlayer(EntityPlayerMP player) {
-        return makePacket(this, S3FPacketCustomPayload::new);
-    }
-
-    @Override
-    default net.minecraft.network.Packet _sc$encode() {
-        return makePacket(this, SevenCommons.proxy.getC17PacketCstr());
-    }
-
-    static <P extends Packet> net.minecraft.network.Packet makePacket(P self, BiFunction<String, byte[], ? extends net.minecraft.network.Packet> constructor) {
-        SimplePacketData<P> data = PacketToChannelMap.getData(self);
-        MCDataOutput out = Network.newOutput(self.expectedSize() + 1);
-        out.writeByte(data.packetID);
-        self.writeTo(out);
-        return constructor.apply(data.channel, out.toByteArray());
-    }
-
+    /**
+     * <p>A version of {@code Packet} that has a response. The response class needs to implement {@link de.take_weiland.mods.commons.net.Packet.Response}.</p>
+     * <p>The response is supplied in form of a {@link CompletableFuture} when an instance of this packet is sent.</p>
+     */
     interface WithResponse<R extends Packet.Response> extends SimplePacket.WithResponse<R>, BaseModPacket {
 
+        /**
+         * <p>Write this packet's data to the output stream.</p>
+         *
+         * @param out the output stream
+         */
         void writeTo(MCDataOutput out);
 
         @Override

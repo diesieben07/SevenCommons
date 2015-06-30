@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.net;
 import com.google.common.collect.ImmutableMap;
 import cpw.mods.fml.common.LoaderState;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.Packet;
 import net.minecraft.entity.player.EntityPlayer;
 
@@ -37,12 +36,18 @@ public final class PacketToChannelMap {
         return (SimplePacketData.WithResponse<P, R>) getDataInternal(packet);
     }
 
-    public static synchronized <P extends Packet> void register(Class<P> clazz, String channel, int id, BiFunction<? super MCDataInput, ? super EntityPlayer, ? extends P> constructor, BiConsumer<? super P, ? super EntityPlayer> handler) {
-        channels.putIfAbsent(clazz, new SimplePacketData.Normal<>(channel, id, constructor, handler));
+    public static synchronized <P extends Packet> void register(Class<P> clazz, String channel, int id, BiConsumer<? super P, ? super EntityPlayer> handler) {
+        register(clazz, new SimplePacketData.Normal<>(channel, id, handler));
     }
 
-    public static synchronized <P extends Packet.WithResponse<R>, R extends Packet.Response> void register(Class<P> clazz, String channel, int id, BiFunction<? super MCDataInput, ? super EntityPlayer, ? extends P> constructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
-        channels.putIfAbsent(clazz, new SimplePacketData.WithResponse<>(channel, id, constructor, handler));
+    public static synchronized <P extends Packet.WithResponse<R>, R extends Packet.Response> void register(Class<P> clazz, String channel, int id, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+        register(clazz, new SimplePacketData.WithResponse<>(channel, id, handler));
+    }
+
+    private static void register(Class<? extends BaseModPacket> clazz, SimplePacketData<?> data) {
+        if (channels.putIfAbsent(clazz, data) != null) {
+            throw new IllegalArgumentException(String.format("Packet class %s used twice", clazz.getName()));
+        }
     }
 
     private static synchronized void freeze() {

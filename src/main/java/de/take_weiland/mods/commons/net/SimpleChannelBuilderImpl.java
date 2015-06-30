@@ -1,12 +1,9 @@
 package de.take_weiland.mods.commons.net;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.MapMaker;
 import com.google.common.primitives.UnsignedBytes;
-import de.take_weiland.mods.commons.internal.net.BaseModPacket;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
-import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
+import de.take_weiland.mods.commons.internal.net.ResponseSupport;
 import de.take_weiland.mods.commons.util.Scheduler;
 import gnu.trove.iterator.TByteObjectIterator;
 import gnu.trove.map.TByteObjectMap;
@@ -14,11 +11,7 @@ import gnu.trove.map.hash.TByteObjectHashMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -40,12 +33,13 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
     }
 
     @Override
-    public <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<? extends P> constructor, BiConsumer<? super P, ? super EntityPlayer> handler) {
-        Class<? extends BaseModPacket> packetClass = constructor.getPacketClass();
-        validate(id, packetClass);
+    public <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, BiConsumer<? super P, ? super EntityPlayer> handler) {
+        Class<P> packetClass = constructor.getPacketClass();
+        validate(id);
+        PacketToChannelMap.register(packetClass, channel, id, handler);
 
         handlers.put((byte) id, (in, player) -> {
-            P packet = constructor.apply(in);
+            P packet = constructor.apply(in, player);
             Scheduler.forSide(sideOf(player)).execute(() -> handler.accept(packet, player));
         });
         return this;
@@ -53,94 +47,89 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
     @Override
     public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> respCstr, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+        validate(id);
+
         Class<P> packetClass = constructor.getPacketClass();
-        Class<R> responseClass = respCstr.getPacketClass();
 
-        validate(id, packetClass);
-        checkDuplicateClass(responseClass);
-
-        AtomicInteger nextID = new AtomicInteger();
-        ConcurrentMap<Integer, CompletableFuture<R>> map = new MapMaker().concurrencyLevel(2).makeMap();
         String channelFinal = channel;
 
         handlers.put((byte) id, (in, player) -> {
             int uniqueID = in.readInt();
-            if (uniqueID == -1) {
-                CompletableFuture<R> future = new CompletableFuture<>();
 
-                P packet = constructor.apply(in);
+            if (ResponseSupport.isResponse(uniqueID)) {
+                @SuppressWarnings("unchecked")
+                CompletableFuture<R> future = (CompletableFuture<R>) ResponseSupport.get(uniqueID);
+
+                if (future != null) {
+                    try {
+                        future.complete(respCstr.apply(in, player));
+                    } catch (Throwable t) {
+                        future.completeExceptionally(t);
+                    }
+                }
+            } else {
+                P packet = constructor.apply(in, player);
                 R response = handler.apply(packet, player);
+                BaseNettyPacket responseWrap = new RawPacket.UsingCustomPayload() {
 
-
-                BaseNettyPacket responseWrap = new BaseNettyPacket.UsingCustomPayload() {
                     @Override
-                    public byte[] _sc$write() {
-                        int responseID = nextID.getAndIncrement();
-                        map.put(responseID, future);
-
+                    public byte[] write() {
                         MCDataOutput out = Network.newOutput(response.expectedSize() + 5);
                         out.writeByte(id);
-                        out.writeInt(responseID);
-
+                        out.writeInt(ResponseSupport.toResponse(uniqueID));
                         response.writeTo(out);
                         return out.toByteArray();
                     }
 
                     @Override
-                    public String _sc$channel() {
-                        return channelFinal;
+                    public void handle(EntityPlayer player) {
+                        // this should never happen
+                        // if we are on a local, direct connection the response itself should be handling
+                        // see ResponseNettyVersion
+                        throw new AssertionError();
                     }
 
                     @Override
-                    public void _sc$handle(EntityPlayer player) {
-                        try {
-                            future.complete(response);
-                        } catch (Throwable t) {
-                            future.completeExceptionally(t);
-                        }
+                    public String channel() {
+                        return channelFinal;
                     }
                 };
+
                 if (sideOf(player).isClient()) {
                     Network.sendToServer(responseWrap);
                 } else {
                     Network.sendToPlayer((EntityPlayerMP) player, responseWrap);
                 }
-            } else {
-                CompletableFuture<R> future = map.get(uniqueID);
-                if (future != null) {
-                    try {
-                        future.complete(respCstr.apply(in));
-                    } catch (Throwable t) {
-                        future.completeExceptionally(t);
-                    }
-                }
             }
         });
+
+        PacketToChannelMap.register(packetClass, channel, id, handler);
 
         return this;
     }
 
-    private void validate(int id, Class<? extends BaseModPacket> clazz) {
+    private void validate(int id) {
         checkArgument(id >= 0 && id <= 255, "ID must be 0-255");
-        checkArgument(!constructors.containsKey((byte) id), "ID already taken");
-        checkDuplicateClass(clazz);
-    }
-
-    private void checkDuplicateClass(Class<? extends BaseModPacket> clazz) {
-        checkArgument(!handlers.containsKey(clazz), "Duplicate packet class %s", clazz.getName());
     }
 
     @Override
     public void build() {
         checkNotBuilt();
-        ImmutableMap<Class<? extends Packet>, HandlerIDPair> handlers = ImmutableMap.copyOf(this.handlers);
+        handlers.compact();
 
-        Function<? super MCDataInput, ? extends Packet>[] packedCstrs = pack(constructors);
+        // do not capture "this" in lambda, for GC
+        TByteObjectHashMap<BiConsumer<? super MCDataInput, ? super EntityPlayer>> handlers = this.handlers;
+        String channel = this.channel;
 
-        SimplePacketCodec codec = new SimplePacketCodec(channel, packedCstrs, handlers);
-        // use the original keySet, avoid having the ImmutableMap keep it around
-        PacketToChannelMap.putAll(this.handlers.keySet(), codec);
-        NetworkImpl.register(channel, codec);
+        Network.registerHandler(this.channel, (payload, player) -> {
+            MCDataInput in = Network.newInput(payload);
+            byte id = in.readByte();
+            BiConsumer<? super MCDataInput, ? super EntityPlayer> handler = handlers.get(id);
+            if (handler == null) {
+                throw new ProtocolException(String.format("Unknown packetID %s in channel %s", UnsignedBytes.toInt(id), channel));
+            }
+            handler.accept(in, player);
+        });
     }
 
     private static Function<? super MCDataInput, ? extends Packet>[] pack(TByteObjectMap<Function<? super MCDataInput, ? extends Packet>> map) {

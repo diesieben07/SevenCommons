@@ -6,12 +6,12 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.internal.net.*;
+import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.util.Scheduler;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelPipeline;
 import net.minecraft.item.ItemStack;
 import net.minecraft.launchwrapper.Launch;
+
+import java.util.function.Consumer;
 
 /**
  * @author diesieben07
@@ -44,18 +44,16 @@ public final class FMLEventHandler {
 
     static {
         Reflection.initialize(Scheduler.class);
-        Runnable[] tickers = (Runnable[]) Launch.blackboard.remove(SCHEDULER_TEMP_KEY);
-        serverTick = tickers[0];
-        clientTick = tickers[1];
+        //noinspection unchecked
+        schedulerTick = (Consumer<Scheduler>) Launch.blackboard.remove(SCHEDULER_TEMP_KEY);
     }
 
-    private static final Runnable serverTick;
-    private static final Runnable clientTick;
+    private static final Consumer<Scheduler> schedulerTick;
 
     @SubscribeEvent
     public void serverTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
-            serverTick.run();
+            schedulerTick.accept(Scheduler.server());
         }
     }
 
@@ -63,7 +61,7 @@ public final class FMLEventHandler {
     @SideOnly(Side.CLIENT)
     public void clientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
-            clientTick.run();
+            schedulerTick.accept(Scheduler.client());
         }
     }
 

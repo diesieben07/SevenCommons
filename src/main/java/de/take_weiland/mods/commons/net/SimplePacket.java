@@ -1,8 +1,9 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.Maps;
 import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
 import de.take_weiland.mods.commons.util.Entities;
 import de.take_weiland.mods.commons.util.Players;
 import net.minecraft.entity.Entity;
@@ -28,33 +29,25 @@ public interface SimplePacket {
 
     void sendTo(EntityPlayerMP player);
 
-    default void sendTo(Iterator<? extends EntityPlayer> it, Predicate<? super EntityPlayerMP> filter) {
-        while (it.hasNext()) {
-            EntityPlayerMP player = Players.checkNotClient(it.next());
-            if (filter == null || filter.test(player)) {
-                sendTo(player);
-            }
-        }
-    }
-
     default void sendTo(EntityPlayer player) {
         sendTo(Players.checkNotClient(player));
     }
 
     default void sendTo(EntityPlayer... players) {
-        sendTo(Iterators.forArray(players), null);
+        sendTo(Arrays.asList(players), null);
     }
 
     default void sendTo(Iterable<? extends EntityPlayer> players) {
-        sendTo(players.iterator(), null);
+        sendTo(players, null);
     }
 
     default void sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
-        sendTo(players.iterator(), filter);
-    }
-
-    default void sendTo(Iterator<? extends EntityPlayer> it) {
-        sendTo(it, null);
+        for (EntityPlayer player : players) {
+            EntityPlayerMP mp = Players.checkNotClient(player);
+            if (filter == null || filter.test(mp)) {
+                sendTo(mp);
+            }
+        }
     }
 
     default void sendTo(World world, Predicate<? super EntityPlayer> filter) {
@@ -90,10 +83,13 @@ public interface SimplePacket {
     }
 
     default void sendToAllAssociated(Entity entity) {
-        sendToAllTracking(entity);
+        Iterable<EntityPlayerMP> players = Entities.getTrackingPlayers(entity);
         if (entity instanceof EntityPlayer) {
-            sendTo((EntityPlayer) entity);
+            Iterable<EntityPlayerMP> playersFinal = players;
+            EntityPlayerMP mp = Players.checkNotClient((EntityPlayer) entity);
+            players = () -> new OnePlusIterator<>(playersFinal.iterator(), mp);
         }
+        sendTo(players);
     }
 
     default void sendToAllTracking(TileEntity te) {
@@ -111,13 +107,16 @@ public interface SimplePacket {
     default void sendToViewing(Container c) {
         // the filter makes sure it only contains EntityPlayer's
         //noinspection unchecked
-        sendTo(Iterables.filter(SCReflector.instance.getCrafters(c), EntityPlayer.class));
+        sendTo(Iterables.filter(SCReflector.instance.getCrafters(c), EntityPlayerMP.class));
     }
 
     interface WithResponse<R> {
 
         default SimplePacket discardResponse() {
-            return new DiscardResponseAdapter(this);
+            /**
+             * see {@link SimplePacketWithResponseTransformer}
+             */
+            return (SimplePacket) this;
         }
 
         CompletableFuture<R> sendToServer();
@@ -128,8 +127,8 @@ public interface SimplePacket {
             return sendTo(Players.checkNotClient(player));
         }
 
-        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players, int sizeHint, Predicate<? super EntityPlayerMP> filter) {
-            HashMap<EntityPlayerMP, CompletableFuture<R>> map = new HashMap<>();
+        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
+            HashMap<EntityPlayerMP, CompletableFuture<R>> map = players instanceof Collection ? Maps.newHashMapWithExpectedSize(((Collection<?>) players).size()) : new HashMap<>();
             Function<EntityPlayerMP, CompletableFuture<R>> sender = this::sendTo;
 
             for (EntityPlayer player : players) {
@@ -139,11 +138,6 @@ public interface SimplePacket {
                 }
             }
             return Collections.unmodifiableMap(map);
-        }
-
-        default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
-            int sizeHint = players instanceof Collection ? ((Collection) players).size() : -1;
-            return sendTo(players, sizeHint, filter);
         }
 
         default Map<EntityPlayer, CompletableFuture<R>> sendTo(EntityPlayer... players) {

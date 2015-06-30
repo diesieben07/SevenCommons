@@ -80,19 +80,19 @@ final class OptimizedPropertyCompiler {
             if (!canAccessDirectly(member)) {
                 ((AccessibleObject) member).setAccessible(true);
                 getMH = publicLookup().unreflect((Method) member);
-                getMH = getMH.asType(methodType(rawType, Object.class));
             }
             if (canSet && !canAccessDirectly(setter)) {
                 setter.setAccessible(true);
                 setMH = publicLookup().unreflect(setter);
-                setMH = setMH.asType(methodType(void.class, Object.class, rawType));
             }
         }
 
         if (getMH != null) {
+            getMH = getMH.asType(methodType(rawType, Object.class));
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, "mh0", methodHandleType.getDescriptor(), null, null);
         }
         if (setMH != null) {
+            setMH = setMH.asType(methodType(void.class, Object.class, rawType));
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, "mh1", methodHandleType.getDescriptor(), null, null);
         }
 

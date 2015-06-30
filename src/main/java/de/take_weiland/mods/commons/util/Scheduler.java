@@ -12,6 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -106,10 +107,9 @@ public final class Scheduler extends AbstractListeningExecutorService {
         }
         server = new Scheduler();
 
-        Launch.blackboard.put(FMLEventHandler.SCHEDULER_TEMP_KEY, new Runnable[]{
-                server::tick,
-                client == null ? null : client::tick
-        });
+        // no intellij, this is NOT the same!
+        //noinspection Convert2MethodRef
+        Launch.blackboard.put(FMLEventHandler.SCHEDULER_TEMP_KEY, (Consumer<Scheduler>) Scheduler::tick);
     }
 
     private Scheduler() {

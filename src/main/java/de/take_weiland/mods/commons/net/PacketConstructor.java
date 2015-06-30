@@ -1,9 +1,10 @@
 package de.take_weiland.mods.commons.net;
 
 import de.take_weiland.mods.commons.internal.net.BaseModPacket;
+import net.minecraft.entity.player.EntityPlayer;
 
 import java.io.Serializable;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 /**
  * <p>A PacketConstructor is used to instantiate a Packet object when it is received.</p>
@@ -15,9 +16,19 @@ import java.util.function.Function;
  * @author diesieben07
  */
 @FunctionalInterface
-public interface PacketConstructor<P extends BaseModPacket> extends Function<MCDataInput, P>, Serializable {
+public interface PacketConstructor<P extends BaseModPacket> extends BiFunction<MCDataInput, EntityPlayer, P>, Serializable {
 
     default Class<P> getPacketClass() {
         return Network.findPacketClassReflectively(this);
+    }
+
+    interface WithoutPlayer<P extends BaseModPacket> extends PacketConstructor<P> {
+
+        P apply(MCDataInput in);
+
+        @Override
+        default P apply(MCDataInput in, EntityPlayer player) {
+            return apply(in);
+        }
     }
 }

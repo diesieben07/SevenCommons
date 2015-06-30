@@ -2,16 +2,15 @@ package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.internal.SCReflector;
-import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.net.MCDataInput;
-import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.net.ProtocolException;
+import de.take_weiland.mods.commons.net.*;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.Syncer;
 import de.take_weiland.mods.commons.util.Entities;
 import de.take_weiland.mods.commons.util.Players;
+import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.tileentity.TileEntity;
@@ -21,7 +20,9 @@ import java.util.List;
 /**
  * @author diesieben07
  */
-public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
+public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPacket.UsingCustomPayload, Runnable {
+
+    public static final String CHANNEL = "SC|Sync";
 
     private static final int TILE_ENTITY = 0;
     private static final int ENTITY = 1;
@@ -63,18 +64,9 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
         out.writeVarInt(0);
     }
 
-    public final void applyDirect() {
-        SyncedObjectProxy obj = getObjectDirect(Players.getClient());
-        if (obj != null) {
-            SyncCompanion companion = obj._sc$getCompanion();
-            if (companion != null) {
-                companion.applyChanges(obj, this);
-            }
-        }
-    }
+    public static void readAndApply(byte[] payload, EntityPlayer player) {
+        MCDataInput in = Network.newInput(payload);
 
-    public static void readAndApply(MCDataInput in) {
-        EntityPlayer player = Players.getClient();
         int type = in.readByte();
         SyncedObjectProxy obj;
         switch (type) {
@@ -120,6 +112,42 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
 
     public abstract void send(Object obj);
 
+    @Override
+    public byte[] write() {
+        MCDataOutput out = Network.newOutput();
+
+        writeMetaInfoToStream(out);
+
+        for (ChangedValue<?> change : changes) {
+            out.writeVarInt(change.fieldId);
+            change.writeData(out);
+        }
+        out.writeVarInt(0);
+
+        return out.toByteArray();
+    }
+
+    @Override
+    public String channel() {
+        return CHANNEL;
+    }
+
+    @Override
+    public void handle(EntityPlayer player) {
+        Scheduler.client().execute(this);
+    }
+
+    @Override
+    public void run() {
+        SyncedObjectProxy obj = getObjectDirect(Players.getClient());
+        if (obj != null) {
+            SyncCompanion companion = obj._sc$getCompanion();
+            if (companion != null) {
+                companion.applyChanges(obj, this);
+            }
+        }
+    }
+
     public static final class ForTE extends SyncEvent {
 
         private final int x;
@@ -158,7 +186,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
         public void send(Object obj) {
             done();
             TileEntity te = (TileEntity) obj;
-            SevenCommons.syncCodec.sendTo(this, Players.getTrackingChunk(te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4));
+            Network.sendTo(Players.getTrackingChunk(te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4), this);
         }
     }
 
@@ -188,7 +216,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
         @Override
         public void send(Object obj) {
             done();
-            SevenCommons.syncCodec.sendTo(this, Entities.getTrackingPlayers((Entity) obj));
+            Network.sendTo(Entities.getTrackingPlayers((Entity) obj), this);
         }
     }
 
@@ -220,8 +248,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator {
             done();
             Container container = (Container) obj;
             List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
-            SevenCommons.syncCodec.sendTo(this, Iterables.filter(crafters, EntityPlayer.class));
+            Network.sendTo(Iterables.filter(crafters, EntityPlayerMP.class), this);
         }
     }
-
 }

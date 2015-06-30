@@ -36,9 +36,11 @@ public interface SCReflector {
 
     SCReflector instance = SCReflection.createAccessor(SCReflector.class);
 
+    @SideOnly(Side.CLIENT)
     @Invoke(method = SRGConstants.M_TRANSLATE_KEY_PRIVATE, srg = true)
     String translate(Locale instance, String key);
 
+    @SideOnly(Side.CLIENT)
     @Getter(target = LanguageManager.class, field = SRGConstants.F_CURRENT_LOCALE, srg = true)
     Locale getCurrentLocale();
 

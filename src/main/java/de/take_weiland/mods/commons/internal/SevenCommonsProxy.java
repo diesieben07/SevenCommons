@@ -19,4 +19,5 @@ public interface SevenCommonsProxy {
 
     BiFunction<String, byte[], ? extends Packet> getC17PacketCstr();
 
+    Packet makeC17Packet(String channel, byte[] data);
 }

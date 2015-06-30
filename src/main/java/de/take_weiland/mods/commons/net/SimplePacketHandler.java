@@ -32,7 +32,7 @@ public interface SimplePacketHandler<P> extends BiConsumer<P, EntityPlayer> {
         handle(packet, player, Sides.sideOf(player));
     }
 
-    interface WithResponse<P extends Packet.WithResponse<R>, R extends Packet> extends BiFunction<P, EntityPlayer, R> {
+    interface WithResponse<P extends Packet.WithResponse<R>, R extends Packet.Response> extends BiFunction<P, EntityPlayer, R> {
 
         R handle(P packet, EntityPlayer player, Side side);
 

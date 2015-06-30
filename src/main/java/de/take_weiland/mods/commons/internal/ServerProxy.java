@@ -32,4 +32,9 @@ public class ServerProxy implements SevenCommonsProxy {
     public BiFunction<String, byte[], ? extends Packet> getC17PacketCstr() {
         throw new IllegalStateException("Tried to encode into serverbound packet on the server.");
     }
+
+    @Override
+    public Packet makeC17Packet(String channel, byte[] data) {
+        throw new IllegalStateException("Tried to encode into serverbound packet on the server");
+    }
 }

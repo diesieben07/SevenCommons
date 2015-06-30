@@ -2,6 +2,8 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
+import de.take_weiland.mods.commons.internal.transformers.net.PacketTransformer;
+import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
 import de.take_weiland.mods.commons.internal.transformers.sync.*;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.EntityNBTHook;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.TileEntityNBTHook;
@@ -32,6 +34,10 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(InventoryNumberKeysFix::new,
                 "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(SRGConstants.M_CHECK_HOTBAR_KEYS));
 
-        addEntry(ListenableSupport::new);
+        addEntry(ListenableSupport::new, clazz -> !clazz.startsWith("org/apache/"));
+
+        // packet stuff
+        addEntry(SimplePacketWithResponseTransformer::new, "de/take_weiland/mods/commons/net/SimplePacket$WithResponse");
+        addEntry(PacketTransformer::new, "de/take_weiland/mods/commons/net/Packet");
     }
 }

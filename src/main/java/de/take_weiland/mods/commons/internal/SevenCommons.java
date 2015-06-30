@@ -13,7 +13,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
-import de.take_weiland.mods.commons.internal.sync.SyncCodec;
+import de.take_weiland.mods.commons.internal.sync.SyncEvent;
 import de.take_weiland.mods.commons.internal.sync.builtin.BuiltinSyncers;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.builtin.DefaultNBTSerializers;
@@ -44,8 +44,6 @@ public final class SevenCommons extends DummyModContainer {
     public static boolean updaterEnabled = true;
 
     public static final int SYNC_PACKET_ID = 0;
-
-    public static SyncCodec syncCodec;
 
     private static EnumMap<LoaderState.ModState, List<Runnable>> stateCallbacks = new EnumMap<>(LoaderState.ModState.class);
     private static EnumSet<LoaderState.ModState> reachedStates = EnumSet.noneOf(LoaderState.ModState.class);
@@ -104,8 +102,7 @@ public final class SevenCommons extends DummyModContainer {
                 .register(1, PacketInventoryName::new, PacketInventoryName::handle)
                 .build();
 
-        syncCodec = new SyncCodec();
-        Network.newChannel(syncCodec);
+        Network.registerHandler(SyncEvent.CHANNEL, SyncEvent::readAndApply);
 
 
 //		packets = Network.newChannel("SevenCommons")

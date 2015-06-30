@@ -9,7 +9,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.S3FPacketCustomPayload;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
 
 /**
  * @author diesieben07
@@ -36,20 +35,20 @@ public final class ResponseNettyVersion<R extends Packet.Response> implements Ba
 
     @Override
     public net.minecraft.network.Packet _sc$encodeToPlayer(EntityPlayerMP player) {
-        return makePacket(S3FPacketCustomPayload::new);
+        SimplePacketData.WithResponse<Packet.WithResponse<R>, R> data = PacketToChannelMap.getData(original);
+        return new S3FPacketCustomPayload(data.channel, encodeToBytes(data));
     }
 
     @Override
     public net.minecraft.network.Packet _sc$encode() {
-        return makePacket(SevenCommons.proxy.getC17PacketCstr());
+        SimplePacketData.WithResponse<Packet.WithResponse<R>, R> data = PacketToChannelMap.getData(original);
+        return SevenCommons.proxy.makeC17Packet(data.channel, encodeToBytes(data));
     }
 
-    private net.minecraft.network.Packet makePacket(BiFunction<String, byte[], ? extends net.minecraft.network.Packet> cstr) {
-        SimplePacketData.WithResponse<Packet.WithResponse<R>, R> data = PacketToChannelMap.getData(original);
-        int uniqueId = data.nextID();
-        if (data.futures.putIfAbsent(uniqueId, future) != null) {
-            throw new RuntimeException("Duplicate future ID!");
-        }
+    private byte[] encodeToBytes(SimplePacketData.WithResponse<Packet.WithResponse<R>, R> data) {
+        int uniqueId = ResponseSupport.nextID();
+        ResponseSupport.register(uniqueId, future);
+
 
         MCDataOutput out = Network.newOutput(original.expectedSize() + 2);
         out.writeByte(data.packetID);
@@ -57,6 +56,6 @@ public final class ResponseNettyVersion<R extends Packet.Response> implements Ba
 
         original.writeTo(out);
 
-        return cstr.apply(data.channel, out.toByteArray());
+        return out.toByteArray();
     }
 }

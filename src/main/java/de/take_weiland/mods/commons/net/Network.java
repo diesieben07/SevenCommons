@@ -46,6 +46,12 @@ public final class Network {
         NetworkImpl.register(channel, handler);
     }
 
+    public static void sendTo(Iterable<? extends EntityPlayer> players, BaseNettyPacket packet) {
+        for (EntityPlayer player : players) {
+            sendToPlayer(Players.checkNotClient(player), packet);
+        }
+    }
+
     public static void sendToPlayer(EntityPlayerMP player, BaseNettyPacket packet) {
         player.playerNetServerHandler.netManager.channel()
                 .writeAndFlush(packet)
