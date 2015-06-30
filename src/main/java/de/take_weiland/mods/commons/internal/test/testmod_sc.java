@@ -3,6 +3,8 @@ package de.take_weiland.mods.commons.internal.test;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.util.Players;
+import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
@@ -13,8 +15,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.lang.reflect.InvocationTargetException;
-
-import static de.take_weiland.mods.commons.util.Sides.sideOf;
+import java.util.UUID;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 public class testmod_sc {
@@ -40,14 +41,27 @@ public class testmod_sc {
 
             @Override
             public boolean onBlockActivated(World world, int par2, int par3, int par4, EntityPlayer player, int par6, float par7, float par8, float par9) {
-                TestTE te = (TestTE) world.getTileEntity(par2, par3, par4);
-                if (sideOf(world).isServer()) {
-                    player.addChatMessage(new ChatComponentText("old val: " + te.test));
-                    te.test = String.valueOf(world.rand.nextFloat());
-                    player.addChatMessage(new ChatComponentText("new val: " + te.test));
-                } else {
-                    player.addChatMessage(new ChatComponentText("on client: " + te.test));
+                if (!world.isRemote) {
+                    Players.getLastUsername(UUID.fromString("f2619323-cd6b-4b87-bfa9-50cc04bd9b2e"))
+                            .whenComplete((name, ex) -> {
+                                Scheduler.server().execute(() -> {
+                                    if (ex == null) {
+                                        player.addChatComponentMessage(new ChatComponentText("Resolved name: " + name));
+                                    } else {
+                                        player.addChatComponentMessage(new ChatComponentText("Could not resolve name: " + ex.getMessage()));
+                                        ex.printStackTrace();
+                                    }
+                                });
+                            });
                 }
+//                TestTE te = (TestTE) world.getTileEntity(par2, par3, par4);
+//                if (sideOf(world).isServer()) {
+//                    player.addChatMessage(new ChatComponentText("old val: " + te.test));
+//                    te.test = String.valueOf(world.rand.nextFloat());
+//                    player.addChatMessage(new ChatComponentText("new val: " + te.test));
+//                } else {
+//                    player.addChatMessage(new ChatComponentText("on client: " + te.test));
+//                }
 //                PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
 //                if (Sides.logical(world).isClient()) {
 //                    player.addChatMessage("On client: " + props.getSomeData());

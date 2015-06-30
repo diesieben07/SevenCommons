@@ -1,6 +1,10 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Resources;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 import com.mojang.authlib.GameProfile;
 import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -12,10 +16,15 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 import javax.annotation.Nullable;
+import java.io.BufferedReader;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 
 import static net.minecraft.server.MinecraftServer.getServer;
 
@@ -143,6 +152,73 @@ public final class Players {
             }
         }
         return null;
+    }
+
+    public static String getLastUsernameKnown(UUID uuid) {
+        EntityPlayerMP online = forUUID(uuid);
+        if (online != null) {
+            return online.getCommandSenderName();
+        }
+
+        GameProfile gameProfile = getServer().func_152358_ax().func_152652_a(uuid);
+        return gameProfile == null ? null : gameProfile.getName();
+    }
+
+    private static final String USERNAME_API_URL = "https://api.mojang.com/user/profiles/%s/names";
+    private static final CharMatcher DASH_MATCHER = CharMatcher.is('-');
+    private static final Gson GSON = new Gson();
+
+    public static CompletableFuture<String> getLastUsername(UUID uuid) {
+        EntityPlayerMP online = forUUID(uuid);
+        if (online != null) {
+            return CompletableFuture.completedFuture(online.getCommandSenderName());
+        }
+
+        CompletableFuture<String> future = new CompletableFuture<>();
+
+        ForkJoinPool.commonPool().execute(() -> {
+            String uuidString = DASH_MATCHER.removeFrom(uuid.toString());
+            try (BufferedReader reader = Resources.asCharSource(new URL(String.format(USERNAME_API_URL, uuidString)), StandardCharsets.UTF_8).openBufferedStream()) {
+                JsonReader json = new JsonReader(reader);
+                json.beginArray();
+
+                String name = null;
+                long when = 0;
+
+                while (json.hasNext()) {
+                    String nameObj = null;
+                    long timeObj = 0;
+                    json.beginObject();
+                    while (json.hasNext()) {
+                        String key = json.nextName();
+                        switch (key) {
+                            case "name":
+                                nameObj = json.nextString();
+                                break;
+                            case "changedToAt":
+                                timeObj = json.nextLong();
+                                break;
+                            default:
+                                json.skipValue();
+                                break;
+                        }
+                    }
+                    json.endObject();
+
+                    if (nameObj != null && timeObj >= when) {
+                        name = nameObj;
+                    }
+                }
+
+                json.endArray();
+
+                future.complete(name);
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
+        });
+
+        return future;
     }
 
     private static ServerConfigurationManager getSCM() {
