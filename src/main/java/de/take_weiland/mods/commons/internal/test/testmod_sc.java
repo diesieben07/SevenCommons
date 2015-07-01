@@ -42,17 +42,15 @@ public class testmod_sc {
             @Override
             public boolean onBlockActivated(World world, int par2, int par3, int par4, EntityPlayer player, int par6, float par7, float par8, float par9) {
                 if (!world.isRemote) {
-                    Players.getLastUsername(UUID.fromString("f2619323-cd6b-4b87-bfa9-50cc04bd9b2e"))
-                            .whenComplete((name, ex) -> {
-                                Scheduler.server().execute(() -> {
-                                    if (ex == null) {
-                                        player.addChatComponentMessage(new ChatComponentText("Resolved name: " + name));
-                                    } else {
-                                        player.addChatComponentMessage(new ChatComponentText("Could not resolve name: " + ex.getMessage()));
-                                        ex.printStackTrace();
-                                    }
-                                });
-                            });
+                    Players.getLastUsername(UUID.fromString("c70ab129-da7d-4a41-90ea-932ae8c6f04a"))
+                            .whenCompleteAsync((name, ex) -> {
+                                if (ex == null) {
+                                    player.addChatComponentMessage(new ChatComponentText("Resolved name: " + name));
+                                } else {
+                                    player.addChatComponentMessage(new ChatComponentText("Could not resolve name: " + ex.getMessage()));
+                                    ex.printStackTrace();
+                                }
+                            }, Scheduler.server());
                 }
 //                TestTE te = (TestTE) world.getTileEntity(par2, par3, par4);
 //                if (sideOf(world).isServer()) {
