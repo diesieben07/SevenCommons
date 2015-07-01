@@ -1,13 +1,10 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Resources;
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
 import com.mojang.authlib.GameProfile;
 import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.internal.UsernameCache;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -16,15 +13,11 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 import javax.annotation.Nullable;
-import java.io.BufferedReader;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 
 import static net.minecraft.server.MinecraftServer.getServer;
 
@@ -130,7 +123,7 @@ public final class Players {
     }
 
     /**
-     * <p>Get the serverside player entity for the given name.</p>
+     * <p>Get the server-side player entity for the given name.</p>
      *
      * @param name the username
      * @return the player entity or null if no such player was found
@@ -140,85 +133,63 @@ public final class Players {
     }
 
     /**
-     * <p>Get the serverside player entity for the given UUID.</p>
+     * <p>Get the server-side player entity for the given UUID.</p>
      *
      * @param uuid the UUID
      * @return the player entity or null if no such player was found
      */
     public static EntityPlayerMP forUUID(UUID uuid) {
         for (EntityPlayerMP player : getAll()) {
-            if (Objects.equals(player.getUniqueID(), uuid)) {
+            if (player.getUniqueID().equals(uuid)) {
                 return player;
             }
         }
         return null;
     }
 
-    public static String getLastUsernameKnown(UUID uuid) {
-        EntityPlayerMP online = forUUID(uuid);
-        if (online != null) {
-            return online.getCommandSenderName();
-        }
-
-        GameProfile gameProfile = getServer().func_152358_ax().func_152652_a(uuid);
-        return gameProfile == null ? null : gameProfile.getName();
+    /**
+     * <p>Get the current username for the given UUID. This method will make an asynchronous request to the Mojang API servers when the username is not in the cache.</p>
+     * <p>The returned {@code CompletableFuture} will:</p>
+     * <ul>
+     * <li>be completed already if the UUID is in the cache</li>
+     * <li>complete normally when any needed API request finishes successfully</li>
+     * <li>complete exceptionally when a needed API request fails</li>
+     * </ul>
+     * <p>
+     * <p>The cache behaves as follows:</p>
+     * <ul>
+     * <li>When a player joins the game their current username is cached</li>
+     * <li>When a request is made to the API the result is cached</li>
+     * <li>By default 500 names are cached, this can be changed in the config file</li>
+     * <li>The cache may be invalidated for a specific user using {@link #invalidateNameCache(UUID)}. That will guarantee
+     * that a new API request is made on the next call to this method, unless the player joins the game in the meantime.</li>
+     * </ul>
+     *
+     * @param uuid the UUID
+     * @return a CompletableFuture that completes with the current name of the player
+     */
+    public static CompletableFuture<String> getName(UUID uuid) {
+        return UsernameCache.get(uuid);
     }
 
-    private static final String USERNAME_API_URL = "https://api.mojang.com/user/profiles/%s/names";
-    private static final CharMatcher DASH_MATCHER = CharMatcher.is('-');
-    private static final Gson GSON = new Gson();
+    /**
+     * <p>Like {@link #getName(UUID)} but does any needed requests synchronously. This method is thereby intended for use in
+     * already asynchronous computations and should not be called from the main game thread.</p>
+     * @param uuid the UUID
+     * @return the current name of the player
+     * @throws IOException if an error occurs while requesting the name
+     */
+    public static String getNameBlocking(UUID uuid) throws IOException {
+        return UsernameCache.getBlocking(uuid);
+    }
 
-    public static CompletableFuture<String> getLastUsername(UUID uuid) {
-        EntityPlayerMP online = forUUID(uuid);
-        if (online != null) {
-            return CompletableFuture.completedFuture(online.getCommandSenderName());
-        }
-
-        CompletableFuture<String> future = new CompletableFuture<>();
-
-        ForkJoinPool.commonPool().execute(() -> {
-            String uuidString = DASH_MATCHER.removeFrom(uuid.toString());
-            try (BufferedReader reader = Resources.asCharSource(new URL(String.format(USERNAME_API_URL, uuidString)), StandardCharsets.UTF_8).openBufferedStream()) {
-                JsonReader json = new JsonReader(reader);
-                json.beginArray();
-
-                String name = null;
-                long when = 0;
-
-                while (json.hasNext()) {
-                    String nameObj = null;
-                    long timeObj = 0;
-                    json.beginObject();
-                    while (json.hasNext()) {
-                        String key = json.nextName();
-                        switch (key) {
-                            case "name":
-                                nameObj = json.nextString();
-                                break;
-                            case "changedToAt":
-                                timeObj = json.nextLong();
-                                break;
-                            default:
-                                json.skipValue();
-                                break;
-                        }
-                    }
-                    json.endObject();
-
-                    if (nameObj != null && timeObj >= when) {
-                        name = nameObj;
-                    }
-                }
-
-                json.endArray();
-
-                future.complete(name);
-            } catch (Throwable t) {
-                future.completeExceptionally(t);
-            }
-        });
-
-        return future;
+    /**
+     * <p>Invalidate any cached name for the given UUID.</p>
+     *
+     * @param uuid the UUID
+     */
+    public static void invalidateNameCache(UUID uuid) {
+        UsernameCache.invalidate(uuid);
     }
 
     private static ServerConfigurationManager getSCM() {

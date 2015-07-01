@@ -39,12 +39,6 @@ public final class SevenCommons extends DummyModContainer {
     public static SevenCommonsProxy proxy;
     public static SevenCommons instance;
 
-    //	@GetProperty(comment = "Set to false to disable the auto-updating feature of SevenCommons")
-    // TODO
-    public static boolean updaterEnabled = true;
-
-    public static final int SYNC_PACKET_ID = 0;
-
     private static EnumMap<LoaderState.ModState, List<Runnable>> stateCallbacks = new EnumMap<>(LoaderState.ModState.class);
     private static EnumSet<LoaderState.ModState> reachedStates = EnumSet.noneOf(LoaderState.ModState.class);
 
@@ -96,6 +90,11 @@ public final class SevenCommons extends DummyModContainer {
 
     public void universalPreInit(FMLPreInitializationEvent event) {
         Configuration config = new Configuration(event.getSuggestedConfigurationFile());
+        config.load();
+
+        int usernameCacheSize = config.getInt("usernameCacheSize", Configuration.CATEGORY_GENERAL, 500, 0, Integer.MAX_VALUE,
+                "How many UUID->Username mappings should be kept in the cache, set to 0 to never cache (this is not recommended!)");
+        UsernameCache.init(usernameCacheSize);
 
         Network.newSimpleChannel("SevenCommons")
                 .register(0, PacketContainerButton::new, PacketContainerButton::handle)
@@ -104,12 +103,6 @@ public final class SevenCommons extends DummyModContainer {
 
         Network.registerHandler(SyncEvent.CHANNEL, SyncEvent::readAndApply);
 
-
-//		packets = Network.newChannel("SevenCommons")
-//				.register(PacketSync.class, SYNC_PACKET_ID)
-//				.register(PacketInventoryName.class)
-//				.register(PacketContainerButton.class)
-//				.build();
 
         ClassInfoUtil.preInit();
 
@@ -122,6 +115,10 @@ public final class SevenCommons extends DummyModContainer {
 
         Syncing.registerFactory(Object.class, new BuiltinSyncers());
         ToNbtFactories.registerFactory(Object.class, new DefaultNBTSerializers());
+
+        if (config.hasChanged()) {
+            config.save();
+        }
     }
 
     @Override

@@ -42,7 +42,7 @@ public class testmod_sc {
             @Override
             public boolean onBlockActivated(World world, int par2, int par3, int par4, EntityPlayer player, int par6, float par7, float par8, float par9) {
                 if (!world.isRemote) {
-                    Players.getLastUsername(UUID.fromString("c70ab129-da7d-4a41-90ea-932ae8c6f04a"))
+                    Players.getName(UUID.fromString("c70ab129-da7d-4a41-90ea-932ae8c6f04a"))
                             .whenCompleteAsync((name, ex) -> {
                                 if (ex == null) {
                                     player.addChatComponentMessage(new ChatComponentText("Resolved name: " + name));
