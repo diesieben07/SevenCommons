@@ -12,32 +12,24 @@ import net.minecraft.server.management.ServerConfigurationManager;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.server.MinecraftServer.getServer;
-
 /**
  * <p>Utilities for working with player entities.</p>
  */
 public final class Players {
 
-    @Nullable
-    public static EntityPlayerMP getSPOwner() {
-        if (getServer().isDedicatedServer()) {
-            return null;
-        }
-        return forName(getServer().getServerOwner());
-    }
-
-    public static boolean isSPOwner(EntityPlayer player) {
-        return player.worldObj.isRemote && getServer() != null;
-    }
-
+    /**
+     * <p>Helper method for ensuring that the given player is a server-side player.</p>
+     *
+     * @param player the player
+     * @return the player as an EntityPlayerMP
+     * @throws IllegalStateException if the player is not a server-side player
+     */
     public static EntityPlayerMP checkNotClient(EntityPlayer player) {
         if (player.worldObj.isRemote) {
             throw new IllegalStateException("Expected a serverside player!");
@@ -64,6 +56,11 @@ public final class Players {
         return isOp(player.getGameProfile());
     }
 
+    /**
+     * <p>Check if the player represented by the given GameProfile is an operator.</p>
+     * @param profile the GameProfile
+     * @return true if the player is an operator
+     */
     public static boolean isOp(GameProfile profile) {
         return getSCM().func_152596_g(profile);
     }
@@ -100,6 +97,14 @@ public final class Players {
         return world.playerEntities;
     }
 
+    /**
+     * <p>Get all players tracking the chunk with the given coordinates.</p>
+     * <p>This method must only be called for server-side worlds and the returned list must not be modified.</p>
+     * @param world the world
+     * @param chunkX the x coordinate
+     * @param chunkZ the z coordinate
+     * @return the players tracking the chunk
+     */
     public static List<EntityPlayerMP> getTrackingChunk(World world, int chunkX, int chunkZ) {
         if (world.isRemote) {
             throw new IllegalArgumentException("Cannot get tracking players on the client");
@@ -113,7 +118,7 @@ public final class Players {
     }
 
     /**
-     * <p>Get the client player ({@link net.minecraft.client.Minecraft#thePlayer} in a safe manner. This method can
+     * <p>Get the client player ({@link net.minecraft.client.Minecraft#thePlayer}) in a safe manner. This method can
      * be referenced in common code without crashing a Dedicated Server, but still must only be called from a client thread.</p>
      *
      * @return the client player
