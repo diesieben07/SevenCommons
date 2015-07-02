@@ -25,10 +25,7 @@ import net.minecraftforge.common.config.Configuration;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 
 public final class SevenCommons extends DummyModContainer {
 
@@ -135,12 +132,8 @@ public final class SevenCommons extends DummyModContainer {
     public void doStateCallback(FMLStateEvent event) {
         synchronized (SevenCommons.class) {
             if (stateCallbacks != null) {
-                List<Runnable> list = stateCallbacks.remove(event.getModState());
-                if (list != null) {
-                    for (Runnable runnable : list) {
-                        runnable.run();
-                    }
-                }
+                stateCallbacks.getOrDefault(event.getModState(), Collections.emptyList())
+                        .forEach(Runnable::run);
                 reachedStates.add(event.getModState());
                 if (event.getModState() == LoaderState.ModState.POSTINITIALIZED) {
                     stateCallbacks = null;
@@ -155,11 +148,8 @@ public final class SevenCommons extends DummyModContainer {
             if (stateCallbacks == null || reachedStates.contains(state)) {
                 callback.run();
             } else {
-                List<Runnable> list = stateCallbacks.get(state);
-                if (list == null) {
-                    stateCallbacks.put(state, list = new ArrayList<>());
-                }
-                list.add(callback);
+                stateCallbacks.computeIfAbsent(state, (key) -> new ArrayList<>())
+                        .add(callback);
             }
         }
     }
