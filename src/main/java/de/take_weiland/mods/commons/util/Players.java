@@ -58,6 +58,7 @@ public final class Players {
 
     /**
      * <p>Check if the player represented by the given GameProfile is an operator.</p>
+     *
      * @param profile the GameProfile
      * @return true if the player is an operator
      */
@@ -100,7 +101,8 @@ public final class Players {
     /**
      * <p>Get all players tracking the chunk with the given coordinates.</p>
      * <p>This method must only be called for server-side worlds and the returned list must not be modified.</p>
-     * @param world the world
+     *
+     * @param world  the world
      * @param chunkX the x coordinate
      * @param chunkZ the z coordinate
      * @return the players tracking the chunk
@@ -156,18 +158,18 @@ public final class Players {
      * <p>Get the current username for the given UUID. This method will make an asynchronous request to the Mojang API servers when the username is not in the cache.</p>
      * <p>The returned {@code CompletableFuture} will:</p>
      * <ul>
-     *     <li>be completed already if the UUID is in the cache</li>
-     *     <li>complete normally when any needed API request finishes successfully</li>
-     *     <li>complete exceptionally when a needed API request fails</li>
+     * <li>be completed already if the UUID is in the cache</li>
+     * <li>complete normally when any needed API request finishes successfully</li>
+     * <li>complete exceptionally when a needed API request fails</li>
      * </ul>
      *
      * <p>The cache behaves as follows:</p>
      * <ul>
-     *     <li>When a player joins the game their current username is cached</li>
-     *     <li>When a request is made to the API the result is cached</li>
-     *     <li>By default 500 names are cached, this can be changed in the config file</li>
-     *     <li>The cache may be invalidated for a specific user using {@link #invalidateNameCache(UUID)}. That will guarantee
-     *     that a new API request is made on the next call to this method, unless the player joins the game in the meantime.</li>
+     * <li>When a player joins the game their current username is cached</li>
+     * <li>When a request is made to the API the result is cached</li>
+     * <li>By default 500 names are cached, this can be changed in the config file</li>
+     * <li>The cache may be invalidated for a specific user using {@link #invalidateNameCache(UUID)}. That will guarantee
+     * that a new API request is made on the next call to this method, unless the player joins the game in the meantime.</li>
      * </ul>
      *
      * @param uuid the UUID
@@ -191,6 +193,7 @@ public final class Players {
 
     /**
      * <p>Invalidate any cached name for the given UUID.</p>
+     *
      * @param uuid the UUID
      */
     public static void invalidateNameCache(UUID uuid) {
