@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.test;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.Scheduler;
@@ -13,9 +14,12 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.UUID;
+
+import static de.take_weiland.mods.commons.util.Sides.sideOf;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 public class testmod_sc {
@@ -60,12 +64,12 @@ public class testmod_sc {
 //                } else {
 //                    player.addChatMessage(new ChatComponentText("on client: " + te.test));
 //                }
-//                PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
-//                if (Sides.logical(world).isClient()) {
-//                    player.addChatMessage("On client: " + props.getSomeData());
-//                } else {
-//                    props.setSomeData(String.valueOf(world.rand.nextFloat()));
-//                }
+                PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
+                if (sideOf(world).isClient()) {
+                    player.addChatMessage(new ChatComponentText("On client: " + props.getSomeData()));
+                } else {
+                    props.setSomeData(String.valueOf(world.rand.nextFloat()));
+                }
 
                 return true;
             }
@@ -76,6 +80,13 @@ public class testmod_sc {
         GameRegistry.registerTileEntity(TestTE.class, "testte");
         GameRegistry.registerBlock(myBlock, "testblock");
         MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    @SubscribeEvent
+    public void onEntityConstruct(EntityEvent.EntityConstructing event) {
+        if (event.entity instanceof EntityPlayer) {
+            event.entity.registerExtendedProperties("testmod_sc", new PlayerProps());
+        }
     }
 
 }

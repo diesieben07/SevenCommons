@@ -10,7 +10,6 @@ public abstract class IEEPSyncCompanion extends SyncCompanion {
 
     public IExtendedEntityProperties _sc$ieep;
     public Entity _sc$entity;
-    public int _sc$id;
     public String _sc$ident;
 
 }

@@ -27,6 +27,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
     private static final int TILE_ENTITY = 0;
     private static final int ENTITY = 1;
     private static final int CONTAINER = 2;
+    private static final int IEEP = 3;
 
     private int cursor = 0;
     ChangedValue<?>[] changes = new ChangedValue[3];
@@ -52,7 +53,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
 
     abstract void writeMetaInfoToStream(MCDataOutput out);
 
-    abstract SyncedObjectProxy getObjectDirect(EntityPlayer player);
+    abstract Object getObjectDirect(EntityPlayer player);
 
     public final void writeTo(MCDataOutput out) {
         writeMetaInfoToStream(out);
@@ -69,18 +70,25 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
 
         int type = in.readByte();
         SyncedObjectProxy obj;
-        switch (type) {
-            case TILE_ENTITY:
-                obj = ForTE.readObjectFromStream(player, in);
-                break;
-            case ENTITY:
-                obj = ForEntity.readObjectFromStream(player, in);
-                break;
-            case CONTAINER:
-                obj = ForContainer.readObjectFromStream(player, in);
-                break;
-            default:
-                throw new ProtocolException("Invalid SyncType ID");
+        try {
+            switch (type) {
+                case TILE_ENTITY:
+                    obj = (SyncedObjectProxy) ForTE.readObjectFromStream(player, in);
+                    break;
+                case ENTITY:
+                    obj = (SyncedObjectProxy) ForEntity.readObjectFromStream(player, in);
+                    break;
+                case CONTAINER:
+                    obj = (SyncedObjectProxy) ForContainer.readObjectFromStream(player, in);
+                    break;
+                case IEEP:
+                    obj = (SyncedObjectProxy) ForIEEP.readObjectFromStream(player, in);
+                    break;
+                default:
+                    throw new ProtocolException("Invalid SyncType ID");
+            }
+        } catch (ClassCastException e) {
+            obj = null;
         }
         if (obj != null) {
             SyncCompanion companion = obj._sc$getCompanion();
@@ -139,12 +147,17 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
 
     @Override
     public void run() {
-        SyncedObjectProxy obj = getObjectDirect(Players.getClient());
-        if (obj != null) {
-            SyncCompanion companion = obj._sc$getCompanion();
-            if (companion != null) {
-                companion.applyChanges(obj, this);
+        try {
+            SyncedObjectProxy obj = (SyncedObjectProxy) getObjectDirect(Players.getClient());
+            if (obj != null) {
+                SyncCompanion companion = obj._sc$getCompanion();
+                if (companion != null) {
+                    companion.applyChanges(obj, this);
+                }
             }
+        } catch (ClassCastException ignored) {
+            // the cast might fail, in that case we just ignore silently
+            ignored.printStackTrace();
         }
     }
 
@@ -161,17 +174,17 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
             this.z = te.zCoord;
         }
 
-        static SyncedObjectProxy readObjectFromStream(EntityPlayer player, MCDataInput in) {
+        static Object readObjectFromStream(EntityPlayer player, MCDataInput in) {
             int x = in.readInt();
             int y = in.readUnsignedByte();
             int z = in.readInt();
 
-            return (SyncedObjectProxy) player.worldObj.getTileEntity(x, y, z);
+            return player.worldObj.getTileEntity(x, y, z);
         }
 
         @Override
-        SyncedObjectProxy getObjectDirect(EntityPlayer player) {
-            return (SyncedObjectProxy) player.worldObj.getTileEntity(x, y, z);
+        Object getObjectDirect(EntityPlayer player) {
+            return player.worldObj.getTileEntity(x, y, z);
         }
 
         @Override
@@ -198,13 +211,13 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
             this.entityID = ((Entity) obj).getEntityId();
         }
 
-        static SyncedObjectProxy readObjectFromStream(EntityPlayer player, MCDataInput in) {
-            return (SyncedObjectProxy) player.worldObj.getEntityByID(in.readInt());
+        static Object readObjectFromStream(EntityPlayer player, MCDataInput in) {
+            return player.worldObj.getEntityByID(in.readInt());
         }
 
         @Override
-        SyncedObjectProxy getObjectDirect(EntityPlayer player) {
-            return (SyncedObjectProxy) player.worldObj.getEntityByID(entityID);
+        Object getObjectDirect(EntityPlayer player) {
+            return player.worldObj.getEntityByID(entityID);
         }
 
         @Override
@@ -228,13 +241,13 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
             this.windowId = ((Container) obj).windowId;
         }
 
-        static SyncedObjectProxy readObjectFromStream(EntityPlayer player, MCDataInput in) {
-            return player.openContainer.windowId == in.readByte() ? (SyncedObjectProxy) player.openContainer : null;
+        static Object readObjectFromStream(EntityPlayer player, MCDataInput in) {
+            return player.openContainer.windowId == in.readByte() ? player.openContainer : null;
         }
 
         @Override
-        SyncedObjectProxy getObjectDirect(EntityPlayer player) {
-            return player.openContainer.windowId == windowId ? (SyncedObjectProxy) player.openContainer : null;
+        Object getObjectDirect(EntityPlayer player) {
+            return player.openContainer.windowId == windowId ? player.openContainer : null;
         }
 
         @Override
@@ -249,6 +262,55 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
             Container container = (Container) obj;
             List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
             Network.sendTo(Iterables.filter(crafters, EntityPlayerMP.class), this);
+        }
+    }
+
+    public static final class ForIEEP extends SyncEvent {
+
+        private final int entityID;
+        private final String id;
+
+        public ForIEEP(Object obj) {
+            IEEPSyncCompanion companion = (IEEPSyncCompanion) ((SyncedObjectProxy) obj)._sc$getCompanion();
+            entityID = companion._sc$entity.getEntityId();
+            id = companion._sc$ident;
+        }
+
+        @Override
+        void writeMetaInfoToStream(MCDataOutput out) {
+            out.writeByte(IEEP);
+            out.writeInt(entityID);
+            out.writeString(id);
+        }
+
+        @Override
+        Object getObjectDirect(EntityPlayer player) {
+            Entity entity = player.worldObj.getEntityByID(entityID);
+            if (entity == null) {
+                return null;
+            }
+            return entity.getExtendedProperties(id);
+        }
+
+        @Override
+        public void send(Object obj) {
+            done();
+            Entity entity = ((IEEPSyncCompanion) ((SyncedObjectProxy) obj)._sc$getCompanion())._sc$entity;
+            Network.sendTo(Entities.getTrackingPlayers(entity), this);
+            if (entity instanceof EntityPlayerMP) {
+                Network.sendToPlayer((EntityPlayerMP) entity, this);
+            }
+
+        }
+
+        public static Object readObjectFromStream(EntityPlayer player, MCDataInput in) {
+            int entityID = in.readInt();
+            String id = in.readString();
+            Entity entity = player.worldObj.getEntityByID(entityID);
+            if (entity == null) {
+                return null;
+            }
+            return entity.getExtendedProperties(id);
         }
     }
 }

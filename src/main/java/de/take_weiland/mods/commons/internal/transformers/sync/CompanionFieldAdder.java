@@ -26,22 +26,22 @@ public final class CompanionFieldAdder extends ClassVisitor {
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        String newIFace = Type.getInternalName(SyncedObjectProxy.class);
+        String newIFace = SyncedObjectProxy.CLASS_NAME;
         if (interfaces == null) {
             interfaces = new String[]{newIFace};
         } else {
             interfaces = ObjectArrays.concat(newIFace, interfaces);
         }
+        className = name;
 
         super.visit(V1_7, access, name, signature, superName, interfaces);
-        className = name;
     }
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (name.equals("<init>")) {
-            return new ConstructorTransformer(mv);
+            return new ConstructorTransformer(mv, className);
         } else {
             return mv;
         }
@@ -74,18 +74,20 @@ public final class CompanionFieldAdder extends ClassVisitor {
         super.visitEnd();
     }
 
-    private final class ConstructorTransformer extends MethodVisitor {
+    static final class ConstructorTransformer extends MethodVisitor {
 
+        private final String className;
         private boolean done = false;
 
-        ConstructorTransformer(MethodVisitor mv) {
+        ConstructorTransformer(MethodVisitor mv, String className) {
             super(ASM4, mv);
+            this.className = className;
         }
 
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
             super.visitMethodInsn(opcode, owner, name, desc, itf);
-            if (!done && opcode == INVOKESPECIAL) {
+            if (!done && opcode == INVOKESPECIAL && !owner.equals(className) /* skip constructors that delegate to other cstrs */) {
                 done = true;
 
                 Type classType = Type.getType(Class.class);

@@ -1,6 +1,8 @@
 package de.take_weiland.mods.commons.internal;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.MapMaker;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.sync.IEEPSyncCompanion;
@@ -22,8 +24,7 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * A class containing methods called from ASM generated code.
@@ -86,26 +87,42 @@ public final class ASMHooks {
             return;
         }
 
+        companion._sc$ieep = props;
+        companion._sc$entity = entity;
+        companion._sc$ident = identifier;
         List<IEEPSyncCompanion> companions = ((EntityProxy) entity)._sc$getPropsCompanions();
         if (companions == null) {
             companions = new ArrayList<>();
             ((EntityProxy) entity)._sc$setPropsCompanions(companions);
         }
+        companions.add(companion);
 
-        companion._sc$ieep = props;
-        companion._sc$entity = entity;
-        companion._sc$ident = identifier;
+        ieepCompanions.put(props, companion);
+    }
 
-        // maintain ordering in the list
-        int len = companions.size();
-        int index = 0;
-        for (int i = 0; i < len; i++) {
-            if (companions.get(i)._sc$ident.compareTo(identifier) >= 0) {
-                index = i;
-                break;
+    public static final String GET_IEEP_COMPANION = "getIEEPCompanion";
+
+    private static final Map<IExtendedEntityProperties, IEEPSyncCompanion> ieepCompanions;
+
+    static {
+        if (FMLLaunchHandler.side().isClient()) {
+            ieepCompanions = new MapMaker().concurrencyLevel(2).makeMap();
+        } else {
+            ieepCompanions = new HashMap<>();
+        }
+    }
+
+    public static IEEPSyncCompanion getIEEPCompanion(IExtendedEntityProperties props) {
+        return ieepCompanions.get(props);
+    }
+
+    public static void onEntityUnload(Entity entity) {
+        List<IEEPSyncCompanion> companions = ((EntityProxy) entity)._sc$getPropsCompanions();
+        if (companions != null) {
+            for (IEEPSyncCompanion companion : companions) {
+                ieepCompanions.remove(companion._sc$ieep);
             }
         }
-        companions.add(index, companion);
     }
 
     public static final String WRITE_NBT_HOOK = "writeToNbtHook";

@@ -35,6 +35,7 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
                 "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(SRGConstants.M_CHECK_HOTBAR_KEYS));
 
         addEntry(ListenableSupport::new, clazz -> !clazz.startsWith("org/apache/"));
+        addEntry(IEEPSyncTransformer::new, "net/minecraftforge/common/IExtendedEntityProperties");
 
         // packet stuff
         addEntry(SimplePacketWithResponseTransformer::new, "de/take_weiland/mods/commons/net/SimplePacket$WithResponse");

@@ -208,8 +208,10 @@ public final class BytecodeEmittingCompanionGenerator {
             syncEventSubclass = Type.getType(SyncEvent.ForEntity.class);
         } else if (Container.class.isAssignableFrom(clazz)) {
             syncEventSubclass = Type.getType(SyncEvent.ForContainer.class);
+        } else if (IExtendedEntityProperties.class.isAssignableFrom(clazz)) {
+            syncEventSubclass = Type.getType(SyncEvent.ForIEEP.class);
         } else {
-            throw new RuntimeException("NYI");
+            throw new IllegalStateException("@Sync in invalid class " + clazz.getName());
         }
         Type syncerType = Type.getType(Syncer.class);
         Type syncerChangeType = Type.getType(Syncer.Change.class);
