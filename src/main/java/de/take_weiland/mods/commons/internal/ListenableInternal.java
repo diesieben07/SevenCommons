@@ -50,9 +50,9 @@ public interface ListenableInternal<T> extends Listenable<T> {
 
     static <T> void doDispatch(ListenableInternal<T> self, Supplier<? extends T> eventSupplier) {
         List<Consumer<? super T>> list = self._sc$getListeners();
-        if (list != null) {
+        int i;
+        if (list != null && (i = list.size()) != 0) {
             T event = eventSupplier.get();
-            int i = list.size();
             do {
                 if (--i < 0) {
                     return;

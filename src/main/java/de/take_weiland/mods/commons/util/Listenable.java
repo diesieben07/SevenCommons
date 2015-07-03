@@ -9,6 +9,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * <p>Simple event dispatcher.</p>
+ * <p>Usage: Implement this interface on your object and it will gain a list of Listeners to which events of type
+ * {@code T} can be dispatched.</p>
+ * <p>This implementation is not thread-safe.</p>
  *
  * @author diesieben07
  */
