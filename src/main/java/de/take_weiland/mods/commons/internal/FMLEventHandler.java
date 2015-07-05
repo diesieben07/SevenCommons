@@ -51,9 +51,20 @@ public final class FMLEventHandler {
     private static final Consumer<Scheduler> schedulerTick;
 
     @SubscribeEvent
-    public void serverTick(TickEvent.ServerTickEvent event) {
+    @SideOnly(Side.CLIENT)
+    public void serverTickClient(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
             schedulerTick.accept(Scheduler.server());
+            ASMHooks.tickIEEPCompanionsClientSide();
+        }
+    }
+
+    @SubscribeEvent
+    @SideOnly(Side.SERVER)
+    public void serverTickServer(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
+            schedulerTick.accept(Scheduler.server());
+            ASMHooks.tickIEEPCompanionsServerSide();
         }
     }
 

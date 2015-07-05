@@ -48,6 +48,22 @@ public final class ASMHooks {
     private ASMHooks() {
     }
 
+    private static final Map<IExtendedEntityProperties, IEEPSyncCompanion> ieepCompanions;
+
+    @SideOnly(Side.CLIENT)
+    public static void tickIEEPCompanionsClientSide() {
+        ieepCompanions.forEach((props, companion) -> {
+            if (!companion._sc$entity.worldObj.isRemote) {
+                companion.check(props, false);
+            }
+        });
+    }
+
+    @SideOnly(Side.SERVER)
+    public static void tickIEEPCompanionsServerSide() {
+        ieepCompanions.forEach((props, companion) -> companion.check(props, false));
+    }
+
     public static void invokeSyncCompanionCheck(Object obj, SyncCompanion companion) {
         if (companion != null) {
             SyncEvent event = companion.check(obj, false);
@@ -55,28 +71,6 @@ public final class ASMHooks {
                 event.send(obj);
             }
         }
-    }
-
-    public static final String TICK_IEEP_COMPANIONS = "tickIEEPCompanions";
-
-    public static void tickIEEPCompanions(List<IEEPSyncCompanion> props) {
-        if (props != null) {
-            // put actual logic into different method, to make this method smaller and more likely
-            // to be inlined into the World class (called from there every tick for every entity!)
-            tickIEEPCompanionsNonNull(props);
-        }
-    }
-
-    private static void tickIEEPCompanionsNonNull(List<IEEPSyncCompanion> props) {
-        int i = props.size();
-        do {
-            if (--i < 0) {
-                return;
-            }
-
-            IEEPSyncCompanion companion = props.get(i);
-            companion.check(companion._sc$ieep, false);
-        } while (true);
     }
 
     public static final String ON_NEW_ENTITY_PROPS = "onNewEntityProps";
@@ -87,22 +81,10 @@ public final class ASMHooks {
             return;
         }
 
-        companion._sc$ieep = props;
         companion._sc$entity = entity;
         companion._sc$ident = identifier;
-        List<IEEPSyncCompanion> companions = ((EntityProxy) entity)._sc$getPropsCompanions();
-        if (companions == null) {
-            companions = new ArrayList<>();
-            ((EntityProxy) entity)._sc$setPropsCompanions(companions);
-        }
-        companions.add(companion);
-
         ieepCompanions.put(props, companion);
     }
-
-    public static final String GET_IEEP_COMPANION = "getIEEPCompanion";
-
-    private static final Map<IExtendedEntityProperties, IEEPSyncCompanion> ieepCompanions;
 
     static {
         if (FMLLaunchHandler.side().isClient()) {
@@ -112,17 +94,14 @@ public final class ASMHooks {
         }
     }
 
+    public static final String GET_IEEP_COMPANION = "getIEEPCompanion";
+
     public static IEEPSyncCompanion getIEEPCompanion(IExtendedEntityProperties props) {
         return ieepCompanions.get(props);
     }
 
     public static void onEntityUnload(Entity entity) {
-        List<IEEPSyncCompanion> companions = ((EntityProxy) entity)._sc$getPropsCompanions();
-        if (companions != null) {
-            for (IEEPSyncCompanion companion : companions) {
-                ieepCompanions.remove(companion._sc$ieep);
-            }
-        }
+        ieepCompanions.keySet().removeAll(((EntityProxy) entity)._sc$getIEEPMap().values());
     }
 
     public static final String WRITE_NBT_HOOK = "writeToNbtHook";

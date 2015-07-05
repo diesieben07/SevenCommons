@@ -10,8 +10,6 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
-import java.util.List;
-
 import static org.objectweb.asm.Opcodes.*;
 
 /**
@@ -74,13 +72,6 @@ public final class EntityTickHook extends ClassVisitor {
                 String invokeCheck = ASMHooks.INVOKE_SYNC_COMP_CHECK;
                 String invokeCheckDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), Type.getType(SyncCompanion.class));
                 super.visitMethodInsn(INVOKESTATIC, hookClazz, invokeCheck, invokeCheckDesc, false);
-
-                super.visitVarInsn(ALOAD, 1);
-                super.visitFieldInsn(GETFIELD, entityIntName, EntitySyncPropsHooks.FIELD_NAME, Type.getDescriptor(List.class));
-
-                String tickSyncProps = ASMHooks.TICK_IEEP_COMPANIONS;
-                String tickSyncPropsDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(List.class));
-                super.visitMethodInsn(INVOKESTATIC, hookClazz, tickSyncProps, tickSyncPropsDesc, false);
 
                 if (client) {
                     super.visitLabel(after);

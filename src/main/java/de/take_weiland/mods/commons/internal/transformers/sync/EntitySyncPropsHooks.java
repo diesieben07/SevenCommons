@@ -4,11 +4,10 @@ import com.google.common.collect.ObjectArrays;
 import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.internal.EntityProxy;
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
-import java.util.List;
+import java.util.Map;
 
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.VOID_TYPE;
@@ -18,7 +17,6 @@ import static org.objectweb.asm.Type.VOID_TYPE;
  */
 public class EntitySyncPropsHooks extends ClassVisitor {
 
-    public static final String FIELD_NAME = "_sc$syncprops";
     private static final String ADD_EXT_PROP_METHOD = "registerExtendedProperties";
 
     public EntitySyncPropsHooks(ClassVisitor cv) {
@@ -27,7 +25,7 @@ public class EntitySyncPropsHooks extends ClassVisitor {
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        String iface = Type.getInternalName(EntityProxy.class);
+        String iface = EntityProxy.CLASS_NAME;
         if (interfaces == null) {
             interfaces = new String[]{iface};
         } else {
@@ -50,34 +48,15 @@ public class EntitySyncPropsHooks extends ClassVisitor {
     public void visitEnd() {
         super.visitEnd();
 
-        Type listType = Type.getType(List.class);
         Type myType = Type.getObjectType("net/minecraft/entity/Entity");
 
-        FieldVisitor fv = super.visitField(ACC_PUBLIC, FIELD_NAME, listType.getDescriptor(), null, null);
-        if (fv != null) {
-            fv.visitEnd();
-        }
-
-        MethodVisitor mv = super.visitMethod(ACC_PUBLIC | ACC_FINAL, EntityProxy.GET_PROPERTIES, Type.getMethodDescriptor(listType), null, null);
+        MethodVisitor mv = super.visitMethod(ACC_PUBLIC | ACC_FINAL, EntityProxy.GET_IEEP_MAP, Type.getMethodDescriptor(Type.getType(Map.class)), null, null);
         if (mv != null) {
             mv.visitCode();
 
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, myType.getInternalName(), FIELD_NAME, listType.getDescriptor());
+            mv.visitFieldInsn(GETFIELD, myType.getInternalName(), "extendedProperties", Type.getDescriptor(Map.class));
             mv.visitInsn(ARETURN);
-
-            mv.visitMaxs(0, 0);
-            mv.visitEnd();
-        }
-
-        mv = super.visitMethod(ACC_PUBLIC | ACC_FINAL, EntityProxy.SET_PROPERTIES, Type.getMethodDescriptor(VOID_TYPE, listType), null, null);
-        if (mv != null) {
-            mv.visitCode();
-
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitFieldInsn(PUTFIELD, myType.getInternalName(), FIELD_NAME, listType.getDescriptor());
-            mv.visitInsn(RETURN);
 
             mv.visitMaxs(0, 0);
             mv.visitEnd();
