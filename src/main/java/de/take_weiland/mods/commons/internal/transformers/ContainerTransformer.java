@@ -15,12 +15,12 @@ import static org.objectweb.asm.Opcodes.*;
 /**
  * @author diesieben07
  */
-public final class ContainerGetInventoriesSupport extends ClassVisitor {
+public final class ContainerTransformer extends ClassVisitor {
 
     private static final String FIELD_NAME = "_sc$inventories";
 
-    public ContainerGetInventoriesSupport(ClassVisitor cv) {
-        super(ASM4, cv);
+    public ContainerTransformer(ClassVisitor cv) {
+        super(ASM5, cv);
     }
 
     @Override
@@ -39,6 +39,8 @@ public final class ContainerGetInventoriesSupport extends ClassVisitor {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (name.equals(MCPNames.method(SRGConstants.M_ADD_CRAFTING_TO_CRAFTERS))) {
             return new AddListenerTransformer(mv);
+        } else if (name.equals(MCPNames.method(SRGConstants.M_ADD_SLOT_TO_CONTAINER))) {
+            return new AddSlotTransformer(mv);
         } else {
             return mv;
         }
@@ -98,7 +100,7 @@ public final class ContainerGetInventoriesSupport extends ClassVisitor {
     private static final class AddListenerTransformer extends MethodVisitor {
 
         AddListenerTransformer(MethodVisitor mv) {
-            super(ASM4, mv);
+            super(ASM5, mv);
         }
 
         @Override
@@ -114,6 +116,28 @@ public final class ContainerGetInventoriesSupport extends ClassVisitor {
             String name = ASMHooks.ON_LISTENER_ADDED;
             String desc = Type.getMethodDescriptor(Type.VOID_TYPE, containerType, iCraftingType);
             super.visitMethodInsn(INVOKESTATIC, owner, name, desc, false);
+        }
+    }
+
+    private static final class AddSlotTransformer extends MethodVisitor {
+
+        AddSlotTransformer(MethodVisitor mv) {
+            super(ASM5, mv);
+        }
+
+        @Override
+        public void visitInsn(int opcode) {
+            if (opcode == ARETURN) {
+                Type containerType = Type.getObjectType("net/minecraft/inventory/Container");
+                Type slotType = Type.getObjectType("net/minecraft/inventory/Slot");
+
+                super.visitVarInsn(ALOAD, 0);
+                super.visitVarInsn(ALOAD, 1);
+                super.visitMethodInsn(INVOKESTATIC, ASMHooks.CLASS_NAME, ASMHooks.ON_SLOT_ADDED,
+                        Type.getMethodDescriptor(Type.VOID_TYPE, containerType, slotType), false);
+            }
+
+            super.visitInsn(opcode);
         }
     }
 }

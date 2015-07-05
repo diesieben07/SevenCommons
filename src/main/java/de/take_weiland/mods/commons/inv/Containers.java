@@ -5,7 +5,6 @@ import de.take_weiland.mods.commons.internal.ContainerProxy;
 import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.ItemStacks;
-import gnu.trove.set.hash.THashSet;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -16,8 +15,6 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * <p>Utilities for working with {@link Container Inventory Containers}.</p>
@@ -49,17 +46,15 @@ public final class Containers {
      * @param yStart          the y coordinate
      */
     public static void addPlayerInventory(Container container, InventoryPlayer inventoryPlayer, int xStart, int yStart) {
-        Set<UUID> allItemInvs = allItemInventories(container);
-
         // add the upper 3 rows
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 9; x++) {
-                SCReflector.instance.addSlot(container, new PlayerSlot(inventoryPlayer, x + y * 9 + 9, xStart + x * SLOT_HEIGHT, yStart + y * SLOT_HEIGHT, allItemInvs));
+                SCReflector.instance.addSlot(container, new SimpleSlot(inventoryPlayer, x + y * 9 + 9, xStart + x * SLOT_HEIGHT, yStart + y * SLOT_HEIGHT));
             }
         }
         // add the hotbar
         for (int k = 0; k < 9; k++) {
-            SCReflector.instance.addSlot(container, new PlayerSlot(inventoryPlayer, k, xStart + k * 18, yStart + 58, allItemInvs));
+            SCReflector.instance.addSlot(container, new SimpleSlot(inventoryPlayer, k, xStart + k * 18, yStart + 58));
         }
     }
 
@@ -260,19 +255,6 @@ public final class Containers {
             return true;
         }
         return false;
-    }
-
-    private static Set<UUID> allItemInventories(Container container) {
-        Set<UUID> set = new THashSet<>(); // HashSet takes horrible amounts of memory
-
-        @SuppressWarnings("unchecked")
-        List<Slot> slots = container.inventorySlots;
-        for (Slot slot : slots) {
-            if (slot.inventory instanceof ItemInventory) {
-                set.add(((ItemInventory) slot.inventory).uuid);
-            }
-        }
-        return set;
     }
 
     private Containers() {

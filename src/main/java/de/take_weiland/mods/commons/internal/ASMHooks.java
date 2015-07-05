@@ -192,4 +192,12 @@ public final class ASMHooks {
         return builder.build();
     }
 
+    public static final String ON_SLOT_ADDED = "onSlotAdded";
+
+    public static void onSlotAdded(Container container, Slot slot) {
+        if (slot instanceof ContainerAwareSlot) {
+            ((ContainerAwareSlot) slot)._sc$injectContainer(container);
+        }
+    }
+
 }

@@ -29,7 +29,7 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(EntityNBTHook::new, "net/minecraft/entity/Entity");
         addEntry(TileEntityNBTHook::new, "net/minecraft/tileentity/TileEntity");
 
-        addEntry(ContainerGetInventoriesSupport::new, "net/minecraft/inventory/Container");
+        addEntry(ContainerTransformer::new, "net/minecraft/inventory/Container");
 
         addEntry(InventoryNumberKeysFix::new,
                 "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(SRGConstants.M_CHECK_HOTBAR_KEYS));

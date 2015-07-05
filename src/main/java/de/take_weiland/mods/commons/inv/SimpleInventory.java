@@ -40,8 +40,9 @@ public interface SimpleInventory extends IInventory, Iterable<ItemStack> {
     }
 
     /**
-     * <p>Like {@link #setInventorySlotContents(int, ItemStack)}, but should not call {@link #markDirty()}.</p>
-     * <p>This method is intended for bulk-setting of slots so it should usually be overridden.</p>
+     * <p>Like {@link #setInventorySlotContents(int, ItemStack)}, but does not call {@link #markDirty()}.</p>
+     * <p>This method should be implemented instead of the usual {@link #setInventorySlotContents(int, ItemStack)},
+     * which is implemented in terms of this method and {@link #markDirty()}.</p>
      *
      * @param slot  the slot
      * @param stack the ItemStack

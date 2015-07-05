@@ -3,6 +3,8 @@ package de.take_weiland.mods.commons.inv;
 import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Container;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -13,6 +15,9 @@ import java.util.UUID;
 
 /**
  * <p>An inventory that stores its contents to an {@link net.minecraft.item.ItemStack}.</p>
+ * <p>When using this inventory, all Slots must use {@link SimpleSlot} (or
+ * {@link Containers#addPlayerInventory(Container, InventoryPlayer) Containers.addPlayerInventory}),
+ * otherwise the ItemStack containing the inventory can be picked up by the player.</p>
  */
 public class ItemInventory implements SimpleInventory, NameableInventory {
 
@@ -21,14 +26,17 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
     final UUID uuid = UUID.randomUUID();
 
     /**
-     * the ItemStack this inventory stores it's data to
+     * <p>The ItemStack that contains this inventory.</p>
      */
     protected final ItemStack stack;
     /**
-     * the NBT key to store data in
+     * <p>The NBT key used to store the inventory data.</p>
      */
     protected final String nbtKey;
 
+    /**
+     * <p>An array of ItemStacks to store the inventory.</p>
+     */
     protected final ItemStack[] storage;
 
     /**
