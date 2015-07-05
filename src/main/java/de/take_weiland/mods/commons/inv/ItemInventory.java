@@ -1,10 +1,12 @@
 package de.take_weiland.mods.commons.inv;
 
+import com.google.common.collect.ImmutableSet;
 import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -15,9 +17,10 @@ import java.util.UUID;
 
 /**
  * <p>An inventory that stores its contents to an {@link net.minecraft.item.ItemStack}.</p>
- * <p>When using this inventory, all Slots must use {@link SimpleSlot} (or
- * {@link Containers#addPlayerInventory(Container, InventoryPlayer) Containers.addPlayerInventory}),
- * otherwise the ItemStack containing the inventory can be picked up by the player.</p>
+ * <p>ItemStacks that provide an ItemInventory must be protected inside a Container that displays their ItemInventory.
+ * Guard against this by either using {@link SimpleSlot}, {@link Containers#addPlayerInventory(Container, InventoryPlayer)
+ * Containers.addPlayerInventory} or by calling {@link #canTakeStack(Container, ItemStack, EntityPlayer)} from your Slot
+ * implementation.</p>
  */
 public class ItemInventory implements SimpleInventory, NameableInventory {
 
@@ -170,5 +173,36 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
     @Override
     public String getDefaultName() {
         return null;
+    }
+
+    /**
+     * <p>Check if the given ItemStack can be picked up by the given player inside the given Container.
+     * This method checks if the ItemStack is in use by any ItemInventory in the given Container and returns false if that
+     * is the case.</p>
+     * <p>If you use {@link SimpleSlot} you do not need this method.</p>
+     *
+     * @param container the Container
+     * @param stack     the ItemStack
+     * @param player    the player
+     * @return true if the stack can be picked up
+     */
+    public static boolean canTakeStack(Container container, @Nullable ItemStack stack, EntityPlayer player) {
+        if (stack == null) {
+            return true;
+        }
+
+        UUID uuid = NBTData.readUUID(ItemStacks.getNbt(stack, NBT_UUID_KEY));
+        if (uuid == null) {
+            return true;
+        }
+
+        ImmutableSet<IInventory> inventories = Containers.getInventories(container);
+        for (IInventory inventory : inventories) {
+            if (inventory instanceof ItemInventory && uuid.equals(((ItemInventory) inventory).uuid)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

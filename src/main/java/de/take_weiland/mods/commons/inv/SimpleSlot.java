@@ -1,20 +1,16 @@
 package de.take_weiland.mods.commons.inv;
 
-import com.google.common.collect.ImmutableSet;
 import de.take_weiland.mods.commons.internal.ContainerAwareSlot;
-import de.take_weiland.mods.commons.nbt.NBTData;
-import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-import java.util.UUID;
-
 /**
  * <p>A basic implementation of {@link Slot} that delegates {@link Slot#isItemValid(ItemStack)} to
  * {@link IInventory#isItemValidForSlot(int, ItemStack)}.</p>
+ * <p>This class also checks for {@link ItemInventory#canTakeStack(Container, ItemStack, EntityPlayer)}.</p>
  */
 public class SimpleSlot extends Slot implements ContainerAwareSlot {
 
@@ -31,28 +27,7 @@ public class SimpleSlot extends Slot implements ContainerAwareSlot {
 
     @Override
     public boolean canTakeStack(EntityPlayer player) {
-        if (container == null) {
-            return true;
-        }
-
-        ItemStack stack = getStack();
-        if (stack == null) {
-            return true;
-        }
-
-        UUID uuid = NBTData.readUUID(ItemStacks.getNbt(stack, ItemInventory.NBT_UUID_KEY));
-        if (uuid == null) {
-            return true;
-        }
-
-        ImmutableSet<IInventory> inventories = Containers.getInventories(container);
-        for (IInventory inventory : inventories) {
-            if (inventory instanceof ItemInventory && uuid.equals(((ItemInventory) inventory).uuid)) {
-                return false;
-            }
-        }
-
-        return true;
+        return container != null && ItemInventory.canTakeStack(container, getStack(), player);
     }
 
     @Override
