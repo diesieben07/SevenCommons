@@ -1,12 +1,11 @@
 package de.take_weiland.mods.commons.inv;
 
 import com.google.common.collect.ImmutableSet;
-import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.ContainerProxy;
-import de.take_weiland.mods.commons.internal.PacketContainerButton;
+import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.ItemStacks;
-import de.take_weiland.mods.commons.internal.SCReflector;
+import gnu.trove.set.hash.THashSet;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -21,7 +20,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * <p>Utilities for working with {@link net.minecraft.inventory.Container Inventory Containers}.</p>
+ * <p>Utilities for working with {@link Container Inventory Containers}.</p>
  */
 public final class Containers {
 
@@ -65,21 +64,6 @@ public final class Containers {
     }
 
     /**
-     * <p>Trigger the given button on the currently open Container. This method will call
-     * {@link de.take_weiland.mods.commons.inv.ButtonContainer#onButtonClick(cpw.mods.fml.relauncher.Side, net.minecraft.entity.player.EntityPlayer, int)}
-     * on both client and server.</p>
-     * <p>This method must only be called from the client thread and will throw a {@code ClassCastException} if the
-     * currently open container does not implement {@code ButtonContainer}.</p>
-     *
-     * @param button the button
-     */
-    public static void triggerButton(int button) {
-        EntityPlayer player = SevenCommons.proxy.getClientPlayer();
-        ((ButtonContainer) player.openContainer).onButtonClick(Side.CLIENT, player, button);
-        new PacketContainerButton(player.openContainer.windowId, button).sendToServer();
-    }
-
-    /**
      * <p>Get all inventories present in the given Container. The inventories are returned in order of first appearance
      * by the Iterator of the returned Set.</p>
      *
@@ -91,15 +75,14 @@ public final class Containers {
     }
 
     /**
-     * <p>Get the player interacting with the given Container. On the client this is always {@code Minecraft#thePlayer}.</p>
+     * <p>Get the player interacting with the given Container. On the client this is always {@code Minecraft.thePlayer}.</p>
      *
      * @param container the Container
      * @return the player
      */
     public static EntityPlayer getViewer(Container container) {
         List<ICrafting> listeners = SCReflector.instance.getCrafters(container);
-        for (int i = 0, len = listeners.size(); i < len; i++) {
-            ICrafting listener = listeners.get(i);
+        for (ICrafting listener : listeners) {
             if (listener instanceof EntityPlayerMP) {
                 return (EntityPlayer) listener;
             }
@@ -109,7 +92,7 @@ public final class Containers {
 
     /**
      * <p>Implementation for shift-clicking in Containers. This is a drop-in replacement you can call from the
-     * {@link Container#transferStackInSlot(net.minecraft.entity.player.EntityPlayer, int)} method in your Container.</p>
+     * {@link Container#transferStackInSlot(EntityPlayer, int)} method in your Container.</p>
      * <ul>
      * <li>When the slot to be moved is not in the inventory of the player it will be moved there as known
      * from vanilla inventories.</li>
@@ -280,21 +263,16 @@ public final class Containers {
     }
 
     private static Set<UUID> allItemInventories(Container container) {
-        ImmutableSet.Builder<UUID> builder = ImmutableSet.builder();
-        ItemInventory last = null;
+        Set<UUID> set = new THashSet<>(); // HashSet takes horrible amounts of memory
 
         @SuppressWarnings("unchecked")
         List<Slot> slots = container.inventorySlots;
         for (Slot slot : slots) {
-            // keep reference to last found inventory, to avoid adding
-            // many duplicates to the builder, because the filtering of those
-            // does not happen before .build()
-            if (last != slot.inventory && slot.inventory instanceof ItemInventory) {
-                last = (ItemInventory) slot.inventory;
-                builder.add(last.uuid);
+            if (slot.inventory instanceof ItemInventory) {
+                set.add(((ItemInventory) slot.inventory).uuid);
             }
         }
-        return builder.build();
+        return set;
     }
 
     private Containers() {

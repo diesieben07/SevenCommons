@@ -176,8 +176,7 @@ public abstract class ShiftClickTarget {
 
     private static final class One extends ShiftClickTarget {
 
-        private final int slot;
-        private boolean done;
+        private int slot;
 
         One(int slot) {
             this.slot = slot;
@@ -185,17 +184,19 @@ public abstract class ShiftClickTarget {
 
         @Override
         boolean hasNext() {
-            return !done;
+            return (slot & (1 << 31)) == 0;
         }
 
         @Override
         int next() {
-            return slot;
+            int ret = slot;
+            slot = ret | (1 << 31);
+            return ret;
         }
 
         @Override
         void reset() {
-            done = false;
+            slot &= ~(1 << 31);
         }
     }
 

@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.inv;
 
 import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import cpw.mods.fml.relauncher.Side;
@@ -18,15 +18,15 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnegative;
-import javax.annotation.Nonnull;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 import static de.take_weiland.mods.commons.util.Sides.sideOf;
 
 /**
- * A collection of static utility methods regarding implementors of {@link IInventory}
+ * <p>A collection of static utility methods regarding implementors of {@link IInventory}.</p>
  *
  * @author diesieben07
  */
@@ -143,6 +143,9 @@ public final class Inventories {
         }
     }
 
+    static final String NBT_KEY = "_sc$inventory";
+    static final String CUSTOM_NAME_KEY = "_sc$customName";
+
     /**
      * <p>Write the given inventory to the given key in the NBTTagCompound. The contents can be read with either
      * {@link #readInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound, String)} or
@@ -158,8 +161,8 @@ public final class Inventories {
 
     /**
      * <p>Write the given inventory to an NBTTagList. The contents can be read with either
-     * {@link #readInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound, String)} or
-     * {@link #readInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagList)}.</p>
+     * {@link #readInventory(ItemStack[], NBTTagCompound, String)} or
+     * {@link #readInventory(ItemStack[], NBTTagList)}.</p>
      *
      * @param stacks the inventory
      * @return an NBTTagList
@@ -180,7 +183,7 @@ public final class Inventories {
 
     /**
      * <p>Read the given inventory from the given key in the NBTTagCompound. The contents must be in the format produced by
-     * {@link #writeInventory(net.minecraft.item.ItemStack[])} or {@link #writeInventory(net.minecraft.item.ItemStack[], net.minecraft.nbt.NBTTagCompound, String)}.</p>
+     * {@link #writeInventory(ItemStack[])} or {@link #writeInventory(ItemStack[], NBTTagCompound, String)}.</p>
      *
      * @param stacks the inventory
      * @param nbt    the NBTTagCompound
@@ -241,7 +244,7 @@ public final class Inventories {
      * @param inventory the inventory
      * @return an Iterable
      */
-    public static FluentIterable<ItemStack> iterate(IInventory inventory) {
+    public static Iterable<ItemStack> iterate(IInventory inventory) {
         return iterate(inventory, true);
     }
 
@@ -253,40 +256,44 @@ public final class Inventories {
      * @param includeNulls whether null (empty slots) should be included in the iterator
      * @return an Iterable
      */
-    public static FluentIterable<ItemStack> iterate(final IInventory inventory, final boolean includeNulls) {
-        return new FluentIterable<ItemStack>() {
-            @Nonnull
-            @Override
-            public Iterator<ItemStack> iterator() {
-                return Inventories.iterator(inventory, includeNulls);
-            }
-        };
+    public static Iterable<ItemStack> iterate(final IInventory inventory, final boolean includeNulls) {
+        Iterable<ItemStack> iterable = inventory instanceof SimpleInventory
+                ? ((SimpleInventory) inventory)
+                : new InventoryAsIterable(inventory);
+
+        return includeNulls ? iterable : Iterables.filter(iterable, Predicates.notNull());
     }
 
-    private static final class InventoryIterator extends UnmodifiableIterator<ItemStack> {
+    static void doForEach(IInventory self, Consumer<? super ItemStack> action) {
+        for (int i = 0, size = self.getSizeInventory(); i < size; i++) {
+            action.accept(self.getStackInSlot(i));
+        }
+    }
 
-        private final IInventory inv;
-        private int next;
+    private static class InventoryAsIterable implements Iterable<ItemStack> {
 
-        InventoryIterator(IInventory inv) {
-            this.inv = inv;
+        private final IInventory inventory;
+
+        InventoryAsIterable(IInventory inventory) {
+            this.inventory = inventory;
         }
 
         @Override
-        public boolean hasNext() {
-            return next < inv.getSizeInventory();
+        public Iterator<ItemStack> iterator() {
+            return new InventoryIterator(inventory);
         }
 
         @Override
-        public ItemStack next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return inv.getStackInSlot(next++);
+        public void forEach(Consumer<? super ItemStack> action) {
+            doForEach(inventory, action);
+        }
+
+        @Override
+        public Spliterator<ItemStack> spliterator() {
+            return new InventorySpliterator(inventory, 0, inventory.getSizeInventory());
         }
     }
 
     private Inventories() {
     }
-
 }

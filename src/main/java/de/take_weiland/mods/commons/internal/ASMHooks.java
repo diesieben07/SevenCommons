@@ -172,8 +172,7 @@ public final class ASMHooks {
             for (int i = 0, len = invs.size(); i < len; i++) {
                 IInventory inv = invs.get(i);
                 if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
-                    // TODO
-                    //new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
+                    new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
                 }
             }
         }

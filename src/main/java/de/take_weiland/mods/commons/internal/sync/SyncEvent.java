@@ -33,11 +33,11 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
     ChangedValue<?>[] changes = new ChangedValue[3];
 
     public final void add(int fieldId, ChangedValue<?> changedValue) {
-        changedValue.fieldId = fieldId;
         if (changes.length == cursor) {
             grow();
         }
         changes[cursor++] = changedValue;
+        changedValue.fieldId = fieldId;
     }
 
     final void done() {
@@ -54,16 +54,6 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
     abstract void writeMetaInfoToStream(MCDataOutput out);
 
     abstract Object getObjectDirect(EntityPlayer player);
-
-    public final void writeTo(MCDataOutput out) {
-        writeMetaInfoToStream(out);
-
-        for (ChangedValue<?> change : changes) {
-            out.writeVarInt(change.fieldId);
-            change.writeData(out);
-        }
-        out.writeVarInt(0);
-    }
 
     public static void readAndApply(byte[] payload, EntityPlayer player) {
         MCDataInput in = Network.newInput(payload);
