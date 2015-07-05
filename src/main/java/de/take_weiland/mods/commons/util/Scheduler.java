@@ -107,8 +107,6 @@ public final class Scheduler extends AbstractListeningExecutorService {
         }
         server = new Scheduler();
 
-        // no intellij, this is NOT the same!
-        //noinspection Convert2MethodRef
         Launch.blackboard.put(FMLEventHandler.SCHEDULER_TEMP_KEY, (Consumer<Scheduler>) Scheduler::tick);
     }
 
