@@ -3,10 +3,8 @@ package de.take_weiland.mods.commons.internal.prop;
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
-
-import static java.lang.invoke.MethodHandles.publicLookup;
+import java.lang.reflect.Modifier;
 
 /**
  * @author diesieben07
@@ -35,21 +33,14 @@ final class FieldProperty<T> extends AbstractProperty<T, Field> {
 
     @Override
     public void set(Object o, T val) {
+        if (Modifier.isFinal(member.getModifiers())) {
+            throw immutableEx();
+        }
         try {
             member.set(o, val);
         } catch (IllegalAccessException e) {
             throw new AssertionError(e);
         }
-    }
-
-    @Override
-    MethodHandle resolveGetter() throws IllegalAccessException {
-        return publicLookup().unreflectGetter(member);
-    }
-
-    @Override
-    MethodHandle resolveSetter() throws IllegalAccessException {
-        return publicLookup().unreflectSetter(member);
     }
 
     @Override

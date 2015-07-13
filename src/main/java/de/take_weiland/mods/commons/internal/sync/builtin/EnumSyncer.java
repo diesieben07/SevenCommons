@@ -7,32 +7,31 @@ import de.take_weiland.mods.commons.sync.Syncer;
 /**
  * @author diesieben07
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
-final class EnumSyncer implements Syncer.ForImmutable<Enum> {
+final class EnumSyncer<E extends Enum<E>> implements Syncer.ForImmutable<E> {
 
-    private final Class clazz;
+    private final Class<E> clazz;
 
-    private EnumSyncer(Class clazz) {
+    private EnumSyncer(Class<E> clazz) {
         this.clazz = clazz;
     }
 
     @Override
-    public Enum decode(MCDataInput in) {
+    public E decode(MCDataInput in) {
         return in.readEnum(clazz);
     }
 
     @Override
-    public void encode(Enum e, MCDataOutput out) {
+    public void encode(E e, MCDataOutput out) {
         out.writeEnum(e);
     }
 
     @Override
-    public Class<Enum> companionType() {
+    public Class<E> companionType() {
         return clazz;
     }
 
     static Syncer<?, ?, ?> get(Class<?> type) {
         //noinspection unchecked,rawtypes
-        return BuiltinSyncers.getOrCreateSyncer(type, EnumSyncer::new);
+        return BuiltinSyncers.getOrCreateSyncer(type, clazz -> new EnumSyncer<>((Class) clazz));
     }
 }

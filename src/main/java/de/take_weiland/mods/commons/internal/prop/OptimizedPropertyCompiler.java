@@ -156,7 +156,7 @@ final class OptimizedPropertyCompiler {
         gen = new GeneratorAdapter(ACC_PUBLIC, setMethod, null, null, cw);
         gen.visitCode();
         if (!canSet) {
-            gen.throwException(Type.getType(UnsupportedOperationException.class), "Cannot set final property");
+            gen.throwException(Type.getType(UnsupportedOperationException.class), "Immutable Property");
         } else {
             if (setMH != null) {
                 Type objectType = Type.getType(Object.class);
@@ -224,10 +224,6 @@ final class OptimizedPropertyCompiler {
         }
     }
 
-    private static void generateBridges(Type myType, ClassWriter cw, Class<?> type) {
-
-    }
-
     private static boolean canAccessDirectly(Member member) {
         boolean a = Modifier.isPublic(member.getDeclaringClass().getModifiers());
         boolean b = Modifier.isPublic(member.getModifiers());
@@ -247,6 +243,9 @@ final class OptimizedPropertyCompiler {
         gen.invokeConstructor(Type.getType(Object.class), getMethod("void <init>()"));
         gen.returnValue();
         gen.endMethod();
+    }
+
+    private OptimizedPropertyCompiler() {
     }
 
 }

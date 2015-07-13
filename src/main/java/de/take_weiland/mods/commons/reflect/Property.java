@@ -4,39 +4,39 @@ import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandle;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
+import java.util.Optional;
 
 /**
  * <p>Information about a Property.</p>
  *
  * @author diesieben07
  */
-public interface Property<T, M extends AccessibleObject & Member & AnnotatedElement> extends PropertyAccess<T> {
+public interface Property<T> extends PropertyAccess<T> {
 
     /**
      * <p>Get the underlying Member for this property. For a getter/setter based property this returns the getter method.</p>
+     * <p>This method will always return something that is also an {@link AnnotatedElement}. For convenience the method
+     * {@link #getAnnotatedElement()} may be used.</p>
      *
      * @return the Member
      */
-    M getMember();
+    Member getMember();
+
+    default AnnotatedElement getAnnotatedElement() {
+        try {
+            return (AnnotatedElement) getMember();
+        } catch (ClassCastException e) {
+            throw new IllegalStateException("getMember of a Property must return an AnnotatedElement", e);
+        }
+    }
 
     /**
-     * <p>Get a MethodHandle that gets this property.</p>
+     * <p>Return a {@link PropertyAccess} instance that will access the same property but may possibly be faster.</p>
      *
-     * @return a MethodHandle
+     * @return a possibly faster PropertyAccess
      */
-    MethodHandle getGetter();
-
-    /**
-     * <p>Get a MethodHandle that sets this property.</p>
-     *
-     * @return a MethodHandle
-     */
-    MethodHandle getSetter();
-
     PropertyAccess<T> optimize();
 
     /**
@@ -65,7 +65,11 @@ public interface Property<T, M extends AccessibleObject & Member & AnnotatedElem
      *
      * @return the SerializationMethod
      */
-    SerializationMethod.Method getDesiredMethod();
+    default SerializationMethod.Method getDesiredMethod() {
+        return Optional.ofNullable(getAnnotation(SerializationMethod.class))
+                .map(SerializationMethod::value)
+                .orElse(SerializationMethod.Method.DEFAULT);
+    }
 
     /**
      * <p>True, if the given annotation is present on the property.</p>
@@ -73,7 +77,9 @@ public interface Property<T, M extends AccessibleObject & Member & AnnotatedElem
      * @param annotation the annotation
      * @return if the annotation is present
      */
-    boolean hasAnnotation(Class<? extends Annotation> annotation);
+    default boolean hasAnnotation(Class<? extends Annotation> annotation) {
+        return getAnnotatedElement().isAnnotationPresent(annotation);
+    }
 
     /**
      * <p>Get the annotation for the specified annotation type if is present, otherwise null.</p>
@@ -81,6 +87,8 @@ public interface Property<T, M extends AccessibleObject & Member & AnnotatedElem
      * @param annotationClass the annotation type
      * @return the annotation
      */
-    <A extends Annotation> A getAnnotation(Class<A> annotationClass);
+    default <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
+        return getAnnotatedElement().getAnnotation(annotationClass);
+    }
 
 }

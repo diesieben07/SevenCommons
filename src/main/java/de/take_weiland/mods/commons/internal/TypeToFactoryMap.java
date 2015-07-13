@@ -20,7 +20,7 @@ public abstract class TypeToFactoryMap<F, FR> {
 
     private Map<Class<?>, Collection<F>> map = new ConcurrentHashMap<>();
 
-    public final FR get(Property<?, ?> type) {
+    public final FR get(Property<?> type) {
         Class<?> rawType = type.getRawType();
         Iterable<Class<?>> hierarchy;
         if (rawType.isPrimitive()) {
@@ -58,13 +58,13 @@ public abstract class TypeToFactoryMap<F, FR> {
         map = builder.build();
     }
 
-    protected abstract FR applyFactory(F factory, Property<?, ?> type);
+    protected abstract FR applyFactory(F factory, Property<?> type);
 
     private void checkNotFrozen() {
         checkState(!(map instanceof ImmutableMap), "Map frozen");
     }
 
-    private FR resultFromList(Property<?, ?> type, Collection<F> list) {
+    private FR resultFromList(Property<?> type, Collection<F> list) {
         FR result = null;
         if (list == null) {
             return null;

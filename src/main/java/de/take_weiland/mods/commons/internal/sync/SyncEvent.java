@@ -55,7 +55,11 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
 
     abstract Object getObjectDirect(EntityPlayer player);
 
-    public static void readAndApply(byte[] payload, EntityPlayer player) {
+    public static void handle(byte[] payload, EntityPlayer player) {
+        Scheduler.client().execute(() -> readAndApply(payload, player));
+    }
+
+    private static void readAndApply(byte[] payload, EntityPlayer player) {
         MCDataInput in = Network.newInput(payload);
 
         int type = in.readByte();

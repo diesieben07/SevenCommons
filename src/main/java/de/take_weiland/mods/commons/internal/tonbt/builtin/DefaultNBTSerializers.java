@@ -20,7 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
     @Override
-    public <T> NBTSerializer<T> get(Property<T, ?> property) {
+    public <T> NBTSerializer<T> get(Property<T> property) {
         Class<?> raw = Primitives.unwrap(property.getRawType()); // the primitive handlers handle boxes as well
         NBTSerializer<?> result;
         if (raw == boolean.class) {

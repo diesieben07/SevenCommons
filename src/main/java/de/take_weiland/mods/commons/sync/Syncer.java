@@ -6,8 +6,6 @@ import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 
 import java.util.Objects;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 /**
  * <p>Support for syncing of a Type {@code V}.</p>
@@ -20,7 +18,7 @@ import java.util.function.Function;
  * <ul>
  * <li>{@link #companionType()} - should return a constant value, may be called at any time depending on the
  * underlying implementation.</li>
- * <li>{@link #check(Object, Function, BiConsumer, Function, BiConsumer)} - always called on the server and may be
+ * <li>{@link #check(Object, PropertyAccess, Object, PropertyAccess)} - always called on the server and may be
  * called very often, usually every game tick. If this method returns {@link #newValue(Object)}, the represented data
  * will be passed to the client either directly using {@link #apply(Object, Object, PropertyAccess, Object, PropertyAccess)}
  * or indirectly by encoding and decoding via {@link #encode(Object, MCDataOutput)} and then

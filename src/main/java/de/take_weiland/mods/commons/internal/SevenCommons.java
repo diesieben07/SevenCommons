@@ -104,7 +104,7 @@ public final class SevenCommons extends DummyModContainer implements IWorldAcces
                 .register(1, PacketInventoryName::new, PacketInventoryName::handle)
                 .build();
 
-        Network.registerHandler(SyncEvent.CHANNEL, SyncEvent::readAndApply);
+        Network.registerHandler(SyncEvent.CHANNEL, SyncEvent::handle);
 
 
         ClassInfoUtil.preInit();

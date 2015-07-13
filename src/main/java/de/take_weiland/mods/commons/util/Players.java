@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Collections2;
 import com.mojang.authlib.GameProfile;
 import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -13,6 +13,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -42,8 +43,8 @@ public final class Players {
      *
      * @return all Operators
      */
-    public static Iterable<EntityPlayerMP> getOnlineOps() {
-        return Iterables.filter(getAll(), Players::isOp);
+    public static Collection<EntityPlayerMP> getOnlineOps() {
+        return Collections2.filter(getAll(), Players::isOp);
     }
 
     /**

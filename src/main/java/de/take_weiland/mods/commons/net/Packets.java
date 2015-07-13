@@ -40,7 +40,7 @@ public final class Packets {
      * @param player the player
      */
     public static void sendTo(Packet packet, EntityPlayer player) {
-        checkNotClient(player).playerNetServerHandler.sendPacket(packet);
+        Players.checkNotClient(player).playerNetServerHandler.sendPacket(packet);
     }
 
     /**
@@ -51,7 +51,7 @@ public final class Packets {
      */
     public static void sendTo(Packet packet, Iterable<? extends EntityPlayer> players) {
         for (EntityPlayer player : players) {
-            checkNotClient(player).playerNetServerHandler.sendPacket(packet);
+            Players.checkNotClient(player).playerNetServerHandler.sendPacket(packet);
         }
     }
 
@@ -63,7 +63,7 @@ public final class Packets {
      */
     public static void sendTo(Packet packet, EntityPlayer... players) {
         for (EntityPlayer player : players) {
-            checkNotClient(player).playerNetServerHandler.sendPacket(packet);
+            Players.checkNotClient(player).playerNetServerHandler.sendPacket(packet);
         }
     }
 
@@ -228,13 +228,6 @@ public final class Packets {
      */
     public static void sendToAllNear(Packet packet, TileEntity te, double radius) {
         sendToAllNear(packet, te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, radius);
-    }
-
-    private static EntityPlayerMP checkNotClient(EntityPlayer player) {
-        if (player.worldObj.isRemote) {
-            throw new IllegalArgumentException("Tried to send packet using a client side player");
-        }
-        return (EntityPlayerMP) player;
     }
 
     private static WorldServer checkNotClient(World world) {

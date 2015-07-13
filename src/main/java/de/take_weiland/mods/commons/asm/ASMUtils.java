@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.asm;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraft.launchwrapper.IClassNameTransformer;
@@ -21,6 +22,14 @@ public final class ASMUtils {
     private ASMUtils() {
     }
 
+    /**
+     * <p>Generate code to convert from one type to another.
+     * See {@link #convertTypes(GeneratorAdapter, Type, Type)} for specifics.</p>
+     *
+     * @param gen  the GeneratorAdapter
+     * @param from the type on top of the stack
+     * @param to   the type to convert to
+     */
     public static void convertTypes(GeneratorAdapter gen, Class<?> from, Class<?> to) {
         convertTypes(gen, Type.getType(from), Type.getType(to));
     }
@@ -29,13 +38,13 @@ public final class ASMUtils {
      * <p>Convert from one type to another.</p>
      * <p>The following conversions are allowed:</p>
      * <ul>
-     * <p>primitive -> primitive</p>
-     * <p>primitive -> wrapper (only direct conversion from a primitive to it's wrapper)</p>
-     * <p>wrapper -> primitive (again only direct conversion)</p>
-     * <p>class -> class (may be a no-op or a checkcast)</p>
+     * <li>primitive -> primitive</li>
+     * <li>primitive -> wrapper (only direct conversion from a primitive to it's wrapper)</li>
+     * <li>wrapper -> primitive (again only direct conversion)</li>
+     * <li>class -> class (may be a no-op or a {@code CHECKCAST})</li>
      * </ul>
      *
-     * @param gen  the generator adapter
+     * @param gen  the GeneratorAdapter
      * @param from the type on top of the stack
      * @param to   the type to convert to
      */
@@ -105,8 +114,7 @@ public final class ASMUtils {
         return internalName.replace('/', '.');
     }
 
-    private static IClassNameTransformer nameTransformer;
-    private static boolean nameTransChecked = false;
+    private static Optional<IClassNameTransformer> nameTransformer;
 
     /**
      * <p>Get the active {@link net.minecraft.launchwrapper.IClassNameTransformer}, if any.</p>
@@ -114,14 +122,13 @@ public final class ASMUtils {
      * @return the active transformer, or null if none
      */
     @Nullable
-    public static IClassNameTransformer getClassNameTransformer() {
-        if (!nameTransChecked) {
+    public static synchronized IClassNameTransformer getClassNameTransformer() {
+        if (nameTransformer == null) {
             nameTransformer = FluentIterable.from(Launch.classLoader.getTransformers())
                     .filter(IClassNameTransformer.class)
-                    .first().orNull();
-            nameTransChecked = true;
+                    .first();
         }
-        return nameTransformer;
+        return nameTransformer.orNull();
     }
 
     /**
@@ -188,8 +195,6 @@ public final class ASMUtils {
         return getClassNode(bytes, THIN_FLAGS);
     }
 
-    // *** annotation utilities *** //
-
     /**
      * <p>Checks if the given {@link org.objectweb.asm.Type} represents a primitive type or the void type.</p>
      *
@@ -203,8 +208,8 @@ public final class ASMUtils {
     /**
      * <p>Checks if the given {@code Type} represents a primitive wrapper such as {@code Integer} or the {@code Void} type.</p>
      *
-     * @param type
-     * @return
+     * @param type the type
+     * @return true if the {@code Type} represents a primitive wrapper
      */
     public static boolean isPrimitiveWrapper(Type type) {
         return unboxedType(type) != type;

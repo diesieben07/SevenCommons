@@ -7,6 +7,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.objectweb.asm.Opcodes.*;
@@ -55,7 +56,7 @@ public class EntitySyncPropsHooks extends ClassVisitor {
             mv.visitCode();
 
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, myType.getInternalName(), "extendedProperties", Type.getDescriptor(Map.class));
+            mv.visitFieldInsn(GETFIELD, myType.getInternalName(), "extendedProperties", Type.getDescriptor(HashMap.class));
             mv.visitInsn(ARETURN);
 
             mv.visitMaxs(0, 0);

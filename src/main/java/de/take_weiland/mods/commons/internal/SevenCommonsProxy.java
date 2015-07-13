@@ -5,8 +5,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 
-import java.util.function.BiFunction;
-
 public interface SevenCommonsProxy {
 
     void preInit(FMLPreInitializationEvent event);
@@ -16,8 +14,6 @@ public interface SevenCommonsProxy {
     EntityPlayer getClientPlayer();
 
     NetworkManager getClientNetworkManager();
-
-    BiFunction<String, byte[], ? extends Packet> getC17PacketCstr();
 
     Packet makeC17Packet(String channel, byte[] data);
 }

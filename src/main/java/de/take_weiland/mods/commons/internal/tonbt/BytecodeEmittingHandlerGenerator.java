@@ -42,7 +42,7 @@ public final class BytecodeEmittingHandlerGenerator {
     private ClassWriter cw;
     private String className;
     private String superName;
-    private Map<Property<?, ?>, NBTSerializer<?>> properties;
+    private Map<Property<?>, NBTSerializer<?>> properties;
 
     BytecodeEmittingHandlerGenerator(DefaultHandlerFactory factory, Class<?> clazz) {
         this.factory = factory;
@@ -94,8 +94,8 @@ public final class BytecodeEmittingHandlerGenerator {
         String nbtSerializerContDesc = Type.getDescriptor(NBTSerializer.ForContainer.class);
         String propertyAccessDesc = Type.getDescriptor(PropertyAccess.class);
 
-        for (Map.Entry<Property<?, ?>, NBTSerializer<?>> entry : properties.entrySet()) {
-            Property<?, ?> property = entry.getKey();
+        for (Map.Entry<Property<?>, NBTSerializer<?>> entry : properties.entrySet()) {
+            Property<?> property = entry.getKey();
             NBTSerializer<?> ser = entry.getValue();
             String serFieldDesc = ser instanceof NBTSerializer.ForValue ? nbtSerializerValDesc
                     : ser instanceof NBTSerializer.ForContainer ? nbtSerializerContDesc
@@ -122,8 +122,8 @@ public final class BytecodeEmittingHandlerGenerator {
         gen.invokeStatic(generatorType, new Method("getStaticInfo", iterType, new Type[0]));
         gen.storeLocal(iterLocal);
 
-        for (Map.Entry<Property<?, ?>, NBTSerializer<?>> entry : properties.entrySet()) {
-            Property<?, ?> property = entry.getKey();
+        for (Map.Entry<Property<?>, NBTSerializer<?>> entry : properties.entrySet()) {
+            Property<?> property = entry.getKey();
             NBTSerializer<?> serializer = entry.getValue();
 
             gen.loadLocal(iterLocal);
@@ -168,8 +168,8 @@ public final class BytecodeEmittingHandlerGenerator {
         Type objectType = Type.getType(Object.class);
         Type propertyAccessType = Type.getType(PropertyAccess.class);
 
-        for (Map.Entry<Property<?, ?>, NBTSerializer<?>> entry : properties.entrySet()) {
-            Property<?, ?> property = entry.getKey();
+        for (Map.Entry<Property<?>, NBTSerializer<?>> entry : properties.entrySet()) {
+            Property<?> property = entry.getKey();
             NBTSerializer<?> serializer = entry.getValue();
 
             gen.loadArg(1);
@@ -211,8 +211,8 @@ public final class BytecodeEmittingHandlerGenerator {
 
         final int nbtTagSlot = gen.newLocal(nbtBaseType);
 
-        for (Map.Entry<Property<?, ?>, NBTSerializer<?>> entry : properties.entrySet()) {
-            Property<?, ?> property = entry.getKey();
+        for (Map.Entry<Property<?>, NBTSerializer<?>> entry : properties.entrySet()) {
+            Property<?> property = entry.getKey();
             NBTSerializer<?> serializer = entry.getValue();
 
             gen.loadArg(1);
@@ -259,7 +259,7 @@ public final class BytecodeEmittingHandlerGenerator {
         }
     }
 
-    private void getValue(GeneratorAdapter gen, Property<?, ?> property) {
+    private void getValue(GeneratorAdapter gen, Property<?> property) {
         Type myType = Type.getObjectType(className);
         Type methodHandleType = Type.getType(MethodHandle.class);
         Type propertyType = Type.getType(property.getRawType());
@@ -270,14 +270,14 @@ public final class BytecodeEmittingHandlerGenerator {
         gen.invokeVirtual(methodHandleType, new Method("invokeExact", propertyType, new Type[]{objectType}));
     }
 
-    private void prepareSetValue(GeneratorAdapter gen, Property<?, ?> property) {
+    private void prepareSetValue(GeneratorAdapter gen, Property<?> property) {
         Type myType = Type.getObjectType(className);
         Type methodHandleType = Type.getType(MethodHandle.class);
         gen.getStatic(myType, identFor(property, SETTER), methodHandleType);
         gen.loadArg(0);
     }
 
-    private void doSetValue(GeneratorAdapter gen, Property<?, ?> property) {
+    private void doSetValue(GeneratorAdapter gen, Property<?> property) {
         Type propertyType = Type.getType(property.getRawType());
         Type objectType = Type.getType(Object.class);
         Type methodHandleType = Type.getType(MethodHandle.class);
@@ -298,13 +298,13 @@ public final class BytecodeEmittingHandlerGenerator {
         return result;
     }
 
-    private static Map<Property<?, ?>, NBTSerializer<?>> staticProperties;
+    private static Map<Property<?>, NBTSerializer<?>> staticProperties;
 
     @SuppressWarnings("unused") // called by the dynamic classes
     static Iterator<Object[]> getStaticInfo() {
         return FluentIterable.from(staticProperties.entrySet())
                 .transform(entry -> {
-                    Property<?, ?> property = entry.getKey();
+                    Property<?> property = entry.getKey();
                     NBTSerializer<?> serializer = entry.getValue();
 
                     Class<?> rawType = property.getRawType();
@@ -321,7 +321,7 @@ public final class BytecodeEmittingHandlerGenerator {
         Function<FluidTank, NBTTagCompound> ser = fluidTank -> func.apply(fluidTank, new NBTTagCompound());
     }
 
-    private String identFor(Property<?, ?> property, String type) {
+    private String identFor(Property<?> property, String type) {
         Member member = property.getMember();
         return "_sc$"
                 + (member instanceof java.lang.reflect.Method ? "m$" : "")
@@ -331,14 +331,6 @@ public final class BytecodeEmittingHandlerGenerator {
 
     public static <T> NBTBase write(NBTSerializer<T> serializer, T val) {
         return val == null ? NBTData.serializedNull() : serializer.write(val);
-    }
-
-    public static <T> T readValue(NBTSerializer.ForValue<T> serializer, NBTBase nbt) {
-        return serializer.read(nbt);
-    }
-
-    public static <T> void readContainer(NBTSerializer.ForContainer<T> serializer, T t, NBTBase nbt) {
-        serializer.read(nbt, t);
     }
 
 }

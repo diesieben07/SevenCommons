@@ -46,10 +46,10 @@ public final class BytecodeEmittingCompanionGenerator {
     private String superName;
     private Class<?> superClass;
     private ClassWriter cw;
-    private final Map<Property<?, ?>, Syncer<?, ?, ?>> properties;
+    private final Map<Property<?>, Syncer<?, ?, ?>> properties;
     private int firstID;
 
-    BytecodeEmittingCompanionGenerator(DefaultCompanionFactory factory, Class<?> clazz, Map<Property<?, ?>, Syncer<?, ?, ?>> properties) {
+    BytecodeEmittingCompanionGenerator(DefaultCompanionFactory factory, Class<?> clazz, Map<Property<?>, Syncer<?, ?, ?>> properties) {
         this.factory = factory;
         this.clazz = clazz;
         this.properties = properties;
@@ -104,8 +104,8 @@ public final class BytecodeEmittingCompanionGenerator {
     }
 
     private void makeFields() {
-        for (Map.Entry<Property<?, ?>, Syncer<?, ?, ?>> entry : properties.entrySet()) {
-            Property<?, ?> property = entry.getKey();
+        for (Map.Entry<Property<?>, Syncer<?, ?, ?>> entry : properties.entrySet()) {
+            Property<?> property = entry.getKey();
             Syncer<?, ?, ?> syncer = entry.getValue();
 
             String descSyncer = Type.getDescriptor(Syncer.class);
@@ -162,8 +162,8 @@ public final class BytecodeEmittingCompanionGenerator {
         gen.tableSwitch(keys, new TableSwitchGenerator() {
             @Override
             public void generateCase(int key, Label end) {
-                Map.Entry<Property<?, ?>, Syncer<?, ?, ?>> entry = Iterables.get(properties.entrySet(), key - firstID);
-                Property<?, ?> property = entry.getKey();
+                Map.Entry<Property<?>, Syncer<?, ?, ?>> entry = Iterables.get(properties.entrySet(), key - firstID);
+                Property<?> property = entry.getKey();
                 Syncer<?, ?, ?> syncer = entry.getValue();
 
                 gen.loadArg(1);
@@ -235,7 +235,7 @@ public final class BytecodeEmittingCompanionGenerator {
         int fieldIndex = 0;
         Label next = null;
 
-        for (Property<?, ?> property : properties.keySet()) {
+        for (Property<?> property : properties.keySet()) {
             if (next != null) {
                 gen.mark(next);
             }
@@ -314,7 +314,10 @@ public final class BytecodeEmittingCompanionGenerator {
         gen.invokeStatic(Type.getType(BytecodeEmittingCompanionGenerator.class), getMethod("java.util.Iterator getStaticData(Class)"));
         gen.storeLocal(iterator);
 
-        for (Property<?, ?> property : properties.keySet()) {
+        for (Map.Entry<Property<?>, Syncer<?, ?, ?>> entry : properties.entrySet()) {
+            Property<?> property = entry.getKey();
+            Syncer<?, ?, ?> syncer = entry.getValue();
+
             gen.loadLocal(iterator);
             gen.invokeInterface(iteratorType, getMethod("Object next()"));
             gen.checkCast(objectArrType);
@@ -325,32 +328,35 @@ public final class BytecodeEmittingCompanionGenerator {
             gen.checkCast(syncerType);
             gen.putStatic(myType, getPropertyID(property, SYNCER), syncerType);
 
-            gen.dup();
+            if (syncer.companionType() != null) {
+                gen.dup();
+            }
             gen.push(1);
             gen.arrayLoad(objectType);
             gen.checkCast(propertyAccessType);
             gen.putStatic(myType, getPropertyID(property, PROP_ACC), propertyAccessType);
 
-            gen.push(2);
-            gen.arrayLoad(objectType);
-            gen.checkCast(propertyAccessType);
-            gen.putStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
-
+            if (syncer.companionType() != null) {
+                gen.push(2);
+                gen.arrayLoad(objectType);
+                gen.checkCast(propertyAccessType);
+                gen.putStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
+            }
         }
 
         gen.returnValue();
         gen.endMethod();
     }
 
-    private static String getPropertyID(Property<?, ?> property, String role) {
+    private static String getPropertyID(Property<?> property, String role) {
         return getPropertyID(property) + "$" + role;
     }
 
-    private static String getPropertyID(Property<?, ?> property) {
+    private static String getPropertyID(Property<?> property) {
         return property.getName() + (property.getMember() instanceof Field ? "$f" : "$m");
     }
 
-    private static Map<Property<?, ?>, Syncer<?, ?, ?>> staticProperties;
+    private static Map<Property<?>, Syncer<?, ?, ?>> staticProperties;
 
     private Class<?> finish() {
         Class<?> cls;
@@ -376,7 +382,7 @@ public final class BytecodeEmittingCompanionGenerator {
     static Iterator<Object[]> getStaticData(Class<?> generatedClass) throws NoSuchFieldException, IllegalAccessException {
         return FluentIterable.from(staticProperties.entrySet())
                 .transform(entry -> {
-                    Property<?, ?> property = entry.getKey();
+                    Property<?> property = entry.getKey();
                     Syncer<?, ?, ?> syncer = entry.getValue();
 
                     PropertyAccess<?> propertyAccess = property.optimize();
@@ -389,7 +395,7 @@ public final class BytecodeEmittingCompanionGenerator {
                             throw new IllegalStateException(e);
                         }
                     } else {
-                        compAccess = PropertyAccess.EMPTY;
+                        compAccess = null; // not used anyways
                     }
 
                     return new Object[]{

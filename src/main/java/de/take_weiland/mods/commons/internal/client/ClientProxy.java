@@ -11,8 +11,6 @@ import net.minecraft.network.play.client.C17PacketCustomPayload;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
 
-import java.util.function.BiFunction;
-
 import static net.minecraft.client.Minecraft.getMinecraft;
 
 public final class ClientProxy implements SevenCommonsProxy {
@@ -42,11 +40,6 @@ public final class ClientProxy implements SevenCommonsProxy {
     @Override
     public NetworkManager getClientNetworkManager() {
         return getMinecraft().getNetHandler().getNetworkManager();
-    }
-
-    @Override
-    public BiFunction<String, byte[], ? extends Packet> getC17PacketCstr() {
-        return C17PacketCustomPayload::new;
     }
 
     @Override

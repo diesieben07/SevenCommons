@@ -16,6 +16,6 @@ public interface NBTSerializerFactory {
      * @param property the property
      * @return an NBTSerializer
      */
-    <T> NBTSerializer<?> get(Property<T, ?> property);
+    <T> NBTSerializer<?> get(Property<T> property);
 
 }

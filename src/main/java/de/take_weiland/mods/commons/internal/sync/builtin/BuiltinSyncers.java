@@ -13,9 +13,9 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
@@ -25,7 +25,7 @@ public final class BuiltinSyncers implements SyncerFactory {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <VAL> Syncer<VAL, ?, ?> getSyncer(Property<VAL, ?> property) {
+    public <VAL> Syncer<VAL, ?, ?> getSyncer(Property<VAL> property) {
         Class<? super VAL> type = property.getRawType();
         Syncer<VAL, ?, ?> syncer = null;
 
@@ -38,9 +38,9 @@ public final class BuiltinSyncers implements SyncerFactory {
         return syncer;
     }
 
-    private static final Map<Class<?>, Syncer<?, ?, ?>> cache = new HashMap<>();
+    private static final Map<Class<?>, Syncer<?, ?, ?>> cache = new ConcurrentHashMap<>();
 
-    static synchronized Syncer<?, ?, ?> getOrCreateSyncer(Class<?> clazz, Function<Class<?>, Syncer<?, ?, ?>> func) {
+    static Syncer<?, ?, ?> getOrCreateSyncer(Class<?> clazz, Function<Class<?>, Syncer<?, ?, ?>> func) {
         return cache.computeIfAbsent(clazz, func);
     }
 
@@ -80,7 +80,7 @@ public final class BuiltinSyncers implements SyncerFactory {
         }
     }
 
-    private static Syncer<?, ?, ?> getContentsSyncer(Class<?> raw, Property<?, ?> spec) {
+    private static Syncer<?, ?, ?> getContentsSyncer(Class<?> raw, Property<?> spec) {
         if (FluidTank.class.isAssignableFrom(raw)) {
             if (spec.hasAnnotation(SyncCapacity.class)) {
                 return FluidTankSyncer.WithCapacity.INSTANCE;

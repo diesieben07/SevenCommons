@@ -27,7 +27,7 @@ public final class ToNbtFactories {
 
     private static final TypeToFactoryMap<NBTSerializerFactory, NBTSerializer<?>> serializerFactories = new TypeToFactoryMap<NBTSerializerFactory, NBTSerializer<?>>() {
         @Override
-        protected NBTSerializer<?> applyFactory(NBTSerializerFactory factory, Property<?, ?> type) {
+        protected NBTSerializer<?> applyFactory(NBTSerializerFactory factory, Property<?> type) {
             return factory.get(type);
         }
     };
@@ -40,7 +40,7 @@ public final class ToNbtFactories {
         serializerFactories.register(baseType, factory);
     }
 
-    static NBTSerializer<?> serializerFor(Property<?, ?> property) {
+    static NBTSerializer<?> serializerFor(Property<?> property) {
         return serializerFactories.get(property);
     }
 
@@ -48,7 +48,7 @@ public final class ToNbtFactories {
         return handlerCV.get(clazz);
     }
 
-    static List<Property<?, ?>> getProperties(Class<?> clazz) {
+    static List<Property<?>> getProperties(Class<?> clazz) {
         return AbstractProperty.allProperties(clazz, ToNbt.class);
     }
 

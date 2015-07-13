@@ -5,8 +5,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 
-import java.util.function.BiFunction;
-
 public class ServerProxy implements SevenCommonsProxy {
 
     @Override
@@ -26,11 +24,6 @@ public class ServerProxy implements SevenCommonsProxy {
     @Override
     public NetworkManager getClientNetworkManager() {
         throw new IllegalStateException("Tried to send packet to the server on the server!");
-    }
-
-    @Override
-    public BiFunction<String, byte[], ? extends Packet> getC17PacketCstr() {
-        throw new IllegalStateException("Tried to encode into serverbound packet on the server.");
     }
 
     @Override

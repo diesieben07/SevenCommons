@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.collect.ComparisonChain;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
@@ -89,19 +90,12 @@ public final class BlockPos implements Comparable<BlockPos> {
 
     @Override
     public int compareTo(BlockPos o) {
-        int myY;
-        int oY;
-        if ((myY = y) == (oY = o.y)) {
-            int myZ;
-            int oZ;
-            if ((myZ = z) == (oZ = o.z)) {
-                return x - o.x;
-            } else {
-                return myZ - oZ;
-            }
-        } else {
-            return myY - oY;
-        }
+        //noinspection SuspiciousNameCombination
+        return ComparisonChain.start()
+                .compare(y, o.y)
+                .compare(z, o.z)
+                .compare(x, o.x)
+                .result();
     }
 
     @Override

@@ -9,6 +9,6 @@ import de.take_weiland.mods.commons.reflect.Property;
  */
 public interface SyncerFactory {
 
-    <VAL> Syncer<VAL, ?, ?> getSyncer(Property<VAL, ?> property);
+    <VAL> Syncer<VAL, ?, ?> getSyncer(Property<VAL> property);
 
 }

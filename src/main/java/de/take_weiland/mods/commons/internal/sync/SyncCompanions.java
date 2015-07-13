@@ -34,7 +34,7 @@ public final class SyncCompanions {
 
     private static final TypeToFactoryMap<SyncerFactory, Syncer<?, ?, ?>> syncerFactories = new TypeToFactoryMap<SyncerFactory, Syncer<?, ?, ?>>() {
         @Override
-        protected Syncer<?, ?, ?> applyFactory(SyncerFactory factory, Property<?, ?> type) {
+        protected Syncer<?, ?, ?> applyFactory(SyncerFactory factory, Property<?> type) {
             return factory.getSyncer(type);
         }
     };
@@ -59,7 +59,7 @@ public final class SyncCompanions {
         return (SyncCompanion) companionConstructors.get(clazz).invokeExact();
     }
 
-    static Map<Property<?, ?>, Syncer<?, ?, ?>> getSyncedMemberInfo(Class<?> clazz) {
+    static Map<Property<?>, Syncer<?, ?, ?>> getSyncedMemberInfo(Class<?> clazz) {
         return AbstractProperty.allPropertiesLazy(clazz, Sync.class)
                 .toMap(syncerFactories::get);
     }

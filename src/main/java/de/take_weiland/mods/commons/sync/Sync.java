@@ -9,7 +9,6 @@ import java.lang.annotation.Target;
 
 /**
  * <p>When present on a Field or Getter in a class synchronizes the contents of that property from server to client.</p>
- * <p>
  * <p>The following types supported by default:</p>
  * <ul>
  * <li>All primitives and their boxed versions</li>
