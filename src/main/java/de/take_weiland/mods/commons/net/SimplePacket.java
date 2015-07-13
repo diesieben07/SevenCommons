@@ -137,7 +137,7 @@ public interface SimplePacket {
      * @param radius the radius
      */
     default void sendToAllNear(TileEntity te, double radius) {
-        sendToAllNear(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, radius);
+        sendToAllNear(te.getWorld(), te.xCoord, te.yCoord, te.zCoord, radius);
     }
 
     /**
@@ -169,7 +169,7 @@ public interface SimplePacket {
      * @param te the TileEntity
      */
     default void sendToAllTracking(TileEntity te) {
-        sendToAllTrackingChunk(te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4);
+        sendToAllTrackingChunk(te.getWorld(), te.xCoord >> 4, te.zCoord >> 4);
     }
 
     /**
@@ -352,7 +352,7 @@ public interface SimplePacket {
          * @return a {@code CompletableFuture} for each player representing their response
          */
         default Map<EntityPlayer, CompletableFuture<R>> sendToAllNear(TileEntity te, double radius) {
-            return sendToAllNear(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, radius);
+            return sendToAllNear(te.getWorld(), te.xCoord, te.yCoord, te.zCoord, radius);
         }
 
         /**
@@ -388,7 +388,7 @@ public interface SimplePacket {
          * @return a {@code CompletableFuture} for each player representing their response
          */
         default Map<EntityPlayer, CompletableFuture<R>> sendToAllTracking(TileEntity te) {
-            return sendToAllTrackingChunk(te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4);
+            return sendToAllTrackingChunk(te.getWorld(), te.xCoord >> 4, te.zCoord >> 4);
         }
 
         /**

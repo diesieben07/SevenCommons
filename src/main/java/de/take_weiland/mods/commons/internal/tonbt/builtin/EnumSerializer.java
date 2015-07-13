@@ -35,7 +35,7 @@ final class EnumSerializer<E extends Enum<E>> implements NBTSerializer.ForValue<
     @Override
     public E read(@Nonnull NBTBase nbt) {
         try {
-            return nbt.getId() == NBT.TAG_STRING ? Enum.valueOf(clazz, ((NBTTagString) nbt).func_150285_a_()) : null;
+            return nbt.getId() == NBT.TAG_STRING ? Enum.valueOf(clazz, ((NBTTagString) nbt).getString()) : null;
         } catch (IllegalArgumentException e) {
             return null;
         }

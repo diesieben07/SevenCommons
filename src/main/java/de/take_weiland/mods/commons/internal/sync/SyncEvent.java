@@ -193,7 +193,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
         public void send(Object obj) {
             done();
             TileEntity te = (TileEntity) obj;
-            Network.sendTo(Players.getTrackingChunk(te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4), this);
+            Network.sendTo(Players.getTrackingChunk(te.getWorld(), te.xCoord >> 4, te.zCoord >> 4), this);
         }
     }
 

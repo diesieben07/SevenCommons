@@ -25,7 +25,7 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      * @return the value of this property
      */
     default boolean booleanValue(ItemStack stack) {
-        return booleanValue(stack.getItemDamage());
+        return booleanValue(stack.getMetadata());
     }
 
     /**
@@ -58,7 +58,7 @@ public interface BooleanProperty extends MetadataProperty<Boolean> {
      * @return the same ItemStack, for convenience
      */
     default ItemStack apply(boolean value, ItemStack stack) {
-        stack.setItemDamage(toMeta(value, stack.getItemDamage()));
+        stack.setMetadata(toMeta(value, stack.getMetadata()));
         return stack;
     }
 

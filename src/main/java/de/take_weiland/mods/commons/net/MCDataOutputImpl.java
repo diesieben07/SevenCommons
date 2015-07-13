@@ -448,7 +448,7 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
         } else {
             ensureWritable(6); // 2 +2 + 1 + 1 (NBT needs at least 1 byte)
             writeShortNBC(Item.getIdFromItem(stack.getItem()));
-            writeShortNBC(stack.getItemDamage());
+            writeShortNBC(stack.getMetadata());
             writeByteNBC(stack.stackSize);
             writeNBT(stack.stackTagCompound);
         }

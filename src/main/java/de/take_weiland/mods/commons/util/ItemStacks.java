@@ -56,7 +56,7 @@ public final class ItemStacks {
     }
 
     private static boolean equalsImpl(ItemStack a, ItemStack b) {
-        return a.getItem() == b.getItem() && a.getItemDamage() == b.getItemDamage()
+        return a.getItem() == b.getItem() && a.getMetadata() == b.getMetadata()
                 && Objects.equal(a.stackTagCompound, b.stackTagCompound);
     }
 
@@ -70,7 +70,7 @@ public final class ItemStacks {
             return 0;
         } else {
             int result = stack.getItem().hashCode();
-            result = 31 * result + (stack.getItemDamage() << 16);
+            result = 31 * result + (stack.getMetadata() << 16);
             result = 31 * result + stack.stackSize;
             result = 31 * result + (stack.stackTagCompound != null ? stack.stackTagCompound.hashCode() : 0);
             return result;
@@ -125,7 +125,7 @@ public final class ItemStacks {
     }
 
     public static boolean is(@Nullable ItemStack stack, Item item, int meta) {
-        return stack != null && stack.getItem() == item && stack.getItemDamage() == meta;
+        return stack != null && stack.getItem() == item && stack.getMetadata() == meta;
     }
 
     public static boolean is(@Nullable ItemStack stack, Block block) {
@@ -133,7 +133,7 @@ public final class ItemStacks {
     }
 
     public static boolean is(@Nullable ItemStack stack, Block block, int meta) {
-        return stack != null && getBlock(stack) == block && stack.getItemDamage() == meta;
+        return stack != null && getBlock(stack) == block && stack.getMetadata() == meta;
     }
 
     @SuppressWarnings("unchecked")
@@ -141,7 +141,7 @@ public final class ItemStacks {
         MetadataProperty<T> prop = ((HasSubtypes<T>) item).subtypeProperty();
         for (T type : prop.values()) {
             ItemStack stack = new ItemStack(item);
-            stack.setItemDamage(prop.toMeta(type, 0));
+            stack.setMetadata(prop.toMeta(type, 0));
 
             String name = baseName + "." + type.subtypeName();
             GameRegistry.registerCustomItemStack(name, stack);

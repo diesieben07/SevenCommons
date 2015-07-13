@@ -60,11 +60,11 @@ public interface SimpleInventory extends IInventory, Iterable<ItemStack> {
     }
 
     @Override
-    default void openInventory() {
+    default void openChest() {
     }
 
     @Override
-    default void closeInventory() {
+    default void closeChest() {
     }
 
     @Override

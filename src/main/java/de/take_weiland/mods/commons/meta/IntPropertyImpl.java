@@ -36,7 +36,7 @@ final class IntPropertyImpl implements IntProperty, MetadataProperty<Integer> {
 
     @Override
     public int intValue(ItemStack stack) {
-        return intValue(stack.getItemDamage());
+        return intValue(stack.getMetadata());
     }
 
     @Override
@@ -46,7 +46,7 @@ final class IntPropertyImpl implements IntProperty, MetadataProperty<Integer> {
 
     @Override
     public ItemStack apply(int value, ItemStack stack) {
-        stack.setItemDamage(toMeta(value, stack.getItemDamage()));
+        stack.setMetadata(toMeta(value, stack.getMetadata()));
         return stack;
     }
 

@@ -37,7 +37,7 @@ public final class MetaBuilder {
      * @return a MetaBuilder
      */
     public static MetaBuilder create(ItemStack initialValue) {
-        return new MetaBuilder(initialValue.getItemDamage());
+        return new MetaBuilder(initialValue.getMetadata());
     }
 
     private MetaBuilder(int initialValue) {
@@ -97,7 +97,7 @@ public final class MetaBuilder {
      * @param stack the ItemStack
      */
     public void apply(ItemStack stack) {
-        stack.setItemDamage(build());
+        stack.setMetadata(build());
     }
 
     /**

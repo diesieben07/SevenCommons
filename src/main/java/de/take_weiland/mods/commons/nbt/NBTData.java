@@ -44,7 +44,7 @@ public final class NBTData {
      */
     @Nullable
     public static String readString(@Nullable NBTBase nbt) {
-        return isSerializedNull(nbt) ? null : ((NBTTagString) nbt).func_150285_a_();
+        return isSerializedNull(nbt) ? null : ((NBTTagString) nbt).getString();
     }
 
     @Nonnull
@@ -61,7 +61,7 @@ public final class NBTData {
         if (isSerializedNull(nbt)) {
             return null;
         } else {
-            return Block.getBlockFromName(((NBTTagString) nbt).func_150285_a_());
+            return Block.getBlockFromName(((NBTTagString) nbt).getString());
         }
     }
 
@@ -79,7 +79,7 @@ public final class NBTData {
         if (isSerializedNull(nbt)) {
             return null;
         } else {
-            return (Item) Item.itemRegistry.getObject(((NBTTagString) nbt).func_150285_a_());
+            return (Item) Item.itemRegistry.getObject(((NBTTagString) nbt).getString());
         }
     }
 
@@ -113,7 +113,7 @@ public final class NBTData {
             return null;
         } else {
             List<NBTBase> asList = NBT.asList((NBTTagList) nbt);
-            return new UUID(((NBTTagLong) asList.get(0)).func_150291_c(), ((NBTTagLong) asList.get(1)).func_150291_c());
+            return new UUID(((NBTTagLong) asList.get(0)).getLong(), ((NBTTagLong) asList.get(1)).getLong());
         }
     }
 
@@ -188,7 +188,7 @@ public final class NBTData {
         if (isSerializedNull(nbt)) {
             return null;
         } else {
-            return Enum.valueOf(clazz, ((NBTTagString) nbt).func_150285_a_());
+            return Enum.valueOf(clazz, ((NBTTagString) nbt).getString());
         }
     }
 
@@ -213,7 +213,7 @@ public final class NBTData {
             EnumSet<E> enumSet = EnumSet.noneOf(enumClass);
             List<NBTBase> list = NBT.asList(((NBTTagList) nbt));
             for (int i = list.size() - 1; i >= 0; i--) {
-                enumSet.add(Enum.valueOf(enumClass, ((NBTTagString) list.get(i)).func_150285_a_()));
+                enumSet.add(Enum.valueOf(enumClass, ((NBTTagString) list.get(i)).getString()));
             }
             return enumSet;
         }
@@ -233,7 +233,7 @@ public final class NBTData {
         if (isSerializedNull(nbt)) {
             return null;
         } else {
-            return BitSet.valueOf(((NBTTagByteArray) nbt).func_150292_c());
+            return BitSet.valueOf(((NBTTagByteArray) nbt).getByteArray());
         }
     }
 

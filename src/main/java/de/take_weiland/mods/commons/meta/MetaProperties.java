@@ -34,7 +34,7 @@ public final class MetaProperties {
      * @param v2 the value for the second property
      */
     public static <A, B> void apply(ItemStack stack, MetadataProperty<? super A> p1, A v1, MetadataProperty<? super B> p2, B v2) {
-        stack.setItemDamage(apply(stack.getItemDamage(), p1, v1, p2, v2));
+        stack.setMetadata(apply(stack.getMetadata(), p1, v1, p2, v2));
     }
 
     /**
@@ -77,7 +77,7 @@ public final class MetaProperties {
      * @param v3 the value for the third property
      */
     public static <A, B, C> void apply(ItemStack stack, MetadataProperty<? super A> p1, A v1, MetadataProperty<? super B> p2, B v2, MetadataProperty<? super C> p3, C v3) {
-        stack.setItemDamage(apply(stack.getItemDamage(), p1, v1, p2, v2, p3, v3));
+        stack.setMetadata(apply(stack.getMetadata(), p1, v1, p2, v2, p3, v3));
     }
 
     /**

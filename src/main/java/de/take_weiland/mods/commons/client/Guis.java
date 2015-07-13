@@ -68,7 +68,7 @@ public final class Guis {
      * @param color     the color
      */
     public static void drawInventoryName(IInventory inventory, int x, int y, int color) {
-        Minecraft.getMinecraft().fontRenderer.drawString(Inventories.getDisplayName(inventory), x, y, color);
+        Minecraft.getMinecraft().fontRendererObj.drawString(Inventories.getDisplayName(inventory), x, y, color);
     }
 
     private Guis() {

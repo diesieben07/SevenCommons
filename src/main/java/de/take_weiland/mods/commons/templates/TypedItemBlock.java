@@ -20,7 +20,7 @@ public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extend
     @Override
     public void getSubItems(Item item, CreativeTabs tab, List list) {
         //noinspection unchecked
-        HasSubtypes.getSubBlocksImpl((BLOCK) field_150939_a, list);
+        HasSubtypes.getSubBlocksImpl((BLOCK) blockInstance, list);
     }
 
     @Override
@@ -31,12 +31,12 @@ public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extend
     @Override
     public String getUnlocalizedName(ItemStack stack) {
         //noinspection unchecked
-        return field_150939_a.getUnlocalizedName() + "." + ((BLOCK) field_150939_a).subtypeProperty().value(stack).subtypeName();
+        return blockInstance.getUnlocalizedName() + "." + ((BLOCK) blockInstance).subtypeProperty().value(stack).subtypeName();
     }
 
     @Override
     public IIcon getIconFromDamage(int meta) {
-        return field_150939_a.getIcon(0, meta);
+        return blockInstance.getIcon(0, meta);
     }
 
 }

@@ -94,7 +94,7 @@ public interface MetadataProperty<T> {
      * @return the value of this property
      */
     default T value(ItemStack stack) {
-        return value(stack.getItemDamage());
+        return value(stack.getMetadata());
     }
 
     /**
@@ -131,7 +131,7 @@ public interface MetadataProperty<T> {
      * @return the same ItemStack, for convenience
      */
     default ItemStack apply(T value, ItemStack stack) {
-        stack.setItemDamage(toMeta(value, stack.getItemDamage()));
+        stack.setMetadata(toMeta(value, stack.getMetadata()));
         return stack;
     }
 

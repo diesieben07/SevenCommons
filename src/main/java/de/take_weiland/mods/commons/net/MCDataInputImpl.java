@@ -709,7 +709,7 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
                 while (id != 0) {
                     String name = readString();
                     NBTBase tag = SCReflector.instance.newNBTTag((byte) id);
-                    SCReflector.instance.load(nbt, this, 1, NBTSizeTracker.field_152451_a);
+                    SCReflector.instance.load(nbt, this, 1, NBTSizeTracker.INFINITE);
 
                     map.put(name, tag);
                     id = readByte();

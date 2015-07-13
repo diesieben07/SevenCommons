@@ -64,7 +64,7 @@ public final class Players {
      * @return true if the player is an operator
      */
     public static boolean isOp(GameProfile profile) {
-        return getSCM().func_152596_g(profile);
+        return getSCM().canSendCommands(profile);
     }
 
     /**
@@ -137,7 +137,7 @@ public final class Players {
      * @return the player entity or null if no such player was found
      */
     public static EntityPlayerMP forName(String name) {
-        return getSCM().func_152612_a(name);
+        return getSCM().getPlayerByUsername(name);
     }
 
     /**

@@ -38,7 +38,7 @@ public interface IntProperty extends MetadataProperty<Integer> {
      * @return the value of this property
      */
     default int intValue(ItemStack stack) {
-        return intValue(stack.getItemDamage());
+        return intValue(stack.getMetadata());
     }
 
     /**
@@ -58,7 +58,7 @@ public interface IntProperty extends MetadataProperty<Integer> {
      * @return the same ItemStack, for convenience
      */
     default ItemStack apply(int value, ItemStack stack) {
-        stack.setItemDamage(toMeta(value, stack.getItemDamage()));
+        stack.setMetadata(toMeta(value, stack.getMetadata()));
         return stack;
     }
 

@@ -83,10 +83,10 @@ public final class Blocks {
         checkPhase("Block");
 
         if (SCReflector.instance.getRawIconName(block) == null) {
-            block.setBlockTextureName(modId + ":" + baseName);
+            block.setTextureName(modId + ":" + baseName);
         }
         if (SCReflector.instance.getRawUnlocalizedName(block) == null) {
-            block.setBlockName(modId + "." + baseName);
+            block.setUnlocalizedName(modId + "." + baseName);
         }
 
         GameRegistry.registerBlock(block, getItemBlockClass(block, itemClass), baseName);

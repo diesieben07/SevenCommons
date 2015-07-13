@@ -63,7 +63,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public Boolean read(NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_BYTE && ((NBTTagByte) nbt).func_150290_f() == TRUE;
+            return nbt.getId() == NBT.TAG_BYTE && ((NBTTagByte) nbt).getByte() == TRUE;
         }
     }
 
@@ -77,7 +77,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public Byte read(NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_BYTE ? ((NBTTagByte) nbt).func_150290_f() : 0;
+            return nbt.getId() == NBT.TAG_BYTE ? ((NBTTagByte) nbt).getByte() : 0;
         }
     }
 
@@ -92,7 +92,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public Short read(NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_SHORT ? ((NBTTagShort) nbt).func_150289_e() : 0;
+            return nbt.getId() == NBT.TAG_SHORT ? ((NBTTagShort) nbt).getShort() : 0;
         }
     }
 
@@ -107,7 +107,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public Character read(NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_SHORT ? (char) ((NBTTagShort) nbt).func_150289_e() : 0;
+            return nbt.getId() == NBT.TAG_SHORT ? (char) ((NBTTagShort) nbt).getShort() : 0;
         }
     }
 
@@ -121,7 +121,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public Integer read(NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_INT ? ((NBTTagInt) nbt).func_150287_d() : 0;
+            return nbt.getId() == NBT.TAG_INT ? ((NBTTagInt) nbt).getInt() : 0;
         }
     }
 
@@ -136,7 +136,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public Long read(NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_LONG ? ((NBTTagLong) nbt).func_150291_c() : 0;
+            return nbt.getId() == NBT.TAG_LONG ? ((NBTTagLong) nbt).getLong() : 0;
         }
     }
 
@@ -151,7 +151,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public Float read(NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_FLOAT ? ((NBTTagFloat) nbt).func_150288_h() : 0f;
+            return nbt.getId() == NBT.TAG_FLOAT ? ((NBTTagFloat) nbt).getFloat() : 0f;
         }
     }
 
@@ -166,7 +166,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public Double read(NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_DOUBLE ? ((NBTTagDouble) nbt).func_150286_g() : 0d;
+            return nbt.getId() == NBT.TAG_DOUBLE ? ((NBTTagDouble) nbt).getDouble() : 0d;
         }
     }
 
@@ -181,7 +181,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
 
         @Override
         public CharSequence read(NBTBase nbt) {
-            return nbt.getId() == NBT.TAG_STRING ? ((NBTTagString) nbt).func_150285_a_() : null;
+            return nbt.getId() == NBT.TAG_STRING ? ((NBTTagString) nbt).getString() : null;
         }
     }
 

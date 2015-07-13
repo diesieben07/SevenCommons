@@ -24,7 +24,7 @@ public class SCItemBlock extends ItemBlock {
     }
 
     protected final void doSCPlaceFeatures(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int meta) {
-        if (stack.hasDisplayName() && field_150939_a.hasTileEntity(meta)) {
+        if (stack.hasDisplayName() && blockInstance.hasTileEntity(meta)) {
             TileEntity te = world.getTileEntity(x, y, z);
             if (te instanceof NameableInventory && ((NameableInventory) te).takeItemStackName(player, stack)) {
                 ((NameableInventory) te).setCustomName(stack.getDisplayName());

@@ -74,7 +74,7 @@ public final class Inventories {
      */
     @SideOnly(Side.CLIENT)
     public static String getDisplayName(IInventory inv) {
-        return inv.hasCustomInventoryName() ? inv.getInventoryName() : I18n.translate(inv.getInventoryName());
+        return inv.isCustomInventoryName() ? inv.getInventoryName() : I18n.translate(inv.getInventoryName());
     }
 
     /**
@@ -98,7 +98,7 @@ public final class Inventories {
      */
     public static void spillIfInventory(TileEntity te) {
         if (te instanceof IInventory) {
-            spill(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, (IInventory) te);
+            spill(te.getWorld(), te.xCoord, te.yCoord, te.zCoord, (IInventory) te);
         }
     }
 
@@ -108,7 +108,7 @@ public final class Inventories {
      * @param te the TileEntity
      */
     public static <T extends TileEntity & IInventory> void spill(T te) {
-        spill(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, te);
+        spill(te.getWorld(), te.xCoord, te.yCoord, te.zCoord, te);
     }
 
     /**

@@ -53,7 +53,7 @@ public final class Sides {
      * @return the logical side
      */
     public static Side sideOf(TileEntity tileEntity) {
-        return sideOf(tileEntity.getWorldObj());
+        return sideOf(tileEntity.getWorld());
     }
 
     /**

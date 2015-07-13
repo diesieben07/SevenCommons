@@ -40,7 +40,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
         if (playerInventoryX >= 0) {
             Containers.addPlayerInventory(this, player.inventory, playerInventoryX, playerInventoryY);
         }
-        inventory.openInventory();
+        inventory.openChest();
     }
 
     /**
@@ -110,6 +110,6 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 
     @Override
     public void onContainerClosed(EntityPlayer player) {
-        inventory.closeInventory();
+        inventory.closeChest();
     }
 }

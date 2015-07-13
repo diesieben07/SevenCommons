@@ -122,7 +122,7 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
     }
 
     @Override
-    public void closeInventory() {
+    public void closeChest() {
         if (stack.stackTagCompound != null) {
             stack.stackTagCompound.removeTag(NBT_UUID_KEY);
         }

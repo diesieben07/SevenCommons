@@ -118,7 +118,7 @@ public final class Packets {
      * @param entity the entity
      */
     public static void sendToAllTracking(Packet packet, Entity entity) {
-        checkNotClient(entity.worldObj).getEntityTracker().func_151247_a(entity, packet);
+        checkNotClient(entity.worldObj).getEntityTracker().sendToAllTrackingEntity(entity, packet);
     }
 
     /**
@@ -138,7 +138,7 @@ public final class Packets {
      * @param te     the TileEntity
      */
     public static void sendToAllTracking(Packet packet, TileEntity te) {
-        sendToAllTrackingChunk(packet, te.getWorldObj(), te.xCoord >> 4, te.zCoord >> 4);
+        sendToAllTrackingChunk(packet, te.getWorld(), te.xCoord >> 4, te.zCoord >> 4);
     }
 
     /**
@@ -227,7 +227,7 @@ public final class Packets {
      * @param radius the radius
      */
     public static void sendToAllNear(Packet packet, TileEntity te, double radius) {
-        sendToAllNear(packet, te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, radius);
+        sendToAllNear(packet, te.getWorld(), te.xCoord, te.yCoord, te.zCoord, radius);
     }
 
     private static WorldServer checkNotClient(World world) {

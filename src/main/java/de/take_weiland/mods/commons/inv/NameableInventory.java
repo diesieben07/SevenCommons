@@ -68,7 +68,7 @@ public interface NameableInventory extends IInventory {
     }
 
     @Override
-    default boolean hasCustomInventoryName() {
+    default boolean isCustomInventoryName() {
         return hasCustomName();
     }
 
@@ -82,7 +82,7 @@ public interface NameableInventory extends IInventory {
     default void readFromNBT(NBTTagCompound nbt) {
         NBTBase tag = nbt.getTag(Inventories.CUSTOM_NAME_KEY);
         if (tag != null && tag.getId() == NBT.TAG_STRING) {
-            setCustomName(((NBTTagString) tag).func_150285_a_());
+            setCustomName(((NBTTagString) tag).getString());
         }
     }
 }

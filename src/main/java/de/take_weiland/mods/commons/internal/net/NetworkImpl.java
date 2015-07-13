@@ -36,12 +36,12 @@ public final class NetworkImpl {
     // receiving
 
     static boolean handleServerCustomPacket(C17PacketCustomPayload mcPacket, EntityPlayerMP player) throws IOException {
-        String channelName = mcPacket.func_149559_c();
+        String channelName = mcPacket.getChannel();
         BiConsumer<? super byte[], ? super EntityPlayer> handler = channels.get(channelName);
         if (handler == null) {
             return false;
         } else {
-            handler.accept(mcPacket.func_149558_e(), player);
+            handler.accept(mcPacket.getData(), player);
             return true;
         }
     }
