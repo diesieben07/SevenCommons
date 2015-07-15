@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.inv;
 
 import de.take_weiland.mods.commons.nbt.NBT;
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -13,12 +12,9 @@ import net.minecraft.nbt.NBTTagString;
  * <p>An inventory which can be named.</p>
  * <p>If a {@code NameableInventory} is used in a Container it's name will be automatically synchronized with the client.</p>
  * <p>If you implement this on a TileEntity, it will automatically take the name of a renamed ItemStack if placed, override
- * {@link #takeItemStackName(EntityPlayer, ItemStack)} to control that behavior.
- * Keep in mind that this only applies if you either register your block using
- * {@link de.take_weiland.mods.commons.util.Blocks#init(Block, String) Blocks.init} or you use
- * {@link de.take_weiland.mods.commons.templates.SCItemBlock SCItemBlock} or a subclass as your ItemBlock class.</p>
+ * {@link #takeItemStackName(EntityPlayer, ItemStack)} to control that behavior.</p>
  *
- * <p>This implementation implements {@link IInventory#hasCustomInventoryName()} and {@link IInventory#getInventoryName()}
+ * <p>This implementation implements {@link IInventory#isCustomInventoryName()} and {@link IInventory#getInventoryName()}
  * to refer to the abstract methods in this class appropriately.</p>
  */
 public interface NameableInventory extends IInventory {

@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.tileentity;
 import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.inv.SimpleInventory;
-import de.take_weiland.mods.commons.util.Blocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -17,9 +16,7 @@ import java.util.function.Consumer;
 
 /**
  * <p>Basic implementation of a {@link net.minecraft.tileentity.TileEntity} with an Inventory.
- * <p>Note that this class implements {@link de.take_weiland.mods.commons.inv.NameableInventory}, so if you
- * use {@link Blocks#init} on your block (or
- * use {@link de.take_weiland.mods.commons.templates.SCItemBlock} as your custom ItemBlock class), this TileEntity
+ * <p>Note that this class implements {@link de.take_weiland.mods.commons.inv.NameableInventory}, so this TileEntity
  * will automatically take the name of a renamed ItemStack when placed. To control that behavior, override
  * {@link #takeItemStackName(EntityPlayer, ItemStack)}.</p>
  */

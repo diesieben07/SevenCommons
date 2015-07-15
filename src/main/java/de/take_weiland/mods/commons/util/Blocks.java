@@ -1,65 +1,40 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.base.Objects;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.internal.SCReflector;
-import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
 import de.take_weiland.mods.commons.meta.Subtype;
-import de.take_weiland.mods.commons.templates.SCItemBlock;
 import de.take_weiland.mods.commons.templates.TypedItemBlock;
 import net.minecraft.block.Block;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 import static de.take_weiland.mods.commons.util.Items.checkPhase;
 
 @ParametersAreNonnullByDefault
-public final class Blocks {
+public final class Blocks extends net.minecraft.init.Blocks {
 
     private Blocks() {
     }
 
     /**
-     * <p>Equivalent to {@link #init(net.minecraft.block.Block, String, Class, String)} using the currently active mod and a default ItemBlock class.</p>
+     * <p>Equivalent to {@link #init(Block, String, Class)} using a default ItemBlock class.</p>
      *
      * @param block    the Block instance
      * @param baseName base name for this block
      */
     public static void init(Block block, String baseName) {
-        init(block, baseName, getItemBlockClass(block, null));
-    }
-
-    /**
-     * <p>Equivalent to {@link #init(net.minecraft.block.Block, String, Class, String)} using a default ItemBlock class.</p>
-     *
-     * @param modId    Your ModId
-     * @param block    the Block instance
-     * @param baseName base name for this block
-     */
-    public static void init(String modId, Block block, String baseName) {
-        init(block, baseName, getItemBlockClass(block, null), modId);
-    }
-
-    /**
-     * <p>Equivalent to {@link #init(net.minecraft.block.Block, String, Class, String)} using the currently active mod.</p>
-     *
-     * @param block     the Block instance
-     * @param baseName  base name for this block
-     * @param itemClass the ItemBlock class to use
-     */
-    public static void init(Block block, String baseName, Class<? extends ItemBlock> itemClass) {
-        // check phase here already so that we don't fail with a NPE on activeModContainer instead
-        checkPhase("Block");
-        init(block, baseName, itemClass, Loader.instance().activeModContainer().getModId());
+        init(block, baseName, getItemBlockClass(block));
     }
 
     /**
@@ -67,20 +42,16 @@ public final class Blocks {
      * <ul>
      * <li>Sets the Block's texture to <tt>modId:baseName</tt>, unless it is already set</li>
      * <li>Sets the Block's unlocalized name to <tt>modId.baseName</tt>, unless it is already set</li>
-     * <li>Register the block with {@link cpw.mods.fml.common.registry.GameRegistry#registerBlock(net.minecraft.block.Block, Class, String, String)}</li>
-     * <li><i>TODO!</i></li>
+     * <li>Register the block with {@link GameRegistry#registerBlock(Block, Class, String)}</li>
+     * <li>If the Block implements {@link HasSubtypes}, register ItemStacks for all subtypes using {@code GameRegistry.registerCustomItemStack}.</li>
      * </ul>
-     * <p>The ItemBlock class provided should extend {@link de.take_weiland.mods.commons.templates.SCItemBlock} (resp.
-     * {@link de.take_weiland.mods.commons.templates.TypedItemBlock} for Blocks that implement {@link de.take_weiland.mods.commons.meta.HasSubtypes})
-     * to enable all features of SevenCommons for this Block.</p>
-     *
      * @param block     the Block instance
      * @param baseName  base name for this block
      * @param itemClass the ItemBlock class to use
-     * @param modId     Your ModId
      */
-    public static void init(Block block, String baseName, Class<? extends ItemBlock> itemClass, String modId) {
+    public static void init(Block block, String baseName, Class<? extends ItemBlock> itemClass) {
         checkPhase("Block");
+        String modId = Loader.instance().activeModContainer().getModId();
 
         if (SCReflector.instance.getRawIconName(block) == null) {
             block.setTextureName(modId + ":" + baseName);
@@ -89,7 +60,7 @@ public final class Blocks {
             block.setUnlocalizedName(modId + "." + baseName);
         }
 
-        GameRegistry.registerBlock(block, getItemBlockClass(block, itemClass), baseName);
+        GameRegistry.registerBlock(block, Objects.firstNonNull(itemClass, getItemBlockClass(block)), baseName);
 
         if (block instanceof HasSubtypes) {
             ItemStacks.registerSubstacks(baseName, getItem(block));
@@ -106,6 +77,10 @@ public final class Blocks {
         } else {
             throw new IllegalArgumentException("Not an ItemBlock");
         }
+    }
+
+    public static Block byID(int id) {
+        return Block.getBlockById(id);
     }
 
     /**
@@ -126,43 +101,29 @@ public final class Blocks {
     }
 
     /**
-     * <p>Generic implementation for {@link net.minecraft.block.Block#getSubBlocks(int, net.minecraft.creativetab.CreativeTabs, java.util.List)}.
+     * <p>Generic implementation for {@link Block#getSubBlocks(Item, CreativeTabs, List)}.
      * This method takes the {@link de.take_weiland.mods.commons.meta.HasSubtypes} interface into account.</p>
      *
      * @param block the Block instance
      * @param list  the list to add ItemStacks to
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static void getSubBlocksImpl(Block block, List list) {
+    public static void getSubBlocksImpl(Block block, List<ItemStack> list) {
         if (block instanceof HasSubtypes) {
-            // this should technically be <? extends Subtype> but Java has no way of doing this
-            MetadataProperty<Subtype> property = ((HasSubtypes<Subtype>) block).subtypeProperty();
-            for (Subtype type : property.values()) {
-                list.add(property.apply(type, new ItemStack(block)));
-            }
+            HasSubtypes.getSubBlocksImpl(block, list);
         } else {
             list.add(new ItemStack(block));
         }
     }
 
-    public static Block byID(int id) {
-        return Block.getBlockById(id);
+    private static <T extends Subtype> void getSubBlocksWithSubtypes(Block block, HasSubtypes<T> subtypes, List<ItemStack> list) {
+        MetadataProperty<T> property = subtypes.subtypeProperty();
+        for (T type : property.values()) {
+            list.add(property.apply(type, new ItemStack(block)));
+        }
     }
 
-    private static Class<? extends ItemBlock> getItemBlockClass(Block block, @Nullable Class<? extends ItemBlock> itemBlock) {
-        Class<? extends ItemBlock> defaultClass = getDefaultItemBlock(block);
-        if (itemBlock == null) {
-            return defaultClass;
-        }
-        if (!defaultClass.isAssignableFrom(itemBlock)) {
-            SevenCommons.LOGGER.warn(String.format("ItemBlock class %s should extend %s to enable all SevenCommons features!", itemBlock.getName(), defaultClass.getSimpleName()));
-        }
-
-        return itemBlock;
-    }
-
-    private static Class<? extends ItemBlock> getDefaultItemBlock(Block block) {
-        return block instanceof HasSubtypes ? TypedItemBlock.class : SCItemBlock.class;
+    private static Class<? extends ItemBlock> getItemBlockClass(Block block) {
+        return block instanceof HasSubtypes ? TypedItemBlock.class : ItemBlock.class;
     }
 
 }

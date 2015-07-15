@@ -50,6 +50,14 @@ public final class ASMHooks {
 
     private static final Map<IExtendedEntityProperties, IEEPSyncCompanion> ieepCompanions;
 
+    static {
+        if (FMLLaunchHandler.side().isClient()) {
+            ieepCompanions = new MapMaker().concurrencyLevel(2).makeMap();
+        } else {
+            ieepCompanions = new HashMap<>();
+        }
+    }
+
     @SideOnly(Side.CLIENT)
     public static void tickIEEPCompanionsClientSide() {
         ieepCompanions.forEach((props, companion) -> {
@@ -84,14 +92,6 @@ public final class ASMHooks {
         companion._sc$entity = entity;
         companion._sc$ident = identifier;
         ieepCompanions.put(props, companion);
-    }
-
-    static {
-        if (FMLLaunchHandler.side().isClient()) {
-            ieepCompanions = new MapMaker().concurrencyLevel(2).makeMap();
-        } else {
-            ieepCompanions = new HashMap<>();
-        }
     }
 
     public static final String GET_IEEP_COMPANION = "getIEEPCompanion";

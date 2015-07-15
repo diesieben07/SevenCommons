@@ -5,12 +5,13 @@ import de.take_weiland.mods.commons.meta.Subtype;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 
 import java.util.List;
 
-public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extends Subtype> extends SCItemBlock {
+public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extends Subtype> extends ItemBlock {
 
     public TypedItemBlock(Block block) {
         super(block);
@@ -39,4 +40,8 @@ public class TypedItemBlock<BLOCK extends Block & HasSubtypes<TYPE>, TYPE extend
         return blockInstance.getIcon(0, meta);
     }
 
+    @Override
+    public final String getUnlocalizedNameInefficiently(ItemStack stack) {
+        return getUnlocalizedName(stack);
+    }
 }
