@@ -144,14 +144,11 @@ public interface HasSubtypes<T extends Subtype> {
 
     /**
      * <p>An implementation for {@link Item#getSubItems(Item, CreativeTabs, List)}.</p>
-     * <p>The {@code list} parameter is intentionally declared as a raw-type to be able to call this method from the
-     * erased version in the Item class.</p>
      *
      * @param item the Item
      * @param list the List to add ItemStacks to
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> void getSubItemsImpl(ITEM item, List list) {
+    static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> void getSubItemsImpl(ITEM item, List<ItemStack> list) {
         MetadataProperty<TYPE> property = item.subtypeProperty();
 
         for (TYPE subtype : property.values()) {
@@ -161,18 +158,14 @@ public interface HasSubtypes<T extends Subtype> {
 
     /**
      * <p>An implementation for {@link Block#getSubBlocks(Item, CreativeTabs, List)}.</p>
-     * <p>The {@code list} parameter is intentionally declared as a raw-type to be able to call this method from the
-     * erased version in the Block class.</p>
      *
      * @param block the Block
      * @param list  the List to add ItemStacks to
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> void getSubBlocksImpl(BLOCK block, List list) {
+    static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> void getSubBlocksImpl(BLOCK block, List<ItemStack> list) {
         MetadataProperty<TYPE> property = block.subtypeProperty();
-
-        for (TYPE subtype : property.values()) {
-            list.add(new ItemStack(block, 1, property.toMeta(subtype, 0)));
+        for (TYPE type : property.values()) {
+            list.add(property.apply(type, new ItemStack(block)));
         }
     }
 
