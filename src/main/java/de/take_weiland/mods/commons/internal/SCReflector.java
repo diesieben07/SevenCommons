@@ -111,7 +111,7 @@ public interface SCReflector {
     @Invoke(method = SRGConstants.M_NBT_LOAD, srg = true)
     void load(NBTBase nbt, DataInput in, int depth, NBTSizeTracker tracker) throws IOException;
 
-    @Invoke(method = SRGConstants.M_NEW_NBT_TAG, target = NBTBase.class)
+    @Invoke(method = SRGConstants.M_NEW_NBT_TAG, srg = true, target = NBTBase.class)
     NBTBase newNBTTag(byte id);
 
     @Construct
