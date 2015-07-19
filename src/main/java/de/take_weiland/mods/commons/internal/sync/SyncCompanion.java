@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.internal.sync;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.Syncer;
+import net.minecraft.entity.player.EntityPlayerMP;
 
 /**
  * <p>Base class for @Sync companion</p>
@@ -22,6 +23,8 @@ public abstract class SyncCompanion {
      * @return the OutputStream that is being written to, might be null
      */
     public abstract SyncEvent check(Object instance, boolean isSuperCall);
+
+    public abstract SyncEvent forceUpdate(Object instance, boolean isSuperCall, EntityPlayerMP player);
 
     public abstract int applyChanges(Object instance, ChangeIterator values);
 

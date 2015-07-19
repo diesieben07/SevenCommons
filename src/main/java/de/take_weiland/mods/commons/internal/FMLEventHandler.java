@@ -2,12 +2,14 @@ package de.take_weiland.mods.commons.internal;
 
 import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.util.Scheduler;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.launchwrapper.Launch;
 
@@ -29,6 +31,11 @@ public final class FMLEventHandler {
                 current.stackTagCompound.removeTag(INV_IN_USE_KEY);
             }
         }
+    }
+
+    @SubscribeEvent
+    public void playerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        ForgeEventHandler.forceIEEPUpdate((EntityPlayerMP) event.player, event.player);
     }
 
     @SubscribeEvent

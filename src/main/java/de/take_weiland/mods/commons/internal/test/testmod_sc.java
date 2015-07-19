@@ -56,20 +56,23 @@ public class testmod_sc {
                                 }
                             }, Scheduler.server());
                 }
-//                TestTE te = (TestTE) world.getTileEntity(par2, par3, par4);
-//                if (sideOf(world).isServer()) {
-//                    player.addChatMessage(new ChatComponentText("old val: " + te.test));
-//                    te.test = String.valueOf(world.rand.nextFloat());
-//                    player.addChatMessage(new ChatComponentText("new val: " + te.test));
-//                } else {
-//                    player.addChatMessage(new ChatComponentText("on client: " + te.test));
-//                }
-                PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
-                if (sideOf(world).isClient()) {
-                    player.addChatMessage(new ChatComponentText("On client: " + props.getSomeData()));
+                TestTE te = (TestTE) world.getTileEntity(par2, par3, par4);
+                if (sideOf(world).isServer()) {
+                    player.addChatMessage(new ChatComponentText("old val: " + te.test));
+                    te.test = String.valueOf(world.rand.nextFloat());
+                    player.addChatMessage(new ChatComponentText("new val: " + te.test));
                 } else {
-                    props.setSomeData(String.valueOf(world.rand.nextFloat()));
+                    player.addChatMessage(new ChatComponentText("on client: " + te.test));
                 }
+//                PlayerProps props = (PlayerProps) player.getExtendedProperties("testmod_sc");
+//                System.out.println(sideOf(world));
+//                if (sideOf(world).isClient()) {
+//                    player.addChatMessage(new ChatComponentText("On client: " + props.getSomeData()));
+//                } else {
+//                    player.addChatMessage(new ChatComponentText("On server bef: " + props.getSomeData()));
+//                    props.setSomeData(String.valueOf(world.rand.nextFloat()));
+//                    player.addChatMessage(new ChatComponentText("On server aft: " + props.getSomeData()));
+//                }
 
                 return true;
             }

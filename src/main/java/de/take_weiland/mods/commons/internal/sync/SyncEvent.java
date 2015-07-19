@@ -114,6 +114,11 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
 
     public abstract void send(Object obj);
 
+    public void send(EntityPlayerMP player) {
+        done();
+        Network.sendToPlayer(player, this);
+    }
+
     @Override
     public byte[] write() {
         MCDataOutput out = Network.newOutput();

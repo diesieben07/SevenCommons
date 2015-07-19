@@ -2,13 +2,24 @@ package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.IWorldAccess;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.IExtendedEntityProperties;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.event.world.WorldEvent;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author diesieben07
@@ -23,6 +34,40 @@ public final class ForgeEventHandler implements IWorldAccess {
                 ((NameableInventory) te).setCustomName(event.itemInHand.getDisplayName());
             }
         }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void startTracking(PlayerEvent.StartTracking event) {
+        SyncCompanion companion = ((SyncedObjectProxy) event.target)._sc$getCompanion();
+        EntityPlayerMP player = (EntityPlayerMP) event.entityPlayer;
+
+        if (companion != null) {
+            companion.forceUpdate(event.target, false, player);
+        }
+        forceIEEPUpdate(player, event.target);
+    }
+
+    public static void forceIEEPUpdate(EntityPlayerMP player, Entity target) {
+        SyncCompanion companion;
+        Collection<IExtendedEntityProperties> ieeps = ((EntityProxy) target)._sc$getIEEPMap().values();
+        for (IExtendedEntityProperties ieep : ieeps) {
+            companion = ASMHooks.getIEEPCompanion(ieep);
+            if (companion != null) {
+                companion.forceUpdate(ieep, false, player);
+            }
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void startTrackingChunk(ChunkWatchEvent.Watch event) {
+        Chunk chunk = event.player.worldObj.getChunkFromChunkCoords(event.chunk.chunkXPos, event.chunk.chunkZPos);
+        //noinspection unchecked
+        ((Map<ChunkPosition, TileEntity>) chunk.chunkTileEntityMap).forEach((key, te) -> {
+            SyncCompanion companion = ((SyncedObjectProxy) te)._sc$getCompanion();
+            if (companion != null) {
+                companion.forceUpdate(te, false, event.player);
+            }
+        });
     }
 
     @SubscribeEvent

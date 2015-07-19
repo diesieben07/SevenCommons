@@ -5,10 +5,7 @@ import com.google.common.collect.MapMaker;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.internal.sync.IEEPSyncCompanion;
-import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
-import de.take_weiland.mods.commons.internal.sync.SyncCompanions;
-import de.take_weiland.mods.commons.internal.sync.SyncEvent;
+import de.take_weiland.mods.commons.internal.sync.*;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
 import de.take_weiland.mods.commons.inv.Containers;
@@ -153,6 +150,10 @@ public final class ASMHooks {
                 if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
                     new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
                 }
+            }
+            SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();
+            if (companion != null) {
+                companion.forceUpdate(companion, false, (EntityPlayerMP) listener);
             }
         }
     }

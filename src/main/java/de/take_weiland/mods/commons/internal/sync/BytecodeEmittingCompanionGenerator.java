@@ -61,6 +61,7 @@ public final class BytecodeEmittingCompanionGenerator {
         makeFields();
         makeCLInit();
         makeApplyChanges();
+        makeForceUpdate();
 
         makeCheck();
 
@@ -286,6 +287,88 @@ public final class BytecodeEmittingCompanionGenerator {
         gen.loadLocal(eventSlot);
         gen.loadArg(0);
         gen.invokeVirtual(syncEventType, getMethod("void send(Object)"));
+
+        gen.mark(end);
+        gen.loadLocal(eventSlot);
+        gen.returnValue();
+        gen.endMethod();
+    }
+
+    private void makeForceUpdate() {
+        Method method = getMethod("de.take_weiland.mods.commons.internal.sync.SyncEvent forceUpdate(Object, boolean, net.minecraft.entity.player.EntityPlayerMP)");
+        GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
+        gen.visitCode();
+
+        Type myType = Type.getObjectType(className);
+        Type superType = Type.getType(superClass);
+        Type objectType = Type.getType(Object.class);
+        Type syncEventType = Type.getType(SyncEvent.class);
+        Type syncEventSubclass;
+        if (TileEntity.class.isAssignableFrom(clazz)) {
+            syncEventSubclass = Type.getType(SyncEvent.ForTE.class);
+        } else if (Entity.class.isAssignableFrom(clazz)) {
+            syncEventSubclass = Type.getType(SyncEvent.ForEntity.class);
+        } else if (Container.class.isAssignableFrom(clazz)) {
+            syncEventSubclass = Type.getType(SyncEvent.ForContainer.class);
+        } else if (IExtendedEntityProperties.class.isAssignableFrom(clazz)) {
+            syncEventSubclass = Type.getType(SyncEvent.ForIEEP.class);
+        } else {
+            throw new IllegalStateException("@Sync in invalid class " + clazz.getName());
+        }
+        Type syncerType = Type.getType(Syncer.class);
+        Type syncerChangeType = Type.getType(Syncer.Change.class);
+        Type changedValueType = Type.getType(ChangedValue.class);
+        Type propertyAccessType = Type.getType(PropertyAccess.class);
+
+        int eventSlot = gen.newLocal(syncEventType);
+        int changeSlot = gen.newLocal(changedValueType);
+
+        if (hasDefaultSuper()) {
+            gen.push((String) null);
+            gen.storeLocal(eventSlot);
+        } else {
+            gen.loadThis();
+            gen.loadArg(0);
+            gen.push(true);
+            gen.loadArg(2);
+            gen.invokeConstructor(superType, method);
+            gen.storeLocal(eventSlot);
+        }
+
+        gen.newInstance(syncEventSubclass);
+        gen.dup();
+        gen.loadArg(0);
+        gen.invokeConstructor(syncEventSubclass, getMethod("void <init>(Object)"));
+        gen.storeLocal(eventSlot);
+
+        int fieldIndex = 0;
+
+        for (Property<?> property : properties.keySet()) {
+            gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
+            gen.loadArg(0);
+            gen.getStatic(myType, getPropertyID(property, PROP_ACC), propertyAccessType);
+            gen.loadThis();
+            gen.getStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
+
+            gen.invokeInterface(syncerType, new Method("forceUpdate", syncerChangeType,
+                    new Type[]{objectType, propertyAccessType, objectType, propertyAccessType}));
+            gen.storeLocal(changeSlot);
+
+            gen.loadLocal(eventSlot);
+            gen.push(firstID + fieldIndex);
+            gen.loadLocal(changeSlot);
+            gen.invokeVirtual(syncEventType, new Method("add", VOID_TYPE, new Type[]{INT_TYPE, changedValueType}));
+
+            fieldIndex++;
+        }
+
+        Label end = new Label();
+        gen.loadArg(1);
+        gen.ifZCmp(NE, end);
+
+        gen.loadLocal(eventSlot);
+        gen.loadArg(2);
+        gen.invokeVirtual(syncEventType, getMethod("void send(net.minecraft.entity.player.EntityPlayerMP)"));
 
         gen.mark(end);
         gen.loadLocal(eventSlot);
