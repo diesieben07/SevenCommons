@@ -1,5 +1,5 @@
 language: java
 jdk: oraclejdk8
-install:
-script: gradle build
+install: chmod +x gradlew
+script: gradlew build
 sudo: false
