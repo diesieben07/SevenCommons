@@ -19,7 +19,7 @@ import static de.take_weiland.mods.commons.util.Items.checkPhase;
 @ParametersAreNonnullByDefault
 public final class Blocks extends net.minecraft.init.Blocks {
 
-    private Blocks() {
+    Blocks() {
     }
 
     /**
