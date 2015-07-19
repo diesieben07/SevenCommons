@@ -80,6 +80,35 @@ public interface MetadataProperty<T> {
     }
 
     /**
+     * <p>Create a new MetaBuilder with an initial value of 0.</p>
+     *
+     * @return a MetaBuilder
+     */
+    static MetaBuilder newBuilder() {
+        return new MetaBuilder(0);
+    }
+
+    /**
+     * <p>Create a new MetaBuilder with the given initial value.</p>
+     *
+     * @param initialValue the initial value
+     * @return a MetaBuilder
+     */
+    static MetaBuilder newBuilder(int initialValue) {
+        return new MetaBuilder(initialValue);
+    }
+
+    /**
+     * <p>Create a new MetaBuilder with the initial value represented by the ItemStack's damage value.</p>
+     *
+     * @param initialValue the ItemStack to use as the initial value
+     * @return a MetaBuilder
+     */
+    static MetaBuilder newBuilder(ItemStack initialValue) {
+        return new MetaBuilder(initialValue.getMetadata());
+    }
+
+    /**
      * <p>Get the value of this property as represented by the given metadata value.</p>
      *
      * @param metadata the metadata

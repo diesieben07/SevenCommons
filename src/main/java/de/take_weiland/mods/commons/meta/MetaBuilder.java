@@ -7,40 +7,18 @@ import net.minecraft.world.World;
  * <p>A builder for easy combination of metadata properties into a single value.</p>
  * <p>Builder instances can be reused with the {@link #reset(int)} method.</p>
  *
+ * <p>Example usage:<pre>
+ *     <code>int meta = MetadataProperty.newBuilder()
+ *                          .set(someProperty, value)
+ *                          .set(otherProperty, value)
+ *                          .toMeta()</code>
+ * </pre></p>
+ *
  * @author diesieben07
  */
 public final class MetaBuilder {
 
-    /**
-     * <p>Create a new MetaBuilder with an initial value of 0.</p>
-     *
-     * @return a MetaBuilder
-     */
-    public static MetaBuilder create() {
-        return new MetaBuilder(0);
-    }
-
-    /**
-     * <p>Create a new MetaBuilder with the given initial value.</p>
-     *
-     * @param initialValue the initial value
-     * @return a MetaBuilder
-     */
-    public static MetaBuilder create(int initialValue) {
-        return new MetaBuilder(initialValue);
-    }
-
-    /**
-     * <p>Create a new MetaBuilder with the initial value represented by the ItemStack's damage value.</p>
-     *
-     * @param initialValue the ItemStack to use as the initial value
-     * @return a MetaBuilder
-     */
-    public static MetaBuilder create(ItemStack initialValue) {
-        return new MetaBuilder(initialValue.getMetadata());
-    }
-
-    private MetaBuilder(int initialValue) {
+    MetaBuilder(int initialValue) {
         meta = initialValue;
     }
 
@@ -87,7 +65,7 @@ public final class MetaBuilder {
      *
      * @return the metadata result
      */
-    public int build() {
+    public int toMeta() {
         return meta;
     }
 
@@ -97,7 +75,7 @@ public final class MetaBuilder {
      * @param stack the ItemStack
      */
     public void apply(ItemStack stack) {
-        stack.setMetadata(build());
+        stack.setMetadata(toMeta());
     }
 
     /**
@@ -110,7 +88,7 @@ public final class MetaBuilder {
      * @param notifyFlags the notify flags to pass to {@link net.minecraft.world.World#setBlockMetadataWithNotify(int, int, int, int, int)} (see there for documentation)
      */
     public void apply(World world, int x, int y, int z, int notifyFlags) {
-        world.setBlockMetadataWithNotify(x, y, z, build(), notifyFlags);
+        world.setBlockMetadataWithNotify(x, y, z, toMeta(), notifyFlags);
     }
 
     /**
@@ -122,7 +100,7 @@ public final class MetaBuilder {
      * @param z     the z coordinate
      */
     public void apply(World world, int x, int y, int z) {
-        world.setBlockMetadataWithNotify(x, y, z, build(), 3);
+        world.setBlockMetadataWithNotify(x, y, z, toMeta(), 3);
     }
 
     /**
