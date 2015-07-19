@@ -27,6 +27,12 @@ enum FluidStackSyncer implements Syncer<FluidStack, FluidStack, FluidStack> {
     }
 
     @Override
+    public Change<FluidStack> forceUpdate(Object obj, PropertyAccess<FluidStack> property, Object cObj, PropertyAccess<FluidStack> companion) {
+        return newValue(Fluids.clone(property.get(obj)));
+    }
+
+
+    @Override
     public Class<FluidStack> companionType() {
         return FluidStack.class;
     }

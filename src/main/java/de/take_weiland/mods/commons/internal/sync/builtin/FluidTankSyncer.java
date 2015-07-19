@@ -28,6 +28,12 @@ enum FluidTankSyncer implements Syncer<FluidTank, FluidStack, FluidStack> {
     }
 
     @Override
+    public Change<FluidStack> forceUpdate(Object obj, PropertyAccess<FluidTank> property, Object cObj, PropertyAccess<FluidStack> companion) {
+        return newValue(Fluids.clone(property.get(obj).getFluid()));
+    }
+
+
+    @Override
     public Class<FluidStack> companionType() {
         return FluidStack.class;
     }
@@ -63,6 +69,13 @@ enum FluidTankSyncer implements Syncer<FluidTank, FluidStack, FluidStack> {
                 return newValue(newVal);
             }
         }
+
+        @Override
+        public Change<StackAndCapacity> forceUpdate(Object obj, PropertyAccess<FluidTank> property, Object cObj, PropertyAccess<StackAndCapacity> companion) {
+            FluidTank tank = property.get(obj);
+            return newValue(new StackAndCapacity(Fluids.clone(tank.getFluid()), tank.getCapacity()));
+        }
+
 
         @Override
         public Class<StackAndCapacity> companionType() {

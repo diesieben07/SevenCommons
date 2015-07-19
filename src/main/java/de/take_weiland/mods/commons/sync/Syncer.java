@@ -53,6 +53,16 @@ public interface Syncer<VAL, COM, DATA> {
      */
     Change<DATA> check(Object obj, PropertyAccess<VAL> property, Object cObj, PropertyAccess<COM> companion);
 
+    /**
+     * <p>Forcibly create a change that contains the current state of the field, without doing any delta updates.</p>
+     *
+     * @param obj       the object to access the property
+     * @param property  the the property
+     * @param cObj      the object to access the companion
+     * @param companion the the companion property
+     * @return {@link #newValue(Object)}
+     */
+    Change<DATA> forceUpdate(Object obj, PropertyAccess<VAL> property, Object cObj, PropertyAccess<COM> companion);
 
     /**
      * <p>Encode the change value into the output stream.</p>
@@ -139,6 +149,11 @@ public interface Syncer<VAL, COM, DATA> {
                 companion.set(cObj, value);
                 return newValue(value);
             }
+        }
+
+        @Override
+        default Change<VAL> forceUpdate(Object obj, PropertyAccess<VAL> property, Object cObj, PropertyAccess<VAL> companion) {
+            return newValue(property.get(obj));
         }
 
         @Override

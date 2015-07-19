@@ -27,6 +27,12 @@ enum ItemStackSyncer implements Syncer<ItemStack, ItemStack, ItemStack> {
     }
 
     @Override
+    public Change<ItemStack> forceUpdate(Object obj, PropertyAccess<ItemStack> property, Object cObj, PropertyAccess<ItemStack> companion) {
+        return newValue(ItemStacks.clone(property.get(obj)));
+    }
+
+
+    @Override
     public void encode(ItemStack itemStack, MCDataOutput out) {
         out.writeItemStack(itemStack);
     }
