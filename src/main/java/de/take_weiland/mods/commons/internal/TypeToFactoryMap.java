@@ -45,7 +45,7 @@ public abstract class TypeToFactoryMap<F, FR> {
 
     public final synchronized void register(Class<?> base, F factory) {
         checkNotFrozen();
-        map.computeIfAbsent(base, k -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+        map.computeIfAbsent(base, k -> ConcurrentHashMap.newKeySet())
                 .add(factory);
     }
 
