@@ -1,18 +1,26 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.Collections2;
 import com.mojang.authlib.GameProfile;
+import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.UsernameCache;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.ServerConfigurationManager;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +44,54 @@ public final class Players {
             throw new IllegalStateException("Expected a serverside player!");
         }
         return (EntityPlayerMP) player;
+    }
+
+    private static final MethodHandle inventoryCraftingContainer;
+    private static final MethodHandle containerPlayerThePlayer;
+    private static final MethodHandle slotCraftingPlayer;
+
+    static {
+        try {
+            Field field = InventoryCrafting.class.getDeclaredField(MCPNames.field(SRGConstants.F_INV_CRAFTING_EVENT_HANDLER));
+            field.setAccessible(true);
+            inventoryCraftingContainer = MethodHandles.publicLookup().unreflectGetter(field);
+
+            field = ContainerPlayer.class.getDeclaredField(MCPNames.field(SRGConstants.F_CONTAINER_PLAYER_THE_PLAYER));
+            field.setAccessible(true);
+            containerPlayerThePlayer = MethodHandles.publicLookup().unreflectGetter(field);
+
+            field = SlotCrafting.class.getDeclaredField(MCPNames.field(SRGConstants.F_SLOT_CRAFTING_THE_PLAYER));
+            field.setAccessible(true);
+            slotCraftingPlayer = MethodHandles.publicLookup().unreflectGetter(field);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * <p>Tries to determine the player who is using the given {@code InventoryCrafting}. This method might fail for
+     * non-vanilla crafting tables added by mods. In that case {@code null} will be returned.</p>
+     *
+     * @param inventory the InventoryCrafting
+     * @return the player using the inventory or null
+     */
+    @Nullable
+    public static EntityPlayer getCraftingPlayer(InventoryCrafting inventory) {
+        try {
+            Container container = (Container) inventoryCraftingContainer.invokeExact(inventory);
+
+            if (container instanceof ContainerPlayer) {
+                return (EntityPlayer) containerPlayerThePlayer.invokeExact((ContainerPlayer) container);
+            } else if (container instanceof ContainerWorkbench) {
+                return (EntityPlayer) slotCraftingPlayer.invokeExact((SlotCrafting) container.getSlot(0));
+            } else {
+                return null;
+            }
+        } catch (ClassCastException cce) {
+            return null;
+        } catch (Throwable t) {
+            throw Throwables.propagate(t);
+        }
     }
 
     /**
