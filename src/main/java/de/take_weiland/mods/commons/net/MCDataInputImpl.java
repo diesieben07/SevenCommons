@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.ChunkPosition;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -753,6 +754,16 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
         int z = (int) (((l & Z_NUM_MASK) | -(l & Z_SIGN_MASK)) >> 34L);
 
         return new ChunkPosition(x, y, z);
+    }
+
+    @Override
+    public ChunkCoordIntPair readChunkCoords() {
+        long l = readLong();
+        if (l == BufferConstants.NULL_COORDS) {
+            return null;
+        } else {
+            return new ChunkCoordIntPair((int) l, (int) (l >>> 32));
+        }
     }
 
     @Override

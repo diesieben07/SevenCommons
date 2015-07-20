@@ -6,6 +6,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.ChunkPosition;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -177,10 +178,21 @@ public interface MCDataInput extends ByteArrayDataInput {
 
     /**
      * <p>Read a set of coordinates from the buffer.</p>
+     * <p>This method reads a long value. If it is equal to {@code 1 << 63}, {@code null} is returned. Otherwise
+     * the {@code x}, {@code y} and {@code z} components are read as specified in {@link MCDataOutput#writeCoords(int, int, int)}.</p>
      *
-     * @return BlockCoordinates
+     * @return a new ChunkPosition object
      */
     ChunkPosition readCoords();
+
+    /**
+     * <p>Read a set of chunk coordinates from the buffer.</p>
+     * <p>This method reads a long value. If it is equal to {@code 1 << 63}, {@code null} is returned. Otherwise
+     * the {@code x}, and {@code z} components are read as specified in {@link MCDataOutput#writeChunkCoords(int, int)}.</p>
+     *
+     * @return a new {@code ChunkCoordIntPair} object
+     */
+    ChunkCoordIntPair readChunkCoords();
 
     /**
      * <p>Read a nullable boxed Boolean from the buffer.</p>

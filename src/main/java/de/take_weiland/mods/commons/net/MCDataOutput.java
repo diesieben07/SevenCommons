@@ -7,13 +7,13 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.ChunkPosition;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.ParametersAreNullableByDefault;
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.BitSet;
 import java.util.EnumSet;
@@ -101,7 +101,7 @@ public interface MCDataOutput extends ByteArrayDataOutput {
     void writeBlock(Block block);
 
     /**
-     * <p>Writes the coordinates to this stream.</p>
+     * <p>Writes the coordinates to the stream.</p>
      *
      * @param x the x coordinate
      * @param y the y coordinate
@@ -109,21 +109,41 @@ public interface MCDataOutput extends ByteArrayDataOutput {
      */
     void writeCoords(int x, int y, int z);
 
-    default void writeCoords(ChunkPosition pos) {
-        if (pos == null) {
-            writeLong(1L << 63L);
-        } else {
-            writeCoords(pos.chunkPosX, pos.chunkPosY, pos.chunkPosZ);
-        }
-    }
+    /**
+     * <p>Writes the coordinates to the stream.</p>
+     * <p>If {@code pos} is null, a long {@code 1 &lt;&lt; 63} will be written. Otherwise a long value will be written
+     * as if by the {@link #writeCoords(int, int, int)} method.</p>
+     *
+     * @param pos the chunk position
+     */
+    void writeCoords(ChunkPosition pos);
 
-    default void writeCoords(ChunkCoordinates pos) {
-        if (pos == null) {
-            writeLong(1L << 63L);
-        } else {
-            writeCoords(pos.posX, pos.posY, pos.posZ);
-        }
-    }
+    /**
+     * <p>Writes the coordinates to the stream.</p>
+     * <p>If {@code pos} is null, a long {@code 1 &lt;&lt; 63} will be written. Otherwise a long value will be written
+     * as if by the {@link #writeCoords(int, int, int)} method.</p>
+     *
+     * @param pos the chunk position
+     */
+    void writeCoords(ChunkCoordinates pos);
+
+    /**
+     * <p>Writes the chunk coordinates to the stream.</p>
+     * <p>This method writes a long value {@code (long) chunkX | (long) chunkZ << 32}.</p>
+     *
+     * @param chunkX the x coordinate of the chunk
+     * @param chunkZ the z coordinate of the chunk
+     */
+    void writeChunkCoords(int chunkX, int chunkZ);
+
+    /**
+     * <p>Writes the coordinates to the stream.</p>
+     * <p>If {@code pos} is null, a long {@code 1 &lt;&lt;63} will be written. Otherwise a long value will be written
+     * as if by the {@link #writeChunkCoords(int, int)} method.</p>
+     *
+     * @param pos the chunk coordinates
+     */
+    void writeChunkCoords(ChunkCoordIntPair pos);
 
     /**
      * <p>Write the given UUID to this stream.</p>

@@ -17,6 +17,8 @@ final class BufferConstants {
     static final int BOX_NONNULL = 1;
     static final long UUID_NULL_MSB = 0xF000;
 
+    static final long NULL_COORDS = 1L << 63L;
+
     private BufferConstants() {
     }
 }

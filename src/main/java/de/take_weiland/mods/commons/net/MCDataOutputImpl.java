@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.ChunkPosition;
 import net.minecraftforge.fluids.FluidStack;
 import org.jetbrains.annotations.NotNull;
@@ -433,12 +434,16 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
 
     @Override
     public void writeString(String s) {
-        int len = s.length();
-        ensureWritable(positiveVarIntLen(len) + len << 1);
+        if (s == null) {
+            writeNegativeVarInt(-1);
+        } else {
+            int len = s.length();
+            ensureWritable(positiveVarIntLen(len) + len << 1);
 
-        writeVarIntNBC(len);
-        for (int i = 0; i < len; i++) {
-            writeShortNBC(s.charAt(i));
+            writeVarIntNBC(len);
+            for (int i = 0; i < len; i++) {
+                writeShortNBC(s.charAt(i));
+            }
         }
     }
 
@@ -508,6 +513,38 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
                 | ((long) y & Y_MASK) << 26
                 | ((long) z & X_Z_MASK) << 34L;
         writeLong(l);
+    }
+
+    @Override
+    public void writeCoords(ChunkPosition pos) {
+        if (pos == null) {
+            writeLong(BufferConstants.NULL_COORDS);
+        } else {
+            writeCoords(pos.chunkPosX, pos.chunkPosY, pos.chunkPosZ);
+        }
+    }
+
+    @Override
+    public void writeCoords(ChunkCoordinates pos) {
+        if (pos == null) {
+            writeLong(BufferConstants.NULL_COORDS);
+        } else {
+            writeCoords(pos.posX, pos.posY, pos.posZ);
+        }
+    }
+
+    @Override
+    public void writeChunkCoords(int chunkX, int chunkZ) {
+        writeLong((long) chunkX | (long) chunkZ << 32);
+    }
+
+    @Override
+    public void writeChunkCoords(ChunkCoordIntPair pos) {
+        if (pos == null) {
+            writeLong(BufferConstants.NULL_COORDS);
+        } else {
+            writeLong((long) pos.chunkXPos | (long) pos.chunkZPos << 32);
+        }
     }
 
     @Override
