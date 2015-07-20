@@ -39,4 +39,7 @@ public interface SRGConstants {
     String M_TILE_ENTITY_WRITE_NBT = "func_145841_b";
     String M_TRANSLATE_KEY_PRIVATE = "func_135026_c";
     String F_CURRENT_LOCALE = "field_135049_a";
+    String F_INV_CRAFTING_EVENT_HANDLER = "field_70465_c";
+    String F_CONTAINER_PLAYER_THE_PLAYER = "field_82862_h";
+    String F_SLOT_CRAFTING_THE_PLAYER = "field_75238_b";
 }
