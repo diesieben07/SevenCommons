@@ -1,14 +1,15 @@
 package de.take_weiland.mods.commons.net;
 
-import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.util.BlockPos;
-import de.take_weiland.mods.commons.util.EnumUtils;
 import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.nbt.NBT;
+import de.take_weiland.mods.commons.util.EnumUtils;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.world.ChunkPosition;
 import net.minecraftforge.fluids.FluidStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -498,9 +499,15 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
         writePositiveVarInt(block == null ? BufferConstants.BLOCK_NULL_ID : Block.getIdFromBlock(block));
     }
 
+    private static final int X_Z_MASK = (1 << 26) - 1;
+    private static final int Y_MASK = (1 << 8) - 1;
+
     @Override
     public void writeCoords(int x, int y, int z) {
-        BlockPos.toByteStream(this, x, y, z);
+        long l = (long) x & X_Z_MASK
+                | ((long) y & Y_MASK) << 26
+                | ((long) z & X_Z_MASK) << 34L;
+        writeLong(l);
     }
 
     @Override

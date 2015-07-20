@@ -6,7 +6,6 @@ import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.Syncer;
-import de.take_weiland.mods.commons.util.BlockPos;
 import de.take_weiland.mods.commons.util.EnumUtils;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -14,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.ChunkPosition;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import org.apache.commons.lang3.ArrayUtils;
@@ -733,10 +733,26 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
         return id == BufferConstants.BLOCK_NULL_ID ? null : Block.getBlockById(id);
     }
 
+    private static final long X_NUM_MASK = (1 << 25) - 1;
+    private static final long X_SIGN_MASK = 1 << 25;
+    private static final long Y_MASK = ((1 << 8) - 1) << 26;
+    private static final long Z_NUM_MASK = ((1L << 25L) - 1L) << 34L;
+    private static final long Z_SIGN_MASK = 1L << 59;
+
     @Override
-    public BlockPos readCoords() {
-//		return BlockPos.streamSerializer().read(this);
-        throw new UnsupportedOperationException();
+    public ChunkPosition readCoords() {
+        // x and z use 26 bits each
+        // y uses 8 bits
+        long l = readLong();
+
+        // first the number part, extend the possible sign bit using "-" operator
+        int x = (int) ((l & X_NUM_MASK) | -(l & X_SIGN_MASK));
+        // simply mask and shift Y, it's unsigned
+        int y = (int) ((l & Y_MASK) >>> 26);
+        // same as for x, but also shift left by 34, use >> instead of >>> to preserve sign bit
+        int z = (int) (((l & Z_NUM_MASK) | -(l & Z_SIGN_MASK)) >> 34L);
+
+        return new ChunkPosition(x, y, z);
     }
 
     @Override

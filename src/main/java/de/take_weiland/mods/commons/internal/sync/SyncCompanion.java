@@ -20,7 +20,7 @@ public abstract class SyncCompanion {
      *
      * @param instance    the actual object
      * @param isSuperCall if this is a super call from an extending companion (used to prevent sending the packet prematurely)
-     * @return the OutputStream that is being written to, might be null
+     * @return the SyncEvent or null if nothing changed
      */
     public abstract SyncEvent check(Object instance, boolean isSuperCall);
 

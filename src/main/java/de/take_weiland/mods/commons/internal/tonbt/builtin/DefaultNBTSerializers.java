@@ -7,6 +7,9 @@ import de.take_weiland.mods.commons.nbt.NBTSerializerFactory;
 import de.take_weiland.mods.commons.reflect.Property;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
+import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.world.ChunkPosition;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 
@@ -41,6 +44,18 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
             result = ForDouble.INSTANCE;
         } else if (CharSequence.class.isAssignableFrom(raw)) {
             result = ForCharSeq.INSTANCE;
+        } else if (raw == ItemStack.class) {
+            result = ForItemStack.INSTANCE;
+        } else if (raw == FluidStack.class) {
+            result = ForFluidStack.INSTANCE;
+        } else if (FluidTank.class.isAssignableFrom(raw)) {
+            result = ForFluidTank.INSTANCE;
+        } else if (raw == ChunkPosition.class) {
+            result = ChunkPositionSerializer.INSTANCE;
+        } else if (raw == ChunkCoordinates.class) {
+            result = ChunkCoordinatesSerializer.INSTANCE;
+        } else if (raw == ChunkCoordIntPair.class) {
+            result = ChunkCoordIntPairSerializer.INSTANCE;
         } else if (raw.isEnum()) {
             result = EnumSerializer.get(raw);
         } else {
@@ -62,7 +77,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
 
         @Override
-        public Boolean read(NBTBase nbt) {
+        public Boolean read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_BYTE && ((NBTTagByte) nbt).getByte() == TRUE;
         }
     }
@@ -76,7 +91,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
 
         @Override
-        public Byte read(NBTBase nbt) {
+        public Byte read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_BYTE ? ((NBTTagByte) nbt).getByte() : 0;
         }
     }
@@ -91,7 +106,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
 
         @Override
-        public Short read(NBTBase nbt) {
+        public Short read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_SHORT ? ((NBTTagShort) nbt).getShort() : 0;
         }
     }
@@ -106,7 +121,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
 
         @Override
-        public Character read(NBTBase nbt) {
+        public Character read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_SHORT ? (char) ((NBTTagShort) nbt).getShort() : 0;
         }
     }
@@ -120,7 +135,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
 
         @Override
-        public Integer read(NBTBase nbt) {
+        public Integer read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_INT ? ((NBTTagInt) nbt).getInt() : 0;
         }
     }
@@ -135,7 +150,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
 
         @Override
-        public Long read(NBTBase nbt) {
+        public Long read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_LONG ? ((NBTTagLong) nbt).getLong() : 0;
         }
     }
@@ -150,7 +165,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
 
         @Override
-        public Float read(NBTBase nbt) {
+        public Float read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_FLOAT ? ((NBTTagFloat) nbt).getFloat() : 0f;
         }
     }
@@ -165,7 +180,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
 
         @Override
-        public Double read(NBTBase nbt) {
+        public Double read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_DOUBLE ? ((NBTTagDouble) nbt).getDouble() : 0d;
         }
     }
@@ -180,7 +195,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
 
         @Override
-        public CharSequence read(NBTBase nbt) {
+        public CharSequence read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_STRING ? ((NBTTagString) nbt).getString() : null;
         }
     }
@@ -190,12 +205,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         INSTANCE;
 
         @Override
-        public ItemStack read(NBTBase nbt) {
+        public ItemStack read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_COMPOUND ? ItemStack.loadItemStackFromNBT((NBTTagCompound) nbt) : null;
         }
 
         @Override
-        public NBTBase write(ItemStack value) {
+        public NBTBase write(@Nonnull ItemStack value) {
             return value.writeToNBT(new NBTTagCompound());
         }
     }
@@ -205,12 +220,12 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         INSTANCE;
 
         @Override
-        public FluidStack read(NBTBase nbt) {
+        public FluidStack read(@Nonnull NBTBase nbt) {
             return nbt.getId() == NBT.TAG_COMPOUND ? FluidStack.loadFluidStackFromNBT((NBTTagCompound) nbt) : null;
         }
 
         @Override
-        public NBTBase write(FluidStack value) {
+        public NBTBase write(@Nonnull FluidStack value) {
             return value.writeToNBT(new NBTTagCompound());
         }
     }
@@ -228,7 +243,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
 
         @Override
-        public NBTBase write(FluidTank value) {
+        public NBTBase write(@Nonnull FluidTank value) {
             return value.writeToNBT(new NBTTagCompound());
         }
     }

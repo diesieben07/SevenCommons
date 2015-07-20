@@ -6,6 +6,8 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.world.ChunkPosition;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.ParametersAreNullableByDefault;
@@ -100,14 +102,28 @@ public interface MCDataOutput extends ByteArrayDataOutput {
 
     /**
      * <p>Writes the coordinates to this stream.</p>
-     * <p>This method writes the coordinates in the order x, y, z. The x and z coordinates are written as if by the
-     * {@link #writeInt(int)} method. The y coordinate is written as if by the {@link #writeByte(int)} method.</p>
      *
      * @param x the x coordinate
      * @param y the y coordinate
      * @param z the z coordinate
      */
     void writeCoords(int x, int y, int z);
+
+    default void writeCoords(ChunkPosition pos) {
+        if (pos == null) {
+            writeLong(1L << 63L);
+        } else {
+            writeCoords(pos.chunkPosX, pos.chunkPosY, pos.chunkPosZ);
+        }
+    }
+
+    default void writeCoords(ChunkCoordinates pos) {
+        if (pos == null) {
+            writeLong(1L << 63L);
+        } else {
+            writeCoords(pos.posX, pos.posY, pos.posZ);
+        }
+    }
 
     /**
      * <p>Write the given UUID to this stream.</p>

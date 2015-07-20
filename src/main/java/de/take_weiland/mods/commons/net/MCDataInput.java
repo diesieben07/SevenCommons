@@ -1,11 +1,12 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataInput;
-import de.take_weiland.mods.commons.util.BlockPos;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.world.ChunkPosition;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
@@ -179,7 +180,7 @@ public interface MCDataInput extends ByteArrayDataInput {
      *
      * @return BlockCoordinates
      */
-    BlockPos readCoords();
+    ChunkPosition readCoords();
 
     /**
      * <p>Read a nullable boxed Boolean from the buffer.</p>
