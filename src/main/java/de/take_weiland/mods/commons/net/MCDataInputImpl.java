@@ -25,6 +25,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.Map;
@@ -36,7 +38,7 @@ import static com.google.common.base.Preconditions.checkPositionIndexes;
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.ChangeIterator {
+class MCDataInputImpl extends InputStream implements MCDataInput, ReadableByteChannel, SyncCompanion.ChangeIterator {
 
     private final byte[] buf;
     private final int maxLen;
@@ -53,6 +55,11 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
 
     @Override
     public InputStream asInputStream() {
+        return this;
+    }
+
+    @Override
+    public ReadableByteChannel asByteChannel() {
         return this;
     }
 
@@ -123,12 +130,29 @@ class MCDataInputImpl extends InputStream implements MCDataInput, SyncCompanion.
     public void close() {
     }
 
+    @Override
+    public boolean isOpen() {
+        return true;
+    }
+
     // actual IO
 
     final void checkAvailable(int bytes) {
         if (maxLen - pos < bytes) {
             throw new IllegalStateException("Read past end of buffer");
         }
+    }
+
+    @Override
+    public int read(ByteBuffer dst) throws IOException {
+        int available = maxLen - pos;
+        if (available == 0) {
+            return -1;
+        }
+        int toTransfer = Math.min(dst.remaining(), available);
+        dst.put(buf, pos, toTransfer);
+        pos += toTransfer;
+        return toTransfer;
     }
 
     @Override

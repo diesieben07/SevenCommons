@@ -25,7 +25,7 @@ import java.util.UUID;
  * <p>This interface is mostly intended for network communication purposes and <i>not</i> for saving data to disk.
  * Additionally this interface specifies <b>Little Endian</b> byte order, violating the contract of the DataOutput interface,
  * to offer better performance on most systems.</p>
- * <p>Instances of this interfaces can be obtained using {@link Network#newDataOutput()}.</p>
+ * <p>Instances of this interface can be obtained using {@link Network#newOutput()}.</p>
  *
  * @author diesieben07
  */
@@ -498,5 +498,12 @@ public interface MCDataOutput extends ByteArrayDataOutput {
      * @return an OutputStream
      */
     OutputStream asOutputStream();
+
+    /**
+     * <p>Get a {@code WritableByteChannel} view of this stream. The created channel writes through to this stream.</p>
+     *
+     * @return a WritableByteChannel
+     */
+    WritableByteChannel asByteChannel();
 
 }

@@ -13,6 +13,7 @@ import net.minecraftforge.fluids.FluidStack;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.InputStream;
+import java.nio.channels.ReadableByteChannel;
 import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -65,6 +66,13 @@ public interface MCDataInput extends ByteArrayDataInput {
      * @return an InputStream
      */
     InputStream asInputStream();
+
+    /**
+     * <p>Get a {@code ReadableByteChannel} view of this stream. The created channel reads through to this stream.</p>
+     *
+     * @return a ReadableByteChannel
+     */
+    ReadableByteChannel asByteChannel();
 
     /**
      * <p>Read a VarInt from the buffer.</p>

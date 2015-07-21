@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkPositionIndexes;
 /**
  * @author diesieben07
  */
-final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
+final class MCDataOutputImpl extends OutputStream implements MCDataOutput, WritableByteChannel {
 
     private boolean locked = false;
     private byte[] buf;
@@ -53,6 +53,11 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
 
     @Override
     public OutputStream asOutputStream() {
+        return this;
+    }
+
+    @Override
+    public WritableByteChannel asByteChannel() {
         return this;
     }
 
@@ -114,6 +119,20 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
                 numRead += read;
             }
         }
+    }
+
+    @Override
+    public synchronized int write(ByteBuffer src) throws IOException {
+        int toWrite = src.remaining();
+        ensureWritable(toWrite);
+        src.get(buf, count, toWrite);
+        count += toWrite;
+        return toWrite;
+    }
+
+    @Override
+    public boolean isOpen() {
+        return true;
     }
 
     final void ensureWritable(int bytesToWrite) {
@@ -593,6 +612,7 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput {
                 int numBytes = 1 + (numEnums >>> 3);
                 ensureWritable(numBytes);
                 int off = count;
+                byte[] buf = this.buf;
 
                 for (E e : enumSet) {
                     int ord = e.ordinal() + 1;
