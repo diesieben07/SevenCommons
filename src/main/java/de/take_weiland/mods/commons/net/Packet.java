@@ -1,9 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.net.BaseModPacket;
-import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
-import de.take_weiland.mods.commons.internal.net.ResponseNettyVersion;
+import de.take_weiland.mods.commons.internal.net.*;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
 import java.lang.annotation.ElementType;
@@ -25,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author diesieben07
  */
-public interface Packet extends BaseModPacket, SimplePacket {
+public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
 
     /**
      * <p>Encode this packet to the output stream.</p>
@@ -50,12 +49,12 @@ public interface Packet extends BaseModPacket, SimplePacket {
 
     @Override
     default void sendToServer() {
-        Network.sendToServer((BaseNettyPacket) this);
+        Network.sendToServer(this);
     }
 
     @Override
     default void sendTo(EntityPlayerMP player) {
-        Network.sendToPlayer(player, (BaseNettyPacket) this);
+        Network.sendToPlayer(player, this);
     }
 
     /**
@@ -101,4 +100,18 @@ public interface Packet extends BaseModPacket, SimplePacket {
 
     }
 
+    @Override
+    default void _sc$handle(EntityPlayer player) {
+        PacketToChannelMap.getData(this).handler.accept(this, player);
+    }
+
+    @Override
+    default net.minecraft.network.Packet _sc$encodeToPlayer(EntityPlayerMP player) {
+        return NetworkImpl.makePacketToClient(this);
+    }
+
+    @Override
+    default net.minecraft.network.Packet _sc$encode() {
+        return NetworkImpl.makePacketToServer(this);
+    }
 }

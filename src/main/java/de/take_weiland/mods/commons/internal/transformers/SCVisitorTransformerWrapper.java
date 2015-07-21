@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
-import de.take_weiland.mods.commons.internal.transformers.net.PacketTransformer;
 import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
 import de.take_weiland.mods.commons.internal.transformers.sync.*;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.EntityNBTHook;
@@ -39,6 +38,5 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
 
         // packet stuff
         addEntry(SimplePacketWithResponseTransformer::new, "de/take_weiland/mods/commons/net/SimplePacket$WithResponse");
-        addEntry(PacketTransformer::new, "de/take_weiland/mods/commons/net/Packet");
     }
 }

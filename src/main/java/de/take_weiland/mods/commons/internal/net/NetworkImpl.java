@@ -3,8 +3,6 @@ package de.take_weiland.mods.commons.internal.net;
 import com.google.common.collect.ImmutableMap;
 import cpw.mods.fml.common.LoaderState;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.Network;
@@ -57,31 +55,14 @@ public final class NetworkImpl {
         }
     }
 
-    public static final String HANDLE_SIMPLE_PACKET = "handleSimplePacketDirect";
-
-    public static void handleSimplePacketDirect(Packet packet, EntityPlayer player) {
-        PacketToChannelMap.getData(packet).handler.accept(packet, player);
-    }
-
-    public static final String MAKE_PKT_TO_CLIENT = "makePacketToClient";
-
     public static net.minecraft.network.Packet makePacketToClient(Packet packet) {
         SimplePacketData<?> data = PacketToChannelMap.getData(packet);
         return new S3FPacketCustomPayload(data.channel, encodePacket(packet, data));
     }
 
-    public static final String MAKE_PKT_TO_SERVER = "makePacketToServer";
-
-    @SideOnly(Side.CLIENT)
     public static net.minecraft.network.Packet makePacketToServer(Packet packet) {
         SimplePacketData<?> data = PacketToChannelMap.getData(packet);
-        return new C17PacketCustomPayload(data.channel, encodePacket(packet, data));
-    }
-
-    public static final String MAKE_PKT_TO_SERVER_INV = "makePacketToServerInvalid";
-
-    public static net.minecraft.network.Packet makePacketToServerInvalid(Packet packet) {
-        throw new IllegalStateException("Tried to send packet to the server on the server");
+        return SevenCommons.proxy.makeC17Packet(data.channel, encodePacket(packet, data));
     }
 
     private static byte[] encodePacket(Packet packet, SimplePacketData<?> data) {
