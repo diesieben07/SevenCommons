@@ -22,7 +22,7 @@ public final class ToClientEncoder extends ChannelOutboundHandlerAdapter {
         if (msg instanceof BaseNettyPacket) {
             byte[] data = ((BaseNettyPacket) msg)._sc$encodeToPlayer(player);
             String channel = ((BaseNettyPacket) msg)._sc$channel();
-            ctx.write(new S3FPacketCustomPayload(channel, data));
+            ctx.write(new S3FPacketCustomPayload(channel, data), promise);
         } else {
             ctx.write(msg, promise);
         }

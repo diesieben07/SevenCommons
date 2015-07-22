@@ -21,7 +21,7 @@ public final class ToServerEncoder extends ChannelOutboundHandlerAdapter {
         if (msg instanceof BaseNettyPacket) {
             byte[] data = ((BaseNettyPacket) msg)._sc$encode();
             String channel = ((BaseNettyPacket) msg)._sc$channel();
-            ctx.write(new C17PacketCustomPayload(channel, data));
+            ctx.write(new C17PacketCustomPayload(channel, data), promise);
         } else {
             ctx.write(msg, promise);
         }
