@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.play.server.S3FPacketCustomPayload;
 
 /**
  * @author diesieben07
@@ -19,7 +20,9 @@ public final class ToClientEncoder extends ChannelOutboundHandlerAdapter {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if (msg instanceof BaseNettyPacket) {
-            ctx.write(((BaseNettyPacket) msg)._sc$encodeToPlayer(player), promise);
+            byte[] data = ((BaseNettyPacket) msg)._sc$encodeToPlayer(player);
+            String channel = ((BaseNettyPacket) msg)._sc$channel();
+            ctx.write(new S3FPacketCustomPayload(channel, data));
         } else {
             ctx.write(msg, promise);
         }

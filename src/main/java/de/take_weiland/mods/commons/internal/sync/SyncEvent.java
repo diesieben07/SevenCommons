@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.net.*;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.Syncer;
@@ -20,7 +21,7 @@ import java.util.List;
 /**
  * @author diesieben07
  */
-public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPacket.UsingCustomPayload, Runnable {
+public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNettyPacket, Runnable {
 
     public static final String CHANNEL = "SC|Sync";
 
@@ -120,7 +121,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
     }
 
     @Override
-    public byte[] write() {
+    public byte[] _sc$encode() {
         MCDataOutput out = Network.newOutput();
 
         writeMetaInfoToStream(out);
@@ -135,12 +136,12 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, RawPack
     }
 
     @Override
-    public String channel() {
+    public String _sc$channel() {
         return CHANNEL;
     }
 
     @Override
-    public void handle(EntityPlayer player) {
+    public void _sc$handle(EntityPlayer player) {
         Scheduler.client().execute(this);
     }
 

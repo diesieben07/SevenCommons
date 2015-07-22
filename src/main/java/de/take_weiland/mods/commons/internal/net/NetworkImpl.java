@@ -3,6 +3,8 @@ package de.take_weiland.mods.commons.internal.net;
 import com.google.common.collect.ImmutableMap;
 import cpw.mods.fml.common.LoaderState;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.Network;
@@ -55,17 +57,7 @@ public final class NetworkImpl {
         }
     }
 
-    public static net.minecraft.network.Packet makePacketToClient(Packet packet) {
-        SimplePacketData<?> data = PacketToChannelMap.getData(packet);
-        return new S3FPacketCustomPayload(data.channel, encodePacket(packet, data));
-    }
-
-    public static net.minecraft.network.Packet makePacketToServer(Packet packet) {
-        SimplePacketData<?> data = PacketToChannelMap.getData(packet);
-        return SevenCommons.proxy.makeC17Packet(data.channel, encodePacket(packet, data));
-    }
-
-    private static byte[] encodePacket(Packet packet, SimplePacketData<?> data) {
+    public static byte[] encodePacket(Packet packet, SimplePacketData<?> data) {
         MCDataOutput out = Network.newOutput(packet.expectedSize() + 1);
         out.writeByte(data.packetID);
         packet.writeTo(out);
@@ -104,6 +96,7 @@ public final class NetworkImpl {
         insertHandler(pipeline, new SCMessageHandlerServer(handler.playerEntity));
     }
 
+    @SideOnly(Side.CLIENT)
     public static void handleClientsideConnection(FMLNetworkEvent.ClientConnectedToServerEvent event) {
         NetHandlerPlayClient handler = (NetHandlerPlayClient) event.handler;
         ChannelPipeline pipeline = handler.getNetworkManager().channel().pipeline();

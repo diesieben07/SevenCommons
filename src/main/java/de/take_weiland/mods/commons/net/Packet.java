@@ -106,12 +106,12 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
     }
 
     @Override
-    default net.minecraft.network.Packet _sc$encodeToPlayer(EntityPlayerMP player) {
-        return NetworkImpl.makePacketToClient(this);
+    default byte[] _sc$encode() {
+        return NetworkImpl.encodePacket(this, PacketToChannelMap.getData(this));
     }
 
     @Override
-    default net.minecraft.network.Packet _sc$encode() {
-        return NetworkImpl.makePacketToServer(this);
+    default String _sc$channel() {
+        return PacketToChannelMap.getData(this).channel;
     }
 }

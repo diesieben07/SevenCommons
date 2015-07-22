@@ -1,12 +1,9 @@
 package de.take_weiland.mods.commons.internal.net;
 
-import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.Packet;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.play.server.S3FPacketCustomPayload;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -34,28 +31,21 @@ public final class ResponseNettyVersion<R extends Packet.Response> implements Ba
     }
 
     @Override
-    public net.minecraft.network.Packet _sc$encodeToPlayer(EntityPlayerMP player) {
-        SimplePacketData.WithResponse<Packet.WithResponse<R>, R> data = PacketToChannelMap.getData(original);
-        return new S3FPacketCustomPayload(data.channel, encodeToBytes(data));
-    }
-
-    @Override
-    public net.minecraft.network.Packet _sc$encode() {
-        SimplePacketData.WithResponse<Packet.WithResponse<R>, R> data = PacketToChannelMap.getData(original);
-        return SevenCommons.proxy.makeC17Packet(data.channel, encodeToBytes(data));
-    }
-
-    private byte[] encodeToBytes(SimplePacketData.WithResponse<Packet.WithResponse<R>, R> data) {
+    public byte[] _sc$encode() {
         int uniqueId = ResponseSupport.nextID();
         ResponseSupport.register(uniqueId, future);
 
-
         MCDataOutput out = Network.newOutput(original.expectedSize() + 2);
-        out.writeByte(data.packetID);
+        out.writeByte(PacketToChannelMap.getData(original).packetID);
         out.writeByte(uniqueId);
 
         original.writeTo(out);
 
         return out.toByteArray();
+    }
+
+    @Override
+    public String _sc$channel() {
+        return PacketToChannelMap.getData(original).channel;
     }
 }

@@ -70,10 +70,10 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
             } else {
                 P packet = constructor.apply(in, player);
                 R response = handler.apply(packet, player);
-                BaseNettyPacket responseWrap = new RawPacket.UsingCustomPayload() {
+                BaseNettyPacket responseWrap = new BaseNettyPacket() {
 
                     @Override
-                    public byte[] write() {
+                    public byte[] _sc$encode() {
                         MCDataOutput out = Network.newOutput(response.expectedSize() + 5);
                         out.writeByte(id);
                         out.writeInt(ResponseSupport.toResponse(uniqueID));
@@ -82,7 +82,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
                     }
 
                     @Override
-                    public void handle(EntityPlayer player) {
+                    public void _sc$handle(EntityPlayer player) {
                         // this should never happen
                         // if we are on a local, direct connection the response itself should be handling
                         // see ResponseNettyVersion
@@ -90,7 +90,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
                     }
 
                     @Override
-                    public String channel() {
+                    public String _sc$channel() {
                         return channelFinal;
                     }
                 };
