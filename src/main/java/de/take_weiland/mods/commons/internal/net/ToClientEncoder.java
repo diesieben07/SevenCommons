@@ -12,6 +12,7 @@ import net.minecraft.network.play.server.S3FPacketCustomPayload;
 public final class ToClientEncoder extends ChannelOutboundHandlerAdapter {
 
     private final EntityPlayerMP player;
+    private static final int MAX_SIZE = 0x1FFF9A;
 
     public ToClientEncoder(EntityPlayerMP player) {
         this.player = player;
@@ -22,7 +23,11 @@ public final class ToClientEncoder extends ChannelOutboundHandlerAdapter {
         if (msg instanceof BaseNettyPacket) {
             byte[] data = ((BaseNettyPacket) msg)._sc$encodeToPlayer(player);
             String channel = ((BaseNettyPacket) msg)._sc$channel();
-            ctx.write(new S3FPacketCustomPayload(channel, data), promise);
+            if (data.length > MAX_SIZE) {
+                NetworkImpl.writeMultipartPacket(channel, data, ctx, promise, MAX_SIZE, S3FPacketCustomPayload::new);
+            } else {
+                ctx.write(new S3FPacketCustomPayload(channel, data), promise);
+            }
         } else {
             ctx.write(msg, promise);
         }

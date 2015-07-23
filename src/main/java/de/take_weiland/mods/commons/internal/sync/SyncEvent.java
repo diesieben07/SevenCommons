@@ -63,6 +63,8 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
     private static void readAndApply(byte[] payload, EntityPlayer player) {
         MCDataInput in = Network.newInput(payload);
 
+        player = Players.getClient();
+
         int type = in.readByte();
         SyncedObjectProxy obj;
         try {
@@ -127,6 +129,9 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
         writeMetaInfoToStream(out);
 
         for (ChangedValue<?> change : changes) {
+            if (change == null) {
+                break;
+            }
             out.writeVarInt(change.fieldId);
             change.writeData(out);
         }

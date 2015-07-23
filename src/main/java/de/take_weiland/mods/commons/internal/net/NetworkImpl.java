@@ -6,12 +6,12 @@ import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.Packet;
 import de.take_weiland.mods.commons.util.Players;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelPipeline;
+import io.netty.channel.*;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -33,28 +34,91 @@ public final class NetworkImpl {
 
     static Map<String, BiConsumer<? super byte[], ? super EntityPlayer>> channels = new ConcurrentHashMap<>();
 
+    private static final String MULTIPART_CHANNEL = "SevenCommons|MP";
+    private static final int MULTIPART_PREFIX = 0;
+    private static final int MULTIPART_DATA = 1;
+
     // receiving
 
-    static boolean handleServerCustomPacket(C17PacketCustomPayload mcPacket, EntityPlayerMP player) throws IOException {
+    static boolean handleServerCustomPacket(C17PacketCustomPayload mcPacket, EntityPlayerMP player, PartTracker tracker) throws IOException {
         String channelName = mcPacket.getChannel();
         BiConsumer<? super byte[], ? super EntityPlayer> handler = channels.get(channelName);
-        if (handler == null) {
-            return false;
-        } else {
+        if (handler != null) {
             handler.accept(mcPacket.getData(), player);
             return true;
+        } else if (channelName.equals(MULTIPART_CHANNEL)) {
+            handleMultipartPacket(mcPacket.getData(), tracker, player);
+            return true;
+        } else {
+            return false;
         }
     }
 
-    static boolean handleClientCustomPacket(S3FPacketCustomPayload mcPacket) throws IOException {
+    static boolean handleClientCustomPacket(S3FPacketCustomPayload mcPacket, PartTracker tracker) throws IOException {
         String channelName = mcPacket.func_149169_c();
         BiConsumer<? super byte[], ? super EntityPlayer> handler = channels.get(channelName);
-        if (handler == null) {
-            return false;
-        } else {
+        if (handler != null) {
             handler.accept(mcPacket.func_149168_d(), Players.getClient());
             return true;
+        } else if (channelName.equals(MULTIPART_CHANNEL)) {
+            handleMultipartPacket(mcPacket.func_149168_d(), tracker, Players.getClient());
+            return true;
+        } else {
+            return false;
         }
+    }
+
+    private static void handleMultipartPacket(byte[] data, PartTracker tracker, EntityPlayer player) throws IOException {
+        if (data[0] == MULTIPART_PREFIX) {
+            MCDataInput in = Network.newInput(data, 1, data.length - 1);
+            String channel = in.readString();
+            int len = in.readVarInt();
+            tracker.start(channel, len);
+        } else {
+            tracker.onPart(data);
+            byte[] complete = tracker.checkDone();
+            if (complete != null) {
+                String channel = tracker.channel();
+                try {
+                    channels.get(channel).accept(complete, player);
+                } catch (NullPointerException e) {
+                    throw new IOException("Unknown channel in multipart packet " + channel);
+                }
+            }
+        }
+    }
+
+    private static int positiveVarIntLen(int i) {
+        // divide by 7 and round up see http://stackoverflow.com/a/7446742
+        // actually ((32 - Integer.nOLZ(i)) + 6) / 7
+        return Math.max(1, 38 - Integer.numberOfLeadingZeros(i) / 7);
+    }
+
+    static void writeMultipartPacket(String channel, byte[] data, ChannelHandlerContext ctx, ChannelPromise promise, int maxSize, BiFunction<String, byte[], ? extends net.minecraft.network.Packet> cstr) {
+        int channelLen = channel.length();
+        int dataLen = data.length;
+        MCDataOutput out = Network.newOutput(1 + positiveVarIntLen(channelLen) + (channelLen << 1) + positiveVarIntLen(dataLen));
+        out.writeByte(MULTIPART_PREFIX);
+        out.writeString(channel);
+        out.writeVarInt(dataLen);
+
+        ctx.write(cstr.apply(MULTIPART_CHANNEL, out.backingArray()));
+
+        maxSize--; // need one byte prefix
+
+        int parts = (dataLen + (maxSize - 1)) / maxSize; // divide by maxSize and round up
+        for (int i = 0; i < (parts - 1); i++) {
+            byte[] dataThisPart = new byte[maxSize + 1];
+            dataThisPart[0] = MULTIPART_DATA;
+            System.arraycopy(data, i * maxSize, dataThisPart, 1, maxSize);
+            ctx.write(cstr.apply(MULTIPART_CHANNEL, dataThisPart));
+        }
+
+        int leftover = dataLen - (parts - 1) * maxSize;
+        byte[] dataThisPart = new byte[leftover + 1];
+        dataThisPart[0] = MULTIPART_DATA;
+        System.arraycopy(data, (parts - 1) * maxSize, dataThisPart, 1, leftover);
+        ctx.write(cstr.apply(MULTIPART_CHANNEL, dataThisPart), promise);
     }
 
     public static byte[] encodePacket(Packet packet, SimplePacketData<?> data) {

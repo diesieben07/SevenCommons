@@ -426,7 +426,7 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput, Writa
     private static int positiveVarIntLen(int i) {
         // divide by 7 and round up see http://stackoverflow.com/a/7446742
         // actually ((32 - Integer.nOLZ(i)) + 6) / 7
-        return (38 - Integer.numberOfLeadingZeros(i)) / 7;
+        return Math.max(1, 38 - Integer.numberOfLeadingZeros(i) / 7);
     }
 
     @Override

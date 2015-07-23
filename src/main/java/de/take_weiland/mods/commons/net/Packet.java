@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.net.*;
+import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
@@ -102,7 +103,8 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
 
     @Override
     default void _sc$handle(EntityPlayer player) {
-        PacketToChannelMap.getData(this).handler.accept(this, player);
+        (player.worldObj.isRemote ? Scheduler.client() : Scheduler.server())
+                .execute(() -> PacketToChannelMap.getData(this).handler.accept(this, player));
     }
 
     @Override
