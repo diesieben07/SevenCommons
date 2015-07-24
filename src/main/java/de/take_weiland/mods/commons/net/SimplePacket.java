@@ -16,7 +16,6 @@ import net.minecraft.world.chunk.Chunk;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -270,12 +269,13 @@ public interface SimplePacket {
          */
         default Map<EntityPlayer, CompletableFuture<R>> sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
             HashMap<EntityPlayerMP, CompletableFuture<R>> map = players instanceof Collection ? Maps.newHashMapWithExpectedSize(((Collection<?>) players).size()) : new HashMap<>();
-            Function<EntityPlayerMP, CompletableFuture<R>> sender = this::sendTo;
 
             for (EntityPlayer player : players) {
                 EntityPlayerMP mp = Players.checkNotClient(player);
                 if (filter == null || filter.test(mp)) {
-                    map.computeIfAbsent(mp, sender);
+                    if (!map.containsKey(mp)) {
+                        map.put(mp, sendTo(mp));
+                    }
                 }
             }
             return Collections.unmodifiableMap(map);
