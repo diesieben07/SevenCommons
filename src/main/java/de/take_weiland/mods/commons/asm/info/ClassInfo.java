@@ -88,7 +88,7 @@ public abstract class ClassInfo extends HasModifiers {
             case "D":
                 return of(double.class);
             default:
-                return fromObjectClassName(className);
+                return fromObjectClassName(ASMUtils.binaryName(className));
         }
     }
 
@@ -132,6 +132,7 @@ public abstract class ClassInfo extends HasModifiers {
         }
     }
 
+    // className must be a binary name
     private static ClassInfo fromObjectClassName(String className) {
         Class<?> clazz;
         if ((clazz = findLoadedClass(Launch.classLoader, className)) != null) {
@@ -139,7 +140,7 @@ public abstract class ClassInfo extends HasModifiers {
         } else {
             try {
                 // the class is not loaded, try get it's bytes
-                byte[] bytes = Launch.classLoader.getClassBytes(ASMUtils.untransformName(className));
+                byte[] bytes = Launch.classLoader.getClassBytes(ASMUtils.binaryName(ASMUtils.untransformName(className)));
                 // somehow we can't access the class bytes (happens for classes not on the LaunchClassLoader)
                 // we try and load the class now
                 if (bytes == null) {
@@ -179,7 +180,7 @@ public abstract class ClassInfo extends HasModifiers {
 
     private static ClassInfo forceLoad(String className) {
         try {
-            return of(Class.forName(className));
+            return of(Class.forName(className, false, ClassInfo.class.getClassLoader()));
         } catch (Exception e) {
             throw new MissingClassException(className, e);
         }
