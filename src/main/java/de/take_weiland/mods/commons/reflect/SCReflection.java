@@ -5,7 +5,7 @@ import com.google.common.io.Files;
 import com.google.common.reflect.Reflection;
 import de.take_weiland.mods.commons.OverrideSetter;
 import de.take_weiland.mods.commons.asm.ASMUtils;
-import de.take_weiland.mods.commons.internal.SevenCommonsLoader;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.reflect.MethodHandleStrategy;
 import de.take_weiland.mods.commons.internal.reflect.ReflectionStrategy;
 import net.minecraft.launchwrapper.Launch;
@@ -35,7 +35,7 @@ import static java.lang.invoke.MethodHandles.publicLookup;
 @ParametersAreNonnullByDefault
 public final class SCReflection {
 
-    private static final Logger logger = SevenCommonsLoader.scLogger("Reflection");
+    private static final Logger logger = SevenCommons.scLogger("Reflection");
     private static final ReflectionStrategy strategy = selectStrategy();
     private static final AtomicInteger nextDynClassId = new AtomicInteger(0);
     private static final boolean DEBUG = Boolean.getBoolean("sevencommons.reflect.debug");

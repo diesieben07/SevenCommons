@@ -29,10 +29,6 @@ if (ENV.DRONE_BUILD_NUMBER) {
 group = "de.take_weiland.mods.commons" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "SevenCommons"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-compileJava.options.encoding = 'UTF-8'
-
 minecraft {
     version = "1.7.10-10.13.3.1370-1.7.10"
     runDir = "eclipse"
@@ -49,8 +45,6 @@ jar {
         attributes 'SevenCommonsInstalledVersion': '0'
     }
 }
-
-tasks.build.dependsOn('sourceJar', 'deobfJar')
 
 processResources
         {
@@ -86,6 +80,27 @@ task sourceJar(type: Jar) {
     classifier = 'sources'
 }
 
+// compile SevenCommonsLoader separately, targeting Java 6
+// for the warning message
+task compileLoader(type: JavaCompile) {
+    source = fileTree(dir: "src/main/java")
+    classpath = sourceSets.main.compileClasspath
+    destinationDir = sourceSets.main.output.classesDir
+    exclude { !it.directory && !it.name.contains("SevenCommonsLoader") }
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+}
+
+compileJava {
+    exclude 'de/take_weiland/mods/commons/internal/SevenCommonsLoader*'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    options.encoding = 'UTF-8'
+}
+
+tasks.compileJava.dependsOn('compileLoader')
+tasks.build.dependsOn('sourceJar', 'deobfJar')
 
 artifacts {
     archives deobfJar
