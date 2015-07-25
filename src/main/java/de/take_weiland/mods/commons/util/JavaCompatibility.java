@@ -36,7 +36,6 @@ public final class JavaCompatibility {
         }
 
         Logger logger = LogManager.getLogger("STDERR");
-//         rawOut = System.out;//new PrintWriter(new OutputStreamWriter(new FileOutputStream(FileDescriptor.err), Charsets.UTF_8));
         logger.error("");
         logger.error(StringUtils.repeat('=', 80));
         logger.error("SevenCommons requires Java 8 to be installed.");
