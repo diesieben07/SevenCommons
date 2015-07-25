@@ -3,6 +3,9 @@ jdk: oraclejdk8
 install: chmod +x gradlew
 script: "./gradlew setupDecompWorkspace build uploadArchives"
 sudo: false
+cache:
+  directories:
+    - $HOME/.gradle
 env:
   global:
   - secure: 01Xg4OOF0gDjUfPq65vDtQk82p89fzM1Klhq2rhC090RjnPARduRtorHuhSYJ1SWqD1c8OrDg2NhGt1qcbOwC+9rBcjDrOcoJ248nC+4pH4lqRUAjxFAfL7WGe5cDethsqh+K3wQZ32gHo7M4cdz0rrBSavlG14coeIg/ss4apo=
