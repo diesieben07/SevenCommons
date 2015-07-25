@@ -1,10 +1,12 @@
 package de.take_weiland.mods.commons.internal.test;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.net.Network;
+import de.take_weiland.mods.commons.util.ItemStacks;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -27,6 +29,13 @@ public class testmod_sc {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        try {
+            System.out.println(ItemStacks.parse("stoneasd"));
+        } catch (ItemStacks.InvalidStackDefinition e) {
+            e.printStackTrace();
+        }
+        FMLCommonHandler.instance().exitJava(0, false);
+
         myBlock = new Block(Material.rock) {
 
             @Override
