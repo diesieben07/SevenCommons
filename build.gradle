@@ -20,8 +20,8 @@ apply plugin: 'maven'
 
 version = "0.1"
 def ENV = System.getenv()
-if (ENV.DRONE_BUILD_NUMBER) {
-    version += "." + ENV.DRONE_BUILD_NUMBER
+if (ENV.TRAVIS_BUILD_NUMBER) {
+    version += "." + ENV.TRAVIS_BUILD_NUMBER
 } else {
     version += ".local"
 }

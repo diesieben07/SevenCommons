@@ -1,5 +1,10 @@
 language: java
 jdk: oraclejdk8
 install: chmod +x gradlew
-script: ./gradlew setupDecompWorkspace build
+script: "./gradlew setupDecompWorkspace build"
 sudo: false
+env:
+  global:
+  - secure: 01Xg4OOF0gDjUfPq65vDtQk82p89fzM1Klhq2rhC090RjnPARduRtorHuhSYJ1SWqD1c8OrDg2NhGt1qcbOwC+9rBcjDrOcoJ248nC+4pH4lqRUAjxFAfL7WGe5cDethsqh+K3wQZ32gHo7M4cdz0rrBSavlG14coeIg/ss4apo=
+  - secure: XpCkpsf0uM6r6Gzkwucwmc+Mwdj6gqO0dGVxOj1IhmUMm8vV9cCJuoCtURJmZ8ejGMS/dPed2MTLOSc+4NdwLmV+iLJFZ9nSQmWr+goiWu3DOgx1qS0aaHBQAbWMOcprpoaAMmx1CGRpR7XkFE8PgBi6XrtI7XjMOQMBl5Q/4T0=
+  - secure: Baabe1tNXeOi+sbqpaUDukMPrxiqq3hc+ewgYJU/pQqsTed3Lp/mVS+cF0YvIIiQzyuXsJUQPffsv/05/VZINFAvyw1jXBVCv+HJj4irxzMoNjTBy20lYAMeUqZ2PYNGv7XUIL1o+NzdBt6fDS8HLJobdjz8gFuJ4/GaK9cFT+8=
