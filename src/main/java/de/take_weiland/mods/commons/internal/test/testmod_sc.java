@@ -30,7 +30,7 @@ public class testmod_sc {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         try {
-            System.out.println(ItemStacks.parse("stoneasd"));
+            System.out.println(ItemStacks.parse("\"13xstone\""));
         } catch (ItemStacks.InvalidStackDefinition e) {
             e.printStackTrace();
         }

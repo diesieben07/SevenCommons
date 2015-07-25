@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
@@ -15,6 +14,8 @@ import org.jetbrains.annotations.Contract;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <p>Utilities for ItemStacks.</p>
@@ -97,48 +98,44 @@ public final class ItemStacks {
 
     }
 
+    private static final Pattern definitionRegex = Pattern.compile("^(?:([0-9]+)x)?(?:(?:\"([^\"]+)\")|([^@]+))(?:@([0-9]+))?$");
+
     /**
      * <p>Parse a textual definition of an ItemStack from e.g. a configuration file. The format is
      * {@code 13xminecraft:stone@4} for an ItemStack of stone with stack size 13 and metadata 4. Metadata and stack size
-     * are optional, defaulting to 0 and 1 respectively. If the domain (usually Mod ID) is "minecraft" it can be left out.</p>
+     * are optional, defaulting to 0 and 1 respectively. If the domain (usually Mod ID) is "minecraft" it can be left out.
+     * In case of ambiguity the item name can be surrounded by quotes ("").</p>
      *
      * @param definition the definition
      * @return the parsed ItemStack
      * @throws InvalidStackDefinition if the definition is invalid
      */
     public static ItemStack parse(String definition) throws InvalidStackDefinition {
-        Item item;
-        int meta;
-        int stackSize;
-
-        String withoutLeadingDigits = CharMatcher.DIGIT.trimLeadingFrom(definition);
-        boolean hasStackSize = !withoutLeadingDigits.contentEquals(definition);
-        if (hasStackSize) {
-            if (withoutLeadingDigits.charAt(0) == 'x') {
-                withoutLeadingDigits = withoutLeadingDigits.substring(1);
-            } else {
-                throw new InvalidStackDefinition("Starts with digits but missing x afterwards");
-            }
-            String stackSizeString = definition.substring(0, definition.length() - withoutLeadingDigits.length() - 1);
-            try {
-                stackSize = Integer.parseInt(stackSizeString);
-            } catch (NumberFormatException e) {
-                throw new InvalidStackDefinition(String.format("Invalid stackSize %s", stackSizeString));
-            }
-        } else {
-            stackSize = 1;
+        Matcher matcher = definitionRegex.matcher(definition);
+        if (!matcher.matches()) {
+            throw new InvalidStackDefinition("Could not parse stack definition");
         }
 
-        int atIdx = withoutLeadingDigits.indexOf('@');
-        if (atIdx < 0) {
-            item = tryParseItem(withoutLeadingDigits);
-            meta = 0;
-        } else {
-            item = tryParseItem(withoutLeadingDigits.substring(0, atIdx));
-            meta = tryParseMetadata(withoutLeadingDigits.substring(atIdx + 1));
-        }
-
+        int stackSize = tryParseStackSize(matcher.group(1));
+        Item item = tryParseItem(Objects.firstNonNull(matcher.group(2), matcher.group(3)));
+        int meta = tryParseMetadata(matcher.group(4));
         return new ItemStack(item, stackSize, meta);
+    }
+
+    private static int tryParseStackSize(@Nullable String s) throws InvalidStackDefinition {
+        if (s == null) {
+            return 1;
+        } else {
+            try {
+                int stackSize = Integer.parseInt(s);
+                if (stackSize < 0 || stackSize > 64) {
+                    throw new InvalidStackDefinition(String.format("Stack size %s out of bounds", s));
+                }
+                return stackSize;
+            } catch (NumberFormatException e) {
+                throw new InvalidStackDefinition(String.format("Invalid stack size %s", s), e);
+            }
+        }
     }
 
     private static Item tryParseItem(String s) throws InvalidStackDefinition {
@@ -149,11 +146,19 @@ public final class ItemStacks {
         return item;
     }
 
-    private static int tryParseMetadata(String s) throws InvalidStackDefinition {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException e) {
-            throw new InvalidStackDefinition(String.format("Invalid metadata %s", s), e);
+    private static int tryParseMetadata(@Nullable String s) throws InvalidStackDefinition {
+        if (s == null) {
+            return 0;
+        } else {
+            try {
+                int meta = Integer.parseInt(s);
+                if (meta < Short.MIN_VALUE || meta > Short.MAX_VALUE) {
+                    throw new InvalidStackDefinition(String.format("Metadata %s out of bounds", s));
+                }
+                return meta;
+            } catch (NumberFormatException e) {
+                throw new InvalidStackDefinition(String.format("Invalid metadata %s", s), e);
+            }
         }
     }
 
