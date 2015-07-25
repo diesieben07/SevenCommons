@@ -86,13 +86,15 @@ task compileLoader(type: JavaCompile) {
     source = fileTree(dir: "src/main/java")
     classpath = sourceSets.main.compileClasspath
     destinationDir = sourceSets.main.output.classesDir
-    exclude { !it.directory && !it.name.contains("SevenCommonsLoader") }
+    include 'de/take_weiland/mods/commons/internal/SevenCommonsLoader*'
+    include 'de/take_weiland/mods/commons/util/JavaCompatibility*'
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
 }
 
 compileJava {
     exclude 'de/take_weiland/mods/commons/internal/SevenCommonsLoader*'
+    exclude 'de/take_weiland/mods/commons/util/JavaCompatibility*'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
