@@ -2,22 +2,26 @@ package de.take_weiland.mods.commons.internal.test;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.net.Network;
+import de.take_weiland.mods.commons.util.Blocks;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.function.Predicate;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 public class testmod_sc {
@@ -29,13 +33,6 @@ public class testmod_sc {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        try {
-            System.out.println(ItemStacks.parse("\"13xstone\""));
-        } catch (ItemStacks.InvalidStackDefinition e) {
-            e.printStackTrace();
-        }
-        FMLCommonHandler.instance().exitJava(0, false);
-
         myBlock = new Block(Material.rock) {
 
             @Override
@@ -75,6 +72,22 @@ public class testmod_sc {
         if (event.entity instanceof EntityPlayer) {
             event.entity.registerExtendedProperties("testmod_sc", new PlayerProps());
         }
+    }
+
+    @Mod.EventHandler
+    public void postInit(FMLPostInitializationEvent event) {
+        try {
+            Predicate<ItemStack> matcher = ItemStacks.parseMatcher("\"pipes|\"");
+            System.out.println("stone: " + matcher.test(new ItemStack(Blocks.stone)));
+            System.out.println("dirt: " + matcher.test(new ItemStack(Blocks.dirt)));
+            System.out.println("dirt@1: " + matcher.test(new ItemStack(Blocks.dirt, 1, 1)));
+            System.out.println("wood: " + matcher.test(new ItemStack(Blocks.log)));
+            System.out.println("wood2: " + matcher.test(new ItemStack(Blocks.log2)));
+        } catch (ItemStacks.InvalidStackDefinition e) {
+            e.printStackTrace();
+        }
+
+        FMLCommonHandler.instance().exitJava(0, false);
     }
 
 }

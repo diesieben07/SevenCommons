@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Objects;
+import com.google.common.primitives.Ints;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
@@ -10,10 +11,14 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.oredict.OreDictionary;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -118,8 +123,95 @@ public final class ItemStacks {
 
         int stackSize = tryParseStackSize(matcher.group(1));
         Item item = tryParseItem(Objects.firstNonNull(matcher.group(2), matcher.group(3)));
-        int meta = tryParseMetadata(matcher.group(4));
+        int meta = tryParseMetadata(matcher.group(4), 0);
         return new ItemStack(item, stackSize, meta);
+    }
+
+    private static final Pattern matcherRegex = Pattern.compile("(?:(?:@(?:([^\\|\"]+)|(?:\"([^\"]+)\")))|(?:(?:\"([^\"]+)\")|([^@|]+))(?:@([0-9]+))?)(\\|)?");
+
+    /**
+     * <p>Parse a String definition into a {@code Predicate<ItemStack>}. The definition contains 1 or more rules separated by the
+     * character {@code |}. The resulting Predicate checks all the rules in order. Rules can be:
+     * <ul>
+     * <li>The character {@code @} followed by an OreDictionary name. If the name contains "@" or "|" it must be enclosed in quotes.</li>
+     * <li>An Item ID (e.g. "minecraft:stone") possibly followed by the character {@code @} and a metadata value. If the Item ID contains
+     * "@" or "|" it must be enclosed in quotes.</li>
+     * </ul></p>
+     *
+     * @param definition the defintion
+     * @return the parsed Predicate
+     * @throws InvalidStackDefinition if the defition is invalid
+     */
+    public static Predicate<ItemStack> parseMatcher(String definition) throws InvalidStackDefinition {
+        Matcher matcher = matcherRegex.matcher(definition);
+
+        List<Predicate<ItemStack>> result = new ArrayList<>();
+
+        int currentPos = 0;
+        boolean expectNext = false;
+
+        while (matcher.find(currentPos)) {
+            if (matcher.start() != currentPos) {
+                String error = definition.substring(currentPos, matcher.start());
+                int ctxStart = Math.max(0, currentPos - 5);
+                int ctxEnd = Math.min(definition.length(), matcher.start() + 5);
+                String context = definition.substring(ctxStart, ctxEnd);
+                throw new InvalidStackDefinition(String.format("Don't know what to do with \"%s\" in context %s%s%s",
+                        error,
+                        ctxStart == 0 ? "" : "...", context, ctxEnd == definition.length() ? "" : "..."));
+            }
+
+            String oreDictEntry = matcher.group(1);
+            if (oreDictEntry == null) {
+                oreDictEntry = matcher.group(2);
+            }
+            if (oreDictEntry != null) {
+                int oreID = OreDictionary.getOreID(oreDictEntry);
+                result.add((stack) -> Ints.contains(OreDictionary.getOreIDs(stack), oreID));
+            } else {
+                Item item = tryParseItem(Objects.firstNonNull(matcher.group(3), matcher.group(4)));
+                int metadata = tryParseMetadata(matcher.group(5), OreDictionary.WILDCARD_VALUE);
+                if (metadata == OreDictionary.WILDCARD_VALUE) {
+                    result.add((stack) -> stack.getItem() == item);
+                } else {
+                    result.add((stack) -> stack.getItem() == item && stack.getMetadata() == metadata);
+                }
+            }
+
+            expectNext = matcher.group(6) != null;
+
+            currentPos = matcher.end();
+            if (matcher.hitEnd()) {
+                break;
+            }
+        }
+        if (expectNext) {
+            throw new InvalidStackDefinition("Definition ended unexpectedly");
+        }
+
+        switch (result.size()) {
+            case 0:
+                return (stack) -> true;
+            case 1:
+                return result.get(0);
+            case 2:
+                return result.get(0).or(result.get(1));
+            default:
+                return combine(result);
+        }
+    }
+
+    private static Predicate<ItemStack> combine(List<Predicate<ItemStack>> list) {
+        //noinspection unchecked
+        Predicate<ItemStack>[] arr = list.toArray(new Predicate[list.size()]);
+        return (stack) -> {
+            for (Predicate<ItemStack> predicate : arr) {
+                if (predicate.test(stack)) {
+                    return true;
+                }
+            }
+            return false;
+        };
     }
 
     private static int tryParseStackSize(@Nullable String s) throws InvalidStackDefinition {
@@ -146,9 +238,9 @@ public final class ItemStacks {
         return item;
     }
 
-    private static int tryParseMetadata(@Nullable String s) throws InvalidStackDefinition {
+    private static int tryParseMetadata(@Nullable String s, int def) throws InvalidStackDefinition {
         if (s == null) {
-            return 0;
+            return def;
         } else {
             try {
                 int meta = Integer.parseInt(s);
