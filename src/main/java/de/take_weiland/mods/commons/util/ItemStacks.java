@@ -140,7 +140,7 @@ public final class ItemStacks {
      *
      * @param definition the defintion
      * @return the parsed Predicate
-     * @throws InvalidStackDefinition if the defition is invalid
+     * @throws InvalidStackDefinition if the definition is invalid
      */
     public static Predicate<ItemStack> parseMatcher(String definition) throws InvalidStackDefinition {
         Matcher matcher = matcherRegex.matcher(definition);
