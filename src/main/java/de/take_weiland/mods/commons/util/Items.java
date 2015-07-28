@@ -10,6 +10,8 @@ import net.minecraft.item.ItemStack;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import java.util.function.Function;
+
 import static com.google.common.base.Preconditions.checkState;
 import static cpw.mods.fml.common.LoaderState.PREINITIALIZATION;
 
@@ -32,7 +34,6 @@ public final class Items {
      *
      * @param item     the Item instance
      * @param baseName base name for this Item
-     * @param modId    your ModId
      */
     public static void init(Item item, String baseName) {
         checkPhase("Item");
@@ -54,6 +55,19 @@ public final class Items {
         }
 
         GameRegistry.registerItem(item, baseName);
+    }
+
+    /**
+     * <p>Utility function to initialize a lot of Items at the same time.</p>
+     *
+     * @param baseNameFunction a function that provides the base name for each Item
+     * @param items            the list of items
+     */
+    @SafeVarargs
+    public static <T extends Item> void initAll(Function<? super T, ? extends String> baseNameFunction, T... items) {
+        for (T item : items) {
+            init(item, baseNameFunction.apply(item));
+        }
     }
 
     public static Block getBlock(Item item) {

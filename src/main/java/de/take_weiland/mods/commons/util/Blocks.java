@@ -14,6 +14,8 @@ import net.minecraft.world.World;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import java.util.function.Function;
+
 import static de.take_weiland.mods.commons.util.Items.checkPhase;
 
 @ParametersAreNonnullByDefault
@@ -59,6 +61,19 @@ public final class Blocks extends net.minecraft.init.Blocks {
 
         if (block instanceof HasSubtypes) {
             ItemStacks.registerSubstacks(baseName, getItem(block));
+        }
+    }
+
+    /**
+     * <p>Utility function to initialize a lot of block at the same time.</p>
+     *
+     * @param baseNameFunction a function that provides the base name for each Block
+     * @param blocks           the list of blocks
+     */
+    @SafeVarargs
+    public static <T extends Block> void initAll(Function<? super T, ? extends String> baseNameFunction, T... blocks) {
+        for (T block : blocks) {
+            init(block, baseNameFunction.apply(block));
         }
     }
 
