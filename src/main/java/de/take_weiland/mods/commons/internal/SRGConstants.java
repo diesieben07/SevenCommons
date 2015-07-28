@@ -42,4 +42,5 @@ public interface SRGConstants {
     String F_INV_CRAFTING_EVENT_HANDLER = "field_70465_c";
     String F_CONTAINER_PLAYER_THE_PLAYER = "field_82862_h";
     String F_SLOT_CRAFTING_THE_PLAYER = "field_75238_b";
+    String M_SAVE_ALL_WORLDS = "func_71267_a";
 }

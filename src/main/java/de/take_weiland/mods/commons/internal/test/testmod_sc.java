@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.test;
 
-import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -87,7 +86,7 @@ public class testmod_sc {
             e.printStackTrace();
         }
 
-        FMLCommonHandler.instance().exitJava(0, false);
+//        FMLCommonHandler.instance().exitJava(0, false);
     }
 
 }

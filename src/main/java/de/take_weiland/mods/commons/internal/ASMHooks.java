@@ -5,6 +5,7 @@ import com.google.common.collect.MapMaker;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import de.take_weiland.mods.commons.SaveWorldsEvent;
 import de.take_weiland.mods.commons.internal.sync.*;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
@@ -20,6 +21,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.IExtendedEntityProperties;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.util.*;
 
@@ -53,6 +55,12 @@ public final class ASMHooks {
         } else {
             ieepCompanions = new HashMap<>();
         }
+    }
+
+    public static final String FIRE_WORLD_SAVE = "fireWorldSaveEvent";
+
+    public static void fireWorldSaveEvent(boolean dontLog) {
+        MinecraftForge.EVENT_BUS.post(new SaveWorldsEvent(!dontLog));
     }
 
     @SideOnly(Side.CLIENT)
