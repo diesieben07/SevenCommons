@@ -9,7 +9,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -64,10 +65,11 @@ public final class Items {
      * @param items            the list of items
      */
     @SafeVarargs
-    public static <T extends Item> void initAll(Function<? super T, ? extends String> baseNameFunction, T... items) {
+    public static <T extends Item> List<T> initAll(Function<? super T, ? extends String> baseNameFunction, T... items) {
         for (T item : items) {
             init(item, baseNameFunction.apply(item));
         }
+        return Arrays.asList(items);
     }
 
     public static Block getBlock(Item item) {

@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal.test;
 
 import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -23,16 +24,18 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.function.Predicate;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
+@GameRegistry.ObjectHolder("testmod_sc")
 public class testmod_sc {
 
     @Mod.Instance
     public static testmod_sc instance;
 
-    private static Block myBlock;
+    @GameRegistry.ObjectHolder("testblock")
+    public static Block myBlock;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        myBlock = new Block(Material.rock) {
+        Block b = new Block(Material.rock) {
 
             @Override
             public boolean hasTileEntity(int metadata) {
@@ -55,15 +58,21 @@ public class testmod_sc {
             }
         };
 
-        myBlock.setCreativeTab(CreativeTabs.tabBlock);
-
+        b.setCreativeTab(CreativeTabs.tabBlock);
         GameRegistry.registerTileEntity(TestTE.class, "testte");
-        GameRegistry.registerBlock(myBlock, "testblock");
+
+        Blocks.init(b, "testblock");
+
         MinecraftForge.EVENT_BUS.register(this);
 
         Network.newSimpleChannel("testmod")
                 .register(0, TestPacket::new, TestResponse::new, (packet, player, side) -> new TestResponse(packet.s))
                 .build();
+    }
+
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent event) {
+        System.out.println(myBlock);
     }
 
     @SubscribeEvent

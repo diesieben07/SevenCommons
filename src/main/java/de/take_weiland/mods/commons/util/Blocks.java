@@ -14,6 +14,8 @@ import net.minecraft.world.World;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 
 import static de.take_weiland.mods.commons.util.Items.checkPhase;
@@ -71,10 +73,11 @@ public final class Blocks extends net.minecraft.init.Blocks {
      * @param blocks           the list of blocks
      */
     @SafeVarargs
-    public static <T extends Block> void initAll(Function<? super T, ? extends String> baseNameFunction, T... blocks) {
+    public static <T extends Block> List<T> initAll(Function<? super T, ? extends String> baseNameFunction, T... blocks) {
         for (T block : blocks) {
             init(block, baseNameFunction.apply(block));
         }
+        return Arrays.asList(blocks);
     }
 
     public static Item getItem(Block block) {
