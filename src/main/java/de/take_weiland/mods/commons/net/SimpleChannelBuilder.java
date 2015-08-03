@@ -77,6 +77,8 @@ public interface SimpleChannelBuilder {
      */
     <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler);
 
+    <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, SimplePacketHandler.WithFutureResponse<? super P, ? extends R> handler);
+
     default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, SimplePacketHandler.WithResponse<? super P, ? extends R> handler) {
         return register(id, constructor, responseConstructor, (BiFunction<? super P, ? super EntityPlayer, ? extends R>) handler);
     }

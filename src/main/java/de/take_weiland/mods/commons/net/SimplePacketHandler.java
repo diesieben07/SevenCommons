@@ -4,6 +4,7 @@ import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.entity.player.EntityPlayer;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -38,7 +39,17 @@ public interface SimplePacketHandler<P> extends BiConsumer<P, EntityPlayer> {
 
         @Override
         default R apply(P packet, EntityPlayer player) {
-            return handle(packet, player, sideOf(player.worldObj));
+            return handle(packet, player, sideOf(player));
+        }
+    }
+
+    interface WithFutureResponse<P extends Packet.WithResponse<R>, R extends Packet.Response> extends BiFunction<P, EntityPlayer, CompletableFuture<? extends R>> {
+
+        CompletableFuture<? extends R> handle(P packet, EntityPlayer player, Side side);
+
+        @Override
+        default CompletableFuture<? extends R> apply(P packet, EntityPlayer player) {
+            return handle(packet, player, sideOf(player));
         }
     }
 }

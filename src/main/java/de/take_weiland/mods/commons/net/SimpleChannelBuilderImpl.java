@@ -5,16 +5,14 @@ import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
 import de.take_weiland.mods.commons.internal.net.ResponseSupport;
 import de.take_weiland.mods.commons.util.Scheduler;
-import gnu.trove.iterator.TByteObjectIterator;
-import gnu.trove.map.TByteObjectMap;
 import gnu.trove.map.hash.TByteObjectHashMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -51,61 +49,19 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
         Class<P> packetClass = constructor.getPacketClass();
 
-        String channelFinal = channel;
-
-        handlers.put((byte) id, (in, player) -> {
-            int uniqueID = in.readInt();
-
-            if (ResponseSupport.isResponse(uniqueID)) {
-                @SuppressWarnings("unchecked")
-                CompletableFuture<R> future = (CompletableFuture<R>) ResponseSupport.get(uniqueID);
-
-                if (future != null) {
-                    try {
-                        future.complete(responseConstructor.apply(in, player));
-                    } catch (Throwable t) {
-                        future.completeExceptionally(t);
-                    }
-                }
-            } else {
-                P packet = constructor.apply(in, player);
-                R response = handler.apply(packet, player);
-                BaseNettyPacket responseWrap = new BaseNettyPacket() {
-
-                    @Override
-                    public byte[] _sc$encode() {
-                        MCDataOutput out = Network.newOutput(response.expectedSize() + 5);
-                        out.writeByte(id);
-                        out.writeInt(ResponseSupport.toResponse(uniqueID));
-                        response.writeTo(out);
-                        return out.toByteArray();
-                    }
-
-                    @Override
-                    public void _sc$handle(EntityPlayer player) {
-                        // this should never happen
-                        // if we are on a local, direct connection the response itself should be handling
-                        // see ResponseNettyVersion
-                        throw new AssertionError();
-                    }
-
-                    @Override
-                    public String _sc$channel() {
-                        return channelFinal;
-                    }
-                };
-
-                if (sideOf(player).isClient()) {
-                    Network.sendToServer(responseWrap);
-                } else {
-                    Network.sendToPlayer((EntityPlayerMP) player, responseWrap);
-                }
-            }
-        });
-
+        handlers.put((byte) id, createResponseHandler(id, constructor, responseConstructor, handler, channel));
         PacketToChannelMap.register(packetClass, channel, id, handler);
 
         return this;
+    }
+
+    @Override
+    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, SimplePacketHandler.WithFutureResponse<? super P, ? extends R> handler) {
+        validate(id);
+
+        handlers.put((byte) id, createResponseFutureHandler(id, constructor, responseConstructor, handler, channel));
+
+        return null;
     }
 
     private void validate(int id) {
@@ -128,30 +84,108 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
             if (handler == null) {
                 throw new ProtocolException(String.format("Unknown packetID %s in channel %s", UnsignedBytes.toInt(id), channel));
             }
-            handler.accept(in, player);
+            Scheduler.forSide(sideOf(player)).execute(() -> handler.accept(in, player));
         });
-    }
-
-    private static Function<? super MCDataInput, ? extends Packet>[] pack(TByteObjectMap<Function<? super MCDataInput, ? extends Packet>> map) {
-        int maxId = 0;
-        for (byte b : map.keys()) {
-            int asInt = UnsignedBytes.toInt(b);
-            if (asInt > maxId) {
-                maxId = asInt;
-            }
-        }
-        @SuppressWarnings("unchecked")
-        Function<? super MCDataInput, ? extends Packet>[] arr = new Function[maxId + 1];
-        TByteObjectIterator<Function<? super MCDataInput, ? extends Packet>> it = map.iterator();
-        while (it.hasNext()) {
-            it.advance();
-            arr[UnsignedBytes.toInt(it.key())] = it.value();
-        }
-        return arr;
     }
 
     private void checkNotBuilt() {
         checkState(handlers != null, "Already built");
     }
 
+    private static <P extends Packet.WithResponse<R>, R extends Packet.Response> BiConsumer<MCDataInput, EntityPlayer> createResponseHandler(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler, String channel) {
+        return (in, player) -> {
+            int uniqueID = in.readInt();
+
+            if (ResponseSupport.isResponse(uniqueID)) {
+                @SuppressWarnings("unchecked")
+                CompletableFuture<R> future = (CompletableFuture<R>) ResponseSupport.get(uniqueID);
+
+                if (future != null) {
+                    try {
+                        future.complete(responseConstructor.apply(in, player));
+                    } catch (Throwable t) {
+                        future.completeExceptionally(t);
+                    }
+                }
+            } else {
+                P packet = constructor.apply(in, player);
+                R response = handler.apply(packet, player);
+                BaseNettyPacket responseWrap = new ResponseWrapper<>(response, id, uniqueID, channel);
+
+                if (sideOf(player).isClient()) {
+                    Network.sendToServer(responseWrap);
+                } else {
+                    Network.sendToPlayer((EntityPlayerMP) player, responseWrap);
+                }
+            }
+        };
+    }
+
+    private static <P extends Packet.WithResponse<R>, R extends Packet.Response> BiConsumer<? super MCDataInput, ? super EntityPlayer> createResponseFutureHandler(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler, String channel) {
+        return (in, player) -> {
+            int uniqueID = in.readInt();
+
+            if (ResponseSupport.isResponse(uniqueID)) {
+                @SuppressWarnings("unchecked")
+                CompletableFuture<R> future = (CompletableFuture<R>) ResponseSupport.get(uniqueID);
+
+                if (future != null) {
+                    try {
+                        future.complete(responseConstructor.apply(in, player));
+                    } catch (Throwable t) {
+                        future.completeExceptionally(t);
+                    }
+                }
+            } else {
+                P packet = constructor.apply(in, player);
+                CompletionStage<? extends R> responseFuture = handler.apply(packet, player);
+                responseFuture.thenAcceptAsync(response -> {
+                    BaseNettyPacket responseWrap = new ResponseWrapper<>(response, id, uniqueID, channel);
+
+                    if (sideOf(player).isClient()) {
+                        Network.sendToServer(responseWrap);
+                    } else {
+                        Network.sendToPlayer((EntityPlayerMP) player, responseWrap);
+                    }
+                });
+            }
+        };
+    }
+
+    private static class ResponseWrapper<R extends Packet.Response> implements BaseNettyPacket {
+
+        private final R response;
+        private final int id;
+        private final int uniqueID;
+        private final String channel;
+
+        ResponseWrapper(R response, int id, int uniqueID, String channel) {
+            this.response = response;
+            this.id = id;
+            this.uniqueID = uniqueID;
+            this.channel = channel;
+        }
+
+        @Override
+        public byte[] _sc$encode() {
+            MCDataOutput out = Network.newOutput(response.expectedSize() + 5);
+            out.writeByte(id);
+            out.writeInt(ResponseSupport.toResponse(uniqueID));
+            response.writeTo(out);
+            return out.toByteArray();
+        }
+
+        @Override
+        public void _sc$handle(EntityPlayer player) {
+            // this should never happen
+            // if we are on a local, direct connection the response itself should be handling
+            // see ResponseNettyVersion
+            throw new AssertionError();
+        }
+
+        @Override
+        public String _sc$channel() {
+            return channel;
+        }
+    }
 }

@@ -162,7 +162,6 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
             }
         } catch (ClassCastException ignored) {
             // the cast might fail, in that case we just ignore silently
-            ignored.printStackTrace();
         }
     }
 

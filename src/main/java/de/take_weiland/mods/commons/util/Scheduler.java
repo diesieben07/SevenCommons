@@ -80,16 +80,6 @@ public final class Scheduler extends AbstractListeningExecutorService {
         });
     }
 
-    private void addTask(Task task) {
-        Task curr;
-        do {
-            curr = head;
-            task.next = curr;
-            // volatile write, any writes before this happen before a read on "head"
-            // hence task.next doesn't need to be volatile
-        } while (!casHead(curr, task));
-    }
-
     static {
         if (FMLCommonHandler.instance().getSide().isClient()) {
             client = new Scheduler();
@@ -98,6 +88,9 @@ public final class Scheduler extends AbstractListeningExecutorService {
         }
         server = new Scheduler();
     }
+
+    @SuppressWarnings("unused") // we use it, just via CAS
+    private volatile Task head;
 
     private static final Unsafe U;
     private static final long headOff;
@@ -115,9 +108,18 @@ public final class Scheduler extends AbstractListeningExecutorService {
         return U.compareAndSwapObject(this, headOff, expect, _new);
     }
 
-    @SuppressWarnings("unused") // we use it, just via CAS
-    private volatile Task head;
 
+    private void addTask(Task task) {
+        Task curr;
+        do {
+            curr = head;
+            task.next = curr;
+            // volatile write, any writes before this happen before a read on "head"
+            // hence task.next doesn't need to be volatile
+        } while (!casHead(curr, task));
+    }
+
+    @SuppressWarnings("unused") // see FMLEventHandler
     private void tick() {
         Task curr;
         do {
@@ -139,9 +141,6 @@ public final class Scheduler extends AbstractListeningExecutorService {
         }
     }
 
-    /**
-     * <p>Base class for Tasks ran by this executor.</p>
-     */
     private abstract static class Task {
 
         Task next;

@@ -28,11 +28,8 @@ enum CrashExceptionHandler implements Thread.UncaughtExceptionHandler {
             cat.addCrashSection("Thread Status", t.getState());
             re = new ReportedException(cr);
         }
-        Scheduler.forSide(Sides.environment()).execute(new Runnable() {
-            @Override
-            public void run() {
-                throw JavaUtils.throwUnchecked(re);
-            }
+        Scheduler.forSide(Sides.environment()).execute(() -> {
+            throw JavaUtils.throwUnchecked(re);
         });
     }
 }

@@ -5,12 +5,12 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import net.minecraft.block.Block;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -65,11 +65,25 @@ public final class Items {
      * @param items            the list of items
      */
     @SafeVarargs
-    public static <T extends Item> List<T> initAll(Function<? super T, ? extends String> baseNameFunction, T... items) {
+    public static <T extends Item> void initAll(Function<? super T, ? extends String> baseNameFunction, T... items) {
+        initAll(baseNameFunction, null, items);
+    }
+
+    /**
+     * <p>Utility function to initialize a lot of Items at the same time and set their creative tab.</p>
+     *
+     * @param baseNameFunction a function that provides the base name for each Item
+     * @param tab              the creative tab
+     * @param items            the list of items
+     */
+    @SafeVarargs
+    public static <T extends Item> void initAll(Function<? super T, ? extends String> baseNameFunction, @Nullable CreativeTabs tab, T... items) {
         for (T item : items) {
             init(item, baseNameFunction.apply(item));
+            if (tab != null) {
+                item.setCreativeTab(tab);
+            }
         }
-        return Arrays.asList(items);
     }
 
     public static Block getBlock(Item item) {
