@@ -4,20 +4,20 @@ import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.AbstractListeningExecutorService;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.FMLEventHandler;
-import net.minecraft.launchwrapper.Launch;
+import sun.misc.Unsafe;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * <p>A thread-safe implementation of {@link com.google.common.util.concurrent.ListeningExecutorService} that uses the
+ * <p>A highly efficient, thread-safe, lock-free implementation of
+ * {@link com.google.common.util.concurrent.ListeningExecutorService} that uses the
  * main Minecraft thread to execute tasks.</p>
  * <p>Limited scheduling is available via the {@link #schedule(Runnable, long)} method.</p>
  * <p>This ExecutorService cannot be shut down or terminated.</p>
@@ -58,45 +58,36 @@ public final class Scheduler extends AbstractListeningExecutorService {
         return side.isClient() ? client : server;
     }
 
-    @Override
-    public void execute(Runnable task) {
-        schedule(task, 0);
-    }
-
     /**
      * <p>Execute the given task after {@code tickDelay} ticks have passed.</p>
      *
-     * @param task      the task
+     * @param r      the task
      * @param tickDelay the delay, in ticks
      */
-    public void schedule(Runnable task, long tickDelay) {
+    public void schedule(Runnable r, long tickDelay) {
         checkArgument(tickDelay >= 0);
-        synchronized (queue) {
-            queue.add(new Task(task, tickDelay + 1));
-        }
+        addTask(new WaitingTask(r, tickDelay));
     }
 
-    final List<Task> queue = new ArrayList<>();
-    final List<Task> scheduledNow = new ArrayList<>();
-
-    private void tick() {
-        List<Task> scheduledNow = this.scheduledNow;
-        List<Task> queue = this.queue;
-        //noinspection SynchronizationOnLocalVariableOrMethodParameter
-        synchronized (queue) {
-            int idx = queue.size();
-            while (--idx >= 0) {
-                Task task = queue.get(idx);
-                if (--task.ticks == 0) {
-                    queue.remove(idx);
-                    scheduledNow.add(task);
-                }
+    @Override
+    public void execute(Runnable task) {
+        addTask(new Task() {
+            @Override
+            public boolean run() {
+                task.run();
+                return false;
             }
-        }
-        int idx = scheduledNow.size();
-        while (--idx >= 0) {
-            scheduledNow.remove(idx).r.run();
-        }
+        });
+    }
+
+    private void addTask(Task task) {
+        Task curr;
+        do {
+            curr = head;
+            task.next = curr;
+            // volatile write, any writes before this happen before a read on "head"
+            // hence task.next doesn't need to be volatile
+        } while (!casHead(curr, task));
     }
 
     static {
@@ -106,25 +97,88 @@ public final class Scheduler extends AbstractListeningExecutorService {
             client = null;
         }
         server = new Scheduler();
-
-        Launch.blackboard.put(FMLEventHandler.SCHEDULER_TEMP_KEY, (Consumer<Scheduler>) Scheduler::tick);
     }
 
-    private Scheduler() {
+    private static final Unsafe U;
+    private static final long headOff;
+
+    static {
+        U = JavaUtils.getUnsafe();
+        try {
+            headOff = U.objectFieldOffset(Scheduler.class.getDeclaredField("head"));
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    static final class Task {
+    private boolean casHead(@Nullable Task expect, @Nullable Task _new) {
+        return U.compareAndSwapObject(this, headOff, expect, _new);
+    }
 
-        final Runnable r;
-        long ticks;
+    @SuppressWarnings("unused") // we use it, just via CAS
+    private volatile Task head;
 
-        Task(Runnable r, long ticks) {
-            this.r = r;
-            this.ticks = ticks;
+    private void tick() {
+        Task curr;
+        do {
+            curr = head;
+            if (curr == null) {
+                // no tasks
+                return;
+            }
+            // set to null to mark tasks as done
+        } while (!casHead(curr, null));
+
+        while (true) {
+            if (curr.run()) {
+                addTask(curr);
+            }
+            if ((curr = curr.next) == null) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * <p>Base class for Tasks ran by this executor.</p>
+     */
+    private abstract static class Task {
+
+        Task next;
+
+        /**
+         * <p>Perform this task's action.</p>
+         *
+         * @return true to keep executing this task next tick
+         */
+        public abstract boolean run();
+
+        Task() {
         }
 
     }
 
+    private static final class WaitingTask extends Task {
+
+        private final Runnable r;
+        private long ticks;
+
+        WaitingTask(Runnable r, long ticks) {
+            this.r = r;
+            this.ticks = ticks;
+        }
+
+        @Override
+        public boolean run() {
+            if (--ticks == 0) {
+                r.run();
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+    }
     /**
      * @return always false
      * @deprecated always false, this ExecutorService cannot be shut down
@@ -161,13 +215,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
     @Override
     @Deprecated
     public List<Runnable> shutdownNow() {
-        List<Runnable> result = new ArrayList<>();
-        synchronized (queue) {
-            for (Task task : queue) {
-                result.add(task.r);
-            }
-        }
-        return result;
+        return Collections.emptyList();
     }
 
     /**
@@ -186,6 +234,9 @@ public final class Scheduler extends AbstractListeningExecutorService {
         int additionalNanos = Ints.saturatedCast(unit.toNanos(timeout) - milliNanos);
         Thread.sleep(millis, additionalNanos);
         return false;
+    }
+
+    private Scheduler() {
     }
 
 }

@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal;
 
-import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
@@ -11,16 +10,17 @@ import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.launchwrapper.Launch;
 
-import java.util.function.Consumer;
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Method;
+
+import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
  * @author diesieben07
  */
 public final class FMLEventHandler {
 
-    public static final String SCHEDULER_TEMP_KEY = "__sc_temp_scheduler_runnables";
     public static final String INV_IN_USE_KEY = "_sc$iteminv$inUse";
 
     @SubscribeEvent
@@ -50,36 +50,43 @@ public final class FMLEventHandler {
     }
 
     static {
-        Reflection.initialize(Scheduler.class);
-        //noinspection unchecked
-        schedulerTick = (Consumer<Scheduler>) Launch.blackboard.remove(SCHEDULER_TEMP_KEY);
+        try {
+            // this is ugly but I don't want Scheduler.tick to be public for obvious reasons
+            // and Scheduler can't extend a class from the internal package since it already extends
+            // something else. This will perform just fine, so meh.
+            Method method = Scheduler.class.getDeclaredMethod("tick");
+            method.setAccessible(true);
+            schedulerTick = publicLookup().unreflect(method);
+        } catch (NoSuchMethodException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private static final Consumer<Scheduler> schedulerTick;
+    private static final MethodHandle schedulerTick;
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void serverTickClient(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.START) {
-            schedulerTick.accept(Scheduler.server());
+    public void serverTickClient(TickEvent.ServerTickEvent event) throws Throwable {
+        if (event.phase == TickEvent.Phase.END) {
+            schedulerTick.invokeExact(Scheduler.server());
             ASMHooks.tickIEEPCompanionsClientSide();
         }
     }
 
     @SubscribeEvent
     @SideOnly(Side.SERVER)
-    public void serverTickServer(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.START) {
-            schedulerTick.accept(Scheduler.server());
+    public void serverTickServer(TickEvent.ServerTickEvent event) throws Throwable {
+        if (event.phase == TickEvent.Phase.END) {
+            schedulerTick.invokeExact(Scheduler.server());
             ASMHooks.tickIEEPCompanionsServerSide();
         }
     }
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void clientTick(TickEvent.ClientTickEvent event) {
+    public void clientTick(TickEvent.ClientTickEvent event) throws Throwable {
         if (event.phase == TickEvent.Phase.END) {
-            schedulerTick.accept(Scheduler.client());
+            schedulerTick.invokeExact(Scheduler.client());
         }
     }
 
