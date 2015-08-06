@@ -55,7 +55,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
      * @return a Scheduler for the side
      */
     public static Scheduler forSide(Side side) {
-        return side.isClient() ? client : server;
+        return side == Side.CLIENT ? client : server;
     }
 
     /**
@@ -71,11 +71,20 @@ public final class Scheduler extends AbstractListeningExecutorService {
 
     @Override
     public void execute(Runnable task) {
-        addTask(new Task() {
+        addTask(new InternalTask() {
             @Override
             public boolean run() {
                 task.run();
                 return false;
+            }
+        });
+    }
+
+    public void execute(Task task) {
+        addTask(new InternalTask() {
+            @Override
+            public boolean run() {
+                return task.run();
             }
         });
     }
@@ -90,7 +99,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
     }
 
     @SuppressWarnings("unused") // we use it, just via CAS
-    private volatile Task head;
+    private volatile InternalTask head;
 
     private static final Unsafe U;
     private static final long headOff;
@@ -104,13 +113,13 @@ public final class Scheduler extends AbstractListeningExecutorService {
         }
     }
 
-    private boolean casHead(@Nullable Task expect, @Nullable Task _new) {
+    private boolean casHead(@Nullable InternalTask expect, @Nullable InternalTask _new) {
         return U.compareAndSwapObject(this, headOff, expect, _new);
     }
 
 
-    private void addTask(Task task) {
-        Task curr;
+    private void addTask(InternalTask task) {
+        InternalTask curr;
         do {
             curr = head;
             task.next = curr;
@@ -121,7 +130,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
 
     @SuppressWarnings("unused") // see FMLEventHandler
     private void tick() {
-        Task curr;
+        InternalTask curr;
         do {
             curr = head;
             if (curr == null) {
@@ -141,9 +150,20 @@ public final class Scheduler extends AbstractListeningExecutorService {
         }
     }
 
-    private abstract static class Task {
+    public interface Task {
 
-        Task next;
+        /**
+         * <p>Execute this task, return true to keep executing.</p>
+         *
+         * @return true to keep executing
+         */
+        boolean run();
+
+    }
+
+    private abstract static class InternalTask {
+
+        InternalTask next;
 
         /**
          * <p>Perform this task's action.</p>
@@ -152,12 +172,12 @@ public final class Scheduler extends AbstractListeningExecutorService {
          */
         public abstract boolean run();
 
-        Task() {
+        InternalTask() {
         }
 
     }
 
-    private static final class WaitingTask extends Task {
+    private static final class WaitingTask extends InternalTask {
 
         private final Runnable r;
         private long ticks;
