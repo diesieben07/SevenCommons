@@ -6,18 +6,20 @@ import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * @author diesieben07
  */
-public final class ClassInfoUtil {
+public final class ClassInfoSuperCache {
 
     public static void preInit() {
-        MinecraftForge.EVENT_BUS.register(new ClassInfoUtil());
+        MinecraftForge.EVENT_BUS.register(new ClassInfoSuperCache());
     }
 
     @SubscribeEvent
@@ -33,25 +35,14 @@ public final class ClassInfoUtil {
         MinecraftForge.EVENT_BUS.unregister(this);
     }
 
-    private static Map<String, ImmutableSet<String>> superCache = new ConcurrentHashMap<>();
+    private static volatile Map<String, ImmutableSet<String>> superCache = new ConcurrentHashMap<>();
 
     public static Set<String> getSupers(ClassInfo classInfo) {
-        // grab a local var in case of concurrency
-        Map<String, ImmutableSet<String>> superCacheLocal = superCache;
-        if (superCacheLocal != null) {
-            return superCacheLocal.computeIfAbsent(classInfo.internalName(), cl -> buildSupers(classInfo));
-        } else {
-            return buildSupers(classInfo);
-        }
+        return computeIfAbsentFixed(superCache, classInfo.internalName(), s -> buildSupers(classInfo));
     }
 
     private static Set<String> getSupers(String clazz) {
-        Map<String, ImmutableSet<String>> superCacheLocal = superCache;
-        if (superCacheLocal != null) {
-            return superCacheLocal.computeIfAbsent(clazz, ClassInfoUtil::buildSupers);
-        } else {
-            return buildSupers(clazz);
-        }
+        return computeIfAbsentFixed(superCache, clazz, ClassInfoSuperCache::buildSupers);
     }
 
     private static ImmutableSet<String> buildSupers(String clazz) {
@@ -77,7 +68,24 @@ public final class ClassInfoUtil {
         return ImmutableSet.copyOf(set);
     }
 
-    private ClassInfoUtil() {
+    // cannot use computeIfAbsent because it is atomic in ConcurrentHashMap
+    // and doesn't allow "chained" computations
+    // which does happen with inheritance
+    private static <K, V> V computeIfAbsentFixed(@Nullable Map<K, V> map, K key, Function<? super K, ? extends V> computation) {
+        if (map == null) {
+            return computation.apply(key);
+        }
+        V value = map.get(key);
+        if (value == null) {
+            value = computation.apply(key);
+            V valueRaced = map.putIfAbsent(key, value);
+            return valueRaced == null ? value : valueRaced;
+        } else {
+            return value;
+        }
+    }
+
+    private ClassInfoSuperCache() {
     }
 
 }

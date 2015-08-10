@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.asm.info;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.MissingClassException;
-import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
+import de.take_weiland.mods.commons.internal.exclude.ClassInfoSuperCache;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -284,7 +284,7 @@ public abstract class ClassInfo extends HasModifiers {
      * @return an immutable Set containing all superclasses and interfaces
      */
     public Set<String> getSupers() {
-        return ClassInfoUtil.getSupers(this);
+        return ClassInfoSuperCache.getSupers(this);
     }
 
     /**
