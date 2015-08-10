@@ -6,11 +6,14 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.util.Scheduler;
+import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.block.Block;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.CompletableFuture;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @GameRegistry.ObjectHolder("testmod_sc")
@@ -25,6 +28,8 @@ public class testmod_sc {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         FMLCommonHandler.instance().bus().register(this);
+        MinecraftForge.EVENT_BUS.register(this);
+        System.out.println(Sides.environment());
 //        Block b = new Block(Material.rock) {
 //
 //            @Override
@@ -55,19 +60,35 @@ public class testmod_sc {
 //
 //        MinecraftForge.EVENT_BUS.register(this);
 //
-//        Network.newSimpleChannel("testmod")
-//                .register(0, TestPacket::new, TestResponse::new, (packet, player, side) -> new TestResponse(packet.s))
-//                .build();
+        Network.newSimpleChannel("testmod")
+                .registerFutureResponse(0, TestPacket::new, TestResponse::new, (packet, player) -> CompletableFuture.supplyAsync(() -> new TestResponse(packet.s)))
+                .build();
     }
+
+    static final int X = 200;
 
     @SubscribeEvent
     public void playerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        for (int i = 0; i < 100; i++) {
-            final int ifin = i;
-            ForkJoinPool.commonPool().execute(() -> {
-                Scheduler.server().execute(() -> System.out.println("task " + ifin));
-            });
-        }
+        new TestPacket("hello world")
+                .sendTo(event.player)
+                .thenAcceptAsync((r) -> System.out.println("received response " + r.s), Scheduler.server());
+
+//        for (int i = 0; i < 100000; i++) {
+//            final int ifin = i;
+//            ForkJoinPool.commonPool().execute(() -> {
+//                SchedulerInternalTask.execute(Scheduler.server(), new SchedulerInternalTask() {
+//
+//                    private int x = new Random().nextInt(X);
+//
+//                    @Override
+//                    public boolean run() {
+//                        if (x++ % X == 0)
+//                            x = new Random().nextInt(X);
+//                        return true;
+//                    }
+//                });
+//            });
+//        }
     }
 
 

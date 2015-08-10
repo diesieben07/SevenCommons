@@ -11,9 +11,11 @@ public interface RawPacket extends BaseNettyPacket {
 
     void handle(EntityPlayer player);
 
-    byte[] encodeToPlayer(EntityPlayerMP player);
-
     byte[] encode();
+
+    default byte[] encodeToPlayer(EntityPlayerMP player) {
+        return encode();
+    }
 
     @Override
     default void _sc$handle(EntityPlayer player) {
@@ -21,13 +23,13 @@ public interface RawPacket extends BaseNettyPacket {
     }
 
     @Override
-    default byte[] _sc$encodeToPlayer(EntityPlayerMP player) {
-        return encodeToPlayer(player);
+    default byte[] _sc$encode() {
+        return encode();
     }
 
     @Override
-    default byte[] _sc$encode() {
-        return encode();
+    default byte[] _sc$encodeToPlayer(EntityPlayerMP player) {
+        return encodeToPlayer(player);
     }
 
 }

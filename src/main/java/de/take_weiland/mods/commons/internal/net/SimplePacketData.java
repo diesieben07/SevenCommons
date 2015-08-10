@@ -3,39 +3,83 @@ package de.take_weiland.mods.commons.internal.net;
 import de.take_weiland.mods.commons.net.Packet;
 import net.minecraft.entity.player.EntityPlayer;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 /**
  * @author diesieben07
  */
-public abstract class SimplePacketData<P extends BaseModPacket> {
+public abstract class SimplePacketData {
 
     public final String channel;
     public final int packetID;
+    public final boolean async;
 
-    public SimplePacketData(String channel, int packetID) {
+    public SimplePacketData(String channel, int packetID, boolean async) {
         this.channel = channel;
         this.packetID = packetID;
+        this.async = async;
     }
 
-    public static final class Normal<P extends Packet> extends SimplePacketData<P> {
+    public static final class Normal<P extends Packet> extends SimplePacketData {
 
         public final BiConsumer<? super P, ? super EntityPlayer> handler;
 
-        public Normal(String channel, int packetID, BiConsumer<? super P, ? super EntityPlayer> handler) {
-            super(channel, packetID);
+        public Normal(String channel, int packetID, boolean async, BiConsumer<? super P, ? super EntityPlayer> handler) {
+            super(channel, packetID, async);
             this.handler = handler;
+        }
+
+    }
+
+    public static abstract class WithResponse<P extends Packet.WithResponse<R>, R extends Packet.Response> extends SimplePacketData {
+
+        WithResponse(String channel, int packetID, boolean async) {
+            super(channel, packetID, async);
+        }
+
+        public abstract void completeFuture(CompletableFuture<R> future, P packet, EntityPlayer player);
+    }
+
+    public static final class WithResponseNormal<P extends Packet.WithResponse<R>, R extends Packet.Response> extends WithResponse<P, R> {
+
+        private final BiFunction<? super P, ? super EntityPlayer, ? extends R> handler;
+
+        public WithResponseNormal(String channel, int packetID, boolean async, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+            super(channel, packetID, async);
+            this.handler = handler;
+        }
+
+        @Override
+        public void completeFuture(CompletableFuture<R> future, P packet, EntityPlayer player) {
+            try {
+                future.complete(handler.apply(packet, player));
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
         }
     }
 
-    public static final class WithResponse<P extends Packet.WithResponse<R>, R extends Packet.Response> extends SimplePacketData<P> {
+    public static final class WithResponseFuture<P extends Packet.WithResponse<R>, R extends Packet.Response> extends WithResponse<P, R> {
 
-        final BiFunction<? super P, ? super EntityPlayer, ? extends R> handler;
+        private final BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler;
 
-        public WithResponse(String channel, int packetID, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
-            super(channel, packetID);
+        public WithResponseFuture(String channel, int packetID, boolean async, BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler) {
+            super(channel, packetID, async);
             this.handler = handler;
+        }
+
+        @Override
+        public void completeFuture(CompletableFuture<R> future, P packet, EntityPlayer player) {
+            handler.apply(packet, player).whenComplete((r, x) -> {
+                if (x != null) {
+                    future.completeExceptionally(x);
+                } else {
+                    future.complete(r);
+                }
+            });
         }
 
     }

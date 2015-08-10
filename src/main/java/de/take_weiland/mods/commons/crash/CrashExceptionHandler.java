@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.crash;
 
+import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Scheduler;
 import de.take_weiland.mods.commons.util.Sides;
@@ -28,8 +29,11 @@ enum CrashExceptionHandler implements Thread.UncaughtExceptionHandler {
             cat.addCrashSection("Thread Status", t.getState());
             re = new ReportedException(cr);
         }
-        Scheduler.forSide(Sides.environment()).execute(() -> {
-            throw JavaUtils.throwUnchecked(re);
+        SchedulerInternalTask.execute(Scheduler.forSide(Sides.environment()), new SchedulerInternalTask() {
+            @Override
+            public boolean run() {
+                throw JavaUtils.throwUnchecked(re);
+            }
         });
     }
 }

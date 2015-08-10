@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.collect.Iterables;
+import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.net.*;
@@ -56,11 +57,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
 
     abstract Object getObjectDirect(EntityPlayer player);
 
-    public static void handle(byte[] payload, EntityPlayer player) {
-        Scheduler.client().execute(() -> readAndApply(payload, player));
-    }
-
-    private static void readAndApply(byte[] payload, EntityPlayer player) {
+    public static void handle(byte[] payload, EntityPlayer player, Side side) {
         MCDataInput in = Network.newInput(payload);
 
         player = Players.getClient();

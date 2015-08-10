@@ -1,11 +1,14 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.reflect.TypeToken;
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.net.BaseModPacket;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.util.Players;
+import de.take_weiland.mods.commons.util.Scheduler;
 import io.netty.channel.ChannelFutureListener;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -15,7 +18,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.invoke.MethodHandleInfo;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -42,7 +44,23 @@ public final class Network {
         return new MCDataInputImpl(bytes, off, len);
     }
 
-    public static void registerHandler(String channel, BiConsumer<? super byte[], ? super EntityPlayer> handler) {
+    public static void registerHandler(String channel, PacketHandler handler) {
+        registerHandler(channel, handler, false);
+    }
+
+    public static void registerHandler(String channel, PacketHandler handler, boolean async) {
+        if (!async) {
+            PacketHandler originalHandler = handler;
+
+            handler = (data, player, side) -> SchedulerInternalTask.execute(Scheduler.forSide(side), new SchedulerInternalTask() {
+                @Override
+                public boolean run() {
+                    originalHandler.accept(data, side == Side.CLIENT ? Players.getClient() : player, side);
+                    return false;
+                }
+            });
+        }
+
         NetworkImpl.register(channel, handler);
     }
 

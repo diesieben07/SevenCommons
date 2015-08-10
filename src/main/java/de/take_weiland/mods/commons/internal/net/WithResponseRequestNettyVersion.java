@@ -10,12 +10,12 @@ import java.util.concurrent.CompletableFuture;
 /**
  * @author diesieben07
  */
-public final class ResponseNettyVersion<R extends Packet.Response> implements BaseNettyPacket {
+public final class WithResponseRequestNettyVersion<R extends Packet.Response> implements BaseNettyPacket {
 
     private final Packet.WithResponse<R> original;
     private final CompletableFuture<R> future;
 
-    public ResponseNettyVersion(Packet.WithResponse<R> original, CompletableFuture<R> future) {
+    public WithResponseRequestNettyVersion(Packet.WithResponse<R> original, CompletableFuture<R> future) {
         this.original = original;
         this.future = future;
     }
@@ -23,11 +23,7 @@ public final class ResponseNettyVersion<R extends Packet.Response> implements Ba
     @Override
     public void _sc$handle(EntityPlayer player) {
         SimplePacketData.WithResponse<Packet.WithResponse<R>, R> data = PacketToChannelMap.getData(original);
-        try {
-            future.complete(data.handler.apply(original, player));
-        } catch (Throwable t) {
-            future.completeExceptionally(t);
-        }
+        data.completeFuture(future, original, player);
     }
 
     @Override
@@ -47,5 +43,10 @@ public final class ResponseNettyVersion<R extends Packet.Response> implements Ba
     @Override
     public String _sc$channel() {
         return PacketToChannelMap.getData(original).channel;
+    }
+
+    @Override
+    public boolean _sc$async() {
+        return PacketToChannelMap.getData(original).async;
     }
 }

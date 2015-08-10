@@ -10,7 +10,6 @@ import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fluids.FluidTank;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -20,8 +19,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Member;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.VOID_TYPE;
@@ -314,11 +311,6 @@ public final class BytecodeEmittingHandlerGenerator {
                     };
                 })
                 .iterator();
-    }
-
-    public static void main(String[] args) {
-        BiFunction<FluidTank, NBTTagCompound, NBTTagCompound> func = FluidTank::writeToNBT;
-        Function<FluidTank, NBTTagCompound> ser = fluidTank -> func.apply(fluidTank, new NBTTagCompound());
     }
 
     private String identFor(Property<?> property, String type) {

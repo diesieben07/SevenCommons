@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.net.*;
-import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
@@ -10,7 +9,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -34,10 +32,18 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
      */
     void writeTo(MCDataOutput out);
 
-    static Side receivingSide(Class<? extends Packet> clazz) {
-        return Optional.ofNullable(clazz.getAnnotation(Receiver.class))
-                .map(Receiver::value)
-                .orElseThrow(() -> new IllegalStateException("Packet missing @Receiver annotation"));
+    static Side receivingSide(Class<? extends BaseModPacket> clazz) {
+        Receiver annotation = clazz.getAnnotation(Receiver.class);
+        if (annotation == null) {
+            throw new IllegalStateException("Packet missing @Receiver annotation");
+        } else {
+            return annotation.value();
+        }
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE)
+    @interface Async {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
@@ -75,18 +81,18 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
         @Override
         default CompletableFuture<R> sendToServer() {
             CompletableFuture<R> future = new CompletableFuture<>();
-            Network.sendToServer(new ResponseNettyVersion<>(this, future));
+            Network.sendToServer(new WithResponseRequestNettyVersion<>(this, future));
             return future;
         }
 
         @Override
         default CompletableFuture<R> sendTo(EntityPlayerMP player) {
             CompletableFuture<R> future = new CompletableFuture<>();
-            Network.sendToPlayer(player, new ResponseNettyVersion<>(this, future));
+            Network.sendToPlayer(player, new WithResponseRequestNettyVersion<>(this, future));
             return future;
         }
-    }
 
+    }
     /**
      * <p>The response for a {@code Packet.WithResponse}.</p>
      */
@@ -103,8 +109,7 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
 
     @Override
     default void _sc$handle(EntityPlayer player) {
-        (player.worldObj.isRemote ? Scheduler.client() : Scheduler.server())
-                .execute(() -> PacketToChannelMap.getData(this).handler.accept(this, player));
+        PacketToChannelMap.getData(this).handler.accept(this, player);
     }
 
     @Override
@@ -115,5 +120,10 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
     @Override
     default String _sc$channel() {
         return PacketToChannelMap.getData(this).channel;
+    }
+
+    @Override
+    default boolean _sc$async() {
+        return PacketToChannelMap.getData(this).async;
     }
 }

@@ -11,4 +11,8 @@ public interface BaseModPacket {
         return Network.DEFAULT_EXPECTED_SIZE;
     }
 
+    default SimplePacketData _sc$getData() {
+        return PacketToChannelMap.getDataFallback(this);
+    }
+
 }

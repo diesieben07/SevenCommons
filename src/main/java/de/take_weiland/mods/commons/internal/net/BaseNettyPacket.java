@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.net;
 
+import cpw.mods.fml.relauncher.Side;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
@@ -12,10 +13,18 @@ public interface BaseNettyPacket {
 
     String _sc$channel();
 
+    byte[] _sc$encode();
+
+    default boolean _sc$canReceive(Side side) {
+        return true;
+    }
+
+    default boolean _sc$async() {
+        return false;
+    }
+
     default byte[] _sc$encodeToPlayer(EntityPlayerMP player) {
         return _sc$encode();
     }
-
-    byte[] _sc$encode();
 
 }

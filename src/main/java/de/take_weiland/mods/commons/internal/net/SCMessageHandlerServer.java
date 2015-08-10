@@ -1,5 +1,9 @@
 package de.take_weiland.mods.commons.internal.net;
 
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
+import de.take_weiland.mods.commons.net.ProtocolException;
+import de.take_weiland.mods.commons.util.Scheduler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -21,9 +25,35 @@ public final class SCMessageHandlerServer extends ChannelInboundHandlerAdapter i
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof BaseNettyPacket) {
-            ((BaseNettyPacket) msg)._sc$handle(player);
+            BaseNettyPacket packet = (BaseNettyPacket) msg;
+            if (!packet._sc$canReceive(Side.SERVER)) {
+                throw new ProtocolException("Packet " + msg + " received on invalid side server");
+            }
+
+            if (packet._sc$async()) {
+                packet._sc$handle(player);
+            } else {
+                SchedulerInternalTask.execute(Scheduler.server(), new SyncPacketExecServer(packet, this.player));
+            }
         } else if (!(msg instanceof C17PacketCustomPayload) || !NetworkImpl.handleServerCustomPacket((C17PacketCustomPayload) msg, player, this)) {
             ctx.fireChannelRead(msg);
+        }
+    }
+
+    private static final class SyncPacketExecServer extends SchedulerInternalTask {
+
+        private final BaseNettyPacket packet;
+        private final EntityPlayerMP player;
+
+        SyncPacketExecServer(BaseNettyPacket packet, EntityPlayerMP player) {
+            this.packet = packet;
+            this.player = player;
+        }
+
+        @Override
+        public boolean run() {
+            packet._sc$handle(player);
+            return false;
         }
     }
 
@@ -33,9 +63,9 @@ public final class SCMessageHandlerServer extends ChannelInboundHandlerAdapter i
         cause.printStackTrace();
         ctx.fireExceptionCaught(cause);
     }
-
     private byte[] multipartData;
     private String multipartChannel;
+
     private int multipartPos;
 
     @Override

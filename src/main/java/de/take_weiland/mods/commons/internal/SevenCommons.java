@@ -12,7 +12,7 @@ import cpw.mods.fml.common.event.FMLStateEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
-import de.take_weiland.mods.commons.internal.exclude.ClassInfoUtil;
+import de.take_weiland.mods.commons.internal.exclude.ClassInfoSuperCache;
 import de.take_weiland.mods.commons.internal.sync.SyncEvent;
 import de.take_weiland.mods.commons.internal.sync.builtin.BuiltinSyncers;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
@@ -110,7 +110,7 @@ public final class SevenCommons extends DummyModContainer {
         Network.registerHandler(SyncEvent.CHANNEL, SyncEvent::handle);
 
 
-        ClassInfoUtil.preInit();
+        ClassInfoSuperCache.preInit();
 
         // initialize the lazy statics in the scheduler class
         Reflection.initialize(Scheduler.class);

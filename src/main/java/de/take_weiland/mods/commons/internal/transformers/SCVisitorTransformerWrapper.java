@@ -1,16 +1,23 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
+import de.take_weiland.mods.commons.internal.transformers.net.PacketGetDataOptimizer;
 import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
 import de.take_weiland.mods.commons.internal.transformers.sync.*;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.EntityNBTHook;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.TileEntityNBTHook;
 
+import java.util.function.Predicate;
+
 /**
  * @author diesieben07
  */
 public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
+
+    private static final boolean DEBUG = true;
+
     @Override
     protected void addEntries() {
         // general MC hooks
@@ -37,6 +44,18 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(SimplePacketWithResponseTransformer::new, "de/take_weiland/mods/commons/net/SimplePacket$WithResponse");
 
         // misc
-        addEntry(ListenableSupport::new, clazz -> !clazz.startsWith("org/apache/"));
+        addEntry(ListenableSupport::new, apacheFilter());
+        if (FMLLaunchHandler.side().isServer()) {
+            addEntry(SideOfOptimizer::new, "de/take_weiland/mods/commons/util/Sides", "sideOf");
+        }
+
+        //noinspection PointlessBooleanExpression,ConstantConditions
+        if (MCPNames.use() || DEBUG) {
+            addEntry(PacketGetDataOptimizer::new, apacheFilter());
+        }
+    }
+
+    private static Predicate<String> apacheFilter() {
+        return clazz -> !clazz.startsWith("org/apache/");
     }
 }

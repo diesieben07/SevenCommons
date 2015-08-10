@@ -1,6 +1,10 @@
 package de.take_weiland.mods.commons.internal.net;
 
+import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
+import de.take_weiland.mods.commons.net.ProtocolException;
 import de.take_weiland.mods.commons.util.Players;
+import de.take_weiland.mods.commons.util.Scheduler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -19,9 +23,33 @@ public final class SCMessageHandlerClient extends ChannelInboundHandlerAdapter i
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof BaseNettyPacket) {
-            ((BaseNettyPacket) msg)._sc$handle(Players.getClient());
+            BaseNettyPacket packet = (BaseNettyPacket) msg;
+            if (!packet._sc$canReceive(Side.SERVER)) {
+                throw new ProtocolException("Packet " + msg + " received on invalid side server");
+            }
+
+            if (packet._sc$async()) {
+                packet._sc$handle(Players.getClient());
+            } else {
+                SchedulerInternalTask.execute(Scheduler.client(), new SyncPacketExecClient(packet));
+            }
         } else if (!(msg instanceof S3FPacketCustomPayload) || !NetworkImpl.handleClientCustomPacket((S3FPacketCustomPayload) msg, this)) {
             ctx.fireChannelRead(msg);
+        }
+    }
+
+    private static final class SyncPacketExecClient extends SchedulerInternalTask {
+
+        private final BaseNettyPacket packet;
+
+        SyncPacketExecClient(BaseNettyPacket packet) {
+            this.packet = packet;
+        }
+
+        @Override
+        public boolean run() {
+            packet._sc$handle(Players.getClient());
+            return false;
         }
     }
 
@@ -31,9 +59,9 @@ public final class SCMessageHandlerClient extends ChannelInboundHandlerAdapter i
         cause.printStackTrace();
         ctx.fireExceptionCaught(cause);
     }
-
     private byte[] multipartData;
     private String multipartChannel;
+
     private int multipartPos;
 
     @Override

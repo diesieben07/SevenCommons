@@ -6,12 +6,12 @@ import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.net.MCDataInput;
-import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.net.Network;
-import de.take_weiland.mods.commons.net.Packet;
+import de.take_weiland.mods.commons.net.*;
 import de.take_weiland.mods.commons.util.Players;
-import io.netty.channel.*;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.ChannelPromise;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -22,7 +22,6 @@ import net.minecraft.network.play.server.S3FPacketCustomPayload;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -32,7 +31,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class NetworkImpl {
 
-    static Map<String, BiConsumer<? super byte[], ? super EntityPlayer>> channels = new ConcurrentHashMap<>();
+    static Map<String, PacketHandler> channels = new ConcurrentHashMap<>();
 
     private static final String MULTIPART_CHANNEL = "SevenCommons|MP";
     private static final int MULTIPART_PREFIX = 0;
@@ -42,12 +41,12 @@ public final class NetworkImpl {
 
     static boolean handleServerCustomPacket(C17PacketCustomPayload mcPacket, EntityPlayerMP player, PartTracker tracker) throws IOException {
         String channelName = mcPacket.getChannel();
-        BiConsumer<? super byte[], ? super EntityPlayer> handler = channels.get(channelName);
+        PacketHandler handler = channels.get(channelName);
         if (handler != null) {
-            handler.accept(mcPacket.getData(), player);
+            handler.accept(mcPacket.getData(), player, Side.SERVER);
             return true;
         } else if (channelName.equals(MULTIPART_CHANNEL)) {
-            handleMultipartPacket(mcPacket.getData(), tracker, player);
+            handleMultipartPacket(mcPacket.getData(), tracker, player, Side.SERVER);
             return true;
         } else {
             return false;
@@ -56,19 +55,19 @@ public final class NetworkImpl {
 
     static boolean handleClientCustomPacket(S3FPacketCustomPayload mcPacket, PartTracker tracker) throws IOException {
         String channelName = mcPacket.func_149169_c();
-        BiConsumer<? super byte[], ? super EntityPlayer> handler = channels.get(channelName);
+        PacketHandler handler = channels.get(channelName);
         if (handler != null) {
-            handler.accept(mcPacket.func_149168_d(), Players.getClient());
+            handler.accept(mcPacket.func_149168_d(), Players.getClient(), Side.CLIENT);
             return true;
         } else if (channelName.equals(MULTIPART_CHANNEL)) {
-            handleMultipartPacket(mcPacket.func_149168_d(), tracker, Players.getClient());
+            handleMultipartPacket(mcPacket.func_149168_d(), tracker, Players.getClient(), Side.CLIENT);
             return true;
         } else {
             return false;
         }
     }
 
-    private static void handleMultipartPacket(byte[] data, PartTracker tracker, EntityPlayer player) throws IOException {
+    private static void handleMultipartPacket(byte[] data, PartTracker tracker, EntityPlayer player, Side side) throws IOException {
         if (data[0] == MULTIPART_PREFIX) {
             MCDataInput in = Network.newInput(data, 1, data.length - 1);
             String channel = in.readString();
@@ -80,7 +79,7 @@ public final class NetworkImpl {
             if (complete != null) {
                 String channel = tracker.channel();
                 try {
-                    channels.get(channel).accept(complete, player);
+                    channels.get(channel).accept(complete, player, side);
                 } catch (NullPointerException e) {
                     throw new IOException("Unknown channel in multipart packet " + channel);
                 }
@@ -121,7 +120,7 @@ public final class NetworkImpl {
         ctx.write(cstr.apply(MULTIPART_CHANNEL, dataThisPart), promise);
     }
 
-    public static byte[] encodePacket(Packet packet, SimplePacketData<?> data) {
+    public static byte[] encodePacket(Packet packet, SimplePacketData data) {
         MCDataOutput out = Network.newOutput(packet.expectedSize() + 1);
         out.writeByte(data.packetID);
         packet.writeTo(out);
@@ -130,7 +129,7 @@ public final class NetworkImpl {
 
     // registering
 
-    public static synchronized void register(String channel, BiConsumer<? super byte[], ? super EntityPlayer> handler) {
+    public static synchronized void register(String channel, PacketHandler handler) {
         checkNotFrozen();
         if (channels.putIfAbsent(channel, handler) != null) {
             throw new IllegalStateException(String.format("Channel %s already registered", channel));
@@ -181,5 +180,8 @@ public final class NetworkImpl {
         // this is "backwards" - outbound messages travel "upwards" in the pipeline
         // so really the order is sevencommons:encoder and then vanilla's encoder
         pipeline.addAfter("encoder", "sevencommons:encoder", encoder);
+    }
+
+    private NetworkImpl() {
     }
 }
