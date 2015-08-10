@@ -4,6 +4,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.AbstractListeningExecutorService;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import sun.misc.Unsafe;
 
 import javax.annotation.Nonnull;
@@ -71,7 +72,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
 
     @Override
     public void execute(Runnable task) {
-        addTask(new InternalTask() {
+        addTask(new SchedulerInternalTask() {
             @Override
             public boolean run() {
                 task.run();
@@ -81,7 +82,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
     }
 
     public void execute(Task task) {
-        addTask(new InternalTask() {
+        addTask(new SchedulerInternalTask() {
             @Override
             public boolean run() {
                 return task.run();
@@ -99,7 +100,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
     }
 
     @SuppressWarnings("unused") // we use it, just via CAS
-    private volatile InternalTask head;
+    private volatile SchedulerInternalTask head;
 
     private static final Unsafe U;
     private static final long headOff;
@@ -113,24 +114,36 @@ public final class Scheduler extends AbstractListeningExecutorService {
         }
     }
 
-    private boolean casHead(@Nullable InternalTask expect, @Nullable InternalTask _new) {
+    private boolean casHead(@Nullable SchedulerInternalTask expect, @Nullable SchedulerInternalTask _new) {
         return U.compareAndSwapObject(this, headOff, expect, _new);
     }
 
+    /**
+     * helper to add a single task
+     * Do not rename, see {@link de.take_weiland.mods.commons.internal.SchedulerInternalTask}
+     */
+    private void addTask(SchedulerInternalTask task) {
+        addTasks(task, task);
+    }
 
-    private void addTask(InternalTask task) {
-        InternalTask curr;
+    /**
+     * add a prebuilt linked list of tasks, newHead must eventually through a chain of .next pointers point to newTail.
+     * newTail.next must be meaningless, it will be overwritten
+     * <p>if newHead == newTail a single task will be added
+     */
+    private void addTasks(SchedulerInternalTask newHead, SchedulerInternalTask newTail) {
+        SchedulerInternalTask curr;
         do {
             curr = head;
-            task.next = curr;
-            // volatile write, any writes before this happen before a read on "head"
-            // hence task.next doesn't need to be volatile
-        } while (!casHead(curr, task));
+            newTail.next = curr;
+            // volatile write, any writes before this happen before a read on "this.head"
+            // hence InternalTask.next doesn't need to be volatile
+        } while (!casHead(curr, newHead));
     }
 
     @SuppressWarnings("unused") // see FMLEventHandler
     private void tick() {
-        InternalTask curr;
+        SchedulerInternalTask curr;
         do {
             curr = head;
             if (curr == null) {
@@ -140,13 +153,26 @@ public final class Scheduler extends AbstractListeningExecutorService {
             // set to null to mark tasks as done
         } while (!casHead(curr, null));
 
+        SchedulerInternalTask rescheduleHead = null; // built list of things to reschedule here, to avoid CASing this.next for every single one of them
+        SchedulerInternalTask rescheduleTail = null; // instead we CAS just once, once we are done here
+
         while (true) {
+            SchedulerInternalTask next = curr.next;
+
             if (curr.run()) {
-                addTask(curr);
+                if (rescheduleHead == null) {
+                    rescheduleHead = rescheduleTail = curr;
+                } else {
+                    curr.next = rescheduleHead;
+                    rescheduleHead = curr;
+                }
             }
-            if ((curr = curr.next) == null) {
+            if ((curr = next) == null) {
                 break;
             }
+        }
+        if (rescheduleHead != null) {
+            addTasks(rescheduleHead, rescheduleTail);
         }
     }
 
@@ -161,23 +187,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
 
     }
 
-    private abstract static class InternalTask {
-
-        InternalTask next;
-
-        /**
-         * <p>Perform this task's action.</p>
-         *
-         * @return true to keep executing this task next tick
-         */
-        public abstract boolean run();
-
-        InternalTask() {
-        }
-
-    }
-
-    private static final class WaitingTask extends InternalTask {
+    private static final class WaitingTask extends SchedulerInternalTask {
 
         private final Runnable r;
         private long ticks;
