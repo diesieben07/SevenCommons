@@ -3,11 +3,15 @@ package de.take_weiland.mods.commons.internal.transformers;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
+import de.take_weiland.mods.commons.internal.net.BaseModPacket;
+import de.take_weiland.mods.commons.internal.net.SimplePacketWithoutResponseMagic;
+import de.take_weiland.mods.commons.internal.transformers.net.InterfaceAdder;
 import de.take_weiland.mods.commons.internal.transformers.net.PacketGetDataOptimizer;
 import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
 import de.take_weiland.mods.commons.internal.transformers.sync.*;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.EntityNBTHook;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.TileEntityNBTHook;
+import org.objectweb.asm.ClassVisitor;
 
 import java.util.function.Predicate;
 
@@ -16,7 +20,7 @@ import java.util.function.Predicate;
  */
 public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     @Override
     protected void addEntries() {
@@ -50,9 +54,16 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         }
 
         //noinspection PointlessBooleanExpression,ConstantConditions
-        if (MCPNames.use() || DEBUG) {
+        if (!MCPNames.use() || DEBUG) {
+            // don't transform people's classes inside dev env, hurts hotswapping :D
             addEntry(PacketGetDataOptimizer::new, apacheFilter());
         }
+
+        addEntry((ClassVisitor cv) -> new InterfaceAdder(cv, BaseModPacket.CLASS_NAME),
+                "de/take_weiland/mods/commons/net/Packet",
+                "de/take_weiland/mods/commons/net/Packet$WithResponse");
+
+        addEntry(cv -> new InterfaceAdder(cv, SimplePacketWithoutResponseMagic.CLASS_NAME), "de/take_weiland/mods/commons/net/Packet");
     }
 
     private static Predicate<String> apacheFilter() {

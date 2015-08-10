@@ -88,17 +88,17 @@ public final class Network {
 
     private static final java.lang.reflect.Type function2ndParam = Function.class.getTypeParameters()[1];
 
-    static <P extends BaseModPacket> Class<P> findPacketClassReflectively(PacketConstructor<P> constructor) {
+    static <P extends SimpleModPacketBase> Class<P> findPacketClassReflectively(PacketConstructor<P> constructor) {
         Class<?> myClazz = constructor.getClass();
 
         TypeToken<?> type = TypeToken.of(myClazz);
         Class<?> result;
         result = type.resolveType(function2ndParam).getRawType();
-        if (!BaseModPacket.class.isAssignableFrom(result)) {
+        if (!SimpleModPacketBase.class.isAssignableFrom(result)) {
             result = BaseModPacket.class;
         }
 
-        if (result == BaseModPacket.class) { // class is not a real subtype of Packet, so did not find an actual type parameter
+        if (result == SimpleModPacketBase.class) { // class is not a real subtype of Packet, so did not find an actual type parameter
             // try lambda-hackery now
             try {
                 Method method = myClazz.getDeclaredMethod("writeReplace");
@@ -107,7 +107,7 @@ public final class Network {
                 if (serForm instanceof SerializedLambda) {
                     SerializedLambda serLambda = (SerializedLambda) serForm;
 
-                    Class<?> returnClass = Packet.class;
+                    Class<?> returnClass = SimpleModPacketBase.class;
                     switch (serLambda.getImplMethodKind()) {
                         case MethodHandleInfo.REF_newInvokeSpecial:
                             returnClass = Class.forName(Type.getObjectType(serLambda.getImplClass()).getClassName());
@@ -120,14 +120,14 @@ public final class Network {
                             break;
                     }
 
-                    if (BaseModPacket.class.isAssignableFrom(returnClass) && returnClass != BaseModPacket.class) {
+                    if (SimpleModPacketBase.class.isAssignableFrom(returnClass) && returnClass != SimpleModPacketBase.class) {
                         result = returnClass;
                     }
                 }
             } catch (Exception ignored) {
             }
         }
-        if (result == BaseModPacket.class) {
+        if (result == SimpleModPacketBase.class) {
             throw new RuntimeException("Failed to reflectively find type argument of PacketConstructor. " +
                     "Please either refactor your code according to the docs or override getPacketClass.");
         }

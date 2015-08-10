@@ -22,16 +22,16 @@ public final class PacketToChannelMap {
 
     public static final String PACKET_DATA_FIELD = "_sc$pkt$data";
 
-    private static Map<Class<? extends BaseModPacket>, SimplePacketData> channels = new ConcurrentHashMap<>();
+    private static Map<Class<?>, SimplePacketData> channels = new ConcurrentHashMap<>();
 
     public static <P extends Packet> SimplePacketData.Normal<P> getData(P packet) {
         //noinspection unchecked
-        return (SimplePacketData.Normal<P>) packet._sc$getData();
+        return (SimplePacketData.Normal<P>) ((BaseModPacket) packet)._sc$getData();
     }
 
     public static <P extends Packet.WithResponse<R>, R extends Packet.Response> SimplePacketData.WithResponse<P, R> getData(P packet) {
         //noinspection unchecked
-        return (SimplePacketData.WithResponse<P, R>) packet._sc$getData();
+        return (SimplePacketData.WithResponse<P, R>) ((BaseModPacket) packet)._sc$getData();
     }
 
     public static SimplePacketData getDataFallback(BaseModPacket packet) {
@@ -43,18 +43,18 @@ public final class PacketToChannelMap {
     }
 
     public static synchronized <P extends Packet> void register(Class<P> clazz, String channel, int id, boolean async, BiConsumer<? super P, ? super EntityPlayer> handler) {
-        register(clazz, new SimplePacketData.Normal<>(channel, id, async, handler));
+        register0(clazz, new SimplePacketData.Normal<>(channel, id, async, handler));
     }
 
     public static synchronized <P extends Packet.WithResponse<R>, R extends Packet.Response> void register(Class<P> clazz, String channel, int id, boolean async, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
-        register(clazz, new SimplePacketData.WithResponseNormal<>(channel, id, async, handler));
+        register0(clazz, new SimplePacketData.WithResponseNormal<>(channel, id, async, handler));
     }
 
     public static synchronized <P extends Packet.WithResponse<R>, R extends Packet.Response> void registerFuture(Class<P> clazz, String channel, int id, boolean async, BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler) {
-        register(clazz, new SimplePacketData.WithResponseFuture<>(channel, id, async, handler));
+        register0(clazz, new SimplePacketData.WithResponseFuture<>(channel, id, async, handler));
     }
 
-    private static void register(Class<? extends BaseModPacket> clazz, SimplePacketData data) {
+    private static void register0(Class<?> clazz, SimplePacketData data) {
         if (channels.putIfAbsent(clazz, data) != null) {
             throw new IllegalArgumentException(String.format("Packet class %s used twice", clazz.getName()));
         }

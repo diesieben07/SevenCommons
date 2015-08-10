@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.net.*;
-import net.minecraft.entity.player.EntityPlayer;
+import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
+import de.take_weiland.mods.commons.internal.net.WithResponseRequestNettyVersion;
 import net.minecraft.entity.player.EntityPlayerMP;
 
 import java.lang.annotation.ElementType;
@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author diesieben07
  */
-public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
+public interface Packet extends SimplePacket, SimpleModPacketBase {
 
     /**
      * <p>Encode this packet to the output stream.</p>
@@ -31,15 +31,6 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
      * @param out the output stream
      */
     void writeTo(MCDataOutput out);
-
-    static Side receivingSide(Class<? extends BaseModPacket> clazz) {
-        Receiver annotation = clazz.getAnnotation(Receiver.class);
-        if (annotation == null) {
-            throw new IllegalStateException("Packet missing @Receiver annotation");
-        } else {
-            return annotation.value();
-        }
-    }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.TYPE)
@@ -56,12 +47,13 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
 
     @Override
     default void sendToServer() {
-        Network.sendToServer(this);
+        // see SimplePacketWithoutResponseMagic
+        Network.sendToServer((BaseNettyPacket) this);
     }
 
     @Override
     default void sendTo(EntityPlayerMP player) {
-        Network.sendToPlayer(player, this);
+        Network.sendToPlayer(player, (BaseNettyPacket) this);
     }
 
     /**
@@ -69,7 +61,7 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
      * <p>The response is supplied in form of a {@link CompletableFuture} when an instance of this packet is sent.</p>
      * @see de.take_weiland.mods.commons.net.SimplePacket.WithResponse
      */
-    interface WithResponse<R extends Packet.Response> extends SimplePacket.WithResponse<R>, BaseModPacket {
+    interface WithResponse<R extends Packet.Response> extends SimplePacket.WithResponse<R>, SimpleModPacketBase {
 
         /**
          * <p>Write this packet's data to the output stream.</p>
@@ -96,7 +88,7 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
     /**
      * <p>The response for a {@code Packet.WithResponse}.</p>
      */
-    interface Response extends BaseModPacket {
+    interface Response extends SimpleModPacketBase {
 
         /**
          * <p>Write this packet's data to the output stream.</p>
@@ -105,25 +97,5 @@ public interface Packet extends BaseModPacket, SimplePacket, BaseNettyPacket {
          */
         void writeTo(MCDataOutput out);
 
-    }
-
-    @Override
-    default void _sc$handle(EntityPlayer player) {
-        PacketToChannelMap.getData(this).handler.accept(this, player);
-    }
-
-    @Override
-    default byte[] _sc$encode() {
-        return NetworkImpl.encodePacket(this, PacketToChannelMap.getData(this));
-    }
-
-    @Override
-    default String _sc$channel() {
-        return PacketToChannelMap.getData(this).channel;
-    }
-
-    @Override
-    default boolean _sc$async() {
-        return PacketToChannelMap.getData(this).async;
     }
 }
