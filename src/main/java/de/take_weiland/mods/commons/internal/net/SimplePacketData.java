@@ -15,20 +15,20 @@ public abstract class SimplePacketData {
 
     public final String channel;
     public final int packetID;
-    public final boolean async;
+    public final byte info;
 
-    public SimplePacketData(String channel, int packetID, boolean async) {
+    public SimplePacketData(String channel, int packetID, byte info) {
         this.channel = channel;
         this.packetID = packetID;
-        this.async = async;
+        this.info = info;
     }
 
     public static final class Normal<P extends Packet> extends SimplePacketData {
 
         public final BiConsumer<? super P, ? super EntityPlayer> handler;
 
-        public Normal(String channel, int packetID, boolean async, BiConsumer<? super P, ? super EntityPlayer> handler) {
-            super(channel, packetID, async);
+        public Normal(String channel, int packetID, byte info, BiConsumer<? super P, ? super EntityPlayer> handler) {
+            super(channel, packetID, info);
             this.handler = handler;
         }
 
@@ -36,8 +36,8 @@ public abstract class SimplePacketData {
 
     public static abstract class WithResponse<P extends Packet.WithResponse<R>, R extends Packet.Response> extends SimplePacketData {
 
-        WithResponse(String channel, int packetID, boolean async) {
-            super(channel, packetID, async);
+        WithResponse(String channel, int packetID, byte info) {
+            super(channel, packetID, info);
         }
 
         public abstract void completeFuture(CompletableFuture<R> future, P packet, EntityPlayer player);
@@ -47,8 +47,8 @@ public abstract class SimplePacketData {
 
         private final BiFunction<? super P, ? super EntityPlayer, ? extends R> handler;
 
-        public WithResponseNormal(String channel, int packetID, boolean async, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
-            super(channel, packetID, async);
+        public WithResponseNormal(String channel, int packetID, byte info, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+            super(channel, packetID, info);
             this.handler = handler;
         }
 
@@ -66,8 +66,8 @@ public abstract class SimplePacketData {
 
         private final BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler;
 
-        public WithResponseFuture(String channel, int packetID, boolean async, BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler) {
-            super(channel, packetID, async);
+        public WithResponseFuture(String channel, int packetID, byte info, BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler) {
+            super(channel, packetID, info);
             this.handler = handler;
         }
 

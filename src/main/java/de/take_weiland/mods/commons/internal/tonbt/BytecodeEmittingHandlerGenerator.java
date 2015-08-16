@@ -288,7 +288,7 @@ public final class BytecodeEmittingHandlerGenerator {
         synchronized (BytecodeEmittingHandlerGenerator.class) {
             staticProperties = properties;
             //noinspection unchecked
-            result = (Class<? extends ToNbtHandler>) SCReflection.defineDynamicClass(cw.toByteArray());
+            result = (Class<? extends ToNbtHandler>) SCReflection.defineClass(cw.toByteArray());
             staticProperties = null;
         }
 

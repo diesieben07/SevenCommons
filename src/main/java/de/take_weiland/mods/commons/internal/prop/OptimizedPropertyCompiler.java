@@ -10,7 +10,9 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.*;
+import java.util.concurrent.atomic.AtomicLong;
 
+import static de.take_weiland.mods.commons.util.JavaUtils.unsafe;
 import static java.lang.invoke.MethodHandles.publicLookup;
 import static java.lang.invoke.MethodType.methodType;
 import static org.objectweb.asm.Opcodes.*;
@@ -40,10 +42,18 @@ final class OptimizedPropertyCompiler {
     static MethodHandle getterMHTemp;
     static MethodHandle setterMHTemp;
 
+    private static final AtomicLong counter = new AtomicLong();
+
     private static PropertyAccess<?> compileClass(Member member, Method setter) throws ReflectiveOperationException {
-        String name = SCReflection.nextDynamicClassName(OptimizedPropertyCompiler.class.getPackage());
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        cw.visit(V1_8, ACC_FINAL, name, null, "java/lang/Object", new String[]{Type.getInternalName(PropertyAccess.class)});
+        String name;
+
+        name = SCReflection.nextDynamicClassName();
+
+        Class<?> declaringClass = member.getDeclaringClass();
+//        name = Type.getInternalName(declaringClass) + "$$_sc$prop$" + counter.getAndIncrement();
+
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_8, ACC_FINAL | ACC_SUPER | ACC_SYNTHETIC, name, null, getSuperclass(), new String[]{Type.getInternalName(PropertyAccess.class)});
 
         generateConstructor(cw);
 
@@ -125,6 +135,7 @@ final class OptimizedPropertyCompiler {
             Type rawReturnType = Type.getType(getMH.type().returnType());
             Type objectType = Type.getType(Object.class);
 
+            gen.push();
             gen.getStatic(myType, "mh0", methodHandleType);
             gen.loadArg(0);
 
@@ -179,9 +190,9 @@ final class OptimizedPropertyCompiler {
                     gen.putField(Type.getType(p0), member.getName(), Type.getType(p1));
                 } else {
                     if (p0.isInterface()) {
-                        gen.invokeInterface(Type.getType(p0), new org.objectweb.asm.commons.Method(setter.getName(), Type.getMethodDescriptor(setter)));
+                        gen.invokeInterface(Type.getType(p0), getMethod(setter));
                     } else {
-                        gen.invokeVirtual(Type.getType(p0), new org.objectweb.asm.commons.Method(setter.getName(), Type.getMethodDescriptor(setter)));
+                        gen.invokeVirtual(Type.getType(p0), getMethod(setter));
                     }
                 }
             }
@@ -217,14 +228,36 @@ final class OptimizedPropertyCompiler {
             getterMHTemp = getMH;
             setterMHTemp = setMH;
             try {
-                return (PropertyAccess<?>) SCReflection.defineDynamicClass(cw.toByteArray()).newInstance();
+                Class<?> clazz = SCReflection.defineAnonymousClass(cw.toByteArray(), declaringClass);
+                return (PropertyAccess<?>) unsafe().allocateInstance(clazz);
             } finally {
                 getterMHTemp = setterMHTemp = null;
             }
         }
     }
 
+    private static final String magicAccessorClass = "sun/reflect/MagicAccessorImpl";
+    private static final boolean enableDirectInvokePrivate;
+
+    static {
+        boolean hasMagicAccessor = false;
+        try {
+            Class.forName(magicAccessorClass.replace('/', '.'));
+            hasMagicAccessor = true;
+        } catch (ClassNotFoundException x) {
+            // ignored
+        }
+        enableDirectInvokePrivate = true;
+    }
+
+    private static String getSuperclass() {
+        return "java/lang/Object";
+    }
+
     private static boolean canAccessDirectly(Member member) {
+        if (enableDirectInvokePrivate) {
+            return true;
+        }
         boolean a = Modifier.isPublic(member.getDeclaringClass().getModifiers());
         boolean b = Modifier.isPublic(member.getModifiers());
         return a && b;
@@ -240,7 +273,7 @@ final class OptimizedPropertyCompiler {
         GeneratorAdapter gen = new GeneratorAdapter(0, getMethod("void <init>()"), null, null, cw);
         gen.visitCode();
         gen.loadThis();
-        gen.invokeConstructor(Type.getType(Object.class), getMethod("void <init>()"));
+        gen.invokeConstructor(Type.getObjectType(getSuperclass()), getMethod("void <init>()"));
         gen.returnValue();
         gen.endMethod();
     }

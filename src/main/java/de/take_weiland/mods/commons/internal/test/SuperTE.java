@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.test;
 
-import de.take_weiland.mods.commons.nbt.ToNbt;
 import net.minecraft.tileentity.TileEntity;
 
 /**
@@ -8,7 +7,6 @@ import net.minecraft.tileentity.TileEntity;
  */
 public class SuperTE extends TileEntity {
 
-    @ToNbt
     private String toNbtTest;
 
 

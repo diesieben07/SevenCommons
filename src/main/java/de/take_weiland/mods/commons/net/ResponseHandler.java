@@ -13,8 +13,8 @@ abstract class ResponseHandler<P extends Packet.WithResponse<R>, R extends Packe
     final PacketConstructor<P> constructor;
     final PacketConstructor<R> responseConstructor;
 
-    ResponseHandler(boolean async, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor) {
-        super(async);
+    ResponseHandler(byte info, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor) {
+        super(info);
         this.constructor = constructor;
         this.responseConstructor = responseConstructor;
     }

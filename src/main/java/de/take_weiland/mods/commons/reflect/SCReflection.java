@@ -25,6 +25,7 @@ import java.lang.reflect.Modifier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static de.take_weiland.mods.commons.util.JavaUtils.unsafe;
 import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
@@ -151,8 +152,8 @@ public final class SCReflection {
      * @param bytes the bytes describing the class
      * @return the defined class
      */
-    public static Class<?> defineDynamicClass(byte[] bytes) {
-        return defineDynamicClass(bytes, Launch.classLoader);
+    public static Class<?> defineClass(byte[] bytes) {
+        return defineClass(bytes, Launch.classLoader);
     }
 
     /**
@@ -162,7 +163,7 @@ public final class SCReflection {
      * @param loader the class loader to use
      * @return the defined class
      */
-    public static Class<?> defineDynamicClass(byte[] bytes, ClassLoader loader) {
+    public static Class<?> defineClass(byte[] bytes, ClassLoader loader) {
         if (DEBUG) {
             try {
                 ClassNode node = ASMUtils.getThinClassNode(bytes);
@@ -197,6 +198,12 @@ public final class SCReflection {
         } catch (IllegalAccessException e) {
             throw new AssertionError("impossible");
         }
+    }
+
+    public static Class<?> defineAnonymousClass(byte[] bytes, Class<?> hostClass) {
+        Class<?> clazz = unsafe().defineAnonymousClass(hostClass, bytes, null);
+        unsafe().ensureClassInitialized(clazz);
+        return clazz;
     }
 
     /**

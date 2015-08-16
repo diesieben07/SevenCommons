@@ -1,6 +1,9 @@
-package de.take_weiland.mods.commons.internal.net;
+package de.take_weiland.mods.commons.net;
 
-import de.take_weiland.mods.commons.net.Packet;
+import de.take_weiland.mods.commons.internal.net.BaseModPacket;
+import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
+import de.take_weiland.mods.commons.internal.net.NetworkImpl;
+import de.take_weiland.mods.commons.internal.net.SimplePacketData;
 import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.function.BiConsumer;
@@ -10,9 +13,7 @@ import java.util.function.BiConsumer;
  *
  * @author diesieben07
  */
-public interface SimplePacketWithoutResponseMagic extends BaseNettyPacket, BaseModPacket {
-
-    String CLASS_NAME = "de/take_weiland/mods/commons/internal/net/SimplePacketWithoutResponseMagic";
+interface PacketAdditionalMethods extends BaseNettyPacket, BaseModPacket {
 
     @Override
     default void _sc$handle(EntityPlayer player) {
@@ -31,8 +32,8 @@ public interface SimplePacketWithoutResponseMagic extends BaseNettyPacket, BaseM
     }
 
     @Override
-    default boolean _sc$async() {
-        return _sc$getData().async;
+    default byte _sc$characteristics() {
+        return _sc$getData().info;
     }
 
 }

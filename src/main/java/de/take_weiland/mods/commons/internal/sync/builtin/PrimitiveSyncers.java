@@ -2,11 +2,23 @@ package de.take_weiland.mods.commons.internal.sync.builtin;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
+import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.Syncer;
 
 enum BooleanSyncer implements Syncer.ForImmutable<Boolean> {
 
     INSTANCE;
+
+    @Override
+    public Change<Boolean> check(Object obj, PropertyAccess<Boolean> property, Object cObj, PropertyAccess<Boolean> companion) {
+        boolean value = property.getBoolean(obj);
+        if (value == companion.getBoolean(cObj)) {
+            return noChange();
+        } else {
+            companion.setBoolean(cObj, value);
+            return newValue(value);
+        }
+    }
 
     @Override
     public Boolean decode(MCDataInput in) {
@@ -29,6 +41,17 @@ enum ByteSyncer implements Syncer.ForImmutable<Byte> {
     INSTANCE;
 
     @Override
+    public Change<Byte> check(Object obj, PropertyAccess<Byte> property, Object cObj, PropertyAccess<Byte> companion) {
+        byte value = property.getByte(obj);
+        if (value == companion.getByte(cObj)) {
+            return noChange();
+        } else {
+            companion.setByte(cObj, value);
+            return newValue(value);
+        }
+    }
+
+    @Override
     public Byte decode(MCDataInput in) {
         return in.readByte();
     }
@@ -47,6 +70,17 @@ enum ByteSyncer implements Syncer.ForImmutable<Byte> {
 enum ShortSyncer implements Syncer.ForImmutable<Short> {
 
     INSTANCE;
+
+    @Override
+    public Change<Short> check(Object obj, PropertyAccess<Short> property, Object cObj, PropertyAccess<Short> companion) {
+        short value = property.getShort(obj);
+        if (value == companion.getShort(cObj)) {
+            return noChange();
+        } else {
+            companion.setShort(cObj, value);
+            return newValue(value);
+        }
+    }
 
     @Override
     public Short decode(MCDataInput in) {
@@ -69,6 +103,17 @@ enum CharSyncer implements Syncer.ForImmutable<Character> {
     INSTANCE;
 
     @Override
+    public Change<Character> check(Object obj, PropertyAccess<Character> property, Object cObj, PropertyAccess<Character> companion) {
+        char value = property.getChar(obj);
+        if (value == companion.getChar(cObj)) {
+            return noChange();
+        } else {
+            companion.setChar(cObj, value);
+            return newValue(value);
+        }
+    }
+
+    @Override
     public Character decode(MCDataInput in) {
         return in.readChar();
     }
@@ -87,6 +132,17 @@ enum CharSyncer implements Syncer.ForImmutable<Character> {
 enum IntSyncer implements Syncer.ForImmutable<Integer> {
 
     INSTANCE;
+
+    @Override
+    public Change<Integer> check(Object obj, PropertyAccess<Integer> property, Object cObj, PropertyAccess<Integer> companion) {
+        int value = property.getInt(obj);
+        if (value == companion.getInt(cObj)) {
+            return noChange();
+        } else {
+            companion.setInt(cObj, value);
+            return newValue(value);
+        }
+    }
 
     @Override
     public Integer decode(MCDataInput in) {
@@ -109,6 +165,17 @@ enum LongSyncer implements Syncer.ForImmutable<Long> {
     INSTANCE;
 
     @Override
+    public Change<Long> check(Object obj, PropertyAccess<Long> property, Object cObj, PropertyAccess<Long> companion) {
+        long value = property.getLong(obj);
+        if (value == companion.getLong(cObj)) {
+            return noChange();
+        } else {
+            companion.setLong(cObj, value);
+            return newValue(value);
+        }
+    }
+
+    @Override
     public Long decode(MCDataInput in) {
         return in.readLong();
     }
@@ -129,6 +196,17 @@ enum FloatSyncer implements Syncer.ForImmutable<Float> {
     INSTANCE;
 
     @Override
+    public Change<Float> check(Object obj, PropertyAccess<Float> property, Object cObj, PropertyAccess<Float> companion) {
+        float value = property.getFloat(obj);
+        if (value == companion.getFloat(cObj)) {
+            return noChange();
+        } else {
+            companion.setFloat(cObj, value);
+            return newValue(value);
+        }
+    }
+
+    @Override
     public Float decode(MCDataInput in) {
         return in.readFloat();
     }
@@ -147,6 +225,17 @@ enum FloatSyncer implements Syncer.ForImmutable<Float> {
 enum DoubleSyncer implements Syncer.ForImmutable<Double> {
 
     INSTANCE;
+
+    @Override
+    public Change<Double> check(Object obj, PropertyAccess<Double> property, Object cObj, PropertyAccess<Double> companion) {
+        double value = property.getDouble(obj);
+        if (value == companion.getDouble(cObj)) {
+            return noChange();
+        } else {
+            companion.setDouble(cObj, value);
+            return newValue(value);
+        }
+    }
 
     @Override
     public Double decode(MCDataInput in) {

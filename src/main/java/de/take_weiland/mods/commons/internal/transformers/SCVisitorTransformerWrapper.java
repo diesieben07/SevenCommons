@@ -4,7 +4,6 @@ import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.net.BaseModPacket;
-import de.take_weiland.mods.commons.internal.net.SimplePacketWithoutResponseMagic;
 import de.take_weiland.mods.commons.internal.transformers.net.InterfaceAdder;
 import de.take_weiland.mods.commons.internal.transformers.net.PacketGetDataOptimizer;
 import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
@@ -63,7 +62,8 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
                 "de/take_weiland/mods/commons/net/Packet",
                 "de/take_weiland/mods/commons/net/Packet$WithResponse");
 
-        addEntry(cv -> new InterfaceAdder(cv, SimplePacketWithoutResponseMagic.CLASS_NAME), "de/take_weiland/mods/commons/net/Packet");
+        addEntry(cv -> new InterfaceAdder(cv, "de/take_weiland/mods/commons/net/PacketAdditionalMethods"), "de/take_weiland/mods/commons/net/Packet");
+        addEntry(cv -> new InterfaceAdder(cv, "de/take_weiland/mods/commons/net/RawPacketAdditionalMethods"), "de/take_weiland/mods/commons/net/RawPacket");
     }
 
     private static Predicate<String> apacheFilter() {

@@ -93,7 +93,7 @@ public final class MethodHandleStrategy extends ReflectionStrategy {
         synchronized (MethodHandleStrategy.class) {
             staticData = handles.values().iterator();
             try {
-                Class<?> genClass = SCReflection.defineDynamicClass(cw.toByteArray());
+                Class<?> genClass = SCReflection.defineClass(cw.toByteArray());
                 Constructor<?> cstr = genClass.getDeclaredConstructor();
                 cstr.setAccessible(true);
                 //noinspection unchecked

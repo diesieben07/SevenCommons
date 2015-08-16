@@ -1,9 +1,9 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.primitives.Ints;
-import com.google.common.util.concurrent.AbstractListeningExecutorService;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
+import de.take_weiland.mods.commons.internal.SchedulerBase;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import sun.misc.Unsafe;
 
@@ -26,7 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-public final class Scheduler extends AbstractListeningExecutorService {
+public final class Scheduler extends SchedulerBase {
 
     private static final Scheduler server;
     private static final Scheduler client;
@@ -106,7 +106,7 @@ public final class Scheduler extends AbstractListeningExecutorService {
     private static final long headOff;
 
     static {
-        U = JavaUtils.getUnsafe();
+        U = JavaUtils.unsafe();
         try {
             headOff = U.objectFieldOffset(Scheduler.class.getDeclaredField("head"));
         } catch (NoSuchFieldException e) {
@@ -122,7 +122,8 @@ public final class Scheduler extends AbstractListeningExecutorService {
      * helper to add a single task
      * Do not rename, see {@link de.take_weiland.mods.commons.internal.SchedulerInternalTask}
      */
-    private void addTask(SchedulerInternalTask task) {
+    @Override
+    protected void addTask(SchedulerInternalTask task) {
         addTasks(task, task);
     }
 

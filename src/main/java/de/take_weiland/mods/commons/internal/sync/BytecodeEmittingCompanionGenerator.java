@@ -451,7 +451,7 @@ public final class BytecodeEmittingCompanionGenerator {
             staticProperties = properties;
             try {
                 cw.visitEnd();
-                cls = SCReflection.defineDynamicClass(cw.toByteArray());
+                cls = SCReflection.defineClass(cw.toByteArray());
             } finally {
                 staticProperties = null;
             }

@@ -42,11 +42,12 @@ public final class WithResponseRequestNettyVersion<R extends Packet.Response> im
 
     @Override
     public String _sc$channel() {
-        return PacketToChannelMap.getData(original).channel;
+        return ((BaseModPacket) original)._sc$getData().channel;
     }
 
     @Override
-    public boolean _sc$async() {
-        return PacketToChannelMap.getData(original).async;
+    public byte _sc$characteristics() {
+        return ((BaseModPacket) original)._sc$getData().info;
     }
+
 }

@@ -58,4 +58,5 @@ final class FieldProperty<T> extends AbstractProperty<T, Field> {
     public Class<? super Object> getRawType() {
         return (Class<? super Object>) member.getType();
     }
+
 }

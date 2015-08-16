@@ -11,8 +11,8 @@ final class ResponseNormalHandler<P extends Packet.WithResponse<R>, R extends Pa
 
     final BiFunction<? super P, ? super EntityPlayer, ? extends R> handler;
 
-    ResponseNormalHandler(boolean async, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
-        super(async, constructor, responseConstructor);
+    ResponseNormalHandler(byte info, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+        super(info, constructor, responseConstructor);
         this.handler = handler;
     }
 

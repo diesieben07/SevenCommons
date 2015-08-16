@@ -80,9 +80,6 @@ public final class ASMHooks {
     public static void invokeSyncCompanionCheck(Object obj, SyncCompanion companion) {
         if (companion != null) {
             SyncEvent event = companion.check(obj, false);
-            if (event != null) {
-                event.send(obj);
-            }
         }
     }
 

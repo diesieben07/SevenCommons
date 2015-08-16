@@ -3,7 +3,9 @@ package de.take_weiland.mods.commons.internal.sync;
 import com.google.common.collect.Iterables;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
+import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.net.*;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.Syncer;
@@ -22,7 +24,7 @@ import java.util.List;
 /**
  * @author diesieben07
  */
-public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNettyPacket, Runnable {
+public abstract class SyncEvent extends SchedulerInternalTask implements SyncCompanion.ChangeIterator, BaseNettyPacket {
 
     public static final String CHANNEL = "SC|Sync";
 
@@ -57,7 +59,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
 
     abstract Object getObjectDirect(EntityPlayer player);
 
-    public static void handle(byte[] payload, EntityPlayer player, Side side) {
+    public static void handle(String channel, byte[] payload, EntityPlayer player, Side side) {
         MCDataInput in = Network.newInput(payload);
 
         player = Players.getClient();
@@ -114,9 +116,10 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
 
     public abstract void send(Object obj);
 
+    @SuppressWarnings("unused")
     public void send(EntityPlayerMP player) {
         done();
-        Network.sendToPlayer(player, this);
+        NetworkImpl.sendToPlayer(player, this);
     }
 
     @Override
@@ -144,11 +147,16 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
 
     @Override
     public void _sc$handle(EntityPlayer player) {
-        Scheduler.client().execute(this);
+        SchedulerInternalTask.execute(Scheduler.client(), this);
     }
 
     @Override
-    public void run() {
+    public byte _sc$characteristics() {
+        return RawPacket.CLIENT | RawPacket.ASYNC;
+    }
+
+    @Override
+    public boolean run() {
         try {
             SyncedObjectProxy obj = (SyncedObjectProxy) getObjectDirect(Players.getClient());
             if (obj != null) {
@@ -160,6 +168,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
         } catch (ClassCastException ignored) {
             // the cast might fail, in that case we just ignore silently
         }
+        return false;
     }
 
     public static final class ForTE extends SyncEvent {
@@ -200,7 +209,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
         public void send(Object obj) {
             done();
             TileEntity te = (TileEntity) obj;
-            Network.sendTo(Players.getTrackingChunk(te.getWorld(), te.xCoord >> 4, te.zCoord >> 4), this);
+            NetworkImpl.sendTo(Players.getTrackingChunk(te.getWorld(), te.xCoord >> 4, te.zCoord >> 4), this);
         }
     }
 
@@ -230,7 +239,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
         @Override
         public void send(Object obj) {
             done();
-            Network.sendTo(Entities.getTrackingPlayers((Entity) obj), this);
+            NetworkImpl.sendTo(Entities.getTrackingPlayers((Entity) obj), this);
         }
     }
 
@@ -262,7 +271,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
             done();
             Container container = (Container) obj;
             List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
-            Network.sendTo(Iterables.filter(crafters, EntityPlayerMP.class), this);
+            NetworkImpl.sendTo(Iterables.filter(crafters, EntityPlayerMP.class), this);
         }
     }
 
@@ -297,9 +306,9 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
         public void send(Object obj) {
             done();
             Entity entity = ((IEEPSyncCompanion) ((SyncedObjectProxy) obj)._sc$getCompanion())._sc$entity;
-            Network.sendTo(Entities.getTrackingPlayers(entity), this);
+            NetworkImpl.sendTo(Entities.getTrackingPlayers(entity), this);
             if (entity instanceof EntityPlayerMP) {
-                Network.sendToPlayer((EntityPlayerMP) entity, this);
+                NetworkImpl.sendToPlayer((EntityPlayerMP) entity, this);
             }
 
         }

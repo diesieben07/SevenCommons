@@ -3,20 +3,18 @@ package de.take_weiland.mods.commons.internal.net;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.ProtocolException;
+import de.take_weiland.mods.commons.net.RawPacket;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.Scheduler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.minecraft.network.play.server.S3FPacketCustomPayload;
-
-import java.io.IOException;
 
 /**
  * @author diesieben07
  */
 @ChannelHandler.Sharable
-public final class SCMessageHandlerClient extends ChannelInboundHandlerAdapter implements PartTracker {
+public final class SCMessageHandlerClient extends SCMessageHandler {
 
     public static final SCMessageHandlerClient INSTANCE = new SCMessageHandlerClient();
 
@@ -24,11 +22,13 @@ public final class SCMessageHandlerClient extends ChannelInboundHandlerAdapter i
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof BaseNettyPacket) {
             BaseNettyPacket packet = (BaseNettyPacket) msg;
-            if (!packet._sc$canReceive(Side.SERVER)) {
-                throw new ProtocolException("Packet " + msg + " received on invalid side server");
+            byte props = packet._sc$characteristics();
+
+            if ((props & RawPacket.CLIENT) == 0) {
+                throw new ProtocolException("Packet " + msg + " received on invalid side client");
             }
 
-            if (packet._sc$async()) {
+            if ((props & RawPacket.ASYNC) != 0) {
                 packet._sc$handle(Players.getClient());
             } else {
                 SchedulerInternalTask.execute(Scheduler.client(), new SyncPacketExecClient(packet));
@@ -54,48 +54,8 @@ public final class SCMessageHandlerClient extends ChannelInboundHandlerAdapter i
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        System.err.println("Exception in netty pipeline on client!");
-        cause.printStackTrace();
-        ctx.fireExceptionCaught(cause);
-    }
-    private byte[] multipartData;
-    private String multipartChannel;
-
-    private int multipartPos;
-
-    @Override
-    public void start(String channel, int len) throws IOException {
-        if (multipartChannel != null) {
-            throw new IOException("New Multipart packet before old was finished");
-        }
-        multipartChannel = channel;
-        multipartData = new byte[len];
-        multipartPos = 0;
+    Side side() {
+        return Side.CLIENT;
     }
 
-    @Override
-    public void onPart(byte[] part) {
-        int actLen = part.length - 1;
-
-        System.arraycopy(part, 1, multipartData, multipartPos, actLen);
-        multipartPos += actLen;
-    }
-
-    @Override
-    public byte[] checkDone() {
-        if (multipartPos == multipartData.length) {
-            return multipartData;
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public String channel() {
-        String channel = multipartChannel;
-        multipartData = null;
-        multipartChannel = null;
-        return channel;
-    }
 }

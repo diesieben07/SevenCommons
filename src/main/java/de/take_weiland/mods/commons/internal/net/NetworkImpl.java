@@ -5,19 +5,19 @@ import cpw.mods.fml.common.LoaderState;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.*;
 import de.take_weiland.mods.commons.util.Players;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelPromise;
+import de.take_weiland.mods.commons.util.Scheduler;
+import io.netty.channel.*;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.play.client.C17PacketCustomPayload;
 import net.minecraft.network.play.server.S3FPacketCustomPayload;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Map;
@@ -31,19 +31,49 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class NetworkImpl {
 
-    static Map<String, PacketHandler> channels = new ConcurrentHashMap<>();
+    public static final Logger LOGGER = SevenCommons.scLogger("Network");
+
+    static Map<String, RawPacketHandler> channels = new ConcurrentHashMap<>();
 
     private static final String MULTIPART_CHANNEL = "SevenCommons|MP";
     private static final int MULTIPART_PREFIX = 0;
     private static final int MULTIPART_DATA = 1;
 
+    static void invokeHandler(RawPacketHandler handler, String channel, byte[] data, EntityPlayer player, byte side) {
+        byte c = handler.characteristics();
+        if ((c & side) == 0) {
+            throw new ProtocolException(String.format("Received packet on channel %s with handler %s on invalid side %s", channel, handler, side == RawPacket.CLIENT ? "client" : "server"));
+        }
+        if ((c & RawPacket.ASYNC) == 0) {
+            if (side == RawPacket.CLIENT) {
+                SchedulerInternalTask.execute(Scheduler.client(), new SchedulerInternalTask() {
+                    @Override
+                    public boolean run() {
+                        handler.accept(channel, data, Players.getClient(), Side.CLIENT);
+                        return false;
+                    }
+                });
+            } else {
+                SchedulerInternalTask.execute(Scheduler.server(), new SchedulerInternalTask() {
+                    @Override
+                    public boolean run() {
+                        handler.accept(channel, data, player, Side.SERVER);
+                        return false;
+                    }
+                });
+            }
+        } else {
+            handler.accept(channel, data, player, side == RawPacket.CLIENT ? Side.CLIENT : Side.SERVER);
+        }
+    }
+
     // receiving
 
-    static boolean handleServerCustomPacket(C17PacketCustomPayload mcPacket, EntityPlayerMP player, PartTracker tracker) throws IOException {
+    static boolean handleServerCustomPacket(C17PacketCustomPayload mcPacket, EntityPlayerMP player, SCMessageHandler tracker) throws IOException {
         String channelName = mcPacket.getChannel();
-        PacketHandler handler = channels.get(channelName);
+        RawPacketHandler handler = channels.get(channelName);
         if (handler != null) {
-            handler.accept(mcPacket.getData(), player, Side.SERVER);
+            handler.accept(channelName, mcPacket.getData(), player, Side.SERVER);
             return true;
         } else if (channelName.equals(MULTIPART_CHANNEL)) {
             handleMultipartPacket(mcPacket.getData(), tracker, player, Side.SERVER);
@@ -53,11 +83,11 @@ public final class NetworkImpl {
         }
     }
 
-    static boolean handleClientCustomPacket(S3FPacketCustomPayload mcPacket, PartTracker tracker) throws IOException {
+    static boolean handleClientCustomPacket(S3FPacketCustomPayload mcPacket, SCMessageHandler tracker) throws IOException {
         String channelName = mcPacket.func_149169_c();
-        PacketHandler handler = channels.get(channelName);
+        RawPacketHandler handler = channels.get(channelName);
         if (handler != null) {
-            handler.accept(mcPacket.func_149168_d(), Players.getClient(), Side.CLIENT);
+            handler.accept(channelName, mcPacket.func_149168_d(), Players.getClient(), Side.CLIENT);
             return true;
         } else if (channelName.equals(MULTIPART_CHANNEL)) {
             handleMultipartPacket(mcPacket.func_149168_d(), tracker, Players.getClient(), Side.CLIENT);
@@ -67,19 +97,35 @@ public final class NetworkImpl {
         }
     }
 
-    private static void handleMultipartPacket(byte[] data, PartTracker tracker, EntityPlayer player, Side side) throws IOException {
+    private static void handleMultipartPacket(byte[] data, SCMessageHandler tracker, EntityPlayer player, Side side) throws IOException {
         if (data[0] == MULTIPART_PREFIX) {
             MCDataInput in = Network.newInput(data, 1, data.length - 1);
             String channel = in.readString();
             int len = in.readVarInt();
-            tracker.start(channel, len);
+            if (tracker.multipartChannel != null) {
+                throw new IOException("New Multipart packet before old was finished");
+            }
+            tracker.multipartChannel = channel;
+            tracker.multipartData = new byte[len];
+            tracker.multipartPos = 0;
         } else {
-            tracker.onPart(data);
-            byte[] complete = tracker.checkDone();
+            int actLen = data.length - 1;
+
+            System.arraycopy(data, 1, tracker.multipartData, tracker.multipartPos, actLen);
+            tracker.multipartPos += actLen;
+            byte[] result;
+            if (tracker.multipartPos == tracker.multipartData.length) {
+                result = tracker.multipartData;
+            } else {
+                result = null;
+            }
+            byte[] complete = result;
             if (complete != null) {
-                String channel = tracker.channel();
+                String channel = tracker.multipartChannel;
+                tracker.multipartData = null;
+                tracker.multipartChannel = null;
                 try {
-                    channels.get(channel).accept(complete, player, side);
+                    channels.get(channel).accept(channel, complete, player, side);
                 } catch (NullPointerException e) {
                     throw new IOException("Unknown channel in multipart packet " + channel);
                 }
@@ -129,7 +175,7 @@ public final class NetworkImpl {
 
     // registering
 
-    public static synchronized void register(String channel, PacketHandler handler) {
+    public static synchronized void register(String channel, RawPacketHandler handler) {
         checkNotFrozen();
         if (channels.putIfAbsent(channel, handler) != null) {
             throw new IllegalStateException(String.format("Channel %s already registered", channel));
@@ -183,5 +229,23 @@ public final class NetworkImpl {
     }
 
     private NetworkImpl() {
+    }
+
+    public static void sendTo(Iterable<? extends EntityPlayer> players, BaseNettyPacket packet) {
+        for (EntityPlayer player : players) {
+            sendToPlayer(Players.checkNotClient(player), packet);
+        }
+    }
+
+    public static void sendToPlayer(EntityPlayerMP player, BaseNettyPacket packet) {
+        player.playerNetServerHandler.netManager.channel()
+                .writeAndFlush(packet)
+                .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    }
+
+    public static void sendToServer(BaseNettyPacket packet) {
+        SevenCommons.proxy.getClientNetworkManager().channel()
+                .writeAndFlush(packet)
+                .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 }

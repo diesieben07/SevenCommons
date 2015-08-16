@@ -12,8 +12,8 @@ class NormalHandler<P extends Packet> extends SimpleChannelBuilderImpl.Handler {
     private final BiConsumer<? super P, ? super EntityPlayer> handlerF;
     private final PacketConstructor<P> constructor;
 
-    NormalHandler(boolean async, BiConsumer<? super P, ? super EntityPlayer> handlerF, PacketConstructor<P> constructor) {
-        super(async);
+    NormalHandler(byte info, BiConsumer<? super P, ? super EntityPlayer> handlerF, PacketConstructor<P> constructor) {
+        super(info);
         this.handlerF = handlerF;
         this.constructor = constructor;
     }

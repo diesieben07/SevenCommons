@@ -1,23 +1,31 @@
 package de.take_weiland.mods.commons.internal.test;
 
-import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.util.Listenable;
+
+import java.util.Random;
 
 /**
  * @author diesieben07
  */
 public class TestTE extends SuperTE implements SyncedInterface, Listenable<String> {
 
-    @Sync
-    @ToNbt
+    //    @Sync
     public String test = "__nullval__";
 
-    @Sync
+    //    @Sync
     Integer foobarusMax;
 
+    private float syncFoobar;
+
     @Sync
-    float syncFoobar;
+    private float getSync() {
+        return syncFoobar;
+    }
+
+    private void setSync(float f) {
+        syncFoobar = f;
+    }
 
     private int tick;
 
@@ -33,6 +41,9 @@ public class TestTE extends SuperTE implements SyncedInterface, Listenable<Strin
 
     @Override
     public void updateEntity() {
+        if (!worldObj.isRemote) {
+            syncFoobar = new Random().nextFloat();
+        }
 //        if (tick++ % 10 == 0) {
 //            if (Sides.sideOf(this).isServer()) {
 //                test = String.valueOf(new Random().nextInt(Integer.MAX_VALUE));
@@ -41,5 +52,9 @@ public class TestTE extends SuperTE implements SyncedInterface, Listenable<Strin
 //                System.out.println("client val's are test=" + test + ", syncFoobar=" + syncFoobar);
 //            }
 //        }
+    }
+
+    public float getSyncFoobar() {
+        return syncFoobar;
     }
 }

@@ -263,58 +263,36 @@ public final class JavaUtils {
     }
 
     /**
-     * <p>Check if {@code sun.misc.Unsafe} is available on this JVM.</p>
-     *
-     * @return true if sun.misc.Unsafe was found
-     */
-    @Unsafe
-    public static boolean hasUnsafe() {
-        initUnsafe();
-        return unsafe != null;
-    }
-
-    /**
      * <p>Return the {@code sun.misc.Unsafe} instance if it is available, {@code null} otherwise.</p>
      *
      * @return the {@code sun.misc.Unsafe} instance or null
      */
     @SuppressWarnings("unchecked")
     @Unsafe
-    public static <T> T getUnsafe() {
-        initUnsafe();
-        return (T) unsafe;
+    public static sun.misc.Unsafe unsafe() {
+        return unsafe;
     }
 
-    private static Object unsafe;
+    private static final sun.misc.Unsafe unsafe;
 
-    private static volatile boolean unsafeChecked;
-
-    private static void initUnsafe() {
-        if (unsafeChecked) {
-            return;
-        }
-        synchronized (JavaUtils.class) {
-            if (unsafeChecked) {
-                return;
-            }
-
-            unsafeChecked = true;
-            try {
-                Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
-                for (Field field : unsafeClass.getDeclaredFields()) {
-                    if (!Modifier.isStatic(field.getModifiers())) {
-                        continue;
-                    }
-                    field.setAccessible(true);
-                    Object value = field.get(null);
-                    if (unsafeClass.isInstance(value)) {
-                        unsafe = value;
-                        break;
-                    }
+    static {
+        try {
+            sun.misc.Unsafe u = null;
+            Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+            for (Field field : unsafeClass.getDeclaredFields()) {
+                if (!Modifier.isStatic(field.getModifiers())) {
+                    continue;
                 }
-            } catch (Exception e) {
-                // no unsafe
+                field.setAccessible(true);
+                Object value = field.get(null);
+                if (unsafeClass.isInstance(value)) {
+                    u = (sun.misc.Unsafe) value;
+                    break;
+                }
             }
+            unsafe = u;
+        } catch (Exception e) {
+            throw new RuntimeException("No unsafe", e);
         }
     }
 

@@ -56,6 +56,10 @@ public abstract class VisitorBasedTransformer implements IClassTransformer {
         addEntry(constructor, classMatcher, Predicate.isEqual(methodName));
     }
 
+    public final void addEntry(Function<? super MethodVisitor, ? extends MethodVisitor> constructor, String className, Predicate<? super String> methodNameMatcher) {
+        addEntry(constructor, Predicate.isEqual(className), methodNameMatcher);
+    }
+
     public final void addEntry(Function<? super MethodVisitor, ? extends MethodVisitor> constructor, Predicate<? super String> classMatcher, Predicate<? super String> methodNameMatcher) {
         addEntry0(classVisitor -> new SingleMethodTransformer(classVisitor, constructor, methodNameMatcher), classMatcher);
     }

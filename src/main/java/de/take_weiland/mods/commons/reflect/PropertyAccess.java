@@ -30,6 +30,78 @@ public interface PropertyAccess<T> extends Function<Object, T>, BiConsumer<Objec
      */
     void set(Object o, T val);
 
+    default boolean getBoolean(Object o) {
+        return (Boolean) get(o);
+    }
+
+    default byte getByte(Object o) {
+        return (Byte) get(o);
+    }
+
+    default short getShort(Object o) {
+        return (Short) get(o);
+    }
+
+    default char getChar(Object o) {
+        return (Character) get(o);
+    }
+
+    default int getInt(Object o) {
+        return (Integer) get(o);
+    }
+
+    default long getLong(Object o) {
+        return (Long) get(o);
+    }
+
+    default float getFloat(Object o) {
+        return (Float) get(o);
+    }
+
+    default double getDouble(Object o) {
+        return (Double) get(o);
+    }
+
+    @SuppressWarnings("unchecked")
+    default void setBoolean(Object o, boolean v) {
+        set(o, (T) (Object) v);
+    }
+
+    @SuppressWarnings("unchecked")
+    default void setByte(Object o, byte v) {
+        set(o, (T) (Object) v);
+    }
+
+    @SuppressWarnings("unchecked")
+    default void setShort(Object o, short v) {
+        set(o, (T) (Object) v);
+    }
+
+    @SuppressWarnings("unchecked")
+    default void setChar(Object o, char v) {
+        set(o, (T) (Object) v);
+    }
+
+    @SuppressWarnings("unchecked")
+    default void setInt(Object o, int v) {
+        set(o, (T) (Object) v);
+    }
+
+    @SuppressWarnings("unchecked")
+    default void setLong(Object o, long v) {
+        set(o, (T) (Object) v);
+    }
+
+    @SuppressWarnings("unchecked")
+    default void setFloat(Object o, float v) {
+        set(o, (T) (Object) v);
+    }
+
+    @SuppressWarnings("unchecked")
+    default void setDouble(Object o, double v) {
+        set(o, (T) (Object) v);
+    }
+
     @Override
     default void accept(Object o, T t) {
         set(o, t);

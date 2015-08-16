@@ -4,6 +4,7 @@ import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
+import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.Scheduler;
@@ -37,10 +38,11 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         validateID(id);
 
         Class<P> packetClass = constructor.getPacketClass();
-        boolean async = isAsync(packetClass);
+        byte info = getInfo(packetClass);
 
-        PacketToChannelMap.register(packetClass, channel, id, async, handler);
-        addHandler(id, new NormalHandler<>(async, handler, constructor));
+        PacketToChannelMap.register(packetClass, channel, id, info, handler);
+
+        addHandler(id, new NormalHandler<>(info, handler, constructor));
         return this;
     }
 
@@ -49,11 +51,11 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         validateID(id);
 
         Class<P> packetClass = constructor.getPacketClass();
-        boolean async = isAsync(packetClass);
+        byte info = getInfo(packetClass);
 
-        PacketToChannelMap.register(packetClass, channel, id, async, handler);
+        PacketToChannelMap.register(packetClass, channel, id, info, handler);
 
-        addHandler(id, new ResponseNormalHandler<>(async, constructor, responseConstructor, handler));
+        addHandler(id, new ResponseNormalHandler<>(info, constructor, responseConstructor, handler));
 
         return this;
     }
@@ -63,11 +65,11 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         validateID(id);
 
         Class<P> packetClass = constructor.getPacketClass();
-        boolean async = isAsync(packetClass);
+        byte info = getInfo(packetClass);
 
-        PacketToChannelMap.registerFuture(packetClass, channel, id, async, handler);
+        PacketToChannelMap.registerFuture(packetClass, channel, id, info, handler);
 
-        addHandler(id, new ResponseFutureHandler<>(async, constructor, responseConstructor, handler));
+        addHandler(id, new ResponseFutureHandler<>(info, constructor, responseConstructor, handler));
 
         return this;
     }
@@ -90,10 +92,10 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         Handler[] handlers = pack(this.handlers);
         String channel = this.channel;
 
-        Network.registerHandler(this.channel, new SimpleChannelPacketHandler(handlers, channel), true);
+        Network.registerHandler(this.channel, new SimpleChannelPacketHandler(handlers, channel));
     }
 
-    private static class SimpleChannelPacketHandler implements PacketHandler {
+    private static class SimpleChannelPacketHandler implements RawPacketHandler {
         private final Handler[] handlers;
         private final String channel;
 
@@ -103,28 +105,32 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         }
 
         @Override
-        public void accept(byte[] payload, EntityPlayer player, Side side) {
+        public void accept(String channel, byte[] payload, EntityPlayer player, Side side) {
             MCDataInput in = Network.newInput(payload);
             int packetID = in.readUnsignedByte();
             Handler handler;
             try {
                 handler = handlers[packetID];
             } catch (ArrayIndexOutOfBoundsException e) {
-                throw unknownIDException(channel, packetID);
+                throw unknownIDException(this.channel, packetID);
             }
 
             if (handler == null) {
-                throw unknownIDException(channel, packetID);
+                throw unknownIDException(this.channel, packetID);
             }
 
-            if (handler.async) {
-                handler.accept(channel, packetID, in, player);
+            if ((handler.info & BaseNettyPacket.sideToCode(side)) == 0) {
+                throw new ProtocolException("PacketID " + packetID + " received on invalid side " + side);
+            }
+
+            if ((handler.info & RawPacket.ASYNC) != 0) {
+                handler.accept(this.channel, packetID, in, player);
             } else {
                 Scheduler s = player == null || player.worldObj.isRemote ? Scheduler.client() : Scheduler.server();
                 SchedulerInternalTask.execute(s, new SchedulerInternalTask() {
                     @Override
                     public boolean run() {
-                        handler.accept(channel, packetID, in, player == null ? Players.getClient() : player);
+                        handler.accept(SimpleChannelPacketHandler.this.channel, packetID, in, player == null ? Players.getClient() : player);
                         return false;
                     }
                 });
@@ -135,6 +141,15 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
             return new ProtocolException(String.format("Unknown packetID %s in channel %s", packetID, channel));
         }
 
+    }
+
+    private static byte getInfo(Class<?> clazz) {
+        return BaseNettyPacket.encodeCharacteristics(getReceiver(clazz), isAsync(clazz));
+    }
+
+    private static Side getReceiver(Class<?> clazz) {
+        Packet.Receiver annotation = clazz.getAnnotation(Packet.Receiver.class);
+        return annotation == null ? null : annotation.value();
     }
 
     private static boolean isAsync(Class<?> clazz) {
@@ -169,10 +184,10 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
      */
     abstract static class Handler {
 
-        final boolean async;
+        final byte info;
 
-        Handler(boolean async) {
-            this.async = async;
+        Handler(byte info) {
+            this.info = info;
         }
 
         public abstract void accept(String channel, int packetID, MCDataInput in, EntityPlayer player);
@@ -183,9 +198,9 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         BaseNettyPacket responseWrap = new ResponseWrapper<>(response, packetID, responseID, channel);
 
         if (player.worldObj.isRemote) {
-            Network.sendToServer(responseWrap);
+            NetworkImpl.sendToServer(responseWrap);
         } else {
-            Network.sendToPlayer((EntityPlayerMP) player, responseWrap);
+            NetworkImpl.sendToPlayer((EntityPlayerMP) player, responseWrap);
         }
     }
 }

@@ -14,13 +14,9 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public abstract class TypeToFactoryMap<F, FR> {
 
-    // lock on "this" guards writes to the map
-    // map must be synchronized as long as it's mutable as well,
-    // to exclude the "get" call, which does not synchronize on "this".
-
     private Map<Class<?>, Collection<F>> map = new ConcurrentHashMap<>();
 
-    public final FR get(Property<?> type) {
+    public final synchronized FR get(Property<?> type) {
         Class<?> rawType = type.getRawType();
         Iterable<Class<?>> hierarchy;
         if (rawType.isPrimitive()) {
@@ -51,11 +47,8 @@ public abstract class TypeToFactoryMap<F, FR> {
 
     public final synchronized void freeze() {
         checkNotFrozen();
-        ImmutableMap.Builder<Class<?>, Collection<F>> builder = ImmutableMap.builder();
-        for (Map.Entry<Class<?>, Collection<F>> entry : map.entrySet()) {
-            builder.put(entry.getKey(), ImmutableList.copyOf(entry.getValue()));
-        }
-        map = builder.build();
+        map = ImmutableMap.copyOf(Maps.transformValues(map, ImmutableList::copyOf));
+        JavaUtils.unsafe().storeFence();
     }
 
     protected abstract FR applyFactory(F factory, Property<?> type);

@@ -12,8 +12,8 @@ final class ResponseFutureHandler<P extends Packet.WithResponse<R>, R extends Pa
 
     final BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler;
 
-    ResponseFutureHandler(boolean async, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler) {
-        super(async, constructor, responseConstructor);
+    ResponseFutureHandler(byte info, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler) {
+        super(info, constructor, responseConstructor);
         this.handler = handler;
     }
 

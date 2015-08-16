@@ -1,15 +1,9 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.reflect.TypeToken;
-import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
-import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.net.BaseModPacket;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
-import de.take_weiland.mods.commons.util.Players;
-import de.take_weiland.mods.commons.util.Scheduler;
-import io.netty.channel.ChannelFutureListener;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import org.objectweb.asm.Type;
@@ -44,42 +38,20 @@ public final class Network {
         return new MCDataInputImpl(bytes, off, len);
     }
 
-    public static void registerHandler(String channel, PacketHandler handler) {
-        registerHandler(channel, handler, false);
-    }
-
-    public static void registerHandler(String channel, PacketHandler handler, boolean async) {
-        if (!async) {
-            PacketHandler originalHandler = handler;
-
-            handler = (data, player, side) -> SchedulerInternalTask.execute(Scheduler.forSide(side), new SchedulerInternalTask() {
-                @Override
-                public boolean run() {
-                    originalHandler.accept(data, side == Side.CLIENT ? Players.getClient() : player, side);
-                    return false;
-                }
-            });
-        }
-
+    public static void registerHandler(String channel, RawPacketHandler handler) {
         NetworkImpl.register(channel, handler);
     }
 
-    public static void sendTo(Iterable<? extends EntityPlayer> players, BaseNettyPacket packet) {
-        for (EntityPlayer player : players) {
-            sendToPlayer(Players.checkNotClient(player), packet);
-        }
+    public static void sendToServer(RawPacket packet) {
+        NetworkImpl.sendToServer((BaseNettyPacket) packet);
     }
 
-    public static void sendToPlayer(EntityPlayerMP player, BaseNettyPacket packet) {
-        player.playerNetServerHandler.netManager.channel()
-                .writeAndFlush(packet)
-                .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    public static void sendTo(RawPacket packet, EntityPlayerMP player) {
+        NetworkImpl.sendToPlayer(player, (BaseNettyPacket) packet);
     }
 
-    public static void sendToServer(BaseNettyPacket packet) {
-        SevenCommons.proxy.getClientNetworkManager().channel()
-                .writeAndFlush(packet)
-                .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    public static void sendTo(RawPacket packet, Iterable<? extends EntityPlayer> players) {
+        NetworkImpl.sendTo(players, (BaseNettyPacket) packet);
     }
 
     public static SimpleChannelBuilder newSimpleChannel(String channel) {
