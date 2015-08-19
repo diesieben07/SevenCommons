@@ -4,6 +4,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
+import de.take_weiland.mods.commons.internal.reflect.AccessorCompiler;
 import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 
@@ -90,12 +91,12 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
     public synchronized final PropertyAccess<T> optimize() {
         if (optimized == null) {
             //noinspection unchecked
-            optimized = doOptimize();
+            optimized = (PropertyAccess<T>) AccessorCompiler.makeOptimizedProperty(member);
         }
         return optimized;
     }
 
-    abstract PropertyAccess<T> doOptimize();
+//    abstract PropertyAccess<T> doOptimize();
 
     abstract TypeToken<?> resolveType();
 

@@ -24,11 +24,11 @@ final class MethodProperty<T> extends AbstractProperty<T, Method> {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    PropertyAccess<T> doOptimize() {
-        return (PropertyAccess<T>) OptimizedPropertyCompiler.optimize(member, setter);
-    }
+//    @SuppressWarnings("unchecked")
+//    @Override
+//    PropertyAccess<T> doOptimize() {
+//        return (PropertyAccess<T>) OptimizedPropertyCompiler.optimize(member, setter);
+//    }
 
     @Override
     public T get(Object o) {

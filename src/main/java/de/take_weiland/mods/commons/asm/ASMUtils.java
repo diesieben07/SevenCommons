@@ -6,12 +6,18 @@ import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import java.lang.invoke.MethodType;
+
+import static org.objectweb.asm.Opcodes.*;
 
 /**
  * <p>A collection of utility methods for working with the ASM library.</p>
@@ -22,77 +28,194 @@ public final class ASMUtils {
     private ASMUtils() {
     }
 
-    /**
-     * <p>Generate code to convert from one type to another.
-     * See {@link #convertTypes(GeneratorAdapter, Type, Type)} for specifics.</p>
-     *
-     * @param gen  the GeneratorAdapter
-     * @param from the type on top of the stack
-     * @param to   the type to convert to
-     */
-    public static void convertTypes(GeneratorAdapter gen, Class<?> from, Class<?> to) {
-        convertTypes(gen, Type.getType(from), Type.getType(to));
-    }
-
-    /**
-     * <p>Convert from one type to another.</p>
-     * <p>The following conversions are allowed:</p>
-     * <ul>
-     * <li>primitive -> primitive</li>
-     * <li>primitive -> wrapper (only direct conversion from a primitive to it's wrapper)</li>
-     * <li>wrapper -> primitive (again only direct conversion)</li>
-     * <li>class -> class (may be a no-op or a {@code CHECKCAST})</li>
-     * </ul>
-     *
-     * @param gen  the GeneratorAdapter
-     * @param from the type on top of the stack
-     * @param to   the type to convert to
-     */
-    public static void convertTypes(GeneratorAdapter gen, Type from, Type to) {
-        if (isPrimitive(from) && isPrimitive(to)) {
-            gen.cast(from, to);
-        } else {
-            if (isPrimitive(from)) {
-                Type boxed = boxedType(from);
-                box(gen, boxed);
-                if (!isAssignableFrom(to, boxed)) {
-                    gen.checkCast(to);
-                }
-            } else if (isPrimitive(to)) {
-                Type boxed = boxedType(to);
-                if (!isAssignableFrom(to, from)) {
-                    gen.checkCast(boxed);
-                }
-                unbox(gen, to);
-            } else {
-                if (!isAssignableFrom(to, from)) {
-                    gen.checkCast(to);
-                }
-            }
-        }
-    }
-
     private static boolean isAssignableFrom(Type a, Type b) {
         return ClassInfo.of(a).isAssignableFrom(ClassInfo.of(b));
     }
 
-    private static void box(GeneratorAdapter gen, Type boxed) {
-        Type primT = unboxedType(boxed);
-        org.objectweb.asm.commons.Method boxMethod =
-                new org.objectweb.asm.commons.Method("valueOf", boxed, new Type[]{primT});
-
-        gen.invokeStatic(boxed, boxMethod);
+    private static void box(MethodVisitor mv, Type primitive) {
+        if (primitive.getSort() == Type.VOID) {
+            mv.visitInsn(ACONST_NULL);
+        } else {
+            Type boxed = boxedType(primitive);
+            mv.visitMethodInsn(INVOKESTATIC, boxed.getInternalName(), "valueOf", Type.getMethodDescriptor(boxed, primitive), false);
+        }
     }
 
-    private static void unbox(GeneratorAdapter gen, Type primitive) {
-        Type boxedT = boxedType(primitive);
+    private static void unbox(MethodVisitor mv, Type primitive) {
+        if (primitive.getSort() == Type.VOID) {
+            mv.visitInsn(POP);
+        } else {
+            Type boxedT = boxedType(primitive);
+            mv.visitMethodInsn(INVOKEVIRTUAL, boxedT.getInternalName(), primitive.getClassName() + "Value", Type.getMethodDescriptor(primitive), false);
+        }
+    }
 
-        org.objectweb.asm.commons.Method unboxMethod =
-                new org.objectweb.asm.commons.Method(primitive.getClassName() + "Value", primitive, new Type[0]);
-        gen.invokeVirtual(boxedT, unboxMethod);
+    public static void convertTypes(MethodVisitor mv, Type from, Type to) {
+        Type fromUnboxed = unboxedType(from);
+        Type toUnboxed = unboxedType(to);
+
+        if (to.equals(from)) {
+            return;
+        }
+
+        if (toUnboxed.getSort() == Type.VOID || fromUnboxed.getSort() == Type.VOID) { // handle void specially
+            popValue(mv, from); // get rid of a possible value on the stack
+            pushDefault(mv, to); // push possible default value
+        } else if (isPrimitive(from) && isPrimitive(to)) { // primitive -> primitive, not including void
+            convertPrimitives(mv, from, to);
+        } else if (isPrimitive(from)) {
+            if (isPrimitiveWrapper(to)) { // primitive -> wrapper
+                convertPrimitives(mv, from, toUnboxed);
+                box(mv, toUnboxed);
+            } else { // primitive -> some object
+                box(mv, from);
+                convertTypes(mv, boxedType(from), to);
+            }
+        } else if (isPrimitive(to)) {
+            if (isPrimitiveWrapper(from)) { // wrapper -> primitive
+                unbox(mv, fromUnboxed);
+                convertPrimitives(mv, fromUnboxed, to);
+            } else { // some object -> primitive
+                Type toBoxed = boxedType(to);
+                convertTypes(mv, from, toBoxed);
+                unbox(mv, to);
+            }
+        } else if (isPrimitiveWrapper(from) && isPrimitiveWrapper(to)) { // wrapper -> wrapper
+            unbox(mv, fromUnboxed);
+            convertTypes(mv, fromUnboxed, toUnboxed);
+            box(mv, toUnboxed);
+        } else if (!isAssignableFrom(to, from)) { // arbitrary conversion, just do a cast if needed
+            mv.visitTypeInsn(CHECKCAST, to.getInternalName());
+        }
+    }
+
+    // no void!
+    private static void convertPrimitives(MethodVisitor mv, Type from, Type to) {
+        int toSort = to.getSort();
+        int fromSort = from.getSort();
+        if (toSort == fromSort) {
+            return;
+        }
+
+        switch (fromSort) {
+            case Type.DOUBLE:
+                switch (toSort) {
+                    case Type.FLOAT:
+                        mv.visitInsn(D2F);
+                        break;
+                    case Type.LONG:
+                        mv.visitInsn(D2L);
+                        break;
+                    default:
+                        mv.visitInsn(D2I);
+                        convertTypes(mv, Type.INT_TYPE, to);
+                        break;
+                }
+                break;
+            case Type.FLOAT:
+                switch (toSort) {
+                    case Type.DOUBLE:
+                        mv.visitInsn(F2D);
+                        break;
+                    case Type.LONG:
+                        mv.visitInsn(F2L);
+                        break;
+                    default:
+                        mv.visitInsn(F2I);
+                        convertTypes(mv, Type.INT_TYPE, to);
+                        break;
+                }
+                break;
+            case Type.LONG:
+                switch (toSort) {
+                    case Type.DOUBLE:
+                        mv.visitInsn(L2D);
+                        break;
+                    case Type.FLOAT:
+                        mv.visitInsn(L2F);
+                        break;
+                    default:
+                        mv.visitInsn(L2I);
+                        convertTypes(mv, Type.INT_TYPE, to);
+                }
+                break;
+            default:
+                switch (toSort) {
+                    case Type.DOUBLE:
+                        mv.visitInsn(I2D);
+                        break;
+                    case Type.FLOAT:
+                        mv.visitInsn(I2F);
+                        break;
+                    case Type.LONG:
+                        mv.visitInsn(I2L);
+                        break;
+                    case Type.SHORT:
+                        mv.visitInsn(I2S);
+                        break;
+                    case Type.CHAR:
+                        mv.visitInsn(I2C);
+                        break;
+                    case Type.BYTE:
+                    case Type.BOOLEAN:
+                        mv.visitInsn(I2B);
+                        break;
+                }
+        }
+    }
+
+    private static void pushDefault(MethodVisitor mv, Type type) {
+        switch (type.getSort()) {
+            case Type.VOID:
+                break;
+            case Type.OBJECT:
+                Type unboxed = unboxedType(type);
+                if (unboxed != type) {
+                    pushDefault(mv, unboxed);
+                    box(mv, unboxed);
+                } else {
+                    mv.visitInsn(ACONST_NULL);
+                }
+                break;
+            case Type.DOUBLE:
+                mv.visitInsn(DCONST_0);
+                break;
+            case Type.FLOAT:
+                mv.visitInsn(FCONST_0);
+                break;
+            case Type.LONG:
+                mv.visitInsn(LCONST_0);
+                break;
+            default:
+                mv.visitInsn(ICONST_0);
+                break;
+        }
+    }
+
+    private static void popValue(MethodVisitor mv, Type type) {
+        switch (type.getSort()) {
+            case Type.DOUBLE:
+            case Type.LONG:
+                mv.visitInsn(POP2);
+                break;
+            case Type.VOID:
+                break;
+            default:
+                mv.visitInsn(POP);
+        }
     }
 
     // *** name utilities *** //
+
+    public static String getMethodDescriptor(MethodType type) {
+        int pcount = type.parameterCount();
+
+        Type[] asmTypes = new Type[pcount];
+        for (int i = 0; i < pcount; i++) {
+            asmTypes[i] = Type.getType(type.parameterType(i));
+        }
+        return Type.getMethodDescriptor(Type.getType(type.returnType()), asmTypes);
+    }
 
     /**
      * <p>Convert the given binary name (e.g. {@code java.lang.Object$Subclass}) to an internal name (e.g. {@code java/lang/Object$Subclass}).</p>

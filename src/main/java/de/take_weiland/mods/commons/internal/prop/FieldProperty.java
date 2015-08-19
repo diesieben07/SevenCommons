@@ -15,11 +15,11 @@ final class FieldProperty<T> extends AbstractProperty<T, Field> {
         super(member);
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    PropertyAccess<T> doOptimize() {
-        return (PropertyAccess<T>) OptimizedPropertyCompiler.optimize(member);
-    }
+//    @SuppressWarnings("unchecked")
+//    @Override
+//    PropertyAccess<T> doOptimize() {
+//        return (PropertyAccess<T>) OptimizedPropertyCompiler.optimize(member);
+//    }
 
     @Override
     public T get(Object o) {

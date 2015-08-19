@@ -164,18 +164,7 @@ public final class SCReflection {
      * @return the defined class
      */
     public static Class<?> defineClass(byte[] bytes, ClassLoader loader) {
-        if (DEBUG) {
-            try {
-                ClassNode node = ASMUtils.getThinClassNode(bytes);
-                File file = new File("sevencommonsdyn/" + node.name + ".class");
-                Files.createParentDirs(file);
-                try (OutputStream out = new FileOutputStream(file)) {
-                    out.write(bytes);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        dumpClass(bytes);
         Class<?> clazz;
         try {
             clazz = (Class<?>) CLASS_LOADER_DEFINE.invokeExact(loader, (String) null, bytes, 0, bytes.length);
@@ -201,9 +190,29 @@ public final class SCReflection {
     }
 
     public static Class<?> defineAnonymousClass(byte[] bytes, Class<?> hostClass) {
-        Class<?> clazz = unsafe().defineAnonymousClass(hostClass, bytes, null);
+        return defineAnonymousClass(bytes, hostClass, null);
+    }
+
+    public static Class<?> defineAnonymousClass(byte[] bytes, Class<?> hostClass, Object[] patches) {
+        dumpClass(bytes);
+        Class<?> clazz = unsafe().defineAnonymousClass(hostClass, bytes, patches);
         unsafe().ensureClassInitialized(clazz);
         return clazz;
+    }
+
+    private static void dumpClass(byte[] bytes) {
+        if (DEBUG) {
+            try {
+                ClassNode node = ASMUtils.getThinClassNode(bytes);
+                File file = new File("sevencommonsdyn/" + node.name + ".class");
+                Files.createParentDirs(file);
+                try (OutputStream out = new FileOutputStream(file)) {
+                    out.write(bytes);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
