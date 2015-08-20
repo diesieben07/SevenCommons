@@ -4,16 +4,18 @@ import com.google.common.collect.ImmutableMap;
 import cpw.mods.fml.common.LoaderState;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.Packet;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.entity.player.EntityPlayer;
-import sun.misc.Unsafe;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+
+import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
  * @author diesieben07
@@ -49,19 +51,38 @@ public final class PacketToChannelMap {
         register0(clazz, new SimplePacketData.WithResponseFuture<>(channel, id, info, handler));
     }
 
+    private static final MethodHandle setFieldMods;
+
+    static {
+        try {
+            Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            setFieldMods = publicLookup().unreflectSetter(modifiersField);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static void register0(Class<?> clazz, SimplePacketData data) {
         if (channels.putIfAbsent(clazz, data) != null) {
             throw new IllegalArgumentException(String.format("Packet class %s used twice", clazz.getName()));
         }
         try {
-            // the field is static final, so use unsafe to set it
             Field field = clazz.getDeclaredField(PACKET_DATA_FIELD);
-            Unsafe unsafe = JavaUtils.unsafe();
-            Object base = unsafe.staticFieldBase(field);
-            long fieldOffset = unsafe.staticFieldOffset(field);
-            unsafe.putObject(base, fieldOffset, data);
+            field.setAccessible(true);
+            try {
+                setFieldMods.invokeExact(field, field.getModifiers() & ~Modifier.FINAL);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                field.set(null, data);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("impossible");
+            }
         } catch (NoSuchFieldException e) {
             // ignored
+            // BaseModPacket has a working fallback
         }
     }
 

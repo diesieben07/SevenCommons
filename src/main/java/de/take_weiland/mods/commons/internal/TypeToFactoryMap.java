@@ -48,7 +48,6 @@ public abstract class TypeToFactoryMap<F, FR> {
     public final synchronized void freeze() {
         checkNotFrozen();
         map = ImmutableMap.copyOf(Maps.transformValues(map, ImmutableList::copyOf));
-        JavaUtils.unsafe().storeFence();
     }
 
     protected abstract FR applyFactory(F factory, Property<?> type);

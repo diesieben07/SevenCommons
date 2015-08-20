@@ -5,7 +5,6 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SchedulerBase;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
-import sun.misc.Unsafe;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -13,6 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -26,7 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-public final class Scheduler extends SchedulerBase {
+public abstract class Scheduler extends SchedulerBase {
 
     private static final Scheduler server;
     private static final Scheduler client;
@@ -91,32 +91,23 @@ public final class Scheduler extends SchedulerBase {
     }
 
     static {
+        boolean useUnsafe = JavaUtils.unsafe() != null;
         if (FMLCommonHandler.instance().getSide().isClient()) {
-            client = new Scheduler();
+            client = useUnsafe ? new SchedulerUnsafe() : new SchedulerNonUnsafe();
         } else {
             client = null;
         }
-        server = new Scheduler();
+        server = useUnsafe ? new SchedulerUnsafe() : new SchedulerNonUnsafe();
     }
 
     @SuppressWarnings("unused") // we use it, just via CAS
     private volatile SchedulerInternalTask head;
 
-    private static final Unsafe U;
-    private static final long headOff;
-
-    static {
-        U = JavaUtils.unsafe();
-        try {
-            headOff = U.objectFieldOffset(Scheduler.class.getDeclaredField("head"));
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        }
+    static AtomicReferenceFieldUpdater<Scheduler, SchedulerInternalTask> makeHeadUpdater() {
+        return AtomicReferenceFieldUpdater.newUpdater(Scheduler.class, SchedulerInternalTask.class, "head");
     }
 
-    private boolean casHead(@Nullable SchedulerInternalTask expect, @Nullable SchedulerInternalTask _new) {
-        return U.compareAndSwapObject(this, headOff, expect, _new);
-    }
+    abstract boolean casHead(@Nullable SchedulerInternalTask expect, @Nullable SchedulerInternalTask _new);
 
     /**
      * helper to add a single task
@@ -266,7 +257,7 @@ public final class Scheduler extends SchedulerBase {
         return false;
     }
 
-    private Scheduler() {
+    Scheduler() {
     }
 
 }

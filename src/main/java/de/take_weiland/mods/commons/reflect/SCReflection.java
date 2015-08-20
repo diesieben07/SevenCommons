@@ -25,7 +25,6 @@ import java.lang.reflect.Modifier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static de.take_weiland.mods.commons.util.JavaUtils.unsafe;
 import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
@@ -187,17 +186,6 @@ public final class SCReflection {
         } catch (IllegalAccessException e) {
             throw new AssertionError("impossible");
         }
-    }
-
-    public static Class<?> defineAnonymousClass(byte[] bytes, Class<?> hostClass) {
-        return defineAnonymousClass(bytes, hostClass, null);
-    }
-
-    public static Class<?> defineAnonymousClass(byte[] bytes, Class<?> hostClass, Object[] patches) {
-        dumpClass(bytes);
-        Class<?> clazz = unsafe().defineAnonymousClass(hostClass, bytes, patches);
-        unsafe().ensureClassInitialized(clazz);
-        return clazz;
     }
 
     private static void dumpClass(byte[] bytes) {

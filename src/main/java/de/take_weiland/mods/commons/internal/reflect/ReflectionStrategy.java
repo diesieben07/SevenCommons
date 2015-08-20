@@ -13,7 +13,6 @@ public abstract class ReflectionStrategy {
         }
     }
 
-
     public abstract <T> T createAccessor(Class<T> iface);
 
 }

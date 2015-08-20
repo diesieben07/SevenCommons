@@ -267,17 +267,16 @@ public final class JavaUtils {
      *
      * @return the {@code sun.misc.Unsafe} instance or null
      */
-    @SuppressWarnings("unchecked")
     @Unsafe
-    public static sun.misc.Unsafe unsafe() {
+    public static Object unsafe() {
         return unsafe;
     }
 
-    private static final sun.misc.Unsafe unsafe;
+    private static final Object unsafe;
 
     static {
+        Object u = null;
         try {
-            sun.misc.Unsafe u = null;
             Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
             for (Field field : unsafeClass.getDeclaredFields()) {
                 if (!Modifier.isStatic(field.getModifiers())) {
@@ -286,14 +285,14 @@ public final class JavaUtils {
                 field.setAccessible(true);
                 Object value = field.get(null);
                 if (unsafeClass.isInstance(value)) {
-                    u = (sun.misc.Unsafe) value;
+                    u = value;
                     break;
                 }
             }
-            unsafe = u;
         } catch (Exception e) {
-            throw new RuntimeException("No unsafe", e);
+            // ignored
         }
+        unsafe = u;
     }
 
     private JavaUtils() {

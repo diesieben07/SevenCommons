@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal.reflect;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
+import de.take_weiland.mods.commons.asm.ClassInfoClassWriter;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.apache.commons.lang3.StringUtils;
@@ -8,22 +9,15 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.util.ASMifier;
-import org.objectweb.asm.util.Printer;
-import org.objectweb.asm.util.Textifier;
-import org.objectweb.asm.util.TraceMethodVisitor;
 
-import java.io.PrintWriter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.*;
 
-import static de.take_weiland.mods.commons.util.JavaUtils.unsafe;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodHandles.publicLookup;
 import static java.lang.invoke.MethodType.methodType;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Opcodes.V1_8;
 
 /**
  * @author diesieben07
@@ -44,10 +38,12 @@ public class AccessorCompiler {
             emitDelegateMethod(context, "set" + postfix, resolved.getRight());
         }
 
-        Class<?> clazz = context.link(AccessorCompiler.class);
+        Class<?> clazz = context.link();
         try {
-            return (PropertyAccess<?>) unsafe().allocateInstance(clazz);
-        } catch (InstantiationException e) {
+            Constructor<?> cstr = clazz.getDeclaredConstructor();
+            cstr.setAccessible(true);
+            return (PropertyAccess<?>) cstr.newInstance();
+        } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
@@ -110,12 +106,13 @@ public class AccessorCompiler {
         }
     }
 
+    @SuppressWarnings("unused")
     private static void invalidSetterImpl(Object o, Object val) {
         throw new UnsupportedOperationException("Tried to set unmodifiable property");
     }
 
     private static CompileContext emitStart(String... interfaces) {
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        ClassWriter cw = new ClassInfoClassWriter(ClassWriter.COMPUTE_FRAMES);
 
         String name = SCReflection.nextDynamicClassName();
         String superName = Type.getInternalName(Object.class);
@@ -134,7 +131,7 @@ public class AccessorCompiler {
         mv.visitEnd();
 
 
-        return new CompileContext(cw);
+        return new CompileContext(name, cw);
     }
 
     private static void emitDelegateMethod(CompileContext context, String name, MethodHandle target) {
@@ -149,7 +146,7 @@ public class AccessorCompiler {
         }
         String desc = Type.getMethodDescriptor(asmReturnType, asmParamTypes);
 
-        MethodVisitor mv = context.cw.visitMethod(ACC_PUBLIC | ACC_FINAL, name, desc, null, null);
+        MethodVisitor mv = context.cw().visitMethod(ACC_PUBLIC | ACC_FINAL, name, desc, null, null);
         mv.visitCode();
 
         emitDelegateCode(context, mv, targetType, target);
@@ -163,8 +160,7 @@ public class AccessorCompiler {
 
         String mhIName = Type.getInternalName(MethodHandle.class);
 
-        context.pushAsConstant(mv, target);
-        mv.visitTypeInsn(CHECKCAST, mhIName);
+        context.pushAsConstant(mv, target, MethodHandle.class);
 
         int varSlot = 1;
         int idx = 0;

@@ -1,75 +1,86 @@
 package de.take_weiland.mods.commons.internal.reflect;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableMap;
+import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.reflect.SCReflection;
-import gnu.trove.iterator.TIntObjectIterator;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import org.apache.commons.lang3.tuple.Pair;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.*;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import static de.take_weiland.mods.commons.util.JavaUtils.unsafe;
+import static org.objectweb.asm.Opcodes.*;
 
 /**
  * @author diesieben07
  */
-public class CompileContext {
+public final class CompileContext {
 
-    final ClassWriter cw;
-    private int placeholderCount = 0;
-    private final Map<Object, Pair<String, Integer>> patches = HashBiMap.create();
+    private final String className;
+    private final ClassWriter cw;
+    private final Map<Object, Pair<String, Class<?>>> constants = new HashMap<>();
+    private int counter;
 
-    CompileContext(ClassWriter cw) {
+    CompileContext(String className, ClassWriter cw) {
+        this.className = className;
         this.cw = cw;
     }
 
-    void pushAsConstant(MethodVisitor mv, Object obj) {
-        Pair<String, Integer> entry = patches.get(obj);
-        if (entry != null) {
-            mv.visitLdcInsn(entry.getLeft());
-        } else {
-            String ph = nextPlaceholder();
-            mv.visitLdcInsn(ph);
-            int idx = cw.newConst(ph);
-            patches.put(obj, Pair.of(ph, idx));
+    public ClassVisitor cw() {
+        return cw;
+    }
+
+    public void pushAsConstant(MethodVisitor mv, Object obj, Class<?> type) {
+        if (!constants.containsKey(obj)) {
+            String id = nextID();
+            constants.put(obj, Pair.of(id, type));
+        }
+        Pair<String, Class<?>> pair = constants.get(obj);
+        mv.visitFieldInsn(GETSTATIC, className, pair.getLeft(), Type.getDescriptor(pair.getRight()));
+        ASMUtils.convertTypes(mv, Type.getType(pair.getRight()), Type.getType(type));
+    }
+
+    public static Iterator<Object> data;
+
+    public Class<?> link() {
+        // fix order
+        Map<Object, Pair<String, Class<?>>> c = ImmutableMap.copyOf(this.constants);
+
+        synchronized (CompileContext.class) {
+            data = c.keySet().iterator();
+
+            for (Map.Entry<Object, Pair<String, Class<?>>> entry : c.entrySet()) {
+                FieldVisitor fv = cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, entry.getValue().getLeft(), Type.getDescriptor(entry.getValue().getRight()), null, null);
+                fv.visitEnd();
+            }
+
+            MethodVisitor mv = cw.visitMethod(ACC_STATIC | ACC_PUBLIC, "<clinit>", Type.getMethodDescriptor(Type.VOID_TYPE), null, null);
+            mv.visitCode();
+
+            for (Map.Entry<Object, Pair<String, Class<?>>> entry : c.entrySet()) {
+                mv.visitFieldInsn(GETSTATIC, Type.getInternalName(CompileContext.class), "data", Type.getDescriptor(Iterator.class));
+                mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iterator.class), "next", Type.getMethodDescriptor(Type.getType(Object.class)), true);
+                ASMUtils.convertTypes(mv, Type.getType(Object.class), Type.getType(entry.getValue().getRight()));
+                mv.visitFieldInsn(PUTSTATIC, className, entry.getValue().getLeft(), Type.getDescriptor(entry.getValue().getRight()));
+            }
+
+            mv.visitInsn(RETURN);
+
+            mv.visitMaxs(0, 0);
+            mv.visitEnd();
+
+            cw.visitEnd();
+            byte[] classFile = cw.toByteArray();
+            Class<?> clazz = SCReflection.defineClass(classFile);
+            data = null;
+
+            return clazz;
+
         }
     }
 
-    Class<?> link(Class<?> holder) {
-        cw.visitEnd();
-        byte[] classFile = cw.toByteArray();
-
-        int cpSize = getConstantPoolSize(classFile);
-
-        Object[] patchesArr = new Object[cpSize];
-        for (Map.Entry<Object, Pair<String, Integer>> entry : patches.entrySet()) {
-            Object val = entry.getKey();
-            int idx = entry.getValue().getRight();
-
-            patchesArr[idx] = val;
-        }
-
-        return SCReflection.defineAnonymousClass(classFile, holder, patchesArr);
+    private String nextID() {
+        return "_sc$cst$" + (counter++);
     }
-
-    private static int getConstantPoolSize(byte[] classFile) {
-        // snagged from JDK
-
-        // The first few bytes:
-        // u4 magic;
-        // u2 minor_version;
-        // u2 major_version;
-        // u2 constant_pool_count;
-        return ((classFile[8] & 0xFF) << 8) | (classFile[9] & 0xFF);
-    }
-
-    private String nextPlaceholder() {
-        return "__sc$ph$" + (placeholderCount++);
-    }
-
 }
