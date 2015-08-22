@@ -132,7 +132,6 @@ public final class JavaCompatibility {
                     frame.pack();
                     frame.setLocationRelativeTo(null);
                     frame.setVisible(true);
-                    frame.setAlwaysOnTop(true);
                 }
             });
 
