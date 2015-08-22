@@ -6,6 +6,8 @@ import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.apache.commons.lang3.tuple.Pair;
 import org.objectweb.asm.*;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -71,12 +73,25 @@ public final class CompileContext {
             mv.visitEnd();
 
             cw.visitEnd();
+
             byte[] classFile = cw.toByteArray();
             Class<?> clazz = SCReflection.defineClass(classFile);
+
             data = null;
 
             return clazz;
 
+        }
+    }
+
+    public Object linkInstantiate() {
+        Class<?> cls = link();
+        try {
+            Constructor<?> cstr = cls.getDeclaredConstructor();
+            cstr.setAccessible(true);
+            return cstr.newInstance();
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException e) {
+            throw new RuntimeException(e);
         }
     }
 

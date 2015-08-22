@@ -91,13 +91,20 @@ public abstract class Scheduler extends SchedulerBase {
     }
 
     static {
-        boolean useUnsafe = JavaUtils.unsafe() != null;
-        if (FMLCommonHandler.instance().getSide().isClient()) {
-            client = useUnsafe ? new SchedulerUnsafe() : new SchedulerNonUnsafe();
-        } else {
-            client = null;
+        try {
+            boolean useUnsafe = JavaUtils.unsafe() != null;
+            @SuppressWarnings("unchecked")
+            Class<? extends Scheduler> clazz = (Class<? extends Scheduler>) Class.forName("de.take_weiland.mods.commons.util.Scheduler" + (useUnsafe ? "Unsafe" : "NonUnsafe"));
+
+            if (FMLCommonHandler.instance().getSide().isClient()) {
+                client = clazz.newInstance();
+            } else {
+                client = null;
+            }
+            server = clazz.newInstance();
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
-        server = useUnsafe ? new SchedulerUnsafe() : new SchedulerNonUnsafe();
     }
 
     @SuppressWarnings("unused") // we use it, just via CAS

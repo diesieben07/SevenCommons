@@ -5,7 +5,6 @@ import de.take_weiland.mods.commons.asm.ClassInfoClassWriter;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Triple;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
@@ -25,17 +24,16 @@ import static org.objectweb.asm.Opcodes.*;
 public class AccessorCompiler {
 
     public static PropertyAccess<?> makeOptimizedProperty(Member member) {
-        Triple<Class<?>, MethodHandle, MethodHandle> resolved = resolve(member);
+        ResolvedMember resolved = resolve(member);
         CompileContext context = emitStart(Type.getInternalName(PropertyAccess.class));
 
-        emitDelegateMethod(context, "get", methodType(Object.class, Object.class), resolved.getMiddle());
-        emitDelegateMethod(context, "set", methodType(void.class, Object.class, Object.class), resolved.getRight());
+        emitDelegateMethod(context, "get", methodType(Object.class, Object.class), resolved.get);
+        emitDelegateMethod(context, "set", methodType(void.class, Object.class, Object.class), resolved.set);
 
-        Class<?> actualType = resolved.getLeft();
-        if (actualType.isPrimitive()) {
-            String postfix = StringUtils.capitalize(actualType.getName());
-            emitDelegateMethod(context, "get" + postfix, resolved.getMiddle());
-            emitDelegateMethod(context, "set" + postfix, resolved.getRight());
+        if (resolved.actualType.isPrimitive()) {
+            String postfix = StringUtils.capitalize(resolved.actualType.getName());
+            emitDelegateMethod(context, "get" + postfix, resolved.get);
+            emitDelegateMethod(context, "set" + postfix, resolved.set);
         }
 
         Class<?> clazz = context.link();
@@ -48,7 +46,7 @@ public class AccessorCompiler {
         }
     }
 
-    private static Triple<Class<?>, MethodHandle, MethodHandle> resolve(Member member) {
+    private static ResolvedMember resolve(Member member) {
         ((AccessibleObject) member).setAccessible(true);
 
         Class<?> type = getType(member);
@@ -85,7 +83,7 @@ public class AccessorCompiler {
         getter = getter.asType(methodType(actualType, Object.class));
         setter = setter.asType(methodType(void.class, Object.class, actualType));
 
-        return Triple.of(actualType, getter, setter);
+        return new ResolvedMember(actualType, getter, setter);
     }
 
     private static Class<?> getType(Member member) {
@@ -111,7 +109,7 @@ public class AccessorCompiler {
         throw new UnsupportedOperationException("Tried to set unmodifiable property");
     }
 
-    private static CompileContext emitStart(String... interfaces) {
+    static CompileContext emitStart(String... interfaces) {
         ClassWriter cw = new ClassInfoClassWriter(ClassWriter.COMPUTE_FRAMES);
 
         String name = SCReflection.nextDynamicClassName();
@@ -134,22 +132,22 @@ public class AccessorCompiler {
         return new CompileContext(name, cw);
     }
 
-    private static void emitDelegateMethod(CompileContext context, String name, MethodHandle target) {
+    static void emitDelegateMethod(CompileContext context, String name, MethodHandle target) {
         emitDelegateMethod(context, name, target.type(), target);
     }
 
-    private static void emitDelegateMethod(CompileContext context, String name, MethodType targetType, MethodHandle target) {
-        Type asmReturnType = Type.getType(targetType.returnType());
-        Type[] asmParamTypes = new Type[targetType.parameterCount()];
-        for (int i = 0; i < targetType.parameterCount(); i++) {
-            asmParamTypes[i] = Type.getType(targetType.parameterType(i));
+    static void emitDelegateMethod(CompileContext context, String name, MethodType methodType, MethodHandle target) {
+        Type asmReturnType = Type.getType(methodType.returnType());
+        Type[] asmParamTypes = new Type[methodType.parameterCount()];
+        for (int i = 0; i < methodType.parameterCount(); i++) {
+            asmParamTypes[i] = Type.getType(methodType.parameterType(i));
         }
         String desc = Type.getMethodDescriptor(asmReturnType, asmParamTypes);
 
         MethodVisitor mv = context.cw().visitMethod(ACC_PUBLIC | ACC_FINAL, name, desc, null, null);
         mv.visitCode();
 
-        emitDelegateCode(context, mv, targetType, target);
+        emitDelegateCode(context, mv, methodType, target);
 
         mv.visitMaxs(0, 0);
         mv.visitEnd();
@@ -180,6 +178,20 @@ public class AccessorCompiler {
         Type asmReturnType = Type.getType(methodType.returnType());
         ASMUtils.convertTypes(mv, Type.getType(targetType.returnType()), asmReturnType);
         mv.visitInsn(asmReturnType.getOpcode(IRETURN));
+    }
+
+    private static final class ResolvedMember {
+
+        final Class<?> actualType;
+        final MethodHandle get;
+        final MethodHandle set;
+
+        private ResolvedMember(Class<?> actualType, MethodHandle get, MethodHandle set) {
+            this.actualType = actualType;
+            this.get = get;
+            this.set = set;
+        }
+
     }
 
 }
