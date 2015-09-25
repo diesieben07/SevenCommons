@@ -104,6 +104,13 @@ compileJava {
 tasks.compileJava.dependsOn('compileLoader')
 tasks.build.dependsOn('sourceJar', 'deobfJar')
 
+makeStart {
+    // TODO do this properly with FG2
+    addReplacement("parseArgs(args);", "parseArgs(args); String __sc_coremodProp = System.getProperty(\"fml.coreMods.load\", \"\");" +
+            "__sc_coremodProp += \"de.take_weiland.mods.commons.internal.SevenCommonsLoader\";" +
+            "System.setProperty(\"fml.coreMods.load\", __sc_coremodProp);")
+}
+
 artifacts {
     archives deobfJar
     archives sourceJar
