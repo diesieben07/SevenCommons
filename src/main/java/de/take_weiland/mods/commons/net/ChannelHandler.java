@@ -6,7 +6,7 @@ import net.minecraft.entity.player.EntityPlayer;
 /**
  * @author diesieben07
  */
-public interface RawPacketHandler {
+public interface ChannelHandler {
 
     void accept(String channel, byte[] data, EntityPlayer player, Side side);
 

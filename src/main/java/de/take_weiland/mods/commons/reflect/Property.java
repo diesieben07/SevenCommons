@@ -2,11 +2,12 @@ package de.take_weiland.mods.commons.reflect;
 
 import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.SerializationMethod;
+import de.take_weiland.mods.commons.asm.ASMProperty;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
-import java.util.Optional;
+import java.lang.reflect.Modifier;
 
 /**
  * <p>Information about a Property.</p>
@@ -17,27 +18,27 @@ public interface Property<T> extends PropertyAccess<T> {
 
     /**
      * <p>Get the underlying Member for this property. For a getter/setter based property this returns the getter method.</p>
-     * <p>This method will always return something that is also an {@link AnnotatedElement}. For convenience the method
-     * {@link #getAnnotatedElement()} may be used.</p>
      *
      * @return the Member
      */
     Member getMember();
 
+    /**
+     * <p>Get the underlying AnnotatedElement for this property. Usually this is the same object as {@link #getMember()}.</p>
+     * @return an AnnotatedElement
+     */
     default AnnotatedElement getAnnotatedElement() {
-        try {
-            return (AnnotatedElement) getMember();
-        } catch (ClassCastException e) {
-            throw new IllegalStateException("getMember of a Property must return an AnnotatedElement", e);
+        Member member = getMember();
+        if (member instanceof AnnotatedElement) {
+            return (AnnotatedElement) member;
+        } else {
+            return NullAnnotatedElement.INSTANCE;
         }
     }
 
-    /**
-     * <p>Return a {@link PropertyAccess} instance that will access the same property but may possibly be faster.</p>
-     *
-     * @return a possibly faster PropertyAccess
-     */
-    PropertyAccess<T> optimize();
+    default boolean isStatic() {
+        return Modifier.isStatic(getMember().getModifiers());
+    }
 
     /**
      * <p>The name of this property.</p>
@@ -65,10 +66,13 @@ public interface Property<T> extends PropertyAccess<T> {
      *
      * @return the SerializationMethod
      */
-    default SerializationMethod.Method getDesiredMethod() {
-        return Optional.ofNullable(getAnnotation(SerializationMethod.class))
-                .map(SerializationMethod::value)
-                .orElse(SerializationMethod.Method.DEFAULT);
+    default SerializationMethod.Method getSerializationMethod() {
+        SerializationMethod annotation = getAnnotation(SerializationMethod.class);
+        if (annotation == null) {
+            return SerializationMethod.Method.DEFAULT;
+        } else {
+            return annotation.value();
+        }
     }
 
     /**
@@ -90,5 +94,7 @@ public interface Property<T> extends PropertyAccess<T> {
     default <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
         return getAnnotatedElement().getAnnotation(annotationClass);
     }
+
+    ASMProperty getASMProperty();
 
 }

@@ -38,7 +38,7 @@ public final class Network {
         return new MCDataInputImpl(bytes, off, len);
     }
 
-    public static void registerHandler(String channel, RawPacketHandler handler) {
+    public static void registerHandler(String channel, ChannelHandler handler) {
         NetworkImpl.register(channel, handler);
     }
 

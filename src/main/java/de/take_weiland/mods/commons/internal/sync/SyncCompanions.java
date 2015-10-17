@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.lang.invoke.MethodType.methodType;
 
 /**
- * <p>Factory for @SyncCompanions.</p>
+ * <p>Factory for SyncCompanions.</p>
  *
  * @author diesieben07
  */
@@ -34,8 +34,12 @@ public final class SyncCompanions {
 
     private static final TypeToFactoryMap<SyncerFactory, Syncer<?, ?, ?>> syncerFactories = new TypeToFactoryMap<SyncerFactory, Syncer<?, ?, ?>>() {
         @Override
-        protected Syncer<?, ?, ?> applyFactory(SyncerFactory factory, Property<?> type) {
-            return factory.getSyncer(type);
+        protected Syncer<?, ?, ?> applyFactory(SyncerFactory factory, Property<?> property) {
+            if (property.isStatic()) {
+                throw new IllegalArgumentException("@Sync cannot be used on static fields");
+            } else {
+                return factory.getSyncer(property);
+            }
         }
     };
 

@@ -1,8 +1,5 @@
 package de.take_weiland.mods.commons.reflect;
 
-import de.take_weiland.mods.commons.internal.prop.ListAccessProperty;
-
-import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -112,12 +109,17 @@ public interface PropertyAccess<T> extends Function<Object, T>, BiConsumer<Objec
         return get(o);
     }
 
-    static <T> PropertyAccess<T> makeListAccess(PropertyAccess<? extends List<T>> listProperty) {
-        return new ListAccessProperty<>(listProperty);
+    /**
+     * <p>Return a {@link PropertyAccess} instance that will access the same property but may possibly be faster.</p>
+     *
+     * @return a possibly faster PropertyAccess
+     */
+    default PropertyAccess<T> optimize() {
+        return this;
     }
 
-    static Object listAccessObject(Object obj, int index) {
-        return new ListAccessProperty.ObjectIntBox(obj, index);
+    default Property<T> original() {
+        return null;
     }
 
 }

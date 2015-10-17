@@ -11,11 +11,6 @@ import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.reflect.Method;
-
-import static java.lang.invoke.MethodHandles.publicLookup;
-
 /**
  * @author diesieben07
  */
@@ -49,44 +44,29 @@ public final class FMLEventHandler {
         NetworkImpl.handleClientsideConnection(event);
     }
 
-    static {
-        try {
-            // this is ugly but I don't want Scheduler.tick to be public for obvious reasons
-            // and Scheduler can't extend a class from the internal package since it already extends
-            // something else. This will perform just fine, so meh.
-            Method method = Scheduler.class.getDeclaredMethod("tick");
-            method.setAccessible(true);
-            schedulerTick = publicLookup().unreflect(method);
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static final MethodHandle schedulerTick;
-
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void serverTickClient(TickEvent.ServerTickEvent event) throws Throwable {
+    public void serverTickClient(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
-            schedulerTick.invokeExact(Scheduler.server());
+            ((SchedulerBase) Scheduler.server()).tick();
             ASMHooks.tickIEEPCompanionsClientSide();
         }
     }
 
     @SubscribeEvent
     @SideOnly(Side.SERVER)
-    public void serverTickServer(TickEvent.ServerTickEvent event) throws Throwable {
+    public void serverTickServer(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
-            schedulerTick.invokeExact(Scheduler.server());
+            ((SchedulerBase) Scheduler.server()).tick();
             ASMHooks.tickIEEPCompanionsServerSide();
         }
     }
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void clientTick(TickEvent.ClientTickEvent event) throws Throwable {
+    public void clientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
-            schedulerTick.invokeExact(Scheduler.client());
+            ((SchedulerBase) Scheduler.client()).tick();
         }
     }
 

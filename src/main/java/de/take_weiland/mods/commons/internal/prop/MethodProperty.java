@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.prop;
 
 import com.google.common.base.Throwables;
 import com.google.common.reflect.TypeToken;
-import de.take_weiland.mods.commons.reflect.PropertyAccess;
+import de.take_weiland.mods.commons.asm.ASMProperty;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.apache.commons.lang3.StringUtils;
 
@@ -77,5 +77,10 @@ final class MethodProperty<T> extends AbstractProperty<T, Method> {
     @Override
     public Class<? super T> getRawType() {
         return (Class<? super T>) member.getReturnType();
+    }
+
+    @Override
+    public ASMProperty getASMProperty() {
+        return ASMProperty.forGetterSetter(member, setter);
     }
 }

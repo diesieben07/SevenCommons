@@ -9,6 +9,12 @@ import de.take_weiland.mods.commons.reflect.Property;
  */
 public interface SyncerFactory {
 
+    /**
+     * <p>Get a {@code Syncer} for the given property.</p>
+     * <p>If this factory does not support the given property, null must be returned.</p>
+     * @param property the property to sync
+     * @return a {@code Syncer} or null
+     */
     <VAL> Syncer<VAL, ?, ?> getSyncer(Property<VAL> property);
 
 }

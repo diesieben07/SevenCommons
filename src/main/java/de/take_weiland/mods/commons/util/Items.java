@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static cpw.mods.fml.common.LoaderState.PREINITIALIZATION;
 
 @ParametersAreNonnullByDefault
-public final class Items {
+public final class Items extends net.minecraft.init.Items {
 
     /**
      * <p>Performs some generic initialization on the given Item:</p>

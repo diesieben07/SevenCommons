@@ -95,7 +95,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         Network.registerHandler(this.channel, new SimpleChannelPacketHandler(handlers, channel));
     }
 
-    private static class SimpleChannelPacketHandler implements RawPacketHandler {
+    private static class SimpleChannelPacketHandler implements ChannelHandler {
         private final Handler[] handlers;
         private final String channel;
 

@@ -8,6 +8,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.*;
+import de.take_weiland.mods.commons.net.ChannelHandler;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.Scheduler;
 import io.netty.channel.*;
@@ -33,13 +34,13 @@ public final class NetworkImpl {
 
     public static final Logger LOGGER = SevenCommons.scLogger("Network");
 
-    static Map<String, RawPacketHandler> channels = new ConcurrentHashMap<>();
+    static Map<String, ChannelHandler> channels = new ConcurrentHashMap<>();
 
     private static final String MULTIPART_CHANNEL = "SevenCommons|MP";
     private static final int MULTIPART_PREFIX = 0;
     private static final int MULTIPART_DATA = 1;
 
-    static void invokeHandler(RawPacketHandler handler, String channel, byte[] data, EntityPlayer player, byte side) {
+    static void invokeHandler(ChannelHandler handler, String channel, byte[] data, EntityPlayer player, byte side) {
         byte c = handler.characteristics();
         if ((c & side) == 0) {
             throw new ProtocolException(String.format("Received packet on channel %s with handler %s on invalid side %s", channel, handler, side == RawPacket.CLIENT ? "client" : "server"));
@@ -71,7 +72,7 @@ public final class NetworkImpl {
 
     static boolean handleServerCustomPacket(C17PacketCustomPayload mcPacket, EntityPlayerMP player, SCMessageHandler tracker) throws IOException {
         String channelName = mcPacket.getChannel();
-        RawPacketHandler handler = channels.get(channelName);
+        ChannelHandler handler = channels.get(channelName);
         if (handler != null) {
             handler.accept(channelName, mcPacket.getData(), player, Side.SERVER);
             return true;
@@ -85,7 +86,7 @@ public final class NetworkImpl {
 
     static boolean handleClientCustomPacket(S3FPacketCustomPayload mcPacket, SCMessageHandler tracker) throws IOException {
         String channelName = mcPacket.func_149169_c();
-        RawPacketHandler handler = channels.get(channelName);
+        ChannelHandler handler = channels.get(channelName);
         if (handler != null) {
             handler.accept(channelName, mcPacket.func_149168_d(), Players.getClient(), Side.CLIENT);
             return true;
@@ -175,7 +176,7 @@ public final class NetworkImpl {
 
     // registering
 
-    public static synchronized void register(String channel, RawPacketHandler handler) {
+    public static synchronized void register(String channel, ChannelHandler handler) {
         checkNotFrozen();
         if (channels.putIfAbsent(channel, handler) != null) {
             throw new IllegalStateException(String.format("Channel %s already registered", channel));
@@ -218,11 +219,11 @@ public final class NetworkImpl {
         insertHandler(pipeline, SCMessageHandlerClient.INSTANCE);
     }
 
-    private static void insertHandler(ChannelPipeline pipeline, ChannelHandler handler) {
+    private static void insertHandler(ChannelPipeline pipeline, io.netty.channel.ChannelHandler handler) {
         pipeline.addBefore("packet_handler", "sevencommons:handler", handler);
     }
 
-    private static void insertEncoder(ChannelPipeline pipeline, ChannelHandler encoder) {
+    private static void insertEncoder(ChannelPipeline pipeline, io.netty.channel.ChannelHandler encoder) {
         // this is "backwards" - outbound messages travel "upwards" in the pipeline
         // so really the order is sevencommons:encoder and then vanilla's encoder
         pipeline.addAfter("encoder", "sevencommons:encoder", encoder);

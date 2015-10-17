@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.internal.transformers.sync;
 
 import com.google.common.collect.ObjectArrays;
-import de.take_weiland.mods.commons.internal.sync.SyncCompanions;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanions;
 import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;

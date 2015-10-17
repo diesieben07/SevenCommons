@@ -26,7 +26,7 @@ public final class MethodHandleStrategy extends ReflectionStrategy {
                 .filter(m -> Modifier.isAbstract(m.getModifiers()))
                 .toMap(AccessorMemberParser::getTarget);
 
-        CompileContext context = AccessorCompiler.emitStart(Type.getInternalName(iface));
+        CompileContextImpl context = AccessorCompiler.emitStart(Type.getInternalName(iface));
         for (Map.Entry<Method, MethodHandle> entry : handles.entrySet()) {
             Method method = entry.getKey();
             MethodHandle targetHandle = entry.getValue();

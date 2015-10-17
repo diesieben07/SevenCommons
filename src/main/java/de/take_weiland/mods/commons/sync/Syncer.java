@@ -23,8 +23,14 @@ import java.util.Objects;
  * will be passed to the client either directly using {@link #apply(Object, Object, PropertyAccess, Object, PropertyAccess)}
  * or indirectly by encoding and decoding via {@link #encode(Object, MCDataOutput)} and then
  * {@link #apply(MCDataInput, Object, PropertyAccess, Object, PropertyAccess)}.</li>
+ * <li>{@link #forceUpdate(Object, PropertyAccess, Object, PropertyAccess)} - always called on the server. This method
+ * will be called to perform an initial complete update.</li>
  * <li>In either case both versions of {@code apply} are always called on the client thread.</li>
  * </ul>
+ * <p>{@code Syncer} instances are created by a {@link SyncerFactory}.</p>
+ *
+ * @see Syncing
+ * @see SyncerFactory
  *
  * @author diesieben07
  */

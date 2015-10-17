@@ -29,10 +29,10 @@ public final class BuiltinSyncers implements SyncerFactory {
         Class<? super VAL> type = property.getRawType();
         Syncer<VAL, ?, ?> syncer = null;
 
-        if (property.getDesiredMethod() != SerializationMethod.Method.CONTENTS) {
+        if (property.getSerializationMethod() != SerializationMethod.Method.CONTENTS) {
             syncer = (Syncer<VAL, ?, ?>) getValueSyncer(type);
         }
-        if (syncer == null && property.getDesiredMethod() != SerializationMethod.Method.VALUE) {
+        if (syncer == null && property.getSerializationMethod() != SerializationMethod.Method.VALUE) {
             syncer = (Syncer<VAL, ?, ?>) getContentsSyncer(type, property);
         }
         return syncer;

@@ -118,7 +118,6 @@ public abstract class Scheduler extends SchedulerBase {
 
     /**
      * helper to add a single task
-     * Do not rename, see {@link de.take_weiland.mods.commons.internal.SchedulerInternalTask}
      */
     @Override
     protected void addTask(SchedulerInternalTask task) {
@@ -140,8 +139,8 @@ public abstract class Scheduler extends SchedulerBase {
         } while (!casHead(curr, newHead));
     }
 
-    @SuppressWarnings("unused") // see FMLEventHandler
-    private void tick() {
+    @Override
+    protected void tick() {
         SchedulerInternalTask curr;
         do {
             curr = head;

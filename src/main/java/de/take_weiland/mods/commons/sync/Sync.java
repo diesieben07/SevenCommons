@@ -22,6 +22,9 @@ import java.lang.annotation.Target;
  * <li>ItemStack</li>
  * <li>Item and Block</li>
  * </ul>
+ * <p>New supported types may be added by implementing the {@link Syncer} interface.</p>
+ *
+ * @see Syncer
  *
  * @author diesieben07
  */

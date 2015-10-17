@@ -4,7 +4,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
 /**
- * <p>A low-level packet. It must be handled by a {@link RawPacketHandler} on the receiving end.</p>
+ * <p>A low-level packet. It must be handled by a {@link ChannelHandler} on the receiving end.</p>
  * <p>Usually the {@link Packet} interface is a better and more convenient choice.</p>
  *
  * @author diesieben07
@@ -62,7 +62,7 @@ public interface RawPacket {
 
     /**
      * <p>A bitmask of characteristics of how this packet should be handled when received directly. This does <i>not</i> apply
-     * to any corresponding {@link RawPacketHandler}.</p>
+     * to any corresponding {@link ChannelHandler}.</p>
      *
      * <p>A combination of the values {@link #SERVER}, {@link #CLIENT} and {@link #ASYNC} may be returned here via the {@code |} operator.</p>
      * <p>The default value is {@code BIDIRECTIONAL}.</p>

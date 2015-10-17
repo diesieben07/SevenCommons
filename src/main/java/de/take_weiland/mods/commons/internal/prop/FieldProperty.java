@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.prop;
 
 import com.google.common.reflect.TypeToken;
-import de.take_weiland.mods.commons.reflect.PropertyAccess;
+import de.take_weiland.mods.commons.asm.ASMProperty;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -14,12 +14,6 @@ final class FieldProperty<T> extends AbstractProperty<T, Field> {
     FieldProperty(Field member) {
         super(member);
     }
-
-//    @SuppressWarnings("unchecked")
-//    @Override
-//    PropertyAccess<T> doOptimize() {
-//        return (PropertyAccess<T>) OptimizedPropertyCompiler.optimize(member);
-//    }
 
     @Override
     public T get(Object o) {
@@ -57,6 +51,11 @@ final class FieldProperty<T> extends AbstractProperty<T, Field> {
     @Override
     public Class<? super Object> getRawType() {
         return (Class<? super Object>) member.getType();
+    }
+
+    @Override
+    public ASMProperty getASMProperty() {
+        return ASMProperty.forField(member);
     }
 
 }

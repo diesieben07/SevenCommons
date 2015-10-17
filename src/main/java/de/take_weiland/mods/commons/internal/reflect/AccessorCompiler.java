@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.internal.reflect;
 
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ClassInfoClassWriter;
+import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.reflect.SCReflection;
 import org.apache.commons.lang3.StringUtils;
@@ -23,9 +24,9 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public class AccessorCompiler {
 
-    public static PropertyAccess<?> makeOptimizedProperty(Member member) {
+    public static <T> PropertyAccess<T> makeOptimizedProperty(Member member, Property<T> property) {
         ResolvedMember resolved = resolve(member);
-        CompileContext context = emitStart(Type.getInternalName(PropertyAccess.class));
+        CompileContextImpl context = emitStart(Type.getInternalName(PropertyAccess.class));
 
         emitDelegateMethod(context, "get", methodType(Object.class, Object.class), resolved.get);
         emitDelegateMethod(context, "set", methodType(void.class, Object.class, Object.class), resolved.set);
@@ -36,11 +37,19 @@ public class AccessorCompiler {
             emitDelegateMethod(context, "set" + postfix, resolved.set);
         }
 
+        MethodVisitor mv = context.cw().visitMethod(ACC_PUBLIC, "original", Type.getMethodDescriptor(Type.getType(Property.class)), null, null);
+        mv.visitCode();
+        context.pushAsConstant(mv, property, Property.class);
+        mv.visitInsn(ARETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+
         Class<?> clazz = context.link();
         try {
             Constructor<?> cstr = clazz.getDeclaredConstructor();
             cstr.setAccessible(true);
-            return (PropertyAccess<?>) cstr.newInstance();
+            //noinspection unchecked
+            return (PropertyAccess<T>) cstr.newInstance();
         } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
@@ -109,7 +118,7 @@ public class AccessorCompiler {
         throw new UnsupportedOperationException("Tried to set unmodifiable property");
     }
 
-    static CompileContext emitStart(String... interfaces) {
+    static CompileContextImpl emitStart(String... interfaces) {
         ClassWriter cw = new ClassInfoClassWriter(ClassWriter.COMPUTE_FRAMES);
 
         String name = SCReflection.nextDynamicClassName();
@@ -129,14 +138,14 @@ public class AccessorCompiler {
         mv.visitEnd();
 
 
-        return new CompileContext(name, cw);
+        return new CompileContextImpl(name, cw);
     }
 
-    static void emitDelegateMethod(CompileContext context, String name, MethodHandle target) {
+    static void emitDelegateMethod(CompileContextImpl context, String name, MethodHandle target) {
         emitDelegateMethod(context, name, target.type(), target);
     }
 
-    static void emitDelegateMethod(CompileContext context, String name, MethodType methodType, MethodHandle target) {
+    static void emitDelegateMethod(CompileContextImpl context, String name, MethodType methodType, MethodHandle target) {
         Type asmReturnType = Type.getType(methodType.returnType());
         Type[] asmParamTypes = new Type[methodType.parameterCount()];
         for (int i = 0; i < methodType.parameterCount(); i++) {
@@ -153,7 +162,7 @@ public class AccessorCompiler {
         mv.visitEnd();
     }
 
-    private static void emitDelegateCode(CompileContext context, MethodVisitor mv, MethodType methodType, MethodHandle target) {
+    private static void emitDelegateCode(CompileContextImpl context, MethodVisitor mv, MethodType methodType, MethodHandle target) {
         MethodType targetType = target.type();
 
         String mhIName = Type.getInternalName(MethodHandle.class);
