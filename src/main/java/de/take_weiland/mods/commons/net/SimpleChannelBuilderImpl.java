@@ -14,10 +14,6 @@ import gnu.trove.map.hash.TByteObjectHashMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
-import java.util.concurrent.CompletionStage;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -27,14 +23,14 @@ import static com.google.common.base.Preconditions.checkState;
 final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
     private final String channel;
-    private final TByteObjectHashMap<Handler> handlers = new TByteObjectHashMap<>();
+    private TByteObjectHashMap<Handler> handlers = new TByteObjectHashMap<>();
 
     SimpleChannelBuilderImpl(String channel) {
         this.channel = channel;
     }
 
     @Override
-    public <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, BiConsumer<? super P, ? super EntityPlayer> handler) {
+    public <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketHandler<? super P> handler) {
         validateID(id);
 
         Class<P> packetClass = constructor.getPacketClass();
@@ -47,7 +43,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
     }
 
     @Override
-    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder registerResponse(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, PacketHandler.WithResponse<? super P, ? extends R> handler) {
         validateID(id);
 
         Class<P> packetClass = constructor.getPacketClass();
@@ -61,7 +57,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
     }
 
     @Override
-    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder registerFutureResponse(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler) {
+    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder registerWithAsyncResponse(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, PacketHandler.WithAsyncResponse<? super P, ? extends R> handler) {
         validateID(id);
 
         Class<P> packetClass = constructor.getPacketClass();
@@ -89,17 +85,18 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
     public void build() {
         checkNotBuilt();
 
-        Handler[] handlers = pack(this.handlers);
-        String channel = this.channel;
+        Handler[] handlersPacked = pack(this.handlers);
 
-        Network.registerHandler(this.channel, new SimpleChannelPacketHandler(handlers, channel));
+        this.handlers = null;
+
+        Network.registerHandler(this.channel, new ModPacketChannelHandler(handlersPacked, channel));
     }
 
-    private static class SimpleChannelPacketHandler implements ChannelHandler {
+    private static class ModPacketChannelHandler implements ChannelHandler {
         private final Handler[] handlers;
         private final String channel;
 
-        public SimpleChannelPacketHandler(Handler[] handlers, String channel) {
+        public ModPacketChannelHandler(Handler[] handlers, String channel) {
             this.handlers = handlers;
             this.channel = channel;
         }
@@ -123,14 +120,14 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
                 throw new ProtocolException("PacketID " + packetID + " received on invalid side " + side);
             }
 
-            if ((handler.info & RawPacket.ASYNC) != 0) {
+            if ((handler.info & Network.ASYNC) != 0) {
                 handler.accept(this.channel, packetID, in, player);
             } else {
                 Scheduler s = player == null || player.worldObj.isRemote ? Scheduler.client() : Scheduler.server();
                 SchedulerInternalTask.execute(s, new SchedulerInternalTask() {
                     @Override
                     public boolean run() {
-                        handler.accept(SimpleChannelPacketHandler.this.channel, packetID, in, player == null ? Players.getClient() : player);
+                        handler.accept(ModPacketChannelHandler.this.channel, packetID, in, player == null ? Players.getClient() : player);
                         return false;
                     }
                 });
@@ -198,9 +195,9 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
         BaseNettyPacket responseWrap = new ResponseWrapper<>(response, packetID, responseID, channel);
 
         if (player.worldObj.isRemote) {
-            NetworkImpl.sendToServer(responseWrap);
+            NetworkImpl.sendRawPacketToServer(responseWrap);
         } else {
-            NetworkImpl.sendToPlayer((EntityPlayerMP) player, responseWrap);
+            NetworkImpl.sendRawPacket((EntityPlayerMP) player, responseWrap);
         }
     }
 }

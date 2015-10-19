@@ -8,10 +8,12 @@ import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.*;
-import de.take_weiland.mods.commons.net.ChannelHandler;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.Scheduler;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.ChannelPromise;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -34,39 +36,14 @@ public final class NetworkImpl {
 
     public static final Logger LOGGER = SevenCommons.scLogger("Network");
 
-    static Map<String, ChannelHandler> channels = new ConcurrentHashMap<>();
+    /**
+     * <p>Only wrapped ChannelHandlers go in here (via {@link #wrapHandler(ChannelHandler)}. No characteristics check is done on these.</p>
+     */
+    private static Map<String, ChannelHandler> channels = new ConcurrentHashMap<>();
 
     private static final String MULTIPART_CHANNEL = "SevenCommons|MP";
     private static final int MULTIPART_PREFIX = 0;
     private static final int MULTIPART_DATA = 1;
-
-    static void invokeHandler(ChannelHandler handler, String channel, byte[] data, EntityPlayer player, byte side) {
-        byte c = handler.characteristics();
-        if ((c & side) == 0) {
-            throw new ProtocolException(String.format("Received packet on channel %s with handler %s on invalid side %s", channel, handler, side == RawPacket.CLIENT ? "client" : "server"));
-        }
-        if ((c & RawPacket.ASYNC) == 0) {
-            if (side == RawPacket.CLIENT) {
-                SchedulerInternalTask.execute(Scheduler.client(), new SchedulerInternalTask() {
-                    @Override
-                    public boolean run() {
-                        handler.accept(channel, data, Players.getClient(), Side.CLIENT);
-                        return false;
-                    }
-                });
-            } else {
-                SchedulerInternalTask.execute(Scheduler.server(), new SchedulerInternalTask() {
-                    @Override
-                    public boolean run() {
-                        handler.accept(channel, data, player, Side.SERVER);
-                        return false;
-                    }
-                });
-            }
-        } else {
-            handler.accept(channel, data, player, side == RawPacket.CLIENT ? Side.CLIENT : Side.SERVER);
-        }
-    }
 
     // receiving
 
@@ -178,9 +155,67 @@ public final class NetworkImpl {
 
     public static synchronized void register(String channel, ChannelHandler handler) {
         checkNotFrozen();
-        if (channels.putIfAbsent(channel, handler) != null) {
+        if (channels.putIfAbsent(channel, wrapHandler(handler)) != null) {
             throw new IllegalStateException(String.format("Channel %s already registered", channel));
         }
+    }
+
+    private static ChannelHandler wrapHandler(ChannelHandler handler) {
+        byte c = handler.characteristics();
+        if ((c & (Network.BIDIRECTIONAL)) == Network.BIDIRECTIONAL) {
+            c &= ~Network.BIDIRECTIONAL;
+        }
+
+        boolean needCheckSide = (c & Network.CLIENT) != 0 || (c & Network.SERVER) != 0;
+        boolean needSchedule = (c & Network.ASYNC) != 0;
+
+        byte characteristics = c;
+
+        if (!needSchedule && !needCheckSide) { // no side checking or scheduling needed
+            return handler;
+        } else if (!needSchedule) {
+            return (channel, data, player, side) -> {
+                checkSide(handler, side, characteristics);
+                handler.accept(channel, data, player, side);
+            };
+        } else if (!needCheckSide) {
+            return (channel, data, player, side) -> SchedulerInternalTask.execute(Scheduler.forSide(side), new ScheduledHandlerExecution(handler, channel, data, player, side));
+        } else {
+            return (channel, data, player, side) -> {
+                checkSide(handler, side, characteristics);
+                SchedulerInternalTask.execute(Scheduler.forSide(side), new ScheduledHandlerExecution(handler, channel, data, player, side));
+            };
+        }
+    }
+
+    private static void checkSide(ChannelHandler handler, Side side, byte characteristics) {
+        if ((characteristics & (1 << side.ordinal())) == 0) {
+            throw new ProtocolException(String.format("Handler %s received packet on invalid side %s", handler, side));
+        }
+    }
+
+    private static final class ScheduledHandlerExecution extends SchedulerInternalTask {
+        private final ChannelHandler handler;
+        private final String channel;
+        private final byte[] data;
+        private final EntityPlayer player;
+
+        private final Side side;
+
+        public ScheduledHandlerExecution(ChannelHandler handler, String channel, byte[] data, EntityPlayer player, Side side) {
+            this.handler = handler;
+            this.channel = channel;
+            this.data = data;
+            this.player = player;
+            this.side = side;
+        }
+
+        @Override
+        public boolean run() {
+            handler.accept(channel, data, player, side);
+            return false;
+        }
+
     }
 
     private static synchronized void freeze() {
@@ -232,19 +267,19 @@ public final class NetworkImpl {
     private NetworkImpl() {
     }
 
-    public static void sendTo(Iterable<? extends EntityPlayer> players, BaseNettyPacket packet) {
+    public static void sendRawPacket(Iterable<? extends EntityPlayer> players, BaseNettyPacket packet) {
         for (EntityPlayer player : players) {
-            sendToPlayer(Players.checkNotClient(player), packet);
+            sendRawPacket(Players.checkNotClient(player), packet);
         }
     }
 
-    public static void sendToPlayer(EntityPlayerMP player, BaseNettyPacket packet) {
+    public static void sendRawPacket(EntityPlayerMP player, BaseNettyPacket packet) {
         player.playerNetServerHandler.netManager.channel()
                 .writeAndFlush(packet)
                 .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 
-    public static void sendToServer(BaseNettyPacket packet) {
+    public static void sendRawPacketToServer(BaseNettyPacket packet) {
         SevenCommons.proxy.getClientNetworkManager().channel()
                 .writeAndFlush(packet)
                 .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);

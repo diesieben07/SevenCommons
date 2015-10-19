@@ -38,7 +38,7 @@ import static com.google.common.base.Preconditions.checkPositionIndexes;
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-class MCDataInputImpl extends InputStream implements MCDataInput, ReadableByteChannel, SyncCompanion.ChangeIterator {
+final class MCDataInputImpl extends InputStream implements MCDataInput, ReadableByteChannel, SyncCompanion.ChangeIterator {
 
     private final byte[] buf;
     private final int maxLen;

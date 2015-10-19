@@ -96,7 +96,7 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput, Writa
         int numRead = 0;
         int read;
         do {
-            ensureWritable(Math.min(Network.DEFAULT_EXPECTED_SIZE, in.available()));
+            ensureWritable(Math.min(Network.DEFAULT_BUFFER_SIZE, in.available()));
             read = in.read(buf, count, buf.length - count);
             if (read == -1) {
                 return numRead;

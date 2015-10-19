@@ -2,8 +2,8 @@ package de.take_weiland.mods.commons.internal.net;
 
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
+import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.ProtocolException;
-import de.take_weiland.mods.commons.net.RawPacket;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.Scheduler;
 import io.netty.channel.ChannelHandler;
@@ -24,11 +24,11 @@ public final class SCMessageHandlerClient extends SCMessageHandler {
             BaseNettyPacket packet = (BaseNettyPacket) msg;
             byte props = packet._sc$characteristics();
 
-            if ((props & RawPacket.CLIENT) == 0) {
+            if ((props & Network.CLIENT) == 0) {
                 throw new ProtocolException("Packet " + msg + " received on invalid side client");
             }
 
-            if ((props & RawPacket.ASYNC) != 0) {
+            if ((props & Network.ASYNC) != 0) {
                 packet._sc$handle(Players.getClient());
             } else {
                 SchedulerInternalTask.execute(Scheduler.client(), new SyncPacketExecClient(packet));

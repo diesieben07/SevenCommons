@@ -17,10 +17,12 @@ import de.take_weiland.mods.commons.internal.sync.SyncEvent;
 import de.take_weiland.mods.commons.internal.sync.builtin.BuiltinSyncers;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.builtin.DefaultNBTSerializers;
+import de.take_weiland.mods.commons.net.ChannelHandler;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.sync.Syncing;
 import de.take_weiland.mods.commons.util.Logging;
 import de.take_weiland.mods.commons.util.Scheduler;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
@@ -107,7 +109,17 @@ public final class SevenCommons extends DummyModContainer {
                 .register(1, PacketInventoryName::new, PacketInventoryName::handle)
                 .build();
 
-        Network.registerHandler(SyncEvent.CHANNEL, SyncEvent::handle);
+        Network.registerHandler(SyncEvent.CHANNEL, new ChannelHandler() {
+            @Override
+            public void accept(String channel, byte[] data, EntityPlayer player, Side side) {
+                SyncEvent.handle(data);
+            }
+
+            @Override
+            public byte characteristics() {
+                return Network.CLIENT | Network.ASYNC;
+            }
+        });
 
 
         ClassInfoSuperCache.preInit();

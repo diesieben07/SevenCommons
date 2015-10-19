@@ -4,16 +4,13 @@ import com.google.common.collect.ImmutableMap;
 import cpw.mods.fml.common.LoaderState;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.Packet;
-import net.minecraft.entity.player.EntityPlayer;
+import de.take_weiland.mods.commons.net.PacketHandler;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Map;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 import static java.lang.invoke.MethodHandles.publicLookup;
 
@@ -39,15 +36,15 @@ public final class PacketToChannelMap {
         return data;
     }
 
-    public static synchronized <P extends Packet> void register(Class<P> clazz, String channel, int id, byte info, BiConsumer<? super P, ? super EntityPlayer> handler) {
+    public static synchronized <P extends Packet> void register(Class<P> clazz, String channel, int id, byte info, PacketHandler<? super P> handler) {
         register0(clazz, new SimplePacketData.Normal<>(channel, id, info, handler));
     }
 
-    public static synchronized <P extends Packet.WithResponse<R>, R extends Packet.Response> void register(Class<P> clazz, String channel, int id, byte info, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler) {
+    public static synchronized <P extends Packet.WithResponse<R>, R extends Packet.Response> void register(Class<P> clazz, String channel, int id, byte info, PacketHandler.WithResponse<? super P, ? extends R> handler) {
         register0(clazz, new SimplePacketData.WithResponseNormal<>(channel, id, info, handler));
     }
 
-    public static synchronized <P extends Packet.WithResponse<R>, R extends Packet.Response> void registerFuture(Class<P> clazz, String channel, int id, byte info, BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler) {
+    public static synchronized <P extends Packet.WithResponse<R>, R extends Packet.Response> void registerFuture(Class<P> clazz, String channel, int id, byte info, PacketHandler.WithAsyncResponse<? super P, ? extends R> handler) {
         register0(clazz, new SimplePacketData.WithResponseFuture<>(channel, id, info, handler));
     }
 

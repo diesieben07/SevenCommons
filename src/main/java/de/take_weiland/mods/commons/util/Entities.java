@@ -14,6 +14,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -83,7 +84,7 @@ public final class Entities {
         }
         IntHashMap trackerMap = SCReflector.instance.getTrackerMap(((WorldServer) entity.worldObj).getEntityTracker());
         EntityTrackerEntry entry = (EntityTrackerEntry) trackerMap.lookup(entity.getEntityId());
-        return entry == null ? null : entry.trackingPlayers;
+        return entry == null ? Collections.emptySet() : entry.trackingPlayers;
     }
 
     /**

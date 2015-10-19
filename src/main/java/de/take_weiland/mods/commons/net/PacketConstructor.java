@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.net;
 
 import java.io.Serializable;
-import java.util.function.Function;
 
 /**
  * <p>A PacketConstructor is used to instantiate a Packet object when it is received.</p>
@@ -13,7 +12,9 @@ import java.util.function.Function;
  * @author diesieben07
  */
 @FunctionalInterface
-public interface PacketConstructor<P extends SimpleModPacketBase> extends Function<MCDataInput, P>, Serializable {
+public interface PacketConstructor<P extends PacketBase> extends Serializable {
+
+    P construct(MCDataInput mcDataInput);
 
     default Class<P> getPacketClass() {
         return Network.findPacketClassReflectively(this);

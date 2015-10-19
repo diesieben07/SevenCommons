@@ -1,13 +1,15 @@
-package de.take_weiland.mods.commons.net;
+package de.take_weiland.mods.commons.internal.net;
 
-import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
+import de.take_weiland.mods.commons.net.RawPacket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
 /**
  * @author diesieben07
  */
-interface RawPacketAdditionalMethods extends BaseNettyPacket {
+public interface RawPacketAdditionalMethods extends BaseNettyPacket {
+
+    String CLASS_NAME = "de/take_weiland/mods/commons/net/RawPacketAdditionalMethods";
 
     @Override
     default byte _sc$characteristics() {

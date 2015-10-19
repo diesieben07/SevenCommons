@@ -4,6 +4,8 @@ import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.net.BaseModPacket;
+import de.take_weiland.mods.commons.internal.net.PacketAdditionalMethods;
+import de.take_weiland.mods.commons.internal.net.RawPacketAdditionalMethods;
 import de.take_weiland.mods.commons.internal.transformers.net.InterfaceAdder;
 import de.take_weiland.mods.commons.internal.transformers.net.PacketGetDataOptimizer;
 import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
@@ -46,12 +48,6 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         // packet stuff
         addEntry(SimplePacketWithResponseTransformer::new, "de/take_weiland/mods/commons/net/SimplePacket$WithResponse");
 
-        // misc
-        addEntry(ListenableSupport::new, apacheFilter());
-        if (FMLLaunchHandler.side().isServer()) {
-            addEntry(SideOfOptimizer::new, "de/take_weiland/mods/commons/util/Sides", "sideOf");
-        }
-
         //noinspection PointlessBooleanExpression,ConstantConditions
         if (!MCPNames.use() || DEBUG) {
             // don't transform people's classes inside dev env, hurts hotswapping :D
@@ -62,8 +58,16 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
                 "de/take_weiland/mods/commons/net/Packet",
                 "de/take_weiland/mods/commons/net/Packet$WithResponse");
 
-        addEntry(cv -> new InterfaceAdder(cv, "de/take_weiland/mods/commons/net/PacketAdditionalMethods"), "de/take_weiland/mods/commons/net/Packet");
-        addEntry(cv -> new InterfaceAdder(cv, "de/take_weiland/mods/commons/net/RawPacketAdditionalMethods"), "de/take_weiland/mods/commons/net/RawPacket");
+        addEntry(cv -> new InterfaceAdder(cv, PacketAdditionalMethods.CLASS_NAME), "de/take_weiland/mods/commons/net/Packet");
+        addEntry(cv -> new InterfaceAdder(cv, RawPacketAdditionalMethods.CLASS_NAME), "de/take_weiland/mods/commons/net/RawPacket");
+
+        // misc
+        addEntry(ListenableSupport::new, apacheFilter());
+        if (FMLLaunchHandler.side().isServer()) {
+            addEntry(SideOfOptimizer::new, "de/take_weiland/mods/commons/util/Sides", "sideOf");
+        }
+
+
     }
 
     private static Predicate<String> apacheFilter() {

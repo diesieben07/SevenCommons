@@ -20,7 +20,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.CompletableFuture;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @GameRegistry.ObjectHolder("testmod_sc")
@@ -64,7 +63,7 @@ public class testmod_sc {
         Blocks.init(b, "testblock");
 //
         Network.newSimpleChannel("testmod")
-                .registerFutureResponse(0, TestPacket::new, TestResponse::new, (packet, player) -> CompletableFuture.supplyAsync(() -> new TestResponse(packet.s)))
+                .register(0, TestPacket::new, TestResponse::new, (packet, player, side) -> new TestResponse(packet.s))
                 .build();
     }
 

@@ -14,6 +14,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.function.Predicate;
@@ -102,10 +103,10 @@ public final class Packets {
     }
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
-    private static void sendToListFiltered(Packet packet, Predicate<? super EntityPlayerMP> filter, List<EntityPlayerMP> all) {
+    private static void sendToListFiltered(Packet packet, @Nullable Predicate<? super EntityPlayerMP> filter, List<EntityPlayerMP> all) {
         for (int i = 0, len = all.size(); i < len; i++) {
             EntityPlayerMP player = all.get(i);
-            if (filter.test(player)) {
+            if (filter == null || filter.test(player)) {
                 player.playerNetServerHandler.sendPacket(packet);
             }
         }
@@ -173,6 +174,7 @@ public final class Packets {
      */
     public static void sendToViewing(Packet packet, Container container) {
         List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
+        //noinspection ForLoopReplaceableByForEach
         for (int i = 0, len = crafters.size(); i < len; ++i) {
             ICrafting crafter = crafters.get(i);
             if (crafter instanceof EntityPlayerMP) {
@@ -194,7 +196,7 @@ public final class Packets {
      */
     public static void sendToAllNear(Packet packet, World world, double x, double y, double z, double radius) {
         List<EntityPlayerMP> players = Players.allIn(checkNotClient(world));
-        radius *= radius;
+        double radiusSq = radius * radius;
 
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0, len = players.size(); i < len; ++i) {
@@ -202,7 +204,7 @@ public final class Packets {
             double dx = x - player.posX;
             double dy = y - player.posY;
             double dz = z - player.posZ;
-            if (dx * dx + dy * dy + dz * dz < radius) {
+            if (dx * dx + dy * dy + dz * dz < radiusSq) {
                 player.playerNetServerHandler.sendPacket(packet);
             }
         }

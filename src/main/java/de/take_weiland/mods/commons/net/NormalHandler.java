@@ -2,24 +2,22 @@ package de.take_weiland.mods.commons.net;
 
 import net.minecraft.entity.player.EntityPlayer;
 
-import java.util.function.BiConsumer;
-
 /**
  * <p>Handler for normal packets.</p>
  */
 class NormalHandler<P extends Packet> extends SimpleChannelBuilderImpl.Handler {
 
-    private final BiConsumer<? super P, ? super EntityPlayer> handlerF;
+    private final PacketHandler<? super P> handler;
     private final PacketConstructor<P> constructor;
 
-    NormalHandler(byte info, BiConsumer<? super P, ? super EntityPlayer> handlerF, PacketConstructor<P> constructor) {
+    NormalHandler(byte info, PacketHandler<? super P> handler, PacketConstructor<P> constructor) {
         super(info);
-        this.handlerF = handlerF;
+        this.handler = handler;
         this.constructor = constructor;
     }
 
     @Override
     public void accept(String channel, int packetID, MCDataInput in, EntityPlayer player) {
-        handlerF.accept(constructor.apply(in), player);
+        handler.handle(constructor.construct(in), player);
     }
 }

@@ -132,7 +132,6 @@ dependencies {
     testCompile "junit:junit:4.11"
 }
 
-print ENV.SC_MAVEN_URL
 if (ENV.SC_MAVEN_URL && ENV.TRAVIS_PULL_REQUEST == "false") { // only upload on travis and not for PRs
     uploadArchives {
         repositories.mavenDeployer {

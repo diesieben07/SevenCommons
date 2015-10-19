@@ -1,11 +1,5 @@
 package de.take_weiland.mods.commons.net;
 
-import net.minecraft.entity.player.EntityPlayer;
-
-import java.util.concurrent.CompletionStage;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 /**
  * <p>A builder for a NetworkChannel.</p>
  * <p>This interface allows the following fluid-style initialization code:</p>
@@ -42,9 +36,15 @@ import java.util.function.BiFunction;
  */
 public interface SimpleChannelBuilder {
 
-    // these ridiculous overloads allow for all combinations of PacketConstructor versions (with or without player) and handler versions (SimplePacketHandler = with side / without side)
-    // most useful for implementing handler and constructor via method references / lambdas, which is desired
-    // they all delegate to the single abstract register method for either with or without response
+    /**
+     * <p>Register a packet using the given constructor and handler.</p>
+     *
+     * @param id          the packet ID
+     * @param constructor the constructor for the packet
+     * @param handler     the handler for the packet
+     * @return this, for convenience
+     */
+    <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketHandler<? super P> handler);
 
     /**
      * <p>Register a packet using the given constructor and handler.</p>
@@ -54,32 +54,60 @@ public interface SimpleChannelBuilder {
      * @param handler     the handler for the packet
      * @return this, for convenience
      */
-    <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, BiConsumer<? super P, ? super EntityPlayer> handler);
-
-    default <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, SimplePacketHandler<? super P> handler) {
-        return register(id, constructor, (BiConsumer<? super P, EntityPlayer>) handler);
+    default <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketHandler.IncludingSide<? super P> handler) {
+        return register(id, constructor, (PacketHandler<? super P>) handler);
     }
 
     /**
-     * <p>Register a Packet with a response using the given constructor and handler.</p>
+     * <p>Register a Packet with a response using the given constructors and handler.</p>
      * @param id the packet ID
      * @param constructor the constructor for the packet
      * @param responseConstructor the constructor for the response
      * @param handler the handler for the packet
      * @return this, for convenience
      */
-    <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder registerResponse(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends R> handler);
+    <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, PacketHandler.WithResponse<? super P, ? extends R> handler);
 
-    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder registerResponse(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, SimplePacketHandler.WithResponse<? super P, ? extends R> handler) {
-        return registerResponse(id, constructor, responseConstructor, (BiFunction<? super P, ? super EntityPlayer, ? extends R>) handler);
+    /**
+     * <p>Register a Packet with a response using the given constructors and handler.</p>
+     *
+     * @param id                  the packet ID
+     * @param constructor         the constructor for the packet
+     * @param responseConstructor the constructor for the response
+     * @param handler             the handler for the packet
+     * @return this, for convenience
+     */
+    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, PacketHandler.WithResponse.IncludingSide<? super P, ? extends R> handler) {
+        return register(id, constructor, responseConstructor, (PacketHandler.WithResponse<? super P, ? extends R>) handler);
     }
 
-    <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder registerFutureResponse(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>> handler);
+    /**
+     * <p>Register a Packet with an asynchronous response using the given constructors and the handler.</p>
+     *
+     * @param id                  the packet ID
+     * @param constructor         the constructor for the packet
+     * @param responseConstructor the constructor for the response
+     * @param handler             the handler for the packet
+     * @return this, for convenience
+     */
+    <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder registerWithAsyncResponse(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, PacketHandler.WithAsyncResponse<? super P, ? extends R> handler);
 
-    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder registerFutureResponse(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, SimplePacketHandler.WithFutureResponse<? super P, ? extends R> handler) {
-        return registerFutureResponse(id, constructor, responseConstructor, ((BiFunction<? super P, ? super EntityPlayer, ? extends CompletionStage<? extends R>>) handler));
+    /**
+     * <p>Register a Packet with an asynchronous response using the given constructors and the handler.</p>
+     *
+     * @param id                  the packet ID
+     * @param constructor         the constructor for the packet
+     * @param responseConstructor the constructor for the response
+     * @param handler             the handler for the packet
+     * @return this, for convenience
+     */
+    default <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder registerWithAsyncResponse(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, PacketHandler.WithAsyncResponse.IncludingSide<? super P, ? extends R> handler) {
+        return registerWithAsyncResponse(id, constructor, responseConstructor, (PacketHandler.WithAsyncResponse<? super P, ? extends R>) handler);
     }
 
+    /**
+     * <p>Finish building.</p>
+     */
     void build();
 
 }

@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
+import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
@@ -9,25 +11,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
  *
  * @author diesieben07
  */
-public interface RawPacket {
-
-    /**
-     * <p>Specifies that this packet may be received on the server-side.</p>
-     */
-    byte SERVER = 0b0001;
-    /**
-     * <p>Specifies that this packet may be received on the client-side.</p>
-     */
-    byte CLIENT = 0b0010;
-    /**
-     * <p>Specifies that this packet may be received on both sides. This is equivalent to {@code CLIENT|SERVER}.</p>
-     */
-    byte BIDIRECTIONAL = SERVER | CLIENT;
-    /**
-     * <p>Specifies that this packet may be handled directly on the netty thread instead of the main game thread for the
-     * receiving side.</p>
-     */
-    byte ASYNC = 0b0100;
+public interface RawPacket extends SimplePacket {
 
     /**
      * <p>Called when this packet is received directly (only happens on local connections).</p>
@@ -61,15 +45,26 @@ public interface RawPacket {
     }
 
     /**
-     * <p>A bitmask of characteristics of how this packet should be handled when received directly. This does <i>not</i> apply
-     * to any corresponding {@link ChannelHandler}.</p>
+     * <p>A bitmap describing characteristics for this packet.</p>
+     * <p>This may be a bitwise-or combination of one or more of {@link Network#ASYNC}, {@link Network#CLIENT}
+     * and {@link Network#SERVER}.</p>
+     * <p>The default value is just {@link Network#BIDIRECTIONAL}.</p>
+     * <p>These settings do <i>not</i> apply to any corresponding {@link ChannelHandler}. These must be set separately
+     * using {@link ChannelHandler#characteristics()}.</p>
      *
-     * <p>A combination of the values {@link #SERVER}, {@link #CLIENT} and {@link #ASYNC} may be returned here via the {@code |} operator.</p>
-     * <p>The default value is {@code BIDIRECTIONAL}.</p>
-     *
-     * @return a bitmask of characteristics
+     * @return the characteristics for this packet
      */
     default byte characteristics() {
-        return BIDIRECTIONAL;
+        return Network.BIDIRECTIONAL;
+    }
+
+    @Override
+    default void sendToServer() {
+        NetworkImpl.sendRawPacketToServer((BaseNettyPacket) this);
+    }
+
+    @Override
+    default void sendTo(EntityPlayerMP player) {
+        NetworkImpl.sendRawPacket(player, (BaseNettyPacket) this);
     }
 }

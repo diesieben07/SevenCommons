@@ -29,13 +29,13 @@ abstract class ResponseHandler<P extends Packet.WithResponse<R>, R extends Packe
 
             if (future != null) {
                 try {
-                    future.complete(responseConstructor.apply(in));
+                    future.complete(responseConstructor.construct(in));
                 } catch (Throwable t) {
                     future.completeExceptionally(t);
                 }
             }
         } else {
-            P packet = constructor.apply(in);
+            P packet = constructor.construct(in);
             doHandle(player, packetID, channel, uniqueID, packet);
         }
     }

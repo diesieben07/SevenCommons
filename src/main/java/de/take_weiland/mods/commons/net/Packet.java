@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.net;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
+import de.take_weiland.mods.commons.internal.net.PacketAdditionalMethods;
 import de.take_weiland.mods.commons.internal.net.WithResponseRequestNettyVersion;
 import net.minecraft.entity.player.EntityPlayerMP;
 
@@ -26,7 +27,7 @@ import java.util.concurrent.CompletionStage;
  *
  * @author diesieben07
  */
-public interface Packet extends SimplePacket, SimpleModPacketBase {
+public interface Packet extends SimplePacket, PacketBase {
 
     /**
      * <p>The {@code Async} annotation may be used on a class that implements either {@code Packet} or {@code Packet.WithResponse} and
@@ -55,12 +56,12 @@ public interface Packet extends SimplePacket, SimpleModPacketBase {
         /**
          * @see PacketAdditionalMethods
          */
-        NetworkImpl.sendToServer((BaseNettyPacket) this);
+        NetworkImpl.sendRawPacketToServer((BaseNettyPacket) this);
     }
 
     @Override
     default void sendTo(EntityPlayerMP player) {
-        NetworkImpl.sendToPlayer(player, (BaseNettyPacket) this);
+        NetworkImpl.sendRawPacket(player, (BaseNettyPacket) this);
     }
 
     /**
@@ -70,19 +71,19 @@ public interface Packet extends SimplePacket, SimpleModPacketBase {
      *
      * @see SimplePacket.WithResponse
      */
-    interface WithResponse<R extends Packet.Response> extends SimplePacket.WithResponse<R>, SimpleModPacketBase {
+    interface WithResponse<R extends Packet.Response> extends SimplePacket.WithResponse<R>, PacketBase {
 
         @Override
         default CompletionStage<R> sendToServer() {
             CompletableFuture<R> future = new CompletableFuture<>();
-            NetworkImpl.sendToServer(new WithResponseRequestNettyVersion<>(this, future));
+            NetworkImpl.sendRawPacketToServer(new WithResponseRequestNettyVersion<>(this, future));
             return future;
         }
 
         @Override
         default CompletionStage<R> sendTo(EntityPlayerMP player) {
             CompletableFuture<R> future = new CompletableFuture<>();
-            NetworkImpl.sendToPlayer(player, new WithResponseRequestNettyVersion<>(this, future));
+            NetworkImpl.sendRawPacket(player, new WithResponseRequestNettyVersion<>(this, future));
             return future;
         }
 
@@ -90,6 +91,6 @@ public interface Packet extends SimplePacket, SimpleModPacketBase {
     /**
      * <p>The response for a {@code Packet.WithResponse}.</p>
      */
-    interface Response extends SimpleModPacketBase {
+    interface Response extends PacketBase {
     }
 }

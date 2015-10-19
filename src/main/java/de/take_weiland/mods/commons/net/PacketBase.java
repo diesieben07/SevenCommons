@@ -4,7 +4,7 @@ package de.take_weiland.mods.commons.net;
  * <p>Base interface for all {@link Packet} and related interfaces.</p>
  * @author diesieben07
  */
-interface SimpleModPacketBase {
+interface PacketBase {
 
     /**
      * <p>Encode this packet's data into the output stream.</p>
@@ -20,7 +20,7 @@ interface SimpleModPacketBase {
      * @return the expected amount of bytes
      */
     default int expectedSize() {
-        return Network.DEFAULT_EXPECTED_SIZE;
+        return Network.DEFAULT_BUFFER_SIZE;
     }
 
 }

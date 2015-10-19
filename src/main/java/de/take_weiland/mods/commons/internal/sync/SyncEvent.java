@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.collect.Iterables;
-import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
@@ -59,10 +58,11 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
 
     abstract Object getObjectDirect(EntityPlayer player);
 
-    public static void handle(String channel, byte[] payload, EntityPlayer player, Side side) {
+
+    public static void handle(byte[] payload) {
         MCDataInput in = Network.newInput(payload);
 
-        player = Players.getClient();
+        EntityPlayer player = Players.getClient();
 
         int type = in.readByte();
         SyncedObjectProxy obj;
@@ -119,7 +119,7 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
     @SuppressWarnings("unused")
     public void send(EntityPlayerMP player) {
         done();
-        NetworkImpl.sendToPlayer(player, this);
+        NetworkImpl.sendRawPacket(player, this);
     }
 
     @Override
@@ -152,7 +152,7 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
 
     @Override
     public byte _sc$characteristics() {
-        return RawPacket.CLIENT | RawPacket.ASYNC;
+        return Network.CLIENT | Network.ASYNC;
     }
 
     @Override
@@ -209,7 +209,7 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
         public void send(Object obj) {
             done();
             TileEntity te = (TileEntity) obj;
-            NetworkImpl.sendTo(Players.getTrackingChunk(te.getWorld(), te.xCoord >> 4, te.zCoord >> 4), this);
+            NetworkImpl.sendRawPacket(Players.getTrackingChunk(te.getWorld(), te.xCoord >> 4, te.zCoord >> 4), this);
         }
     }
 
@@ -239,7 +239,7 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
         @Override
         public void send(Object obj) {
             done();
-            NetworkImpl.sendTo(Entities.getTrackingPlayers((Entity) obj), this);
+            NetworkImpl.sendRawPacket(Entities.getTrackingPlayers((Entity) obj), this);
         }
     }
 
@@ -271,7 +271,7 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
             done();
             Container container = (Container) obj;
             List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
-            NetworkImpl.sendTo(Iterables.filter(crafters, EntityPlayerMP.class), this);
+            NetworkImpl.sendRawPacket(Iterables.filter(crafters, EntityPlayerMP.class), this);
         }
     }
 
@@ -306,9 +306,9 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
         public void send(Object obj) {
             done();
             Entity entity = ((IEEPSyncCompanion) ((SyncedObjectProxy) obj)._sc$getCompanion())._sc$entity;
-            NetworkImpl.sendTo(Entities.getTrackingPlayers(entity), this);
+            NetworkImpl.sendRawPacket(Entities.getTrackingPlayers(entity), this);
             if (entity instanceof EntityPlayerMP) {
-                NetworkImpl.sendToPlayer((EntityPlayerMP) entity, this);
+                NetworkImpl.sendRawPacket((EntityPlayerMP) entity, this);
             }
 
         }

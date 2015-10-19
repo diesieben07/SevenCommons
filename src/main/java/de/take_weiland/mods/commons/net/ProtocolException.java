@@ -46,6 +46,11 @@ public class ProtocolException extends RuntimeException {
         return this;
     }
 
+    /**
+     * <p>Get any set kick message or {@code null} if none has been specified.</p>
+     *
+     * @return the kick message or {@code null}
+     */
     public final String getKickMessage() {
         return playerKickMsg;
     }
