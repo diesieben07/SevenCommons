@@ -6,6 +6,7 @@ import de.take_weiland.mods.commons.inv.SimpleInventory;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.gui.IUpdatePlayerListBox;
 import net.minecraft.tileentity.TileEntity;
 
 import javax.annotation.Nonnull;
