@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.nbt;
 import com.google.common.collect.ImmutableMap;
 import de.take_weiland.mods.commons.internal.SCReflector;
 import net.minecraft.nbt.*;
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.Nonnull;
@@ -144,8 +145,40 @@ public final class NBT {
         return SCReflector.instance.getWrappedMap(nbt);
     }
 
+    private static final Map<Class<? extends NBTBase>, Supplier<? extends NBTBase>> defaultCreators;
+
+    static {
+        defaultCreators = ImmutableMap.<Class<? extends NBTBase>, Supplier<? extends NBTBase>>builder()
+                .put(NBTTagByte.class, () -> new NBTTagByte((byte) 0))
+                .put(NBTTagByteArray.class, () -> new NBTTagByteArray(ArrayUtils.EMPTY_BYTE_ARRAY))
+                .put(NBTTagCompound.class, NBTTagCompound::new)
+                .put(NBTTagDouble.class, () -> new NBTTagDouble(0D))
+                .put(NBTTagEnd.class, NBTTagEnd::new)
+                .put(NBTTagFloat.class, () -> new NBTTagFloat(0F))
+                .put(NBTTagInt.class, () -> new NBTTagInt(0))
+                .put(NBTTagIntArray.class, () -> new NBTTagIntArray(ArrayUtils.EMPTY_INT_ARRAY))
+                .put(NBTTagList.class, NBTTagList::new)
+                .put(NBTTagLong.class, () -> new NBTTagLong(0L))
+                .put(NBTTagShort.class, () -> new NBTTagShort((short) 0))
+                .put(NBTTagString.class, () -> new NBTTagString(""))
+                .build();
+    }
+
     /**
-     * <p>Get an NBTTag of the given type or creates it if it does not exist.</p>
+     * <p>Get an NBTTag of the given type or create it if it does not exist.</p>
+     *
+     * @param parent the parent tag
+     * @param key    the key
+     * @param clazz  the type of NBTTag
+     * @return the NBTTag
+     */
+    public static <T extends NBTBase> T getOrCreate(NBTTagCompound parent, String key, Class<T> clazz) {
+        //noinspection unchecked
+        return getOrCreate(parent, key, clazz, (Supplier<T>) defaultCreators.get(clazz));
+    }
+
+    /**
+     * <p>Get an NBTTag of the given type or create it if it does not exist.</p>
      *
      * @param parent  the parent tag
      * @param key     the key
@@ -164,7 +197,7 @@ public final class NBT {
     }
 
     /**
-     * <p>Get an NBTTag of the given type or creates it if it does not exist.</p>
+     * <p>Get an NBTTag of the given type or create it if it does not exist.</p>
      *
      * @param parent  the parent tag
      * @param key     the key
