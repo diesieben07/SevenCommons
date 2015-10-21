@@ -10,6 +10,8 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -143,6 +145,44 @@ public final class NBT {
     }
 
     /**
+     * <p>Get an NBTTag of the given type or creates it if it does not exist.</p>
+     *
+     * @param parent  the parent tag
+     * @param key     the key
+     * @param clazz   the type of NBTTag
+     * @param creator the supplier to call in case the tag is not present
+     * @return the NBTTag
+     */
+    public static <T extends NBTBase> T getOrCreate(NBTTagCompound parent, String key, Class<T> clazz, Supplier<? extends T> creator) {
+        NBTBase nbt = parent.getTag(key);
+        if (nbt == null || !clazz.isInstance(nbt)) {
+            nbt = creator.get();
+            parent.setTag(key, nbt);
+        }
+        //noinspection unchecked
+        return (T) nbt;
+    }
+
+    /**
+     * <p>Get an NBTTag of the given type or creates it if it does not exist.</p>
+     *
+     * @param parent  the parent tag
+     * @param key     the key
+     * @param clazz   the type of NBTTag
+     * @param creator the function to call with the key in case the tag is not present
+     * @return the NBTTag
+     */
+    public static <T extends NBTBase> T getOrCreate(NBTTagCompound parent, String key, Class<T> clazz, Function<? super String, ? extends T> creator) {
+        NBTBase nbt = parent.getTag(key);
+        if (nbt == null || !clazz.isInstance(nbt)) {
+            nbt = creator.apply(key);
+            parent.setTag(key, nbt);
+        }
+        //noinspection unchecked
+        return (T) nbt;
+    }
+
+    /**
      * <p>Get the NBTTagCompound with the given key in {@code parent} or, if no entry for that key is present,
      * create a new NBTTagCompound and store it in {@code parent} with the given key.</p>
      *
@@ -152,7 +192,12 @@ public final class NBT {
      */
     @Nonnull
     public static NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {
-        return (NBTTagCompound) asMap(parent).computeIfAbsent(key, s -> new NBTTagCompound());
+        NBTBase nbt = parent.getTag(key);
+        if (nbt == null || nbt.getId() != TAG_COMPOUND) {
+            nbt = new NBTTagCompound();
+            parent.setTag(key, nbt);
+        }
+        return (NBTTagCompound) nbt;
     }
 
     /**
@@ -165,7 +210,12 @@ public final class NBT {
      */
     @Nonnull
     public static NBTTagList getOrCreateList(NBTTagCompound parent, String key) {
-        return (NBTTagList) asMap(parent).computeIfAbsent(key, s -> new NBTTagList());
+        NBTBase nbt = parent.getTag(key);
+        if (nbt == null || nbt.getId() != TAG_LIST) {
+            nbt = new NBTTagList();
+            parent.setTag(key, nbt);
+        }
+        return (NBTTagList) nbt;
     }
 
     /**
