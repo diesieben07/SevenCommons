@@ -13,6 +13,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 
 /**
@@ -42,6 +43,8 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
      */
     protected final ItemStack[] storage;
 
+    private final Consumer<ItemStack> changeListener;
+
     /**
      * <p>This constructor uses the given NBT key to store the data.</p>
      * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
@@ -50,11 +53,7 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
      * @param nbtKey the NBT key to use
      */
     protected ItemInventory(ItemStack stack, String nbtKey) {
-        this.storage = new ItemStack[getSizeInventory()];
-        this.stack = stack;
-        this.nbtKey = nbtKey;
-        writeUUID();
-        readFromNBT(getNbt());
+        this(stack, nbtKey, defaultChangeListener());
     }
 
     /**
@@ -65,11 +64,7 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
      * @param nbtKey the NBT key to use
      */
     protected ItemInventory(int size, ItemStack stack, String nbtKey) {
-        this.storage = new ItemStack[size];
-        this.stack = stack;
-        this.nbtKey = nbtKey;
-        writeUUID();
-        readFromNBT(getNbt());
+        this(size, stack, nbtKey, defaultChangeListener());
     }
 
     /**
@@ -93,8 +88,64 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
         this(size, stack, defaultNBTKey(stack));
     }
 
+    public ItemInventory(int size, IInventory inventory, int slot) {
+        this(size, inventory.getStackInSlot(slot), inventoryChangeListener(inventory, slot));
+    }
+
+    protected ItemInventory(ItemStack stack, Consumer<ItemStack> changeListener) {
+        this(stack, defaultNBTKey(stack), changeListener);
+    }
+
+    protected ItemInventory(int size, ItemStack stack, Consumer<ItemStack> changeListener) {
+        this(size, stack, defaultNBTKey(stack), changeListener);
+    }
+
+    /**
+     * <p>This constructor uses the given NBT key to store the data.</p>
+     *
+     * @param size   the size of this inventory
+     * @param stack  the ItemStack to save to
+     * @param nbtKey the NBT key to use
+     * @param changeListener a listener to be called back when the associated ItemStack changes
+     */
+    protected ItemInventory(int size, ItemStack stack, String nbtKey, Consumer<ItemStack> changeListener) {
+        this.storage = new ItemStack[size];
+        this.stack = stack;
+        this.nbtKey = nbtKey;
+        this.changeListener = changeListener;
+        writeUUID();
+        readFromNBT(getNbt());
+    }
+
+    /**
+     * <p>This constructor uses the given NBT key to store the data.</p>
+     * <p>This constructor calls {@link #getSizeInventory()} to determine the size of the inventory. It needs to be overridden and work properly when called from this constructor.</p>
+     *
+     * @param stack  the ItemStack to save to
+     * @param nbtKey the NBT key to use
+     * @param changeListener a listener to be called back when the associated ItemStack changes
+     */
+    protected ItemInventory(ItemStack stack, String nbtKey, Consumer<ItemStack> changeListener) {
+        this.storage = new ItemStack[getSizeInventory()];
+        this.stack = stack;
+        this.nbtKey = nbtKey;
+        this.changeListener = changeListener;
+        writeUUID();
+        readFromNBT(getNbt());
+    }
+
+    private static Consumer<ItemStack> defaultChangeListener() {
+        return stack -> {
+        };
+    }
+
+    private static Consumer<ItemStack> inventoryChangeListener(IInventory inventory, int slot) {
+        return stack -> inventory.setInventorySlotContents(slot, stack);
+    }
+
     private void writeUUID() {
         ItemStacks.getNbt(stack).setTag(nbtKey, NBTData.writeUUID(uuid));
+        markDirty();
     }
 
     private static String defaultNBTKey(ItemStack stack) {
@@ -119,6 +170,7 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
     @Override
     public void markDirty() {
         saveData();
+        changeListener.accept(stack);
     }
 
     @Override
@@ -135,7 +187,7 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
     }
 
     /**
-     * saves this inventory to the ItemStack.
+     * <p>Save the Inventory back to the ItemStack.</p>
      */
     protected final void saveData() {
         writeToNBT(getNbt());
@@ -163,6 +215,7 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
     @Override
     public void setCustomName(String name) {
         stack.setStackDisplayName(name);
+        markDirty();
     }
 
     @Override
