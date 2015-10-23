@@ -8,14 +8,13 @@ import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.templates.TypedItemBlock;
 import net.minecraft.block.Block;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.world.World;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
 
 import static de.take_weiland.mods.commons.util.Items.checkPhase;
@@ -66,6 +65,7 @@ public final class Blocks extends net.minecraft.init.Blocks {
         }
     }
 
+
     /**
      * <p>Utility function to initialize a lot of block at the same time.</p>
      *
@@ -73,11 +73,25 @@ public final class Blocks extends net.minecraft.init.Blocks {
      * @param blocks           the list of blocks
      */
     @SafeVarargs
-    public static <T extends Block> List<T> initAll(Function<? super T, ? extends String> baseNameFunction, T... blocks) {
+    public static <T extends Block> void initAll(Function<? super T, ? extends String> baseNameFunction, T... blocks) {
+        initAll(baseNameFunction, null, blocks);
+    }
+
+    /**
+     * <p>Utility function to initialize a lot of block at the same time and set their creative tab.</p>
+     *
+     * @param baseNameFunction a function that provides the base name for each Block
+     * @param tab the creative tab
+     * @param blocks           the list of blocks
+     */
+    @SafeVarargs
+    public static <T extends Block> void initAll(Function<? super T, ? extends String> baseNameFunction, @Nullable CreativeTabs tab, T... blocks) {
         for (T block : blocks) {
             init(block, baseNameFunction.apply(block));
+            if (tab != null) {
+                block.setCreativeTab(tab);
+            }
         }
-        return Arrays.asList(blocks);
     }
 
     public static Item getItem(Block block) {
