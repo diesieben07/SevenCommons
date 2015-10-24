@@ -107,6 +107,7 @@ public final class SevenCommons extends DummyModContainer {
         Network.newSimpleChannel("SevenCommons")
                 .register(0, PacketContainerButton::new, PacketContainerButton::handle)
                 .register(1, PacketInventoryName::new, PacketInventoryName::handle)
+                .register(2, PacketItemInvUUID::new, PacketItemInvUUID::handle)
                 .build();
 
         Network.registerHandler(SyncEvent.CHANNEL, new ChannelHandler() {

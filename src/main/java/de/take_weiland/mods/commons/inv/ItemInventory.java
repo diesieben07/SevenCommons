@@ -28,7 +28,7 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
 
     static final String NBT_UUID_KEY = "_sc$iteminv$uuid";
 
-    final UUID uuid = UUID.randomUUID();
+    UUID uuid = UUID.randomUUID();
 
     /**
      * <p>The ItemStack that contains this inventory.</p>

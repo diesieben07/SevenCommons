@@ -10,6 +10,7 @@ import de.take_weiland.mods.commons.internal.sync.*;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
 import de.take_weiland.mods.commons.inv.Containers;
+import de.take_weiland.mods.commons.inv.ItemInventory;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.client.Minecraft;
@@ -23,7 +24,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * A class containing methods called from ASM generated code.
@@ -147,13 +151,16 @@ public final class ASMHooks {
         return slot != null && slot.canTakeStack(Minecraft.getMinecraft().thePlayer);
     }
 
-    public static void onListenerAdded(Container container, ICrafting listener) {
+    public static void onListenerAdded(Container container, ICrafting listener) throws Throwable {
         if (listener instanceof EntityPlayerMP) {
             List<IInventory> invs = Containers.getInventories(container).asList();
             for (int i = 0, len = invs.size(); i < len; i++) {
                 IInventory inv = invs.get(i);
                 if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
                     new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
+                } else if (inv instanceof ItemInventory) {
+                    UUID uuid = (UUID) PacketItemInvUUID.itemInvUUIDGetter.invokeExact((ItemInventory) inv);
+                    new PacketItemInvUUID(container.windowId, i, uuid).sendTo((EntityPlayerMP) listener);
                 }
             }
             SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();
