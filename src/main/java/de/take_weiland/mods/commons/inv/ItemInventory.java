@@ -1,10 +1,13 @@
 package de.take_weiland.mods.commons.inv;
 
 import com.google.common.collect.ImmutableSet;
+import de.take_weiland.mods.commons.internal.PacketItemInvUUID;
+import de.take_weiland.mods.commons.internal.PlayerAwareInventory;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
@@ -24,11 +27,11 @@ import java.util.function.Consumer;
  * Containers.addPlayerInventory} or by calling {@link #canTakeStack(Container, ItemStack, EntityPlayer)} from your Slot
  * implementation.</p>
  */
-public class ItemInventory implements SimpleInventory, NameableInventory {
+public class ItemInventory implements SimpleInventory, NameableInventory, PlayerAwareInventory {
 
     static final String NBT_UUID_KEY = "_sc$iteminv$uuid";
 
-    UUID uuid = UUID.randomUUID();
+    UUID uuid;
 
     /**
      * <p>The ItemStack that contains this inventory.</p>
@@ -114,7 +117,6 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
         this.stack = stack;
         this.nbtKey = nbtKey;
         this.changeListener = changeListener;
-        writeUUID();
         readFromNBT(getNbt());
     }
 
@@ -131,13 +133,21 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
         this.stack = stack;
         this.nbtKey = nbtKey;
         this.changeListener = changeListener;
-        writeUUID();
         readFromNBT(getNbt());
     }
 
     private static Consumer<ItemStack> defaultChangeListener() {
         return stack -> {
         };
+    }
+
+    @Override
+    public void _sc$onPlayerViewContainer(Container container, int index, EntityPlayerMP player) {
+        if (uuid == null) {
+            uuid = UUID.randomUUID();
+            writeUUID();
+        }
+        new PacketItemInvUUID(container.windowId, index, uuid).sendTo(player);
     }
 
     private static Consumer<ItemStack> inventoryChangeListener(IInventory inventory, int slot) {

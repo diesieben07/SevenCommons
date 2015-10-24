@@ -10,7 +10,6 @@ import de.take_weiland.mods.commons.internal.sync.*;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
 import de.take_weiland.mods.commons.inv.Containers;
-import de.take_weiland.mods.commons.inv.ItemInventory;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.client.Minecraft;
@@ -27,7 +26,6 @@ import net.minecraftforge.common.MinecraftForge;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * A class containing methods called from ASM generated code.
@@ -159,9 +157,8 @@ public final class ASMHooks {
                 if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
                     new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
                 }
-                if (inv instanceof ItemInventory) {
-                    UUID uuid = (UUID) PacketItemInvUUID.itemInvUUIDGetter.invokeExact((ItemInventory) inv);
-                    new PacketItemInvUUID(container.windowId, i, uuid).sendTo((EntityPlayerMP) listener);
+                if (inv instanceof PlayerAwareInventory) {
+                    ((PlayerAwareInventory) inv)._sc$onPlayerViewContainer(container, i, (EntityPlayerMP) listener);
                 }
             }
             SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();
