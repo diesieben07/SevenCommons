@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 /**
  * @author diesieben07
  */
+@SuppressWarnings("UseOfSunClasses")
 final class SchedulerUnsafe extends Scheduler {
 
     private static final Unsafe U;
@@ -22,6 +23,7 @@ final class SchedulerUnsafe extends Scheduler {
         }
     }
 
+    @Override
     boolean casHead(@Nullable SchedulerInternalTask expect, @Nullable SchedulerInternalTask _new) {
         return U.compareAndSwapObject(this, headOff, expect, _new);
     }

@@ -9,7 +9,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
  */
 public interface RawPacketAdditionalMethods extends BaseNettyPacket {
 
-    String CLASS_NAME = "de/take_weiland/mods/commons/net/RawPacketAdditionalMethods";
+    String CLASS_NAME = "de/take_weiland/mods/commons/internal/net/RawPacketAdditionalMethods";
 
     @Override
     default byte _sc$characteristics() {

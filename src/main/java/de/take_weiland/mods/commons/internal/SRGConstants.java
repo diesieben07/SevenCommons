@@ -43,4 +43,5 @@ public interface SRGConstants {
     String F_CONTAINER_PLAYER_THE_PLAYER = "field_82862_h";
     String F_SLOT_CRAFTING_THE_PLAYER = "field_75238_b";
     String M_SAVE_ALL_WORLDS = "func_71267_a";
+    String M_DRAW_SLOT = "func_146977_a";
 }
