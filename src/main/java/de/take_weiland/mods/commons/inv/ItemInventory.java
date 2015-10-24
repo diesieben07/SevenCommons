@@ -144,7 +144,7 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
     }
 
     private void writeUUID() {
-        ItemStacks.getNbt(stack).setTag(nbtKey, NBTData.writeUUID(uuid));
+        ItemStacks.getNbt(stack).setTag(NBT_UUID_KEY, NBTData.writeUUID(uuid));
         markDirty();
     }
 
