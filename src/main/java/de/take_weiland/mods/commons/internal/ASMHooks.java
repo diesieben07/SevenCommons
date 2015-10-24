@@ -158,7 +158,8 @@ public final class ASMHooks {
                 IInventory inv = invs.get(i);
                 if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
                     new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
-                } else if (inv instanceof ItemInventory) {
+                }
+                if (inv instanceof ItemInventory) {
                     UUID uuid = (UUID) PacketItemInvUUID.itemInvUUIDGetter.invokeExact((ItemInventory) inv);
                     new PacketItemInvUUID(container.windowId, i, uuid).sendTo((EntityPlayerMP) listener);
                 }
