@@ -94,6 +94,15 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
     }
 
     /**
+     * <p>Get this container's inventory.</p>
+     *
+     * @return the inventory
+     */
+    public T inventory() {
+        return inventory;
+    }
+
+    /**
      * <p>Add the slots for the inventory to this Container in this method. Note that the player inventory is usually added automatically.</p>
      */
     protected abstract void addSlots();
