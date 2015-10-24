@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.inv;
 
 import com.google.common.collect.ImmutableSet;
+import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.entity.player.EntityPlayer;
@@ -244,7 +245,7 @@ public class ItemInventory implements SimpleInventory, NameableInventory {
             return true;
         }
 
-        UUID uuid = NBTData.readUUID(ItemStacks.getNbt(stack, NBT_UUID_KEY));
+        UUID uuid = NBTData.readUUID(ItemStacks.getNbt(stack).getTagList(NBT_UUID_KEY, NBT.TAG_LONG));
         if (uuid == null) {
             return true;
         }
