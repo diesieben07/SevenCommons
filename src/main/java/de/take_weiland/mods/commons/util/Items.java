@@ -52,7 +52,7 @@ public final class Items extends net.minecraft.init.Items {
         if (item instanceof HasSubtypes) {
             SCReflector.instance.setHasSubtypes(item, true);
 
-            ItemStacks.registerSubstacks(baseName, item);
+            ItemStacks.registerSubstacks(baseName, item, (HasSubtypes<?>) item);
         }
 
         GameRegistry.registerItem(item, baseName);
