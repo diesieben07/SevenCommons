@@ -3,14 +3,13 @@ package de.take_weiland.mods.commons.util;
 import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.Packet;
-import net.minecraft.util.Direction;
-import net.minecraft.util.IntHashMap;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.*;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -102,5 +101,19 @@ public final class Entities {
 
     private Entities() {
     }
+
+    /**
+     * Gives back the movingobjectposition of the given entity on both server and client
+     * @param entity
+     * @param distance
+     * @return the movingobjectposition
+     */
+    public static MovingObjectPosition rayTrace(EntityLivingBase entity, double distance) {
+        Vec3 vec3 = Vec3.createVectorHelper(entity.posX, entity.posY, entity.posZ);
+        Vec3 vec31 = entity.getLook(1);
+        Vec3 vec32 = vec3.addVector(vec31.xCoord * distance, vec31.yCoord * distance, vec31.zCoord * distance);
+        return entity.worldObj.rayTraceBlocks(vec3, vec32, false, false, true);
+    }
+
 
 }
