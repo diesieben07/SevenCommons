@@ -204,6 +204,13 @@ public class ItemInventory implements SimpleInventory, NameableInventory, Player
         writeToNBT(getNbt());
     }
 
+    /**
+     * <p>Load the inventory from the ItemStack.</p>
+     */
+    protected final void loadData() {
+        readFromNBT(getNbt());
+    }
+
     private NBTTagCompound getNbt() {
         return ItemStacks.getNbt(stack, nbtKey);
     }
