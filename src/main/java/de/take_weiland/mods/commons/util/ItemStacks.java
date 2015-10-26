@@ -400,9 +400,8 @@ public final class ItemStacks {
         return stack != null && getBlock(stack) == block && stack.getMetadata() == meta;
     }
 
-    @SuppressWarnings("unchecked")
-    static <T extends Enum<T> & Subtype> void registerSubstacks(String baseName, Item item) {
-        MetadataProperty<T> prop = ((HasSubtypes<T>) item).subtypeProperty();
+    static <T extends Subtype> void registerSubstacks(String baseName, Item item, HasSubtypes<T> subtype) {
+        MetadataProperty<T> prop = subtype.subtypeProperty();
         for (T type : prop.values()) {
             ItemStack stack = new ItemStack(item);
             stack.setMetadata(prop.toMeta(type, 0));

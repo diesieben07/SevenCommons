@@ -61,7 +61,7 @@ public final class Blocks extends net.minecraft.init.Blocks {
         GameRegistry.registerBlock(block, Objects.firstNonNull(itemClass, getItemBlockClass(block)), baseName);
 
         if (block instanceof HasSubtypes) {
-            ItemStacks.registerSubstacks(baseName, getItem(block));
+            ItemStacks.registerSubstacks(baseName, getItem(block), (HasSubtypes<?>) block);
         }
     }
 

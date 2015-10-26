@@ -11,7 +11,7 @@ import net.minecraft.entity.player.EntityPlayer;
  */
 public interface PacketAdditionalMethods extends BaseNettyPacket, BaseModPacket {
 
-    String CLASS_NAME = "de/take_weiland/mods/commons/net/PacketAdditionalMethods";
+    String CLASS_NAME = "de/take_weiland/mods/commons/internal/net/PacketAdditionalMethods";
 
     @Override
     default void _sc$handle(EntityPlayer player) {

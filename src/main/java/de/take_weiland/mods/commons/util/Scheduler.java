@@ -72,22 +72,11 @@ public abstract class Scheduler extends SchedulerBase {
 
     @Override
     public void execute(Runnable task) {
-        addTask(new SchedulerInternalTask() {
-            @Override
-            public boolean run() {
-                task.run();
-                return false;
-            }
-        });
+        addTask(new WrappedRunnable(task));
     }
 
     public void execute(Task task) {
-        addTask(new SchedulerInternalTask() {
-            @Override
-            public boolean run() {
-                return task.run();
-            }
-        });
+        addTask(new WrappedTask(task));
     }
 
     static {
@@ -205,7 +194,57 @@ public abstract class Scheduler extends SchedulerBase {
             }
         }
 
+        @Override
+        public String toString() {
+            return "WaitingTask{" +
+                    "r=" + r +
+                    ", ticks=" + ticks +
+                    '}';
+        }
     }
+
+    private static class WrappedTask extends SchedulerInternalTask {
+
+        private final Task task;
+
+        public WrappedTask(Task task) {
+            this.task = task;
+        }
+
+        @Override
+        public boolean run() {
+            return task.run();
+        }
+
+        @Override
+        public String toString() {
+            return "WrappedTask{" +
+                    "task=" + task +
+                    '}';
+        }
+    }
+
+    private static class WrappedRunnable extends SchedulerInternalTask {
+        private final Runnable task;
+
+        public WrappedRunnable(Runnable task) {
+            this.task = task;
+        }
+
+        @Override
+        public boolean run() {
+            task.run();
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return "WrappedRunnable{" +
+                    "task=" + task +
+                    '}';
+        }
+    }
+
     /**
      * @return always false
      * @deprecated always false, this ExecutorService cannot be shut down

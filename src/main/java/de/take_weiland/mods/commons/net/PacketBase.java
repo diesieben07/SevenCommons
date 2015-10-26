@@ -4,7 +4,7 @@ package de.take_weiland.mods.commons.net;
  * <p>Base interface for all {@link Packet} and related interfaces.</p>
  * @author diesieben07
  */
-interface PacketBase {
+public interface PacketBase {
 
     /**
      * <p>Encode this packet's data into the output stream.</p>

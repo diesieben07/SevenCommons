@@ -23,7 +23,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A class containing methods called from ASM generated code.
@@ -147,13 +149,16 @@ public final class ASMHooks {
         return slot != null && slot.canTakeStack(Minecraft.getMinecraft().thePlayer);
     }
 
-    public static void onListenerAdded(Container container, ICrafting listener) {
+    public static void onListenerAdded(Container container, ICrafting listener) throws Throwable {
         if (listener instanceof EntityPlayerMP) {
             List<IInventory> invs = Containers.getInventories(container).asList();
             for (int i = 0, len = invs.size(); i < len; i++) {
                 IInventory inv = invs.get(i);
                 if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
                     new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
+                }
+                if (inv instanceof PlayerAwareInventory) {
+                    ((PlayerAwareInventory) inv)._sc$onPlayerViewContainer(container, i, (EntityPlayerMP) listener);
                 }
             }
             SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();

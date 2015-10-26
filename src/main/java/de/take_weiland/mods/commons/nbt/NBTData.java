@@ -113,7 +113,11 @@ public final class NBTData {
             return null;
         } else {
             List<NBTBase> asList = NBT.asList((NBTTagList) nbt);
-            return new UUID(((NBTTagLong) asList.get(0)).getLong(), ((NBTTagLong) asList.get(1)).getLong());
+            if (asList.size() != 2) {
+                return null;
+            } else {
+                return new UUID(((NBTTagLong) asList.get(0)).getLong(), ((NBTTagLong) asList.get(1)).getLong());
+            }
         }
     }
 
