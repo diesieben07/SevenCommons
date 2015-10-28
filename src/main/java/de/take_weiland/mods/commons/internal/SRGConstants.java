@@ -44,4 +44,7 @@ public interface SRGConstants {
     String F_SLOT_CRAFTING_THE_PLAYER = "field_75238_b";
     String M_SAVE_ALL_WORLDS = "func_71267_a";
     String M_DRAW_SLOT = "func_146977_a";
+    String M_HANDLE_INPUT = "func_146269_k";
+    String M_HANDLE_KEYBOARD_INPUT = "func_146282_l";
+    String M_HANDLE_MOUSE_INPUT = "func_146274_d";
 }

@@ -1,7 +1,10 @@
 package de.take_weiland.mods.commons.client;
 
+import de.take_weiland.mods.commons.internal.GuiScreenProxy;
 import de.take_weiland.mods.commons.inv.Inventories;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.inventory.IInventory;
 
@@ -18,6 +21,20 @@ public final class Guis {
      */
     public static void close() {
         Minecraft.getMinecraft().displayGuiScreen(null);
+    }
+
+    /**
+     * <p>Add the given text field to the screen. The methods {@link GuiTextField#textboxKeyTyped(char, int)},
+     * {@link GuiTextField#mouseClicked(int, int, int)} and {@link GuiTextField#drawTextBox()} will be called automatically.</p>
+     * <p>Like with buttons, text fields must be re-added here in {@link GuiScreen#initGui()}.</p>
+     *
+     * @param gui       the {@code GuiScreen}
+     * @param textField the text field
+     * @return the text field, for convenience
+     */
+    public static GuiTextField addTextField(GuiScreen gui, GuiTextField textField) {
+        ((GuiScreenProxy) gui)._sc$textFields().add(textField);
+        return textField;
     }
 
     /**

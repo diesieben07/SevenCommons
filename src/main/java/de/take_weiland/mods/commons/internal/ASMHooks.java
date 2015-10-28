@@ -13,6 +13,8 @@ import de.take_weiland.mods.commons.inv.Containers;
 import de.take_weiland.mods.commons.inv.NameableInventory;
 import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
@@ -22,6 +24,8 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +36,7 @@ import java.util.Map;
  *
  * @author diesieben07
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "ForLoopReplaceableByForEach"})
 public final class ASMHooks {
 
     public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/ASMHooks";
@@ -44,7 +48,9 @@ public final class ASMHooks {
     public static final String ON_LISTENER_ADDED = "onListenerAdded";
     public static final String IS_USEABLE_CLIENT = "isUseableClient";
     public static final String INVOKE_SYNC_COMP_CHECK = "invokeSyncCompanionCheck";
-    public static final String ON_GUI_INIT = "onGuiInit";
+
+    public static final String ON_GUI_KEY = "onGuiKey";
+    public static final String ON_GUI_MOUSE = "onGuiMouse";
 
     private ASMHooks() {
     }
@@ -56,6 +62,30 @@ public final class ASMHooks {
             ieepCompanions = new MapMaker().concurrencyLevel(2).makeMap();
         } else {
             ieepCompanions = new HashMap<>();
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static void onGuiKey(GuiScreen screen) {
+        if (Keyboard.getEventKeyState()) {
+            List<GuiTextField> list = ((GuiScreenProxy) screen)._sc$textFields();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                list.get(i).textboxKeyTyped(Keyboard.getEventCharacter(), Keyboard.getEventKey());
+            }
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static void onGuiMouse(GuiScreen screen) {
+        if (Mouse.getEventButtonState()) {
+            int mouseX = Mouse.getEventX() * screen.width / screen.mc.displayWidth;
+            int mouseY = screen.height - Mouse.getEventY() * screen.height / screen.mc.displayHeight - 1;
+            int button = Mouse.getEventButton();
+
+            List<GuiTextField> list = ((GuiScreenProxy) screen)._sc$textFields();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                list.get(i).mouseClicked(mouseX, mouseY, button);
+            }
         }
     }
 
