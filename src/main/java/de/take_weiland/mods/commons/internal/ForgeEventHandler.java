@@ -40,7 +40,7 @@ public final class ForgeEventHandler implements IWorldAccess {
     @SuppressWarnings("ForLoopReplaceableByForEach")
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void onScreenDraw(GuiScreenEvent.DrawScreenEvent.Pre event) {
+    public void onScreenDraw(GuiScreenEvent.DrawScreenEvent.Post event) {
         List<GuiTextField> fields = ((GuiScreenProxy) event.gui)._sc$textFields();
         for (int i = 0, fieldsSize = fields.size(); i < fieldsSize; i++) {
             GuiTextField field = fields.get(i);
