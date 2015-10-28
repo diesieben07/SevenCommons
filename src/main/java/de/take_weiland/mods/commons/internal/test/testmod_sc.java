@@ -7,6 +7,7 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
+import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.util.Blocks;
 import de.take_weiland.mods.commons.util.Scheduler;
@@ -15,9 +16,11 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -51,7 +54,9 @@ public class testmod_sc {
             @Override
             public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int par6, float par7, float par8, float par9) {
                 if (world.isRemote) {
-                    System.out.println(((TestTE) world.getTileEntity(x, y, z)).getSyncFoobar());
+//                    System.out.println(((TestTE) world.getTileEntity(x, y, z)).getSyncFoobar());
+                } else {
+                    Inventories.tryStore(new ItemStack(Blocks.stone), world, x, y, z, ForgeDirection.UP);
                 }
                 return true;
             }
