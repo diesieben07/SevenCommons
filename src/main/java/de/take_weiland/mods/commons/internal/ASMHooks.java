@@ -46,7 +46,7 @@ public final class ASMHooks {
     public static final String SEND_SYNC_STREAM = "sendSyncStream";
     public static final String FIND_CONTAINER_INVS = "findContainerInvs";
     public static final String ON_LISTENER_ADDED = "onListenerAdded";
-    public static final String IS_USEABLE_CLIENT = "isUseableClient";
+    public static final String CAN_NUMBER_KEY_MOVE = "canNumberKeyMove";
     public static final String INVOKE_SYNC_COMP_CHECK = "invokeSyncCompanionCheck";
 
     public static final String ON_GUI_KEY = "onGuiKey";
@@ -175,8 +175,18 @@ public final class ASMHooks {
     }
 
     @SideOnly(Side.CLIENT)
-    public static boolean isUseableClient(Slot slot) {
-        return slot != null && slot.canTakeStack(Minecraft.getMinecraft().thePlayer);
+    public static boolean canNumberKeyMove(Slot slot) {
+        if (slot != null && !slot.canTakeStack(Minecraft.getMinecraft().thePlayer)) {
+            return false;
+        }
+        List<GuiTextField> fields = ((GuiScreenProxy) Minecraft.getMinecraft().currentScreen)._sc$textFields();
+        for (int i = 0, len = fields.size(); i < len; i++) {
+            GuiTextField field = fields.get(i);
+            if (field.isFocused()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static void onListenerAdded(Container container, ICrafting listener) throws Throwable {
