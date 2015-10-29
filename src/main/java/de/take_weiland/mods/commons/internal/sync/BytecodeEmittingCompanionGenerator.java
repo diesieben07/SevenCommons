@@ -261,7 +261,7 @@ public final class BytecodeEmittingCompanionGenerator {
 
             gen.newInstance(syncEventSubclass);
             gen.dup();
-            gen.loadArg(0);
+            gen.loadArg(1);
             gen.invokeConstructor(syncEventSubclass, getMethod("void <init>(Object)"));
             gen.storeLocal(eventSlot);
 
@@ -337,7 +337,7 @@ public final class BytecodeEmittingCompanionGenerator {
 
         gen.newInstance(syncEventSubclass);
         gen.dup();
-        gen.loadArg(0);
+        gen.loadArg(1);
         gen.invokeConstructor(syncEventSubclass, getMethod("void <init>(Object)"));
         gen.storeLocal(eventSlot);
 
