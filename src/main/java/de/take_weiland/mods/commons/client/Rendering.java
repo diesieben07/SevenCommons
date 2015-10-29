@@ -577,7 +577,7 @@ public final class Rendering {
         float uEnd = (u + uSize) * uFact;
         float vEnd = (v + vSize) * vFact;
 
-        drawTexturedQuad(x, y, width, height, u, v, uEnd, vEnd, zLevel);
+        drawTexturedQuad(x, y, width, height, u * uFact, v * vFact, uEnd, vEnd, zLevel);
     }
 
     /**
