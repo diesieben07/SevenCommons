@@ -38,8 +38,8 @@ public class GuiButtonImage extends GuiButton {
         super(buttonId, x, y, width, height, "");
         this.texture = texture;
         Minecraft.getMinecraft().getTextureManager().bindTexture(texture);
-        int texWidth = glGetTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WIDTH);
-        int texHeight = glGetTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_HEIGHT);
+        int texWidth = glGetTexLevelParameteri(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH);
+        int texHeight = glGetTexLevelParameteri(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT);
 
         float uFact = 1f / texWidth;
         float vFact = 1f / texHeight;
