@@ -66,6 +66,5 @@ public class GuiButtonImage extends GuiButton {
 
             mouseDragged(mc, mouseX, mouseY);
         }
-        super.drawButton(mc, mouseX, mouseY);
     }
 }
