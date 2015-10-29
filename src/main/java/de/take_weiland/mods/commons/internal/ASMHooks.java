@@ -211,7 +211,7 @@ public final class ASMHooks {
             }
             SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();
             if (companion != null) {
-                companion.forceUpdate(companion, false, (EntityPlayerMP) listener);
+                companion.forceUpdate(container, false, (EntityPlayerMP) listener);
             }
         }
     }
