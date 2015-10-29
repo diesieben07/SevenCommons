@@ -176,10 +176,18 @@ public final class ASMHooks {
 
     @SideOnly(Side.CLIENT)
     public static boolean canNumberKeyMove(Slot slot) {
-        if (slot != null && !slot.canTakeStack(Minecraft.getMinecraft().thePlayer)) {
+        if (slot == null) {
+            return true;
+        }
+        if (!slot.canTakeStack(Minecraft.getMinecraft().thePlayer)) {
             return false;
         }
-        List<GuiTextField> fields = ((GuiScreenProxy) Minecraft.getMinecraft().currentScreen)._sc$textFields();
+
+        GuiScreenProxy screen = (GuiScreenProxy) Minecraft.getMinecraft().currentScreen;
+        if (screen == null) {
+            return false; // this can be true if GuiScreen.keyTyped closes the screen -.-
+        }
+        List<GuiTextField> fields = screen._sc$textFields();
         for (int i = 0, len = fields.size(); i < len; i++) {
             GuiTextField field = fields.get(i);
             if (field.isFocused()) {
