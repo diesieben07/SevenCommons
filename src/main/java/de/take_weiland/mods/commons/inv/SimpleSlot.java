@@ -15,9 +15,12 @@ import net.minecraft.item.ItemStack;
 public class SimpleSlot extends Slot implements ContainerAwareSlot {
 
     private Container container;
+    private final int xNormal, yNormal;
 
     public SimpleSlot(IInventory inventory, int index, int x, int y) {
         super(inventory, index, x, y);
+        xNormal = x;
+        yNormal = y;
     }
 
     @Override
@@ -33,5 +36,15 @@ public class SimpleSlot extends Slot implements ContainerAwareSlot {
     @Override
     public void _sc$injectContainer(Container container) {
         this.container = container;
+    }
+
+    public void setNormalPosition() {
+        xDisplayPosition = xNormal;
+        yDisplayPosition = yNormal;
+    }
+
+    public void setDisplayPosition(int x, int y) {
+        xDisplayPosition = x;
+        yDisplayPosition = y;
     }
 }
