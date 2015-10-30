@@ -62,7 +62,7 @@ public class GuiButtonImage extends GuiButton {
             OpenGlHelper.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, 1, 0);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // why?
 
-            Rendering.drawTexturedQuad(xPosition, yPosition, width, height, uStart + (uEnd - uStart) * hoverState, vStart, uEnd, vEnd, zLevel);
+            Rendering.drawTexturedQuad(xPosition, yPosition, width, height, uStart, vStart + (vEnd - vStart) * hoverState, uEnd, vEnd, zLevel);
 
             mouseDragged(mc, mouseX, mouseY);
         }
