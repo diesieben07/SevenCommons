@@ -22,7 +22,7 @@ enum FluidTankSyncer implements Syncer<FluidTank, FluidStack, FluidStack> {
             return noChange();
         } else {
             FluidStack clone = Fluids.clone(tank.getFluid());
-            companion.set(obj, clone);
+            companion.set(cObj, clone);
             return newValue(clone);
         }
     }
@@ -65,7 +65,7 @@ enum FluidTankSyncer implements Syncer<FluidTank, FluidStack, FluidStack> {
                 return noChange();
             } else {
                 StackAndCapacity newVal = new StackAndCapacity(Fluids.clone(tank.getFluid()), tank.getCapacity());
-                companion.set(obj, newVal);
+                companion.set(cObj, newVal);
                 return newValue(newVal);
             }
         }

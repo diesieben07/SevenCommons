@@ -7,20 +7,23 @@ import com.google.common.collect.UnmodifiableIterator;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.client.I18n;
+import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockChest;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import javax.annotation.Nonnegative;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.Spliterator;
+import javax.annotation.Nullable;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static de.take_weiland.mods.commons.util.Sides.sideOf;
@@ -31,6 +34,8 @@ import static de.take_weiland.mods.commons.util.Sides.sideOf;
  * @author diesieben07
  */
 public final class Inventories {
+
+    private static final EnumSet<ForgeDirection> ALL_SIDES = EnumSet.copyOf(Arrays.asList(ForgeDirection.VALID_DIRECTIONS));
 
     /**
      * <p>Generic implementation for {@link net.minecraft.inventory.IInventory#decrStackSize}.</p>
@@ -268,6 +273,189 @@ public final class Inventories {
         for (int i = 0, size = self.getSizeInventory(); i < size; i++) {
             action.accept(self.getStackInSlot(i));
         }
+    }
+
+    /**
+     * <p>Try to store the given ItemStack in any inventory adjacent to the given block position.</p>
+     *
+     * @param stack the ItemStack to store
+     * @param world the world
+     * @param x     x coordinate
+     * @param y     y coordinate
+     * @param z     z coordinate
+     * @return any leftover items that could not be stored or null if the whole stack could be stored
+     */
+    @Nullable
+    public static ItemStack tryStore(ItemStack stack, World world, int x, int y, int z) {
+        return tryStore(stack, world, x, y, z, ALL_SIDES, null);
+    }
+
+    /**
+     * <p>Try to store the given ItemStack in any inventory adjacent to the given block position. If {@code dispenseSide}
+     * is not null and not enough applicable inventory space is available, dispense it as an item entity on the specified side of the block.</p>
+     *
+     * @param stack        the ItemStack to store
+     * @param world        the world
+     * @param x            x coordinate
+     * @param y            y coordinate
+     * @param z            z coordinate
+     * @param dispenseSide the side to dispense any leftover items
+     * @return any leftover items that could not be stored or dispensed or null if the whole stack could be stored or dispensed
+     */
+    public static ItemStack tryStore(ItemStack stack, World world, int x, int y, int z, @Nullable ForgeDirection dispenseSide) {
+        return tryStore(stack, world, x, y, z, ALL_SIDES, dispenseSide);
+    }
+
+    /**
+     * <p>Try to store the given ItemStack in the inventories adjacent to the given block position on the specified sides.
+     * If {@code dispenseSide} is not null and not enough applicable inventory space is available, dispense it as an item
+     * entity on the specified side of the block.</p>
+     *
+     * @param stack        the ItemStack to store
+     * @param world        the world
+     * @param x            x coordinate
+     * @param y            y coordinate
+     * @param z            z coordinate
+     * @param sides        the sides of the block to check for inventories
+     * @param dispenseSide the side to dispense any leftover items
+     * @return any leftover items that could not be stored or dispensed or null if the whole stack could be stored or dispensed
+     */
+    @Nullable
+    public static ItemStack tryStore(ItemStack stack, World world, int x, int y, int z, EnumSet<ForgeDirection> sides, @Nullable ForgeDirection dispenseSide) {
+        @Nullable
+        ItemStack result = stack;
+        for (ForgeDirection side : sides) {
+            result = tryStoreInInv(result, world, x + side.offsetX, y + side.offsetY, z + side.offsetZ, side.getOpposite());
+            if (result == null) {
+                return null;
+            }
+        }
+        if (dispenseSide != null) {
+            EntityItem item = new EntityItem(world, itemEntityPos(x, dispenseSide.offsetX), itemEntityPos(y, dispenseSide.offsetY), itemEntityPos(z, dispenseSide.offsetZ), stack.copy());
+            item.motionX = dispenseSide.offsetX / 8d;
+            item.motionY = dispenseSide.offsetY / 8d;
+            item.motionZ = dispenseSide.offsetZ / 8d;
+            world.spawnEntityInWorld(item);
+            return null;
+        }
+        return result;
+    }
+
+    private static double itemEntityPos(int base, int offset) {
+        if (offset == 1) {
+            return base + 1;
+        } else if (offset == -1) {
+            return base;
+        } else {
+            return base + 0.5;
+        }
+    }
+
+    private static ItemStack tryStoreInInv(ItemStack stack, World world, int x, int y, int z, ForgeDirection side) {
+        Block block = world.getBlock(x, y, z);
+        IInventory inv;
+
+        TileEntity te;
+        if (block instanceof BlockChest) {
+            inv = ((BlockChest) block).getInventory(world, x, y, z);
+        } else if (!((te = world.getTileEntity(x, y, z)) instanceof IInventory)) {
+            return stack;
+        } else {
+            inv = (IInventory) te;
+        }
+
+        boolean isSided = inv instanceof ISidedInventory;
+        int sideInt = side.ordinal();
+
+        InvIterator it = isSided ? sidedInvIterator((ISidedInventory) inv, sideInt) : invSlotsIterator(inv);
+
+        while (true) {
+            int slot = it.next();
+            if (slot == -1) break;
+
+            ItemStack invStack = inv.getStackInSlot(slot);
+            if (invStack == null || !ItemStacks.equal(invStack, stack)) {
+                continue;
+            }
+            if (!inv.isItemValidForSlot(slot, stack) || (isSided && !((ISidedInventory) inv).canInsertItem(slot, stack, sideInt))) {
+                continue;
+            }
+
+            ItemStack newStack = ItemStacks.merge(stack, invStack, true);
+            inv.setInventorySlotContents(slot, newStack);
+
+            if (stack.stackSize == 0) {
+                return null;
+            }
+        }
+
+        it.reset();
+        while (true) {
+            int slot = it.next();
+            if (slot == -1) break;
+
+            ItemStack invStack = inv.getStackInSlot(slot);
+            if (invStack != null) {
+                continue;
+            }
+            if (!inv.isItemValidForSlot(slot, stack) || (isSided && !((ISidedInventory) inv).canInsertItem(slot, stack, sideInt))) {
+                continue;
+            }
+
+            inv.setInventorySlotContents(slot, stack);
+            return null;
+        }
+
+        return stack;
+    }
+
+    private static InvIterator sidedInvIterator(ISidedInventory inv, int side) {
+        int[] slots = inv.getSlotsForFace(side);
+
+        return new InvIterator() {
+
+            private int index;
+
+            @Override
+            public int next() {
+                if (index == slots.length) {
+                    return -1;
+                } else {
+                    return slots[index++];
+                }
+            }
+
+            @Override
+            public void reset() {
+                index = 0;
+            }
+        };
+    }
+
+    private static InvIterator invSlotsIterator(IInventory inv) {
+        int max = inv.getSizeInventory();
+        return new InvIterator() {
+
+            private int curr;
+
+            @Override
+            public int next() {
+                return curr == max ? -1 : curr++;
+            }
+
+            @Override
+            public void reset() {
+                curr = 0;
+            }
+        };
+    }
+
+    private interface InvIterator {
+
+        int next();
+
+        void reset();
+
     }
 
     private static class InventoryAsIterable implements Iterable<ItemStack> {

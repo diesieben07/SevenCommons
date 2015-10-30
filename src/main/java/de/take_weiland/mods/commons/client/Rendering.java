@@ -574,15 +574,32 @@ public final class Rendering {
         float uFact = 1f / texWidth;
         float vFact = 1f / texHeight;
 
-        int uEnd = u + uSize;
-        int vEnd = v + vSize;
+        float uEnd = (u + uSize) * uFact;
+        float vEnd = (v + vSize) * vFact;
 
+        drawTexturedQuad(x, y, width, height, u * uFact, v * vFact, uEnd, vEnd, zLevel);
+    }
+
+    /**
+     * <p>Draw a textured rectangle.</p>
+     *
+     * @param x      the x coordinate
+     * @param y      the y coordinate
+     * @param width  the width of the rectangle
+     * @param height the height of the rectangle
+     * @param uStart the starting x coordinate in the texture
+     * @param vStart the starting y coordinate in the texture
+     * @param uEnd   the ending x coordinate in the texture
+     * @param vEnd   the ending Y coordinate in the texture
+     * @param zLevel the z-level to draw at
+     */
+    public static void drawTexturedQuad(int x, int y, int width, int height, float uStart, float vStart, float uEnd, float vEnd, float zLevel) {
         Tessellator t = Tessellator.instance;
         t.startDrawingQuads();
-        t.addVertexWithUV(x, y + height, zLevel, u * uFact, vEnd * vFact);
-        t.addVertexWithUV(x + width, y + height, zLevel, uEnd * uFact, vEnd * vFact);
-        t.addVertexWithUV(x + width, y, zLevel, uEnd * uFact, v * vFact);
-        t.addVertexWithUV(x, y, zLevel, u * uFact, v * vFact);
+        t.addVertexWithUV(x, y + height, zLevel, uStart, vEnd);
+        t.addVertexWithUV(x + width, y + height, zLevel, uEnd, vEnd);
+        t.addVertexWithUV(x + width, y, zLevel, uEnd, vStart);
+        t.addVertexWithUV(x, y, zLevel, uStart, vStart);
         t.draw();
     }
 

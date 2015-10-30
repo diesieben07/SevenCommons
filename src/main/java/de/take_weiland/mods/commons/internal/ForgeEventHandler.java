@@ -2,9 +2,12 @@ package de.take_weiland.mods.commons.internal;
 
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
 import de.take_weiland.mods.commons.inv.NameableInventory;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -12,6 +15,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.IWorldAccess;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BlockEvent;
@@ -19,12 +23,30 @@ import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.event.world.WorldEvent;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author diesieben07
  */
 public final class ForgeEventHandler implements IWorldAccess {
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    @SideOnly(Side.CLIENT)
+    public void onScreenInit(GuiScreenEvent.InitGuiEvent.Pre event) {
+        ((GuiScreenProxy) event.gui)._sc$textFields().clear();
+    }
+
+    @SuppressWarnings("ForLoopReplaceableByForEach")
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    public void onScreenDraw(GuiScreenEvent.DrawScreenEvent.Post event) {
+        List<GuiTextField> fields = ((GuiScreenProxy) event.gui)._sc$textFields();
+        for (int i = 0, fieldsSize = fields.size(); i < fieldsSize; i++) {
+            GuiTextField field = fields.get(i);
+            field.drawTextBox();
+        }
+    }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onBlockPlace(BlockEvent.PlaceEvent event) {

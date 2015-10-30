@@ -31,6 +31,8 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(SaveWorldsEventHook::new, "net/minecraft/server/MinecraftServer", MCPNames.method(SRGConstants.M_SAVE_ALL_WORLDS));
         addEntry(ContainerSlotDrawHook::new, "net/minecraft/client/gui/inventory/GuiContainer");
 
+        addEntry(GuiScreenHooks::new, "net/minecraft/client/gui/GuiScreen");
+
         // @Sync hooks
         addEntry(CompanionFieldAdder::new,
                 "net/minecraft/tileentity/TileEntity",
