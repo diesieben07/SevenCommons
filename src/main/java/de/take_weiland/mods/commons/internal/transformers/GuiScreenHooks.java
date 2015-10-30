@@ -99,16 +99,16 @@ public final class GuiScreenHooks extends ClassVisitor {
 
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-            super.visitMethodInsn(opcode, owner, name, desc, itf);
-
             String methodDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getObjectType("net/minecraft/client/gui/GuiScreen"));
             if (name.equals(MCPNames.method(SRGConstants.M_HANDLE_KEYBOARD_INPUT))) {
-                super.visitVarInsn(ALOAD, 0);
+                super.visitInsn(DUP);
                 super.visitMethodInsn(INVOKESTATIC, ASMHooks.CLASS_NAME, ASMHooks.ON_GUI_KEY, methodDesc, false);
             } else if (name.equals(MCPNames.method(SRGConstants.M_HANDLE_MOUSE_INPUT))) {
-                super.visitVarInsn(ALOAD, 0);
+                super.visitInsn(DUP);
                 super.visitMethodInsn(INVOKESTATIC, ASMHooks.CLASS_NAME, ASMHooks.ON_GUI_MOUSE, methodDesc, false);
             }
+
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
         }
     }
 }
