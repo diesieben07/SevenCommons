@@ -44,21 +44,21 @@ public final class Rendering {
         int iconWidth = icon.getIconWidth();
         int iconHeight = icon.getIconHeight();
 
-        // number of rows & cols of "full" icons (full size)
-        int fullCols = MathHelper.floor_float(width / (float) iconWidth);
-        int fullRows = MathHelper.floor_float(height / (float) iconHeight);
+        // number of rows & cols of full size icons
+        int fullCols = width / iconWidth;
+        int fullRows = height / iconHeight;
 
         float minU = icon.getMinU();
         float maxU = icon.getMaxU();
         float minV = icon.getMinV();
         float maxV = icon.getMaxV();
 
-        // interpolated max u/v for the excess row / col
-        float partialMaxU = minU + (maxU - minU) * ((width - fullCols * iconWidth) / (float) width);
-        float partialMaxV = minV + (maxV - minV) * ((height - fullRows * iconHeight) / (float) height);
+        int excessWidth = width % iconWidth;
+        int excessHeight = height % iconHeight;
 
-        boolean excessCol = (width % iconWidth) != 0;
-        boolean excessRow = (height % iconHeight) != 0;
+        // interpolated max u/v for the excess row / col
+        float partialMaxU = minU + (maxU - minU) * ((float) excessWidth / iconWidth);
+        float partialMaxV = minV + (maxV - minV) * ((float) excessHeight / iconHeight);
 
         int xNow;
         int yNow;
@@ -67,42 +67,39 @@ public final class Rendering {
             for (int col = 0; col < fullCols; col++) {
                 // main part, only full icons
                 xNow = x + col * iconWidth;
-                t.addVertexWithUV(xNow, yNow + iconHeight, zLevel, minU, maxV);
-                t.addVertexWithUV(xNow + iconWidth, yNow + iconHeight, zLevel, maxU, maxV);
-                t.addVertexWithUV(xNow + iconWidth, yNow, zLevel, maxU, minV);
-                t.addVertexWithUV(xNow, yNow, zLevel, minU, minV);
+                drawRect(xNow, yNow, iconWidth, iconHeight, zLevel, minU, minV, maxU, maxV);
             }
-            if (excessCol) {
-                // excess part in every row at the end of the columns
+            if (excessWidth != 0) {
+                // last not full width column in every row at the end
                 xNow = x + fullCols * iconWidth;
-                t.addVertexWithUV(xNow, yNow + iconHeight, zLevel, minU, maxV);
-                t.addVertexWithUV(x + width, yNow + iconHeight, zLevel, partialMaxU, maxV);
-                t.addVertexWithUV(x + width, yNow, zLevel, partialMaxU, minV);
-                t.addVertexWithUV(xNow, yNow, zLevel, minU, minV);
+                drawRect(xNow, yNow, iconWidth, iconHeight, zLevel, minU, minV, maxU, maxV);
             }
         }
-        if (excessRow) {
-            // last "excess" row
+        if (excessHeight != 0) {
+            // last not full height row
             for (int col = 0; col < fullCols; col++) {
                 xNow = x + col * iconWidth;
                 yNow = y + fullRows * iconHeight;
-                t.addVertexWithUV(xNow, y + height, zLevel, minU, partialMaxV);
-                t.addVertexWithUV(xNow + iconWidth, y + height, zLevel, maxU, partialMaxV);
-                t.addVertexWithUV(xNow + iconWidth, yNow, zLevel, maxU, minV);
-                t.addVertexWithUV(xNow, yNow, zLevel, minU, minV);
+                drawRect(xNow, yNow, iconWidth, excessHeight, zLevel, minU, minV, maxU, partialMaxV);
             }
-            if (excessCol) {
-                // missing quad in the bottom right corner when excess row & col
+            if (excessWidth != 0) {
+                // missing quad in the bottom right corner of neither full height nor full width
                 xNow = x + fullCols * iconWidth;
                 yNow = y + fullRows * iconHeight;
-                t.addVertexWithUV(xNow, y + height, zLevel, minU, partialMaxV);
-                t.addVertexWithUV(x + width, y + height, zLevel, partialMaxU, partialMaxV);
-                t.addVertexWithUV(x + width, yNow, zLevel, partialMaxU, minV);
-                t.addVertexWithUV(xNow, yNow, zLevel, minU, minV);
+                drawRect(xNow, yNow, excessWidth, excessHeight, zLevel, minU, minV, partialMaxU, partialMaxV);
             }
         }
 
         t.draw();
+    }
+
+    private static void drawRect(float x, float y, float width, float height, float z, float u, float v, float maxU, float maxV) {
+        Tessellator t = Tessellator.instance;
+
+        t.addVertexWithUV(x, y + height, z, u, maxV);
+        t.addVertexWithUV(x + width, y + height, z, maxU, maxV);
+        t.addVertexWithUV(x + width, y, z, maxU, v);
+        t.addVertexWithUV(x, y, z, u, v);
     }
 
     /**
@@ -121,7 +118,7 @@ public final class Rendering {
         if (fluidStack != null) {
             Fluid fluid = fluidStack.getFluid();
             IIcon fluidIcon = fluid.getStillIcon();
-            int fluidHeight = MathHelper.ceiling_float_int((fluidStack.amount / (float) tankCapacity) * fullHeight);
+            int fluidHeight = MathHelper.ceiling_double_int((fluidStack.amount / (double) tankCapacity) * fullHeight);
 
             glColor3f(1, 1, 1);
             renderEngine.bindTexture(renderEngine.getResourceLocation(fluid.getSpriteNumber()));
