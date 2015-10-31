@@ -99,7 +99,7 @@ public interface Sound {
         if (world.isRemote) {
             world.playSound(x, y, z, fullName(), volume, pitch, false);
         } else {
-            world.playSoundEffect(x, y, z, getName(), volume, pitch); // does nothing on client
+            world.playSoundEffect(x, y, z, fullName(), volume, pitch); // does nothing on client
         }
     }
 
