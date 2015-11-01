@@ -18,6 +18,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.tileentity.TileEntity;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -35,7 +36,7 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
     private int cursor = 0;
     ChangedValue<?>[] changes = new ChangedValue[3];
 
-    public final void add(int fieldId, ChangedValue<?> changedValue) {
+    public final void add(int fieldId, Syncer.Change<?> changedValue) {
         if (changes.length == cursor) {
             grow();
         }
@@ -114,13 +115,16 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
         syncer.apply(change.data, obj, property, cObj, companion);
     }
 
-    public abstract void send(Object obj);
-
-    @SuppressWarnings("unused")
-    public void send(EntityPlayerMP player) {
-        done();
-        NetworkImpl.sendRawPacket(player, this);
+    public void send(Object obj, @Nullable EntityPlayerMP player) {
+        if (player == null) {
+            send(obj);
+        } else {
+            done();
+            NetworkImpl.sendRawPacket(player, this);
+        }
     }
+
+    abstract void send(Object obj);
 
     @Override
     public byte[] _sc$encode() {

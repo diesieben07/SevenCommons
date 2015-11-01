@@ -13,10 +13,10 @@ import static org.objectweb.asm.Opcodes.*;
 /**
  * @author diesieben07
  */
-public final class ContainerTickHook extends ClassVisitor {
+public final class ContainerSyncHooks extends ClassVisitor {
 
-    public ContainerTickHook(ClassVisitor cv) {
-        super(ASM4, cv);
+    public ContainerSyncHooks(ClassVisitor cv) {
+        super(ASM5, cv);
     }
 
     @Override
@@ -49,6 +49,10 @@ public final class ContainerTickHook extends ClassVisitor {
             String invokeCheck = ASMHooks.INVOKE_SYNC_COMP_CHECK;
             String invokeCheckDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), syncerCompanionType);
             super.visitMethodInsn(INVOKESTATIC, hookClazz, invokeCheck, invokeCheckDesc, false);
+
+            super.visitVarInsn(ALOAD, 0);
+            String desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getObjectType(containerIntName));
+            super.visitMethodInsn(INVOKESTATIC, hookClazz, ASMHooks.TICK_CONTAINER_COMPANIONS, desc, false);
         }
     }
 }

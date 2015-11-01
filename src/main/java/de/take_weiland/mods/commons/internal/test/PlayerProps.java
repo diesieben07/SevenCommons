@@ -13,16 +13,6 @@ public class PlayerProps implements IExtendedEntityProperties, SyncedInterface {
     private String someString;
 
     @Override
-    public String getSomeData() {
-        return someString;
-    }
-
-    @Override
-    public void setSomeData(String i) {
-        this.someString = i;
-    }
-
-    @Override
     public void saveNBTData(NBTTagCompound compound) {
 
     }
