@@ -7,7 +7,10 @@ import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.SaveWorldsEvent;
-import de.take_weiland.mods.commons.internal.sync.*;
+import de.take_weiland.mods.commons.internal.sync.IEEPSyncCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanions;
+import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
 import de.take_weiland.mods.commons.inv.Containers;
@@ -17,6 +20,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
@@ -113,19 +117,29 @@ public final class ASMHooks {
 
     public static void invokeSyncCompanionCheck(Object obj, SyncCompanion companion) {
         if (companion != null) {
-            SyncEvent event = companion.check(obj, 0, null);
+            companion.check(obj, 0, null);
         }
     }
 
     public static void tickContainerCompanions(Container container) {
+        EntityPlayer player = Containers.getViewer(container);
+        if (player.worldObj.isRemote) {
+            return;
+        }
+
+        SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();
+        if (companion != null) {
+            companion.check(container, 0, null);
+        }
+
         ImmutableList<IInventory> list = ((ContainerProxy) container)._sc$getInventories().asList();
 
         for (int i = 0, len = list.size(); i < len; i++) {
             IInventory inv = list.get(i);
             if (inv instanceof SyncedObjectProxy) {
-                SyncCompanion companion = ((SyncedObjectProxy) inv)._sc$getCompanion();
+                companion = ((SyncedObjectProxy) inv)._sc$getCompanion();
                 if (companion != null) {
-                    companion.checkInContainer(inv, 0, (EntityPlayerMP) Containers.getViewer(container));
+                    companion.checkInContainer(inv, 0, (EntityPlayerMP) player);
                 }
             }
         }
