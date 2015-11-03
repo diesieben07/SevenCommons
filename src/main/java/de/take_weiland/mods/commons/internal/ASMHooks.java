@@ -123,7 +123,7 @@ public final class ASMHooks {
 
     public static void tickContainerCompanions(Container container) {
         EntityPlayer player = Containers.getViewer(container);
-        if (player.worldObj.isRemote) {
+        if (player == null || player.worldObj.isRemote) {
             return;
         }
 
