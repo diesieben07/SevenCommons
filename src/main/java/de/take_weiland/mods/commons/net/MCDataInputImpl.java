@@ -235,6 +235,10 @@ final class MCDataInputImpl extends InputStream implements MCDataInput, Readable
         return readByte() & 0xFF;
     }
 
+    final int readUnsignedByteNBC() {
+        return buf[pos++] & 0xFF;
+    }
+
     @Override
     public short readShort() {
         checkAvailable(2);
@@ -322,6 +326,18 @@ final class MCDataInputImpl extends InputStream implements MCDataInput, Readable
             step += 7;
         } while ((read & BufferConstants.BYTE_MSB) == 0);
         return res;
+    }
+
+    @Override
+    public int readUnsignedMedium() {
+        checkAvailable(3);
+        return readUnsignedByteNBC() | (readUnsignedByteNBC() << 8) | (readUnsignedByteNBC() << 16);
+    }
+
+    @Override
+    public int readMedium() {
+        int unsigned = readUnsignedMedium();
+        return unsigned | -(unsigned & 0x0080_0000); // restore sign bit
     }
 
     // primitive boxes

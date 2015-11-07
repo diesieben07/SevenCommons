@@ -5,7 +5,6 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.ChunkPosition;
 import net.minecraftforge.fluids.FluidStack;
@@ -81,6 +80,23 @@ public interface MCDataInput extends ByteArrayDataInput {
      * @see MCDataOutput#writeVarInt(int)
      */
     int readVarInt();
+
+    /**
+     * <p>Read a 24-bit integer from the buffer.</p>
+     * <p>The minimum value is {@code ‭-‭8388608‬} ({@code 0xFF 80 00 00}), the maximum value is {@code ‭8388607‬}
+     * ({@code 0x00 7F FF FF}).</p>
+     *
+     * @return an int
+     */
+    int readMedium();
+
+    /**
+     * <p>Read a 24-bit unsigned integer from the buffer.</p>
+     * <p>The maximum value is {@code ‭16777215‬} ({@code 0x00 FF FF FF}).</p>
+     *
+     * @return an unsigned int
+     */
+    int readUnsignedMedium();
 
     /**
      * <p>Read a String from the buffer.</p>

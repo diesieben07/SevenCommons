@@ -194,6 +194,14 @@ public interface MCDataOutput extends ByteArrayDataOutput {
     void writeVarInt(int i);
 
     /**
+     * <p>Write a 24-bit integer to the stream.</p>
+     * <p>The minimum value is {@code ‭-‭8388608‬} ({@code 0xFF 80 00 00}), the maximum value is {@code ‭8388607‬}
+     * ({@code 0x00 7F FF FF}).</p>
+     * @param i the int to write
+     */
+    void writeMedium(int i);
+
+    /**
      * <p>Write the given boolean array to the stream.</p>
      * <p>If the array is null, this method writes a VarInt -1. Otherwise this method first writes the length of the array
      * as a VarInt and then the booleans as a series of {@code booleans.length %8 + 1} bytes. 8 elements are written as
