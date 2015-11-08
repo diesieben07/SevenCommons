@@ -19,6 +19,7 @@ import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -27,6 +28,7 @@ import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.IIcon;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.input.Keyboard;
@@ -274,6 +276,24 @@ public final class ASMHooks {
     public static void onSlotAdded(Container container, Slot slot) {
         if (slot instanceof ContainerAwareSlot) {
             ((ContainerAwareSlot) slot)._sc$injectContainer(container);
+        }
+    }
+
+    public static final String PRE_RENDER_BLOCK = "preRenderBlock";
+
+    public static IIcon preRenderBlock(RenderBlocks rb, IIcon icon, int side) {
+        if (icon instanceof RenderAwareSprite) {
+            return ((RenderAwareSprite) icon).preRender(rb, side);
+        } else {
+            return icon;
+        }
+    }
+
+    public static final String POST_RENDER_BLOCK = "postRenderBlock";
+
+    public static void postRenderBlock(RenderBlocks rb, IIcon icon, int side) {
+        if (icon instanceof RenderAwareSprite) {
+            ((RenderAwareSprite) icon).postRender(rb, side);
         }
     }
 
