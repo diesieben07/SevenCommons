@@ -16,6 +16,7 @@ public class SimpleSlot extends Slot implements ContainerAwareSlot {
 
     private Container container;
     private final int xNormal, yNormal;
+    private boolean allowPickUp;
 
     public SimpleSlot(IInventory inventory, int index, int x, int y) {
         super(inventory, index, x, y);
@@ -30,7 +31,7 @@ public class SimpleSlot extends Slot implements ContainerAwareSlot {
 
     @Override
     public boolean canTakeStack(EntityPlayer player) {
-        return container != null && ItemInventory.canTakeStack(container, getStack(), player);
+        return container != null && ItemInventory.canTakeStack(container, getStack(), player) && allowPickUp;
     }
 
     @Override
@@ -46,5 +47,17 @@ public class SimpleSlot extends Slot implements ContainerAwareSlot {
     public void setDisplayPosition(int x, int y) {
         xDisplayPosition = x;
         yDisplayPosition = y;
+    }
+
+    /**
+     * Sets if the player can take the Item out of the slot or not
+     * @param allow
+     */
+    public void allowPickUp(boolean allow) {
+        allowPickUp = allow;
+    }
+
+    public boolean allowsPickUp() {
+        return allowPickUp;
     }
 }
