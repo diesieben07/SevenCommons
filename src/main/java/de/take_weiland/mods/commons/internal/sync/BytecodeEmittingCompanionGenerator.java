@@ -6,8 +6,10 @@ import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
 import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.reflect.SCReflection;
+import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.sync.Syncer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.IExtendedEntityProperties;
@@ -22,10 +24,10 @@ import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.Map;
 
-import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.*;
-import static org.objectweb.asm.commons.GeneratorAdapter.NE;
+import static org.objectweb.asm.Type.VOID_TYPE;
+import static org.objectweb.asm.Type.getObjectType;
+import static org.objectweb.asm.commons.GeneratorAdapter.*;
 import static org.objectweb.asm.commons.Method.getMethod;
 
 /**
@@ -61,9 +63,11 @@ public final class BytecodeEmittingCompanionGenerator {
         makeFields();
         makeCLInit();
         makeApplyChanges();
-        makeForceUpdate();
 
-        makeCheck();
+//        makeForceUpdate();
+//        makeCheck();
+        genCheck(true);
+        genCheck(false);
 
         return finish();
     }
@@ -75,7 +79,7 @@ public final class BytecodeEmittingCompanionGenerator {
         superName = Type.getInternalName(superClass);
         firstID = factory.getNextFreeIDFor(clazz);
 
-        cw = new ClassWriter(COMPUTE_FRAMES);
+        cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         cw.visit(V1_8, ACC_PUBLIC, className, null, superName, null);
 
         Method cstr = getMethod("void <init>()");
@@ -98,10 +102,6 @@ public final class BytecodeEmittingCompanionGenerator {
 
     private boolean isIEEP() {
         return IExtendedEntityProperties.class.isAssignableFrom(clazz);
-    }
-
-    private boolean hasDefaultSuper() {
-        return isIEEP() ? superClass == IEEPSyncCompanion.class : superClass == SyncCompanion.class;
     }
 
     private void makeFields() {
@@ -193,187 +193,184 @@ public final class BytecodeEmittingCompanionGenerator {
         gen.endMethod();
     }
 
-    private void makeCheck() {
-        Method method = getMethod("de.take_weiland.mods.commons.internal.sync.SyncEvent check(Object, boolean)");
+    private void genCheck(boolean inContainer) {
+        Class<?> syncEventClass = getSyncEventClass();
+        Type syncEventSubType = Type.getType(syncEventClass);
+
+        Type syncEventType = Type.getType(SyncEvent.class);
+        Type objectType = Type.getType(Object.class);
+        Type entityPlayerMPType = Type.getType(EntityPlayerMP.class);
+        Type myType = Type.getObjectType(className);
+        Type syncerType = Type.getType(Syncer.class);
+        Type propertyAccessType = Type.getType(PropertyAccess.class);
+        Type changeType = Type.getType(Syncer.Change.class);
+
+        String name = "check" + (inContainer ? "InContainer" : "");
+        String desc = Type.getMethodDescriptor(syncEventType, objectType, Type.INT_TYPE, entityPlayerMPType);
+
+        Method method = new Method(name, desc);
         GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
         gen.visitCode();
 
-        Type myType = Type.getObjectType(className);
-        Type superType = Type.getType(superClass);
-        Type objectType = Type.getType(Object.class);
-        Type syncEventType = Type.getType(SyncEvent.class);
-        Type syncEventSubclass;
-        if (TileEntity.class.isAssignableFrom(clazz)) {
-            syncEventSubclass = Type.getType(SyncEvent.ForTE.class);
-        } else if (Entity.class.isAssignableFrom(clazz)) {
-            syncEventSubclass = Type.getType(SyncEvent.ForEntity.class);
-        } else if (Container.class.isAssignableFrom(clazz)) {
-            syncEventSubclass = Type.getType(SyncEvent.ForContainer.class);
-        } else if (IExtendedEntityProperties.class.isAssignableFrom(clazz)) {
-            syncEventSubclass = Type.getType(SyncEvent.ForIEEP.class);
-        } else {
-            throw new IllegalStateException("@Sync in invalid class " + clazz.getName());
-        }
-        Type syncerType = Type.getType(Syncer.class);
-        Type syncerChangeType = Type.getType(Syncer.Change.class);
-        Type changedValueType = Type.getType(ChangedValue.class);
-        Type propertyAccessType = Type.getType(PropertyAccess.class);
-
-        int eventSlot = gen.newLocal(syncEventType);
-        int changeSlot = gen.newLocal(changedValueType);
-
-        if (hasDefaultSuper()) {
-            gen.push((String) null);
-            gen.storeLocal(eventSlot);
-        } else {
-            gen.loadThis();
-            gen.loadArg(0);
-            gen.push(true);
-            gen.invokeConstructor(superType, method);
-            gen.storeLocal(eventSlot);
-        }
-
-        int fieldIndex = 0;
-        Label next = null;
-
+        boolean hasProp = false;
         for (Property<?> property : properties.keySet()) {
-            if (next != null) {
-                gen.mark(next);
+            if (property.getAnnotation(Sync.class).inContainer() == inContainer) {
+                hasProp = true;
+                break;
             }
-            next = new Label();
+        }
 
-            gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
-            gen.loadArg(0);
-            gen.getStatic(myType, getPropertyID(property, PROP_ACC), propertyAccessType);
+        final int p_syncObj = 0;
+        final int p_flags = 1;
+        final int p_player = 2;
+
+        if (!hasProp) {
+            if (needCallSuper()) {
+                gen.loadThis();
+                gen.loadArg(p_syncObj);
+                gen.loadArg(p_flags);
+                gen.push(SyncCompanion.SUPER_CALL);
+                gen.math(OR, Type.INT_TYPE);
+                gen.loadArg(p_player);
+                gen.invokeConstructor(Type.getType(superClass), method);
+            } else {
+                gen.push((String) null);
+            }
+            gen.returnValue();
+            gen.endMethod();
+            return;
+        }
+
+        final int v_syncEvent = gen.newLocal(syncEventType);
+        final int v_isForced = gen.newLocal(Type.BOOLEAN_TYPE);
+        final int v_change = gen.newLocal(changeType);
+
+        gen.loadArg(p_flags);
+        gen.push(SyncCompanion.FORCE_CHECK);
+        gen.math(AND, Type.INT_TYPE);
+        gen.storeLocal(v_isForced);
+
+        if (needCallSuper()) {
             gen.loadThis();
-            gen.getStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
+            gen.loadArg(p_syncObj);
+            gen.loadArg(p_flags);
+            gen.push(SyncCompanion.SUPER_CALL);
+            gen.math(OR, Type.INT_TYPE);
+            gen.loadArg(p_player);
+            gen.invokeConstructor(Type.getType(superClass), method);
+            gen.storeLocal(v_syncEvent);
+        } else {
+            Label doInit = new Label();
+            Label done = new Label();
 
-            gen.invokeInterface(syncerType, new Method("check", syncerChangeType,
-                    new Type[]{objectType, propertyAccessType, objectType, propertyAccessType}));
-            gen.storeLocal(changeSlot);
+            gen.loadLocal(v_isForced);
+            gen.ifZCmp(NE, doInit);
 
-            gen.loadLocal(changeSlot);
-            gen.ifNull(next);
+            gen.push((String) null);
+            gen.goTo(done);
 
-            Label eventNotNull = new Label();
-            gen.loadLocal(eventSlot);
-            gen.ifNonNull(eventNotNull);
-
-            gen.newInstance(syncEventSubclass);
+            gen.mark(doInit);
+            gen.newInstance(syncEventSubType);
             gen.dup();
-            gen.loadArg(0);
-            gen.invokeConstructor(syncEventSubclass, getMethod("void <init>(Object)"));
-            gen.storeLocal(eventSlot);
+            gen.loadArg(p_syncObj);
+            gen.invokeConstructor(syncEventSubType, new Method("<init>", Type.getMethodDescriptor(Type.VOID_TYPE, objectType)));
 
-            gen.mark(eventNotNull);
-            gen.loadLocal(eventSlot);
-            gen.push(firstID + fieldIndex);
-            gen.loadLocal(changeSlot);
-            gen.invokeVirtual(syncEventType, new Method("add", VOID_TYPE, new Type[]{INT_TYPE, changedValueType}));
+            gen.mark(done);
+            gen.storeLocal(v_syncEvent);
+        }
+
+        int fieldIndex = -1;
+
+        for (Map.Entry<Property<?>, Syncer<?, ?, ?>> entry : properties.entrySet()) {
+            Property<?> property = entry.getKey();
+            Syncer<?, ?, ?> syncer = entry.getValue();
 
             fieldIndex++;
-        }
 
-        if (next != null) {
+            if (property.getAnnotation(Sync.class).inContainer() != inContainer) {
+                continue;
+            }
+
+            gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
+            gen.loadArg(p_syncObj);
+            gen.getStatic(myType, getPropertyID(property, PROP_ACC), propertyAccessType);
+            if (syncer.companionType() != null) {
+                gen.loadThis();
+                gen.getStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
+            } else {
+                gen.push((String) null);
+                gen.push((String) null);
+            }
+
+            Label invokeForced = new Label();
+            Label after = new Label();
+            gen.loadLocal(v_isForced);
+            gen.ifZCmp(NE, invokeForced);
+
+            gen.invokeInterface(syncerType, new Method("check", changeType, new Type[]{objectType, propertyAccessType, objectType, propertyAccessType}));
+            gen.goTo(after);
+            gen.mark(invokeForced);
+            gen.invokeInterface(syncerType, new Method("forceUpdate", changeType, new Type[]{objectType, propertyAccessType, objectType, propertyAccessType}));
+            gen.mark(after);
+            gen.storeLocal(v_change);
+
+            Label next = new Label();
+
+            gen.loadLocal(v_change);
+            gen.ifNull(next);
+
+            Label noInit = new Label();
+            gen.loadLocal(v_syncEvent);
+            gen.ifNonNull(noInit);
+
+            gen.newInstance(syncEventSubType);
+            gen.dup();
+            gen.loadArg(p_syncObj);
+            gen.invokeConstructor(syncEventSubType, new Method("<init>", Type.VOID_TYPE, new Type[]{objectType}));
+            gen.storeLocal(v_syncEvent);
+            gen.mark(noInit);
+
+            gen.loadLocal(v_syncEvent);
+            gen.push(firstID + fieldIndex);
+            gen.loadLocal(v_change);
+            gen.invokeVirtual(syncEventType, new Method("add", Type.VOID_TYPE, new Type[]{Type.INT_TYPE, changeType}));
+
             gen.mark(next);
         }
 
-        Label end = new Label();
-        gen.loadArg(1);
-        gen.ifZCmp(NE, end);
-        gen.loadLocal(eventSlot);
-        gen.ifNull(end);
+        Label done = new Label();
 
-        gen.loadLocal(eventSlot);
-        gen.loadArg(0);
-        gen.invokeVirtual(syncEventType, getMethod("void send(Object)"));
+        gen.loadArg(p_flags);
+        gen.push(SyncCompanion.SUPER_CALL);
+        gen.math(AND, Type.INT_TYPE);
+        gen.ifZCmp(NE, done);
 
-        gen.mark(end);
-        gen.loadLocal(eventSlot);
+        gen.loadLocal(v_syncEvent);
+        gen.ifNull(done);
+
+        gen.loadLocal(v_syncEvent);
+        gen.loadArg(p_syncObj);
+        gen.loadArg(p_player);
+        gen.invokeVirtual(syncEventType, new Method("send", Type.VOID_TYPE, new Type[]{objectType, entityPlayerMPType}));
+
+        gen.mark(done);
+        gen.loadLocal(v_syncEvent);
         gen.returnValue();
         gen.endMethod();
     }
 
-    private void makeForceUpdate() {
-        Method method = getMethod("de.take_weiland.mods.commons.internal.sync.SyncEvent forceUpdate(Object, boolean, net.minecraft.entity.player.EntityPlayerMP)");
-        GeneratorAdapter gen = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
-        gen.visitCode();
-
-        Type myType = Type.getObjectType(className);
-        Type superType = Type.getType(superClass);
-        Type objectType = Type.getType(Object.class);
-        Type syncEventType = Type.getType(SyncEvent.class);
-        Type syncEventSubclass;
+    private Class<? extends SyncEvent> getSyncEventClass() {
         if (TileEntity.class.isAssignableFrom(clazz)) {
-            syncEventSubclass = Type.getType(SyncEvent.ForTE.class);
+            return SyncEvent.ForTE.class;
         } else if (Entity.class.isAssignableFrom(clazz)) {
-            syncEventSubclass = Type.getType(SyncEvent.ForEntity.class);
+            return SyncEvent.ForEntity.class;
         } else if (Container.class.isAssignableFrom(clazz)) {
-            syncEventSubclass = Type.getType(SyncEvent.ForContainer.class);
+            return SyncEvent.ForContainer.class;
         } else if (IExtendedEntityProperties.class.isAssignableFrom(clazz)) {
-            syncEventSubclass = Type.getType(SyncEvent.ForIEEP.class);
+            return SyncEvent.ForIEEP.class;
         } else {
-            throw new IllegalStateException("@Sync in invalid class " + clazz.getName());
+            throw new IllegalStateException("Don't know how to sync in " + clazz);
         }
-        Type syncerType = Type.getType(Syncer.class);
-        Type syncerChangeType = Type.getType(Syncer.Change.class);
-        Type changedValueType = Type.getType(ChangedValue.class);
-        Type propertyAccessType = Type.getType(PropertyAccess.class);
-
-        int eventSlot = gen.newLocal(syncEventType);
-        int changeSlot = gen.newLocal(changedValueType);
-
-        if (hasDefaultSuper()) {
-            gen.push((String) null);
-            gen.storeLocal(eventSlot);
-        } else {
-            gen.loadThis();
-            gen.loadArg(0);
-            gen.push(true);
-            gen.loadArg(2);
-            gen.invokeConstructor(superType, method);
-            gen.storeLocal(eventSlot);
-        }
-
-        gen.newInstance(syncEventSubclass);
-        gen.dup();
-        gen.loadArg(0);
-        gen.invokeConstructor(syncEventSubclass, getMethod("void <init>(Object)"));
-        gen.storeLocal(eventSlot);
-
-        int fieldIndex = 0;
-
-        for (Property<?> property : properties.keySet()) {
-            gen.getStatic(myType, getPropertyID(property, SYNCER), syncerType);
-            gen.loadArg(0);
-            gen.getStatic(myType, getPropertyID(property, PROP_ACC), propertyAccessType);
-            gen.loadThis();
-            gen.getStatic(myType, getPropertyID(property, COMP_ACC), propertyAccessType);
-
-            gen.invokeInterface(syncerType, new Method("forceUpdate", syncerChangeType,
-                    new Type[]{objectType, propertyAccessType, objectType, propertyAccessType}));
-            gen.storeLocal(changeSlot);
-
-            gen.loadLocal(eventSlot);
-            gen.push(firstID + fieldIndex);
-            gen.loadLocal(changeSlot);
-            gen.invokeVirtual(syncEventType, new Method("add", VOID_TYPE, new Type[]{INT_TYPE, changedValueType}));
-
-            fieldIndex++;
-        }
-
-        Label end = new Label();
-        gen.loadArg(1);
-        gen.ifZCmp(NE, end);
-
-        gen.loadLocal(eventSlot);
-        gen.loadArg(2);
-        gen.invokeVirtual(syncEventType, getMethod("void send(net.minecraft.entity.player.EntityPlayerMP)"));
-
-        gen.mark(end);
-        gen.loadLocal(eventSlot);
-        gen.returnValue();
-        gen.endMethod();
     }
 
     private boolean needCallSuper() {

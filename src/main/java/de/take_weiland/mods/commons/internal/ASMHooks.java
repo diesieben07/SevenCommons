@@ -1,12 +1,16 @@
 package de.take_weiland.mods.commons.internal;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.SaveWorldsEvent;
-import de.take_weiland.mods.commons.internal.sync.*;
+import de.take_weiland.mods.commons.internal.sync.IEEPSyncCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
+import de.take_weiland.mods.commons.internal.sync.SyncCompanions;
+import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
 import de.take_weiland.mods.commons.inv.Containers;
@@ -15,13 +19,16 @@ import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.IIcon;
 import net.minecraftforge.common.IExtendedEntityProperties;
 import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.input.Keyboard;
@@ -41,13 +48,14 @@ public final class ASMHooks {
 
     public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/ASMHooks";
     public static final String ON_START_TRACKING = "onStartTracking";
-    public static final String ON_PLAYER_CLONE = "onPlayerClone";
-    public static final String NEW_SYNC_STREAM = "newSyncStream";
-    public static final String SEND_SYNC_STREAM = "sendSyncStream";
-    public static final String FIND_CONTAINER_INVS = "findContainerInvs";
-    public static final String ON_LISTENER_ADDED = "onListenerAdded";
-    public static final String CAN_NUMBER_KEY_MOVE = "canNumberKeyMove";
-    public static final String INVOKE_SYNC_COMP_CHECK = "invokeSyncCompanionCheck";
+    public static final String ON_PLAYER_CLONE           = "onPlayerClone";
+    public static final String NEW_SYNC_STREAM           = "newSyncStream";
+    public static final String SEND_SYNC_STREAM          = "sendSyncStream";
+    public static final String FIND_CONTAINER_INVS       = "findContainerInvs";
+    public static final String ON_LISTENER_ADDED         = "onListenerAdded";
+    public static final String CAN_NUMBER_KEY_MOVE       = "canNumberKeyMove";
+    public static final String INVOKE_SYNC_COMP_CHECK    = "invokeSyncCompanionCheck";
+    public static final String TICK_CONTAINER_COMPANIONS = "tickContainerCompanions";
 
     public static final String ON_GUI_KEY = "onGuiKey";
     public static final String ON_GUI_MOUSE = "onGuiMouse";
@@ -99,19 +107,43 @@ public final class ASMHooks {
     public static void tickIEEPCompanionsClientSide() {
         ieepCompanions.forEach((props, companion) -> {
             if (!companion._sc$entity.worldObj.isRemote) {
-                companion.check(props, false);
+                companion.check(props, 0, null);
             }
         });
     }
 
     @SideOnly(Side.SERVER)
     public static void tickIEEPCompanionsServerSide() {
-        ieepCompanions.forEach((props, companion) -> companion.check(props, false));
+        ieepCompanions.forEach((props, companion) -> companion.check(props, 0, null));
     }
 
     public static void invokeSyncCompanionCheck(Object obj, SyncCompanion companion) {
         if (companion != null) {
-            SyncEvent event = companion.check(obj, false);
+            companion.check(obj, 0, null);
+        }
+    }
+
+    public static void tickContainerCompanions(Container container) {
+        EntityPlayer player = Containers.getViewer(container);
+        if (player == null || player.worldObj.isRemote) {
+            return;
+        }
+
+        SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();
+        if (companion != null) {
+            companion.check(container, 0, null);
+        }
+
+        ImmutableList<IInventory> list = ((ContainerProxy) container)._sc$getInventories().asList();
+
+        for (int i = 0, len = list.size(); i < len; i++) {
+            IInventory inv = list.get(i);
+            if (inv instanceof SyncedObjectProxy) {
+                companion = ((SyncedObjectProxy) inv)._sc$getCompanion();
+                if (companion != null) {
+                    companion.checkInContainer(inv, 0, (EntityPlayerMP) player);
+                }
+            }
         }
     }
 
@@ -199,19 +231,28 @@ public final class ASMHooks {
 
     public static void onListenerAdded(Container container, ICrafting listener) throws Throwable {
         if (listener instanceof EntityPlayerMP) {
+            EntityPlayerMP player = (EntityPlayerMP) listener;
+
             List<IInventory> invs = Containers.getInventories(container).asList();
             for (int i = 0, len = invs.size(); i < len; i++) {
                 IInventory inv = invs.get(i);
                 if (inv instanceof NameableInventory && ((NameableInventory) inv).hasCustomName()) {
-                    new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo((EntityPlayerMP) listener);
+                    new PacketInventoryName(container.windowId, i, ((NameableInventory) inv).getCustomName()).sendTo(player);
                 }
                 if (inv instanceof PlayerAwareInventory) {
-                    ((PlayerAwareInventory) inv)._sc$onPlayerViewContainer(container, i, (EntityPlayerMP) listener);
+                    ((PlayerAwareInventory) inv)._sc$onPlayerViewContainer(container, i, player);
+                }
+                if (inv instanceof SyncedObjectProxy) {
+                    SyncCompanion companion = ((SyncedObjectProxy) inv)._sc$getCompanion();
+                    if (companion != null) {
+                        companion.checkInContainer(inv, SyncCompanion.FORCE_CHECK, player);
+                    }
                 }
             }
+
             SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();
             if (companion != null) {
-                companion.forceUpdate(container, false, (EntityPlayerMP) listener);
+                companion.check(container, SyncCompanion.FORCE_CHECK, (EntityPlayerMP) listener);
             }
         }
     }
@@ -235,6 +276,24 @@ public final class ASMHooks {
     public static void onSlotAdded(Container container, Slot slot) {
         if (slot instanceof ContainerAwareSlot) {
             ((ContainerAwareSlot) slot)._sc$injectContainer(container);
+        }
+    }
+
+    public static final String PRE_RENDER_BLOCK = "preRenderBlock";
+
+    public static IIcon preRenderBlock(RenderBlocks rb, IIcon icon, int side) {
+        if (icon instanceof RenderAwareSprite) {
+            return ((RenderAwareSprite) icon).preRender(rb, side);
+        } else {
+            return icon;
+        }
+    }
+
+    public static final String POST_RENDER_BLOCK = "postRenderBlock";
+
+    public static void postRenderBlock(RenderBlocks rb, IIcon icon, int side) {
+        if (icon instanceof RenderAwareSprite) {
+            ((RenderAwareSprite) icon).postRender(rb, side);
         }
     }
 

@@ -12,19 +12,25 @@ import net.minecraft.entity.player.EntityPlayerMP;
  */
 public abstract class SyncCompanion {
 
-    public static final int FIELD_ID_END = 0;
+    public static final int FIELD_ID_END     = 0;
     public static final int FIRST_USEABLE_ID = 1;
+
+    public static final int SUPER_CALL  = 0b01;
+    public static final int FORCE_CHECK = 0b10;
 
     /**
      * <p>Called to check for changes, does everything to make sure the client object is up to date.</p>
      *
-     * @param instance    the actual object
-     * @param isSuperCall if this is a super call from an extending companion (used to prevent sending the packet prematurely)
+     * @param instance the actual object
+     * @param flags    if this is a super call from an extending companion (used to prevent sending the packet prematurely)
+     * @param player
      * @return the SyncEvent or null if nothing changed
      */
-    public abstract SyncEvent check(Object instance, boolean isSuperCall);
+    public abstract SyncEvent check(Object instance, int flags, EntityPlayerMP player);
 
-    public abstract SyncEvent forceUpdate(Object instance, boolean isSuperCall, EntityPlayerMP player);
+    public abstract SyncEvent checkInContainer(Object instance, int flags, EntityPlayerMP player);
+
+//    public abstract SyncEvent forceUpdate(Object instance, boolean isSuperCall, EntityPlayerMP player);
 
     public abstract int applyChanges(Object instance, ChangeIterator values);
 

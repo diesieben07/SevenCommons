@@ -64,7 +64,7 @@ public final class ForgeEventHandler implements IWorldAccess {
         EntityPlayerMP player = (EntityPlayerMP) event.entityPlayer;
 
         if (companion != null) {
-            companion.forceUpdate(event.target, false, player);
+            companion.check(event.target, SyncCompanion.FORCE_CHECK, player);
         }
         forceIEEPUpdate(player, event.target);
     }
@@ -75,7 +75,7 @@ public final class ForgeEventHandler implements IWorldAccess {
         for (IExtendedEntityProperties ieep : ieeps) {
             companion = ASMHooks.getIEEPCompanion(ieep);
             if (companion != null) {
-                companion.forceUpdate(ieep, false, player);
+                companion.check(ieep, SyncCompanion.FORCE_CHECK, player);
             }
         }
     }
@@ -87,7 +87,7 @@ public final class ForgeEventHandler implements IWorldAccess {
         ((Map<ChunkPosition, TileEntity>) chunk.chunkTileEntityMap).forEach((key, te) -> {
             SyncCompanion companion = ((SyncedObjectProxy) te)._sc$getCompanion();
             if (companion != null) {
-                companion.forceUpdate(te, false, event.player);
+                companion.check(te, SyncCompanion.FORCE_CHECK, event.player);
             }
         });
     }

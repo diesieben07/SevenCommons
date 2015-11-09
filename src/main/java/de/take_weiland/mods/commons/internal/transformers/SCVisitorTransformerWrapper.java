@@ -31,7 +31,10 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(SaveWorldsEventHook::new, "net/minecraft/server/MinecraftServer", MCPNames.method(SRGConstants.M_SAVE_ALL_WORLDS));
         addEntry(ContainerSlotDrawHook::new, "net/minecraft/client/gui/inventory/GuiContainer");
 
-        addEntry(GuiScreenHooks::new, "net/minecraft/client/gui/GuiScreen");
+        if (FMLLaunchHandler.side().isClient()) {
+            addEntry(GuiScreenHooks::new, "net/minecraft/client/gui/GuiScreen");
+            addEntry(RenderBlocksHook::new, "net/minecraft/client/renderer/RenderBlocks");
+        }
 
         // @Sync hooks
         addEntry(CompanionFieldAdder::new,
@@ -40,7 +43,7 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
                 "net/minecraft/inventory/Container");
         addEntry(TileEntityTickHook::new, "net/minecraft/world/World");
         addEntry(EntityTickHook::new, "net/minecraft/world/World");
-        addEntry(ContainerTickHook::new, "net/minecraft/inventory/Container");
+        addEntry(ContainerSyncHooks::new, "net/minecraft/inventory/Container");
         addEntry(EntitySyncPropsHooks::new, "net/minecraft/entity/Entity");
         addEntry(IEEPSyncTransformer::new, "net/minecraftforge/common/IExtendedEntityProperties");
 

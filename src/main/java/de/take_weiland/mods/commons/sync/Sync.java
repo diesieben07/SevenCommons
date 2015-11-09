@@ -48,4 +48,12 @@ public @interface Sync {
      */
     SerializationMethod.Method method() default SerializationMethod.Method.DEFAULT;
 
+    /**
+     * <p>Set this to true if the given property should be synced as a Container property when the synced object is viewed
+     * as an inventory in a {@link net.minecraft.inventory.Container}.</p>
+     *
+     * @return true if this is a container property
+     */
+    boolean inContainer() default false;
+
 }

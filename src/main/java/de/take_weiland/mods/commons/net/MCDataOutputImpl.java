@@ -435,6 +435,14 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput, Writa
         writeVarIntNBC(i);
     }
 
+    @Override
+    public void writeMedium(int i) {
+        ensureWritable(3);
+        writeByteNBC(i);
+        writeByteNBC(i >>> 8);
+        writeByteNBC(i >>> 16);
+    }
+
     private void writePositiveVarInt(int i) {
         ensureWritable(positiveVarIntLen(i));
         writeVarIntNBC(i);

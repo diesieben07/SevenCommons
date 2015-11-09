@@ -10,16 +10,10 @@ import java.util.Random;
  */
 public class TestTE extends SuperTE implements SyncedInterface, Listenable<String> {
 
-    //    @Sync
-    public String test = "__nullval__";
-
-    //    @Sync
-    Integer foobarusMax;
-
     private float syncFoobar;
 
-    @Sync
-    private float getSync() {
+    @Sync(inContainer = true)
+    public float getSync() {
         return syncFoobar;
     }
 
@@ -27,22 +21,12 @@ public class TestTE extends SuperTE implements SyncedInterface, Listenable<Strin
         syncFoobar = f;
     }
 
-    private int tick;
-
-    @Override
-    public String getSomeData() {
-        return test;
-    }
-
-    @Override
-    public void setSomeData(String i) {
-        test = i;
-    }
-
     @Override
     public void updateEntity() {
         if (!worldObj.isRemote) {
             syncFoobar = new Random().nextFloat();
+        } else {
+            System.out.println(getSync());
         }
 //        if (tick++ % 10 == 0) {
 //            if (Sides.sideOf(this).isServer()) {
@@ -54,7 +38,4 @@ public class TestTE extends SuperTE implements SyncedInterface, Listenable<Strin
 //        }
     }
 
-    public float getSyncFoobar() {
-        return syncFoobar;
-    }
 }

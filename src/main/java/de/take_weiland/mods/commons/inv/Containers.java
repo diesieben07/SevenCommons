@@ -77,7 +77,9 @@ public final class Containers {
      */
     public static EntityPlayer getViewer(Container container) {
         List<ICrafting> listeners = SCReflector.instance.getCrafters(container);
-        for (ICrafting listener : listeners) {
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0, len = listeners.size(); i < len; i++) {
+            ICrafting listener = listeners.get(i);
             if (listener instanceof EntityPlayerMP) {
                 return (EntityPlayer) listener;
             }
