@@ -17,6 +17,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -69,6 +70,14 @@ public class testmod_sc {
                     player.openGui(testmod_sc.this, 0, world, x, y, z);
                 }
                 return true;
+            }
+
+            IIcon[] STANDART_iicon;
+            IIcon[][] icons = new IIcon[6][4];
+
+            @Override
+            public IIcon getItemIcon(int side, int meta) {
+                return super.getItemIcon(side, meta);
             }
         };
 

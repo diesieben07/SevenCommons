@@ -16,7 +16,7 @@ public class SimpleSlot extends Slot implements ContainerAwareSlot {
 
     private Container container;
     private final int xNormal, yNormal;
-    private boolean allowPickUp;
+    private boolean allowPickUp = true;
 
     public SimpleSlot(IInventory inventory, int index, int x, int y) {
         super(inventory, index, x, y);
