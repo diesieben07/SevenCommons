@@ -8,18 +8,24 @@ import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.client.Axis;
+import de.take_weiland.mods.commons.client.IconManager;
+import de.take_weiland.mods.commons.client.IconManagerBuilder;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.util.Blocks;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -63,21 +69,33 @@ public class testmod_sc {
             }
 
             @Override
-            public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int par6, float par7, float par8, float par9) {
+            public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float par7, float par8, float par9) {
                 if (world.isRemote) {
 //                    System.out.println(((TestTE) world.getTileEntity(x, y, z)).getSyncFoobar());
                 } else {
-                    player.openGui(testmod_sc.this, 0, world, x, y, z);
+                    ((TestTE) world.getTileEntity(x, y, z)).rotMeta = icons.getMeta(side, 0);
                 }
                 return true;
             }
 
-            IIcon[] STANDART_iicon;
-            IIcon[][] icons = new IIcon[6][4];
+            @Override
+            public IIcon getIcon(IBlockAccess world, int x, int y, int z, int side) {
+                IIcon icon = icons.getIcon(side, ((TestTE) world.getTileEntity(x, y, z)).rotMeta);
+                System.out.println(ForgeDirection.VALID_DIRECTIONS[side] + " is " + icon);
+                return icon;
+            }
+
+            IconManager icons;
 
             @Override
-            public IIcon getItemIcon(int side, int meta) {
-                return super.getItemIcon(side, meta);
+            public void registerIcons(IIconRegister reg) {
+                IconManagerBuilder builder = new IconManagerBuilder(reg)
+                        .addRotationAxis(Axis.X, Axis.Y, Axis.Z);
+
+                for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
+                    builder = builder.texture(reg.registerIcon("sevencommons:test_" + dir.name().toLowerCase()), dir);
+                }
+                icons = builder.build();
             }
         };
 

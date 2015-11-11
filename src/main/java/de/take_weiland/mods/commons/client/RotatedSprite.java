@@ -10,49 +10,35 @@ import net.minecraft.util.IIcon;
 final class RotatedSprite extends DelegatingSprite implements RenderAwareSprite {
 
     private final int amount;
-    private final int face;
 
-    RotatedSprite(IIcon delegate, int amount, int face) {
+    RotatedSprite(IIcon delegate, int amount) {
         super(delegate);
         this.amount = amount;
-        this.face = face;
     }
 
     @Override
     public IIcon preRender(RenderBlocks rb, int side) {
-        if (side == face) {
-            applyRotation(rb, amount);
-        }
-        return delegate;
+        applyRotation(rb, amount);
+        return this;
     }
 
     @Override
     public void postRender(RenderBlocks rb, int side) {
-        if (side == face) {
-            applyRotation(rb, 0);
-        }
+        System.out.println("hello post");
+        applyRotation(rb, 0);
     }
 
     private void applyRotation(RenderBlocks rb, int n) {
-        switch (face) {
-            case 0:
-                rb.uvRotateBottom = n;
-                break;
-            case 1:
-                rb.uvRotateTop = n;
-                break;
-            case 2:
-                rb.uvRotateNorth = n;
-                break;
-            case 3:
-                rb.uvRotateSouth = n;
-                break;
-            case 4:
-                rb.uvRotateWest = n;
-                break;
-            case 5:
-                rb.uvRotateEast = n;
-                break;
-        }
+        rb.uvRotateBottom = n;
+        rb.uvRotateTop = n;
+        rb.uvRotateNorth = n;
+        rb.uvRotateSouth = n;
+        rb.uvRotateWest = n;
+        rb.uvRotateEast = n;
+    }
+
+    @Override
+    public String toString() {
+        return delegate + " rotated " + amount + 'x';
     }
 }

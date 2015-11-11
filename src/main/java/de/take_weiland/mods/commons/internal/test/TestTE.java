@@ -12,6 +12,11 @@ public class TestTE extends SuperTE implements SyncedInterface, Listenable<Strin
 
     private float syncFoobar;
 
+    @Sync
+    public int rotMeta;
+
+    private int lastRot = -1;
+
     @Sync(inContainer = true)
     public float getSync() {
         return syncFoobar;
@@ -26,7 +31,10 @@ public class TestTE extends SuperTE implements SyncedInterface, Listenable<Strin
         if (!worldObj.isRemote) {
             syncFoobar = new Random().nextFloat();
         } else {
-            System.out.println(getSync());
+            if (lastRot != rotMeta) {
+                worldObj.markBlockForRenderUpdate(xCoord, yCoord, zCoord);
+                lastRot = rotMeta;
+            }
         }
 //        if (tick++ % 10 == 0) {
 //            if (Sides.sideOf(this).isServer()) {

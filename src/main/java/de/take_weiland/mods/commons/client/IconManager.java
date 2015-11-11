@@ -9,8 +9,8 @@ import net.minecraft.util.IIcon;
  */
 public interface IconManager {
 
-    IIcon getIcon(int meta, BlockFace face);
+    IIcon getIcon(int side, int meta);
 
-    int getMeta(BlockFace front, int frontRotation);
+    int getMeta(int front, int frontRotation);
 
 }
