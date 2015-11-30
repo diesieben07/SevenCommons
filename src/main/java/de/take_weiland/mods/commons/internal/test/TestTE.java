@@ -3,8 +3,6 @@ package de.take_weiland.mods.commons.internal.test;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.util.Listenable;
 
-import java.util.Random;
-
 /**
  * @author diesieben07
  */
@@ -29,7 +27,12 @@ public class TestTE extends SuperTE implements SyncedInterface, Listenable<Strin
     @Override
     public void updateEntity() {
         if (!worldObj.isRemote) {
-            syncFoobar = new Random().nextFloat();
+//            syncFoobar++;
+//            if (syncFoobar >= 30) {
+//                syncFoobar = 0;
+//                rotMeta = (rotMeta + 1) % 4;
+//            };
+
         } else {
             if (lastRot != rotMeta) {
                 worldObj.markBlockForRenderUpdate(xCoord, yCoord, zCoord);

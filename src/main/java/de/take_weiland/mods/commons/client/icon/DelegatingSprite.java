@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.client;
+package de.take_weiland.mods.commons.client.icon;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -23,8 +23,8 @@ class DelegatingSprite implements IIcon {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public float getMaxU() {
-        return delegate.getMaxU();
+    public int getIconHeight() {
+        return delegate.getIconHeight();
     }
 
     @Override
@@ -35,14 +35,8 @@ class DelegatingSprite implements IIcon {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public int getIconHeight() {
-        return delegate.getIconHeight();
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    public float getInterpolatedV(double p_94207_1_) {
-        return delegate.getInterpolatedV(p_94207_1_);
+    public float getMaxU() {
+        return delegate.getMaxU();
     }
 
     @Override
@@ -53,19 +47,27 @@ class DelegatingSprite implements IIcon {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public String getIconName() {
-        return delegate.getIconName();
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
     public float getMaxV() {
         return delegate.getMaxV();
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public float getInterpolatedU(double p_94214_1_) {
-        return delegate.getInterpolatedU(p_94214_1_);
+    public float getInterpolatedU(double i) {
+        float d = getMaxU() - getMinU();
+        return getMinU() + d * ((float) i / 16.0F);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public float getInterpolatedV(double i) {
+        float d = getMaxV() - getMinV();
+        return getMinV() + d * ((float) i / 16.0F);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public String getIconName() {
+        return delegate.getIconName();
     }
 }

@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.client;
+package de.take_weiland.mods.commons.client.icon;
 
 import com.google.common.collect.ImmutableMap;
 import de.take_weiland.mods.commons.internal.SCReflector;
@@ -39,6 +39,16 @@ public final class Icons {
      */
     public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> Map<TYPE, IIcon> registerMulti(BLOCK block, IIconRegister register) {
         return registerMulti0(SCReflector.instance.getIconName(block) + ".", block, register);
+    }
+
+    /**
+     * <p>Create a new {@link IconManagerBuilder}.</p>
+     *
+     * @param register the {@code IIconRegister} to use
+     * @return a new {@code IconManagerBuilder}
+     */
+    public static IconManagerBuilder newBuilder(IIconRegister register) {
+        return new BuilderImpl(register);
     }
 
     private static <TYPE extends Subtype> Map<TYPE, IIcon> registerMulti0(String base, HasSubtypes<TYPE> element, IIconRegister register) {
