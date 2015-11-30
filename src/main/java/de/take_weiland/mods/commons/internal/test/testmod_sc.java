@@ -13,7 +13,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.client.icon.IconManager;
 import de.take_weiland.mods.commons.client.icon.IconManagerBuilder;
 import de.take_weiland.mods.commons.client.icon.Icons;
-import de.take_weiland.mods.commons.client.icon.RotatedDirection;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.util.Blocks;
@@ -166,24 +165,10 @@ public class testmod_sc {
 
         @Override
         public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float par7, float par8, float par9) {
-            if (world.isRemote) {
-//                    System.out.println(((TestTE) world.getTileEntity(x, y, z)).getSyncFoobar());
-            } else {
-                if (player.isSneaking()) {
-                    side = ForgeDirection.VALID_DIRECTIONS[side].getOpposite().ordinal();
-                }
-
+            if (!world.isRemote) {
                 if (side >= 2) {
-
                     TestTE te = (TestTE) world.getTileEntity(x, y, z);
-                    RotatedDirection front = icons.getFront(te.rotMeta);
-//                if (front.getDirection().ordinal() == side) {
-////                    te.rotMeta = (te.rotMeta & ~3) | (((te.rotMeta & 3) + 1) & 3);
-//                    te.rotMeta = icons.getMeta(side, (front.getRotation() + 1) & 3);
-//                } else {
                     te.rotMeta = icons.getMeta(side, 0);
-                    System.out.println("meta is " + te.rotMeta);
-//                }
                 }
             }
             return true;
