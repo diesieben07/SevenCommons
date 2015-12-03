@@ -166,10 +166,10 @@ public class testmod_sc {
         @Override
         public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float par7, float par8, float par9) {
             if (!world.isRemote) {
-                if (side >= 2) {
-                    TestTE te = (TestTE) world.getTileEntity(x, y, z);
-                    te.rotMeta = icons.getMeta(side, 0);
-                }
+//                if (side > -1) {
+//                    TestTE te = (TestTE) world.getTileEntity(x, y, z);
+//                    te.rotMeta = icons.getMeta(side, 0);
+//                }
             }
             return true;
         }
@@ -183,12 +183,12 @@ public class testmod_sc {
 
         @Override
         public void registerIcons(IIconRegister reg) {
-            IconManagerBuilder builder = Icons.newBuilder(reg)
-                    .addAllRotations();
+            IconManagerBuilder builder = Icons.newBuilder(reg, "sevencommons")
+                    .addValidFront(ForgeDirection.SOUTH, 2);
             for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
-                builder = builder.texture(reg.registerIcon("sevencommons:test_" + dir.name().toLowerCase()), dir);
+                builder.texture("test_" + dir.name().toLowerCase(), dir);
             }
-            icons = builder.build();
+            icons = builder.build(false);
         }
     }
 }

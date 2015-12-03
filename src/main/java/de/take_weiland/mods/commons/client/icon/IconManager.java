@@ -57,8 +57,6 @@ public interface IconManager {
      * @param meta the metadata
      * @return the front face and it's rotation
      */
-    default RotatedDirection getFront(int meta) {
-        return null;
-    }
+    RotatedDirection getFront(int meta);
 
 }

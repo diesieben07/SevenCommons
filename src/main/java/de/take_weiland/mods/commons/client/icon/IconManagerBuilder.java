@@ -4,11 +4,16 @@ import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * <p>A builder for {@link IconManager}.</p>
+ * <p>All methods for specifying textures expect the textures to be specified using the default orientation: front facing north, up facing up.</p>
+ * <p>Most methods return {@code this} to allow a fluid-style initialization.</p>
  *
  * @author diesieben07
  */
+@ParametersAreNonnullByDefault
 public interface IconManagerBuilder {
     /**
      * <p>Add the given list of directions as allowed front facings.</p>
@@ -90,6 +95,15 @@ public interface IconManagerBuilder {
     default IconManagerBuilder addAllRotations() {
         return addValidRotatableFront(ForgeDirection.VALID_DIRECTIONS);
     }
+
+    /**
+     * <p>Set a default resource domain to be used for future texture specifications. After {@code defaultResourceDomain("example")}
+     * the icon {@code "stone"} will no longer resolve to {@code "minecraft:stone"} but to {@code "example:stone"}.</p>
+     *
+     * @param domain the texture domain
+     * @return this
+     */
+    IconManagerBuilder defaultResourceDomain(String domain);
 
     /**
      * <p>The {@link IIconRegister} associated with this builder.</p>

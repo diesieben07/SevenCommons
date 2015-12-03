@@ -1,18 +1,21 @@
 package de.take_weiland.mods.commons.client.icon;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import gnu.trove.impl.Constants;
-import gnu.trove.map.TIntIntMap;
-import gnu.trove.map.hash.TIntIntHashMap;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
-import org.apache.commons.lang3.tuple.Triple;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.*;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static de.take_weiland.mods.commons.client.icon.RotatedDirection.checkFace;
 
 /**
@@ -23,16 +26,48 @@ final class BuilderImpl implements IconManagerBuilder {
 
     private final EnumMap<ForgeDirection, IIcon> faceIcons   = new EnumMap<>(ForgeDirection.class);
     private final Set<RotatedDirection>          validFronts = new HashSet<>();
-    private final IIconRegister register;
+    private IIconRegister register;
 
-    BuilderImpl(IIconRegister register) {
-        this.register = register;
+    BuilderImpl(IIconRegister register, @Nullable String domain) {
+        if (domain == null) {
+            this.register = register;
+        } else {
+            this.register = new DomainRegister(register, domain);
+        }
     }
 
     @Override
     public IconManagerBuilder addValidFront(RotatedDirection... directions) {
         Collections.addAll(validFronts, directions);
         return this;
+    }
+
+    @Override
+    public IconManagerBuilder defaultResourceDomain(String domain) {
+        checkArgument(!Strings.isNullOrEmpty(domain));
+
+        IIconRegister original = register instanceof DomainRegister ? ((DomainRegister) register).delegate : register;
+        register = new DomainRegister(original, domain);
+        return this;
+    }
+
+    private static final class DomainRegister implements IIconRegister {
+
+        private final IIconRegister delegate;
+        final         String        domain;
+
+        private DomainRegister(IIconRegister delegate, String domain) {
+            this.delegate = delegate;
+            this.domain = domain;
+        }
+
+        @Override
+        public IIcon registerIcon(String icon) {
+            if (icon.indexOf(':') == -1) {
+                icon = domain + ':' + icon;
+            }
+            return delegate.registerIcon(icon);
+        }
     }
 
     @Override
@@ -55,66 +90,19 @@ final class BuilderImpl implements IconManagerBuilder {
         }
 
         if (validFronts.size() == 0) {
-            throw new IllegalStateException("No valid front faces defined");
+            validFronts.add(new RotatedDirection(ForgeDirection.NORTH, 0));
+        }
+
+        if (validFronts.size() == 1) {
+            RotatedDirection front = Iterables.getOnlyElement(validFronts);
+            return new IconManagerImplNoRotation(IconManagerImplRotation.rotatedInstance(faceIcons, front), front);
         }
 
         if (useStandardMeta && validFronts.size() > 16) {
             throw new IllegalStateException(String.format("Too many possibilities (%s) for standard metadata (max is 16)", validFronts.size()));
         }
 
-        return new ManagerImpl(validFronts, faceIcons);
-    }
-
-    private static final class ManagerImpl implements IconManager {
-
-        private final TIntIntMap         lookup;
-        private final IIcon[]            icons;
-        private final RotatedDirection[] sortedFronts;
-
-        ManagerImpl(Set<RotatedDirection> validFronts, Map<ForgeDirection, IIcon> faceToIcons) {
-            sortedFronts = validFronts.toArray(new RotatedDirection[validFronts.size()]);
-            Arrays.sort(sortedFronts);
-
-            lookup = new TIntIntHashMap(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1, -1);
-            icons = new IIcon[sortedFronts.length * 6];
-
-            for (int i = 0; i < sortedFronts.length; i++) {
-                RotatedDirection front = sortedFronts[i];
-                lookup.put(front.encode(), i);
-
-                Map<Triple<IIcon, Integer, Boolean>, IIcon> iconCache = new HashMap<>();
-
-                for (ForgeDirection face : ForgeDirection.VALID_DIRECTIONS) {
-                    CubeOrientation.IconInstance iconFace = CubeOrientation.computeFace(face, front);
-
-                    IIcon origIcon = faceToIcons.get(iconFace.face);
-                    Triple<IIcon, Integer, Boolean> key = Triple.of(origIcon, iconFace.rotation, iconFace.flipU);
-
-                    IIcon morphed = iconCache.computeIfAbsent(key, k -> MorphedSprite.morph(origIcon, iconFace.rotation, iconFace.flipU, false));
-                    icons[face.ordinal() + i * 6] = morphed;
-                }
-            }
-        }
-
-        @Override
-        public IIcon getIcon(int side, int meta) {
-            return icons[side + meta * 6];
-        }
-
-        @Override
-        public int getMeta(int front, int frontRotation) {
-            int meta = lookup.get(RotatedDirection.encode(front, frontRotation));
-            if (meta < 0) {
-                throw new IllegalArgumentException("Cannot rotate to " + new RotatedDirection(ForgeDirection.VALID_DIRECTIONS[front], frontRotation));
-            }
-            return meta;
-        }
-
-        @Override
-        public RotatedDirection getFront(int meta) {
-            return sortedFronts[meta];
-        }
-
+        return new IconManagerImplRotation(validFronts, faceIcons);
     }
 
 }
