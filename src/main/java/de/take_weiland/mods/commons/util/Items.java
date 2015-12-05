@@ -11,6 +11,7 @@ import net.minecraft.item.ItemStack;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
 import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -66,6 +67,16 @@ public final class Items extends net.minecraft.init.Items {
      */
     @SafeVarargs
     public static <T extends Item> void initAll(Function<? super T, ? extends String> baseNameFunction, T... items) {
+        initAll(baseNameFunction, null, Arrays.asList(items));
+    }
+
+    /**
+     * <p>Utility function to initialize a lot of Items at the same time.</p>
+     *
+     * @param baseNameFunction a function that provides the base name for each Item
+     * @param items            the list of items
+     */
+    public static <T extends Item> void initAll(Function<? super T, ? extends String> baseNameFunction, Iterable<? extends T> items) {
         initAll(baseNameFunction, null, items);
     }
 
@@ -78,6 +89,17 @@ public final class Items extends net.minecraft.init.Items {
      */
     @SafeVarargs
     public static <T extends Item> void initAll(Function<? super T, ? extends String> baseNameFunction, @Nullable CreativeTabs tab, T... items) {
+        initAll(baseNameFunction, tab, Arrays.asList(items));
+    }
+
+    /**
+     * <p>Utility function to initialize a lot of Items at the same time and set their creative tab.</p>
+     *
+     * @param baseNameFunction a function that provides the base name for each Item
+     * @param tab              the creative tab
+     * @param items            the list of items
+     */
+    public static <T extends Item> void initAll(Function<? super T, ? extends String> baseNameFunction, @Nullable CreativeTabs tab, Iterable<? extends T> items) {
         for (T item : items) {
             init(item, baseNameFunction.apply(item));
             if (tab != null) {

@@ -15,6 +15,7 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
 import java.util.function.Function;
 
 import static de.take_weiland.mods.commons.util.Items.checkPhase;
@@ -74,6 +75,16 @@ public final class Blocks extends net.minecraft.init.Blocks {
      */
     @SafeVarargs
     public static <T extends Block> void initAll(Function<? super T, ? extends String> baseNameFunction, T... blocks) {
+        initAll(baseNameFunction, null, Arrays.asList(blocks));
+    }
+
+    /**
+     * <p>Utility function to initialize a lot of block at the same time.</p>
+     *
+     * @param baseNameFunction a function that provides the base name for each Block
+     * @param blocks           the list of blocks
+     */
+    public static <T extends Block> void initAll(Function<? super T, ? extends String> baseNameFunction, Iterable<? extends T> blocks) {
         initAll(baseNameFunction, null, blocks);
     }
 
@@ -86,6 +97,17 @@ public final class Blocks extends net.minecraft.init.Blocks {
      */
     @SafeVarargs
     public static <T extends Block> void initAll(Function<? super T, ? extends String> baseNameFunction, @Nullable CreativeTabs tab, T... blocks) {
+        initAll(baseNameFunction, tab, Arrays.asList(blocks));
+    }
+
+    /**
+     * <p>Utility function to initialize a lot of block at the same time and set their creative tab.</p>
+     *
+     * @param baseNameFunction a function that provides the base name for each Block
+     * @param tab              the creative tab
+     * @param blocks           the list of blocks
+     */
+    public static <T extends Block> void initAll(Function<? super T, ? extends String> baseNameFunction, @Nullable CreativeTabs tab, Iterable<? extends T> blocks) {
         for (T block : blocks) {
             init(block, baseNameFunction.apply(block));
             if (tab != null) {
