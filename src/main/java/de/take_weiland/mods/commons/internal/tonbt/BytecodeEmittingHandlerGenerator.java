@@ -11,6 +11,7 @@ import de.take_weiland.mods.commons.reflect.SCReflection;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
@@ -217,11 +218,17 @@ public final class BytecodeEmittingHandlerGenerator {
             gen.invokeVirtual(nbtCompType, nbtCompGetTag);
             gen.storeLocal(nbtTagSlot);
 
+            Label isNull = new Label();
+            gen.loadLocal(nbtTagSlot);
+            gen.ifNull(isNull);
+
             gen.getStatic(myType, identFor(property, SERIALIZER), Type.getType(getSerializerType(serializer)));
             gen.loadLocal(nbtTagSlot);
             gen.loadArg(0);
             gen.getStatic(myType, identFor(property, PROP_ACC), propertyAccessType);
             gen.invokeInterface(serializerType, new Method("read", VOID_TYPE, new Type[]{nbtBaseType, objectType, propertyAccessType}));
+
+            gen.mark(isNull);
         }
 
         gen.returnValue();
