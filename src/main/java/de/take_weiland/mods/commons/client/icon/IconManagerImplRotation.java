@@ -123,28 +123,6 @@ final class IconManagerImplRotation implements IconManager {
                 return 0;
             }
         }
-//
-//        switch (updown) {
-//            case 0:
-//                int dir = Direction.directionToFacing[cardinalDir];
-//                if ((possibleFronts & (1 << dir)) != 0) {
-//                    return getMeta(dir, 0);
-//                } else {
-//                    return 0;
-//                }
-//            case 1:
-//                if ((possibleFronts & 2) != 0) {
-//                    return getMeta(1, (cardinalDir + 2) & 3);
-//                }
-//                break;
-//            case -1:
-//                if ((possibleFronts & 1) != 0) {
-//                    return getMeta(0, (cardinalDir + ((~cardinalDir & 1) << 1)) & 3); // need to rotate 180 even numbers for some reason o.O
-//                }
-//                break;
-//        }
-//
-//        return 0;
     }
 
     public static void main(String[] args) {
