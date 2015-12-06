@@ -193,9 +193,7 @@ public class testmod_sc {
         @Override
         public void registerIcons(IIconRegister reg) {
             IconManagerBuilder builder = Icons.newBuilder(reg, "sevencommons")
-                    .addCardinalDirections()
-                    .update()
-                    .addAllRotations();
+                    .addCardinalDirections();
             for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
                 builder.texture("test_" + dir.name().toLowerCase(), dir);
             }

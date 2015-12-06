@@ -53,7 +53,6 @@ final class IconManagerImplRotation implements IconManager {
                 icons[face.ordinal() + i * 6] = rIcon;
                 for (RotatedDirection remappedFrom : keysPointingTo(remaps, front)) {
                     int idx = Arrays.binarySearch(sortedFronts, remappedFrom, frontSorter);
-                    System.out.printf("%s remapped to %s, idx %s\n", remappedFrom, front, idx);
                     icons[face.ordinal() + idx * 6] = rIcon;
                 }
             }
@@ -62,8 +61,6 @@ final class IconManagerImplRotation implements IconManager {
         for (Map.Entry<RotatedDirection, RotatedDirection> entry : remaps.entrySet()) {
             lookup.put(entry.getKey().encode(), Arrays.binarySearch(sortedFronts, entry.getValue(), frontSorter));
         }
-
-        System.out.println(icons[lookup.get(new RotatedDirection(ForgeDirection.NORTH, 0).encode())]);
 
         this.possibleFronts = possibleFronts;
     }
@@ -111,30 +108,43 @@ final class IconManagerImplRotation implements IconManager {
     @Override
     public int getMeta(@NotNull @Nonnull EntityLivingBase placer) {
         int updown = Integer.signum((int) (placer.rotationPitch / UP_DOWN_THRESHOLD));
+        updown = updown == 1 ? 1 : updown == -1 ? 0 : -1;
 
         int cardinalDir = (MathHelper.floor_double((placer.rotationYaw / 90) + 2.5) & 3);
 
-        switch (updown) {
-            case 0:
-                int dir = Direction.directionToFacing[cardinalDir];
-                if ((possibleFronts & (1 << dir)) != 0) {
-                    return getMeta(dir, 0);
-                } else {
-                    return 0;
-                }
-            case 1:
-                if ((possibleFronts & 2) != 0) {
-                    return getMeta(1, (cardinalDir + 2) & 3);
-                }
-                break;
-            case -1:
-                if ((possibleFronts & 1) != 0) {
-                    return getMeta(0, (cardinalDir + ((~cardinalDir & 1) << 1)) & 3); // need to rotate 180 even numbers for some reason o.O
-                }
-                break;
+        if (updown >= 0 && (possibleFronts & (1 << updown)) != 0) {
+            int add = updown == 0 ? ((~cardinalDir & 1) << 1) : 2;
+            return getMeta(updown, (cardinalDir + add) & 3);
+        } else {
+            int dir = Direction.directionToFacing[cardinalDir];
+            if ((possibleFronts & (1 << dir)) != 0) {
+                return getMeta(dir, 0);
+            } else {
+                return 0;
+            }
         }
-
-        return 0;
+//
+//        switch (updown) {
+//            case 0:
+//                int dir = Direction.directionToFacing[cardinalDir];
+//                if ((possibleFronts & (1 << dir)) != 0) {
+//                    return getMeta(dir, 0);
+//                } else {
+//                    return 0;
+//                }
+//            case 1:
+//                if ((possibleFronts & 2) != 0) {
+//                    return getMeta(1, (cardinalDir + 2) & 3);
+//                }
+//                break;
+//            case -1:
+//                if ((possibleFronts & 1) != 0) {
+//                    return getMeta(0, (cardinalDir + ((~cardinalDir & 1) << 1)) & 3); // need to rotate 180 even numbers for some reason o.O
+//                }
+//                break;
+//        }
+//
+//        return 0;
     }
 
     public static void main(String[] args) {
