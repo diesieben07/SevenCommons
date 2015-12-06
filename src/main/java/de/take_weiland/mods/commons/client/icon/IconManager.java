@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.client.icon;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -50,6 +51,8 @@ public interface IconManager {
         checkArgument(front != ForgeDirection.UNKNOWN, "UNKNOWN not valid");
         return getMeta(front.ordinal(), frontRotation);
     }
+
+    int getMeta(EntityLivingBase placer);
 
     /**
      * <p>Get the front face that is specified by the given metadata.</p>

@@ -15,6 +15,30 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public interface IconManagerBuilder {
+
+    /**
+     * <p>Ensure compatibility with save files that have been created using the current state of the builder, even if new
+     * rotation possibilities are added after this method is called.</p>
+     * <p>Example: A builder is created with just {@code addValidFront(NORTH)}. If later this builder is replaced with
+     * {@code addValidFront(UP, DOWN, NORTH)}, it is no longer guaranteed to be compatible with old save files, unless
+     * {@code addValidFront(NORTH).update(addValidFront(UP, DOWN)} is used.</p>
+     * <p>This method may be called multiple times to signify multiple version updates.</p>
+     *
+     * @return this
+     */
+    IconManagerBuilder update();
+
+    /**
+     * <p>Remap any occurrence of {@code original} as the front face with {@code _new} as the front face. This is useful
+     * if you wish to remove orientation possibilities with an update but wish to keep compatibility.</p>
+     * <p>The original orientation still counts towards the total number of orientations.</p>
+     *
+     * @param original the original orientation
+     * @param _new     the new orientation
+     * @return this
+     */
+    IconManagerBuilder remap(RotatedDirection original, RotatedDirection _new);
+
     /**
      * <p>Add the given list of directions as allowed front facings.</p>
      *

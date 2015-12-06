@@ -24,7 +24,9 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
@@ -179,12 +181,21 @@ public class testmod_sc {
             return icons.getIcon(side, ((TestTE) world.getTileEntity(x, y, z)).rotMeta);
         }
 
+        @Override
+        public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase placer, ItemStack itemIn) {
+            super.onBlockPlacedBy(world, x, y, z, placer, itemIn);
+            int meta = icons.getMeta(placer);
+            ((TestTE) world.getTileEntity(x, y, z)).rotMeta = meta;
+        }
+
         IconManager icons;
 
         @Override
         public void registerIcons(IIconRegister reg) {
             IconManagerBuilder builder = Icons.newBuilder(reg, "sevencommons")
-                    .addValidFront(ForgeDirection.SOUTH, 2);
+                    .addCardinalDirections()
+                    .update()
+                    .addAllRotations();
             for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
                 builder.texture("test_" + dir.name().toLowerCase(), dir);
             }

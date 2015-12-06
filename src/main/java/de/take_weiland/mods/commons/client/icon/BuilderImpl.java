@@ -1,21 +1,17 @@
 package de.take_weiland.mods.commons.client.icon;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static de.take_weiland.mods.commons.client.icon.RotatedDirection.checkFace;
 
 /**
@@ -24,8 +20,10 @@ import static de.take_weiland.mods.commons.client.icon.RotatedDirection.checkFac
 @ParametersAreNonnullByDefault
 final class BuilderImpl implements IconManagerBuilder {
 
-    private final EnumMap<ForgeDirection, IIcon> faceIcons   = new EnumMap<>(ForgeDirection.class);
-    private final Set<RotatedDirection>          validFronts = new HashSet<>();
+    private final List<List<RotatedDirection>>            updates     = new ArrayList<>();
+    private final EnumMap<ForgeDirection, IIcon>          faceIcons   = new EnumMap<>(ForgeDirection.class);
+    private final Set<RotatedDirection>                   validFronts = new HashSet<>();
+    private final Map<RotatedDirection, RotatedDirection> remaps      = new HashMap<>();
     private IIconRegister register;
 
     BuilderImpl(IIconRegister register, @Nullable String domain) {
@@ -34,12 +32,42 @@ final class BuilderImpl implements IconManagerBuilder {
         } else {
             this.register = new DomainRegister(register, domain);
         }
+
+        update();
+    }
+
+    @Override
+    public IconManagerBuilder update() {
+        if (!updates.isEmpty()) {
+            currentUpdate().sort(null);
+        }
+        updates.add(new ArrayList<>());
+        return this;
+    }
+
+    @Override
+    public IconManagerBuilder remap(RotatedDirection original, RotatedDirection _new) {
+        checkArgument(!original.equals(_new), "Cannot remap %s to itself", original);
+        checkState(validFronts.contains(original) && validFronts.contains(_new), "Orientations must be registered before remapping");
+        RotatedDirection remapPrev = remaps.get(original);
+        checkState(remapPrev == null, "%s is already mapped to %s", original, remapPrev);
+
+        remaps.put(original, _new);
+        return this;
     }
 
     @Override
     public IconManagerBuilder addValidFront(RotatedDirection... directions) {
-        Collections.addAll(validFronts, directions);
+        for (RotatedDirection direction : directions) {
+            if (validFronts.add(direction)) {
+                currentUpdate().add(direction);
+            }
+        }
         return this;
+    }
+
+    private List<RotatedDirection> currentUpdate() {
+        return updates.get(updates.size() - 1);
     }
 
     @Override
@@ -102,7 +130,30 @@ final class BuilderImpl implements IconManagerBuilder {
             throw new IllegalStateException(String.format("Too many possibilities (%s) for standard metadata (max is 16)", validFronts.size()));
         }
 
-        return new IconManagerImplRotation(validFronts, faceIcons);
+        Comparator<RotatedDirection> frontSorter;
+        if (updates.size() == 1) {
+            frontSorter = null;
+        } else {
+            List<RotatedDirection> list = ImmutableList.copyOf(Iterables.concat(updates));
+            frontSorter = Ordering.explicit(list);
+        }
+
+        // remove indirections in remaps
+        for (Map.Entry<RotatedDirection, RotatedDirection> entry : remaps.entrySet()) {
+            RotatedDirection actualTarget = entry.getValue();
+            RotatedDirection temp = actualTarget;
+            do {
+                temp = remaps.get(temp);
+                if (temp == null) {
+                    break;
+                }
+                actualTarget = temp;
+            } while (true);
+
+            entry.setValue(actualTarget);
+        }
+
+        return new IconManagerImplRotation(validFronts, faceIcons, frontSorter, remaps);
     }
 
 }

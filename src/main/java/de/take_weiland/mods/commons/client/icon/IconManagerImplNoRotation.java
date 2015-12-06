@@ -1,8 +1,10 @@
 package de.take_weiland.mods.commons.client.icon;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 
 /**
@@ -28,6 +30,11 @@ final class IconManagerImplNoRotation implements IconManager {
 
     @Override
     public int getMeta(int front, int frontRotation) {
+        return 0;
+    }
+
+    @Override
+    public int getMeta(@Nonnull EntityLivingBase placer) {
         return 0;
     }
 

@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.test;
 
+import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.sync.Sync;
 import de.take_weiland.mods.commons.util.Listenable;
 
@@ -11,6 +12,7 @@ public class TestTE extends SuperTE implements SyncedInterface, Listenable<Strin
     private float syncFoobar;
 
     @Sync
+    @ToNbt
     public int rotMeta;
 
     private int lastRot = -1;
