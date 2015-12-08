@@ -9,12 +9,21 @@ import net.minecraft.util.IIcon;
  */
 final class MorphedSprite extends DelegatingSprite implements RenderAwareSprite {
 
-    private static final int FLIP_U = 0b100;
+    private static final byte FLIP_U = 0b100;
     private final byte encode;
 
     private MorphedSprite(IIcon delegate, byte encode) {
         super(delegate);
         this.encode = encode;
+    }
+
+    static IIcon rotateSimple(IIcon icon, int rot) {
+        byte encode = encodeRotation(rot);
+        if (encode == 0) {
+            return icon;
+        } else {
+            return new MorphedSprite(icon, encode);
+        }
     }
 
     static Object morph(Object delegate, int rot, boolean flipU, boolean flipV) {
@@ -36,26 +45,22 @@ final class MorphedSprite extends DelegatingSprite implements RenderAwareSprite 
             flipU = !flipU;
         }
 
-        rot &= 3;
+        return (byte) (encodeRotation(rot) | (flipU ? FLIP_U : 0));
+    }
 
-        int notchRot;
-        switch (rot) {
+    private static byte encodeRotation(int rot) {
+        switch (rot & 3) {
             case 0:
-                notchRot = 0;
-                break;
+                return 0;
             case 1:
-                notchRot = 1;
-                break;
+                return 1;
             case 2:
-                notchRot = 3;
-                break;
+                return 3;
             case 3:
-                notchRot = 2;
-                break;
+                return 2;
             default:
                 throw new AssertionError();
         }
-        return (byte) (notchRot | (flipU ? FLIP_U : 0));
     }
 
     @Override

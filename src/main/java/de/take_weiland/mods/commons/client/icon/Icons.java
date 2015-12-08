@@ -47,6 +47,17 @@ public final class Icons {
     }
 
     /**
+     * <p>Create an Icon that will be rotated {@code n} times clockwise when used with {@link net.minecraft.client.renderer.RenderBlocks}.</p>
+     *
+     * @param icon the icon
+     * @param n    number of rotations
+     * @return the rotated icon
+     */
+    public static IIcon rotate(IIcon icon, int n) {
+        return MorphedSprite.rotateSimple(icon, n);
+    }
+
+    /**
      * <p>Create a new {@link IconManagerBuilder}.</p>
      *
      * @param register the {@code IIconRegister} to use
