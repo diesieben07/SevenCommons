@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.transformers.net;
+package de.take_weiland.mods.commons.internal.transformers;
 
 import com.google.common.collect.ObjectArrays;
 import org.objectweb.asm.ClassVisitor;
@@ -14,7 +14,7 @@ public final class InterfaceAdder extends ClassVisitor {
 
     private final String interfaceName;
 
-    public InterfaceAdder(ClassVisitor cv, String interfaceName) {
+    InterfaceAdder(ClassVisitor cv, String interfaceName) {
         super(ASM5, cv);
         this.interfaceName = interfaceName;
     }

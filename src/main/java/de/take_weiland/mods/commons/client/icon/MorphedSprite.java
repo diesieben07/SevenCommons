@@ -17,7 +17,19 @@ final class MorphedSprite extends DelegatingSprite implements RenderAwareSprite 
         this.encode = encode;
     }
 
-    static IIcon morph(IIcon delegate, int rot, boolean flipU, boolean flipV) {
+    static Object morph(Object delegate, int rot, boolean flipU, boolean flipV) {
+        byte encode = encode(rot, flipU, flipV);
+        if (encode == 0) {
+            return delegate;
+        } else if (delegate instanceof IIcon) {
+            return new MorphedSprite((IIcon) delegate, encode);
+        } else {
+            IconProvider provider = (IconProvider) delegate;
+            return (IconProvider) (side, context) -> new MorphedSprite(provider.getIcon(side, context), encode);
+        }
+    }
+
+    private static byte encode(int rot, boolean flipU, boolean flipV) {
         if (flipV) {
             // flipV is just flipU and 180 rotation
             rot += 2;
@@ -43,12 +55,7 @@ final class MorphedSprite extends DelegatingSprite implements RenderAwareSprite 
             default:
                 throw new AssertionError();
         }
-        if (notchRot == 0 && !flipU) {
-            return delegate;
-        } else {
-            byte encode = (byte) (notchRot | (flipU ? FLIP_U : 0));
-            return new MorphedSprite(delegate, encode);
-        }
+        return (byte) (notchRot | (flipU ? FLIP_U : 0));
     }
 
     @Override

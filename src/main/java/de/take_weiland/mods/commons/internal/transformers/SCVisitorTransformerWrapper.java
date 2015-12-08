@@ -6,7 +6,6 @@ import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.net.BaseModPacket;
 import de.take_weiland.mods.commons.internal.net.PacketAdditionalMethods;
 import de.take_weiland.mods.commons.internal.net.RawPacketAdditionalMethods;
-import de.take_weiland.mods.commons.internal.transformers.net.InterfaceAdder;
 import de.take_weiland.mods.commons.internal.transformers.net.PacketGetDataOptimizer;
 import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
 import de.take_weiland.mods.commons.internal.transformers.sync.*;
@@ -72,8 +71,6 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         if (FMLLaunchHandler.side().isServer()) {
             addEntry(SideOfOptimizer::new, "de/take_weiland/mods/commons/util/Sides", "sideOf");
         }
-
-
     }
 
     private static Predicate<String> apacheFilter() {

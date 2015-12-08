@@ -143,7 +143,9 @@ public interface IconManagerBuilder {
      * @param faces the face
      * @return this
      */
-    IconManagerBuilder texture(IIcon icon, ForgeDirection... faces);
+    default IconManagerBuilder texture(IIcon icon, ForgeDirection... faces) {
+        return ((BuilderImpl) this).texture((Object) icon, faces);
+    }
 
     /**
      * <p>Apply the given icon to given list of faces.</p>
@@ -154,6 +156,17 @@ public interface IconManagerBuilder {
      */
     default IconManagerBuilder texture(String icon, ForgeDirection... faces) {
         return texture(register().registerIcon(icon), faces);
+    }
+
+    /**
+     * <p>Apply the given {@code IconProvider} to given list of faces.</p>
+     *
+     * @param provider the provider
+     * @param faces    the face
+     * @return this
+     */
+    default IconManagerBuilder texture(IconProvider provider, ForgeDirection... faces) {
+        return ((BuilderImpl) this).texture((Object) provider, faces);
     }
 
     /**
@@ -173,7 +186,17 @@ public interface IconManagerBuilder {
      * @return this
      */
     default IconManagerBuilder texture(String icon) {
-        return texture(register().registerIcon(icon));
+        return texture(icon, ForgeDirection.VALID_DIRECTIONS);
+    }
+
+    /**
+     * <p>Apply the given {@code IconProvider} to all faces.</p>
+     *
+     * @param provider the provider
+     * @return this
+     */
+    default IconManagerBuilder texture(IconProvider provider) {
+        return texture(provider, ForgeDirection.VALID_DIRECTIONS);
     }
 
     /**
@@ -193,7 +216,17 @@ public interface IconManagerBuilder {
      * @return this
      */
     default IconManagerBuilder textureSides(String icon) {
-        return textureSides(register().registerIcon(icon));
+        return texture(icon, ForgeDirection.NORTH, ForgeDirection.EAST, ForgeDirection.SOUTH, ForgeDirection.WEST);
+    }
+
+    /**
+     * <p>Apply the given {@code IconProvider} to all faces except top and bottom.</p>
+     *
+     * @param provider the provider
+     * @return this
+     */
+    default IconManagerBuilder textureSides(IconProvider provider) {
+        return texture(provider, ForgeDirection.NORTH, ForgeDirection.EAST, ForgeDirection.SOUTH, ForgeDirection.WEST);
     }
 
     /**
@@ -213,7 +246,17 @@ public interface IconManagerBuilder {
      * @return this
      */
     default IconManagerBuilder textureTopBottom(String icon) {
-        return textureTopBottom(register().registerIcon(icon));
+        return texture(icon, ForgeDirection.DOWN, ForgeDirection.UP);
+    }
+
+    /**
+     * <p>Apply the given {@code IconProvider} to the top and bottom face.</p>
+     *
+     * @param provider the provider
+     * @return this
+     */
+    default IconManagerBuilder textureTopBottom(IconProvider provider) {
+        return texture(provider, ForgeDirection.DOWN, ForgeDirection.UP);
     }
 
     /**

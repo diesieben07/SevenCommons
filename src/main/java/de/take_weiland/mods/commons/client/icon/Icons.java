@@ -120,5 +120,4 @@ public final class Icons {
 
     private Icons() {
     }
-
 }

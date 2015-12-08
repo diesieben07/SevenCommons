@@ -21,7 +21,7 @@ import static de.take_weiland.mods.commons.client.icon.RotatedDirection.checkFac
 final class BuilderImpl implements IconManagerBuilder {
 
     private final List<List<RotatedDirection>>            updates     = new ArrayList<>();
-    private final EnumMap<ForgeDirection, IIcon>          faceIcons   = new EnumMap<>(ForgeDirection.class);
+    private final EnumMap<ForgeDirection, Object>         faceIcons   = new EnumMap<>(ForgeDirection.class);
     private final Set<RotatedDirection>                   validFronts = new HashSet<>();
     private final Map<RotatedDirection, RotatedDirection> remaps      = new HashMap<>();
     private IIconRegister register;
@@ -103,8 +103,7 @@ final class BuilderImpl implements IconManagerBuilder {
         return register;
     }
 
-    @Override
-    public IconManagerBuilder texture(IIcon icon, ForgeDirection... faces) {
+    IconManagerBuilder texture(Object icon, ForgeDirection... faces) {
         for (ForgeDirection face : faces) {
             faceIcons.put(checkFace(face), icon);
         }

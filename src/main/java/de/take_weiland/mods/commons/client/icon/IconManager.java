@@ -1,7 +1,9 @@
 package de.take_weiland.mods.commons.client.icon;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -23,13 +25,39 @@ public interface IconManager {
 
     /**
      * <p>Get the icon for the given side and metadata.</p>
-     * <p>For simple rotations this method can be used as a drop-in solution for {@link net.minecraft.block.Block#getIcon(int, int)}.</p>
+     * <p>For simple rotations where the rotation metadata is stored in the standard block metadata this method can be
+     * used as a drop-in solution for {@link net.minecraft.block.Block#getIcon(int, int)}.</p>
      *
-     * @param side the side
-     * @param meta the metadata
+     * @param side  the side
+     * @param meta  the metadata
      * @return the icon
      */
     IIcon getIcon(int side, int meta);
+
+    /**
+     * <p>Get the icon for the given side and metadata with the given {@code ItemStack} context.</p>
+     * <p>The {@code ItemStack} will be passed on to any registered {@link IconProvider IconProviders}.</p>
+     *
+     * @param stack the ItemStack
+     * @param side  the side
+     * @param meta  the metadata
+     * @return the icon
+     */
+    IIcon getIcon(ItemStack stack, int side, int meta);
+
+    /**
+     * <p>Get the icon for the given side and metadata with the given {@code World} and location context.</p>
+     * <p>The {@code World} and location will be passed on to any registered {@link IconProvider IconProviders}.</p>
+     *
+     * @param side  the side
+     * @param meta  the metadata
+     * @param world the World
+     * @param x     the x coordinate
+     * @param y     the y coordinate
+     * @param z     the z coordinate
+     * @return the icon
+     */
+    IIcon getIcon(IBlockAccess world, int x, int y, int z, int side, int meta);
 
     /**
      * <p>Get the metadata for the given front and it's rotation.</p>
@@ -52,6 +80,12 @@ public interface IconManager {
         return getMeta(front.ordinal(), frontRotation);
     }
 
+    /**
+     * <p>Determine the orientation based on the rotation angles of the given placer.</p>
+     *
+     * @param placer the placing entity
+     * @return the metadata
+     */
     int getMeta(EntityLivingBase placer);
 
     /**

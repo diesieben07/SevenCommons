@@ -167,25 +167,29 @@ public class testmod_sc {
 
         @Override
         public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float par7, float par8, float par9) {
-            if (!world.isRemote) {
+//            if (!world.isRemote) {
 //                if (side > -1) {
 //                    TestTE te = (TestTE) world.getTileEntity(x, y, z);
 //                    te.rotMeta = icons.getMeta(side, 0);
 //                }
-            }
+//            }
             return true;
         }
 
         @Override
+        public IIcon getIcon(int side, int meta) {
+            return icons.getIcon(side, 0);
+        }
+
+        @Override
         public IIcon getIcon(IBlockAccess world, int x, int y, int z, int side) {
-            return icons.getIcon(side, ((TestTE) world.getTileEntity(x, y, z)).rotMeta);
+            return icons.getIcon(world, x, y, z, side, ((TestTE) world.getTileEntity(x, y, z)).rotMeta);
         }
 
         @Override
         public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase placer, ItemStack itemIn) {
             super.onBlockPlacedBy(world, x, y, z, placer, itemIn);
-            int meta = icons.getMeta(placer);
-            ((TestTE) world.getTileEntity(x, y, z)).rotMeta = meta;
+            ((TestTE) world.getTileEntity(x, y, z)).rotMeta = icons.getMeta(placer);
         }
 
         IconManager icons;
@@ -195,7 +199,8 @@ public class testmod_sc {
             IconManagerBuilder builder = Icons.newBuilder(reg, "sevencommons")
                     .addCardinalDirections();
             for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
-                builder.texture("test_" + dir.name().toLowerCase(), dir);
+                IIcon icon = reg.registerIcon("sevencommons:test_" + dir.name().toLowerCase());
+                builder.texture((side, context) -> icon, dir);
             }
             icons = builder.build(false);
         }

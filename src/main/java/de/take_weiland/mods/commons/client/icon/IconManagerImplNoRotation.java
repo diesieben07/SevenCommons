@@ -4,18 +4,17 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import javax.annotation.Nonnull;
 import java.util.Map;
 
 /**
  * @author diesieben07
  */
-final class IconManagerImplNoRotation implements IconManager {
+final class IconManagerImplNoRotation extends AbstractIconManager {
 
     private final RotatedDirection front;
-    private final IIcon[]          icons;
+    private final Object[]         icons;
 
-    public IconManagerImplNoRotation(Map<ForgeDirection, IIcon> icons, RotatedDirection front) {
+    public IconManagerImplNoRotation(Map<ForgeDirection, Object> icons, RotatedDirection front) {
         this.front = front;
         this.icons = new IIcon[6];
         for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
@@ -24,7 +23,7 @@ final class IconManagerImplNoRotation implements IconManager {
     }
 
     @Override
-    public IIcon getIcon(int side, int meta) {
+    Object getIcon0(int side, int meta) {
         return icons[side];
     }
 
@@ -34,7 +33,7 @@ final class IconManagerImplNoRotation implements IconManager {
     }
 
     @Override
-    public int getMeta(@Nonnull EntityLivingBase placer) {
+    public int getMeta(EntityLivingBase placer) {
         return 0;
     }
 

@@ -6,36 +6,36 @@ import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.Direction;
-import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.apache.commons.lang3.tuple.Triple;
-import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
  * @author diesieben07
  */
-final class IconManagerImplRotation implements IconManager {
+@ParametersAreNonnullByDefault
+final class IconManagerImplRotation extends AbstractIconManager {
 
     private final TIntIntMap         lookup;
-    private final IIcon[]            icons;
+    private final Object[]           icons;
     private final RotatedDirection[] sortedFronts;
     private final short              possibleFronts;
 
 
-    IconManagerImplRotation(Set<RotatedDirection> validFronts, Map<ForgeDirection, IIcon> faceToIcon, Comparator<RotatedDirection> frontSorter, Map<RotatedDirection, RotatedDirection> remaps) {
+    IconManagerImplRotation(Set<RotatedDirection> validFronts, Map<ForgeDirection, Object> faceToIcon, @Nullable Comparator<RotatedDirection> frontSorter, Map<RotatedDirection, RotatedDirection> remaps) {
         sortedFronts = validFronts.toArray(new RotatedDirection[validFronts.size()]);
         Arrays.sort(sortedFronts, frontSorter);
 
         lookup = new TIntIntHashMap(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1, -1);
-        icons = new IIcon[sortedFronts.length * 6];
+        icons = new Object[sortedFronts.length * 6];
 
         short possibleFronts = 0;
 
-        Map<Triple<IIcon, Integer, Boolean>, IIcon> iconCache = new HashMap<>();
+        Map<Triple<Object, Integer, Boolean>, Object> iconCache = new HashMap<>();
 
         for (int i = 0; i < sortedFronts.length; i++) {
             RotatedDirection front = sortedFronts[i];
@@ -47,9 +47,9 @@ final class IconManagerImplRotation implements IconManager {
             lookup.put(front.encode(), i);
             possibleFronts |= (1 << front.getDirection().ordinal());
 
-            Map<ForgeDirection, IIcon> rotated = rotatedInstance(faceToIcon, front, iconCache);
+            Map<ForgeDirection, Object> rotated = rotatedInstance(faceToIcon, front, iconCache);
             for (ForgeDirection face : ForgeDirection.VALID_DIRECTIONS) {
-                IIcon rIcon = rotated.get(face);
+                Object rIcon = rotated.get(face);
                 icons[face.ordinal() + i * 6] = rIcon;
                 for (RotatedDirection remappedFrom : keysPointingTo(remaps, front)) {
                     int idx = Arrays.binarySearch(sortedFronts, remappedFrom, frontSorter);
@@ -69,20 +69,20 @@ final class IconManagerImplRotation implements IconManager {
         return Iterables.filter(map.keySet(), k -> map.get(k).equals(value));
     }
 
-    static Map<ForgeDirection, IIcon> rotatedInstance(Map<ForgeDirection, IIcon> icons, RotatedDirection front) {
+    static Map<ForgeDirection, Object> rotatedInstance(Map<ForgeDirection, Object> icons, RotatedDirection front) {
         return rotatedInstance(icons, front, new HashMap<>());
     }
 
-    static Map<ForgeDirection, IIcon> rotatedInstance(Map<ForgeDirection, IIcon> icons, RotatedDirection front, Map<Triple<IIcon, Integer, Boolean>, IIcon> iconCache) {
-        Map<ForgeDirection, IIcon> result = new EnumMap<>(ForgeDirection.class);
+    static Map<ForgeDirection, Object> rotatedInstance(Map<ForgeDirection, Object> icons, RotatedDirection front, Map<Triple<Object, Integer, Boolean>, Object> iconCache) {
+        Map<ForgeDirection, Object> result = new EnumMap<>(ForgeDirection.class);
 
         for (ForgeDirection face : ForgeDirection.VALID_DIRECTIONS) {
             CubeOrientation.IconInstance iconFace = CubeOrientation.computeFace(face, front);
 
-            IIcon origIcon = icons.get(iconFace.face);
-            Triple<IIcon, Integer, Boolean> key = Triple.of(origIcon, iconFace.rotation, iconFace.flipU);
+            Object origIcon = icons.get(iconFace.face);
+            Triple<Object, Integer, Boolean> key = Triple.of(origIcon, iconFace.rotation, iconFace.flipU);
 
-            IIcon morphed = iconCache.computeIfAbsent(key, k -> MorphedSprite.morph(origIcon, iconFace.rotation, iconFace.flipU, false));
+            Object morphed = iconCache.computeIfAbsent(key, k -> MorphedSprite.morph(origIcon, iconFace.rotation, iconFace.flipU, false));
             result.put(face, morphed);
         }
 
@@ -90,7 +90,7 @@ final class IconManagerImplRotation implements IconManager {
     }
 
     @Override
-    public IIcon getIcon(int side, int meta) {
+    Object getIcon0(int side, int meta) {
         return icons[side + meta * 6];
     }
 
@@ -106,7 +106,7 @@ final class IconManagerImplRotation implements IconManager {
     private static final float UP_DOWN_THRESHOLD = 50f;
 
     @Override
-    public int getMeta(@NotNull @Nonnull EntityLivingBase placer) {
+    public int getMeta(EntityLivingBase placer) {
         int updown = Integer.signum((int) (placer.rotationPitch / UP_DOWN_THRESHOLD));
         updown = updown == 1 ? 1 : updown == -1 ? 0 : -1;
 
@@ -123,12 +123,6 @@ final class IconManagerImplRotation implements IconManager {
                 return 0;
             }
         }
-    }
-
-    public static void main(String[] args) {
-        int updown = Integer.bitCount(Integer.signum((int) (14 / UP_DOWN_THRESHOLD)));
-        updown = Integer.numberOfLeadingZeros(updown) - (updown >>> 3);
-        System.out.println(UUID.randomUUID());
     }
 
     @Override
