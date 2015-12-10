@@ -186,6 +186,8 @@ public final class Rendering {
     public static void drawInventoryBlock(Block block, int meta, RenderBlocks renderer) {
         Tessellator t = Tessellator.instance;
 
+        t.addTranslation(0, -0.1f, 0);
+
         t.startDrawingQuads();
         t.setNormal(-1, 0, 0);
         renderer.renderFaceXNeg(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, WEST.ordinal(), meta));
@@ -215,6 +217,8 @@ public final class Rendering {
         t.setNormal(0, 1, 0);
         renderer.renderFaceYPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, UP.ordinal(), meta));
         t.draw();
+
+        t.addTranslation(0, 0.1f, 0);
     }
 
     /**
