@@ -29,6 +29,8 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(InventoryNumberKeysFix::new, "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(SRGConstants.M_CHECK_HOTBAR_KEYS));
         addEntry(SaveWorldsEventHook::new, "net/minecraft/server/MinecraftServer", MCPNames.method(SRGConstants.M_SAVE_ALL_WORLDS));
         addEntry(ContainerSlotDrawHook::new, "net/minecraft/client/gui/inventory/GuiContainer");
+        addEntry(IIconHook::new, "net/minecraft/util/IIcon");
+        addEntry(cv -> new InterfaceAdder(cv, "de/take_weiland/mods/commons/client/icon/IconProviderAdd"), "de/take_weiland/mods/commons/client/icon/IconProvider");
 
         if (FMLLaunchHandler.side().isClient()) {
             addEntry(GuiScreenHooks::new, "net/minecraft/client/gui/GuiScreen");

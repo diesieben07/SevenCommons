@@ -143,9 +143,7 @@ public interface IconManagerBuilder {
      * @param faces the face
      * @return this
      */
-    default IconManagerBuilder texture(IIcon icon, ForgeDirection... faces) {
-        return ((BuilderImpl) this).texture((Object) icon, faces);
-    }
+    IconManagerBuilder texture(IIcon icon, ForgeDirection... faces);
 
     /**
      * <p>Apply the given icon to given list of faces.</p>
@@ -165,9 +163,7 @@ public interface IconManagerBuilder {
      * @param faces    the face
      * @return this
      */
-    default IconManagerBuilder texture(IconProvider provider, ForgeDirection... faces) {
-        return ((BuilderImpl) this).texture((Object) provider, faces);
-    }
+    IconManagerBuilder texture(IconProvider provider, ForgeDirection... faces);
 
     /**
      * <p>Apply the given icon to all faces.</p>

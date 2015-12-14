@@ -34,16 +34,17 @@ public interface IconManager {
      */
     IIcon getIcon(int side, int meta);
 
+    IIcon getInventoryIcon(int side);
+
     /**
      * <p>Get the icon for the given side and metadata with the given {@code ItemStack} context.</p>
      * <p>The {@code ItemStack} will be passed on to any registered {@link IconProvider IconProviders}.</p>
      *
      * @param stack the ItemStack
      * @param side  the side
-     * @param meta  the metadata
      * @return the icon
      */
-    IIcon getIcon(ItemStack stack, int side, int meta);
+    IIcon getIcon(ItemStack stack, int side);
 
     /**
      * <p>Get the icon for the given side and metadata with the given {@code World} and location context.</p>

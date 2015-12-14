@@ -13,6 +13,7 @@ import net.minecraft.world.IBlockAccess;
  *
  * @author diesieben07
  */
+@FunctionalInterface
 public interface IconProvider {
 
     /**

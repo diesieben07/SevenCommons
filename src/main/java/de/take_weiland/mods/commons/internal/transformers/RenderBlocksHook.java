@@ -14,7 +14,7 @@ import static org.objectweb.asm.Opcodes.*;
 /**
  * @author diesieben07
  */
-public class RenderBlocksHook extends ClassVisitor {
+public final class RenderBlocksHook extends ClassVisitor {
 
     RenderBlocksHook(ClassVisitor cv) {
         super(ASM5, cv);
@@ -24,9 +24,13 @@ public class RenderBlocksHook extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 
+        if (name.equals(MCPNames.method(SRGConstants.M_RENDER_BLOCK_AS_ITEM))) {
+            return new RenderAsItemHook(mv);
+        }
+
         int side = getSide(name);
         if (side != -1) {
-            mv = new MethodHook(mv, side);
+            mv = new RenderSideMethodHook(mv, side);
         }
 
         return mv;
@@ -50,7 +54,36 @@ public class RenderBlocksHook extends ClassVisitor {
         }
     }
 
-    private static final class MethodHook extends MethodVisitor {
+    private static final class RenderAsItemHook extends MethodVisitor {
+
+        RenderAsItemHook(MethodVisitor mv) {
+            super(ASM5, mv);
+        }
+
+        @Override
+        public void visitCode() {
+            super.visitCode();
+
+            super.visitInsn(ICONST_1);
+            putField();
+        }
+
+        @Override
+        public void visitInsn(int opcode) {
+            if (opcode == RETURN || opcode == ATHROW) {
+                super.visitInsn(ICONST_0);
+                putField();
+
+            }
+            super.visitInsn(opcode);
+        }
+
+        private void putField() {
+            super.visitFieldInsn(PUTSTATIC, ASMHooks.CLASS_NAME, ASMHooks.DRAW_BLOCK_INV, Type.BOOLEAN_TYPE.getDescriptor());
+        }
+    }
+
+    private static final class RenderSideMethodHook extends MethodVisitor {
 
         private final int side;
 
@@ -60,7 +93,7 @@ public class RenderBlocksHook extends ClassVisitor {
         private int stage = SEARCH_CALL_OVERRIDE;
         private Label jumpTarget;
 
-        MethodHook(MethodVisitor mv, int side) {
+        RenderSideMethodHook(MethodVisitor mv, int side) {
             super(ASM5, mv);
             this.side = side;
         }

@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.client.icon;
 
-import com.google.common.collect.ComparisonChain;
+import com.google.common.primitives.Ints;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import javax.annotation.Nonnull;
@@ -70,10 +70,15 @@ public final class RotatedDirection implements Comparable<RotatedDirection> {
 
     @Override
     public int compareTo(@Nonnull RotatedDirection that) {
-        return ComparisonChain.start()
-                .compare(this.direction, that.direction)
-                .compare(this.faceRotation, that.faceRotation)
-                .result();
+        if (this.getDirection() != that.getDirection()) {
+            return this.getDirection().compareTo(that.getDirection());
+        }
+
+        if (this.getRotation() != that.getRotation()) {
+            return Ints.compare(this.getRotation(), that.getRotation());
+        }
+
+        return 0;
     }
 
     @Override

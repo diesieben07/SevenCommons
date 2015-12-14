@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.client.icon;
 
+import de.take_weiland.mods.commons.internal.IconProviderInternal;
 import de.take_weiland.mods.commons.internal.RenderAwareSprite;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.util.IIcon;
@@ -26,15 +27,15 @@ final class MorphedSprite extends DelegatingSprite implements RenderAwareSprite 
         }
     }
 
-    static Object morph(Object delegate, int rot, boolean flipU, boolean flipV) {
+    static IconProviderInternal morph(IconProviderInternal delegate, int rot, boolean flipU, boolean flipV) {
         byte encode = encode(rot, flipU, flipV);
         if (encode == 0) {
             return delegate;
-        } else if (delegate instanceof IIcon) {
-            return new MorphedSprite((IIcon) delegate, encode);
-        } else {
+        } else if (delegate instanceof IconProvider) {
             IconProvider provider = (IconProvider) delegate;
-            return (IconProvider) (side, context) -> new MorphedSprite(provider.getIcon(side, context), encode);
+            return (IconProviderInternal) (IconProvider) (side, context) -> new MorphedSprite(provider.getIcon(side, context), encode);
+        } else {
+            return (IconProviderInternal) (Object) new MorphedSprite((IIcon) delegate, encode);
         }
     }
 

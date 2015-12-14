@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.client.icon;
 
+import de.take_weiland.mods.commons.internal.IconProviderInternal;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import java.util.Map;
@@ -11,20 +11,25 @@ import java.util.Map;
  */
 final class IconManagerImplNoRotation extends AbstractIconManager {
 
-    private final RotatedDirection front;
-    private final Object[]         icons;
+    private final RotatedDirection       front;
+    private final IconProviderInternal[] icons;
 
-    public IconManagerImplNoRotation(Map<ForgeDirection, Object> icons, RotatedDirection front) {
+    public IconManagerImplNoRotation(Map<ForgeDirection, IconProviderInternal> icons, RotatedDirection front) {
         this.front = front;
-        this.icons = new IIcon[6];
+        this.icons = new IconProviderInternal[6];
         for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
             this.icons[dir.ordinal()] = icons.get(dir);
         }
     }
 
     @Override
-    Object getIcon0(int side, int meta) {
+    IconProviderInternal getIcon0(int side, int meta) {
         return icons[side];
+    }
+
+    @Override
+    int inventoryMeta() {
+        return 0;
     }
 
     @Override

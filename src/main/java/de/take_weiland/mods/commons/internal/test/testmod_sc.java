@@ -13,8 +13,11 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.client.icon.IconManager;
 import de.take_weiland.mods.commons.client.icon.IconManagerBuilder;
 import de.take_weiland.mods.commons.client.icon.Icons;
+import de.take_weiland.mods.commons.client.icon.RotatedDirection;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
+import de.take_weiland.mods.commons.net.PacketConstructor;
+import de.take_weiland.mods.commons.net.PacketHandler;
 import de.take_weiland.mods.commons.util.Blocks;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.block.Block;
@@ -75,7 +78,7 @@ public class testmod_sc {
 
 //
         Network.newSimpleChannel("testmod")
-                .register(0, TestPacket::new, TestResponse::new, (packet, player, side) -> new TestResponse(packet.s))
+                .register(0, (PacketConstructor<TestPacket>) TestPacket::new, (PacketConstructor<TestResponse>) TestResponse::new, (PacketHandler.WithResponse.IncludingSide<TestPacket, TestResponse>) (packet, player, side) -> new TestResponse(packet.s))
                 .build();
     }
 
@@ -167,12 +170,19 @@ public class testmod_sc {
 
         @Override
         public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float par7, float par8, float par9) {
-//            if (!world.isRemote) {
-//                if (side > -1) {
-//                    TestTE te = (TestTE) world.getTileEntity(x, y, z);
-//                    te.rotMeta = icons.getMeta(side, 0);
-//                }
-//            }
+            if (!world.isRemote) {
+                if (player.isSneaking()) {
+                    side = ForgeDirection.getOrientation(side).getOpposite().ordinal();
+                }
+
+                TestTE te = (TestTE) world.getTileEntity(x, y, z);
+                RotatedDirection front = icons.getFront(te.rotMeta);
+                if (front.getDirection().ordinal() == side) {
+                    te.rotMeta = icons.getMeta(front.getDirection().ordinal(), (front.getRotation() + 1) & 3);
+                } else {
+                    te.rotMeta = icons.getMeta(side, 0);
+                }
+            }
             return true;
         }
 
@@ -196,8 +206,14 @@ public class testmod_sc {
 
         @Override
         public void registerIcons(IIconRegister reg) {
-            IconManagerBuilder builder = Icons.newBuilder(reg, "sevencommons")
-                    .addCardinalDirections();
+            IconManagerBuilder builder = Icons.newBuilder(reg, "sevencommons");
+            for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
+                for (int i = 0; i < 4; i++) {
+                    if (direction != ForgeDirection.SOUTH) {
+                        builder.addValidFront(direction, i);
+                    }
+                }
+            }
             for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
                 IIcon icon = reg.registerIcon("sevencommons:test_" + dir.name().toLowerCase());
                 builder.texture((side, context) -> icon, dir);

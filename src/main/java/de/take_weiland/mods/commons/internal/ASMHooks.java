@@ -57,8 +57,11 @@ public final class ASMHooks {
     public static final String INVOKE_SYNC_COMP_CHECK    = "invokeSyncCompanionCheck";
     public static final String TICK_CONTAINER_COMPANIONS = "tickContainerCompanions";
 
-    public static final String ON_GUI_KEY = "onGuiKey";
-    public static final String ON_GUI_MOUSE = "onGuiMouse";
+    public static final String ON_GUI_KEY     = "onGuiKey";
+    public static final String ON_GUI_MOUSE   = "onGuiMouse";
+    public static final String DRAW_BLOCK_INV = "drawBlockInv";
+
+    public static boolean drawBlockInv;
 
     private ASMHooks() {
     }

@@ -47,11 +47,12 @@ public interface SRGConstants {
     String M_HANDLE_INPUT                            = "func_146269_k";
     String M_HANDLE_KEYBOARD_INPUT                   = "func_146282_l";
     String M_HANDLE_MOUSE_INPUT                      = "func_146274_d";
-    String M_RENDER_FACE_X_NEG                       = "func_147798_e";
-    String M_RENDER_FACE_X_POS                       = "func_147764_f";
-    String M_RENDER_FACE_Y_NEG                       = "func_147768_a";
-    String M_RENDER_FACE_Y_POS                       = "func_147806_b";
-    String M_RENDER_FACE_Z_NEG                       = "func_147761_c";
-    String M_RENDER_FACE_Z_POS                       = "func_147734_d";
-    String M_HAS_OVERRIDE_BLOCK_TEXTURE              = "func_147744_b";
+    String M_RENDER_FACE_X_NEG          = "func_147798_e";
+    String M_RENDER_FACE_X_POS          = "func_147764_f";
+    String M_RENDER_FACE_Y_NEG          = "func_147768_a";
+    String M_RENDER_FACE_Y_POS          = "func_147806_b";
+    String M_RENDER_FACE_Z_NEG          = "func_147761_c";
+    String M_RENDER_FACE_Z_POS          = "func_147734_d";
+    String M_HAS_OVERRIDE_BLOCK_TEXTURE = "func_147744_b";
+    String M_RENDER_BLOCK_AS_ITEM       = "func_147800_a";
 }

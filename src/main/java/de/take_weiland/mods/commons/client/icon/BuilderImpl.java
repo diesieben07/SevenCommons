@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.client.icon;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.*;
+import de.take_weiland.mods.commons.internal.IconProviderInternal;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -20,10 +21,10 @@ import static de.take_weiland.mods.commons.client.icon.RotatedDirection.checkFac
 @ParametersAreNonnullByDefault
 final class BuilderImpl implements IconManagerBuilder {
 
-    private final List<List<RotatedDirection>>            updates     = new ArrayList<>();
-    private final EnumMap<ForgeDirection, Object>         faceIcons   = new EnumMap<>(ForgeDirection.class);
-    private final Set<RotatedDirection>                   validFronts = new HashSet<>();
-    private final Map<RotatedDirection, RotatedDirection> remaps      = new HashMap<>();
+    private final List<List<RotatedDirection>>                  updates     = new ArrayList<>();
+    private final EnumMap<ForgeDirection, IconProviderInternal> faceIcons   = new EnumMap<>(ForgeDirection.class);
+    private final Set<RotatedDirection>                         validFronts = new HashSet<>();
+    private final Map<RotatedDirection, RotatedDirection>       remaps      = new HashMap<>();
     private IIconRegister register;
 
     BuilderImpl(IIconRegister register, @Nullable String domain) {
@@ -66,6 +67,22 @@ final class BuilderImpl implements IconManagerBuilder {
         return this;
     }
 
+    @Override
+    public IconManagerBuilder texture(IconProvider provider, ForgeDirection... faces) {
+        for (ForgeDirection face : faces) {
+            faceIcons.put(checkFace(face), (IconProviderInternal) provider);
+        }
+        return this;
+    }
+
+    @Override
+    public IconManagerBuilder texture(IIcon icon, ForgeDirection... faces) {
+        for (ForgeDirection face : faces) {
+            faceIcons.put(checkFace(face), (IconProviderInternal) icon);
+        }
+        return this;
+    }
+
     private List<RotatedDirection> currentUpdate() {
         return updates.get(updates.size() - 1);
     }
@@ -103,13 +120,6 @@ final class BuilderImpl implements IconManagerBuilder {
         return register;
     }
 
-    IconManagerBuilder texture(Object icon, ForgeDirection... faces) {
-        for (ForgeDirection face : faces) {
-            faceIcons.put(checkFace(face), icon);
-        }
-        return this;
-    }
-
     @Override
     public IconManager build(boolean useStandardMeta) {
         if (faceIcons.size() != 6) {
@@ -122,7 +132,9 @@ final class BuilderImpl implements IconManagerBuilder {
 
         if (validFronts.size() == 1) {
             RotatedDirection front = Iterables.getOnlyElement(validFronts);
-            return new IconManagerImplNoRotation(IconManagerImplRotation.rotatedInstance(faceIcons, front), front);
+            if (front.getDirection() == ForgeDirection.SOUTH && front.getRotation() == 0) {
+                return new IconManagerImplNoRotation(IconManagerImplRotation.rotatedInstance(faceIcons, front), front);
+            }
         }
 
         if (useStandardMeta && validFronts.size() > 16) {
