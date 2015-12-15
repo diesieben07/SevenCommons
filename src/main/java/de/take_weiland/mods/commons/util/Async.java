@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -21,8 +22,10 @@ public final class Async {
         int proc = Runtime.getRuntime().availableProcessors();
         commonScheduler = Executors.newScheduledThreadPool(proc, new ThreadFactoryBuilder()
                 .setNameFormat("SevenCommonsPool %s")
+                .setDaemon(true)
                 .build());
 
+        MoreExecutors.addDelayedShutdownHook(commonScheduler, 30, TimeUnit.SECONDS);
     }
 
     public static ScheduledExecutorService commonExecutor() {

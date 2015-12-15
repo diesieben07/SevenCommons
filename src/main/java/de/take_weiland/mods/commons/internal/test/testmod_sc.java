@@ -128,10 +128,13 @@ public class testmod_sc {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         Async.RetryCharacteristics c = Async.characteristics(IOException.class, 500, 1000, 10000);
 
-        Async.retrying(() -> {
+        System.out.println(Async.retrying(() -> {
             System.out.println("trying at " + SimpleDateFormat.getTimeInstance().format(new Date()));
-            throw new IOException("hello!");
-        }, c).toCompletableFuture().get();
+            if (Math.random() < 0.5) {
+                throw new IOException("fail!");
+            }
+            return "hello";
+        }, c).toCompletableFuture().get());
     }
 
     static final int X = 200;
