@@ -18,6 +18,7 @@ import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketConstructor;
 import de.take_weiland.mods.commons.net.PacketHandler;
+import de.take_weiland.mods.commons.util.Async;
 import de.take_weiland.mods.commons.util.Blocks;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.block.Block;
@@ -38,8 +39,12 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
+import java.util.concurrent.ExecutionException;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @GameRegistry.ObjectHolder("testmod_sc")
@@ -118,6 +123,15 @@ public class testmod_sc {
                 }
             }
         });
+    }
+
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        Async.RetryCharacteristics c = Async.characteristics(IOException.class, 500, 1000, 10000);
+
+        Async.retrying(() -> {
+            System.out.println("trying at " + SimpleDateFormat.getTimeInstance().format(new Date()));
+            throw new IOException("hello!");
+        }, c).toCompletableFuture().get();
     }
 
     static final int X = 200;
