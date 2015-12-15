@@ -42,6 +42,17 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput, Writa
     }
 
     @Override
+    public void resetPosition(int pos) {
+        if (locked) {
+            throw new IllegalStateException("Output locked");
+        }
+        if (pos < 0) {
+            throw new IllegalArgumentException("pos must be >= 0");
+        }
+        count = pos;
+    }
+
+    @Override
     public void lock() {
         locked = true;
     }

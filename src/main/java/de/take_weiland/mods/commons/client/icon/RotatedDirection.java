@@ -74,11 +74,8 @@ public final class RotatedDirection implements Comparable<RotatedDirection> {
             return this.getDirection().compareTo(that.getDirection());
         }
 
-        if (this.getRotation() != that.getRotation()) {
             return Ints.compare(this.getRotation(), that.getRotation());
-        }
 
-        return 0;
     }
 
     @Override

@@ -471,6 +471,25 @@ public interface MCDataOutput extends ByteArrayDataOutput {
     int length();
 
     /**
+     * <p>Reset the writing position to the given index. After this operation {@link #length()} will be equal to {@code pos}.</p>
+     * @param pos the position to reset to
+     */
+    void resetPosition(int pos);
+
+    /**
+     * <p>Rewind the position for {@code bytes} number of bytes.</p>
+     *
+     * @param bytes the number of bytes, at most {@link #length()}
+     */
+    default void unread(int bytes) {
+        int newPos = length() - bytes;
+        if (newPos < 0) {
+            throw new IllegalArgumentException("Cannot rewind more than length of buffer");
+        }
+        resetPosition(newPos);
+    }
+
+    /**
      * <p>Return the array backing this stream. Any modification in the returned array will be reflected in the contents
      * of this stream, as long as the buffer does not grow.</p>
      *
