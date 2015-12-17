@@ -110,7 +110,7 @@ public final class Retries {
     }
 
     /**
-     * <p>Specification about how a task should be retried.</p>
+     * <p>Specification about how a task should be retried. Implementations of this interface must be threadsafe.</p>
      */
     public interface RetrySettings extends Predicate<Throwable> {
 
