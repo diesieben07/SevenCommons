@@ -18,8 +18,8 @@ import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketConstructor;
 import de.take_weiland.mods.commons.net.PacketHandler;
-import de.take_weiland.mods.commons.util.Async;
 import de.take_weiland.mods.commons.util.Blocks;
+import de.take_weiland.mods.commons.util.Retries;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -126,9 +126,9 @@ public class testmod_sc {
     }
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        Async.RetryCharacteristics c = Async.characteristics(IOException.class, 500, 1000, 10000);
+        Retries.RetrySettings c = Retries.settings(IOException.class, 500, 1000, 10000);
 
-        System.out.println(Async.retrying(() -> {
+        System.out.println(Retries.retryAsync(() -> {
             System.out.println("trying at " + SimpleDateFormat.getTimeInstance().format(new Date()));
             if (Math.random() < 0.5) {
                 throw new IOException("fail!");
