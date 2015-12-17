@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.reflect.Reflection;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import cpw.mods.fml.client.FMLFileResourcePack;
 import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.common.*;
@@ -21,34 +21,45 @@ import de.take_weiland.mods.commons.net.ChannelHandler;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.sync.Syncing;
 import de.take_weiland.mods.commons.util.Logging;
-import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 public final class SevenCommons extends DummyModContainer {
 
-    public static final Logger LOGGER = Logging.getLogger("SevenCommons");
+    public static final Logger log = Logging.getLogger("SevenCommons");
+
     public static final String VERSION = "1.0";
+    public static final String MOD_ID  = "sevencommons";
+
     public static long clientMainThreadID;
 
+    public static ScheduledExecutorService commonScheduler;
+
     public static SevenCommonsProxy proxy;
-    public static SevenCommons instance;
-    public static File source;
+    public static SevenCommons      instance;
+    public static File              source;
+
+    static Configuration config;
 
     private static EnumMap<LoaderState.ModState, List<Runnable>> stateCallbacks = new EnumMap<>(LoaderState.ModState.class);
-    private static EnumSet<LoaderState.ModState> reachedStates = EnumSet.noneOf(LoaderState.ModState.class);
+    private static EnumSet<LoaderState.ModState>                 reachedStates  = EnumSet.noneOf(LoaderState.ModState.class);
 
     public SevenCommons() {
         super(new ModMetadata());
         ModMetadata meta = getMetadata();
         meta.name = "SevenCommons";
-        meta.modId = "sevencommons";
+        meta.modId = MOD_ID;
         meta.authorList = ImmutableList.of("diesieben07");
         meta.version = VERSION;
 
@@ -63,6 +74,11 @@ public final class SevenCommons extends DummyModContainer {
 
     public static Logger scLogger(String channel) {
         return Logging.getLogger("SC|" + channel);
+    }
+
+    @Override
+    public String getGuiClassName() {
+        return "de.take_weiland.mods.commons.internal.SCConfigGui$Factory";
     }
 
     @Override
@@ -97,12 +113,14 @@ public final class SevenCommons extends DummyModContainer {
     }
 
     public void universalPreInit(FMLPreInitializationEvent event) {
-        Configuration config = new Configuration(event.getSuggestedConfigurationFile());
+        config = new Configuration(event.getSuggestedConfigurationFile());
         config.load();
 
-        int usernameCacheSize = config.getInt("usernameCacheSize", Configuration.CATEGORY_GENERAL, 500, 0, Integer.MAX_VALUE,
-                "How many UUID->Username mappings should be kept in the cache, set to 0 to never cache (this is not recommended!)");
-        UsernameCache.init(usernameCacheSize);
+        syncConfig(true);
+
+        FMLCommonHandler.instance().bus().register(new FMLEventHandler());
+        MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
+
 
         Network.newSimpleChannel("SevenCommons")
                 .register(0, PacketContainerButton::new, PacketContainerButton::handle)
@@ -125,12 +143,6 @@ public final class SevenCommons extends DummyModContainer {
 
         ClassInfoSuperCache.preInit();
 
-        // initialize the lazy statics in the scheduler class
-        Reflection.initialize(Scheduler.class);
-
-        FMLCommonHandler.instance().bus().register(new FMLEventHandler());
-        MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
-
         proxy.preInit(event);
 
         Syncing.registerFactory(Object.class, new BuiltinSyncers());
@@ -139,6 +151,48 @@ public final class SevenCommons extends DummyModContainer {
         if (config.hasChanged()) {
             config.save();
         }
+    }
+
+    static void syncConfig(boolean initialStartup) {
+        int usernameCacheSize = config.getInt("usernameCacheSize", Configuration.CATEGORY_GENERAL, 500, 0, Integer.MAX_VALUE,
+                "How many UUID->Username mappings should be kept in the cache, set to 0 to never cache (this is not recommended!)");
+        UsernameCache.initCache(usernameCacheSize);
+
+        Property minCorePoolSize = config.get(Configuration.CATEGORY_GENERAL, "commonPoolMinSize", -1,
+                "How many Threads to keep alive in the core async-pool even when idle, -1 for default (usually number of cores on the machine).",
+                -1, Integer.MAX_VALUE);
+        minCorePoolSize.setRequiresMcRestart(true);
+
+        if (initialStartup) {
+            startCorePool(minCorePoolSize.getInt());
+        }
+    }
+
+    private static void startCorePool(int size) {
+        int corePoolSize = size < 0 ? Runtime.getRuntime().availableProcessors() : size;
+
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("SevenCommonsPool %s")
+                .setDaemon(true)
+                .build();
+
+        commonScheduler = new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+
+            @Override
+            public void run() {
+                commonScheduler.shutdown();
+                if (!commonScheduler.isTerminated()) {
+                    log.info("Waiting max. 20 seconds for common thread pool to shut down");
+                    try {
+                        commonScheduler.awaitTermination(20, TimeUnit.SECONDS);
+                        log.info("Common thread pool gracefully shut down");
+                    } catch (Throwable x) {
+                        log.error("Exception occurred awaiting common thread pool shut down", x);
+                    }
+                }
+            }
+        });
     }
 
     @Override

@@ -62,7 +62,7 @@ public final class MCPNames {
             throw failFindMappings(String.format("Mappings file not found (tried %s).", file.getAbsolutePath()));
         }
         try {
-            SevenCommons.LOGGER.info("Reading SRG->MCP mappings from " + file);
+            SevenCommons.log.info("Reading SRG->MCP mappings from " + file);
             return Files.readLines(file, StandardCharsets.UTF_8, new MCPFileParser());
         } catch (IOException e) {
             throw failFindMappings("IOException while parsing mappings file", e);

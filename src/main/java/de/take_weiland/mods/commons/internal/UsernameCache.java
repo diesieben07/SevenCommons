@@ -8,9 +8,7 @@ import com.google.common.io.Resources;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.gson.stream.JsonReader;
 import com.mojang.authlib.GameProfile;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent;
+import net.minecraft.entity.player.EntityPlayer;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedReader;
@@ -63,16 +61,14 @@ public final class UsernameCache {
     private UsernameCache() {
     }
 
-    static void init(int cacheSize) {
-        FMLCommonHandler.instance().bus().register(new UsernameCache());
+    static void initCache(int cacheSize) {
         cache = CacheBuilder.newBuilder()
                 .maximumSize(cacheSize)
                 .build(new Loader());
     }
 
-    @SubscribeEvent
-    public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        GameProfile profile = event.player.getGameProfile();
+    static void onPlayerLogin(EntityPlayer player) {
+        GameProfile profile = player.getGameProfile();
         cache.put(profile.getId(), profile.getName());
     }
 

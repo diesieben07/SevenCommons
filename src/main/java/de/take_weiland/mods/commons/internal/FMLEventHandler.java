@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
+import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
@@ -18,6 +19,14 @@ public final class FMLEventHandler {
 
     public static final String INV_IN_USE_KEY = "_sc$iteminv$inUse";
 
+
+    @SubscribeEvent
+    public void onConfigChange(ConfigChangedEvent.OnConfigChangedEvent event) {
+        if (event.modID.equals(SevenCommons.MOD_ID)) {
+            SevenCommons.syncConfig(false);
+        }
+    }
+
     @SubscribeEvent
     public void playerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase == TickEvent.Phase.START && event.side.isServer() && event.player.openContainer == event.player.inventoryContainer) {
@@ -31,6 +40,7 @@ public final class FMLEventHandler {
     @SubscribeEvent
     public void playerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         ForgeEventHandler.forceIEEPUpdate((EntityPlayerMP) event.player, event.player);
+        UsernameCache.onPlayerLogin(event.player);
     }
 
     @SubscribeEvent
