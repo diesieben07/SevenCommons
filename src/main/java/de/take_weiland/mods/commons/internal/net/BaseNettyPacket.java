@@ -24,13 +24,13 @@ public interface BaseNettyPacket {
 
     String _sc$channel();
 
-    byte[] _sc$encode();
+    byte[] _sc$encode() throws Exception;
 
     default byte _sc$characteristics() {
         return Network.BIDIRECTIONAL;
     }
 
-    default byte[] _sc$encodeToPlayer(EntityPlayerMP player) {
+    default byte[] _sc$encodeToPlayer(EntityPlayerMP player) throws Exception {
         return _sc$encode();
     }
 

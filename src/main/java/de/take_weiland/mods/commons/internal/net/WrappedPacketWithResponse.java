@@ -10,12 +10,12 @@ import java.util.concurrent.CompletableFuture;
 /**
  * @author diesieben07
  */
-public final class WithResponseRequestNettyVersion<R extends Packet.Response> implements BaseNettyPacket {
+public final class WrappedPacketWithResponse<R extends Packet.Response> implements BaseNettyPacket {
 
     private final Packet.WithResponse<R> original;
     private final CompletableFuture<R> future;
 
-    public WithResponseRequestNettyVersion(Packet.WithResponse<R> original, CompletableFuture<R> future) {
+    public WrappedPacketWithResponse(Packet.WithResponse<R> original, CompletableFuture<R> future) {
         this.original = original;
         this.future = future;
     }
@@ -27,7 +27,7 @@ public final class WithResponseRequestNettyVersion<R extends Packet.Response> im
     }
 
     @Override
-    public byte[] _sc$encode() {
+    public byte[] _sc$encode() throws Exception {
         int uniqueId = ResponseSupport.nextID();
         ResponseSupport.register(uniqueId, future);
 
@@ -50,4 +50,8 @@ public final class WithResponseRequestNettyVersion<R extends Packet.Response> im
         return ((BaseModPacket) original)._sc$getData().info;
     }
 
+    @Override
+    public String toString() {
+        return String.format("Wrapped packet with response (packet=%s, future=%s)", original, future);
+    }
 }

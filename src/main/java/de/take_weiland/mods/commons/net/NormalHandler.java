@@ -5,7 +5,7 @@ import net.minecraft.entity.player.EntityPlayer;
 /**
  * <p>Handler for normal packets.</p>
  */
-class NormalHandler<P extends Packet> extends SimpleChannelBuilderImpl.Handler {
+final class NormalHandler<P extends Packet> extends SimpleChannelBuilderImpl.Handler {
 
     private final PacketHandler<? super P> handler;
     private final PacketConstructor<P> constructor;
@@ -18,6 +18,17 @@ class NormalHandler<P extends Packet> extends SimpleChannelBuilderImpl.Handler {
 
     @Override
     public void accept(String channel, int packetID, MCDataInput in, EntityPlayer player) {
-        handler.handle(constructor.construct(in), player);
+        P packet;
+        try {
+            packet = constructor.construct(in);
+        } catch (Exception e) {
+            throw wrapConstructException(packetID, e);
+        }
+        handler.handle(packet, player);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Normal packet handler (handler=%s, constructor=%s)", handler, constructor);
     }
 }

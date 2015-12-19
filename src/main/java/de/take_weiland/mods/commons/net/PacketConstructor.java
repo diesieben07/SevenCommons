@@ -14,7 +14,7 @@ import java.io.Serializable;
 @FunctionalInterface
 public interface PacketConstructor<P extends PacketBase> extends Serializable {
 
-    P construct(MCDataInput mcDataInput);
+    P construct(MCDataInput mcDataInput) throws Exception;
 
     default Class<P> getPacketClass() {
         return Network.findPacketClassReflectively(this);

@@ -11,7 +11,7 @@ public interface PacketBase {
      *
      * @param out the output stream
      */
-    void writeTo(MCDataOutput out);
+    void writeTo(MCDataOutput out) throws Exception;
 
     /**
      * <p>The expected amount of bytes that this packet will produce when encoded.</p>

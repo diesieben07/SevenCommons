@@ -144,7 +144,7 @@ public final class NetworkImpl {
         ctx.write(cstr.apply(MULTIPART_CHANNEL, dataThisPart), promise);
     }
 
-    public static byte[] encodePacket(Packet packet, SimplePacketData data) {
+    public static byte[] encodePacket(Packet packet, SimplePacketData data) throws Exception {
         MCDataOutput out = Network.newOutput(packet.expectedSize() + 1);
         out.writeByte(data.packetID);
         packet.writeTo(out);

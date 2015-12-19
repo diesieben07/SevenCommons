@@ -19,4 +19,9 @@ final class ResponseNormalHandler<P extends Packet.WithResponse<R>, R extends Pa
         R response = handler.handle(packet, player);
         SimpleChannelBuilderImpl.sendResponse(response, player, packetID, responseID, channel);
     }
+
+    @Override
+    Object handler() {
+        return handler;
+    }
 }

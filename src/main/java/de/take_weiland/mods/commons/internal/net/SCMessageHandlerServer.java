@@ -55,6 +55,11 @@ public final class SCMessageHandlerServer extends SCMessageHandler {
             packet._sc$handle(player);
             return false;
         }
+
+        @Override
+        public String toString() {
+            return String.format("Server thread packet exec (packet=%s, player=%s)", packet, player);
+        }
     }
 
     @Override

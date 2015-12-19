@@ -175,6 +175,16 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
         return false;
     }
 
+    @Override
+    public String toString() {
+        return String.format("SyncEvent (type=%s, %s)", type(), data());
+    }
+
+
+    abstract String type();
+
+    abstract Object data();
+
     public static final class ForTE extends SyncEvent {
 
         private final int x;
@@ -215,6 +225,16 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
             TileEntity te = (TileEntity) obj;
             NetworkImpl.sendRawPacket(Players.getTrackingChunk(te.getWorld(), te.xCoord >> 4, te.zCoord >> 4), this);
         }
+
+        @Override
+        String type() {
+            return "TileEntity";
+        }
+
+        @Override
+        Object data() {
+            return String.format("x=%s, y=%s, z=%s", x, y, z);
+        }
     }
 
     public static final class ForEntity extends SyncEvent {
@@ -244,6 +264,16 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
         public void send(Object obj) {
             done();
             NetworkImpl.sendRawPacket(Entities.getTrackingPlayers((Entity) obj), this);
+        }
+
+        @Override
+        String type() {
+            return "Entity";
+        }
+
+        @Override
+        Object data() {
+            return String.format("id=%s", entityID);
         }
     }
 
@@ -277,6 +307,16 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
             List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
             NetworkImpl.sendRawPacket(Iterables.filter(crafters, EntityPlayerMP.class), this);
         }
+
+        @Override
+        String type() {
+            return "Container";
+        }
+
+        @Override
+        Object data() {
+            return String.format("id=%s", windowId);
+        }
     }
 
     public static final class ForIEEP extends SyncEvent {
@@ -288,6 +328,16 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
             IEEPSyncCompanion companion = (IEEPSyncCompanion) ((SyncedObjectProxy) obj)._sc$getCompanion();
             entityID = companion._sc$entity.getEntityId();
             id = companion._sc$ident;
+        }
+
+        static Object readObjectFromStream(EntityPlayer player, MCDataInput in) {
+            int entityID = in.readInt();
+            String id = in.readString();
+            Entity entity = player.worldObj.getEntityByID(entityID);
+            if (entity == null) {
+                return null;
+            }
+            return entity.getExtendedProperties(id);
         }
 
         @Override
@@ -314,17 +364,16 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
             if (entity instanceof EntityPlayerMP) {
                 NetworkImpl.sendRawPacket((EntityPlayerMP) entity, this);
             }
-
         }
 
-        public static Object readObjectFromStream(EntityPlayer player, MCDataInput in) {
-            int entityID = in.readInt();
-            String id = in.readString();
-            Entity entity = player.worldObj.getEntityByID(entityID);
-            if (entity == null) {
-                return null;
-            }
-            return entity.getExtendedProperties(id);
+        @Override
+        String type() {
+            return "EntityProperties";
+        }
+
+        @Override
+        Object data() {
+            return String.format("EntityID=%s, PropertyID=%s", entityID, id);
         }
     }
 }

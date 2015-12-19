@@ -35,11 +35,22 @@ abstract class ResponseHandler<P extends Packet.WithResponse<R>, R extends Packe
                 }
             }
         } else {
-            P packet = constructor.construct(in);
+            P packet;
+            try {
+                packet = constructor.construct(in);
+            } catch (Exception x) {
+                throw wrapConstructException(packetID, x);
+            }
             doHandle(player, packetID, channel, uniqueID, packet);
         }
     }
 
     abstract void doHandle(EntityPlayer player, int packetID, String channel, int responseID, P packet);
 
+    abstract Object handler();
+
+    @Override
+    public String toString() {
+        return String.format("Response packet handler (handler=%s, constructor=%s, responseConstructor=%s", handler(), constructor, responseConstructor);
+    }
 }

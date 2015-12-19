@@ -7,25 +7,25 @@ import net.minecraft.entity.player.EntityPlayer;
 /**
  * <p>Wrapper around a response "R".</p>
  */
-final class ResponseWrapper<R extends Packet.Response> implements BaseNettyPacket {
+final class WrappedResponsePacket<R extends Packet.Response> implements BaseNettyPacket {
 
-    private final R response;
-    private final int id;
-    private final int uniqueID;
+    private final R      response;
+    private final int    packetId;
+    private final int    uniqueId;
     private final String channel;
 
-    ResponseWrapper(R response, int id, int uniqueID, String channel) {
+    WrappedResponsePacket(R response, int packetId, int uniqueId, String channel) {
         this.response = response;
-        this.id = id;
-        this.uniqueID = uniqueID;
+        this.packetId = packetId;
+        this.uniqueId = uniqueId;
         this.channel = channel;
     }
 
     @Override
-    public byte[] _sc$encode() {
+    public byte[] _sc$encode() throws Exception {
         MCDataOutput out = Network.newOutput(response.expectedSize() + 5);
-        out.writeByte(id);
-        out.writeInt(ResponseSupport.toResponse(uniqueID));
+        out.writeByte(packetId);
+        out.writeInt(ResponseSupport.toResponse(uniqueId));
         response.writeTo(out);
         return out.toByteArray();
     }
@@ -41,5 +41,10 @@ final class ResponseWrapper<R extends Packet.Response> implements BaseNettyPacke
     @Override
     public String _sc$channel() {
         return channel;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Wrapped response packet (packet=%s, packetID=%s, responseId=%s, channel=%s", response, packetId, uniqueId, channel);
     }
 }

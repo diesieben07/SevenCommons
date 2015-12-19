@@ -21,4 +21,9 @@ final class ResponseFutureHandler<P extends Packet.WithResponse<R>, R extends Pa
         CompletionStage<? extends R> responseFuture = handler.handle(packet, player);
         responseFuture.thenAccept(response -> SimpleChannelBuilderImpl.sendResponse(response, player, packetID, responseID, channel));
     }
+
+    @Override
+    Object handler() {
+        return handler;
+    }
 }

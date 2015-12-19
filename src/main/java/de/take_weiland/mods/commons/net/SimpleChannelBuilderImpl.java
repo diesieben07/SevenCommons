@@ -130,6 +130,11 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
                         handler.accept(ModPacketChannelHandler.this.channel, packetID, in, player == null ? Players.getClient() : player);
                         return false;
                     }
+
+                    @Override
+                    public String toString() {
+                        return String.format("Sync execution of handler %s for packetID %s", handler, packetID);
+                    }
                 });
             }
         }
@@ -189,10 +194,14 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
 
         public abstract void accept(String channel, int packetID, MCDataInput in, EntityPlayer player);
 
+        protected static RuntimeException wrapConstructException(int packetID, Exception x) {
+            return new RuntimeException(String.format("Exception while constructing packet %s", packetID), x);
+        }
+
     }
 
     static <R extends Packet.Response> void sendResponse(R response, EntityPlayer player, int packetID, int responseID, String channel) {
-        BaseNettyPacket responseWrap = new ResponseWrapper<>(response, packetID, responseID, channel);
+        BaseNettyPacket responseWrap = new WrappedResponsePacket<>(response, packetID, responseID, channel);
 
         if (player.worldObj.isRemote) {
             NetworkImpl.sendRawPacketToServer(responseWrap);

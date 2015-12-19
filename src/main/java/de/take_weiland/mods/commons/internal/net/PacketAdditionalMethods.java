@@ -21,7 +21,7 @@ public interface PacketAdditionalMethods extends BaseNettyPacket, BaseModPacket 
     }
 
     @Override
-    default byte[] _sc$encode() {
+    default byte[] _sc$encode() throws Exception {
         return NetworkImpl.encodePacket((Packet) this, _sc$getData());
     }
 

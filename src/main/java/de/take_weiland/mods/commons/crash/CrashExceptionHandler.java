@@ -34,6 +34,11 @@ enum CrashExceptionHandler implements Thread.UncaughtExceptionHandler {
             public boolean run() {
                 throw JavaUtils.throwUnchecked(re);
             }
+
+            @Override
+            public String toString() {
+                return String.format("Main Thread exception thrower (exception=%s)", re);
+            }
         });
     }
 }

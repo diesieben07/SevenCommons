@@ -5,6 +5,7 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SchedulerBase;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
+import de.take_weiland.mods.commons.internal.SevenCommons;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -146,14 +147,19 @@ public abstract class Scheduler extends SchedulerBase {
         while (true) {
             SchedulerInternalTask next = curr.next;
 
-            if (curr.run()) {
-                if (rescheduleHead == null) {
-                    rescheduleHead = rescheduleTail = curr;
-                } else {
-                    curr.next = rescheduleHead;
-                    rescheduleHead = curr;
+            try {
+                if (curr.run()) {
+                    if (rescheduleHead == null) {
+                        rescheduleHead = rescheduleTail = curr;
+                    } else {
+                        curr.next = rescheduleHead;
+                        rescheduleHead = curr;
+                    }
                 }
+            } catch (Throwable x) {
+                SevenCommons.log.error(String.format("Exception thrown during execution of %s", curr));
             }
+
             if ((curr = next) == null) {
                 break;
             }
@@ -196,10 +202,7 @@ public abstract class Scheduler extends SchedulerBase {
 
         @Override
         public String toString() {
-            return "WaitingTask{" +
-                    "r=" + r +
-                    ", ticks=" + ticks +
-                    '}';
+            return String.format("Scheduled task (task=%s, remainingTicks=%s)", r, ticks);
         }
     }
 
@@ -218,9 +221,7 @@ public abstract class Scheduler extends SchedulerBase {
 
         @Override
         public String toString() {
-            return "WrappedTask{" +
-                    "task=" + task +
-                    '}';
+            return task.toString();
         }
     }
 
@@ -239,9 +240,7 @@ public abstract class Scheduler extends SchedulerBase {
 
         @Override
         public String toString() {
-            return "WrappedRunnable{" +
-                    "task=" + task +
-                    '}';
+            return task.toString();
         }
     }
 

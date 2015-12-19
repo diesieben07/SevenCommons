@@ -4,7 +4,7 @@ import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.PacketAdditionalMethods;
-import de.take_weiland.mods.commons.internal.net.WithResponseRequestNettyVersion;
+import de.take_weiland.mods.commons.internal.net.WrappedPacketWithResponse;
 import net.minecraft.entity.player.EntityPlayerMP;
 
 import java.lang.annotation.ElementType;
@@ -76,14 +76,14 @@ public interface Packet extends SimplePacket, PacketBase {
         @Override
         default CompletionStage<R> sendToServer() {
             CompletableFuture<R> future = new CompletableFuture<>();
-            NetworkImpl.sendRawPacketToServer(new WithResponseRequestNettyVersion<>(this, future));
+            NetworkImpl.sendRawPacketToServer(new WrappedPacketWithResponse<>(this, future));
             return future;
         }
 
         @Override
         default CompletionStage<R> sendTo(EntityPlayerMP player) {
             CompletableFuture<R> future = new CompletableFuture<>();
-            NetworkImpl.sendRawPacket(player, new WithResponseRequestNettyVersion<>(this, future));
+            NetworkImpl.sendRawPacket(player, new WrappedPacketWithResponse<>(this, future));
             return future;
         }
 
