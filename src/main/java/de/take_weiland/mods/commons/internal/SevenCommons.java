@@ -11,6 +11,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLStateEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import de.take_weiland.mods.commons.crash.Crashing;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoSuperCache;
 import de.take_weiland.mods.commons.internal.sync.SyncEvent;
@@ -174,6 +175,7 @@ public final class SevenCommons extends DummyModContainer {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("SevenCommonsPool %s")
                 .setDaemon(true)
+                .setUncaughtExceptionHandler(Crashing.mainThreadExceptionHandler())
                 .build();
 
         commonScheduler = new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);

@@ -25,6 +25,16 @@ public final class Crashing {
     }
 
     /**
+     * <p>An {@code UncaughtExceptionHandler} which will cause any uncaught exceptions to cause a CrashReport in the
+     * Minecraft main thread.</p>
+     *
+     * @return an UncaughtExceptionHandler
+     */
+    public static Thread.UncaughtExceptionHandler mainThreadExceptionHandler() {
+        return CrashExceptionHandler.INSTANCE;
+    }
+
+    /**
      * <p>Append the given Objects to the category with the given name. If the array contains a single {@code Callable}
      * it will be called for the actual value. Any Exception thrown during that process will be appended instead.
      * Otherwise the value will be converted to a String representation using

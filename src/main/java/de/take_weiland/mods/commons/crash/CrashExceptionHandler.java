@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.crash;
 
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
-import de.take_weiland.mods.commons.util.JavaUtils;
 import de.take_weiland.mods.commons.util.Scheduler;
 import de.take_weiland.mods.commons.util.Sides;
 import net.minecraft.crash.CrashReport;
@@ -32,7 +31,7 @@ enum CrashExceptionHandler implements Thread.UncaughtExceptionHandler {
         SchedulerInternalTask.execute(Scheduler.forSide(Sides.environment()), new SchedulerInternalTask() {
             @Override
             public boolean run() {
-                throw JavaUtils.throwUnchecked(re);
+                throw re;
             }
 
             @Override
