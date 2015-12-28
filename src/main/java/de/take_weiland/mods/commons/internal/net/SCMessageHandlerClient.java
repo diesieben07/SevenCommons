@@ -31,7 +31,7 @@ public final class SCMessageHandlerClient extends SCMessageHandler {
             if ((props & Network.ASYNC) != 0) {
                 packet._sc$handle(Players.getClient());
             } else {
-                SchedulerInternalTask.execute(Scheduler.client(), new SyncPacketExecClient(packet));
+                SchedulerInternalTask.add(Scheduler.client(), new SyncPacketExecClient(packet));
             }
         } else if (!(msg instanceof S3FPacketCustomPayload) || !NetworkImpl.handleClientCustomPacket((S3FPacketCustomPayload) msg, this)) {
             ctx.fireChannelRead(msg);
@@ -47,7 +47,7 @@ public final class SCMessageHandlerClient extends SCMessageHandler {
         }
 
         @Override
-        public boolean run() {
+        public boolean execute() {
             packet._sc$handle(Players.getClient());
             return false;
         }

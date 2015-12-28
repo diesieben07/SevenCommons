@@ -148,7 +148,7 @@ public abstract class Scheduler extends SchedulerBase {
             SchedulerInternalTask next = curr.next;
 
             try {
-                if (curr.run()) {
+                if (curr.execute()) {
                     if (rescheduleHead == null) {
                         rescheduleHead = rescheduleTail = curr;
                     } else {
@@ -176,7 +176,7 @@ public abstract class Scheduler extends SchedulerBase {
          *
          * @return true to keep executing
          */
-        boolean run();
+        boolean execute();
 
     }
 
@@ -191,7 +191,7 @@ public abstract class Scheduler extends SchedulerBase {
         }
 
         @Override
-        public boolean run() {
+        public boolean execute() {
             if (--ticks == 0) {
                 r.run();
                 return false;
@@ -215,8 +215,8 @@ public abstract class Scheduler extends SchedulerBase {
         }
 
         @Override
-        public boolean run() {
-            return task.run();
+        public boolean execute() {
+            return task.execute();
         }
 
         @Override
@@ -233,7 +233,7 @@ public abstract class Scheduler extends SchedulerBase {
         }
 
         @Override
-        public boolean run() {
+        public boolean execute() {
             task.run();
             return false;
         }

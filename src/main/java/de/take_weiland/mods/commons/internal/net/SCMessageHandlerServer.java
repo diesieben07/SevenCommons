@@ -33,7 +33,7 @@ public final class SCMessageHandlerServer extends SCMessageHandler {
             if ((props & Network.ASYNC) != 0) {
                 packet._sc$handle(player);
             } else {
-                SchedulerInternalTask.execute(Scheduler.server(), new SyncPacketExecServer(packet, this.player));
+                SchedulerInternalTask.add(Scheduler.server(), new SyncPacketExecServer(packet, this.player));
             }
         } else if (!(msg instanceof C17PacketCustomPayload) || !NetworkImpl.handleServerCustomPacket((C17PacketCustomPayload) msg, player, this)) {
             ctx.fireChannelRead(msg);
@@ -51,7 +51,7 @@ public final class SCMessageHandlerServer extends SCMessageHandler {
         }
 
         @Override
-        public boolean run() {
+        public boolean execute() {
             packet._sc$handle(player);
             return false;
         }

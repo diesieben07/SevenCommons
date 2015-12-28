@@ -17,9 +17,9 @@ public abstract class SchedulerInternalTask {
      *
      * @return true to keep executing this task next tick
      */
-    public abstract boolean run();
+    public abstract boolean execute();
 
-    public static void execute(Scheduler scheduler, SchedulerInternalTask task) {
+    public static void add(Scheduler scheduler, SchedulerInternalTask task) {
         ((SchedulerBase) scheduler).addTask(task);
     }
 

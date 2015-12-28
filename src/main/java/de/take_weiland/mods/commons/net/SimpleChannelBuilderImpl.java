@@ -124,9 +124,9 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
                 handler.accept(this.channel, packetID, in, player);
             } else {
                 Scheduler s = player == null || player.worldObj.isRemote ? Scheduler.client() : Scheduler.server();
-                SchedulerInternalTask.execute(s, new SchedulerInternalTask() {
+                SchedulerInternalTask.add(s, new SchedulerInternalTask() {
                     @Override
-                    public boolean run() {
+                    public boolean execute() {
                         handler.accept(ModPacketChannelHandler.this.channel, packetID, in, player == null ? Players.getClient() : player);
                         return false;
                     }

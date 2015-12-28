@@ -151,7 +151,7 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
 
     @Override
     public void _sc$handle(EntityPlayer player) {
-        SchedulerInternalTask.execute(Scheduler.client(), this);
+        SchedulerInternalTask.add(Scheduler.client(), this);
     }
 
     @Override
@@ -160,7 +160,7 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
     }
 
     @Override
-    public boolean run() {
+    public boolean execute() {
         try {
             SyncedObjectProxy obj = (SyncedObjectProxy) getObjectDirect(Players.getClient());
             if (obj != null) {

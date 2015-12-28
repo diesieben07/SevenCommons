@@ -179,11 +179,11 @@ public final class NetworkImpl {
                 handler.accept(channel, data, player, side);
             };
         } else if (!needCheckSide) {
-            return (channel, data, player, side) -> SchedulerInternalTask.execute(Scheduler.forSide(side), new ScheduledHandlerExecution(handler, channel, data, player, side));
+            return (channel, data, player, side) -> SchedulerInternalTask.add(Scheduler.forSide(side), new ScheduledHandlerExecution(handler, channel, data, player, side));
         } else {
             return (channel, data, player, side) -> {
                 checkSide(handler, side, characteristics);
-                SchedulerInternalTask.execute(Scheduler.forSide(side), new ScheduledHandlerExecution(handler, channel, data, player, side));
+                SchedulerInternalTask.add(Scheduler.forSide(side), new ScheduledHandlerExecution(handler, channel, data, player, side));
             };
         }
     }
@@ -211,7 +211,7 @@ public final class NetworkImpl {
         }
 
         @Override
-        public boolean run() {
+        public boolean execute() {
             handler.accept(channel, data, player, side);
             return false;
         }

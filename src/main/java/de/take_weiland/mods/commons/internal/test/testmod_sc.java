@@ -141,10 +141,10 @@ public class testmod_sc {
 
     @SubscribeEvent
     public void playerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        SchedulerInternalTask.execute(Scheduler.server(), new SchedulerInternalTask() {
+        SchedulerInternalTask.add(Scheduler.server(), new SchedulerInternalTask() {
 
             @Override
-            public boolean run() {
+            public boolean execute() {
                 System.out.println("tick");
                 return false;
             }
