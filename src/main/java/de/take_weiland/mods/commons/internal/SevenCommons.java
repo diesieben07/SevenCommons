@@ -6,24 +6,37 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import cpw.mods.fml.client.FMLFileResourcePack;
 import cpw.mods.fml.client.FMLFolderResourcePack;
+import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.*;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.event.FMLStateEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.crash.Crashing;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
+import de.take_weiland.mods.commons.internal.client.worldview.EmptyEntityRenderer;
+import de.take_weiland.mods.commons.internal.client.worldview.ViewEntity;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoSuperCache;
 import de.take_weiland.mods.commons.internal.sync.SyncEvent;
 import de.take_weiland.mods.commons.internal.sync.builtin.BuiltinSyncers;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.builtin.DefaultNBTSerializers;
+import de.take_weiland.mods.commons.internal.worldview.*;
 import de.take_weiland.mods.commons.net.ChannelHandler;
 import de.take_weiland.mods.commons.net.Network;
+import de.take_weiland.mods.commons.net.PacketHandler;
 import de.take_weiland.mods.commons.sync.Syncing;
 import de.take_weiland.mods.commons.util.Logging;
+import de.take_weiland.mods.commons.worldview.ClientChunks;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.launchwrapper.Launch;
+import net.minecraft.network.play.INetHandlerPlayClient;
+import net.minecraft.network.play.server.S21PacketChunkData;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -37,6 +50,21 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public final class SevenCommons extends DummyModContainer {
+
+    public static INetHandlerPlayClient replaceNetHandler(S21PacketChunkData packet, INetHandlerPlayClient nh) {
+        return packet.func_149274_i() && packet.func_149276_g() == 0 ? new NullClientHandler() : nh;
+    }
+
+    public static boolean logChunk(S21PacketChunkData packet) {
+        int x = packet.func_149273_e();
+        int z = packet.func_149271_f();
+        boolean reqinit = packet.func_149274_i();
+        int layers = packet.func_149276_g();
+        if (x == 0 && z == 0) {
+            System.out.println("chunk packet on client @[" + x + ", " + z + "], init=" + reqinit + ", layers=" + layers);
+        }
+        return false;
+    }
 
     public static final Logger log = Logging.getLogger("SevenCommons");
 
@@ -94,6 +122,9 @@ public final class SevenCommons extends DummyModContainer {
         try {
             proxy = new ClientProxy();
             clientMainThreadID = Thread.currentThread().getId();
+
+            RenderingRegistry.registerEntityRenderingHandler(ViewEntity.class, new EmptyEntityRenderer());
+
             universalPreInit(event);
         } catch (Throwable e) {
             e.printStackTrace();
@@ -127,6 +158,11 @@ public final class SevenCommons extends DummyModContainer {
                 .register(0, PacketContainerButton::new, PacketContainerButton::handle)
                 .register(1, PacketInventoryName::new, PacketInventoryName::handle)
                 .register(2, PacketItemInvUUID::new, PacketItemInvUUID::handle)
+                .register(3, PacketChunkData::new, proxy::handleChunkDataPacket)
+                .register(4, PacketRequestView::new, PacketRequestView::handle)
+                .register(5, PacketBlockChange::new, proxy::handleBlockChangePacket)
+                .register(6, PacketChunkUnload::new, proxy::handleChunkUnloadPacket)
+                .register(7, PacketRequestWorldInfo::new, PacketWorldInfo::new, (PacketHandler.WithResponse<PacketRequestWorldInfo, PacketWorldInfo>) PacketRequestWorldInfo::handle)
                 .build();
 
         Network.registerHandler(SyncEvent.CHANNEL, new ChannelHandler() {
@@ -205,6 +241,71 @@ public final class SevenCommons extends DummyModContainer {
     @Override
     public Class<?> getCustomResourcePackClass() {
         return getSource().isDirectory() ? FMLFolderResourcePack.class : FMLFileResourcePack.class;
+    }
+
+    @Subscribe
+    public void onServerStart(FMLServerStartingEvent event) {
+        event.registerServerCommand(new CommandBase() {
+            @Override
+            public String getCommandName() {
+                return "loadchunk";
+            }
+
+            @Override
+            public String getCommandUsage(ICommandSender sender) {
+                return "loadchunk <dim> <x>, <z>, <radius> [\"un\"]";
+            }
+
+            @Override
+            public void processCommand(ICommandSender sender, String[] args) {
+                if (args.length != 4 && args.length != 5) {
+                    throw new CommandException("Invalid number of args");
+                }
+
+                int dim = parseInt(sender, args[0]);
+                int x = parseInt(sender, args[1]);
+                int z = parseInt(sender, args[2]);
+                int r = parseInt(sender, args[3]);
+                boolean un = args.length == 5 && args[4].equalsIgnoreCase("un");
+
+                EntityPlayerMP player = getCommandSenderAsPlayer(sender);
+                for (int x0 = x - r; x0 <= x + r; x0++) {
+                    for (int z0 = z - r; z0 <= z + r; z0++) {
+                        if (un) {
+                            ClientChunks.unloadChunk(player, dim, x0, z0);
+                        } else {
+                            ClientChunks.loadChunk(player, dim, x0, z0);
+                        }
+                    }
+                }
+            }
+        });
+
+        event.registerServerCommand(new CommandBase() {
+            @Override
+            public String getCommandName() {
+                return "blockupdate";
+            }
+
+            @Override
+            public String getCommandUsage(ICommandSender sender) {
+                return "blockupdate <x>, <y>, <z>";
+            }
+
+            @Override
+            public void processCommand(ICommandSender sender, String[] args) {
+                if (args.length != 3) {
+                    throw new CommandException("Invalid number of args");
+                }
+
+                int x = parseInt(sender, args[0]);
+                int y = parseInt(sender, args[1]);
+                int z = parseInt(sender, args[2]);
+
+                getCommandSenderAsPlayer(sender).worldObj.markBlockForUpdate(x, y, z);
+            }
+        });
+
     }
 
     @Subscribe

@@ -4,7 +4,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Collections2;
 import com.mojang.authlib.GameProfile;
 import de.take_weiland.mods.commons.asm.MCPNames;
-import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.PlayerManagerProxy;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.UsernameCache;
@@ -168,12 +168,8 @@ public final class Players {
         if (world.isRemote) {
             throw new IllegalArgumentException("Cannot get tracking players on the client");
         }
-        Object playerInstance = SCReflector.instance.getPlayerInstance(((WorldServer) world).getPlayerManager(), chunkX, chunkZ, false);
-        if (playerInstance == null) {
-            return Collections.emptyList();
-        } else {
-            return SCReflector.instance.getWatchers(playerInstance);
-        }
+        PlayerManagerProxy.PlayerInstanceAdapter chunkInstance = ((PlayerManagerProxy) ((WorldServer) world).getPlayerManager())._sc$getPlayerInstance(chunkX, chunkZ, false);
+        return chunkInstance == null ? Collections.emptyList() : chunkInstance._sc$getPlayersWatching();
     }
 
     /**

@@ -1,9 +1,11 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataInput;
+import de.take_weiland.mods.commons.Unsafe;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.ChunkPosition;
@@ -11,6 +13,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.DataInput;
 import java.io.InputStream;
 import java.nio.channels.ReadableByteChannel;
 import java.util.BitSet;
@@ -23,12 +26,28 @@ import java.util.UUID;
  * <p>This interface is mostly intended for network communication purposes and <i>not</i> for reading data from disk.
  * Additionally this interface specifies <b>Little Endian</b> byte order, violating the contract of the DataInput interface,
  * to offer better performance on most systems.</p>
- * <p>Instances of this interfaces can be obtained using {@link Network#newDataInput(byte[])}.</p>
+ * <p>Instances of this interfaces can be obtained using {@link Network#newInput(byte[])}.</p>
  *
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
 public interface MCDataInput extends ByteArrayDataInput {
+
+    /**
+     * <p>Return the array backing this stream. Any modification in the returned array will be reflected in the contents
+     * of this stream.</p>
+     *
+     * @return the array backing this buffer
+     */
+    @Unsafe
+    byte[] backingArray();
+
+    /**
+     * <p>Starting position in the backing array.</p>
+     *
+     * @return the starting position
+     */
+    int arrayOffset();
 
     /**
      * <p>Set the byte position pointer of this stream.</p>
@@ -132,7 +151,7 @@ public interface MCDataInput extends ByteArrayDataInput {
      * <p>This method first reads a byte, specifying the type of the next tag ({@link net.minecraft.nbt.NBTBase#getId()}).
      * If the first ID is -1, null is returned. If the ID is 0, the method returns the NBTTagCompound. Otherwise a String
      * is read as if by the {@link #readString()} method and then tag's data is read, via the
-     * {@link net.minecraft.nbt.NBTBase#load(java.io.DataInput, int)} method.</p>
+     * {@link net.minecraft.nbt.NBTBase#read(DataInput, int, NBTSizeTracker)} method.</p>
      *
      * @return an NBTTagCompound or null
      */

@@ -64,6 +64,16 @@ final class MCDataInputImpl extends InputStream implements MCDataInput, Readable
     }
 
     @Override
+    public byte[] backingArray() {
+        return buf;
+    }
+
+    @Override
+    public int arrayOffset() {
+        return initialPos;
+    }
+
+    @Override
     public int pos() {
         return pos - initialPos;
     }

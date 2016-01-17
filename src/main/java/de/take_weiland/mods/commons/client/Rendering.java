@@ -1,8 +1,15 @@
 package de.take_weiland.mods.commons.client;
 
+import com.google.common.base.Throwables;
+import de.take_weiland.mods.commons.asm.MCPNames;
+import de.take_weiland.mods.commons.client.worldview.WorldView;
 import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.SRGConstants;
+import de.take_weiland.mods.commons.internal.client.worldview.WorldViewImpl;
+import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.ITextureObject;
@@ -10,12 +17,18 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Timer;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 
 import javax.annotation.Nullable;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static net.minecraft.client.Minecraft.getMinecraft;
 import static net.minecraftforge.common.util.ForgeDirection.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -25,6 +38,53 @@ import static org.lwjgl.opengl.GL11.*;
  * @author diesieben07
  */
 public final class Rendering {
+
+    /**
+     * <p>Create a new world view with the given properties.</p>
+     *
+     * @param frameskip number of frames to skip between rendering, -1 to disable continuous rendering
+     * @param texWidth  texture width of the view
+     * @param texHeight texture height of the view
+     * @param dimension dimension ID for the view
+     * @param x         x position of the camera
+     * @param y         y position of the camera
+     * @param z         z position of the camera
+     * @param pitch     pitch of the camera
+     * @param yaw       yaw of the camera
+     * @return a new WorldView
+     */
+    public static WorldView newWorldView(int frameskip, int texWidth, int texHeight, int dimension, double x, double y, double z, float pitch, float yaw) {
+        if (getMinecraft().thePlayer == null) {
+            throw new IllegalStateException("No client world loaded");
+        }
+        checkArgument(frameskip >= -1);
+        return WorldViewImpl.create(frameskip, texWidth, texHeight, dimension, x, y, z, pitch, yaw);
+    }
+
+    private static final MethodHandle timerGet;
+
+    static {
+        try {
+            Field field = Minecraft.class.getDeclaredField(MCPNames.field(SRGConstants.F_MINECRAFT_TIMER));
+            field.setAccessible(true);
+            timerGet = MethodHandles.publicLookup().unreflectGetter(field);
+        } catch (Exception x) {
+            throw Throwables.propagate(x);
+        }
+    }
+
+    /**
+     * <p>Get the current render partial tick value.</p>
+     *
+     * @return the render partial tick value
+     */
+    public static float getPartialTicks() {
+        try {
+            return ((Timer) timerGet.invokeExact(getMinecraft())).renderPartialTicks;
+        } catch (Throwable x) {
+            throw JavaUtils.throwUnchecked(x);
+        }
+    }
 
     /**
      * <p>Fills a specified area on the screen with the provided {@link net.minecraft.util.IIcon Icon}.</p>
@@ -113,7 +173,7 @@ public final class Rendering {
      * @param fullHeight   the height of the rectangle when the tank is full
      */
     public static void drawFluidStack(@Nullable FluidStack fluidStack, int tankCapacity, int x, int y, int width, int fullHeight) {
-        TextureManager renderEngine = Minecraft.getMinecraft().renderEngine;
+        TextureManager renderEngine = getMinecraft().renderEngine;
 
         if (fluidStack != null) {
             Fluid fluid = fluidStack.getFluid();
@@ -137,7 +197,7 @@ public final class Rendering {
      * @param height       the height of the rectangle
      */
     public static void drawFluidStackHorizontal(@Nullable FluidStack fluidStack, int tankCapacity, int x, int y, int fullWidth, int height) {
-        TextureManager renderEngine = Minecraft.getMinecraft().renderEngine;
+        TextureManager renderEngine = getMinecraft().renderEngine;
 
         if (fluidStack != null) {
             Fluid fluid = fluidStack.getFluid();
@@ -641,14 +701,15 @@ public final class Rendering {
      * @param loc the ResourceLocation
      */
     public static void unloadTexture(ResourceLocation loc) {
-        ITextureObject tex = SCReflector.instance.getTexturesMap(Minecraft.getMinecraft().renderEngine).remove(loc);
+        ITextureObject tex = SCReflector.instance.getTexturesMap(getMinecraft().renderEngine).remove(loc);
         if (tex != null) {
             glDeleteTextures(tex.getGlTextureId());
         }
     }
 
     private static float getZLevel() {
-        return SCReflector.instance.getZLevel(Minecraft.getMinecraft().currentScreen);
+        GuiScreen screen = getMinecraft().currentScreen;
+        return screen == null ? 0 : SCReflector.instance.getZLevel(screen);
     }
 
     private Rendering() {

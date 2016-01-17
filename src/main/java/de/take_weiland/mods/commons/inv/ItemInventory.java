@@ -31,7 +31,7 @@ public class ItemInventory implements SimpleInventory, NameableInventory, Player
 
     static final String NBT_UUID_KEY = "_sc$iteminv$uuid";
 
-    UUID uuid;
+    private UUID uuid;
 
     /**
      * <p>The ItemStack that contains this inventory.</p>

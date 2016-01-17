@@ -2,7 +2,10 @@ package de.take_weiland.mods.commons.internal.transformers;
 
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
+import de.take_weiland.mods.commons.internal.ChunkProxy;
+import de.take_weiland.mods.commons.internal.EntityPlayerMPProxy;
 import de.take_weiland.mods.commons.internal.SRGConstants;
+import de.take_weiland.mods.commons.internal.WorldServerProxy;
 import de.take_weiland.mods.commons.internal.net.BaseModPacket;
 import de.take_weiland.mods.commons.internal.net.PacketAdditionalMethods;
 import de.take_weiland.mods.commons.internal.net.RawPacketAdditionalMethods;
@@ -31,10 +34,19 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(ContainerSlotDrawHook::new, "net/minecraft/client/gui/inventory/GuiContainer");
         addEntry(IIconHook::new, "net/minecraft/util/IIcon");
         addEntry(cv -> new InterfaceAdder(cv, "de/take_weiland/mods/commons/client/icon/IconProviderAdd"), "de/take_weiland/mods/commons/client/icon/IconProvider");
+        addEntry(PlayerManagerHook::new, PlayerManagerHook.PLAYER_MANAGER_CLASS);
+        addEntry(PlayerManagerHook.PlayerInstanceHook::new, PlayerManagerHook.PLAYER_INSTANCE_CLASS);
+        addEntry(WorldHook::new, WorldHook.WORLD_CLASS_NAME);
+
+        addEntry(FieldAdder.cstr(ChunkProxy.class), "net/minecraft/world/chunk/Chunk");
+        addEntry(FieldAdder.cstr(WorldServerProxy.class), "net/minecraft/world/WorldServer");
+        addEntry(FieldAdder.cstr(EntityPlayerMPProxy.class), "net/minecraft/entity/player/EntityPlayerMP");
 
         if (FMLLaunchHandler.side().isClient()) {
             addEntry(GuiScreenHooks::new, "net/minecraft/client/gui/GuiScreen");
             addEntry(RenderBlocksHook::new, "net/minecraft/client/renderer/RenderBlocks");
+            addEntry(EntityRendererHook::new, EntityRendererHook.ENTITY_RENDERER_CLASS);
+            addEntry(MinecraftHook::new, MinecraftHook.MINECRAFT_CLASS);
         }
 
         // @Sync hooks

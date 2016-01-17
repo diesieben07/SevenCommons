@@ -10,10 +10,12 @@ import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+import de.take_weiland.mods.commons.client.Rendering;
 import de.take_weiland.mods.commons.client.icon.IconManager;
 import de.take_weiland.mods.commons.client.icon.IconManagerBuilder;
 import de.take_weiland.mods.commons.client.icon.Icons;
 import de.take_weiland.mods.commons.client.icon.RotatedDirection;
+import de.take_weiland.mods.commons.client.worldview.WorldView;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketConstructor;
@@ -23,6 +25,9 @@ import de.take_weiland.mods.commons.util.Retries;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -36,6 +41,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -45,6 +51,8 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
+
+import static net.minecraft.client.Minecraft.getMinecraft;
 
 @Mod(modid = "testmod_sc", name = "testmod_sc", version = "0.1", dependencies = "required-after:sevencommons")
 @GameRegistry.ObjectHolder("testmod_sc")
@@ -166,6 +174,31 @@ public class testmod_sc {
 //                });
 //            });
 //        }
+    }
+
+    WorldView view;
+
+    @SubscribeEvent
+    public void onGuiOverlay(RenderGameOverlayEvent.Post event) {
+        if (getMinecraft().theWorld != null && event.type == RenderGameOverlayEvent.ElementType.ALL) {
+            if (view == null) {
+                view = Rendering.newWorldView(0, 64, 64, 0, 0, 65, 0, 90, 0);
+            } else {
+                view.bindTexture();
+
+                int y = new ScaledResolution(getMinecraft(), getMinecraft().displayWidth, getMinecraft().displayHeight).getScaledHeight() - 74;
+                Tessellator t = Tessellator.instance;
+                t.startDrawingQuads();
+                t.addVertexWithUV(10, y + 64, (float) 0, 0, 0);
+                t.addVertexWithUV(10 + 64, y + 64, (float) 0, 1, 0);
+                t.addVertexWithUV(10 + 64, y, (float) 0, 1, 1);
+                t.addVertexWithUV(10, y, (float) 0, 0, 1);
+                t.draw();
+
+                EntityClientPlayerMP player = getMinecraft().thePlayer;
+//                view.setPosition(0, 60, 0, 90, 0);
+            }
+        }
     }
 
 
