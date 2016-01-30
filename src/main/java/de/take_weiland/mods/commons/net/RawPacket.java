@@ -35,16 +35,6 @@ public interface RawPacket extends SimplePacket {
     String channel();
 
     /**
-     * <p>Encode this packet into bytes when sent from server to a client. This method defaults to {@link #encode()}.</p>
-     *
-     * @param player the player
-     * @return the bytes
-     */
-    default byte[] encodeToPlayer(EntityPlayerMP player) {
-        return encode();
-    }
-
-    /**
      * <p>A bitmap describing characteristics for this packet.</p>
      * <p>This may be a bitwise-or combination of one or more of {@link Network#ASYNC}, {@link Network#CLIENT}
      * and {@link Network#SERVER}.</p>
@@ -67,4 +57,5 @@ public interface RawPacket extends SimplePacket {
     default void sendTo(EntityPlayerMP player) {
         NetworkImpl.sendRawPacket(player, (BaseNettyPacket) this);
     }
+
 }

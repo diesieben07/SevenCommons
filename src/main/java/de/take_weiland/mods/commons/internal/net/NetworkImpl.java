@@ -17,7 +17,9 @@ import io.netty.channel.ChannelPromise;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.INetHandler;
 import net.minecraft.network.NetHandlerPlayServer;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.client.C17PacketCustomPayload;
 import net.minecraft.network.play.server.S3FPacketCustomPayload;
 import org.apache.logging.log4j.Logger;
@@ -235,7 +237,7 @@ public final class NetworkImpl {
         ChannelPipeline pipeline = handler.netManager.channel().pipeline();
 
         if (!event.isLocal) {
-            insertEncoder(pipeline, new ToClientEncoder(handler.playerEntity));
+            insertEncoder(pipeline, ToClientEncoder.INSTANCE);
         }
 
         insertHandler(pipeline, new SCMessageHandlerServer(handler.playerEntity));
@@ -283,5 +285,53 @@ public final class NetworkImpl {
         SevenCommons.proxy.getClientNetworkManager().channel()
                 .writeAndFlush(packet)
                 .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    }
+
+    public static net.minecraft.network.Packet createVanillaWrapper(BaseNettyPacket packet) {
+        return new VanillaWrapper(packet);
+    }
+
+    private static final class VanillaWrapper extends net.minecraft.network.Packet implements BaseNettyPacket {
+
+        private final BaseNettyPacket wrapped;
+
+        VanillaWrapper(BaseNettyPacket wrapped) {
+            this.wrapped = wrapped;
+        }
+
+        @Override
+        public byte _sc$characteristics() {
+            return wrapped._sc$characteristics();
+        }
+
+        @Override
+        public byte[] _sc$encode() throws Exception {
+            return wrapped._sc$encode();
+        }
+
+        @Override
+        public String _sc$channel() {
+            return wrapped._sc$channel();
+        }
+
+        @Override
+        public void _sc$handle(EntityPlayer player) {
+            wrapped._sc$handle(player);
+        }
+
+        @Override
+        public void readPacketData(PacketBuffer data) throws IOException {
+
+        }
+
+        @Override
+        public void writePacketData(PacketBuffer data) throws IOException {
+
+        }
+
+        @Override
+        public void processPacket(INetHandler handler) {
+
+        }
     }
 }

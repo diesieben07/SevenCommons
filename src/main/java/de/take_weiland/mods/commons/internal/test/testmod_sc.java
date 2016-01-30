@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.test;
 
-import com.google.common.collect.FluentIterable;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -14,7 +13,6 @@ import de.take_weiland.mods.commons.client.Rendering;
 import de.take_weiland.mods.commons.client.icon.IconManager;
 import de.take_weiland.mods.commons.client.icon.IconManagerBuilder;
 import de.take_weiland.mods.commons.client.icon.Icons;
-import de.take_weiland.mods.commons.client.icon.RotatedDirection;
 import de.take_weiland.mods.commons.client.worldview.WorldView;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
@@ -38,18 +36,18 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
@@ -93,6 +91,14 @@ public class testmod_sc {
         Network.newSimpleChannel("testmod")
                 .register(0, (PacketConstructor<TestPacket>) TestPacket::new, (PacketConstructor<TestResponse>) TestResponse::new, (PacketHandler.WithResponse.IncludingSide<TestPacket, TestResponse>) (packet, player, side) -> new TestResponse(packet.s))
                 .build();
+
+        ForgeChunkManager.setForcedChunkLoadingCallback(this, new ForgeChunkManager.LoadingCallback() {
+            @Override
+            public void ticketsLoaded(List<ForgeChunkManager.Ticket> tickets, World world) {
+
+            }
+        });
+
     }
 
     @Mod.EventHandler
@@ -120,9 +126,6 @@ public class testmod_sc {
 
                         EntityPlayer player = getCommandSenderAsPlayer(sender);
                         Chunk chunk = player.worldObj.getChunkFromBlockCoords((int) player.posX, (int) player.posZ);
-                        for (TestTE te : FluentIterable.from((Collection<TileEntity>) chunk.chunkTileEntityMap.values()).filter(TestTE.class)) {
-                            te.rotMeta = block.icons.getMeta(dir.ordinal(), rot);
-                        }
                     } catch (NumberFormatException nfe) {
                         throw new CommandException("Invalid number");
                     } catch (IllegalArgumentException e) {
@@ -182,16 +185,17 @@ public class testmod_sc {
     public void onGuiOverlay(RenderGameOverlayEvent.Post event) {
         if (getMinecraft().theWorld != null && event.type == RenderGameOverlayEvent.ElementType.ALL) {
             if (view == null) {
-                view = Rendering.newWorldView(0, 64, 64, 0, 0, 65, 0, 90, 0);
+                view = Rendering.newWorldView(0, 256, 256, 0, 0, 65, 0, 90, 0);
             } else {
                 view.bindTexture();
 
-                int y = new ScaledResolution(getMinecraft(), getMinecraft().displayWidth, getMinecraft().displayHeight).getScaledHeight() - 74;
+                int screenSize = 100;
+                int y = new ScaledResolution(getMinecraft(), getMinecraft().displayWidth, getMinecraft().displayHeight).getScaledHeight() - screenSize - 10;
                 Tessellator t = Tessellator.instance;
                 t.startDrawingQuads();
-                t.addVertexWithUV(10, y + 64, (float) 0, 0, 0);
-                t.addVertexWithUV(10 + 64, y + 64, (float) 0, 1, 0);
-                t.addVertexWithUV(10 + 64, y, (float) 0, 1, 1);
+                t.addVertexWithUV(10, y + screenSize, (float) 0, 0, 0);
+                t.addVertexWithUV(10 + screenSize, y + screenSize, (float) 0, 1, 0);
+                t.addVertexWithUV(10 + screenSize, y, (float) 0, 1, 1);
                 t.addVertexWithUV(10, y, (float) 0, 0, 1);
                 t.draw();
 
@@ -225,13 +229,6 @@ public class testmod_sc {
                     side = ForgeDirection.getOrientation(side).getOpposite().ordinal();
                 }
 
-                TestTE te = (TestTE) world.getTileEntity(x, y, z);
-                RotatedDirection front = icons.getFront(te.rotMeta);
-                if (front.getDirection().ordinal() == side) {
-                    te.rotMeta = icons.getMeta(front.getDirection().ordinal(), (front.getRotation() + 1) & 3);
-                } else {
-                    te.rotMeta = icons.getMeta(side, 0);
-                }
             }
             return true;
         }
@@ -242,14 +239,8 @@ public class testmod_sc {
         }
 
         @Override
-        public IIcon getIcon(IBlockAccess world, int x, int y, int z, int side) {
-            return icons.getIcon(world, x, y, z, side, ((TestTE) world.getTileEntity(x, y, z)).rotMeta);
-        }
-
-        @Override
         public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase placer, ItemStack itemIn) {
             super.onBlockPlacedBy(world, x, y, z, placer, itemIn);
-            ((TestTE) world.getTileEntity(x, y, z)).rotMeta = icons.getMeta(placer);
         }
 
         IconManager icons;

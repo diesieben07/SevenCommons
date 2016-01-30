@@ -27,7 +27,7 @@ public final class FMLEventHandler {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public void renderTick(TickEvent.RenderTickEvent event) {
-        if (getMinecraft().theWorld != null && event.phase == TickEvent.Phase.START) {
+        if (getMinecraft().theWorld != null && event.phase == TickEvent.Phase.END) {
             WorldViewImpl.renderAll();
         }
     }
@@ -101,6 +101,7 @@ public final class FMLEventHandler {
     public void clientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             ((SchedulerBase) Scheduler.client()).tick();
+            WorldViewImpl.tick();
         }
     }
 

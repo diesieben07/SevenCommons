@@ -28,6 +28,10 @@ import java.util.function.Predicate;
  */
 public interface SimplePacket {
 
+    static SimplePacket wrap(net.minecraft.network.Packet packet) {
+        return (SimplePacket) packet;
+    }
+
     /**
      * <p>Send this packet to the server. This method must only be called from the client thread.</p>
      */
@@ -239,7 +243,6 @@ public interface SimplePacket {
         sendTo(Iterables.filter(SCReflector.instance.getCrafters(c), EntityPlayerMP.class));
     }
 
-
     /**
      * <p>A version of {@link SimplePacket} with a Response.</p>
      * <p>A response is supplied in form of a {@link CompletionStage CompletionStage&lt;R&gt;} or in case of a method that sends to
@@ -258,6 +261,8 @@ public interface SimplePacket {
              */
             return (SimplePacket) this;
         }
+
+        net.minecraft.network.Packet toVanillaPacket();
 
         /**
          * <p>Send this packet to the server. This method must only be called from the client thread.</p>

@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.net;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.net.Network;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 
 import javax.annotation.Nonnull;
 
@@ -28,10 +27,6 @@ public interface BaseNettyPacket {
 
     default byte _sc$characteristics() {
         return Network.BIDIRECTIONAL;
-    }
-
-    default byte[] _sc$encodeToPlayer(EntityPlayerMP player) throws Exception {
-        return _sc$encode();
     }
 
 }

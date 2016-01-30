@@ -14,6 +14,7 @@ import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithRe
 import de.take_weiland.mods.commons.internal.transformers.sync.*;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.EntityNBTHook;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.TileEntityNBTHook;
+import de.take_weiland.mods.commons.internal.worldview.VanillaPacketProxy;
 import org.objectweb.asm.ClassVisitor;
 
 import java.util.function.Predicate;
@@ -42,11 +43,19 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(FieldAdder.cstr(WorldServerProxy.class), "net/minecraft/world/WorldServer");
         addEntry(FieldAdder.cstr(EntityPlayerMPProxy.class), "net/minecraft/entity/player/EntityPlayerMP");
 
+        addEntry(FieldAdder.cstr(VanillaPacketProxy.class), PacketEncoderHook.PACKET);
+        addEntry(cv -> new InterfaceAdder(cv, "de/take_weiland/mods/commons/internal/VanillaSimplePacketShim"), PacketEncoderHook.PACKET);
+        addEntry(ServerConfigManagerHook::new, "net/minecraft/server/management/ServerConfigurationManager");
+
+        addEntry(PacketEncoderHook::new, PacketEncoderHook.MESSAGE_SERIALIZER);
+        addEntry(PacketDecoderHook::new, PacketDecoderHook.MESSAGE_DESERIALIZER);
+
         if (FMLLaunchHandler.side().isClient()) {
             addEntry(GuiScreenHooks::new, "net/minecraft/client/gui/GuiScreen");
             addEntry(RenderBlocksHook::new, "net/minecraft/client/renderer/RenderBlocks");
             addEntry(EntityRendererHook::new, EntityRendererHook.ENTITY_RENDERER_CLASS);
             addEntry(MinecraftHook::new, MinecraftHook.MINECRAFT_CLASS);
+            addEntry(NetworkManagerHook::new, "net/minecraft/network/NetworkManager");
         }
 
         // @Sync hooks

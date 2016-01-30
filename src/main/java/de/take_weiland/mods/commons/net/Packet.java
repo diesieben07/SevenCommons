@@ -87,6 +87,10 @@ public interface Packet extends SimplePacket, PacketBase {
             return future;
         }
 
+        @Override
+        default net.minecraft.network.Packet toVanillaPacket() {
+            return NetworkImpl.createVanillaWrapper(new WrappedPacketWithResponse<>(this, new CompletableFuture<>()));
+        }
     }
     /**
      * <p>The response for a {@code Packet.WithResponse}.</p>

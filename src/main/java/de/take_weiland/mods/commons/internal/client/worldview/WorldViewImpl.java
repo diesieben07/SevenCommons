@@ -1,19 +1,23 @@
 package de.take_weiland.mods.commons.internal.client.worldview;
 
+import cpw.mods.fml.relauncher.ReflectionHelper;
 import de.take_weiland.mods.commons.client.worldview.WorldView;
 import de.take_weiland.mods.commons.internal.EntityRendererProxy;
 import de.take_weiland.mods.commons.internal.worldview.PacketRequestWorldInfo;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
-import org.lwjgl.BufferUtils;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +25,7 @@ import java.util.Map;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.*;
 
 /**
  * @author diesieben07
@@ -35,16 +40,28 @@ public final class WorldViewImpl implements WorldView {
     private       EntityLivingBase viewport;
     private       long             renderEndNanoTime;
 
-    private       int texture;
-    private final int width, height;
+    private       int    texture;
+    private       int    frameBuffer;
+    private final int    renderBuffer;
+    private final int    width;
+    private final int    height;
     private final int    dimension;
     private       double x, y, z;
     private float pitch, yaw;
 
     public static WorldViewImpl create(int frameskip, int width, int height, int dimension, double x, double y, double z, float pitch, float yaw) {
+        int frameBuf = glGenFramebuffers();
+        glBindFramebuffer(GL_FRAMEBUFFER, frameBuf);
         int texture = genTexture(width, height);
 
-        WorldViewImpl view = new WorldViewImpl(texture, width, height, dimension, x, y, z, pitch, yaw);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+        int renderBuf = glGenRenderbuffers();
+        glBindRenderbuffer(GL_RENDERBUFFER, renderBuf);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuf);
+
+        WorldViewImpl view = new WorldViewImpl(texture, frameBuf, renderBuf, width, height, dimension, x, y, z, pitch, yaw);
         getViews(dimension).add(view);
 
         WorldClient world = clientWorlds.get(dimension);
@@ -72,6 +89,20 @@ public final class WorldViewImpl implements WorldView {
             setWorld(dimension, world);
         }
         return world;
+    }
+
+    public static void tick() {
+        if (getMinecraft().theWorld != null && !getMinecraft().isGamePaused()) {
+            clientWorlds.forEach((id, world) -> {
+                WorldClient mainWorld = getMinecraft().theWorld;
+                if (world != mainWorld) {
+                    getMinecraft().theWorld = world;
+                    world.tick();
+
+                    getMinecraft().theWorld = mainWorld;
+                }
+            });
+        }
     }
 
     public static final String SET_CLIENT_WORLD = "setMainClientWorld";
@@ -125,6 +156,8 @@ public final class WorldViewImpl implements WorldView {
 
         RenderGlobal renderGlobalBackup = mc.renderGlobal;
         EntityLivingBase viewportBackup = mc.renderViewEntity;
+        WorldClient worldBackup = mc.theWorld;
+        EffectRenderer effectRendererBackup = mc.effectRenderer;
         int heightBackup = mc.displayHeight;
         int widthBackup = mc.displayWidth;
         int thirdPersonBackup = settings.thirdPersonView;
@@ -144,15 +177,29 @@ public final class WorldViewImpl implements WorldView {
         ((EntityRendererProxy) entityRenderer)._sc$setFovModifierHand(1F);
         ((EntityRendererProxy) entityRenderer)._sc$setFovModifierHandPrev(1F);
 
+        mc.theWorld = getOrCreateWorld(dimension);
+        RenderManager.instance.set(mc.theWorld);
+
+        mc.effectRenderer = new EffectRenderer(mc.theWorld, mc.renderEngine);
+
+        mc.entityRenderer.updateRenderer();
+        mc.renderGlobal.updateClouds();
+        mc.theWorld.doVoidFogParticles(MathHelper.floor_double(mc.renderViewEntity.posX), MathHelper.floor_double(mc.renderViewEntity.posY), MathHelper.floor_double(mc.renderViewEntity.posZ));
+        mc.effectRenderer.updateEffects();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
         int fps = mc.gameSettings.limitFramerate;
         if (mc.isFramerateLimitBelowMax()) {
-            entityRenderer.renderWorld(partialTicks, 0L);
+            entityRenderer.renderWorld(partialTicks, ernanotime(entityRenderer) + 1000000000 / fps);
         } else {
-            entityRenderer.renderWorld(partialTicks, renderEndNanoTime + (1000000000 / fps));
+            entityRenderer.renderWorld(partialTicks, 0L);
         }
 
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, width, height, 0);
+//        glBindTexture(GL_TEXTURE_2D, texture);
+//        glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, width, height, 0);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         renderEndNanoTime = System.nanoTime();
 
@@ -166,6 +213,16 @@ public final class WorldViewImpl implements WorldView {
         mc.displayWidth = widthBackup;
         mc.renderGlobal = renderGlobalBackup;
         mc.renderViewEntity = viewportBackup;
+        mc.theWorld = worldBackup;
+        mc.effectRenderer = effectRendererBackup;
+
+        RenderManager.instance.set(worldBackup);
+        mc.entityRenderer.updateRenderer();
+    }
+
+
+    private static long ernanotime(EntityRenderer er) {
+        return ReflectionHelper.getPrivateValue(EntityRenderer.class, er, "renderEndNanoTime");
     }
 
     private static int genTexture(int width, int height) {
@@ -174,7 +231,7 @@ public final class WorldViewImpl implements WorldView {
             throw new RuntimeException("failed to generate new GL texture"); // 0 is default texture
         }
         glBindTexture(GL_TEXTURE_2D, id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, BufferUtils.createByteBuffer(3 * width * height));
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, (ByteBuffer) null);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -186,8 +243,10 @@ public final class WorldViewImpl implements WorldView {
         return views.computeIfAbsent(dimension, x -> new ArrayList<>());
     }
 
-    private WorldViewImpl(int texture, int width, int height, int dimension, double x, double y, double z, float pitch, float yaw) {
+    private WorldViewImpl(int texture, int frameBuffer, int renderBuffer, int width, int height, int dimension, double x, double y, double z, float pitch, float yaw) {
         this.texture = texture;
+        this.frameBuffer = frameBuffer;
+        this.renderBuffer = renderBuffer;
         this.width = width;
         this.height = height;
         this.dimension = dimension;
@@ -203,6 +262,9 @@ public final class WorldViewImpl implements WorldView {
     @Override
     public void dispose() {
         if (isActive()) {
+            glDeleteFramebuffers(frameBuffer);
+            glDeleteRenderbuffers(renderBuffer);
+
             glDeleteTextures(texture);
             views.get(dimension).remove(this);
             texture = 0;

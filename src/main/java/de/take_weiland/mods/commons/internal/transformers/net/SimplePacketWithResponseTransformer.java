@@ -35,7 +35,7 @@ public class SimplePacketWithResponseTransformer extends ClassVisitor {
 
         Class<SimplePacket> spClass = SimplePacket.class;
         for (Method method : spClass.getDeclaredMethods()) {
-            if (method.isSynthetic() || method.isBridge() || Modifier.isStatic(method.getModifiers())) {
+            if (method.isSynthetic() || method.isBridge() || Modifier.isStatic(method.getModifiers()) || method.getReturnType() != void.class) {
                 continue;
             }
 

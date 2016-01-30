@@ -7,11 +7,9 @@ import de.take_weiland.mods.commons.tileentity.TileEntityInventory;
  */
 public class SuperTE extends TileEntityInventory {
 
-    private String toNbtTest;
-
     @Override
     public String getDefaultName() {
-        return "test";
+        return null;
     }
 
     @Override

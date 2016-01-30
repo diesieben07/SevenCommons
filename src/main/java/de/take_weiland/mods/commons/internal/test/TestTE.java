@@ -1,36 +1,23 @@
 package de.take_weiland.mods.commons.internal.test;
 
-import de.take_weiland.mods.commons.nbt.ToNbt;
-import de.take_weiland.mods.commons.sync.Sync;
+import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraftforge.common.ForgeChunkManager;
 
 import static de.take_weiland.mods.commons.util.Sides.sideOf;
 
 /**
  * @author diesieben07
  */
-public class TestTE extends SuperTE implements SyncedInterface {
+public class TestTE extends SuperTE {
 
-    private float syncFoobar;
-
-    @Sync
-    @ToNbt
-    public int rotMeta;
-
-    private int lastRot = -1;
-
-    @Sync(inContainer = true)
-    public float getSync() {
-        return syncFoobar;
-    }
-
-    private void setSync(float f) {
-        syncFoobar = f;
-    }
+    private boolean first = false;
 
     @Override
     public void updateEntity() {
-        if (sideOf(this).isClient()) {
-            System.out.println("tick!");
+        if (sideOf(this).isServer() && !first) {
+            first = true;
+
+            ForgeChunkManager.forceChunk(ForgeChunkManager.requestTicket(testmod_sc.instance, worldObj, ForgeChunkManager.Type.NORMAL), new ChunkCoordIntPair(xCoord >> 4, zCoord >> 4));
         }
     }
 
