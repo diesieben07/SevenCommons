@@ -55,7 +55,7 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
             addEntry(RenderBlocksHook::new, "net/minecraft/client/renderer/RenderBlocks");
             addEntry(EntityRendererHook::new, EntityRendererHook.ENTITY_RENDERER_CLASS);
             addEntry(MinecraftHook::new, MinecraftHook.MINECRAFT_CLASS);
-            addEntry(NetworkManagerHook::new, "net/minecraft/network/NetworkManager");
+            addEntry(NetworkManagerHook::new, NetworkManagerHook.NETWORK_MANAGER_CLASS);
         }
 
         // @Sync hooks

@@ -74,7 +74,9 @@ public class VanillaPacketPrefixes {
     private static WorldClient clientWorldBackup;
 
     @SideOnly(Side.CLIENT)
-    public static void prePacketProcess(Packet packet) throws Throwable {
+    public static void prePacketProcess(boolean isClient, Packet packet) throws Throwable {
+        if (!isClient) return;
+
         if (clientWorldBackup != null) {
             System.out.println("=== WARNING!!! LEFTOVER World backup! ===");
         }
@@ -92,7 +94,9 @@ public class VanillaPacketPrefixes {
     public static final String POST_PACKET_PROCESS = "postPacketProcess";
 
     @SideOnly(Side.CLIENT)
-    public static void postPacketProcess(Packet packet) throws Throwable {
+    public static void postPacketProcess(boolean isClient, Packet packet) throws Throwable {
+        if (!isClient) return;
+
         WorldClient oldWorld = clientWorldBackup;
         if (oldWorld != null) {
             getMinecraft().theWorld = oldWorld;

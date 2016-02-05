@@ -14,6 +14,8 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public class NetworkManagerHook extends ClassVisitor {
 
+    static final String NETWORK_MANAGER_CLASS = "net/minecraft/network/NetworkManager";
+
     NetworkManagerHook(ClassVisitor cv) {
         super(ASM5, cv);
     }
@@ -47,13 +49,15 @@ public class NetworkManagerHook extends ClassVisitor {
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
             boolean doHook = false;
-            String mDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getObjectType(PacketEncoderHook.PACKET));
+            String mDesc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.BOOLEAN_TYPE, Type.getObjectType(PacketEncoderHook.PACKET));
 
             if (opcode == INVOKEVIRTUAL && owner.equals(PacketEncoderHook.PACKET) && name.equals(MCPNames.method(SRGConstants.M_PROCESS_PACKET))) {
                 if (lastNonThisAload == -1) {
                     throw new RuntimeException("Failed to hook into NetworkManager.processPackets");
                 } else {
                     doHook = true;
+                    super.visitVarInsn(ALOAD, 0);
+                    super.visitFieldInsn(GETFIELD, NETWORK_MANAGER_CLASS, MCPNames.field(SRGConstants.F_NETWORK_MANAGER_CLIENTSIDE), Type.BOOLEAN_TYPE.getDescriptor());
                     super.visitVarInsn(ALOAD, lastNonThisAload);
                     super.visitMethodInsn(INVOKESTATIC, VanillaPacketPrefixes.CLASS_NAME, VanillaPacketPrefixes.PRE_PACKET_PROCESS, mDesc, false);
                 }
@@ -62,6 +66,8 @@ public class NetworkManagerHook extends ClassVisitor {
             super.visitMethodInsn(opcode, owner, name, desc, itf);
 
             if (doHook) {
+                super.visitVarInsn(ALOAD, 0);
+                super.visitFieldInsn(GETFIELD, NETWORK_MANAGER_CLASS, MCPNames.field(SRGConstants.F_NETWORK_MANAGER_CLIENTSIDE), Type.BOOLEAN_TYPE.getDescriptor());
                 super.visitVarInsn(ALOAD, lastNonThisAload);
                 super.visitMethodInsn(INVOKESTATIC, VanillaPacketPrefixes.CLASS_NAME, VanillaPacketPrefixes.POST_PACKET_PROCESS, mDesc, false);
             }

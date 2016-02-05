@@ -68,11 +68,12 @@ public interface SRGConstants {
     String F_WORLD_THE_PROFILER                      = "field_72984_F";
     String F_WORLD_IS_REMOTE                         = "field_72995_K";
     String M_WRITE_VARINT_TO_BUFFER                  = "func_150787_b";
-    String M_READ_VARINT_FROM_BUFFER                 = "func_150792_a";
-    String M_CREATE_PACKET                           = "func_148839_a";
-    String M_PROCESS_RECEIVED_PACKETS                = "func_74428_b";
-    String M_PROCESS_PACKET                          = "func_148833_a";
-    String M_SEND_TO_ALL_NEAR_EXCEPT                 = "func_148543_a";
-    String M_NET_HANDLER_PLAY_SERVER_SEND_PACKET     = "func_147359_a";
-    String M_NET_HANDLER_PLAY_CLIENT_WORLD           = "field_147300_g";
+    String M_READ_VARINT_FROM_BUFFER             = "func_150792_a";
+    String M_CREATE_PACKET                       = "func_148839_a";
+    String M_PROCESS_RECEIVED_PACKETS            = "func_74428_b";
+    String M_PROCESS_PACKET                      = "func_148833_a";
+    String M_SEND_TO_ALL_NEAR_EXCEPT             = "func_148543_a";
+    String M_NET_HANDLER_PLAY_SERVER_SEND_PACKET = "func_147359_a";
+    String M_NET_HANDLER_PLAY_CLIENT_WORLD       = "field_147300_g";
+    String F_NETWORK_MANAGER_CLIENTSIDE          = "field_150747_h";
 }
