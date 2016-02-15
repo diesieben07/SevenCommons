@@ -98,6 +98,8 @@ public final class WorldViewImpl implements WorldView {
                 WorldClient mainWorld = getMinecraft().theWorld;
                 if (world != mainWorld) {
                     getMinecraft().theWorld = world;
+
+                    world.updateEntities();
                     world.tick();
 
                     getMinecraft().theWorld = mainWorld;
@@ -141,26 +143,6 @@ public final class WorldViewImpl implements WorldView {
     private void updateViewportPosition() {
         viewport.setPositionAndRotation(x, y, z, yaw, pitch);
     }
-
-//    private void render() {
-//        Minecraft mc = getMinecraft();
-//
-//        glViewport(0, 0, width, height);
-//        glBindTexture(GL11.GL_TEXTURE_2D, 0);
-//        glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-//        glClearColor(1.0f, 1f, 1f, 0.5f);
-//        glClear(GL11.GL_COLOR_BUFFER_BIT);
-//
-//        Rendering.drawColoredQuad(0, 0, 20, 20, 0x0000FF, 1, 2);
-////        Rendering.drawGradient(false, 0, 0, 1, 1, 0xFF0000, 1, 0x0000FF, 1, 0);
-//
-//        glEnable(GL11.GL_TEXTURE_2D);
-//        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//
-//        glViewport(0, 0, mc.displayWidth, mc.displayHeight);
-//        glLoadIdentity();
-
-//    }
 
     private void render() {
         if (viewport == null) {
@@ -230,11 +212,11 @@ public final class WorldViewImpl implements WorldView {
         glLoadIdentity();
 
 //        ReflectionHelper.setPrivateValue(EntityRenderer.class, entityRenderer, nanoTime, "renderEndNanoTime");
+//
+//        glBindTexture(GL_TEXTURE_2D, texture);
+//        glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, width, height, 0);
 
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, width, height, 0);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         renderEndNanoTime = System.nanoTime();
 
