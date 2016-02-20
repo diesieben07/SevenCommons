@@ -93,7 +93,7 @@ public class testmod_sc {
 
 //
         Network.newSimpleChannel("testmod")
-                .register(0, (PacketConstructor<TestPacket>) TestPacket::new, (PacketConstructor<TestResponse>) TestResponse::new, (PacketHandler.WithResponse.IncludingSide<TestPacket, TestResponse>) (packet, player, side) -> new TestResponse(packet.s))
+                .register(0, (PacketConstructor<TestPacket>) TestPacket::new, (PacketConstructor<TestResponse>) TestResponse::new, (PacketHandler.WithResponse.WithSideAndPlayer<TestPacket, TestResponse>) (packet, player, side) -> new TestResponse(packet.s))
                 .build();
 
         ForgeChunkManager.setForcedChunkLoadingCallback(this, (tickets, world) -> {

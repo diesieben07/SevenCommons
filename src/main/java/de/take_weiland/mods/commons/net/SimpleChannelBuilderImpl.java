@@ -30,7 +30,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
     }
 
     @Override
-    public <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketHandler<? super P> handler) {
+    public <P extends Packet> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketHandler<P> handler) {
         validateID(id);
 
         Class<P> packetClass = constructor.getPacketClass();
@@ -43,7 +43,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
     }
 
     @Override
-    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, PacketHandler.WithResponse<? super P, ? extends R> handler) {
+    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, PacketHandler.WithResponse<P, R> handler) {
         validateID(id);
 
         Class<P> packetClass = constructor.getPacketClass();
@@ -57,7 +57,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
     }
 
     @Override
-    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder registerWithAsyncResponse(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, PacketHandler.WithAsyncResponse<? super P, ? extends R> handler) {
+    public <P extends Packet.WithResponse<R>, R extends Packet.Response> SimpleChannelBuilder register(int id, PacketConstructor<P> constructor, PacketConstructor<R> responseConstructor, PacketHandler.WithAsyncResponse<P, R> handler) {
         validateID(id);
 
         Class<P> packetClass = constructor.getPacketClass();

@@ -26,10 +26,10 @@ public interface PacketHandler<P extends Packet> {
     void handle(P packet, EntityPlayer player);
 
     /**
-     * <p>Version of {@code PacketHandler} that includes a {@link Side} argument specifying the logical side.</p>
+     * <p>Version of {@code PacketHandler} that provides a {@link Side} argument specifying the logical side.</p>
      */
     @FunctionalInterface
-    interface IncludingSide<P extends Packet> extends PacketHandler<P> {
+    interface WithSideAndPlayer<P extends Packet> extends PacketHandler<P> {
 
         /**
          * <p>Called when a packet is received.</p>
@@ -45,6 +45,50 @@ public interface PacketHandler<P extends Packet> {
         default void handle(P packet, EntityPlayer player) {
             handle(packet, player, sideOf(player));
         }
+
+    }
+
+    /**
+     * <p>Version of {@code PacketHandler} that provides a {@link Side} argument specifying the logical side, but no player argument.</p>
+     */
+    @FunctionalInterface
+    interface WithSide<P extends Packet> extends PacketHandler<P> {
+
+        /**
+         * <p>Called when a packet is received.</p>
+         * <p>On the client the client player will be passed, on the server the player sending the packet will be passed.</p>
+         *
+         * @param packet the packet
+         * @param side   the logical side
+         */
+        void handle(P packet, Side side);
+
+        @Override
+        default void handle(P packet, EntityPlayer player) {
+            handle(packet, sideOf(player));
+        }
+
+    }
+
+    /**
+     * <p>Version of {@code PacketHandler} that does not provide any arguments besides the packet.</p>
+     */
+    @FunctionalInterface
+    interface WithoutPlayer<P extends Packet> extends PacketHandler<P> {
+
+        /**
+         * <p>Called when a packet is received.</p>
+         * <p>On the client the client player will be passed, on the server the player sending the packet will be passed.</p>
+         *
+         * @param packet the packet
+         */
+        void handle(P packet);
+
+        @Override
+        default void handle(P packet, EntityPlayer player) {
+            handle(packet);
+        }
+
     }
 
     /**
@@ -64,10 +108,10 @@ public interface PacketHandler<P extends Packet> {
         R handle(P packet, EntityPlayer player);
 
         /**
-         * <p>Version of {@code PacketHandler.WithResponse} that includes a {@link Side} argument specifying the logical side.</p>
+         * <p>Version of {@code PacketHandler.WithResponse} that provides a {@link Side} argument specifying the logical side.</p>
          */
         @FunctionalInterface
-        interface IncludingSide<P extends Packet.WithResponse<R>, R extends Packet.Response> extends PacketHandler.WithResponse<P, R> {
+        interface WithSideAndPlayer<P extends Packet.WithResponse<R>, R extends Packet.Response> extends PacketHandler.WithResponse<P, R> {
 
             /**
              * <p>Called when a packet is received.</p>
@@ -83,6 +127,49 @@ public interface PacketHandler<P extends Packet> {
             @Override
             default R handle(P packet, EntityPlayer player) {
                 return handle(packet, player, sideOf(player));
+            }
+        }
+
+        /**
+         * <p>Version of {@code PacketHandler.WithResponse} that provides a {@link Side} argument specifying the logical side, but no player argument.</p>
+         */
+        @FunctionalInterface
+        interface WithSide<P extends Packet.WithResponse<R>, R extends Packet.Response> extends PacketHandler.WithResponse<P, R> {
+
+            /**
+             * <p>Called when a packet is received.</p>
+             * <p>On the client, the client player will be passed, on the server the player sending the packet will be passed.</p>
+             *
+             * @param packet the packet
+             * @param side   the logical side
+             * @return the response
+             */
+            R handle(P packet, Side side);
+
+            @Override
+            default R handle(P packet, EntityPlayer player) {
+                return handle(packet, sideOf(player));
+            }
+        }
+
+        /**
+         * <p>Version of {@code PacketHandler.WithResponse} that does not provide any arguments besides the packet.</p>
+         */
+        @FunctionalInterface
+        interface WithoutPlayer<P extends Packet.WithResponse<R>, R extends Packet.Response> extends PacketHandler.WithResponse<P, R> {
+
+            /**
+             * <p>Called when a packet is received.</p>
+             * <p>On the client, the client player will be passed, on the server the player sending the packet will be passed.</p>
+             *
+             * @param packet the packet
+             * @return the response
+             */
+            R handle(P packet);
+
+            @Override
+            default R handle(P packet, EntityPlayer player) {
+                return handle(packet);
             }
         }
 
@@ -106,10 +193,10 @@ public interface PacketHandler<P extends Packet> {
 
 
         /**
-         * <p>Version of {@code PacketHandler.WithAsyncResponse} that includes a {@link Side} argument specifying the logical side.</p>
+         * <p>Version of {@code PacketHandler.WithAsyncResponse} that provides a {@link Side} argument specifying the logical side.</p>
          */
         @FunctionalInterface
-        interface IncludingSide<P extends Packet.WithResponse<R>, R extends Packet.Response> extends PacketHandler.WithAsyncResponse<P, R> {
+        interface WithSideAndPlayer<P extends Packet.WithResponse<R>, R extends Packet.Response> extends PacketHandler.WithAsyncResponse<P, R> {
 
             /**
              * <p>Called when a packet is received.</p>
@@ -125,6 +212,49 @@ public interface PacketHandler<P extends Packet> {
             @Override
             default CompletionStage<? extends R> handle(P packet, EntityPlayer player) {
                 return handle(packet, player, sideOf(player));
+            }
+        }
+
+        /**
+         * <p>Version of {@code PacketHandler.WithAsyncResponse} that provides a {@link Side} argument specifying the logical side, but no player argument.</p>
+         */
+        @FunctionalInterface
+        interface WithSide<P extends Packet.WithResponse<R>, R extends Packet.Response> extends PacketHandler.WithAsyncResponse<P, R> {
+
+            /**
+             * <p>Called when a packet is received.</p>
+             * <p>On the client, the client player will be passed, on the server the player sending the packet will be passed.</p>
+             *
+             * @param packet the packet
+             * @param side   the logical side
+             * @return the response as a {@code CompletionStage}
+             */
+            CompletionStage<? extends R> handle(P packet, Side side);
+
+            @Override
+            default CompletionStage<? extends R> handle(P packet, EntityPlayer player) {
+                return handle(packet, sideOf(player));
+            }
+        }
+
+        /**
+         * <p>Version of {@code PacketHandler.WithAsyncResponse} that does not provide any arguments besides the packet.</p>
+         */
+        @FunctionalInterface
+        interface WithoutPlayer<P extends Packet.WithResponse<R>, R extends Packet.Response> extends PacketHandler.WithAsyncResponse<P, R> {
+
+            /**
+             * <p>Called when a packet is received.</p>
+             * <p>On the client, the client player will be passed, on the server the player sending the packet will be passed.</p>
+             *
+             * @param packet the packet
+             * @return the response as a {@code CompletionStage}
+             */
+            CompletionStage<? extends R> handle(P packet);
+
+            @Override
+            default CompletionStage<? extends R> handle(P packet, EntityPlayer player) {
+                return handle(packet);
             }
         }
 

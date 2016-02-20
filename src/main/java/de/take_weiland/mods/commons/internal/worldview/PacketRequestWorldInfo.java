@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.worldview;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.Packet;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
@@ -28,7 +27,7 @@ public class PacketRequestWorldInfo implements Packet.WithResponse<PacketWorldIn
         out.writeInt(dimension);
     }
 
-    public PacketWorldInfo handle(EntityPlayer player) {
+    public PacketWorldInfo handle() {
         WorldServer world = DimensionManager.getWorld(dimension);
         if (world == null) {
             // todo

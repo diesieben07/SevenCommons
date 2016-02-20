@@ -22,10 +22,11 @@ import de.take_weiland.mods.commons.internal.sync.SyncEvent;
 import de.take_weiland.mods.commons.internal.sync.builtin.BuiltinSyncers;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.builtin.DefaultNBTSerializers;
-import de.take_weiland.mods.commons.internal.worldview.*;
+import de.take_weiland.mods.commons.internal.worldview.NullClientHandler;
+import de.take_weiland.mods.commons.internal.worldview.PacketRequestWorldInfo;
+import de.take_weiland.mods.commons.internal.worldview.PacketWorldInfo;
 import de.take_weiland.mods.commons.net.ChannelHandler;
 import de.take_weiland.mods.commons.net.Network;
-import de.take_weiland.mods.commons.net.PacketHandler;
 import de.take_weiland.mods.commons.sync.Syncing;
 import de.take_weiland.mods.commons.util.Logging;
 import de.take_weiland.mods.commons.worldview.ClientChunks;
@@ -158,11 +159,7 @@ public final class SevenCommons extends DummyModContainer {
                 .register(0, PacketContainerButton::new, PacketContainerButton::handle)
                 .register(1, PacketInventoryName::new, PacketInventoryName::handle)
                 .register(2, PacketItemInvUUID::new, PacketItemInvUUID::handle)
-                .register(3, PacketChunkData::new, proxy::handleChunkDataPacket)
-                .register(4, PacketRequestView::new, PacketRequestView::handle)
-                .register(5, PacketBlockChange::new, proxy::handleBlockChangePacket)
-                .register(6, PacketChunkUnload::new, proxy::handleChunkUnloadPacket)
-                .register(7, PacketRequestWorldInfo::new, PacketWorldInfo::new, (PacketHandler.WithResponse<PacketRequestWorldInfo, PacketWorldInfo>) PacketRequestWorldInfo::handle)
+                .register(3, PacketRequestWorldInfo::new, PacketWorldInfo::new, PacketRequestWorldInfo::handle)
                 .build();
 
         Network.registerHandler(SyncEvent.CHANNEL, new ChannelHandler() {
