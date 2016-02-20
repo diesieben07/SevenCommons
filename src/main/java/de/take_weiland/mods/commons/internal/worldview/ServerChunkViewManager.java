@@ -4,9 +4,10 @@ import de.take_weiland.mods.commons.internal.EntityPlayerMPProxy;
 import de.take_weiland.mods.commons.internal.WorldProxy;
 import de.take_weiland.mods.commons.net.SimplePacket;
 import de.take_weiland.mods.commons.util.Players;
+import de.take_weiland.mods.commons.worldview.DimensionalChunk;
 import gnu.trove.impl.hash.TPrimitiveHash;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
@@ -39,40 +40,51 @@ public class ServerChunkViewManager {
 
     // "public" API, from ClientChunks class
 
+    // add new chunk view for given player if not already present
     public static void addView(EntityPlayer player, int dimension, int chunkX, int chunkZ) {
         long chunkEnc = encodeChunk(dimension, chunkX, chunkZ);
 
-        getChunkInstance(chunkEnc).players.add(player);
-        ((EntityPlayerMPProxy) player)._sc$viewedChunks().add(chunkEnc);
+        if (getChunkInstance(chunkEnc).players.add(player)) {
+            ((EntityPlayerMPProxy) player)._sc$viewedChunks().add(chunkEnc);
 
-        WorldServer world = DimensionManager.getWorld(dimension);
-        // if world and chunk are loaded and player is not already tracking through vanilla mechanics we need to tell them about the chunk
-        if (world != null && ((WorldProxy) world)._sc$chunkExists(chunkX, chunkZ) && !Players.getTrackingChunk(world, chunkX, chunkZ).contains(player)) {
-            Chunk chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
-            chunkPacket(chunk, INIT_NEW).sendTo(player);
+            WorldServer world = DimensionManager.getWorld(dimension);
+            // if world and chunk are loaded and player is not already tracking through vanilla mechanics we need to tell them about the chunk
+            if (world != null && ((WorldProxy) world)._sc$chunkExists(chunkX, chunkZ) && !Players.getTrackingChunk(world, chunkX, chunkZ).contains(player)) {
+                Chunk chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
+                chunkPacket(chunk, INIT_NEW).sendTo(player);
+            }
         }
     }
 
+    // remove given chunk view from player, if present
     public static void removeView(EntityPlayer player, int dimension, int chunkX, int chunkZ) {
         long chunkEnc = encodeChunk(dimension, chunkX, chunkZ);
         if (removePlayer(chunkEnc, player)) {
             ((EntityPlayerMPProxy) player)._sc$viewedChunks().remove(chunkEnc);
             WorldServer world = DimensionManager.getWorld(dimension);
+            // only send unload packet if world is loaded and player is not still tracking
             if (world != null && !Players.getTrackingChunk(world, chunkX, chunkZ).contains(player)) {
                 SimplePacket.wrap(chunkUnloadPacket(world.getChunkFromChunkCoords(chunkX, chunkZ))).sendTo(player);
             }
         }
     }
 
-    // event callbacks
+    // event callbacks //
 
+    // remove players logging out from the lists of chunks they are viewing
     public static void onPlayerLogout(EntityPlayer player) {
-        TLongArrayList chunks = ((EntityPlayerMPProxy) player)._sc$viewedChunks();
-        for (int i = 0, len = chunks.size(); i < len; i++) {
-            removePlayer(chunks.getQuick(i), player);
+        TLongHashSet chunks = ((EntityPlayerMPProxy) player)._sc$viewedChunks();
+        byte[] states = chunks._states;
+        long[] set = chunks._set;
+        for (int idx = chunks.capacity(); idx >= 0; idx--) {
+            if (states[idx] == TPrimitiveHash.FULL) {
+                removePlayer(set[idx], player);
+            }
         }
     }
 
+    // need to notify all players who are not tracking a chunk already
+    // but watching it as a world view about loads and unloads
     public static void onChunkLoad(Chunk chunk) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
@@ -93,28 +105,31 @@ public class ServerChunkViewManager {
         }
     }
 
-    // ASM callbacks
+    // ASM callbacks //
+
     public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/worldview/ServerChunkViewManager";
 
     public static final String SUPPRESS_UNLOAD_PACKET = "suppressUnloadPacket";
 
+    // called if a vanilla unload packet needs to be suppressed for the given player and chunk
+    // this is so that viewed chunks do not get unloaded if the player stops tracking them
     @SuppressWarnings("unused")
     public static boolean suppressUnloadPacket(EntityPlayerMP player, Chunk chunk) {
-        TLongArrayList viewedChunks = ((EntityPlayerMPProxy) player)._sc$viewedChunks();
-        long enc = encodeChunk(chunk);
-        boolean contains = viewedChunks.contains(enc);
-        if (contains) System.out.println("suppressing unload packet for " + chunk.xPosition + ", " + chunk.zPosition);
-        return contains;
+        return ((EntityPlayerMPProxy) player)._sc$viewedChunks().contains(encodeChunk(chunk));
     }
 
     public static final String ENHANCE_ACTIVE_CHUNK_SET = "enhanceActiveChunkSet";
 
+    // called to enhance the vanilla "active chunk set"
+    // this is needed so that vanilla sees viewed chunks as being tracked by a player
+    // otherwise updates do not get processed through IWorldAccess and we cannot detect block changes
     @SuppressWarnings("unused")
     public static void enhanceActiveChunkSet(Set<ChunkCoordIntPair> activeChunks) {
         byte[] states = chunkData._states;
         long[] set = chunkData._set;
         int i = states.length;
 
+        // manual loop through the hash array to get rid of the iterator
         outer:
         do {
             while (true) {
@@ -133,9 +148,13 @@ public class ServerChunkViewManager {
     public static final String SEND_NEAR_HOOK = "sendNearFailed";
 
     // called when ServerConfigurationManager decides that packet does _not_ need to be send to given player
+    // because they are not in the radius
+    // need to check if the packet needs to be sent anyways because player has a chunk view for the given chunk
     public static void sendNearFailed(EntityPlayerMP player, double x, double y, double z, double radius, int dimension, Packet packet) {
         if (hasChunkInRadius(player, dimension, (int) x, (int) z, radius)) {
             if (dimension != player.dimension) {
+                // even though this is setting the field after the packet has been potentially passed into other player's netty threads already
+                // this is ok since those other players are ok to see the packet without dimension ID set as they are guaranteed to be in the correct dimension
                 ((VanillaPacketProxy) packet)._sc$setTargetDimension(dimension);
             }
             SimplePacket.wrap(packet).sendTo(player);
@@ -147,28 +166,34 @@ public class ServerChunkViewManager {
         x >>= 4;
         z >>= 4;
         radius /= 16;
-        radius *= radius;
+        radius *= radius; // preemptively square it for checks below
 
-        TLongArrayList viewedChunks = ((EntityPlayerMPProxy) player)._sc$viewedChunks();
-        for (int i = 0, len = viewedChunks.size(); i < len; i++) {
-            long enc = viewedChunks.getQuick(i);
-            if ((enc & DIMENSION_MASK) == dimension) {
-                enc >>>= CHUNK_X_SHIFT;
-                int dx = x - (int) (enc & CHUNK_COORD_MASK | -(enc & CHUNK_COORD_SIGN_BIT));
-                enc >>>= CHUNK_Z_SHIFT - CHUNK_X_SHIFT;
-                int dz = z - (int) ((enc & CHUNK_COORD_MASK) | -(enc & CHUNK_COORD_SIGN_BIT));
+        TLongHashSet viewedChunks = ((EntityPlayerMPProxy) player)._sc$viewedChunks();
+        byte[] states = viewedChunks._states;
+        long[] set = viewedChunks._set;
+        int idx = viewedChunks.capacity();
+        do {
+            if (--idx < 0) return false;
+            if (states[idx] == TPrimitiveHash.FULL) {
+                long enc = set[idx];
+                if ((enc & DIMENSION_MASK) == dimension) {
+                    enc >>>= CHUNK_X_SHIFT;
+                    int dx = x - (int) (enc & CHUNK_COORD_MASK | -(enc & CHUNK_COORD_SIGN_BIT));
+                    enc >>>= CHUNK_Z_SHIFT - CHUNK_X_SHIFT;
+                    int dz = z - (int) ((enc & CHUNK_COORD_MASK) | -(enc & CHUNK_COORD_SIGN_BIT));
 
-                if (dx * dx + dz * dz < radius) { // TODO is this right? I hope.
-                    return true;
+                    if (dx * dx + dz * dz < radius) { // TODO is this right? I hope. this should just ignore the Y dimension entirely
+                        return true;
+                    }
                 }
             }
-        }
-
-        return false;
+        } while (true);
     }
 
-    // block change callbacks form ChunkUpdateTracker
+    // block change callbacks form ChunkUpdateTracker //
 
+    // yLayers is a bit map of changed 16-high chunk layers
+    // send changes to all players not already tracking this chunk
     static void onChunkLayersChanged(Chunk chunk, int yLayers) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
@@ -179,6 +204,7 @@ public class ServerChunkViewManager {
         }
     }
 
+    // a single block changed in the given chunk (coordinates are within-chunk coordinates, 0-15)
     static void onSingleBlockChanged(Chunk chunk, int x, int y, int z) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
@@ -189,7 +215,7 @@ public class ServerChunkViewManager {
         }
     }
 
-    // misc
+    // utility for above //
 
     private static SimplePacket blockChangePacket(World world, int x, int y, int z) {
         S23PacketBlockChange packet = new S23PacketBlockChange(x, y, z, world);
@@ -285,6 +311,7 @@ public class ServerChunkViewManager {
         };
     }
 
+    // remove player from given chunk
     // returns true when player was actually there
     private static boolean removePlayer(long enc, EntityPlayer player) {
         ChunkInstance chunkInstance = chunkData.get(enc);
@@ -298,6 +325,7 @@ public class ServerChunkViewManager {
         }
     }
 
+    // get or create ChunkInstance for given chunk
     private static ChunkInstance getChunkInstance(long chunkEnc) {
         ChunkInstance chunk = chunkData.get(chunkEnc);
         if (chunk == null) {
@@ -314,17 +342,12 @@ public class ServerChunkViewManager {
     private static final long CHUNK_Z_SHIFT        = 42;
     private static final long CHUNK_COORD_SIGN_BIT = 0x20_0000L;
 
-
     private static long encodeChunk(Chunk chunk) {
         return encodeChunk(chunk.worldObj.provider.dimensionId, chunk.xPosition, chunk.zPosition);
     }
 
-    public static void main(String[] args) {
-        System.out.println(decodeIntoChunkPair(encodeChunk(0, 10, -120)));
-    }
-
     // encode dimension, chunkX and chunkZ into a single long
-    private static long encodeChunk(int dimension, int chunkX, int chunkZ) {
+    public static long encodeChunk(int dimension, int chunkX, int chunkZ) {
         // chunkX and chunkZ need 22 bits each (world allows block coords -30000000-30000000)
         // this assumes that dimensionID doesn't need more than 20 bits. let's just hope so, otherwise revisit this
         // (could for example use an index into a sorted list of used dim IDs instead)
@@ -334,6 +357,7 @@ public class ServerChunkViewManager {
         return (dimension & DIMENSION_MASK) | ((chunkX & CHUNK_COORD_MASK) << CHUNK_X_SHIFT) | ((chunkZ & CHUNK_COORD_MASK) << CHUNK_Z_SHIFT);
     }
 
+    // decode given encoded chunk into a ChunkCoordIntPair, ignoring dimension
     private static ChunkCoordIntPair decodeIntoChunkPair(long l) {
         l >>>= CHUNK_X_SHIFT;
         int x = (int) ((l & CHUNK_COORD_MASK) | -(l & CHUNK_COORD_SIGN_BIT));
@@ -341,5 +365,17 @@ public class ServerChunkViewManager {
         l >>>= CHUNK_Z_SHIFT - CHUNK_X_SHIFT;
         int z = (int) ((l & CHUNK_COORD_MASK) | -(l & CHUNK_COORD_SIGN_BIT));
         return new ChunkCoordIntPair(x, z);
+    }
+
+    // decode encoded chunk into a DimensionalChunk
+    public static DimensionalChunk decodeIntoDimensionalChunk(long l) {
+        int dimension = (int) (l & DIMENSION_MASK);
+
+        l >>>= CHUNK_X_SHIFT;
+        int x = (int) ((l & CHUNK_COORD_MASK) | -(l & CHUNK_COORD_SIGN_BIT));
+        l >>>= CHUNK_Z_SHIFT - CHUNK_X_SHIFT;
+        int z = (int) ((l & CHUNK_COORD_MASK) | -(l & CHUNK_COORD_SIGN_BIT));
+
+        return new DimensionalChunk(dimension, x, z);
     }
 }

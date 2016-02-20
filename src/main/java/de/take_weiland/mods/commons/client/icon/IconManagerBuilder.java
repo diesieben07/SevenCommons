@@ -21,7 +21,7 @@ public interface IconManagerBuilder {
      * rotation possibilities are added after this method is called.</p>
      * <p>Example: A builder is created with just {@code addValidFront(NORTH)}. If later this builder is replaced with
      * {@code addValidFront(UP, DOWN, NORTH)}, it is no longer guaranteed to be compatible with old save files, unless
-     * {@code addValidFront(NORTH).update(addValidFront(UP, DOWN)} is used.</p>
+     * {@code addValidFront(NORTH).update().addValidFront(UP, DOWN)} is used.</p>
      * <p>This method may be called multiple times to signify multiple version updates.</p>
      *
      * @return this

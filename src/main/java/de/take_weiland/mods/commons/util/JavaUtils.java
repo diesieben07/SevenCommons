@@ -1,10 +1,11 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -154,9 +155,11 @@ public final class JavaUtils {
     public static <T extends Cloneable> T clone(T t) {
         try {
             //noinspection unchecked
-            return (T) SCReflector.instance.clone(t);
+            return (T) CommonMethodHandles.objectClone.invokeExact(t);
         } catch (CloneNotSupportedException e) {
             throw new IllegalArgumentException("Tried to clone a non-cloneable object " + t, e);
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
         }
     }
 

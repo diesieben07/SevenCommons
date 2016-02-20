@@ -1,8 +1,11 @@
 package de.take_weiland.mods.commons.worldview;
 
+import de.take_weiland.mods.commons.internal.EntityPlayerMPProxy;
 import de.take_weiland.mods.commons.internal.worldview.ServerChunkViewManager;
 import de.take_weiland.mods.commons.util.Players;
 import net.minecraft.entity.player.EntityPlayer;
+
+import java.util.Set;
 
 /**
  * <p>Mechanics to keep chunks loaded on the client even if they are out of range for the player or in a different dimension.</p>
@@ -37,6 +40,29 @@ public class ClientChunks {
      */
     public static void unloadChunk(EntityPlayer player, int dimension, int chunkX, int chunkZ) {
         ServerChunkViewManager.removeView(Players.checkNotClient(player), dimension, chunkX, chunkZ);
+    }
+
+    /**
+     * <p>Check if the given chunk in the given dimension is being loaded for the given player.</p>
+     *
+     * @param player    the player
+     * @param dimension the dimension ID
+     * @param chunkX    the x coordinate of the chunk
+     * @param chunkZ    the z coordinate of the chunk
+     * @return true if the given chunk is being loaded
+     */
+    public static boolean isChunkLoadedForPlayer(EntityPlayer player, int dimension, int chunkX, int chunkZ) {
+        return ((EntityPlayerMPProxy) Players.checkNotClient(player))._sc$viewedChunks().contains(ServerChunkViewManager.encodeChunk(dimension, chunkX, chunkZ));
+    }
+
+    /**
+     * <p>Get all chunks loaded for the given player.</p>
+     *
+     * @param player the player
+     * @return an unmodifiable set of chunks
+     */
+    public static Set<DimensionalChunk> getPlayerLoadedChunks(EntityPlayer player) {
+        return new PlayerChunkSetImpl(((EntityPlayerMPProxy) Players.checkNotClient(player))._sc$viewedChunks());
     }
 
 }

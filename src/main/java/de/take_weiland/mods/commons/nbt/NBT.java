@@ -1,7 +1,9 @@
 package de.take_weiland.mods.commons.nbt;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
-import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.asm.MCPNames;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import net.minecraft.nbt.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Contract;
@@ -9,6 +11,8 @@ import org.jetbrains.annotations.Contract;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -16,6 +20,7 @@ import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
  * <p>Utility methods regarding NBT data.</p>
@@ -129,7 +134,12 @@ public final class NBT {
      */
     @Nonnull
     public static <T extends NBTBase> List<T> asList(NBTTagList nbt) {
-        return SCReflector.instance.getWrappedList(nbt);
+        try {
+            //noinspection unchecked
+            return (List<T>) nbtListGet.invokeExact(nbt);
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
+        }
     }
 
     /**
@@ -142,7 +152,29 @@ public final class NBT {
      */
     @Nonnull
     public static Map<String, NBTBase> asMap(NBTTagCompound nbt) {
-        return SCReflector.instance.getWrappedMap(nbt);
+        try {
+            //noinspection unchecked
+            return (Map<String, NBTBase>) nbtMapGet.invokeExact(nbt);
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
+        }
+    }
+
+    private static final MethodHandle nbtListGet;
+    private static final MethodHandle nbtMapGet;
+
+    static {
+        try {
+            Field field = NBTTagList.class.getDeclaredField(MCPNames.field(SRGConstants.F_TAG_LIST));
+            field.setAccessible(true);
+            nbtListGet = publicLookup().unreflectGetter(field);
+
+            field = NBTTagCompound.class.getDeclaredField(MCPNames.field(SRGConstants.F_TAG_MAP));
+            field.setAccessible(true);
+            nbtMapGet = publicLookup().unreflectGetter(field);
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     private static final Map<Class<? extends NBTBase>, Supplier<? extends NBTBase>> defaultCreators;

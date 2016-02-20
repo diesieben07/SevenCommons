@@ -1,9 +1,12 @@
 package de.take_weiland.mods.commons.util;
 
-import de.take_weiland.mods.commons.internal.SCReflector;
+import com.google.common.base.Throwables;
+import de.take_weiland.mods.commons.asm.MCPNames;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -13,8 +16,12 @@ import net.minecraft.util.*;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Set;
+
+import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
  * <p>Utilities regarding Entities.</p>
@@ -81,9 +88,26 @@ public final class Entities {
         if (entity.worldObj.isRemote) {
             throw new IllegalArgumentException("Cannot get tracking players on the client");
         }
-        IntHashMap trackerMap = SCReflector.instance.getTrackerMap(((WorldServer) entity.worldObj).getEntityTracker());
+        IntHashMap trackerMap;
+        try {
+            trackerMap = (IntHashMap) trackerMapGet.invokeExact(((WorldServer) entity.worldObj).getEntityTracker());
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
+        }
         EntityTrackerEntry entry = (EntityTrackerEntry) trackerMap.lookup(entity.getEntityId());
         return entry == null ? Collections.emptySet() : entry.trackingPlayers;
+    }
+
+    private static final MethodHandle trackerMapGet;
+
+    static {
+        try {
+            Field field = EntityTracker.class.getDeclaredField(MCPNames.field(SRGConstants.F_TRACKED_ENTITY_IDS));
+            field.setAccessible(true);
+            trackerMapGet = publicLookup().unreflectGetter(field);
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     /**

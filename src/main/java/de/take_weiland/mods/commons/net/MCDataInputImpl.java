@@ -1,7 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
+import com.google.common.base.Throwables;
 import com.google.common.primitives.Ints;
-import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -710,7 +712,11 @@ final class MCDataInputImpl extends InputStream implements MCDataInput, Readable
                 pos += 2;
             }
             this.pos = pos;
-            return SCReflector.instance.createStringShared(chars, true);
+            try {
+                return (String) CommonMethodHandles.createSharedString.invokeExact(chars);
+            } catch (Throwable x) {
+                throw Throwables.propagate(x);
+            }
         }
     }
 
@@ -759,8 +765,15 @@ final class MCDataInputImpl extends InputStream implements MCDataInput, Readable
             try {
                 while (id != 0) {
                     String name = readString();
-                    NBTBase tag = SCReflector.instance.newNBTTag((byte) id);
-                    SCReflector.instance.load(nbt, this, 1, NBTSizeTracker.INFINITE);
+                    NBTBase tag;
+                    try {
+                        tag = (NBTBase) CommonMethodHandles.newNbt.invokeExact((byte) id);
+                        CommonMethodHandles.nbtBaseRead.invokeExact((NBTBase) nbt, (DataInput) this, 1, NBTSizeTracker.INFINITE);
+                    } catch (IOException io) {
+                        throw io;
+                    } catch (Throwable x) {
+                        throw Throwables.propagate(x);
+                    }
 
                     map.put(name, tag);
                     id = readByte();

@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.internal.test;
 
+import com.google.common.reflect.Reflection;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -9,7 +10,6 @@ import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.client.Rendering;
 import de.take_weiland.mods.commons.client.icon.IconManager;
 import de.take_weiland.mods.commons.client.icon.IconManagerBuilder;
 import de.take_weiland.mods.commons.client.icon.Icons;
@@ -18,6 +18,7 @@ import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketConstructor;
 import de.take_weiland.mods.commons.net.PacketHandler;
+import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.util.Blocks;
 import de.take_weiland.mods.commons.util.Retries;
 import de.take_weiland.mods.commons.util.Scheduler;
@@ -34,7 +35,9 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.server.S02PacketChat;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -42,13 +45,14 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
+import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 
@@ -92,13 +96,11 @@ public class testmod_sc {
                 .register(0, (PacketConstructor<TestPacket>) TestPacket::new, (PacketConstructor<TestResponse>) TestResponse::new, (PacketHandler.WithResponse.IncludingSide<TestPacket, TestResponse>) (packet, player, side) -> new TestResponse(packet.s))
                 .build();
 
-        ForgeChunkManager.setForcedChunkLoadingCallback(this, new ForgeChunkManager.LoadingCallback() {
-            @Override
-            public void ticketsLoaded(List<ForgeChunkManager.Ticket> tickets, World world) {
+        ForgeChunkManager.setForcedChunkLoadingCallback(this, (tickets, world) -> {
 
-            }
         });
 
+        Reflection.initialize(Packets.class);
     }
 
     @Mod.EventHandler
@@ -184,9 +186,13 @@ public class testmod_sc {
     @SubscribeEvent
     public void onGuiOverlay(RenderGameOverlayEvent.Post event) {
         if (getMinecraft().theWorld != null && event.type == RenderGameOverlayEvent.ElementType.ALL) {
-            if (view == null) {
-                view = Rendering.newWorldView(0, 256, 256, 0, 0, 65, 0, 90, 0);
+            if (view == null || view.isDisposed()) {
+                view = WorldView.create(256, 256, 0, 0, 65, 0, 90, 0, 240, TimeUnit.SECONDS);
             } else {
+                if (Mouse.isButtonDown(0) && view.getRenderMode() == WorldView.RenderMode.ON_DEMAND) {
+                    view.requestRender();
+                }
+
                 view.bindTexture();
 
                 int screenSize = 100;
@@ -225,10 +231,7 @@ public class testmod_sc {
         @Override
         public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float par7, float par8, float par9) {
             if (!world.isRemote) {
-                if (player.isSneaking()) {
-                    side = ForgeDirection.getOrientation(side).getOpposite().ordinal();
-                }
-
+                Packets.sendToAllTrackingChunk(new S02PacketChat(new ChatComponentText("hello world")), world, x >> 4, z >> 4);
             }
             return true;
         }

@@ -10,7 +10,7 @@ import de.take_weiland.mods.commons.internal.sync.SyncedObjectProxy;
 import de.take_weiland.mods.commons.internal.worldview.ChunkUpdateTracker;
 import de.take_weiland.mods.commons.internal.worldview.ServerChunkViewManager;
 import de.take_weiland.mods.commons.inv.NameableInventory;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -98,7 +98,7 @@ public final class ForgeEventHandler {
 
     @SubscribeEvent
     public void onPlayerClone(PlayerEvent.Clone event) {
-        TLongArrayList old = ((EntityPlayerMPProxy) event.original)._sc$viewedChunks();
+        TLongHashSet old = ((EntityPlayerMPProxy) event.original)._sc$viewedChunks();
         ((EntityPlayerMPProxy) event.entityPlayer)._sc$viewedChunks().addAll(old);
     }
 

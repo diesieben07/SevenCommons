@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.collect.Iterables;
-import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
@@ -304,7 +304,7 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
         public void send(Object obj) {
             done();
             Container container = (Container) obj;
-            List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
+            List<ICrafting> crafters = CommonMethodHandles.getListeners(container);
             NetworkImpl.sendRawPacket(Iterables.filter(crafters, EntityPlayerMP.class), this);
         }
 

@@ -2,13 +2,11 @@ package de.take_weiland.mods.commons.client;
 
 import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.asm.MCPNames;
-import de.take_weiland.mods.commons.client.worldview.WorldView;
-import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SRGConstants;
-import de.take_weiland.mods.commons.internal.client.worldview.WorldViewImpl;
 import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
@@ -26,8 +24,9 @@ import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.invoke.MethodHandles.publicLookup;
 import static net.minecraft.client.Minecraft.getMinecraft;
 import static net.minecraftforge.common.util.ForgeDirection.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -38,28 +37,6 @@ import static org.lwjgl.opengl.GL11.*;
  * @author diesieben07
  */
 public final class Rendering {
-
-    /**
-     * <p>Create a new world view with the given properties.</p>
-     *
-     * @param frameskip number of frames to skip between rendering, -1 to disable continuous rendering
-     * @param texWidth  texture width of the view
-     * @param texHeight texture height of the view
-     * @param dimension dimension ID for the view
-     * @param x         x position of the camera
-     * @param y         y position of the camera
-     * @param z         z position of the camera
-     * @param pitch     pitch of the camera
-     * @param yaw       yaw of the camera
-     * @return a new WorldView
-     */
-    public static WorldView newWorldView(int frameskip, int texWidth, int texHeight, int dimension, double x, double y, double z, float pitch, float yaw) {
-        if (getMinecraft().thePlayer == null) {
-            throw new IllegalStateException("No client world loaded");
-        }
-        checkArgument(frameskip >= -1);
-        return WorldViewImpl.create(frameskip, texWidth, texHeight, dimension, x, y, z, pitch, yaw);
-    }
 
     private static final MethodHandle timerGet;
 
@@ -701,7 +678,14 @@ public final class Rendering {
      * @param loc the ResourceLocation
      */
     public static void unloadTexture(ResourceLocation loc) {
-        ITextureObject tex = SCReflector.instance.getTexturesMap(getMinecraft().renderEngine).remove(loc);
+        ITextureObject tex;
+        try {
+            //noinspection unchecked
+            tex = ((Map<ResourceLocation, ITextureObject>) texturesMapGet.invokeExact(getMinecraft().renderEngine)).remove(loc);
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
+        }
+
         if (tex != null) {
             glDeleteTextures(tex.getGlTextureId());
         }
@@ -709,7 +693,28 @@ public final class Rendering {
 
     private static float getZLevel() {
         GuiScreen screen = getMinecraft().currentScreen;
-        return screen == null ? 0 : SCReflector.instance.getZLevel(screen);
+        try {
+            return screen == null ? 0 : (float) zLevelGet.invokeExact(screen);
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
+        }
+    }
+
+    private static final MethodHandle texturesMapGet;
+    private static final MethodHandle zLevelGet;
+
+    static {
+        try {
+            Field field = TextureManager.class.getDeclaredField(MCPNames.field(SRGConstants.F_MAP_TEXTURE_OBJECTS));
+            field.setAccessible(true);
+            texturesMapGet = publicLookup().unreflectGetter(field);
+
+            field = Gui.class.getDeclaredField(MCPNames.field(SRGConstants.F_Z_LEVEL));
+            field.setAccessible(true);
+            zLevelGet = publicLookup().unreflectGetter(field);
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
+        }
     }
 
     private Rendering() {

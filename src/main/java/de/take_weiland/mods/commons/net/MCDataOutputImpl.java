@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
-import de.take_weiland.mods.commons.internal.SCReflector;
+import com.google.common.base.Throwables;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.nbt.NBT;
 import de.take_weiland.mods.commons.util.EnumUtils;
 import net.minecraft.block.Block;
@@ -526,7 +527,13 @@ final class MCDataOutputImpl extends OutputStream implements MCDataOutput, Writa
 
                     writeByte(tag.getId());
                     writeString(entry.getKey());
-                    SCReflector.instance.write(tag, this);
+                    try {
+                        CommonMethodHandles.nbtBaseWrite.invokeExact((NBTBase) tag, (DataOutput) this);
+                    } catch (IOException io) {
+                        throw io;
+                    } catch (Throwable x) {
+                        throw Throwables.propagate(x);
+                    }
                 }
             } catch (IOException e) {
                 throw new IllegalStateException(e);

@@ -1,8 +1,9 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.base.Throwables;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
@@ -42,17 +43,25 @@ public final class Items extends net.minecraft.init.Items {
 
         String modId = Loader.instance().activeModContainer().getModId();
 
-        if (SCReflector.instance.getRawIconName(item) == null) {
-            item.setTextureName(modId + ":" + baseName);
-        }
+        //noinspection Duplicates
+        try {
+            if ((String) CommonMethodHandles.itemIconNameGet.invokeExact(item) == null) {
+                item.setTextureName(modId + ":" + baseName);
+            }
 
-        if (SCReflector.instance.getRawUnlocalizedName(item) == null) {
-            item.setUnlocalizedName(modId + "." + baseName);
+            if ((String) CommonMethodHandles.itemUnlocalizedNameGet.invokeExact(item) == null) {
+                item.setUnlocalizedName(modId + "." + baseName);
+            }
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
         }
 
         if (item instanceof HasSubtypes) {
-            SCReflector.instance.setHasSubtypes(item, true);
-
+            try {
+                CommonMethodHandles.setHasSubtypes.invokeExact(item, true);
+            } catch (Throwable x) {
+                throw Throwables.propagate(x);
+            }
             ItemStacks.registerSubstacks(baseName, item, (HasSubtypes<?>) item);
         }
 

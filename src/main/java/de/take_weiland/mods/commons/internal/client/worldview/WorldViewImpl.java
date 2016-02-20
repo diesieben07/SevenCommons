@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 import static org.lwjgl.opengl.GL11.*;
@@ -31,7 +32,7 @@ import static org.lwjgl.opengl.GL30.*;
 /**
  * @author diesieben07
  */
-public final class WorldViewImpl implements WorldView {
+public class WorldViewImpl implements WorldView {
 
     private static final Map<Integer, List<WorldViewImpl>> views        = new HashMap<>();
     private static final Map<Integer, WorldClient>         clientWorlds = new HashMap<>();
@@ -39,18 +40,18 @@ public final class WorldViewImpl implements WorldView {
 
     private final RenderGlobal     rg;
     private       EntityLivingBase viewport;
-    private       long             renderEndNanoTime;
 
-    private       int    texture;
-    private       int    frameBuffer;
-    private final int    renderBuffer;
-    private final int    width;
-    private final int    height;
-    private final int    dimension;
-    private       double x, y, z;
+    private       int texture;
+    private final int frameBuffer;
+    private final int renderBuffer;
+    private final int width;
+    private final int height;
+    private final int dimension;
+
+    private double x, y, z;
     private float pitch, yaw;
 
-    public static WorldViewImpl create(int frameskip, int width, int height, int dimension, double x, double y, double z, float pitch, float yaw) {
+    public static WorldViewImpl createImpl(int fps, TimeUnit unit, int width, int height, int dimension, double x, double y, double z, float pitch, float yaw) {
         int frameBuf = glGenFramebuffers();
         glBindFramebuffer(GL_FRAMEBUFFER, frameBuf);
         int texture = genTexture(width, height);
@@ -62,7 +63,14 @@ public final class WorldViewImpl implements WorldView {
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuf);
 
-        WorldViewImpl view = new WorldViewImpl(texture, frameBuf, renderBuf, width, height, dimension, x, y, z, pitch, yaw);
+        WorldViewImpl view;
+        if (fps == WorldView.ON_DEMAND_RENDERING) {
+            view = new OnDemandRenderingView(texture, frameBuf, renderBuf, width, height, dimension, x, y, z, pitch, yaw);
+        } else if (fps != WorldView.CONTINUOUS) {
+            view = new ViewWithFPS(texture, frameBuf, renderBuf, width, height, dimension, x, y, z, pitch, yaw, fps, unit);
+        } else {
+            view = new WorldViewImpl(texture, frameBuf, renderBuf, width, height, dimension, x, y, z, pitch, yaw);
+        }
         getViews(dimension).add(view);
 
         WorldClient world = clientWorlds.get(dimension);
@@ -108,6 +116,12 @@ public final class WorldViewImpl implements WorldView {
         }
     }
 
+    public static void cleanup() {
+        clientWorlds.clear();
+        views.forEach((dim, list) -> list.forEach(WorldViewImpl::disposeNoListRemove));
+        views.clear();
+    }
+
     public static final String SET_CLIENT_WORLD = "setMainClientWorld";
 
     // callback from asm
@@ -144,7 +158,11 @@ public final class WorldViewImpl implements WorldView {
         viewport.setPositionAndRotation(x, y, z, yaw, pitch);
     }
 
-    private void render() {
+    void render() {
+        forceRender();
+    }
+
+    final void forceRender() {
         if (viewport == null) {
             return;
         }
@@ -211,15 +229,6 @@ public final class WorldViewImpl implements WorldView {
         glViewport(0, 0, widthBackup, heightBackup);
         glLoadIdentity();
 
-//        ReflectionHelper.setPrivateValue(EntityRenderer.class, entityRenderer, nanoTime, "renderEndNanoTime");
-//
-//        glBindTexture(GL_TEXTURE_2D, texture);
-//        glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, width, height, 0);
-
-//        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        renderEndNanoTime = System.nanoTime();
-
         ((EntityRendererProxy) entityRenderer)._sc$setFovModifierHand(fovHandBackup);
         ((EntityRendererProxy) entityRenderer)._sc$setFovModifierHandPrev(fovHandPrevBackup);
 
@@ -278,19 +287,23 @@ public final class WorldViewImpl implements WorldView {
 
     @Override
     public void dispose() {
-        if (isActive()) {
+        disposeNoListRemove();
+        views.get(dimension).remove(this);
+    }
+
+    private void disposeNoListRemove() {
+        if (isDisposed()) {
             glDeleteFramebuffers(frameBuffer);
             glDeleteRenderbuffers(renderBuffer);
 
             glDeleteTextures(texture);
-            views.get(dimension).remove(this);
             texture = 0;
         }
     }
 
     @Override
-    public boolean isActive() {
-        return texture != 0;
+    public boolean isDisposed() {
+        return texture == 0;
     }
 
     @Override
@@ -348,17 +361,61 @@ public final class WorldViewImpl implements WorldView {
     }
 
     @Override
-    public RenderMode getRenderType() {
-        return null;
-    }
-
-    @Override
-    public int getFrameskip() {
-        return 0;
+    public RenderMode getRenderMode() {
+        return RenderMode.CONTINUOUS;
     }
 
     @Override
     public void requestRender() {
+        throw new UnsupportedOperationException();
+    }
 
+    static final class OnDemandRenderingView extends WorldViewImpl {
+
+        private boolean requested = true;
+
+        private OnDemandRenderingView(int texture, int frameBuffer, int renderBuffer, int width, int height, int dimension, double x, double y, double z, float pitch, float yaw) {
+            super(texture, frameBuffer, renderBuffer, width, height, dimension, x, y, z, pitch, yaw);
+        }
+
+        @Override
+        public RenderMode getRenderMode() {
+            return RenderMode.ON_DEMAND;
+        }
+
+        @Override
+        void render() {
+            if (requested) {
+                forceRender();
+                requested = false;
+            }
+        }
+
+        @Override
+        public void requestRender() {
+            requested = true;
+        }
+
+    }
+
+    static final class ViewWithFPS extends WorldViewImpl {
+
+        private final long nanosBetweenFrame;
+        private       long lastFrame;
+
+        private ViewWithFPS(int texture, int frameBuffer, int renderBuffer, int width, int height, int dimension, double x, double y, double z, float pitch, float yaw, int fps, TimeUnit unit) {
+            super(texture, frameBuffer, renderBuffer, width, height, dimension, x, y, z, pitch, yaw);
+            this.nanosBetweenFrame = unit.toNanos(1) / fps;
+            lastFrame = 0;
+        }
+
+        @Override
+        void render() {
+            long now = System.nanoTime();
+            if ((now - lastFrame) >= nanosBetweenFrame) {
+                lastFrame = now;
+                forceRender();
+            }
+        }
     }
 }

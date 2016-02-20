@@ -3,19 +3,13 @@ package de.take_weiland.mods.commons.internal.worldview;
 import com.google.common.collect.BiMap;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.asm.MCPNames;
-import de.take_weiland.mods.commons.internal.SRGConstants;
+import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.client.worldview.WorldViewImpl;
 import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
-
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Field;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 
@@ -87,7 +81,7 @@ public class VanillaPacketPrefixes {
             clientWorldBackup = world;
             WorldClient newWorld = WorldViewImpl.getOrCreateWorld(targetDim);
             getMinecraft().theWorld = newWorld;
-            netHandlerClientWorldSet.invokeExact(getMinecraft().getNetHandler(), newWorld);
+            ClientProxy.netHandlerClientWorldSet.invokeExact(getMinecraft().getNetHandler(), newWorld);
         }
     }
 
@@ -100,24 +94,12 @@ public class VanillaPacketPrefixes {
         WorldClient oldWorld = clientWorldBackup;
         if (oldWorld != null) {
             getMinecraft().theWorld = oldWorld;
-            netHandlerClientWorldSet.invokeExact(getMinecraft().getNetHandler(), oldWorld);
+            ClientProxy.netHandlerClientWorldSet.invokeExact(getMinecraft().getNetHandler(), oldWorld);
             clientWorldBackup = null;
         }
     }
 
     // todo serversafe!
-
-    private static final MethodHandle netHandlerClientWorldSet;
-
-    static {
-        try {
-            Field field = NetHandlerPlayClient.class.getDeclaredField(MCPNames.field(SRGConstants.M_NET_HANDLER_PLAY_CLIENT_WORLD));
-            field.setAccessible(true);
-            netHandlerClientWorldSet = MethodHandles.publicLookup().unreflectSetter(field);
-        } catch (Exception x) {
-            throw new RuntimeException(x);
-        }
-    }
 
 
 }

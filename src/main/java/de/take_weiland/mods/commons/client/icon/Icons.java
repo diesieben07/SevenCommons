@@ -1,8 +1,9 @@
 package de.take_weiland.mods.commons.client.icon;
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
-import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.meta.MetadataProperty;
 import de.take_weiland.mods.commons.meta.Subtype;
@@ -32,7 +33,11 @@ public final class Icons {
      * @return a Map mapping Subtypes to Icons
      */
     public static <TYPE extends Subtype, ITEM extends Item & HasSubtypes<TYPE>> Map<TYPE, IIcon> registerMulti(ITEM item, IIconRegister register) {
-        return registerMulti0(SCReflector.instance.getIconName(item) + ".", item, register);
+        try {
+            return registerMulti0((String) CommonMethodHandles.itemIconNameGet.invokeExact(item) + ".", item, register);
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
+        }
     }
 
     /**
@@ -43,7 +48,11 @@ public final class Icons {
      * @return a Map mapping Subtypes to Icons
      */
     public static <TYPE extends Subtype, BLOCK extends Block & HasSubtypes<TYPE>> Map<TYPE, IIcon> registerMulti(BLOCK block, IIconRegister register) {
-        return registerMulti0(SCReflector.instance.getIconName(block) + ".", block, register);
+        try {
+            return registerMulti0((String) CommonMethodHandles.blockIconNameGet.invokeExact(block) + ".", block, register);
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
+        }
     }
 
     /**

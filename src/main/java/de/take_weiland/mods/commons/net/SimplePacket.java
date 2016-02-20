@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
 import de.take_weiland.mods.commons.util.Entities;
 import de.take_weiland.mods.commons.util.Players;
@@ -240,7 +240,7 @@ public interface SimplePacket {
     default void sendToViewing(Container c) {
         // the filter makes sure it only contains EntityPlayer's
         //noinspection unchecked
-        sendTo(Iterables.filter(SCReflector.instance.getCrafters(c), EntityPlayerMP.class));
+        sendTo(Iterables.filter(CommonMethodHandles.getListeners(c), EntityPlayerMP.class));
     }
 
     /**
@@ -499,7 +499,7 @@ public interface SimplePacket {
          * @return a {@code CompletableFuture} for each player representing their response
          */
         default Map<EntityPlayer, CompletionStage<R>> sendToViewing(Container c) {
-            return sendTo(Iterables.filter(SCReflector.instance.getCrafters(c), EntityPlayerMP.class), null);
+            return sendTo(Iterables.filter(CommonMethodHandles.getListeners(c), EntityPlayerMP.class), null);
         }
     }
 

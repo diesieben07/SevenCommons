@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
 import de.take_weiland.mods.commons.internal.transformers.FieldAdder;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 /**
  * @author diesieben07
@@ -9,10 +9,10 @@ import gnu.trove.list.array.TLongArrayList;
 public interface EntityPlayerMPProxy {
 
     @FieldAdder.FieldGetter(field = "_sc$chunks", creator = "createList")
-    TLongArrayList _sc$viewedChunks();
+    TLongHashSet _sc$viewedChunks();
 
-    static TLongArrayList createList() {
-        return new TLongArrayList();
+    static TLongHashSet createList() {
+        return new TLongHashSet();
     }
 
 }

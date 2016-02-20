@@ -1,6 +1,9 @@
 package de.take_weiland.mods.commons.net;
 
-import de.take_weiland.mods.commons.internal.SCReflector;
+import com.google.common.base.Throwables;
+import de.take_weiland.mods.commons.asm.MCPNames;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.Players;
 import net.minecraft.entity.Entity;
@@ -9,6 +12,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.network.Packet;
+import net.minecraft.server.management.PlayerManager;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -16,8 +20,13 @@ import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.function.Predicate;
+
+import static java.lang.invoke.MethodHandles.publicLookup;
 
 /**
  * <p>Utility class for sending Packets around.</p>
@@ -151,9 +160,36 @@ public final class Packets {
      * @param chunkZ the chunk z coordinate
      */
     public static void sendToAllTrackingChunk(Packet packet, World world, int chunkX, int chunkZ) {
-        Object playerInstance = SCReflector.instance.getPlayerInstance(checkNotClient(world).getPlayerManager(), chunkX, chunkZ, false);
-        if (playerInstance != null) {
-            SCReflector.instance.sendToAllWatchingChunk(playerInstance, packet);
+        try {
+            sendPacketToChunk.invokeExact(checkNotClient(world).getPlayerManager(), chunkX, chunkZ, false, packet);
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
+        }
+    }
+
+    private static final MethodHandle sendPacketToChunk;
+
+    static {
+        try {
+            // this is done in MethodHandles because we cannot reference the PlayerInstance class
+            // basically:
+            // void sendPacketToChunk(PlayerManager pm, int chunkX, int chunkZ, boolean create, Packet packet) {
+            //     pm.getOrCreateChunkWatcher(chunkX, chunkZ, create).sendToAllWatchingChunk(packet)
+            // }
+
+            Class<?> playerInstanceClass = Class.forName("net.minecraft.server.management.PlayerManager$PlayerInstance");
+            Method method = PlayerManager.class.getDeclaredMethod(MCPNames.method(SRGConstants.M_GET_OR_CREATE_CHUNK_WATCHER), int.class, int.class, boolean.class);
+            method.setAccessible(true);
+            MethodHandle playerInstanceGet = publicLookup().unreflect(method);
+
+            method = playerInstanceClass.getDeclaredMethod(MCPNames.method(SRGConstants.M_SEND_TO_ALL_WATCHING_CHUNK), Packet.class);
+            method.setAccessible(true);
+            MethodHandle sendPacket = publicLookup().unreflect(method);
+            sendPacket = MethodHandles.dropArguments(sendPacket, 1, PlayerManager.class, int.class, int.class, boolean.class);
+
+            sendPacketToChunk = MethodHandles.foldArguments(sendPacket, playerInstanceGet);
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
         }
     }
 
@@ -173,7 +209,7 @@ public final class Packets {
      * This method does <i>not</i> check for players viewing the inventory. As in: this method sends the packet to only one player.</p>
      */
     public static void sendToViewing(Packet packet, Container container) {
-        List<ICrafting> crafters = SCReflector.instance.getCrafters(container);
+        List<ICrafting> crafters = CommonMethodHandles.getListeners(container);
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0, len = crafters.size(); i < len; ++i) {
             ICrafting crafter = crafters.get(i);

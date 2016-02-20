@@ -1,8 +1,9 @@
 package de.take_weiland.mods.commons.inv;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.internal.ContainerProxy;
-import de.take_weiland.mods.commons.internal.SCReflector;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.util.ItemStacks;
 import net.minecraft.entity.player.EntityPlayer;
@@ -46,15 +47,19 @@ public final class Containers {
      * @param yStart          the y coordinate
      */
     public static void addPlayerInventory(Container container, InventoryPlayer inventoryPlayer, int xStart, int yStart) {
-        // add the upper 3 rows
-        for (int y = 0; y < 3; y++) {
-            for (int x = 0; x < 9; x++) {
-                SCReflector.instance.addSlot(container, new SimpleSlot(inventoryPlayer, x + y * 9 + 9, xStart + x * SLOT_HEIGHT, yStart + y * SLOT_HEIGHT));
+        try {
+            // add the upper 3 rows
+            for (int y = 0; y < 3; y++) {
+                for (int x = 0; x < 9; x++) {
+                    CommonMethodHandles.containerAddSlot.invokeExact(container, (Slot) new SimpleSlot(inventoryPlayer, x + y * 9 + 9, xStart + x * SLOT_HEIGHT, yStart + y * SLOT_HEIGHT));
+                }
             }
-        }
-        // add the hotbar
-        for (int k = 0; k < 9; k++) {
-            SCReflector.instance.addSlot(container, new SimpleSlot(inventoryPlayer, k, xStart + k * 18, yStart + 58));
+            // add the hotbar
+            for (int k = 0; k < 9; k++) {
+                CommonMethodHandles.containerAddSlot.invokeExact(container, (Slot) new SimpleSlot(inventoryPlayer, k, xStart + k * 18, yStart + 58));
+            }
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
         }
     }
 
@@ -76,7 +81,7 @@ public final class Containers {
      * @return the player
      */
     public static EntityPlayer getViewer(Container container) {
-        List<ICrafting> listeners = SCReflector.instance.getCrafters(container);
+        List<ICrafting> listeners = CommonMethodHandles.getListeners(container);
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0, len = listeners.size(); i < len; i++) {
             ICrafting listener = listeners.get(i);

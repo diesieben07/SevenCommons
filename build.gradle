@@ -1,4 +1,4 @@
-hjbuildscript {
+buildscript {
     repositories {
         mavenCentral()
         maven {

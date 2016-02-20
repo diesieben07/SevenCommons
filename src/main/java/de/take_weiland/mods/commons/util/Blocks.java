@@ -1,9 +1,10 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Throwables;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.internal.SCReflector;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.inv.Inventories;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import de.take_weiland.mods.commons.templates.TypedItemBlock;
@@ -52,11 +53,16 @@ public final class Blocks extends net.minecraft.init.Blocks {
         checkPhase("Block");
         String modId = Loader.instance().activeModContainer().getModId();
 
-        if (SCReflector.instance.getRawIconName(block) == null) {
-            block.setTextureName(modId + ":" + baseName);
-        }
-        if (SCReflector.instance.getRawUnlocalizedName(block) == null) {
-            block.setUnlocalizedName(modId + "." + baseName);
+        //noinspection Duplicates
+        try {
+            if ((String) CommonMethodHandles.blockIconNameGet.invokeExact(block) == null) {
+                block.setTextureName(modId + ":" + baseName);
+            }
+            if ((String) CommonMethodHandles.blockUnlocalizedNameGet.invokeExact(block) == null) {
+                block.setUnlocalizedName(modId + "." + baseName);
+            }
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
         }
 
         GameRegistry.registerBlock(block, Objects.firstNonNull(itemClass, getItemBlockClass(block)), baseName);
@@ -65,7 +71,6 @@ public final class Blocks extends net.minecraft.init.Blocks {
             ItemStacks.registerSubstacks(baseName, getItem(block), (HasSubtypes<?>) block);
         }
     }
-
 
     /**
      * <p>Utility function to initialize a lot of block at the same time.</p>

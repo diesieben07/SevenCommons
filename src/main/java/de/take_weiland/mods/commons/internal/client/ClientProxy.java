@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.internal.client;
 
+import de.take_weiland.mods.commons.asm.MCPNames;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
 import de.take_weiland.mods.commons.internal.client.worldview.WorldViewImpl;
 import de.take_weiland.mods.commons.internal.worldview.PacketBlockChange;
@@ -7,12 +9,17 @@ import de.take_weiland.mods.commons.internal.worldview.PacketChunkData;
 import de.take_weiland.mods.commons.internal.worldview.PacketChunkUnload;
 import net.minecraft.block.Block;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C17PacketCustomPayload;
 import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.chunk.Chunk;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 
@@ -72,4 +79,17 @@ public final class ClientProxy implements SevenCommonsProxy {
     public void handleBlockChangePacket(PacketBlockChange packet, EntityPlayer player) {
         WorldViewImpl.getOrCreateWorld(packet.dimension).setBlock(packet.x, packet.y, packet.z, Block.getBlockById(packet.data >>> 4), packet.data & 0xF, 3);
     }
+
+    public static final MethodHandle netHandlerClientWorldSet;
+
+    static {
+        try {
+            Field field = NetHandlerPlayClient.class.getDeclaredField(MCPNames.field(SRGConstants.M_NET_HANDLER_PLAY_CLIENT_WORLD));
+            field.setAccessible(true);
+            netHandlerClientWorldSet = MethodHandles.publicLookup().unreflectSetter(field);
+        } catch (Exception x) {
+            throw new RuntimeException(x);
+        }
+    }
+
 }
