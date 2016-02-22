@@ -16,9 +16,12 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
+import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -300,6 +303,48 @@ public class WorldViewImpl implements WorldView {
             glDeleteTextures(texture);
             texture = 0;
         }
+    }
+
+    private static ByteBuffer screenshotBuf;
+    private static IntBuffer  intBuf;
+
+    @Override
+    public BufferedImage grabScreenshot() {
+        glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        int byteCount = width * height * 4;
+
+        if (screenshotBuf == null || screenshotBuf.capacity() < byteCount) {
+            screenshotBuf = BufferUtils.createByteBuffer(byteCount);
+            intBuf = screenshotBuf.asIntBuffer();
+        }
+        screenshotBuf.clear();
+
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_BYTE, screenshotBuf);
+
+        int[] ints = new int[width * height];
+        intBuf.rewind();
+        intBuf.get(ints);
+
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        img.setRGB(0, 0, width, height, ints, 0, width);
+        return img;
+    }
+
+    public static BufferedImage fromRawRotatedRgb(int width, int height, byte[] data) {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int i = (x + width * y) * 3;
+                int r = data[i] & 0xFF;
+                int g = data[i + 1] & 0xFF;
+                int b = data[i + 2] & 0xFF;
+                image.setRGB(x, height - y - 1, 0xFF << 24 | r << 16 | g << 8 | b);
+            }
+        }
+        return image;
     }
 
     @Override

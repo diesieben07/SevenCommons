@@ -4,6 +4,7 @@ import de.take_weiland.mods.commons.internal.client.worldview.WorldViewImpl;
 import org.lwjgl.opengl.GL11;
 
 import javax.vecmath.Vector3d;
+import java.awt.image.BufferedImage;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -129,6 +130,8 @@ public interface WorldView {
     default void bindTexture() {
         glBindTexture(GL_TEXTURE_2D, getTextureId());
     }
+
+    BufferedImage grabScreenshot();
 
     /**
      * <p>Dispose this view. A disposed view will no longer be rendered and it's texture and other resources will be deleted.</p>
