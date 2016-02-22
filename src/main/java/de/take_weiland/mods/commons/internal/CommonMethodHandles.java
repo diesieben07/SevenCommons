@@ -51,7 +51,7 @@ public final class CommonMethodHandles {
 
             Method method = Item.class.getDeclaredMethod(MCPNames.method(SRGConstants.M_SET_HAS_SUBTYPES), boolean.class);
             method.setAccessible(true);
-            setHasSubtypes = publicLookup().unreflect(method);
+            setHasSubtypes = publicLookup().unreflect(method).asType(methodType(void.class, Item.class, boolean.class));
 
             method = Container.class.getDeclaredMethod(MCPNames.method(SRGConstants.M_ADD_SLOT_TO_CONTAINER), Slot.class);
             method.setAccessible(true);
