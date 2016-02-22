@@ -6,14 +6,14 @@ import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SchedulerBase;
 import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import gnu.trove.list.linked.TLinkedList;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -27,7 +27,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author diesieben07
  */
 @ParametersAreNonnullByDefault
-public abstract class Scheduler extends SchedulerBase {
+public final class Scheduler extends SchedulerBase {
 
     private static final Scheduler server;
     private static final Scheduler client;
@@ -81,91 +81,45 @@ public abstract class Scheduler extends SchedulerBase {
     }
 
     static {
-        try {
-            boolean useUnsafe = JavaUtils.unsafe() != null;
-            @SuppressWarnings("unchecked")
-            Class<? extends Scheduler> clazz = (Class<? extends Scheduler>) Class.forName("de.take_weiland.mods.commons.util.Scheduler" + (useUnsafe ? "Unsafe" : "NonUnsafe"));
-
-            if (FMLCommonHandler.instance().getSide().isClient()) {
-                client = clazz.newInstance();
-            } else {
-                client = null;
-            }
-            server = clazz.newInstance();
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+        if (FMLCommonHandler.instance().getSide().isClient()) {
+            client = new Scheduler();
+        } else {
+            client = null;
         }
+        server = new Scheduler();
     }
-
-    @SuppressWarnings("unused") // we use it, just via CAS
-    private volatile SchedulerInternalTask head;
-
-    static AtomicReferenceFieldUpdater<Scheduler, SchedulerInternalTask> makeHeadUpdater() {
-        return AtomicReferenceFieldUpdater.newUpdater(Scheduler.class, SchedulerInternalTask.class, "head");
-    }
-
-    abstract boolean casHead(@Nullable SchedulerInternalTask expect, @Nullable SchedulerInternalTask _new);
 
     /**
      * helper to add a single task
      */
     @Override
     protected void addTask(SchedulerInternalTask task) {
-        addTasks(task, task);
+        newTasks.addLast(task);
     }
 
-    /**
-     * add a prebuilt linked list of tasks, newHead must eventually through a chain of .next pointers point to newTail.
-     * newTail.next must be meaningless, it will be overwritten
-     * <p>if newHead == newTail a single task will be added
-     */
-    private void addTasks(SchedulerInternalTask newHead, SchedulerInternalTask newTail) {
-        SchedulerInternalTask curr;
-        do {
-            curr = head;
-            newTail.next = curr;
-            // volatile write, any writes before this happen before a read on "this.head"
-            // hence InternalTask.next doesn't need to be volatile
-        } while (!casHead(curr, newHead));
-    }
+    private final ConcurrentLinkedDeque<SchedulerInternalTask> newTasks    = new ConcurrentLinkedDeque<>();
+    private final TLinkedList<SchedulerInternalTask>           activeTasks = new TLinkedList<>();
 
     @Override
     protected void tick() {
-        SchedulerInternalTask curr;
-        do {
-            curr = head;
-            if (curr == null) {
-                // no tasks
-                return;
-            }
-            // set to null to mark tasks as done
-        } while (!casHead(curr, null));
-
-        SchedulerInternalTask rescheduleHead = null; // built list of things to reschedule here, to avoid CASing this.next for every single one of them
-        SchedulerInternalTask rescheduleTail = null; // instead we CAS just once, once we are done here
-
-        while (true) {
-            SchedulerInternalTask next = curr.next;
-
-            try {
-                if (curr.execute()) {
-                    if (rescheduleHead == null) {
-                        rescheduleHead = rescheduleTail = curr;
-                    } else {
-                        curr.next = rescheduleHead;
-                        rescheduleHead = curr;
-                    }
-                }
-            } catch (Throwable x) {
-                SevenCommons.log.error(String.format("Exception thrown during execution of %s", curr));
-            }
-
-            if ((curr = next) == null) {
-                break;
+        {
+            SchedulerInternalTask task;
+            while ((task = newTasks.pollFirst()) != null) {
+                activeTasks.add(task);
             }
         }
-        if (rescheduleHead != null) {
-            addTasks(rescheduleHead, rescheduleTail);
+        {
+            SchedulerInternalTask curr = activeTasks.getFirst();
+            while (curr != null) {
+                try {
+                    if (!curr.execute()) {
+                        activeTasks.remove(curr);
+                    }
+                } catch (Throwable x) {
+                    SevenCommons.log.error(String.format("Exception thrown during execution of %s", curr));
+                }
+                curr = curr.getNext();
+            }
         }
     }
 
@@ -301,7 +255,7 @@ public abstract class Scheduler extends SchedulerBase {
         return false;
     }
 
-    Scheduler() {
+    private Scheduler() {
     }
 
 }

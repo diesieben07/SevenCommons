@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal;
 
 import de.take_weiland.mods.commons.util.Scheduler;
+import gnu.trove.list.TLinkable;
 
 /**
  * <p>Can be used for memory-saving purposes. if a task subclassing this is added to the scheduler, no additional memory
@@ -8,9 +9,10 @@ import de.take_weiland.mods.commons.util.Scheduler;
  *
  * @author diesieben07
  */
-public abstract class SchedulerInternalTask {
+public abstract class SchedulerInternalTask implements TLinkable<SchedulerInternalTask> {
 
-    public SchedulerInternalTask next;
+    private SchedulerInternalTask next;
+    private SchedulerInternalTask prev;
 
     /**
      * <p>Perform this task's action.</p>
@@ -23,4 +25,23 @@ public abstract class SchedulerInternalTask {
         ((SchedulerBase) scheduler).addTask(task);
     }
 
+    @Override
+    public SchedulerInternalTask getNext() {
+        return next;
+    }
+
+    @Override
+    public SchedulerInternalTask getPrevious() {
+        return prev;
+    }
+
+    @Override
+    public void setNext(SchedulerInternalTask t) {
+        next = t;
+    }
+
+    @Override
+    public void setPrevious(SchedulerInternalTask t) {
+        prev = t;
+    }
 }
