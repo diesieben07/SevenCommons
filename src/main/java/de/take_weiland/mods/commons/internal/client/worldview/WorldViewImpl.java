@@ -413,7 +413,11 @@ public class WorldViewImpl implements WorldView {
             if (renderCallback == null) {
                 renderCallback = callback;
             } else {
-                renderCallback = renderCallback.andThen(callback::accept);
+                Consumer<? super WorldView> oldCb = this.renderCallback;
+                this.renderCallback = view -> {
+                    callback.accept(view);
+                    oldCb.accept(view);
+                };
             }
         }
     }
