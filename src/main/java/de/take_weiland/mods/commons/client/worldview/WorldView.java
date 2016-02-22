@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL11;
 
 import javax.vecmath.Vector3d;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static net.minecraft.client.Minecraft.getMinecraft;
@@ -162,6 +163,8 @@ public interface WorldView {
      * <p>For non-continuous views request that this view be rendered at the next game frame.</p>
      */
     void requestRender();
+
+    void requestRender(Consumer<? super WorldView> callback);
 
     /**
      * <p>Get the width of this view's texture in pixels.</p>

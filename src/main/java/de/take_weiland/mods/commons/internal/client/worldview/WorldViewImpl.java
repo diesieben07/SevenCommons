@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 import static org.lwjgl.opengl.GL11.*;
@@ -370,9 +371,15 @@ public class WorldViewImpl implements WorldView {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void requestRender(Consumer<? super WorldView> callback) {
+        throw new UnsupportedOperationException();
+    }
+
     static final class OnDemandRenderingView extends WorldViewImpl {
 
         private boolean requested = true;
+        private Consumer<? super WorldView> renderCallback;
 
         private OnDemandRenderingView(int texture, int frameBuffer, int renderBuffer, int width, int height, int dimension, double x, double y, double z, float pitch, float yaw) {
             super(texture, frameBuffer, renderBuffer, width, height, dimension, x, y, z, pitch, yaw);
@@ -387,7 +394,11 @@ public class WorldViewImpl implements WorldView {
         void render() {
             if (requested) {
                 forceRender();
+                if (renderCallback != null) {
+                    renderCallback.accept(this);
+                }
                 requested = false;
+                renderCallback = null;
             }
         }
 
@@ -396,6 +407,15 @@ public class WorldViewImpl implements WorldView {
             requested = true;
         }
 
+        @Override
+        public void requestRender(Consumer<? super WorldView> callback) {
+            requested = true;
+            if (renderCallback == null) {
+                renderCallback = callback;
+            } else {
+                renderCallback = renderCallback.andThen(callback::accept);
+            }
+        }
     }
 
     static final class ViewWithFPS extends WorldViewImpl {
