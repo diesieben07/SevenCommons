@@ -17,13 +17,14 @@ buildscript {
 
 apply plugin: 'forge'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 version = "0.1"
 def ENV = System.getenv()
 if (ENV.TRAVIS_BUILD_NUMBER) {
     version += "." + ENV.TRAVIS_BUILD_NUMBER
 } else {
-    version += ".local"
+    version += "-SNAPSHOT"
 }
 
 group = "de.take_weiland.mods.commons" // http://maven.apache.org/guides/mini/guide-naming-conventions.html

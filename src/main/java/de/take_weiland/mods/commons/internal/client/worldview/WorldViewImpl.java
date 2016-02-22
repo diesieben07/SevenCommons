@@ -31,6 +31,8 @@ import java.util.function.Consumer;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.GL_BGRA;
+import static org.lwjgl.opengl.GL12.GL_UNSIGNED_INT_8_8_8_8_REV;
 import static org.lwjgl.opengl.GL30.*;
 
 /**
@@ -320,31 +322,21 @@ public class WorldViewImpl implements WorldView {
             screenshotBuf = BufferUtils.createByteBuffer(byteCount);
             intBuf = screenshotBuf.asIntBuffer();
         }
-        screenshotBuf.clear();
+        intBuf.clear();
 
-        glReadPixels(0, 0, width, height, GL_RGBA, GL_BYTE, screenshotBuf);
+        glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, intBuf);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         int[] ints = new int[width * height];
         intBuf.rewind();
         intBuf.get(ints);
 
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        img.setRGB(0, 0, width, height, ints, 0, width);
-        return img;
-    }
-
-    public static BufferedImage fromRawRotatedRgb(int width, int height, byte[] data) {
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                int i = (x + width * y) * 3;
-                int r = data[i] & 0xFF;
-                int g = data[i + 1] & 0xFF;
-                int b = data[i + 2] & 0xFF;
-                image.setRGB(x, height - y - 1, 0xFF << 24 | r << 16 | g << 8 | b);
-            }
+        for (int row = 0; row < height; row++) {
+            img.setRGB(0, height - 1 - row, width, 1, ints, row * width, width);
         }
-        return image;
+        return img;
     }
 
     @Override

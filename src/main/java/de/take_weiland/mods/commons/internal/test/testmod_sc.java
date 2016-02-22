@@ -24,9 +24,6 @@ import de.take_weiland.mods.commons.util.Retries;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -45,14 +42,16 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
-import org.lwjgl.input.Mouse;
+import org.lwjgl.input.Keyboard;
 
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 
@@ -187,26 +186,31 @@ public class testmod_sc {
     public void onGuiOverlay(RenderGameOverlayEvent.Post event) {
         if (getMinecraft().theWorld != null && event.type == RenderGameOverlayEvent.ElementType.ALL) {
             if (view == null || view.isDisposed()) {
-                view = WorldView.create(256, 256, 0, 0, 65, 0, 90, 0, 240, TimeUnit.SECONDS);
+                view = WorldView.create(256, 256, 0, 0, 65, 0, 90, 0, WorldView.ON_DEMAND_RENDERING);
             } else {
-                if (Mouse.isButtonDown(0) && view.getRenderMode() == WorldView.RenderMode.ON_DEMAND) {
-                    view.requestRender();
+                if (Keyboard.isKeyDown(Keyboard.KEY_RCONTROL) && view.getRenderMode() == WorldView.RenderMode.ON_DEMAND) {
+                    view.requestRender(view -> {
+                        try {
+                            ImageIO.write(view.grabScreenshot(), "PNG", new File("C:/users/takew/desktop/test.png"));
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
                 }
 
-                view.bindTexture();
-
-                int screenSize = 100;
-                int y = new ScaledResolution(getMinecraft(), getMinecraft().displayWidth, getMinecraft().displayHeight).getScaledHeight() - screenSize - 10;
-                Tessellator t = Tessellator.instance;
-                t.startDrawingQuads();
-                t.addVertexWithUV(10, y + screenSize, (float) 0, 0, 0);
-                t.addVertexWithUV(10 + screenSize, y + screenSize, (float) 0, 1, 0);
-                t.addVertexWithUV(10 + screenSize, y, (float) 0, 1, 1);
-                t.addVertexWithUV(10, y, (float) 0, 0, 1);
-                t.draw();
-
-                EntityClientPlayerMP player = getMinecraft().thePlayer;
-//                view.setPosition(0, 60, 0, 90, 0);
+//                view.bindTexture();
+//
+//                int screenSize = 100;
+//                int y = new ScaledResolution(getMinecraft(), getMinecraft().displayWidth, getMinecraft().displayHeight).getScaledHeight() - screenSize - 10;
+//                Tessellator t = Tessellator.instance;
+//                t.startDrawingQuads();
+//                t.addVertexWithUV(10, y + screenSize, (float) 0, 0, 0);
+//                t.addVertexWithUV(10 + screenSize, y + screenSize, (float) 0, 1, 0);
+//                t.addVertexWithUV(10 + screenSize, y, (float) 0, 1, 1);
+//                t.addVertexWithUV(10, y, (float) 0, 0, 1);
+//                t.draw();
+//
+//                EntityClientPlayerMP player = getMinecraft().thePlayer;
             }
         }
     }
