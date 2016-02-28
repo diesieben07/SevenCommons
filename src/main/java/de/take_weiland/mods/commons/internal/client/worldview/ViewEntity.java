@@ -13,10 +13,20 @@ public class ViewEntity extends EntityLivingBase {
         super(world);
     }
 
-//    @Override
-//    public void onUpdate() {
-//
-//    }
+    @Override
+    public void onUpdate() {
+
+    }
+
+    @Override
+    public boolean canBeCollidedWith() {
+        return false;
+    }
+
+    @Override
+    public boolean canBePushed() {
+        return false;
+    }
 
     @Override
     public ItemStack getHeldItem() {

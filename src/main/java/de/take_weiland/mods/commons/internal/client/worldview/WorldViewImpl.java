@@ -291,6 +291,7 @@ public class WorldViewImpl implements WorldView {
 
             glDeleteTextures(texture);
             texture = 0;
+            viewport.setDead();
         }
     }
 
