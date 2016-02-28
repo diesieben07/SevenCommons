@@ -44,10 +44,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.input.Keyboard;
 
-import javax.imageio.ImageIO;
-import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -182,19 +179,24 @@ public class testmod_sc {
 
     WorldView view;
 
+    static boolean req = false;
+
     @SubscribeEvent
     public void onGuiOverlay(RenderGameOverlayEvent.Post event) {
         if (getMinecraft().theWorld != null && event.type == RenderGameOverlayEvent.ElementType.ALL) {
             if (view == null || view.isDisposed()) {
                 view = WorldView.create(256, 256, 0, 0, 65, 0, 90, 0, WorldView.ON_DEMAND_RENDERING);
             } else {
-                if (Keyboard.isKeyDown(Keyboard.KEY_RCONTROL) && view.getRenderMode() == WorldView.RenderMode.ON_DEMAND) {
+                if (!req && Keyboard.isKeyDown(Keyboard.KEY_RCONTROL) && view.getRenderMode() == WorldView.RenderMode.ON_DEMAND) {
+                    req = true;
                     view.requestRender(view -> {
-                        try {
-                            ImageIO.write(view.grabScreenshot(), "PNG", new File("C:/users/takew/desktop/test.png"));
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
+                        System.out.println("hello!");
+                        req = false;
+//                        try {
+//                            ImageIO.write(view.grabScreenshot(), "PNG", new File("C:/users/takew/desktop/test.png"));
+//                        } catch (IOException e) {
+//                            throw new UncheckedIOException(e);
+//                        }
                     });
                 }
 
@@ -209,8 +211,9 @@ public class testmod_sc {
 //                t.addVertexWithUV(10 + screenSize, y, (float) 0, 1, 1);
 //                t.addVertexWithUV(10, y, (float) 0, 0, 1);
 //                t.draw();
-//
+////
 //                EntityClientPlayerMP player = getMinecraft().thePlayer;
+//                view.setPosition(0, 65, 0, player.rotationPitch, player.rotationYaw);
             }
         }
     }

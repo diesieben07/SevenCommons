@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.internal.client.worldview;
 
-import cpw.mods.fml.relauncher.ReflectionHelper;
 import de.take_weiland.mods.commons.client.worldview.WorldView;
 import de.take_weiland.mods.commons.internal.EntityRendererProxy;
 import de.take_weiland.mods.commons.internal.worldview.PacketRequestWorldInfo;
@@ -13,7 +12,6 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import org.lwjgl.BufferUtils;
@@ -44,8 +42,8 @@ public class WorldViewImpl implements WorldView {
     private static final Map<Integer, WorldClient>         clientWorlds = new HashMap<>();
     public static final  String                            CLASS_NAME   = "de/take_weiland/mods/commons/internal/client/worldview/WorldViewImpl";
 
-    private final RenderGlobal     rg;
-    private       EntityLivingBase viewport;
+    final RenderGlobal rg;
+    EntityLivingBase viewport;
 
     private       int texture;
     private final int frameBuffer;
@@ -207,27 +205,13 @@ public class WorldViewImpl implements WorldView {
         mc.theWorld = getOrCreateWorld(dimension);
         RenderManager.instance.set(mc.theWorld);
 
-        mc.effectRenderer = new EffectRenderer(mc.theWorld, mc.renderEngine);
-
-        mc.entityRenderer.updateRenderer();
-        mc.renderGlobal.updateClouds();
-        mc.theWorld.doVoidFogParticles(MathHelper.floor_double(mc.renderViewEntity.posX), MathHelper.floor_double(mc.renderViewEntity.posY), MathHelper.floor_double(mc.renderViewEntity.posZ));
-        mc.effectRenderer.updateEffects();
-
         glViewport(0, 0, mc.displayWidth, mc.displayHeight);
         glBindTexture(GL11.GL_TEXTURE_2D, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
         glClearColor(1.0f, 0.0f, 0.0f, 0.5f);
         glClear(GL11.GL_COLOR_BUFFER_BIT);
 
-
-        long nanoTime = ernanotime(entityRenderer);
-        int fps = mc.gameSettings.limitFramerate;
-        if (mc.isFramerateLimitBelowMax()) {
-            entityRenderer.renderWorld(partialTicks, nanoTime + 1000000000 / fps);
-        } else {
-            entityRenderer.renderWorld(partialTicks, 0L);
-        }
+        doRenderWorld(partialTicks, entityRenderer);
 
         glEnable(GL11.GL_TEXTURE_2D);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -252,9 +236,8 @@ public class WorldViewImpl implements WorldView {
         mc.entityRenderer.updateRenderer();
     }
 
-
-    private static long ernanotime(EntityRenderer er) {
-        return ReflectionHelper.getPrivateValue(EntityRenderer.class, er, "renderEndNanoTime");
+    void doRenderWorld(float partialTicks, EntityRenderer entityRenderer) {
+        entityRenderer.renderWorld(partialTicks, 0);
     }
 
     private static int genTexture(int width, int height) {
@@ -288,7 +271,11 @@ public class WorldViewImpl implements WorldView {
         this.pitch = pitch;
         this.yaw = yaw;
 
-        this.rg = new RenderGlobal(getMinecraft());
+        this.rg = createRenderGlobal();
+    }
+
+    RenderGlobal createRenderGlobal() {
+        return new RenderGlobal(getMinecraft());
     }
 
     @Override
@@ -415,11 +402,21 @@ public class WorldViewImpl implements WorldView {
 
     static final class OnDemandRenderingView extends WorldViewImpl {
 
-        private boolean requested = true;
+        private static final int     MAX_UPDATE_TIME_IDLE    = 8000000; // roughly 120fps
+        private static final int     MAX_UPDATE_TIME_PENDING = MAX_UPDATE_TIME_IDLE * 2;
+        private static final int     MAX_REQUEST_FRAME_DELAY = 5;
+        private              boolean requested               = false;
         private Consumer<? super WorldView> renderCallback;
+
+        private int requestPendingFrames = 0;
 
         private OnDemandRenderingView(int texture, int frameBuffer, int renderBuffer, int width, int height, int dimension, double x, double y, double z, float pitch, float yaw) {
             super(texture, frameBuffer, renderBuffer, width, height, dimension, x, y, z, pitch, yaw);
+        }
+
+        @Override
+        RenderGlobal createRenderGlobal() {
+            return new FreezableRenderGlobal(getMinecraft());
         }
 
         @Override
@@ -429,24 +426,33 @@ public class WorldViewImpl implements WorldView {
 
         @Override
         void render() {
+            boolean done;
+            long maxEndTime = System.nanoTime() + (requested ? MAX_UPDATE_TIME_PENDING : MAX_UPDATE_TIME_IDLE);
+            //noinspection StatementWithEmptyBody
+            do {
+            } while (!(done = rg.updateRenderers(viewport, false)) && (System.nanoTime() - maxEndTime) < 0);
+
             if (requested) {
-                forceRender();
-                if (renderCallback != null) {
-                    renderCallback.accept(this);
+                if (done || requestPendingFrames++ == MAX_REQUEST_FRAME_DELAY) {
+                    forceRender();
+                    if (renderCallback != null) {
+                        renderCallback.accept(this);
+                    }
+                    requested = false;
+                    renderCallback = null;
                 }
-                requested = false;
-                renderCallback = null;
             }
         }
 
         @Override
         public void requestRender() {
             requested = true;
+            requestPendingFrames = 0;
         }
 
         @Override
         public void requestRender(Consumer<? super WorldView> callback) {
-            requested = true;
+            requestRender();
             if (renderCallback == null) {
                 renderCallback = callback;
             } else {
@@ -455,6 +461,51 @@ public class WorldViewImpl implements WorldView {
                     callback.accept(view);
                     oldCb.accept(view);
                 };
+            }
+        }
+    }
+
+    static final class FreezableRenderGlobal extends RenderGlobal {
+
+        private       boolean      frozen  = false;
+        private final List<Update> updates = new ArrayList<>();
+
+        public FreezableRenderGlobal(Minecraft mc) {
+            super(mc);
+        }
+
+        void freezeWorld() {
+            frozen = true;
+        }
+
+        void unFreeze() {
+            for (Update update : updates) {
+                super.markBlocksForUpdate(update.xStart, update.yStart, update.zStart, update.xEnd, update.yEnd, update.zEnd);
+            }
+            updates.clear();
+            frozen = false;
+        }
+
+        @Override
+        public void markBlocksForUpdate(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd) {
+            if (frozen) {
+                updates.add(new Update(xStart, yStart, zStart, xEnd, yEnd, zEnd));
+            } else {
+                super.markBlocksForUpdate(xStart, yStart, zStart, xEnd, yEnd, zEnd);
+            }
+        }
+
+        private static final class Update {
+
+            private final int xStart, yStart, zStart, xEnd, yEnd, zEnd;
+
+            Update(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd) {
+                this.xStart = xStart;
+                this.yStart = yStart;
+                this.zStart = zStart;
+                this.xEnd = xEnd;
+                this.yEnd = yEnd;
+                this.zEnd = zEnd;
             }
         }
     }
