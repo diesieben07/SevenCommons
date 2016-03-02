@@ -4,7 +4,10 @@ import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import de.take_weiland.mods.commons.internal.net.BaseModPacket;
 import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
 import de.take_weiland.mods.commons.internal.net.SimplePacketData;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -24,7 +27,7 @@ public final class PacketGetDataOptimizer extends ClassVisitor {
                 && (access & ACC_ABSTRACT) == 0
                 && !name.equals("de/take_weiland/mods/commons/internal/net/BaseModPacket")
                 && ClassInfo.of(BaseModPacket.class).isAssignableFrom(ClassInfo.of(name))) {
-            FieldVisitor fv = super.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, PacketToChannelMap.PACKET_DATA_FIELD, Type.getDescriptor(SimplePacketData.class), null, null);
+            FieldVisitor fv = super.visitField(ACC_PRIVATE | ACC_STATIC, PacketToChannelMap.PACKET_DATA_FIELD, Type.getDescriptor(SimplePacketData.class), null, null);
             if (fv != null) {
                 fv.visitEnd();
             }
