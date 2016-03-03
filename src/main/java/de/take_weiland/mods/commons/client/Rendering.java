@@ -694,7 +694,7 @@ public final class Rendering {
     private static float getZLevel() {
         GuiScreen screen = getMinecraft().currentScreen;
         try {
-            return screen == null ? 0 : (float) zLevelGet.invokeExact(screen);
+            return screen == null ? 0 : (float) zLevelGet.invokeExact((Gui) screen);
         } catch (Throwable x) {
             throw Throwables.propagate(x);
         }
