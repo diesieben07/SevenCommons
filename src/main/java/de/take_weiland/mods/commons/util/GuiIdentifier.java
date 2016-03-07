@@ -151,34 +151,6 @@ public interface GuiIdentifier {
          * @param guiConstructor       the gui constructor
          * @return this for convenience
          */
-        default <C extends Container> Builder add(GuiIdentifier id, ContainerConstructor.OneArg<C> containerConstructor, Supplier<GuiContainerConstructor<? extends C>> guiConstructor) {
-            return add(id, (ContainerConstructor<C>) containerConstructor, guiConstructor);
-        }
-
-        /**
-         * <p>Bind the given identifier to the given Container and GuiContainer.</p>
-         * <p>The GuiContainer constructor is wrapped in a Supplier to isolate any referenced client-only classes (see {@linkplain GuiIdentifier example usage}).
-         * The Supplier will be queried once if the environment is client side, otherwise the Supplier will be immediately discarded.</p>
-         *
-         * @param id                   the identifier
-         * @param containerConstructor the container constructor
-         * @param guiConstructor       the gui constructor
-         * @return this for convenience
-         */
-        default <C extends Container> Builder add(GuiIdentifier id, ContainerConstructor.TwoArg<C> containerConstructor, Supplier<GuiContainerConstructor<? extends C>> guiConstructor) {
-            return add(id, (ContainerConstructor<C>) containerConstructor, guiConstructor);
-        }
-
-        /**
-         * <p>Bind the given identifier to the given Container and GuiContainer.</p>
-         * <p>The GuiContainer constructor is wrapped in a Supplier to isolate any referenced client-only classes (see {@linkplain GuiIdentifier example usage}).
-         * The Supplier will be queried once if the environment is client side, otherwise the Supplier will be immediately discarded.</p>
-         *
-         * @param id                   the identifier
-         * @param containerConstructor the container constructor
-         * @param guiConstructor       the gui constructor
-         * @return this for convenience
-         */
         default <C extends Container, T extends TileEntity> Builder add(GuiIdentifier id, ContainerConstructor.ForTileEntity<C, T> containerConstructor, Supplier<GuiContainerConstructor<? extends C>> guiConstructor) {
             return add(id, (ContainerConstructor<C>) containerConstructor, guiConstructor);
         }
@@ -228,61 +200,16 @@ public interface GuiIdentifier {
              * <p>Create a new Container instance with the given parameters.</p>
              *
              * @param player the player
-             * @param world  the world
              * @return a new Container
              */
-            C newInstance(EntityPlayer player, World world);
+            C newInstance(EntityPlayer player);
 
             @Override
             default C newInstance(EntityPlayer player, World world, int x, int y, int z) {
-                return newInstance(player, world);
+                return newInstance(player);
             }
         }
 
-        /**
-         * <p>Version of {@code ContainerConstructor} that provides only the first argument.</p>
-         */
-        @FunctionalInterface
-        interface OneArg<C extends Container> extends ContainerConstructor<C> {
-
-            /**
-             * <p>Create a new Container instance with the given parameters.</p>
-             *
-             * @param player the player
-             * @param world  the world
-             * @param x      1st argument
-             * @return a new Container
-             */
-            C newInstance(EntityPlayer player, World world, int x);
-
-            @Override
-            default C newInstance(EntityPlayer player, World world, int x, int y, int z) {
-                return newInstance(player, world, x);
-            }
-        }
-
-        /**
-         * <p>Version of {@code ContainerConstructor} that provides only the first 2 arguments.</p>
-         */
-        @FunctionalInterface
-        interface TwoArg<C extends Container> extends ContainerConstructor<C> {
-
-            /**
-             * <p>Create a new Container instance with the given parameters.</p>
-             *
-             * @param player the player
-             * @param world  the world
-             * @param x      1st argument
-             * @param y      2nd argument
-             * @return a new Container
-             */
-            C newInstance(EntityPlayer player, World world, int x, int y);
-
-            @Override
-            default C newInstance(EntityPlayer player, World world, int x, int y, int z) {
-                return newInstance(player, world, x, y);
-            }
-        }
 
         /**
          * <p>Version of {@code ContainerConstructor} that provides the TileEntity given by the coordinates.</p>
