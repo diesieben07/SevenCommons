@@ -10,8 +10,8 @@ import net.minecraft.world.World;
  */
 public class TestContainer extends AbstractContainer<TestTE> {
 
-    public TestContainer(World world, int x, int y, int z, EntityPlayer player) {
-        super(world, x, y, z, player);
+    public TestContainer(EntityPlayer player, World world, int x, int y, int z) {
+        super(player, world, x, y, z);
     }
 
     @Override

@@ -20,6 +20,7 @@ import de.take_weiland.mods.commons.net.PacketConstructor;
 import de.take_weiland.mods.commons.net.PacketHandler;
 import de.take_weiland.mods.commons.net.Packets;
 import de.take_weiland.mods.commons.util.Blocks;
+import de.take_weiland.mods.commons.util.GuiIdentifier;
 import de.take_weiland.mods.commons.util.Retries;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.block.Block;
@@ -71,7 +72,7 @@ public class testmod_sc {
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new IGuiHandler() {
             @Override
             public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-                return new TestContainer(world, x, y, z, player);
+                return new TestContainer(player, world, x, y, z);
             }
 
             @Override
@@ -87,6 +88,12 @@ public class testmod_sc {
 
         Blocks.init(block, "testblock");
 
+        GuiIdentifier.builder()
+                .add(Guis.BAR, TestContainer::new, () -> TestGui::new)
+                .add(Guis.BAZ, TestContainer::new, () -> TestGui::new)
+                .add(Guis.FOO, TestContainer::new, () -> TestGui::new)
+                .done();
+
 //
         Network.newSimpleChannel("testmod")
                 .register(0, (PacketConstructor<TestPacket>) TestPacket::new, (PacketConstructor<TestResponse>) TestResponse::new, (PacketHandler.WithResponse.WithSideAndPlayer<TestPacket, TestResponse>) (packet, player, side) -> new TestResponse(packet.s))
@@ -97,6 +104,16 @@ public class testmod_sc {
         });
 
         Reflection.initialize(Packets.class);
+    }
+
+    enum Guis implements GuiIdentifier {
+
+        FOO, BAR, BAZ;
+
+        @Override
+        public Object mod() {
+            return testmod_sc.instance;
+        }
     }
 
     @Mod.EventHandler

@@ -56,6 +56,8 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
             addEntry(EntityRendererHook::new, EntityRendererHook.ENTITY_RENDERER_CLASS);
             addEntry(MinecraftHook::new, MinecraftHook.MINECRAFT_CLASS);
             addEntry(NetworkManagerHook::new, NetworkManagerHook.NETWORK_MANAGER_CLASS);
+            addEntry(cv -> new InterfaceAdder(cv, "de/take_weiland/mods/commons/util/GuiConstructorInternal"), "de/take_weiland/mods/commons/util/GuiIdentifier$GuiContainerConstructor");
+            addEntry(cv -> new InterfaceAdder(cv, "de/take_weiland/mods/commons/util/GuiConstructorInternal$OnSingleGui"), "de/take_weiland/mods/commons/util/GuiIdentifier$GuiConstructor");
         }
 
         // @Sync hooks
