@@ -179,7 +179,7 @@ public interface GuiIdentifier {
          * @param guiConstructor       the gui constructor
          * @return this for convenience
          */
-        default <C extends Container> Builder add(GuiIdentifier id, ContainerConstructor.ForTileEntity<C, ?> containerConstructor, Supplier<GuiContainerConstructor<? extends C>> guiConstructor) {
+        default <C extends Container, T extends TileEntity> Builder add(GuiIdentifier id, ContainerConstructor.ForTileEntity<C, T> containerConstructor, Supplier<GuiContainerConstructor<? extends C>> guiConstructor) {
             return add(id, (ContainerConstructor<C>) containerConstructor, guiConstructor);
         }
 
