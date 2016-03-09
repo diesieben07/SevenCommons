@@ -26,7 +26,7 @@ public class SimpleSlot extends Slot implements ContainerAwareSlot {
 
     @Override
     public boolean isItemValid(ItemStack stack) {
-        return inventory.isItemValidForSlot(slotNumber, stack);
+        return inventory.isItemValidForSlot(getSlotIndex(), stack);
     }
 
     @Override
