@@ -35,7 +35,7 @@ final class EnumProperty<T extends Enum<T>> implements MetadataProperty<T> {
 
     @Override
     public int toMeta(T value, int previousMeta) {
-        return previousMeta | value.ordinal() << shift;
+        return (previousMeta & ~(mask << shift)) | value.ordinal() << shift;
     }
 
     @Override

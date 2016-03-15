@@ -47,11 +47,11 @@ final class RegularArrayProperty<T> implements MetadataProperty<T> {
 
     @Override
     public final T value(int metadata) {
-        return lookup.keySet().asList().get((metadata >> shift) & mask);
+        return lookup.keySet().asList().get((metadata >>> shift) & mask);
     }
 
     @Override
     public final int toMeta(T value, int previousMeta) {
-        return previousMeta | (toMeta0(value) << shift);
+        return (previousMeta & ~(mask << shift)) | (toMeta0(value) << shift);
     }
 }

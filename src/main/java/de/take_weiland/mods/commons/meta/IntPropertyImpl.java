@@ -41,7 +41,7 @@ final class IntPropertyImpl implements IntProperty, MetadataProperty<Integer> {
 
     @Override
     public int toMeta(int value, int previousMeta) {
-        return previousMeta | ((value & mask) << shift);
+        return (previousMeta & ~(mask << shift)) | ((value & mask) << shift);
     }
 
     @Override

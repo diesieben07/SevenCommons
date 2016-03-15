@@ -32,7 +32,7 @@ final class BooleanPropertyImpl implements BooleanProperty, MetadataProperty<Boo
 
     @Override
     public int toMeta(boolean value, int previousMeta) {
-        return value ? previousMeta | mask : previousMeta;
+        return value ? previousMeta | mask : previousMeta & ~mask;
     }
 
     private static final Set<Boolean> values = ImmutableSet.of(Boolean.FALSE, Boolean.TRUE);

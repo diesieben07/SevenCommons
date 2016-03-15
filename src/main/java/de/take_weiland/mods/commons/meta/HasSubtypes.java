@@ -42,6 +42,28 @@ public interface HasSubtypes<T extends Subtype> {
     }
 
     /**
+     * <p>Apply the given type to the given ItemStack.</p>
+     *
+     * @param stack the ItemStack
+     * @param type  the type
+     * @return the ItemStack, for convenience
+     */
+    default ItemStack setType(ItemStack stack, T type) {
+        return subtypeProperty().apply(type, stack);
+    }
+
+    /**
+     * <p>Apply the given type to the given metadata.</p>
+     *
+     * @param meta the metadata
+     * @param type the type
+     * @return the new metadata
+     */
+    default int setType(int meta, T type) {
+        return subtypeProperty().toMeta(type, meta);
+    }
+
+    /**
      * <p>Create an ItemStack of the given type.</p>
      *
      * @param type the type
