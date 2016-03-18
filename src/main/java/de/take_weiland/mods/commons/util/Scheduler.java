@@ -117,6 +117,7 @@ public final class Scheduler extends SchedulerBase {
                     }
                 } catch (Throwable x) {
                     SevenCommons.log.error(String.format("Exception thrown during execution of %s", curr));
+                    activeTasks.remove(curr);
                 }
                 curr = curr.getNext();
             }
