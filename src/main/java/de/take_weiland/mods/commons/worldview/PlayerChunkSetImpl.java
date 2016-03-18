@@ -23,29 +23,29 @@ final class PlayerChunkSetImpl extends AbstractSet<DimensionalChunk> {
     @Nonnull
     @Override
     public Iterator<DimensionalChunk> iterator() {
-        class It extends AbstractIterator<DimensionalChunk> {
+        return new It(set._states, set._set, set.capacity());
+    }
 
-            private final byte[] states;
-            private final long[] set;
-            private       int    idx;
+    private static class It extends AbstractIterator<DimensionalChunk> {
 
-            It(byte[] states, long[] set, int capacity) {
-                this.states = states;
-                this.set = set;
-                this.idx = capacity;
-            }
+        private final byte[] states;
+        private final long[] set;
+        private       int    idx;
 
-            @Override
-            protected DimensionalChunk computeNext() {
-                do {
-                    if (--idx == -1) return endOfData();
-                    if (states[idx] == TPrimitiveHash.FULL)
-                        return ServerChunkViewManager.decodeIntoDimensionalChunk(set[idx]);
-                } while (true);
-            }
+        It(byte[] states, long[] set, int capacity) {
+            this.states = states;
+            this.set = set;
+            this.idx = capacity;
         }
 
-        return new It(set._states, set._set, set.capacity());
+        @Override
+        protected DimensionalChunk computeNext() {
+            do {
+                if (--idx == -1) return endOfData();
+                if (states[idx] == TPrimitiveHash.FULL)
+                    return ServerChunkViewManager.decodeIntoDimensionalChunk(set[idx]);
+            } while (true);
+        }
     }
 
     @Override
