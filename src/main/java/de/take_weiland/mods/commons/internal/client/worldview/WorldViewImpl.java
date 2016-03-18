@@ -18,6 +18,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -295,7 +296,6 @@ public class WorldViewImpl implements WorldView {
         }
     }
 
-    private static ByteBuffer screenshotBuf;
     private static IntBuffer  intBuf;
 
     @Override
@@ -304,26 +304,25 @@ public class WorldViewImpl implements WorldView {
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-        int byteCount = width * height * 4;
-
-        if (screenshotBuf == null || screenshotBuf.capacity() < byteCount) {
-            screenshotBuf = BufferUtils.createByteBuffer(byteCount);
-            intBuf = screenshotBuf.asIntBuffer();
+        int intCount = width * height;
+        if (intBuf == null || intBuf.capacity() < intCount) {
+            intBuf = BufferUtils.createIntBuffer(intCount);
         }
         intBuf.clear();
 
+        // use _REV so that BGRA becomes RGBA for the BufferedImage
         glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, intBuf);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        int[] ints = new int[width * height];
-        intBuf.rewind();
-        intBuf.get(ints);
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        int[] imgData = ((DataBufferInt) img.getWritableTile(0, 0).getDataBuffer()).getData();
 
-        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        for (int row = 0; row < height; row++) {
-            img.setRGB(0, height - 1 - row, width, 1, ints, row * width, width);
+        // copy one row at a time from bottom to top to rotate the image by 180°
+        for (int row = height; row > 0; ) {
+            intBuf.get(imgData, --row * width, width);
         }
+
         return img;
     }
 
