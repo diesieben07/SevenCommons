@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal.net;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.ProtocolException;
 import de.take_weiland.mods.commons.util.Scheduler;
@@ -33,14 +32,14 @@ public final class SCMessageHandlerServer extends SCMessageHandler {
             if ((props & Network.ASYNC) != 0) {
                 packet._sc$handle(player);
             } else {
-                SchedulerInternalTask.add(Scheduler.server(), new SyncPacketExecServer(packet, this.player));
+                Scheduler.server().execute(new SyncPacketExecServer(packet, this.player));
             }
         } else if (!(msg instanceof C17PacketCustomPayload) || !NetworkImpl.handleServerCustomPacket((C17PacketCustomPayload) msg, player, this)) {
             ctx.fireChannelRead(msg);
         }
     }
 
-    private static final class SyncPacketExecServer extends SchedulerInternalTask {
+    private static final class SyncPacketExecServer implements Scheduler.Task {
 
         private final BaseNettyPacket packet;
         private final EntityPlayerMP player;

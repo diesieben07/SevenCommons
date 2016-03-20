@@ -14,7 +14,6 @@ import de.take_weiland.mods.commons.client.icon.IconManager;
 import de.take_weiland.mods.commons.client.icon.IconManagerBuilder;
 import de.take_weiland.mods.commons.client.icon.Icons;
 import de.take_weiland.mods.commons.client.worldview.WorldView;
-import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.PacketConstructor;
 import de.take_weiland.mods.commons.net.PacketHandler;
@@ -167,14 +166,11 @@ public class testmod_sc {
 
     @SubscribeEvent
     public void playerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        SchedulerInternalTask.add(Scheduler.server(), new SchedulerInternalTask() {
-
-            @Override
-            public boolean execute() {
-                System.out.println("tick");
-                return false;
-            }
-        });
+        Scheduler.Task task = () -> {
+            System.out.println("tick");
+            return false;
+        };
+        Scheduler.server().execute(task);
 
 //        for (int i = 0; i < 100000; i++) {
 //            final int ifin = i;

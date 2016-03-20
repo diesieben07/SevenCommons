@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal.net;
 
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.net.ProtocolException;
 import de.take_weiland.mods.commons.util.Players;
@@ -31,14 +30,14 @@ public final class SCMessageHandlerClient extends SCMessageHandler {
             if ((props & Network.ASYNC) != 0) {
                 packet._sc$handle(Players.getClient());
             } else {
-                SchedulerInternalTask.add(Scheduler.client(), new SyncPacketExecClient(packet));
+                Scheduler.client().execute(new SyncPacketExecClient(packet));
             }
         } else if (!(msg instanceof S3FPacketCustomPayload) || !NetworkImpl.handleClientCustomPacket((S3FPacketCustomPayload) msg, this)) {
             ctx.fireChannelRead(msg);
         }
     }
 
-    private static final class SyncPacketExecClient extends SchedulerInternalTask {
+    private static final class SyncPacketExecClient implements Scheduler.Task {
 
         private final BaseNettyPacket packet;
 

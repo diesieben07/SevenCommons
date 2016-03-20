@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.primitives.UnsignedBytes;
 import cpw.mods.fml.relauncher.Side;
-import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.PacketToChannelMap;
@@ -124,7 +123,7 @@ final class SimpleChannelBuilderImpl implements SimpleChannelBuilder {
                 handler.accept(this.channel, packetID, in, player);
             } else {
                 Scheduler s = player == null || player.worldObj.isRemote ? Scheduler.client() : Scheduler.server();
-                SchedulerInternalTask.add(s, new SchedulerInternalTask() {
+                s.execute(new Scheduler.Task() {
                     @Override
                     public boolean execute() {
                         handler.accept(ModPacketChannelHandler.this.channel, packetID, in, player == null ? Players.getClient() : player);

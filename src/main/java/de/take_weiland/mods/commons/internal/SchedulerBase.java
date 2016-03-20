@@ -7,8 +7,6 @@ import com.google.common.util.concurrent.AbstractListeningExecutorService;
  */
 public abstract class SchedulerBase extends AbstractListeningExecutorService {
 
-    protected abstract void addTask(SchedulerInternalTask task);
-
     protected abstract void tick();
 
 }

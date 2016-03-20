@@ -4,15 +4,13 @@ import com.google.common.primitives.Ints;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SchedulerBase;
-import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import gnu.trove.list.linked.TLinkedList;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -63,21 +61,21 @@ public final class Scheduler extends SchedulerBase {
     /**
      * <p>Execute the given task after {@code tickDelay} ticks have passed.</p>
      *
-     * @param r      the task
+     * @param r         the task
      * @param tickDelay the delay, in ticks
      */
     public void schedule(Runnable r, long tickDelay) {
         checkArgument(tickDelay >= 0);
-        addTask(new WaitingTask(r, tickDelay));
+        execute(new WaitingTask(r, tickDelay));
     }
 
     @Override
     public void execute(Runnable task) {
-        addTask(new WrappedRunnable(task));
+        execute(new WrappedRunnable(task));
     }
 
     public void execute(Task task) {
-        addTask(new WrappedTask(task));
+        inputQueue.offer(task);
     }
 
     static {
@@ -89,38 +87,71 @@ public final class Scheduler extends SchedulerBase {
         server = new Scheduler();
     }
 
-    /**
-     * helper to add a single task
-     */
-    @Override
-    protected void addTask(SchedulerInternalTask task) {
-        newTasks.addLast(task);
-    }
+    // this is the queue that holds new tasks until they are picked up by the main thread
+    private final ConcurrentLinkedQueue<Task> inputQueue = new ConcurrentLinkedQueue<>();
 
-    private final ConcurrentLinkedDeque<SchedulerInternalTask> newTasks    = new ConcurrentLinkedDeque<>();
-    private final TLinkedList<SchedulerInternalTask>           activeTasks = new TLinkedList<>();
+    // only used by the main thread
+    private Task[] activeTasks = new Task[5];
+    private int size = 0; // actual number of tasks in the above array, used for adding to the end
 
     @Override
     protected void tick() {
+        Task[] activeTasks = this.activeTasks;
+        int size = this.size;
         {
-            SchedulerInternalTask task;
-            while ((task = newTasks.pollFirst()) != null) {
-                activeTasks.add(task);
+            // handle existing tasks
+
+            // move through task list and simultaneously execute tasks and compact the list
+            // by moving non-removed tasks to the new end of the list if needed
+            int idx = 0, free = -1;
+            while (idx < size) {
+                Task t = activeTasks[idx];
+                if (!checkedExecute(t)) {
+                    // task needs to be removed, null out it's slot
+                    activeTasks[idx] = null;
+                    if (free == -1) {
+                        // if this is the first task to be removed, set it as the compaction target
+                        free = idx;
+                    }
+                } else if (free != -1) {
+                    // we had to remove one or more tasks earlier in the list,
+                    // move this one there to keep the list continuous
+                    activeTasks[free++] = t;
+                    activeTasks[idx] = null;
+                }
+                idx++;
+            }
+            // we had to remove at least one task, adjust the size
+            if (free != -1) {
+                this.size = free;
             }
         }
         {
-            SchedulerInternalTask curr = activeTasks.getFirst();
-            while (curr != null) {
-                try {
-                    if (!curr.execute()) {
-                        activeTasks.remove(curr);
+            // handle new tasks
+            Task task;
+            while ((task = inputQueue.poll()) != null) {
+                // only add task to the active list if it wants to keep executing
+                // avoids unnecessary work for one-off tasks
+                if (checkedExecute(task)) {
+                    if (size == activeTasks.length) {
+                        // we are full
+                        Task[] newArr = new Task[size << 1];
+                        System.arraycopy(activeTasks, 0, newArr, 0, size);
+                        activeTasks = this.activeTasks = newArr;
                     }
-                } catch (Throwable x) {
-                    SevenCommons.log.error(String.format("Exception thrown during execution of %s", curr));
-                    activeTasks.remove(curr);
+                    activeTasks[size] = task;
+                    this.size++;
                 }
-                curr = curr.getNext();
             }
+        }
+    }
+
+    private static boolean checkedExecute(Task task) {
+        try {
+            return task.execute();
+        } catch (Throwable x) {
+            SevenCommons.log.error(String.format("Exception thrown during execution of %s", task));
+            return false;
         }
     }
 
@@ -135,7 +166,7 @@ public final class Scheduler extends SchedulerBase {
 
     }
 
-    private static final class WaitingTask extends SchedulerInternalTask {
+    private static final class WaitingTask implements Task {
 
         private final Runnable r;
         private long ticks;
@@ -161,26 +192,7 @@ public final class Scheduler extends SchedulerBase {
         }
     }
 
-    private static class WrappedTask extends SchedulerInternalTask {
-
-        private final Task task;
-
-        public WrappedTask(Task task) {
-            this.task = task;
-        }
-
-        @Override
-        public boolean execute() {
-            return task.execute();
-        }
-
-        @Override
-        public String toString() {
-            return task.toString();
-        }
-    }
-
-    private static class WrappedRunnable extends SchedulerInternalTask {
+    private static class WrappedRunnable implements Task {
         private final Runnable task;
 
         public WrappedRunnable(Runnable task) {

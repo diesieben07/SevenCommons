@@ -5,7 +5,6 @@ import cpw.mods.fml.common.LoaderState;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.*;
 import de.take_weiland.mods.commons.util.Players;
@@ -181,11 +180,11 @@ public final class NetworkImpl {
                 handler.accept(channel, data, player, side);
             };
         } else if (!needCheckSide) {
-            return (channel, data, player, side) -> SchedulerInternalTask.add(Scheduler.forSide(side), new ScheduledHandlerExecution(handler, channel, data, player, side));
+            return (channel, data, player, side) -> Scheduler.forSide(side).execute(new ScheduledHandlerExecution(handler, channel, data, player, side));
         } else {
             return (channel, data, player, side) -> {
                 checkSide(handler, side, characteristics);
-                SchedulerInternalTask.add(Scheduler.forSide(side), new ScheduledHandlerExecution(handler, channel, data, player, side));
+                Scheduler.forSide(side).execute(new ScheduledHandlerExecution(handler, channel, data, player, side));
             };
         }
     }
@@ -196,7 +195,7 @@ public final class NetworkImpl {
         }
     }
 
-    private static final class ScheduledHandlerExecution extends SchedulerInternalTask {
+    private static final class ScheduledHandlerExecution implements Scheduler.Task {
         private final ChannelHandler handler;
         private final String channel;
         private final byte[] data;

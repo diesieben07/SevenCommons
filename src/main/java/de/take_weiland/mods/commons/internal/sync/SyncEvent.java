@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.internal.sync;
 
 import com.google.common.collect.Iterables;
 import de.take_weiland.mods.commons.internal.CommonMethodHandles;
-import de.take_weiland.mods.commons.internal.SchedulerInternalTask;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.net.*;
@@ -24,7 +23,7 @@ import java.util.List;
 /**
  * @author diesieben07
  */
-public abstract class SyncEvent extends SchedulerInternalTask implements SyncCompanion.ChangeIterator, BaseNettyPacket {
+public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNettyPacket, Scheduler.Task {
 
     public static final String CHANNEL = "SC|Sync";
 
@@ -151,7 +150,7 @@ public abstract class SyncEvent extends SchedulerInternalTask implements SyncCom
 
     @Override
     public void _sc$handle(EntityPlayer player) {
-        SchedulerInternalTask.add(Scheduler.client(), this);
+        Scheduler.client().execute(this);
     }
 
     @Override
