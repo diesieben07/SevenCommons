@@ -76,7 +76,7 @@ public class ServerChunkViewManager {
         TLongHashSet chunks = ((EntityPlayerMPProxy) player)._sc$viewedChunks();
         byte[] states = chunks._states;
         long[] set = chunks._set;
-        for (int idx = chunks.capacity(); idx >= 0; ) {
+        for (int idx = chunks.capacity(); idx > 0; ) {
             if (states[--idx] == TPrimitiveHash.FULL) {
                 removePlayer(set[idx], player);
             }

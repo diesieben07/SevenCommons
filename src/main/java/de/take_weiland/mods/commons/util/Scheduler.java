@@ -21,6 +21,9 @@ import static com.google.common.base.Preconditions.checkArgument;
  * main Minecraft thread to execute tasks.</p>
  * <p>Limited scheduling is available via the {@link #schedule(Runnable, long)} method.</p>
  * <p>This ExecutorService cannot be shut down or terminated.</p>
+ * <p>If tasks are added from inside a task executed by this Scheduler, they will be executed in the same tick as the
+ * task adding the new tasks. If a task is scheduled from inside another task, the current tick will count as the first
+ * waiting tick.</p>
  *
  * @author diesieben07
  */
