@@ -1,10 +1,9 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.primitives.Ints;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.SchedulerBase;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;

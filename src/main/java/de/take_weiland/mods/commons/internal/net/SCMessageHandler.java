@@ -1,11 +1,11 @@
 package de.take_weiland.mods.commons.internal.net;
 
-import cpw.mods.fml.common.network.handshake.NetworkDispatcher;
-import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.net.ProtocolException;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.fml.common.network.handshake.NetworkDispatcher;
+import net.minecraftforge.fml.relauncher.Side;
 
 /**
  * @author diesieben07
@@ -19,7 +19,7 @@ abstract class SCMessageHandler extends ChannelInboundHandlerAdapter {
         if (cause instanceof ProtocolException) {
             ProtocolException pe = (ProtocolException) cause;
             if (pe.getKickMessage() != null) {
-                ctx.attr(NetworkDispatcher.FML_DISPATCHER).get().manager.closeChannel(new ChatComponentText(pe.getKickMessage()));
+                ctx.attr(NetworkDispatcher.FML_DISPATCHER).get().manager.closeChannel(new TextComponentString(pe.getKickMessage()));
             }
             NetworkImpl.LOGGER.warn("ProtocolException on " + (side().name().toLowerCase()) + "-side netty channel", pe);
         }

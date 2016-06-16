@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.net;
 
-import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.net.PacketAdditionalMethods;

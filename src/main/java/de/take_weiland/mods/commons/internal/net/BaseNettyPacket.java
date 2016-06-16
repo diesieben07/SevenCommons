@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.internal.net;
 
-import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.net.Network;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.Nonnull;
 

@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.internal.exclude;
 
 import com.google.common.collect.ImmutableSet;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import de.take_weiland.mods.commons.asm.info.ClassInfo;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;
@@ -24,7 +24,7 @@ public final class ClassInfoSuperCache {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
-        if (event.world.isRemote) {
+        if (event.getWorld().isRemote) {
             return;
         }
         // null out the superCache once any world is loaded

@@ -1,9 +1,9 @@
 package de.take_weiland.mods.commons.internal;
 
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 public interface SevenCommonsProxy {
 

@@ -1,8 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Throwables;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.registry.GameRegistry;
 import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.meta.HasSubtypes;
 import net.minecraft.block.Block;
@@ -16,7 +14,6 @@ import java.util.Arrays;
 import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkState;
-import static cpw.mods.fml.common.LoaderState.PREINITIALIZATION;
 
 @ParametersAreNonnullByDefault
 public final class Items extends net.minecraft.init.Items {
@@ -26,11 +23,11 @@ public final class Items extends net.minecraft.init.Items {
      * <ul>
      * <li>Sets the Item's texture to <tt>modId:baseName</tt>, unless it is already set</li>
      * <li>Sets the Item's unlocalized name to <tt>modId.baseName</tt>, unless it is already set</li>
-     * <li>Register the Item with {@link GameRegistry#registerItem(Item, String)}</li>
+     * <li>Register the Item with {@link net.minecraftforge.fml.common.registry.GameRegistry#registerItem(Item, String)}</li>
      * <li>If the Item has subtypes (implementing {@link HasSubtypes}):
      * <ul>
      * <li>Call {@link Item#setHasSubtypes(boolean) setHasSubtypes(true)}</li>
-     * <li>Register custom ItemStacks for the subtypes with {@link GameRegistry#registerCustomItemStack(String, ItemStack)}</li>
+     * <li>Register custom ItemStacks for the subtypes with {@link net.minecraftforge.fml.common.registry.GameRegistry#registerCustomItemStack(String, ItemStack)}</li>
      * </ul>
      * </li>
      * </ul>

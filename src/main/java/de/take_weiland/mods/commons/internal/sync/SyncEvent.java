@@ -14,7 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.IContainerListener;
 import net.minecraft.tileentity.TileEntity;
 
 import javax.annotation.Nullable;
@@ -303,7 +303,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, BaseNet
         public void send(Object obj) {
             done();
             Container container = (Container) obj;
-            List<ICrafting> crafters = CommonMethodHandles.getListeners(container);
+            List<IContainerListener> crafters = CommonMethodHandles.getListeners(container);
             NetworkImpl.sendRawPacket(Iterables.filter(crafters, EntityPlayerMP.class), this);
         }
 

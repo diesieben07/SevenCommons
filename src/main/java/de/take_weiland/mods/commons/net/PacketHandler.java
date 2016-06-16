@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
-import cpw.mods.fml.relauncher.Side;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.concurrent.CompletionStage;
 

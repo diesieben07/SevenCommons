@@ -11,10 +11,9 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import com.google.common.primitives.Ints;
-import cpw.mods.fml.relauncher.CoreModManager;
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;

@@ -1,8 +1,7 @@
 package de.take_weiland.mods.commons.util;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import org.apache.commons.lang3.JavaVersion;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -30,7 +29,7 @@ public final class JavaCompatibility {
     /**
      * <p>Display a warning to the user if the game is not running on Java 8.</p>
      * <p>If your coremod (not regular mod!) requires Java 8, compile your {@code IFMLLoadingPlugin} for Java 6 and call this method
-     * from {@link IFMLLoadingPlugin#getASMTransformerClass()}. This will display a warning to the user if Java 8 is not installed.</p>
+     * from {@link net.minecraftforge.fml.relauncher.IFMLLoadingPlugin#getASMTransformerClass()}. This will display a warning to the user if Java 8 is not installed.</p>
      * <p>This class will always be compiled for Java 6.</p>
      * <p>For regular mods Java 8 can be used always, since SevenCommons will require it before any regular mods load.</p>
      *
