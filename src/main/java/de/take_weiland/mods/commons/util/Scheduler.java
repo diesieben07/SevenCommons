@@ -126,7 +126,7 @@ public final class Scheduler extends SchedulerBase {
             }
             // we had to remove at least one task, adjust the size
             if (free != -1) {
-                this.size = free;
+                this.size = size = free;
             }
         }
         {

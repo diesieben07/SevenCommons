@@ -12,6 +12,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * <p>Various utility methods.</p>
@@ -79,6 +81,10 @@ public final class JavaUtils {
         } else {
             return Objects.hashCode(o);
         }
+    }
+
+    public static <T> Stream<T> stream(Iterable<T> it) {
+        return it instanceof Collection ? ((Collection<T>) it).stream() : StreamSupport.stream(it.spliterator(), false);
     }
 
     /**
