@@ -33,7 +33,7 @@ minecraft {
     replaceIn "internal/SevenCommons.java"
     replace "@VERSION@", project.version
 
-    mappings = "stable_12"
+    mappings = "snapshot_20160616"
 }
 
 jar {

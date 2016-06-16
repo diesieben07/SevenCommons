@@ -4,7 +4,7 @@ import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import net.minecraft.block.Block;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTBase;
@@ -94,10 +94,10 @@ public final class CommonMethodHandles {
         }
     }
 
-    public static List<ICrafting> getListeners(Container container) {
+    public static List<IContainerListener> getListeners(Container container) {
         try {
             //noinspection unchecked
-            return (List<ICrafting>) containerGetCrafters.invokeExact(container);
+            return (List<IContainerListener>) containerGetCrafters.invokeExact(container);
         } catch (Throwable x) {
             throw Throwables.propagate(x);
         }

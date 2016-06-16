@@ -10,7 +10,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
@@ -81,10 +81,10 @@ public final class Containers {
      * @return the player
      */
     public static EntityPlayer getViewer(Container container) {
-        List<ICrafting> listeners = CommonMethodHandles.getListeners(container);
+        List<IContainerListener> listeners = CommonMethodHandles.getListeners(container);
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0, len = listeners.size(); i < len; i++) {
-            ICrafting listener = listeners.get(i);
+            IContainerListener listener = listeners.get(i);
             if (listener instanceof EntityPlayerMP) {
                 return (EntityPlayer) listener;
             }
