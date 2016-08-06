@@ -1,19 +1,15 @@
 package de.take_weiland.mods.commons.internal.test;
 
-import de.take_weiland.mods.commons.tileentity.TileEntityInventory;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ITickable;
 
 /**
  * @author diesieben07
  */
-public class SuperTE extends TileEntityInventory {
+public class SuperTE extends TileEntity implements ITickable{
 
     @Override
-    public String getDefaultName() {
-        return null;
-    }
+    public void update() {
 
-    @Override
-    public int getSizeInventory() {
-        return 1;
     }
 }

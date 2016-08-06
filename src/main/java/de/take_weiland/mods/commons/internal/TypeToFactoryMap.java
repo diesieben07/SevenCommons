@@ -14,7 +14,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public abstract class TypeToFactoryMap<F, FR> {
 
-    private Map<Class<?>, Collection<F>> map = new ConcurrentHashMap<>();
+    private Map<Class<?>, Collection<F>> map = new HashMap<>();
 
     public final synchronized FR get(Property<?> type) {
         Class<?> rawType = type.getRawType();

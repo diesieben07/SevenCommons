@@ -3,19 +3,22 @@ package de.take_weiland.mods.commons.net;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import de.take_weiland.mods.commons.internal.CommonMethodHandles;
-import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
 import de.take_weiland.mods.commons.util.Entities;
 import de.take_weiland.mods.commons.util.Players;
+import gnu.trove.map.hash.THashMap;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
+import net.minecraft.network.NetworkManager;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -28,21 +31,31 @@ import java.util.function.Predicate;
  */
 public interface SimplePacket {
 
-    static SimplePacket wrap(net.minecraft.network.Packet packet) {
-        return (SimplePacket) packet;
+    static SimplePacket of(net.minecraft.network.Packet<?> packet) {
+        return manager -> manager.sendPacket(packet);
+    }
+
+    void sendTo(NetworkManager manager);
+
+    default void sendTo(PacketTarget target) {
+        target.send(this);
     }
 
     /**
      * <p>Send this packet to the server. This method must only be called from the client thread.</p>
      */
-    void sendToServer();
+    default void sendToServer() {
+        sendTo(FMLCommonHandler.instance().getClientToServerNetworkManager());
+    }
 
     /**
      * <p>Send this packet to the given player.</p>
      *
      * @param player the player
      */
-    void sendTo(EntityPlayerMP player);
+    default void sendTo(EntityPlayerMP player) {
+        sendTo(player.connection.netManager);
+    }
 
     /**
      * <p>Send this packet to the given player. This method must only be called for server-side players.</p>
@@ -153,6 +166,10 @@ public interface SimplePacket {
         sendTo(Players.allIn(world), player -> player.getDistanceSq(x, y, z) <= radius);
     }
 
+    default void sendToAllNear(World world, BlockPos pos, double radius) {
+        sendToAllNear(world, pos.getX(), pos.getY(), pos.getZ(), radius);
+    }
+
     /**
      * <p>Send this packet to all players that are within the given radius around the given entity. This method must only be called for server-side entities.</p>
      * <p>Usually {@link #sendToAllTracking(Entity)} or {@link #sendToAllAssociated(Entity)} are more sensible choices.</p>
@@ -172,7 +189,7 @@ public interface SimplePacket {
      * @param radius the radius
      */
     default void sendToAllNear(TileEntity te, double radius) {
-        sendToAllNear(te.getWorld(), te.xCoord, te.yCoord, te.zCoord, radius);
+        sendToAllNear(te.getWorld(), te.getPos(), radius);
     }
 
     /**
@@ -191,11 +208,9 @@ public interface SimplePacket {
      * @param entity the entity
      */
     default void sendToAllAssociated(Entity entity) {
-        Iterable<EntityPlayerMP> players = Entities.getTrackingPlayers(entity);
+        Iterator<EntityPlayerMP> players = Entities.getTrackingPlayers(entity).iterator();
         if (entity instanceof EntityPlayerMP) {
-            Iterable<EntityPlayerMP> playersFinal = players;
-            EntityPlayerMP mp = (EntityPlayerMP) entity;
-            players = () -> new OnePlusIterator<>(playersFinal.iterator(), mp);
+            players = new OnePlusIterator<>(players, (EntityPlayerMP) entity);
         }
         sendTo(players);
     }
@@ -207,7 +222,8 @@ public interface SimplePacket {
      * @param te the TileEntity
      */
     default void sendToAllTracking(TileEntity te) {
-        sendToAllTrackingChunk(te.getWorld(), te.xCoord >> 4, te.zCoord >> 4);
+        BlockPos pos = te.getPos();
+        sendToAllTrackingChunk(te.getWorld(), pos.getX() >> 4, pos.getZ() >> 4);
     }
 
     /**
@@ -217,7 +233,7 @@ public interface SimplePacket {
      * @param chunk the Chunk
      */
     default void sendToAllTracking(Chunk chunk) {
-        sendToAllTrackingChunk(chunk.worldObj, chunk.xPosition, chunk.zPosition);
+        sendToAllTrackingChunk(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
     }
 
     /**
@@ -256,20 +272,19 @@ public interface SimplePacket {
          * @return a {@code SimplePacket} version
          */
         default SimplePacket discardResponse() {
-            /**
-             * see {@link SimplePacketWithResponseTransformer}
-             */
-            return (SimplePacket) this;
+            return new PacketDiscardedResponse(this);
         }
 
-        net.minecraft.network.Packet toVanillaPacket();
+        CompletionStage<R> sendTo(NetworkManager manager);
 
         /**
          * <p>Send this packet to the server. This method must only be called from the client thread.</p>
          *
          * @return a {@code CompletableFuture} representing the response
          */
-        CompletionStage<R> sendToServer();
+        default CompletionStage<R> sendToServer() {
+            return sendTo(FMLCommonHandler.instance().getClientToServerNetworkManager());
+        }
 
         /**
          * <p>Send this packet to the given player.</p>
@@ -277,7 +292,9 @@ public interface SimplePacket {
          * @param player the player
          * @return a {@code CompletableFuture} representing the response
          */
-        CompletionStage<R> sendTo(EntityPlayerMP player);
+        default CompletionStage<R> sendTo(EntityPlayerMP player) {
+            return sendTo(player.connection.netManager);
+        }
 
         /**
          * <p>Send this packet to the given player. This method must only be called for server-side players.</p>
@@ -295,7 +312,7 @@ public interface SimplePacket {
          * @param players the players
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendTo(EntityPlayer... players) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendTo(EntityPlayer... players) {
             return sendTo(Iterators.forArray(players), null);
         }
 
@@ -305,7 +322,7 @@ public interface SimplePacket {
          * @param players the players
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendTo(Iterable<? extends EntityPlayer> players) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendTo(Iterable<? extends EntityPlayer> players) {
             return sendTo(players.iterator(), null);
         }
 
@@ -316,7 +333,7 @@ public interface SimplePacket {
          * @param filter  the filter, may be null
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendTo(Iterable<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
             return sendTo(players.iterator(), filter);
         }
 
@@ -326,7 +343,7 @@ public interface SimplePacket {
          * @param players the players
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendTo(Iterator<? extends EntityPlayer> players) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendTo(Iterator<? extends EntityPlayer> players) {
             return sendTo(players, null);
         }
 
@@ -337,8 +354,8 @@ public interface SimplePacket {
          * @param filter  the filter, may be null
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendTo(Iterator<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
-            HashMap<EntityPlayerMP, CompletionStage<R>> map = new HashMap<>();
+        default Map<EntityPlayerMP, CompletionStage<R>> sendTo(Iterator<? extends EntityPlayer> players, Predicate<? super EntityPlayerMP> filter) {
+            THashMap<EntityPlayerMP, CompletionStage<R>> map = new THashMap<>();
 
             while (players.hasNext()) {
                 EntityPlayerMP mp = Players.checkNotClient(players.next());
@@ -358,7 +375,7 @@ public interface SimplePacket {
          * @param filter the filter, may be null
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendTo(World world, Predicate<? super EntityPlayerMP> filter) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendTo(World world, Predicate<? super EntityPlayerMP> filter) {
             return sendTo(Players.allIn(world), filter);
         }
 
@@ -368,7 +385,7 @@ public interface SimplePacket {
          * @param filter the filter, may be null
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendTo(Predicate<? super EntityPlayerMP> filter) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendTo(Predicate<? super EntityPlayerMP> filter) {
             return sendTo(Players.getAll(), filter);
         }
 
@@ -377,7 +394,7 @@ public interface SimplePacket {
          *
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToAll() {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAll() {
             return sendTo(Players.getAll(), null);
         }
 
@@ -387,7 +404,7 @@ public interface SimplePacket {
          * @param world the world
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToAllIn(World world) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAllIn(World world) {
             return sendTo(Players.allIn(world), null);
         }
 
@@ -401,9 +418,13 @@ public interface SimplePacket {
          * @param radius the radius
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToAllNear(World world, double x, double y, double z, double radius) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAllNear(World world, double x, double y, double z, double radius) {
             double rSq = radius * radius;
             return sendTo(Players.allIn(world), p -> p.getDistanceSq(x, y, z) <= rSq);
+        }
+
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAllNear(World world, Vec3i pos, double radius) {
+            return sendToAllNear(world, pos.getX(), pos.getY(), pos.getZ(), radius);
         }
 
         /**
@@ -414,7 +435,7 @@ public interface SimplePacket {
          * @param radius the radius
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToAllNear(Entity entity, double radius) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAllNear(Entity entity, double radius) {
             return sendToAllNear(entity.worldObj, entity.posX, entity.posY, entity.posZ, radius);
         }
 
@@ -426,8 +447,8 @@ public interface SimplePacket {
          * @param radius the radius
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToAllNear(TileEntity te, double radius) {
-            return sendToAllNear(te.getWorld(), te.xCoord, te.yCoord, te.zCoord, radius);
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAllNear(TileEntity te, double radius) {
+            return sendToAllNear(te.getWorld(), te.getPos(), radius);
         }
 
         /**
@@ -437,7 +458,7 @@ public interface SimplePacket {
          * @param entity the entity
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToAllTracking(Entity entity) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAllTracking(Entity entity) {
             return sendTo(Entities.getTrackingPlayers(entity), null);
         }
 
@@ -447,7 +468,7 @@ public interface SimplePacket {
          * @param entity the entity
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToAllAssociated(Entity entity) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAllAssociated(Entity entity) {
             Iterable<EntityPlayerMP> players = Entities.getTrackingPlayers(entity);
             if (entity instanceof EntityPlayer) {
                 Iterable<EntityPlayerMP> playersFinal = players;
@@ -464,8 +485,9 @@ public interface SimplePacket {
          * @param te the TileEntity
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToAllTracking(TileEntity te) {
-            return sendToAllTrackingChunk(te.getWorld(), te.xCoord >> 4, te.zCoord >> 4);
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAllTracking(TileEntity te) {
+            BlockPos pos = te.getPos();
+            return sendToAllTrackingChunk(te.getWorld(), pos.getX() >> 4, pos.getZ() >> 4);
         }
 
         /**
@@ -475,8 +497,8 @@ public interface SimplePacket {
          * @param chunk the Chunk
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToAllTracking(Chunk chunk) {
-            return sendToAllTrackingChunk(chunk.worldObj, chunk.xPosition, chunk.zPosition);
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAllTracking(Chunk chunk) {
+            return sendToAllTrackingChunk(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
         }
 
         /**
@@ -488,7 +510,7 @@ public interface SimplePacket {
          * @param chunkZ the z coordinate of the chunk
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToAllTrackingChunk(World world, int chunkX, int chunkZ) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToAllTrackingChunk(World world, int chunkX, int chunkZ) {
             return sendTo(Players.getTrackingChunk(world, chunkX, chunkZ), null);
         }
 
@@ -498,7 +520,7 @@ public interface SimplePacket {
          * @param c the container
          * @return a {@code CompletableFuture} for each player representing their response
          */
-        default Map<EntityPlayer, CompletionStage<R>> sendToViewing(Container c) {
+        default Map<EntityPlayerMP, CompletionStage<R>> sendToViewing(Container c) {
             return sendTo(Iterables.filter(CommonMethodHandles.getListeners(c), EntityPlayerMP.class), null);
         }
     }

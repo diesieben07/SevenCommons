@@ -39,7 +39,7 @@ public class AccessorCompiler {
 
         MethodVisitor mv = context.cw().visitMethod(ACC_PUBLIC, "original", Type.getMethodDescriptor(Type.getType(Property.class)), null, null);
         mv.visitCode();
-        context.pushAsConstant(mv, property, Property.class);
+        context.pushConstant(mv, property, Property.class);
         mv.visitInsn(ARETURN);
         mv.visitMaxs(0, 0);
         mv.visitEnd();
@@ -137,7 +137,6 @@ public class AccessorCompiler {
         mv.visitMaxs(0, 0);
         mv.visitEnd();
 
-
         return new CompileContextImpl(name, cw);
     }
 
@@ -167,7 +166,7 @@ public class AccessorCompiler {
 
         String mhIName = Type.getInternalName(MethodHandle.class);
 
-        context.pushAsConstant(mv, target, MethodHandle.class);
+        context.pushConstant(mv, target, MethodHandle.class);
 
         int varSlot = 1;
         int idx = 0;

@@ -4,18 +4,20 @@ import com.google.common.base.Throwables;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.util.JavaUtils;
-import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.texture.ITextureObject;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.util.IIcon;
-import net.minecraft.util.MathHelper;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Timer;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
@@ -28,7 +30,7 @@ import java.util.Map;
 
 import static java.lang.invoke.MethodHandles.publicLookup;
 import static net.minecraft.client.Minecraft.getMinecraft;
-import static net.minecraftforge.common.util.ForgeDirection.*;
+import static net.minecraft.client.renderer.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.*;
 
 /**
@@ -72,9 +74,10 @@ public final class Rendering {
      * @param width  The width of the provided icon to draw on the screen
      * @param height The height of the provided icon to draw on the screen
      */
-    public static void fillAreaWithIcon(IIcon icon, int x, int y, int width, int height) {
-        Tessellator t = Tessellator.instance;
-        t.startDrawingQuads();
+    public static void fillAreaWithIcon(TextureAtlasSprite icon, int x, int y, int width, int height) {
+        Tessellator t = Tessellator.getInstance();
+        VertexBuffer b = t.getBuffer();
+        b.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 
         float zLevel = getZLevel();
 
@@ -131,12 +134,12 @@ public final class Rendering {
     }
 
     private static void drawRect(float x, float y, float width, float height, float z, float u, float v, float maxU, float maxV) {
-        Tessellator t = Tessellator.instance;
+        VertexBuffer b = Tessellator.getInstance().getBuffer();
 
-        t.addVertexWithUV(x, y + height, z, u, maxV);
-        t.addVertexWithUV(x + width, y + height, z, maxU, maxV);
-        t.addVertexWithUV(x + width, y, z, maxU, v);
-        t.addVertexWithUV(x, y, z, u, v);
+        b.pos(x, y + height, z).tex(u, maxV).endVertex();
+        b.pos(x + width, y + height, z).tex(maxU, maxV).endVertex();
+        b.pos(x + width, y, z).tex(maxU, v).endVertex();
+        b.pos(x, y, z).tex(u, v).endVertex();
     }
 
     /**
@@ -150,15 +153,14 @@ public final class Rendering {
      * @param fullHeight   the height of the rectangle when the tank is full
      */
     public static void drawFluidStack(@Nullable FluidStack fluidStack, int tankCapacity, int x, int y, int width, int fullHeight) {
-        TextureManager renderEngine = getMinecraft().renderEngine;
 
         if (fluidStack != null) {
             Fluid fluid = fluidStack.getFluid();
-            IIcon fluidIcon = fluid.getStillIcon();
+            TextureAtlasSprite fluidIcon = getMinecraft().getTextureMapBlocks().getTextureExtry(fluid.getStill(fluidStack).toString());
             int fluidHeight = MathHelper.ceiling_double_int((fluidStack.amount / (double) tankCapacity) * fullHeight);
 
-            glColor3f(1, 1, 1);
-            renderEngine.bindTexture(renderEngine.getResourceLocation(fluid.getSpriteNumber()));
+            color(1, 1, 1);
+            getMinecraft().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             fillAreaWithIcon(fluidIcon, x, y + fullHeight - fluidHeight, width, fluidHeight);
         }
     }
@@ -178,11 +180,11 @@ public final class Rendering {
 
         if (fluidStack != null) {
             Fluid fluid = fluidStack.getFluid();
-            IIcon fluidIcon = fluid.getStillIcon();
+            TextureAtlasSprite fluidIcon = getMinecraft().getTextureMapBlocks().getAtlasSprite(fluid.getStill(fluidStack).toString());
             int fluidWidth = MathHelper.ceiling_float_int((fluidStack.amount / (float) tankCapacity) * fullWidth);
 
-            glColor3f(1, 1, 1);
-            renderEngine.bindTexture(renderEngine.getResourceLocation(fluid.getSpriteNumber()));
+            color(1, 1, 1);
+            renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             fillAreaWithIcon(fluidIcon, x, y, fluidWidth, height);
         }
     }
@@ -211,51 +213,6 @@ public final class Rendering {
      */
     public static void drawTankHorizontal(IFluidTank tank, int x, int y, int fullWidth, int height) {
         drawFluidStackHorizontal(tank.getFluid(), tank.getCapacity(), x, y, fullWidth, height);
-    }
-
-    /**
-     * <p>Draw a simple inventory block. This method draws a cuboid based on the current block dimensions.</p>
-     *
-     * @param block    the Block to draw
-     * @param meta     the Block metadata
-     * @param renderer the RenderBlocks instance
-     */
-    public static void drawInventoryBlock(Block block, int meta, RenderBlocks renderer) {
-        Tessellator t = Tessellator.instance;
-
-        t.addTranslation(0, -0.1f, 0);
-
-        t.startDrawingQuads();
-        t.setNormal(-1, 0, 0);
-        renderer.renderFaceXNeg(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, WEST.ordinal(), meta));
-        t.draw();
-
-        t.startDrawingQuads();
-        t.setNormal(1, 0, 0);
-        renderer.renderFaceXPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, EAST.ordinal(), meta));
-        t.draw();
-
-        t.startDrawingQuads();
-        t.setNormal(0, 0, -1);
-        renderer.renderFaceZNeg(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, NORTH.ordinal(), meta));
-        t.draw();
-
-        t.startDrawingQuads();
-        t.setNormal(0, 0, 1);
-        renderer.renderFaceZPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, SOUTH.ordinal(), meta));
-        t.draw();
-
-        t.startDrawingQuads();
-        t.setNormal(0, -1, 0);
-        renderer.renderFaceYNeg(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, DOWN.ordinal(), meta));
-        t.draw();
-
-        t.startDrawingQuads();
-        t.setNormal(0, 1, 0);
-        renderer.renderFaceYPos(block, 0, 0, 0, renderer.getBlockIconFromSideAndMetadata(block, UP.ordinal(), meta));
-        t.draw();
-
-        t.addTranslation(0, 0.1f, 0);
     }
 
     /**
@@ -301,32 +258,34 @@ public final class Rendering {
             return;
         }
 
-        float r = (float) (color >> 16 & 0xFF) / 255.0F;
-        float g = (float) (color >> 8 & 0xFF) / 255.0F;
-        float b = (float) (color & 0xFF) / 255.0F;
+        float cr = (float) (color >> 16 & 0xFF) / 255.0F;
+        float cg = (float) (color >> 8 & 0xFF) / 255.0F;
+        float cb = (float) (color & 0xFF) / 255.0F;
 
-        glDisable(GL_TEXTURE_2D);
+        disableTexture2D();
 
         if (alpha != 255) {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            enableBlend();
+            blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
 
-        glColor4f(r, g, b, alpha / 255F);
+        color(cr, cg, cb, alpha);
 
-        Tessellator t = Tessellator.instance;
-        t.startDrawingQuads();
+        Tessellator t = Tessellator.getInstance();
+        VertexBuffer b = t.getBuffer();
 
-        t.addVertex(x, y + height, zLevel);
-        t.addVertex(x + width, y + height, zLevel);
-        t.addVertex(x + width, y, zLevel);
-        t.addVertex(x, y, zLevel);
+        b.begin(GL_QUADS, DefaultVertexFormats.POSITION);
+
+        b.pos(x, y + height, zLevel).endVertex();
+        b.pos(x + width, y + height, zLevel).endVertex();
+        b.pos(x + width, y, zLevel).endVertex();
+        b.pos(x, y, zLevel).endVertex();
 
         t.draw();
 
-        glEnable(GL_TEXTURE_2D);
+        enableTexture2D();
         if (alpha != 255) {
-            glDisable(GL_BLEND);
+            disableBlend();
         }
     }
 
@@ -486,16 +445,17 @@ public final class Rendering {
         float b2 = (float) (toColor & 0xFF) / 255.0F;
 
         if (needBlending) {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            enableBlend();
+            blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
 
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_ALPHA_TEST);
-        glShadeModel(GL_SMOOTH);
+        disableTexture2D();
+        disableAlpha();
+        shadeModel(GL_SMOOTH);
 
-        Tessellator t = Tessellator.instance;
-        t.startDrawingQuads();
+        Tessellator t = Tessellator.getInstance();
+
+        t.getBuffer().begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
 
         if (horizontal) {
             horizontalGradient0(x, y, width, height, fromAlpha, toAlpha, zLevel, r1, g1, b1, r2, g2, b2);
@@ -505,39 +465,31 @@ public final class Rendering {
 
         t.draw();
 
-        glShadeModel(GL_FLAT);
-        glEnable(GL_TEXTURE_2D);
-        glEnable(GL_ALPHA_TEST);
+        shadeModel(GL_FLAT);
+        enableTexture2D();
+        enableAlpha();
 
         if (needBlending) {
-            glDisable(GL_BLEND);
+            disableBlend();
         }
     }
 
     private static void verticalGradient0(int x, int y, int width, int height, int fromAlpha, int toAlpha, float zLevel, float r1, float g1, float b1, float r2, float g2, float b2) {
-        Tessellator t = Tessellator.instance;
-        t.setColorRGBA_F(r1, g1, b1, fromAlpha / 255F);
-        t.addVertex(x, y + height, zLevel);
-        t.addVertex(x + width, y + height, zLevel);
+        VertexBuffer b = Tessellator.getInstance().getBuffer();
 
-        t.setColorRGBA_F(r2, g2, b2, toAlpha / 255F);
-        t.addVertex(x + width, y, zLevel);
-        t.addVertex(x, y, zLevel);
+        b.color(r1, g1, b1, fromAlpha / 255f).pos(x, y + height, zLevel).endVertex();
+        b.color(r1, g1, b1, fromAlpha / 255f).pos(x + width, y + height, zLevel).endVertex();
+        b.color(r2, g2, b2, toAlpha / 255f).pos(x + width, y, zLevel).endVertex();
+        b.color(r2, g2, b2, toAlpha / 255f).pos(x, y, zLevel).endVertex();
     }
 
     private static void horizontalGradient0(int x, int y, int width, int height, int fromAlpha, int toAlpha, float zLevel, float r1, float g1, float b1, float r2, float g2, float b2) {
-        Tessellator t = Tessellator.instance;
-        t.setColorRGBA_F(r1, g1, b1, fromAlpha / 255F);
-        t.addVertex(x, y + height, zLevel);
+        VertexBuffer b = Tessellator.getInstance().getBuffer();
 
-        t.setColorRGBA_F(r2, g2, b2, toAlpha / 255F);
-        t.addVertex(x + width, y + height, zLevel);
-
-        t.setColorRGBA_F(r2, g2, b2, toAlpha / 255F);
-        t.addVertex(x + width, y, zLevel);
-
-        t.setColorRGBA_F(r1, g1, b1, fromAlpha / 255F);
-        t.addVertex(x, y, zLevel);
+        b.color(r1, g1, b1, fromAlpha / 255f).pos(x, y + height, zLevel).endVertex();
+        b.color(r2, g2, b2, toAlpha / 255F).pos(x + width, y + height, zLevel).endVertex();
+        b.color(r2, g2, b2, toAlpha / 255F).pos(x + width, y, zLevel).endVertex();
+        b.color(r1, g1, b1, fromAlpha / 255F).pos(x, y, zLevel).endVertex();
     }
 
     /**
@@ -632,12 +584,15 @@ public final class Rendering {
      * @param zLevel the z-level to draw at
      */
     public static void drawTexturedQuad(int x, int y, int width, int height, float uStart, float vStart, float uEnd, float vEnd, float zLevel) {
-        Tessellator t = Tessellator.instance;
-        t.startDrawingQuads();
-        t.addVertexWithUV(x, y + height, zLevel, uStart, vEnd);
-        t.addVertexWithUV(x + width, y + height, zLevel, uEnd, vEnd);
-        t.addVertexWithUV(x + width, y, zLevel, uEnd, vStart);
-        t.addVertexWithUV(x, y, zLevel, uStart, vStart);
+        Tessellator t = Tessellator.getInstance();
+        VertexBuffer b = t.getBuffer();
+
+        b.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        b.pos(x, y + height, zLevel).tex(uStart, vEnd).endVertex();
+        b.pos(x + width, y + height, zLevel).tex(uEnd, vEnd).endVertex();
+        b.pos(x + width, y, zLevel).tex(uEnd, vStart).endVertex();
+        b.pos(x, y, zLevel).tex(uStart, vStart).endVertex();
+
         t.draw();
     }
 
@@ -663,12 +618,15 @@ public final class Rendering {
      * @param zLevel the z-level to draw at
      */
     public static void drawTexturedQuadFit(int x, int y, int width, int height, float zLevel) {
-        Tessellator t = Tessellator.instance;
-        t.startDrawingQuads();
-        t.addVertexWithUV(x, y + height, zLevel, 0, 1);
-        t.addVertexWithUV(x + width, y + height, zLevel, 1, 1);
-        t.addVertexWithUV(x + width, y, zLevel, 1, 0);
-        t.addVertexWithUV(x, y, zLevel, 0, 0);
+        Tessellator t = Tessellator.getInstance();
+        VertexBuffer b = t.getBuffer();
+
+        b.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        b.pos(x, y + height, zLevel).tex(0, 1).endVertex();
+        b.pos(x + width, y + height, zLevel).tex(1, 1).endVertex();
+        b.pos(x + width, y, zLevel).tex(1, 0).endVertex();
+        b.pos(x, y, zLevel).tex(0, 0).endVertex();
+
         t.draw();
     }
 

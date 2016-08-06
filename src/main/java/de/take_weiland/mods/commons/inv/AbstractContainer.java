@@ -4,6 +4,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 /**
@@ -40,7 +41,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
         if (playerInventoryX >= 0) {
             Containers.addPlayerInventory(this, player.inventory, playerInventoryX, playerInventoryY);
         }
-        inventory.openChest();
+        inventory.openInventory(player);
     }
 
     /**
@@ -64,12 +65,10 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
      *
      * @param player the player
      * @param world  the world
-     * @param x      the x coordinate of the TileEntity
-     * @param y      the y coordinate of the TileEntity
-     * @param z      the z coordinate of the TileEntity
+     * @param pos    the coordinates of the TileEntity
      */
-    public AbstractContainer(EntityPlayer player, World world, int x, int y, int z) {
-        this(player, Containers.PLAYER_INV_X_DEFAULT, Containers.PLAYER_INV_Y_DEFAULT, world, x, y, z);
+    public AbstractContainer(EntityPlayer player, World world, BlockPos pos) {
+        this(player, Containers.PLAYER_INV_X_DEFAULT, Containers.PLAYER_INV_Y_DEFAULT, world, pos);
     }
 
     /**
@@ -84,13 +83,11 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
      * @param playerInventoryX the x-coordinate for the player inventory
      * @param playerInventoryY the y-coordinate for the player inventory
      * @param world            the world
-     * @param x                the x coordinate of the TileEntity
-     * @param y                the y coordinate of the TileEntity
-     * @param z                the z coordinate of the TileEntity
+     * @param pos              the coordinates of the TileEntity
      */
-    @SuppressWarnings("unchecked")
-    public AbstractContainer(EntityPlayer player, int playerInventoryX, int playerInventoryY, World world, int x, int y, int z) {
-        this(player, playerInventoryX, playerInventoryY, (T) world.getTileEntity(x, y, z));
+    public AbstractContainer(EntityPlayer player, int playerInventoryX, int playerInventoryY, World world, BlockPos pos) {
+        //noinspection ConstantConditions,unchecked
+        this(player, playerInventoryX, playerInventoryY, (T) world.getTileEntity(pos));
     }
 
     /**
@@ -119,6 +116,7 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 
     @Override
     public void onContainerClosed(EntityPlayer player) {
-        inventory.closeChest();
+        super.onContainerClosed(player);
+        inventory.closeInventory(player);
     }
 }

@@ -1,8 +1,13 @@
 package de.take_weiland.mods.commons.internal.client.worldview;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHandSide;
 import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
+import java.util.Collections;
 
 /**
  * @author diesieben07
@@ -29,22 +34,23 @@ public class ViewEntity extends EntityLivingBase {
     }
 
     @Override
-    public ItemStack getHeldItem() {
+    public Iterable<ItemStack> getArmorInventoryList() {
+        return Collections.emptyList();
+    }
+
+    @Nullable
+    @Override
+    public ItemStack getItemStackFromSlot(EntityEquipmentSlot slotIn) {
         return null;
     }
 
     @Override
-    public ItemStack getEquipmentInSlot(int slot) {
-        return null;
-    }
-
-    @Override
-    public void setCurrentItemOrArmor(int slot, ItemStack stack) {
+    public void setItemStackToSlot(EntityEquipmentSlot slotIn, @Nullable ItemStack stack) {
 
     }
 
     @Override
-    public ItemStack[] getInventory() {
-        return new ItemStack[0];
+    public EnumHandSide getPrimaryHand() {
+        return EnumHandSide.RIGHT;
     }
 }

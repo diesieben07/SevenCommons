@@ -1,16 +1,15 @@
 
 package de.take_weiland.mods.commons.internal;
 
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import de.take_weiland.mods.commons.util.JavaCompatibility;
 import net.minecraft.launchwrapper.Launch;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-@MCVersion("1.7.10")
+@IFMLLoadingPlugin.MCVersion("1.7.10")
 @IFMLLoadingPlugin.SortingIndex(1001) // get after deobfuscation
 @IFMLLoadingPlugin.TransformerExclusions({
         "de.take_weiland.mods.commons.asm.",

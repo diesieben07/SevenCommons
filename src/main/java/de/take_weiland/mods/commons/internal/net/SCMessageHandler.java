@@ -1,18 +1,19 @@
 package de.take_weiland.mods.commons.internal.net;
 
 import de.take_weiland.mods.commons.net.ProtocolException;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fml.common.network.handshake.NetworkDispatcher;
-import net.minecraftforge.fml.relauncher.Side;
+
+import static net.minecraftforge.fml.relauncher.FMLLaunchHandler.side;
 
 /**
  * @author diesieben07
  */
-abstract class SCMessageHandler extends ChannelInboundHandlerAdapter {
+public abstract class SCMessageHandler extends ChannelInboundHandlerAdapter {
 
-    abstract Side side();
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
@@ -26,7 +27,7 @@ abstract class SCMessageHandler extends ChannelInboundHandlerAdapter {
         super.exceptionCaught(ctx, cause);
     }
 
-    byte[] multipartData;
+    ByteBuf[] multipartData = new ByteBuf[4];
     String multipartChannel;
     int multipartPos;
 

@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.worldview;
 import de.take_weiland.mods.commons.internal.ChunkProxy;
 import de.take_weiland.mods.commons.internal.WorldProxy;
 import de.take_weiland.mods.commons.internal.WorldServerProxy;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
@@ -64,9 +64,9 @@ public class ChunkUpdateTracker {
         int data = ((ChunkProxy) chunk)._sc$getBlockUpdates();
 
         if (data == 0) {
-            WorldServerProxy proxy = (WorldServerProxy) chunk.worldObj;
+            WorldServerProxy proxy = (WorldServerProxy) chunk.getWorld();
             long[] arr = proxy._sc$getChangedChunks();
-            arr = appendChunkMark(arr, ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition));
+            arr = appendChunkMark(arr, ChunkPos.chunkXZ2Int(chunk.xPosition, chunk.zPosition));
             proxy._sc$setChangedChunks(arr);
         }
 

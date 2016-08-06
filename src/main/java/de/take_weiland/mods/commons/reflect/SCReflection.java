@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.reflect;
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.common.reflect.Reflection;
-import de.take_weiland.mods.commons.OverrideSetter;
+import de.take_weiland.mods.commons.ExplicitSetter;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.reflect.MethodHandleStrategy;
@@ -63,7 +63,7 @@ public final class SCReflection {
 
     /**
      * <p>Will try to find the corresponding setter method to the given method.</p>
-     * <p>If the method is annotated with {@link OverrideSetter} the method specified there will be returned,
+     * <p>If the method is annotated with {@link ExplicitSetter} the method specified there will be returned,
      * provided it is a valid setter.</p>
      * <p>Otherwise the following rules apply in this order:</p>
      * <ul>
@@ -80,7 +80,7 @@ public final class SCReflection {
         Class<?> type = getter.getReturnType();
         checkArgument(type != void.class, "Getters must not return void");
 
-        OverrideSetter ann = getter.getAnnotation(OverrideSetter.class);
+        ExplicitSetter ann = getter.getAnnotation(ExplicitSetter.class);
         if (ann != null) {
             try {
                 return getter.getDeclaringClass().getDeclaredMethod(ann.value(), type);

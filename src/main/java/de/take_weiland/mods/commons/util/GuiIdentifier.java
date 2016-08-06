@@ -1,16 +1,17 @@
 package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Throwables;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.network.IGuiHandler;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.function.Supplier;
 
@@ -99,7 +100,7 @@ public interface GuiIdentifier {
     }
 
     /**
-     * <p>Open this GUI for the given player with 3 arguments, usually block coordinates.</p>
+     * <p>Open this GUI for the given player with 3 arguments.</p>
      *
      * @param player the player
      * @param x      1st argument
@@ -108,6 +109,10 @@ public interface GuiIdentifier {
      */
     default void open(EntityPlayer player, int x, int y, int z) {
         player.openGui(mod(), ordinal(), player.worldObj, x, y, z);
+    }
+
+    default void open(EntityPlayer player, Vec3i pos) {
+        player.openGui(mod(), ordinal(), player.worldObj, pos.getX(), pos.getY(), pos.getZ());
     }
 
     /**
@@ -152,6 +157,20 @@ public interface GuiIdentifier {
          * @return this for convenience
          */
         default <C extends Container, T extends TileEntity> Builder add(GuiIdentifier id, ContainerConstructor.ForTileEntity<C, T> containerConstructor, Supplier<GuiContainerConstructor<? extends C>> guiConstructor) {
+            return add(id, (ContainerConstructor<C>) containerConstructor, guiConstructor);
+        }
+
+        /**
+         * <p>Bind the given identifier to the given Container and GuiContainer.</p>
+         * <p>The GuiContainer constructor is wrapped in a Supplier to isolate any referenced client-only classes (see {@linkplain GuiIdentifier example usage}).
+         * The Supplier will be queried once if the environment is client side, otherwise the Supplier will be immediately discarded.</p>
+         *
+         * @param id                   the identifier
+         * @param containerConstructor the container constructor
+         * @param guiConstructor       the gui constructor
+         * @return this for convenience
+         */
+        default <C extends Container> Builder add(GuiIdentifier id, ContainerConstructor.ForBlockPosition<C> containerConstructor, Supplier<GuiContainerConstructor<? extends C>> guiConstructor) {
             return add(id, (ContainerConstructor<C>) containerConstructor, guiConstructor);
         }
 
@@ -228,7 +247,26 @@ public interface GuiIdentifier {
             @Override
             default C newInstance(EntityPlayer player, World world, int x, int y, int z) {
                 //noinspection unchecked
-                return newInstance(player, (T) world.getTileEntity(x, y, z));
+                return newInstance(player, (T) world.getTileEntity(new BlockPos(x, y, z)));
+            }
+        }
+
+        @FunctionalInterface
+        interface ForBlockPosition<C extends Container> extends ContainerConstructor<C> {
+
+            /**
+             * <p>Create a new Container instance with the given parameters.</p>
+             *
+             * @param player the player
+             * @param world  the world
+             * @param pos    the block position
+             * @return a new Container
+             */
+            C newInstance(EntityPlayer player, World world, BlockPos pos);
+
+            @Override
+            default C newInstance(EntityPlayer player, World world, int x, int y, int z) {
+                return newInstance(player, world, new BlockPos(x, y, z));
             }
         }
     }

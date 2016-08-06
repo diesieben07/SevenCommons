@@ -3,6 +3,7 @@ package de.take_weiland.mods.commons.util;
 import com.google.common.primitives.Ints;
 import de.take_weiland.mods.commons.internal.SchedulerBase;
 import de.take_weiland.mods.commons.internal.SevenCommons;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.Nonnull;
@@ -73,7 +74,7 @@ public final class Scheduler extends SchedulerBase {
 
     @Override
     public void execute(Runnable task) {
-        execute(new WrappedRunnable(task));
+        execute(() -> { task.run(); return false; });
     }
 
     public void execute(Task task) {
@@ -125,7 +126,7 @@ public final class Scheduler extends SchedulerBase {
             }
             // we had to remove at least one task, adjust the size
             if (free != -1) {
-                this.size = size = free;
+                size = free;
             }
         }
         {
@@ -141,11 +142,11 @@ public final class Scheduler extends SchedulerBase {
                         System.arraycopy(activeTasks, 0, newArr, 0, size);
                         activeTasks = this.activeTasks = newArr;
                     }
-                    activeTasks[size] = task;
-                    this.size++;
+                    activeTasks[size++] = task;
                 }
             }
         }
+        this.size = size;
     }
 
     private static boolean checkedExecute(Task task) {
@@ -191,25 +192,6 @@ public final class Scheduler extends SchedulerBase {
         @Override
         public String toString() {
             return String.format("Scheduled task (task=%s, remainingTicks=%s)", r, ticks);
-        }
-    }
-
-    private static class WrappedRunnable implements Task {
-        private final Runnable task;
-
-        public WrappedRunnable(Runnable task) {
-            this.task = task;
-        }
-
-        @Override
-        public boolean execute() {
-            task.run();
-            return false;
-        }
-
-        @Override
-        public String toString() {
-            return task.toString();
         }
     }
 

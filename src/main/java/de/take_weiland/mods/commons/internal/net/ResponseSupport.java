@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal.net;
 
 import com.google.common.collect.MapMaker;
+import de.take_weiland.mods.commons.net.Packet;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
@@ -12,29 +13,28 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class ResponseSupport {
 
     private static final AtomicInteger nextID = new AtomicInteger();
-    private static final int RESPONSE = 0x8000_0000;
-    private static final int MASK = ~RESPONSE;
+    public static final byte IS_RESPONSE = (byte) 0b10000000;
+    private static final byte MASK = ~IS_RESPONSE;
 
     private static final ConcurrentMap<Integer, CompletableFuture<?>> map = new MapMaker().concurrencyLevel(2).makeMap();
 
-    public static int nextID() {
-        return nextID.getAndIncrement() & MASK;
+    public static byte register(CompletableFuture<?> future) {
+        int id = nextID.getAndIncrement() & MASK;
+        if (map.putIfAbsent(id, future) != null) {
+            throw new RuntimeException("Ran out of pending response IDs.");
+        }
+        return (byte) id;
     }
 
-    public static boolean isResponse(int id) {
-        return (id & RESPONSE) != 0;
-    }
-
-    public static int toResponse(int id) {
-        return id | RESPONSE;
-    }
-
-    public static void register(int id, CompletableFuture<?> future) {
-        map.put(id, future);
-    }
-
-    public static CompletableFuture<?> get(int id) {
-        return map.remove(id & MASK);
+    public static <R extends Packet.Response> CompletableFuture<R> unregister(int id) {
+        //noinspection unchecked
+        CompletableFuture<R> future = (CompletableFuture<R>) map.remove(id & MASK);
+        if (future == null) {
+            NetworkImpl.LOGGER.error("Tried to complete unknown packet response future (id={})", id & MASK);
+            // just make it go nowhere
+            future = new CompletableFuture<>();
+        }
+        return future;
     }
 
 }

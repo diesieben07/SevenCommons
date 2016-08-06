@@ -4,14 +4,17 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.fml.common.registry.IForgeRegistry;
+import net.minecraftforge.fml.common.registry.IForgeRegistryEntry;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.BitSet;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -44,42 +47,48 @@ public final class NBTData {
      */
     @Nullable
     public static String readString(@Nullable NBTBase nbt) {
-        return isSerializedNull(nbt) ? null : ((NBTTagString) nbt).getString();
+        if (isSerializedNull(nbt, NBT.TAG_STRING)) {
+            return null;
+        } else {
+            return ((NBTTagString) nbt).getString();
+        }
     }
 
     @Nonnull
     public static NBTBase writeBlock(@Nullable Block block) {
-        if (block == null) {
-            return serializedNull();
-        } else {
-            return new NBTTagString(Block.blockRegistry.getNameForObject(block));
-        }
+        return writeRegistryEntry(block);
     }
 
     @Nullable
     public static Block readBlock(@Nullable NBTBase nbt) {
-        if (isSerializedNull(nbt)) {
-            return null;
-        } else {
-            return Block.getBlockFromName(((NBTTagString) nbt).getString());
-        }
+        return readRegistryEntry(nbt, ForgeRegistries.BLOCKS);
     }
 
     @Nonnull
     public static NBTBase writeItem(@Nullable Item item) {
-        if (item == null) {
-            return serializedNull();
-        } else {
-            return new NBTTagString(Item.itemRegistry.getNameForObject(item));
-        }
+        return writeRegistryEntry(item);
     }
 
     @Nullable
     public static Item readItem(@Nullable NBTBase nbt) {
-        if (isSerializedNull(nbt)) {
+        return readRegistryEntry(nbt, ForgeRegistries.ITEMS);
+    }
+
+    @Nonnull
+    public static NBTBase writeRegistryEntry(@Nullable IForgeRegistryEntry<?> entry) {
+        if (entry == null) {
+            return serializedNull();
+        } else {
+            return new NBTTagString(entry.getRegistryName().toString());
+        }
+    }
+
+    @Nullable
+    public static <V extends IForgeRegistryEntry<V>> V readRegistryEntry(@Nullable NBTBase nbt, IForgeRegistry<V> registry) {
+        if (isSerializedNull(nbt, NBT.TAG_STRING)) {
             return null;
         } else {
-            return (Item) Item.itemRegistry.getObject(((NBTTagString) nbt).getString());
+            return registry.getValue(new ResourceLocation(((NBTTagString) nbt).getString()));
         }
     }
 
@@ -109,15 +118,22 @@ public final class NBTData {
      */
     @Nullable
     public static UUID readUUID(@Nullable NBTBase nbt) {
-        if (isSerializedNull(nbt) || nbt.getId() != NBT.TAG_LIST) {
+        if (isSerializedNull(nbt, NBT.TAG_LIST)) {
             return null;
         } else {
-            List<NBTBase> asList = NBT.asList((NBTTagList) nbt);
-            if (asList.size() != 2) {
+            NBTTagList list = (NBTTagList) nbt;
+            if (list.tagCount() != 2) {
                 return null;
-            } else {
-                return new UUID(((NBTTagLong) asList.get(0)).getLong(), ((NBTTagLong) asList.get(1)).getLong());
             }
+            NBTBase msb = list.get(0);
+            if (msb.getId() != NBT.TAG_LONG) {
+                return null;
+            }
+            NBTBase lsb = list.get(1);
+            if (lsb.getId() != NBT.TAG_LONG) {
+                return null;
+            }
+            return new UUID(((NBTTagLong) msb).getLong(), ((NBTTagLong) lsb).getLong());
         }
     }
 
@@ -140,7 +156,7 @@ public final class NBTData {
      */
     @Nullable
     public static ItemStack readItemStack(@Nullable NBTBase nbt) {
-        return isSerializedNull(nbt) ? null : ItemStack.loadItemStackFromNBT((NBTTagCompound) nbt);
+        return isSerializedNull(nbt, NBT.TAG_COMPOUND) ? null : ItemStack.loadItemStackFromNBT((NBTTagCompound) nbt);
     }
 
     /**
@@ -162,7 +178,7 @@ public final class NBTData {
      */
     @Nullable
     public static FluidStack readFluidStack(@Nullable NBTBase nbt) {
-        return isSerializedNull(nbt) ? null : FluidStack.loadFluidStackFromNBT((NBTTagCompound) nbt);
+        return isSerializedNull(nbt, NBT.TAG_COMPOUND) ? null : FluidStack.loadFluidStackFromNBT((NBTTagCompound) nbt);
     }
 
     /**
@@ -189,7 +205,7 @@ public final class NBTData {
      */
     @Nullable
     public static <E extends Enum<E>> E readEnum(@Nullable NBTBase nbt, Class<E> clazz) {
-        if (isSerializedNull(nbt)) {
+        if (isSerializedNull(nbt, NBT.TAG_STRING)) {
             return null;
         } else {
             return Enum.valueOf(clazz, ((NBTTagString) nbt).getString());
@@ -211,13 +227,17 @@ public final class NBTData {
 
     @Nullable
     public static <E extends Enum<E>> EnumSet<E> readEnumSet(@Nullable NBTBase nbt, Class<E> enumClass) {
-        if (isSerializedNull(nbt)) {
+        if (isSerializedNull(nbt, NBT.TAG_LIST)) {
             return null;
         } else {
             EnumSet<E> enumSet = EnumSet.noneOf(enumClass);
-            List<NBTBase> list = NBT.asList(((NBTTagList) nbt));
-            for (int i = list.size() - 1; i >= 0; i--) {
-                enumSet.add(Enum.valueOf(enumClass, ((NBTTagString) list.get(i)).getString()));
+            NBTTagList list = (NBTTagList) nbt;
+            for (int i = 0, n = list.tagCount(); i < n; i++) {
+                NBTBase e = list.get(i);
+                if (e.getId() != NBT.TAG_STRING) {
+                    return null;
+                }
+                enumSet.add(Enum.valueOf(enumClass, ((NBTTagString) e).getString()));
             }
             return enumSet;
         }
@@ -234,7 +254,7 @@ public final class NBTData {
 
     @Nullable
     public static BitSet readBitSet(@Nullable NBTBase nbt) {
-        if (isSerializedNull(nbt)) {
+        if (isSerializedNull(nbt, NBT.TAG_BYTE_ARRAY)) {
             return null;
         } else {
             return BitSet.valueOf(((NBTTagByteArray) nbt).getByteArray());
@@ -264,6 +284,12 @@ public final class NBTData {
     @Contract("null->true")
     public static boolean isSerializedNull(@Nullable NBTBase nbt) {
         return nbt == null || nbt.getId() == NBT.TAG_COMPOUND && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL;
+    }
+
+    private static boolean isSerializedNull(@Nullable NBTBase nbt, int id) {
+        return nbt == null
+                || nbt.getId() != id
+                || nbt.getId() == NBT.TAG_COMPOUND && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL;
     }
 
 }

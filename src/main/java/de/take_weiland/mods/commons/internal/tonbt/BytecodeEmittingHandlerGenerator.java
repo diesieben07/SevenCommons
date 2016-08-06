@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.internal.tonbt;
 
-import com.google.common.collect.FluentIterable;
+import de.take_weiland.mods.commons.asm.MCPNames;
+import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
 import de.take_weiland.mods.commons.nbt.NBTData;
 import de.take_weiland.mods.commons.nbt.NBTSerializer;
@@ -20,6 +21,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Member;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.VOID_TYPE;
@@ -48,8 +51,9 @@ public final class BytecodeEmittingHandlerGenerator {
     }
 
     Class<? extends ToNbtHandler> generateHandler() {
-        properties = AbstractProperty.allPropertiesLazy(clazz, ToNbt.class)
-                .toMap(ToNbtFactories::serializerFor);
+        properties = AbstractProperty.allProperties(clazz, ToNbt.class)
+                .collect(Collectors.toMap(Function.identity(), ToNbtFactories::serializerFor));
+
         if (properties.isEmpty()) {
             return null;
         }
@@ -68,7 +72,7 @@ public final class BytecodeEmittingHandlerGenerator {
         className = SCReflection.nextDynamicClassName(BytecodeEmittingHandlerGenerator.class.getPackage());
         superName = chooseSuperName();
         cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        cw.visit(V1_7, 0, className, null, superName, null);
+        cw.visit(V1_8, 0, className, null, superName, null);
 
         GeneratorAdapter gen = new GeneratorAdapter(0, getMethod("void <init>()"), null, null, cw);
         gen.loadThis();
@@ -178,7 +182,7 @@ public final class BytecodeEmittingHandlerGenerator {
             gen.getStatic(myType, identFor(property, PROP_ACC), propertyAccessType);
             gen.invokeInterface(serializerType, new Method("write", nbtBaseType, new Type[]{objectType, propertyAccessType}));
 
-            gen.invokeVirtual(nbtCompType, new Method(/* MCPNames.method(MCPNames.M_SET_TAG)*/ "setTag", Type.VOID_TYPE, new Type[]{stringType, nbtBaseType}));
+            gen.invokeVirtual(nbtCompType, new Method(MCPNames.method(SRGConstants.M_SET_TAG), Type.VOID_TYPE, new Type[]{stringType, nbtBaseType}));
         }
 
         gen.returnValue();
@@ -306,8 +310,8 @@ public final class BytecodeEmittingHandlerGenerator {
 
     @SuppressWarnings("unused") // called by the dynamic classes
     static Iterator<Object[]> getStaticInfo() {
-        return FluentIterable.from(staticProperties.entrySet())
-                .transform(entry -> {
+        return staticProperties.entrySet().stream()
+                .map(entry -> {
                     Property<?> property = entry.getKey();
                     NBTSerializer<?> serializer = entry.getValue();
 

@@ -1,13 +1,19 @@
 package de.take_weiland.mods.commons.net;
 
 import com.google.common.reflect.TypeToken;
-import de.take_weiland.mods.commons.internal.net.NetworkImpl;
+import de.take_weiland.mods.commons.internal.net.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import net.minecraftforge.fml.relauncher.Side;
 import org.objectweb.asm.Type;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.invoke.MethodHandleInfo;
 import java.lang.invoke.SerializedLambda;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -46,7 +52,7 @@ public final class Network {
      * @return a new {@code MCDataOutput}.
      */
     public static MCDataOutput newOutput() {
-        return new MCDataOutputImpl(DEFAULT_BUFFER_SIZE);
+        return newOutput(DEFAULT_BUFFER_SIZE);
     }
 
     /**
@@ -55,89 +61,20 @@ public final class Network {
      * @return a new {@code MCDataOutput}.
      */
     public static MCDataOutput newOutput(int expectedSize) {
-        return new MCDataOutputImpl(expectedSize);
+        return new MCDataOutputImpl(Unpooled.buffer(expectedSize));
     }
 
     /**
-     * <p>Create a new {@code MCDataInput} that reads from the given array.</p>
+     * <p>Create a new {@code MCDataInput} that reads from the given buffer.</p>
      *
      * @return a new {@code MCDataInput}.
      */
-    public static MCDataInput newInput(byte[] bytes) {
-        return new MCDataInputImpl(bytes, 0, bytes.length);
-    }
-
-    /**
-     * <p>Create a new {@code MCDataInput} that reads at most {@code len} bytes from the given array starting at
-     * position {@code off}.</p>
-     *
-     * @return a new {@code MCDataInput}.
-     */
-    public static MCDataInput newInput(byte[] bytes, int off, int len) {
-        return new MCDataInputImpl(bytes, off, len);
-    }
-
-    /**
-     * <p>Register a new {@code ChannelHandler} for the given channel.</p>
-     *
-     * @param channel the channel
-     * @param handler the handlerSS
-     */
-    public static void registerHandler(String channel, ChannelHandler handler) {
-        NetworkImpl.register(channel, handler);
+    public static MCDataInput newInput(ByteBuf buf) {
+        return new MCDataInputImpl(buf);
     }
 
     public static SimpleChannelBuilder newSimpleChannel(String channel) {
         return new SimpleChannelBuilderImpl(channel);
-    }
-
-    private static final java.lang.reflect.Type function2ndParam = Function.class.getTypeParameters()[1];
-
-    static <P extends PacketBase> Class<P> findPacketClassReflectively(PacketConstructor<P> constructor) {
-        Class<?> myClazz = constructor.getClass();
-
-        TypeToken<?> type = TypeToken.of(myClazz);
-        Class<?> result;
-        result = type.resolveType(function2ndParam).getRawType();
-        if (!PacketBase.class.isAssignableFrom(result)) {
-            result = PacketBase.class;
-        }
-
-        if (result == PacketBase.class) { // class is not a real subtype of Packet, so did not find an actual type parameter
-            // try lambda-hackery now
-            try {
-                Method method = myClazz.getDeclaredMethod("writeReplace");
-                method.setAccessible(true);
-                Object serForm = method.invoke(constructor);
-                if (serForm instanceof SerializedLambda) {
-                    SerializedLambda serLambda = (SerializedLambda) serForm;
-
-                    Class<?> returnClass = PacketBase.class;
-                    switch (serLambda.getImplMethodKind()) {
-                        case MethodHandleInfo.REF_newInvokeSpecial:
-                            returnClass = Class.forName(Type.getObjectType(serLambda.getImplClass()).getClassName());
-                            break;
-                        case MethodHandleInfo.REF_invokeInterface:
-                        case MethodHandleInfo.REF_invokeSpecial:
-                        case MethodHandleInfo.REF_invokeStatic:
-                        case MethodHandleInfo.REF_invokeVirtual:
-                            returnClass = Class.forName(Type.getReturnType(serLambda.getImplMethodSignature()).getClassName());
-                            break;
-                    }
-
-                    if (PacketBase.class.isAssignableFrom(returnClass) && returnClass != PacketBase.class) {
-                        result = returnClass;
-                    }
-                }
-            } catch (Exception ignored) {
-            }
-        }
-        if (result == PacketBase.class) {
-            throw new RuntimeException("Failed to reflectively find type argument of PacketConstructor. " +
-                    "Please either refactor your code according to the docs or override getPacketClass.");
-        }
-        //noinspection unchecked
-        return (Class<P>) result;
     }
 
 }

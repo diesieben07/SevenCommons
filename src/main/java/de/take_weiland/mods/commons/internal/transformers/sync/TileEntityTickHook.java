@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.internal.transformers.sync;
 
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ASMHooks;
 import de.take_weiland.mods.commons.internal.SRGConstants;
-import de.take_weiland.mods.commons.internal.sync.SyncCompanion;
+import de.take_weiland.mods.commons.internal.sync_olds.SyncCompanion;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;

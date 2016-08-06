@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.inv;
 
-import cpw.mods.fml.relauncher.Side;
 import de.take_weiland.mods.commons.internal.PacketContainerButton;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraftforge.fml.relauncher.Side;
 
 /**
  * <p>Implement this on your Container to make it applicable to handling GUI Buttons.</p>

@@ -4,17 +4,17 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Collections2;
 import com.mojang.authlib.GameProfile;
 import de.take_weiland.mods.commons.asm.MCPNames;
-import de.take_weiland.mods.commons.internal.PlayerManagerProxy;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.UsernameCache;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.*;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.ServerConfigurationManager;
+import net.minecraft.server.management.PlayerChunkMapEntry;
+import net.minecraft.server.management.PlayerList;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -22,7 +22,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -128,9 +127,8 @@ public final class Players {
      *
      * @return all players
      */
-    @SuppressWarnings("unchecked")
     public static List<EntityPlayerMP> getAll() {
-        return getSCM().playerEntityList;
+        return getSCM().getPlayerList();
     }
 
     /**
@@ -150,9 +148,9 @@ public final class Players {
      * @param world the world
      * @return all players in the world
      */
-    @SuppressWarnings("unchecked")
     public static List<EntityPlayerMP> allIn(WorldServer world) {
-        return world.playerEntities;
+        //noinspection unchecked
+        return (List<EntityPlayerMP>) (Object) world.playerEntities;
     }
 
     /**
@@ -168,8 +166,25 @@ public final class Players {
         if (world.isRemote) {
             throw new IllegalArgumentException("Cannot get tracking players on the client");
         }
-        PlayerManagerProxy.PlayerInstanceAdapter chunkInstance = ((PlayerManagerProxy) ((WorldServer) world).getPlayerManager())._sc$getPlayerInstance(chunkX, chunkZ, false);
-        return chunkInstance == null ? Collections.emptyList() : chunkInstance._sc$getPlayersWatching();
+        PlayerChunkMapEntry entry = ((WorldServer) world).getPlayerChunkMap().getEntry(chunkX, chunkZ);
+        try {
+            //noinspection unchecked
+            return (List<EntityPlayerMP>) chunkMapEntryPlayers.invokeExact((PlayerChunkMapEntry) entry);
+        } catch (Throwable x) {
+            throw Throwables.propagate(x);
+        }
+    }
+
+    private static final MethodHandle chunkMapEntryPlayers;
+
+    static {
+        try {
+            Field field = PlayerChunkMapEntry.class.getDeclaredField(MCPNames.field(SRGConstants.F_CHUNK_MAP_ENTRY_PLAYERS));
+            field.setAccessible(true);
+            chunkMapEntryPlayers = MethodHandles.publicLookup().unreflectGetter(field);
+        } catch (ReflectiveOperationException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     /**
@@ -199,12 +214,7 @@ public final class Players {
      * @return the player entity or null if no such player was found
      */
     public static EntityPlayerMP forUUID(UUID uuid) {
-        for (EntityPlayerMP player : getAll()) {
-            if (player.getUniqueID().equals(uuid)) {
-                return player;
-            }
-        }
-        return null;
+        return getSCM().getPlayerByUUID(uuid);
     }
 
     /**
@@ -253,8 +263,8 @@ public final class Players {
         UsernameCache.invalidate(uuid);
     }
 
-    private static ServerConfigurationManager getSCM() {
-        return MinecraftServer.getServer().getConfigurationManager();
+    private static PlayerList getSCM() {
+        return FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList();
     }
 
     private Players() {

@@ -1,19 +1,18 @@
 package de.take_weiland.mods.commons.internal;
 
-import cpw.mods.fml.client.event.ConfigChangedEvent;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
-import cpw.mods.fml.common.network.FMLNetworkEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.worldview.WorldViewImpl;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.worldview.ChunkUpdateTracker;
 import de.take_weiland.mods.commons.internal.worldview.ServerChunkViewManager;
 import de.take_weiland.mods.commons.util.Scheduler;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 
@@ -34,7 +33,7 @@ public final class FMLEventHandler {
 
     @SubscribeEvent
     public void onConfigChange(ConfigChangedEvent.OnConfigChangedEvent event) {
-        if (event.modID.equals(SevenCommons.MOD_ID)) {
+        if (event.getModID().equals(SevenCommons.MOD_ID)) {
             SevenCommons.syncConfig(false);
         }
     }
@@ -43,8 +42,8 @@ public final class FMLEventHandler {
     public void playerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase == TickEvent.Phase.START && event.side.isServer() && event.player.openContainer == event.player.inventoryContainer) {
             ItemStack current = event.player.inventory.getCurrentItem();
-            if (current != null && current.stackTagCompound != null) {
-                current.stackTagCompound.removeTag(INV_IN_USE_KEY);
+            if (current != null && current.getTagCompound() != null) {
+                current.getTagCompound().removeTag(INV_IN_USE_KEY);
             }
         }
     }
@@ -58,7 +57,6 @@ public final class FMLEventHandler {
 
     @SubscribeEvent
     public void playerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        ForgeEventHandler.forceIEEPUpdate((EntityPlayerMP) event.player, event.player);
         UsernameCache.onPlayerLogin(event.player);
     }
 
@@ -75,7 +73,7 @@ public final class FMLEventHandler {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public void clientConnectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        NetworkImpl.handleClientsideConnection(event);
+        NetworkImpl.handleClientConnectedToServer(event);
     }
 
     @SubscribeEvent
@@ -85,20 +83,9 @@ public final class FMLEventHandler {
     }
 
     @SubscribeEvent
-    @SideOnly(Side.CLIENT)
-    public void serverTickClient(TickEvent.ServerTickEvent event) {
+    public void serverTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             ((SchedulerBase) Scheduler.server()).tick();
-            ASMHooks.tickIEEPCompanionsClientSide();
-        }
-    }
-
-    @SubscribeEvent
-    @SideOnly(Side.SERVER)
-    public void serverTickServer(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) {
-            ((SchedulerBase) Scheduler.server()).tick();
-            ASMHooks.tickIEEPCompanionsServerSide();
         }
     }
 

@@ -1,7 +1,10 @@
 package de.take_weiland.mods.commons.util;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 /**
  * <p>Base interface for implementing a Sound. Usually implemented on an {@code Enum} to implement a list of sounds in
@@ -48,7 +51,7 @@ public interface Sound {
 
     /**
      * <p>Play this sound at the given entity with the given volume and pitch.</p>
-     * <p>This method behaves exactly like {@link Entity#playSound(String, float, float)}: for normal entities it only plays
+     * <p>This method behaves exactly like {@link Entity#playSound(SoundEvent, float, float)}: for normal entities it only plays
      * the sound on the server; for players the client plays the sound and the server sends the sound to everyone but
      * the player.</p>
      *
@@ -57,51 +60,51 @@ public interface Sound {
      * @param pitch  the pitch
      */
     default void playAt(Entity e, float volume, float pitch) {
-        e.playSound(fullName(), volume, pitch);
+        e.playSound(ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(fullName())), volume, pitch);
     }
 
-    /**
-     * <p>Play this sound at the given entity with the given volume and pitch.</p>
-     * <p>As opposed to {@link #playAt(Entity, float, float)}, this method only operates when called on the server and
-     * uses packets for all players to play the sound.</p>
-     *
-     * @param entity the entity
-     * @param volume the volume
-     * @param pitch  the pitch
-     */
-    default void playAtServer(Entity entity, float volume, float pitch) {
-        entity.worldObj.playSoundAtEntity(entity, fullName(), volume, pitch);
-    }
+//    /**
+//     * <p>Play this sound at the given entity with the given volume and pitch.</p>
+//     * <p>As opposed to {@link #playAt(Entity, float, float)}, this method only operates when called on the server and
+//     * uses packets for all players to play the sound.</p>
+//     *
+//     * @param entity the entity
+//     * @param volume the volume
+//     * @param pitch  the pitch
+//     */
+//    default void playAtServer(Entity entity, float volume, float pitch) {
+//        entity.worldObj.playSound(entity.posX, entity.posY, entity.posZ, ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(fullName())), volume, pitch);
+//    }
 
-    /**
-     * <p>Play this sound at the given location with volume 1 and pitch 1.</p>
-     *
-     * @param world the world
-     * @param x     the x coordinate
-     * @param y     the y coordinate
-     * @param z     the z coordinate
-     */
-    default void play(World world, double x, double y, double z) {
-        play(world, x, y, z, 1, 1);
-    }
+//    /**
+//     * <p>Play this sound at the given location with volume 1 and pitch 1.</p>
+//     *
+//     * @param world the world
+//     * @param x     the x coordinate
+//     * @param y     the y coordinate
+//     * @param z     the z coordinate
+//     */
+//    default void play(World world, double x, double y, double z) {
+//        play(world, x, y, z, 1, 1);
+//    }
 
-    /**
-     * <p>Play this sound at the given location with the given volume and pitch.</p>
-     *
-     * @param world  the world
-     * @param volume the volume
-     * @param pitch  the pitch
-     * @param x      the x coordinate
-     * @param y      the y coordinate
-     * @param z      the z coordinate
-     */
-    default void play(World world, double x, double y, double z, float volume, float pitch) {
-        if (world.isRemote) {
-            world.playSound(x, y, z, fullName(), volume, pitch, false);
-        } else {
-            world.playSoundEffect(x, y, z, fullName(), volume, pitch); // does nothing on client
-        }
-    }
+//    /**
+//     * <p>Play this sound at the given location with the given volume and pitch.</p>
+//     *
+//     * @param world  the world
+//     * @param volume the volume
+//     * @param pitch  the pitch
+//     * @param x      the x coordinate
+//     * @param y      the y coordinate
+//     * @param z      the z coordinate
+//     */
+//    default void play(World world, double x, double y, double z, float volume, float pitch) {
+//        if (world.isRemote) {
+//            world.playSound(x, y, z, fullName(), volume, pitch, false);
+//        } else {
+//            world.playSoundEffect(x, y, z, fullName(), volume, pitch); // does nothing on client
+//        }
+//    }
 
 
 }

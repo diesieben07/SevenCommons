@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.internal.worldview;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.Packet;
-import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 
@@ -31,10 +31,10 @@ public class PacketRequestWorldInfo implements Packet.WithResponse<PacketWorldIn
         WorldServer world = DimensionManager.getWorld(dimension);
         if (world == null) {
             // todo
-            return new PacketWorldInfo(0, 0, 0, 0, 0);
+            return new PacketWorldInfo(BlockPos.ORIGIN, 0, 0);
         } else {
-            ChunkCoordinates spawn = world.getSpawnPoint();
-            return new PacketWorldInfo(spawn.posX, spawn.posY, spawn.posZ, world.skylightSubtracted, world.getWorldTime());
+            BlockPos spawn = world.getSpawnPoint();
+            return new PacketWorldInfo(spawn, world.getSkylightSubtracted(), world.getWorldTime());
         }
     }
 }

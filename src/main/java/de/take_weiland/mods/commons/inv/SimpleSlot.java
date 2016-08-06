@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.inv;
 
 import de.take_weiland.mods.commons.internal.ContainerAwareSlot;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
@@ -10,7 +9,6 @@ import net.minecraft.item.ItemStack;
 /**
  * <p>A basic implementation of {@link Slot} that delegates {@link Slot#isItemValid(ItemStack)} to
  * {@link IInventory#isItemValidForSlot(int, ItemStack)}.</p>
- * <p>This class also checks for {@link ItemInventory#canTakeStack(Container, ItemStack, EntityPlayer)}.</p>
  */
 public class SimpleSlot extends Slot implements ContainerAwareSlot {
 
@@ -27,11 +25,6 @@ public class SimpleSlot extends Slot implements ContainerAwareSlot {
     @Override
     public boolean isItemValid(ItemStack stack) {
         return inventory.isItemValidForSlot(getSlotIndex(), stack);
-    }
-
-    @Override
-    public boolean canTakeStack(EntityPlayer player) {
-        return container != null && ItemInventory.canTakeStack(container, getStack(), player) && allowPickUp;
     }
 
     @Override

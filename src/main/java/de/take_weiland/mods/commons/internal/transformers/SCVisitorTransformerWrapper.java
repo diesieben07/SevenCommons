@@ -1,21 +1,15 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.ChunkProxy;
 import de.take_weiland.mods.commons.internal.EntityPlayerMPProxy;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.WorldServerProxy;
-import de.take_weiland.mods.commons.internal.net.BaseModPacket;
-import de.take_weiland.mods.commons.internal.net.PacketAdditionalMethods;
-import de.take_weiland.mods.commons.internal.net.RawPacketAdditionalMethods;
-import de.take_weiland.mods.commons.internal.transformers.net.PacketGetDataOptimizer;
 import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
 import de.take_weiland.mods.commons.internal.transformers.sync.*;
-import de.take_weiland.mods.commons.internal.transformers.tonbt.EntityNBTHook;
 import de.take_weiland.mods.commons.internal.transformers.tonbt.TileEntityNBTHook;
 import de.take_weiland.mods.commons.internal.worldview.VanillaPacketProxy;
-import org.objectweb.asm.ClassVisitor;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 
 import java.util.function.Predicate;
 
@@ -33,7 +27,6 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(InventoryNumberKeysFix::new, "net/minecraft/client/gui/inventory/GuiContainer", MCPNames.method(SRGConstants.M_CHECK_HOTBAR_KEYS));
         addEntry(SaveWorldsEventHook::new, "net/minecraft/server/MinecraftServer", MCPNames.method(SRGConstants.M_SAVE_ALL_WORLDS));
         addEntry(ContainerSlotDrawHook::new, "net/minecraft/client/gui/inventory/GuiContainer");
-        addEntry(IIconHook::new, "net/minecraft/util/IIcon");
         addEntry(cv -> new InterfaceAdder(cv, "de/take_weiland/mods/commons/client/icon/IconProviderAdd"), "de/take_weiland/mods/commons/client/icon/IconProvider");
         addEntry(PlayerManagerHook::new, PlayerManagerHook.PLAYER_MANAGER_CLASS);
         addEntry(PlayerManagerHook.PlayerInstanceHook::new, PlayerManagerHook.PLAYER_INSTANCE_CLASS);
@@ -52,7 +45,6 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
 
         if (FMLLaunchHandler.side().isClient()) {
             addEntry(GuiScreenHooks::new, "net/minecraft/client/gui/GuiScreen");
-            addEntry(RenderBlocksHook::new, "net/minecraft/client/renderer/RenderBlocks");
             addEntry(EntityRendererHook::new, EntityRendererHook.ENTITY_RENDERER_CLASS);
             addEntry(MinecraftHook::new, MinecraftHook.MINECRAFT_CLASS);
             addEntry(NetworkManagerHook::new, NetworkManagerHook.NETWORK_MANAGER_CLASS);
@@ -68,34 +60,15 @@ public final class SCVisitorTransformerWrapper extends VisitorBasedTransformer {
         addEntry(TileEntityTickHook::new, "net/minecraft/world/World");
         addEntry(EntityTickHook::new, "net/minecraft/world/World");
         addEntry(ContainerSyncHooks::new, "net/minecraft/inventory/Container");
-        addEntry(EntitySyncPropsHooks::new, "net/minecraft/entity/Entity");
-        addEntry(IEEPSyncTransformer::new, "net/minecraftforge/common/IExtendedEntityProperties");
 
         // @ToNbt hooks
-        addEntry(EntityNBTHook::new, "net/minecraft/entity/Entity");
         addEntry(TileEntityNBTHook::new, "net/minecraft/tileentity/TileEntity");
 
         // packet stuff
         addEntry(SimplePacketWithResponseTransformer::new, "de/take_weiland/mods/commons/net/SimplePacket$WithResponse");
 
-        //noinspection PointlessBooleanExpression,ConstantConditions
-        if (!MCPNames.use() || DEBUG) {
-            // don't transform people's classes inside dev env, hurts hotswapping :D
-            addEntry(PacketGetDataOptimizer::new, apacheFilter());
-        }
-
-        addEntry((ClassVisitor cv) -> new InterfaceAdder(cv, BaseModPacket.CLASS_NAME),
-                "de/take_weiland/mods/commons/net/Packet",
-                "de/take_weiland/mods/commons/net/Packet$WithResponse");
-
-        addEntry(cv -> new InterfaceAdder(cv, PacketAdditionalMethods.CLASS_NAME), "de/take_weiland/mods/commons/net/Packet");
-        addEntry(cv -> new InterfaceAdder(cv, RawPacketAdditionalMethods.CLASS_NAME), "de/take_weiland/mods/commons/net/RawPacket");
-
         // misc
         addEntry(ListenableSupport::new, apacheFilter());
-        if (FMLLaunchHandler.side().isServer()) {
-            addEntry(SideOfOptimizer::new, "de/take_weiland/mods/commons/util/Sides", "sideOf");
-        }
     }
 
     private static Predicate<String> apacheFilter() {

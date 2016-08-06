@@ -6,11 +6,11 @@ import de.take_weiland.mods.commons.internal.worldview.PacketRequestWorldInfo;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.particle.EffectRenderer;
+import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
-import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
@@ -91,13 +91,13 @@ public class WorldViewImpl implements WorldView {
         WorldClient world = clientWorlds.get(dimension);
         if (world == null) {
             WorldSettings settings = new WorldSettings(0, WorldSettings.GameType.SURVIVAL, false, false, WorldType.DEFAULT);
-            world = new ClientOtherDimWorld(getMinecraft().getNetHandler(), settings, dimension, getMinecraft().theWorld.difficultySetting, getMinecraft().theWorld.theProfiler);
+            world = new ClientOtherDimWorld(getMinecraft().getConnection(), settings, dimension, getMinecraft().theWorld.getDifficulty(), getMinecraft().theWorld.theProfiler);
 
             WorldClient wc = world;
             new PacketRequestWorldInfo(dimension).sendToServer()
                     .thenAcceptAsync(packet -> {
-                        wc.setSpawnLocation(packet.spawnX, packet.spawnY, packet.spawnZ);
-                        wc.skylightSubtracted = packet.skylightSubtracted;
+                        wc.setSpawnPoint(packet.spawn);
+                        wc.setSkylightSubtracted(packet.skylightSubtracted);
                         wc.setWorldTime(packet.worldTime);
                     }, Scheduler.client());
             setWorld(dimension, world);
@@ -133,7 +133,7 @@ public class WorldViewImpl implements WorldView {
     @SuppressWarnings("unused")
     public static void setMainClientWorld(WorldClient world) {
         if (world != null) {
-            setWorld(world.provider.dimensionId, world);
+            setWorld(world.provider.getDimension(), world);
         }
     }
 
@@ -181,9 +181,9 @@ public class WorldViewImpl implements WorldView {
         EntityRenderer entityRenderer = mc.entityRenderer;
 
         RenderGlobal renderGlobalBackup = mc.renderGlobal;
-        EntityLivingBase viewportBackup = mc.renderViewEntity;
+        Entity viewportBackup = mc.getRenderViewEntity();
         WorldClient worldBackup = mc.theWorld;
-        EffectRenderer effectRendererBackup = mc.effectRenderer;
+        ParticleManager effectRendererBackup = mc.effectRenderer;
         int heightBackup = mc.displayHeight;
         int widthBackup = mc.displayWidth;
         int thirdPersonBackup = settings.thirdPersonView;
@@ -193,7 +193,7 @@ public class WorldViewImpl implements WorldView {
         float fovHandPrevBackup = ((EntityRendererProxy) entityRenderer)._sc$getFovModifierHandPrev();
 
         mc.renderGlobal = rg;
-        mc.renderViewEntity = viewport;
+        mc.setRenderViewEntity(viewport);
         mc.displayHeight = height;
         mc.displayWidth = width;
 
@@ -204,7 +204,7 @@ public class WorldViewImpl implements WorldView {
         ((EntityRendererProxy) entityRenderer)._sc$setFovModifierHandPrev(1F);
 
         mc.theWorld = getOrCreateWorld(dimension);
-        RenderManager.instance.set(mc.theWorld);
+        mc.getRenderManager().set(mc.theWorld);
 
         glViewport(0, 0, mc.displayWidth, mc.displayHeight);
         glBindTexture(GL11.GL_TEXTURE_2D, 0);
@@ -229,11 +229,11 @@ public class WorldViewImpl implements WorldView {
         mc.displayHeight = heightBackup;
         mc.displayWidth = widthBackup;
         mc.renderGlobal = renderGlobalBackup;
-        mc.renderViewEntity = viewportBackup;
+        mc.setRenderViewEntity(viewportBackup);
         mc.theWorld = worldBackup;
         mc.effectRenderer = effectRendererBackup;
 
-        RenderManager.instance.set(worldBackup);
+        mc.getRenderManager().set(worldBackup);
         mc.entityRenderer.updateRenderer();
     }
 
@@ -426,22 +426,22 @@ public class WorldViewImpl implements WorldView {
 
         @Override
         void render() {
-            boolean done;
-            long maxEndTime = System.nanoTime() + (requested ? MAX_UPDATE_TIME_PENDING : MAX_UPDATE_TIME_IDLE);
-            //noinspection StatementWithEmptyBody
-            do {
-            } while (!(done = rg.updateRenderers(viewport, false)) && (System.nanoTime() - maxEndTime) < 0);
-
-            if (requested) {
-                if (done || requestPendingFrames++ == MAX_REQUEST_FRAME_DELAY) {
-                    forceRender();
-                    if (renderCallback != null) {
-                        renderCallback.accept(this);
-                    }
-                    requested = false;
-                    renderCallback = null;
-                }
-            }
+////            boolean done;
+////            long maxEndTime = System.nanoTime() + (requested ? MAX_UPDATE_TIME_PENDING : MAX_UPDATE_TIME_IDLE);
+////            //noinspection StatementWithEmptyBody
+////            do {
+////            } while (!(done = rg.updateRenderers(viewport, false)) && (System.nanoTime() - maxEndTime) < 0);
+//
+//            if (requested) {
+//                if (done || requestPendingFrames++ == MAX_REQUEST_FRAME_DELAY) {
+//                    forceRender();
+//                    if (renderCallback != null) {
+//                        renderCallback.accept(this);
+//                    }
+//                    requested = false;
+//                    renderCallback = null;
+//                }
+//            }
         }
 
         @Override
@@ -478,22 +478,22 @@ public class WorldViewImpl implements WorldView {
             frozen = true;
         }
 
-        void unFreeze() {
-            for (Update update : updates) {
-                super.markBlocksForUpdate(update.xStart, update.yStart, update.zStart, update.xEnd, update.yEnd, update.zEnd);
-            }
-            updates.clear();
-            frozen = false;
-        }
-
-        @Override
-        public void markBlocksForUpdate(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd) {
-            if (frozen) {
-                updates.add(new Update(xStart, yStart, zStart, xEnd, yEnd, zEnd));
-            } else {
-                super.markBlocksForUpdate(xStart, yStart, zStart, xEnd, yEnd, zEnd);
-            }
-        }
+//        void unFreeze() {
+//            for (Update update : updates) {
+//                super.markBlocksForUpdate(update.xStart, update.yStart, update.zStart, update.xEnd, update.yEnd, update.zEnd);
+//            }
+//            updates.clear();
+//            frozen = false;
+//        }
+//
+//        @Override
+//        public void markBlocksForUpdate(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd) {
+//            if (frozen) {
+//                updates.add(new Update(xStart, yStart, zStart, xEnd, yEnd, zEnd));
+//            } else {
+//                super.markBlocksForUpdate(xStart, yStart, zStart, xEnd, yEnd, zEnd);
+//            }
+//        }
 
         private static final class Update {
 

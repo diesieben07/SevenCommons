@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.internal.net.NetworkImpl;
+
 import java.io.Serializable;
 
 /**
@@ -14,10 +16,10 @@ import java.io.Serializable;
 @FunctionalInterface
 public interface PacketConstructor<P extends PacketBase> extends Serializable {
 
-    P construct(MCDataInput mcDataInput) throws Exception;
+    P newInstance(MCDataInput mcDataInput) throws Exception;
 
     default Class<P> getPacketClass() {
-        return Network.findPacketClassReflectively(this);
+        return NetworkImpl.findPacketClassReflectively(this);
     }
 
 }

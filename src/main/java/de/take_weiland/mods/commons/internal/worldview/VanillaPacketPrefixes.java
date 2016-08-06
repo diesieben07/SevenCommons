@@ -1,15 +1,13 @@
 package de.take_weiland.mods.commons.internal.worldview;
 
-import com.google.common.collect.BiMap;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.client.worldview.WorldViewImpl;
 import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 
@@ -26,7 +24,7 @@ public class VanillaPacketPrefixes {
 
     public static final String CLASS_NAME = "de/take_weiland/mods/commons/internal/worldview/VanillaPacketPrefixes";
 
-    public static final int PREFIX_ID   = 127; // highest one-byte VarInt
+    public static final int PREFIX_ID = 127; // highest one-byte VarInt
     public static final int NOOP_DIM_ID = Integer.MIN_VALUE;
 
     public static final String WRITE_PREFIX = "writePrefix";
@@ -57,9 +55,10 @@ public class VanillaPacketPrefixes {
     @SuppressWarnings("unchecked")
     public static Packet readPacketWithPrefix(ChannelHandlerContext context, PacketBuffer buf, int packetId) {
         // ASM patched code already read <PREFIX_ID>
-        Packet packet = Packet.generatePacket((BiMap<Integer, Class<?>>) context.channel().attr(NetworkManager.attrKeyReceivable).get(), packetId);
-        ((VanillaPacketProxy) packet)._sc$setTargetDimension(buf.readInt());
-        return packet;
+//
+//        Packet packet = Packet.generatePacket((BiMap<Integer, Class<?>>) context.channel().attr(NetworkManager.attrKeyReceivable).get(), packetId);
+//        ((VanillaPacketProxy) packet)._sc$setTargetDimension(buf.readInt());
+        return null;
     }
 
     public static final String PRE_PACKET_PROCESS = "prePacketProcess";
@@ -77,11 +76,11 @@ public class VanillaPacketPrefixes {
 
         int targetDim = ((VanillaPacketProxy) packet)._sc$targetDimension();
         WorldClient world = getMinecraft().theWorld;
-        if (targetDim != NOOP_DIM_ID && targetDim != world.provider.dimensionId) {
+        if (targetDim != NOOP_DIM_ID && targetDim != world.provider.getDimension()) {
             clientWorldBackup = world;
             WorldClient newWorld = WorldViewImpl.getOrCreateWorld(targetDim);
             getMinecraft().theWorld = newWorld;
-            ClientProxy.netHandlerClientWorldSet.invokeExact(getMinecraft().getNetHandler(), newWorld);
+            ClientProxy.netHandlerClientWorldSet.invokeExact(getMinecraft().getConnection(), newWorld);
         }
     }
 
@@ -94,7 +93,7 @@ public class VanillaPacketPrefixes {
         WorldClient oldWorld = clientWorldBackup;
         if (oldWorld != null) {
             getMinecraft().theWorld = oldWorld;
-            ClientProxy.netHandlerClientWorldSet.invokeExact(getMinecraft().getNetHandler(), oldWorld);
+            ClientProxy.netHandlerClientWorldSet.invokeExact(getMinecraft().getConnection(), oldWorld);
             clientWorldBackup = null;
         }
     }

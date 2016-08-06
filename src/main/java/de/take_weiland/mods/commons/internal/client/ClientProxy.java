@@ -3,11 +3,15 @@ package de.take_weiland.mods.commons.internal.client;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.SevenCommonsProxy;
+import io.netty.buffer.Unpooled;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
-import net.minecraft.network.play.client.C17PacketCustomPayload;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.play.INetHandlerPlayServer;
+import net.minecraft.network.play.client.CPacketCustomPayload;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -18,8 +22,8 @@ import static net.minecraft.client.Minecraft.getMinecraft;
 public final class ClientProxy implements SevenCommonsProxy {
 
     @Override
-    public void sendPacketToServer(Packet p) {
-        getMinecraft().getNetHandler().addToSendQueue(p);
+    public void sendPacketToServer(Packet<INetHandlerPlayServer> p) {
+        getMinecraft().getConnection().sendPacket(p);
     }
 
     @Override
@@ -29,12 +33,16 @@ public final class ClientProxy implements SevenCommonsProxy {
 
     @Override
     public NetworkManager getClientNetworkManager() {
-        return getMinecraft().getNetHandler().getNetworkManager();
+        return getMinecraft().getConnection().getNetworkManager();
     }
 
     @Override
-    public Packet makeC17Packet(String channel, byte[] data) {
-        return new C17PacketCustomPayload(channel, data);
+    public Packet<INetHandlerPlayServer> newServerboundPacket(String channel, PacketBuffer payload) {
+        return new CPacketCustomPayload(channel, new PacketBuffer(Unpooled.wrappedBuffer(payload))); // todo
+    }
+
+    @Override
+    public void preInit(FMLPreInitializationEvent event) {
     }
 
     public static final MethodHandle netHandlerClientWorldSet;

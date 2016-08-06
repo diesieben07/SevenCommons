@@ -15,7 +15,7 @@ public final class NBTSerializers {
 
     /**
      * <p>Register a {@code NBTSerializerFactory}. The factory will be called back for all properties whose type
-     * extends or implements the given {@code baseClass}.If {@code baseClass} is {@code Object}, the factory will also
+     * extends or implements the given {@code baseClass}. If {@code baseClass} is {@code Object}, the factory will also
      * receive callbacks for primitive types.</p>
      *
      * @param baseClass the base class

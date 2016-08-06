@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons;
 
-import cpw.mods.fml.common.eventhandler.Event;
+import net.minecraftforge.fml.common.eventhandler.Event;
 
 /**
  * <p>Fired when the server saves the world data.</p>

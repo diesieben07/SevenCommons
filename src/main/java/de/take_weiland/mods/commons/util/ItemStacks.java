@@ -2,15 +2,12 @@ package de.take_weiland.mods.commons.util;
 
 import com.google.common.base.Objects;
 import com.google.common.primitives.Ints;
-import cpw.mods.fml.common.registry.GameRegistry;
-import de.take_weiland.mods.commons.meta.HasSubtypes;
-import de.take_weiland.mods.commons.meta.MetadataProperty;
-import de.take_weiland.mods.commons.meta.Subtype;
 import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.oredict.OreDictionary;
 import org.jetbrains.annotations.Contract;
 
@@ -55,7 +52,7 @@ public final class ItemStacks {
 
     private static boolean equalsImpl(ItemStack a, ItemStack b) {
         return a.getItem() == b.getItem() && a.getMetadata() == b.getMetadata()
-                && Objects.equal(a.stackTagCompound, b.stackTagCompound);
+                && Objects.equal(a.getTagCompound(), b.getTagCompound());
     }
 
     /**
@@ -84,7 +81,7 @@ public final class ItemStacks {
             int result = stack.getItem().hashCode();
             result = 31 * result + (stack.getMetadata() << 16);
             result = 31 * result + stack.stackSize;
-            result = 31 * result + (stack.stackTagCompound != null ? stack.stackTagCompound.hashCode() : 0);
+            result = 31 * result + (stack.getTagCompound() != null ? stack.getTagCompound().hashCode() : 0);
             return result;
         }
     }
@@ -232,7 +229,7 @@ public final class ItemStacks {
     }
 
     private static Item tryParseItem(String s) throws InvalidStackDefinition {
-        Item item = (Item) Item.itemRegistry.getObject(s);
+        Item item = Item.REGISTRY.getObject(new ResourceLocation(s));
         if (item == null) {
             throw new InvalidStackDefinition(String.format("Unknown Item %s", s));
         }
@@ -376,10 +373,12 @@ public final class ItemStacks {
      * @return the NBTTagCompound associated with the ItemStack
      */
     public static NBTTagCompound getNbt(ItemStack stack) {
-        if (stack.stackTagCompound == null) {
-            stack.stackTagCompound = new NBTTagCompound();
+        NBTTagCompound nbt = stack.getTagCompound();
+        if (nbt == null) {
+            nbt = new NBTTagCompound();
+            stack.setTagCompound(nbt);
         }
-        return stack.stackTagCompound;
+        return nbt;
     }
 
     /**
@@ -438,17 +437,6 @@ public final class ItemStacks {
      */
     public static boolean is(@Nullable ItemStack stack, Block block, int meta) {
         return stack != null && getBlock(stack) == block && stack.getMetadata() == meta;
-    }
-
-    static <T extends Subtype> void registerSubstacks(String baseName, Item item, HasSubtypes<T> subtype) {
-        MetadataProperty<T> prop = subtype.subtypeProperty();
-        for (T type : prop.values()) {
-            ItemStack stack = new ItemStack(item);
-            stack.setMetadata(prop.toMeta(type, 0));
-
-            String name = baseName + "." + type.subtypeName();
-            GameRegistry.registerCustomItemStack(name, stack);
-        }
     }
 
     private ItemStacks() {

@@ -11,19 +11,13 @@ import gnu.trove.set.hash.TLongHashSet;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.S21PacketChunkData;
-import net.minecraft.network.play.server.S23PacketBlockChange;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.ChunkPosition;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
 
-import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -64,7 +58,7 @@ public class ServerChunkViewManager {
             WorldServer world = DimensionManager.getWorld(dimension);
             // only send unload packet if world is loaded and player is not still tracking
             if (world != null && !Players.getTrackingChunk(world, chunkX, chunkZ).contains(player)) {
-                SimplePacket.wrap(chunkUnloadPacket(world.getChunkFromChunkCoords(chunkX, chunkZ))).sendTo(player);
+                SimplePacket.of(chunkUnloadPacket(world.getChunkFromChunkCoords(chunkX, chunkZ))).sendTo(player);
             }
         }
     }
@@ -88,7 +82,7 @@ public class ServerChunkViewManager {
     public static void onChunkLoad(Chunk chunk) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
-            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.worldObj, chunk.xPosition, chunk.zPosition);
+            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
             if (it.hasNext()) {
                 chunkPacket(chunk, INIT_NEW).sendTo(it);
             }
@@ -98,9 +92,9 @@ public class ServerChunkViewManager {
     public static void onChunkUnload(Chunk chunk) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
-            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.worldObj, chunk.xPosition, chunk.zPosition);
+            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
             if (it.hasNext()) {
-                SimplePacket.wrap(chunkUnloadPacket(chunk)).sendTo(it);
+                SimplePacket.of(chunkUnloadPacket(chunk)).sendTo(it);
             }
         }
     }
@@ -124,7 +118,7 @@ public class ServerChunkViewManager {
     // this is needed so that vanilla sees viewed chunks as being tracked by a player
     // otherwise updates do not get processed through IWorldAccess and we cannot detect block changes
     @SuppressWarnings("unused")
-    public static void enhanceActiveChunkSet(Set<ChunkCoordIntPair> activeChunks) {
+    public static void enhanceActiveChunkSet(Set<ChunkPos> activeChunks) {
         byte[] states = chunkData._states;
         long[] set = chunkData._set;
         int i = states.length;
@@ -157,7 +151,7 @@ public class ServerChunkViewManager {
                 // this is ok since those other players are ok to see the packet without dimension ID set as they are guaranteed to be in the correct dimension
                 ((VanillaPacketProxy) packet)._sc$setTargetDimension(dimension);
             }
-            SimplePacket.wrap(packet).sendTo(player);
+            SimplePacket.of(packet).sendTo(player);
         }
     }
 
@@ -197,7 +191,7 @@ public class ServerChunkViewManager {
     static void onChunkLayersChanged(Chunk chunk, int yLayers) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
-            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.worldObj, chunk.xPosition, chunk.zPosition);
+            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
             if (it.hasNext()) {
                 chunkPacket(chunk, yLayers).sendTo(it);
             }
@@ -208,9 +202,9 @@ public class ServerChunkViewManager {
     static void onSingleBlockChanged(Chunk chunk, int x, int y, int z) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
-            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.worldObj, chunk.xPosition, chunk.zPosition);
+            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
             if (it.hasNext()) {
-                blockChangePacket(chunk.worldObj, x + (chunk.xPosition << 4), y, z + (chunk.zPosition << 4)).sendTo(it);
+                blockChangePacket(chunk.getWorld(), x + (chunk.xPosition << 4), y, z + (chunk.zPosition << 4)).sendTo(it);
             }
         }
     }
@@ -218,96 +212,78 @@ public class ServerChunkViewManager {
     // utility for above //
 
     private static SimplePacket blockChangePacket(World world, int x, int y, int z) {
-        S23PacketBlockChange packet = new S23PacketBlockChange(x, y, z, world);
-        ((VanillaPacketProxy) packet)._sc$setTargetDimension(world.provider.dimensionId);
-
-        TileEntity te = world.getTileEntity(x, y, z);
-        Packet tePkt;
-        if (te != null && (tePkt = te.getDescriptionPacket()) != null) {
-            ((VanillaPacketProxy) tePkt)._sc$setTargetDimension(world.provider.dimensionId);
-            return createConcatPacket(SimplePacket.wrap(packet), SimplePacket.wrap(tePkt));
-        } else {
-            return SimplePacket.wrap(packet);
-        }
+//        S23PacketBlockChange packet = new S23PacketBlockChange(x, y, z, world);
+//        ((VanillaPacketProxy) packet)._sc$setTargetDimension(world.provider.dimensionId);
+//
+//        TileEntity te = world.getTileEntity(x, y, z);
+//        Packet tePkt;
+//        if (te != null && (tePkt = te.getDescriptionPacket()) != null) {
+//            ((VanillaPacketProxy) tePkt)._sc$setTargetDimension(world.provider.dimensionId);
+//            return createConcatPacket(SimplePacket.of(packet), SimplePacket.of(tePkt));
+//        } else {
+//            return SimplePacket.of(packet);
+//        }
+        return manager -> {};
     }
 
     private static Packet chunkUnloadPacket(Chunk chunk) {
-        S21PacketChunkData packet = new S21PacketChunkData(chunk, true, 0);
-        ((VanillaPacketProxy) packet)._sc$setTargetDimension(chunk.worldObj.provider.dimensionId);
-        return packet;
+//        S21PacketChunkData packet = new S21PacketChunkData(chunk, true, 0);
+//        ((VanillaPacketProxy) packet)._sc$setTargetDimension(chunk.worldObj.provider.dimensionId);
+//        return packet;
+        return null;
     }
 
     private static SimplePacket chunkPacket(Chunk chunk, int yLayers) {
-        S21PacketChunkData packet;
-        if (yLayers == INIT_NEW) {
-            packet = new S21PacketChunkData(chunk, true, 0xFFFF);
-        } else {
-            packet = new S21PacketChunkData(chunk, false, yLayers);
-        }
-        ((VanillaPacketProxy) packet)._sc$setTargetDimension(chunk.worldObj.provider.dimensionId);
-
-        return createConcatPacket(SimplePacket.wrap(packet), tileEntityPackets(chunk, yLayers));
+//        S21PacketChunkData packet;
+//        if (yLayers == INIT_NEW) {
+//            packet = new S21PacketChunkData(chunk, true, 0xFFFF);
+//        } else {
+//            packet = new S21PacketChunkData(chunk, false, yLayers);
+//        }
+//        ((VanillaPacketProxy) packet)._sc$setTargetDimension(chunk.worldObj.provider.dimensionId);
+//
+//        return createConcatPacket(SimplePacket.of(packet), tileEntityPackets(chunk, yLayers));
+        return manager -> {};
     }
 
     private static final SimplePacket[] emptyArr = new SimplePacket[0];
 
     @SuppressWarnings("unchecked")
     private static SimplePacket[] tileEntityPackets(Chunk chunk, int yLayers) {
-        Collection<TileEntity> tileEntities = ((Map<ChunkPosition, TileEntity>) chunk.chunkTileEntityMap).values();
-        int n = tileEntities.size();
-        if (n == 0) {
-            return emptyArr;
-        } else {
-            int dimId = chunk.worldObj.provider.dimensionId;
-            SimplePacket[] arr = new SimplePacket[n];
-            for (TileEntity te : tileEntities) {
-                if ((yLayers & 1 << (te.yCoord >>> 4)) == 0) continue;
-
-                Packet tePkt = te.getDescriptionPacket();
-                if (tePkt != null) {
-                    ((VanillaPacketProxy) tePkt)._sc$setTargetDimension(dimId);
-                    arr[--n] = SimplePacket.wrap(tePkt);
-                }
-            }
-            return arr;
-        }
+//        Collection<TileEntity> tileEntities = ((Map<ChunkPosition, TileEntity>) chunk.chunkTileEntityMap).values();
+//        int n = tileEntities.size();
+//        if (n == 0) {
+//            return emptyArr;
+//        } else {
+//            int dimId = chunk.worldObj.provider.dimensionId;
+//            SimplePacket[] arr = new SimplePacket[n];
+//            for (TileEntity te : tileEntities) {
+//                if ((yLayers & 1 << (te.yCoord >>> 4)) == 0) continue;
+//
+//                Packet tePkt = te.getDescriptionPacket();
+//                if (tePkt != null) {
+//                    ((VanillaPacketProxy) tePkt)._sc$setTargetDimension(dimId);
+//                    arr[--n] = SimplePacket.of(tePkt);
+//                }
+//            }
+//            return arr;
+//        }
+        return emptyArr;
     }
 
     private static SimplePacket createConcatPacket(SimplePacket a, SimplePacket[] b) {
-        class Concat implements SimplePacket {
-
-            @Override
-            public void sendToServer() {
-                a.sendToServer();
-                for (SimplePacket packet : b) {
-                    if (packet != null) packet.sendToServer();
-                }
+        return manager -> {
+            a.sendTo(manager);
+            for (SimplePacket simplePacket : b) {
+                simplePacket.sendTo(manager);
             }
-
-            @Override
-            public void sendTo(EntityPlayerMP player) {
-                a.sendTo(player);
-                for (SimplePacket packet : b) {
-                    if (packet != null) packet.sendTo(player);
-                }
-            }
-        }
-        return new Concat();
+        };
     }
 
     private static SimplePacket createConcatPacket(SimplePacket a, SimplePacket b) {
-        return new SimplePacket() {
-            @Override
-            public void sendToServer() {
-                a.sendToServer();
-                b.sendToServer();
-            }
-
-            @Override
-            public void sendTo(EntityPlayerMP player) {
-                a.sendTo(player);
-                b.sendTo(player);
-            }
+        return manager -> {
+            a.sendTo(manager);
+            b.sendTo(manager);
         };
     }
 
@@ -343,7 +319,7 @@ public class ServerChunkViewManager {
     private static final long CHUNK_COORD_SIGN_BIT = 0x20_0000L;
 
     private static long encodeChunk(Chunk chunk) {
-        return encodeChunk(chunk.worldObj.provider.dimensionId, chunk.xPosition, chunk.zPosition);
+        return encodeChunk(chunk.getWorld().provider.getDimension(), chunk.xPosition, chunk.zPosition);
     }
 
     // encode dimension, chunkX and chunkZ into a single long
@@ -358,13 +334,13 @@ public class ServerChunkViewManager {
     }
 
     // decode given encoded chunk into a ChunkCoordIntPair, ignoring dimension
-    private static ChunkCoordIntPair decodeIntoChunkPair(long l) {
+    private static ChunkPos decodeIntoChunkPair(long l) {
         l >>>= CHUNK_X_SHIFT;
         int x = (int) ((l & CHUNK_COORD_MASK) | -(l & CHUNK_COORD_SIGN_BIT));
 
         l >>>= CHUNK_Z_SHIFT - CHUNK_X_SHIFT;
         int z = (int) ((l & CHUNK_COORD_MASK) | -(l & CHUNK_COORD_SIGN_BIT));
-        return new ChunkCoordIntPair(x, z);
+        return new ChunkPos(x, z);
     }
 
     // decode encoded chunk into a DimensionalChunk

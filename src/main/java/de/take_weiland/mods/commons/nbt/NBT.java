@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import net.minecraft.nbt.*;
+import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 
@@ -28,41 +29,45 @@ import static java.lang.invoke.MethodHandles.publicLookup;
 @ParametersAreNonnullByDefault
 public final class NBT {
 
-    public static final int TAG_END = 0;
-    public static final int TAG_BYTE = 1;
-    public static final int TAG_SHORT = 2;
-    public static final int TAG_INT = 3;
-    public static final int TAG_LONG = 4;
-    public static final int TAG_FLOAT = 5;
-    public static final int TAG_DOUBLE = 6;
-    public static final int TAG_BYTE_ARR = 7;
-    public static final int TAG_STRING = 8;
-    public static final int TAG_LIST = 9;
-    public static final int TAG_COMPOUND = 10;
-    public static final int TAG_INT_ARR = 11;
+    public static final int TAG_END = Constants.NBT.TAG_END;
+    public static final int TAG_BYTE = Constants.NBT.TAG_BYTE;
+    public static final int TAG_SHORT = Constants.NBT.TAG_SHORT;
+    public static final int TAG_INT = Constants.NBT.TAG_INT;
+    public static final int TAG_LONG = Constants.NBT.TAG_LONG;
+    public static final int TAG_FLOAT = Constants.NBT.TAG_FLOAT;
+    public static final int TAG_DOUBLE = Constants.NBT.TAG_DOUBLE;
+    public static final int TAG_BYTE_ARRAY = Constants.NBT.TAG_BYTE_ARRAY;
+    public static final int TAG_STRING = Constants.NBT.TAG_STRING;
+    public static final int TAG_LIST = Constants.NBT.TAG_LIST;
+    public static final int TAG_COMPOUND = Constants.NBT.TAG_COMPOUND;
+    public static final int TAG_INT_ARRAY = Constants.NBT.TAG_INT_ARRAY;
 
     /**
      * <p>An enumeration of all NBT tag types.</p>
      */
-    public enum Tag {
+    public static final class Tag<T extends NBTBase> {
 
-        END(NBTTagEnd.class),
-        BYTE(NBTTagByte.class),
-        SHORT(NBTTagShort.class),
-        INT(NBTTagInt.class),
-        LONG(NBTTagLong.class),
-        FLOAT(NBTTagFloat.class),
-        DOUBLE(NBTTagDouble.class),
-        BYTE_ARRAY(NBTTagByteArray.class),
-        STRING(NBTTagString.class),
-        LIST(NBTTagList.class),
-        COMPOUND(NBTTagCompound.class),
-        INT_ARRAY(NBTTagIntArray.class);
+        public static final Tag<NBTTagEnd> END = new Tag<>(NBTTagEnd.class, TAG_END, NBTTagEnd::new);
+        public static final Tag<NBTTagByte> BYTE = new Tag<>(NBTTagByte.class, TAG_BYTE, () -> new NBTTagByte((byte) 0));
+        public static final Tag<NBTTagShort> SHORT = new Tag<>(NBTTagShort.class, TAG_SHORT, NBTTagShort::new);
+        public static final Tag<NBTTagInt> INT = new Tag<>(NBTTagInt.class, TAG_INT, () -> new NBTTagInt(0));
+        public static final Tag<NBTTagLong> LONG = new Tag<>(NBTTagLong.class, TAG_LONG, () -> new NBTTagLong(0));
+        public static final Tag<NBTTagFloat> FLOAT = new Tag<>(NBTTagFloat.class, TAG_FLOAT, () -> new NBTTagFloat(0));
+        public static final Tag<NBTTagDouble> DOUBLE = new Tag<>(NBTTagDouble.class, TAG_DOUBLE, () -> new NBTTagDouble(0));
+        public static final Tag<NBTTagByteArray> BYTE_ARRAY = new Tag<>(NBTTagByteArray.class, TAG_BYTE_ARRAY, () -> new NBTTagByteArray(ArrayUtils.EMPTY_BYTE_ARRAY));
+        public static final Tag<NBTTagString> STRING = new Tag<>(NBTTagString.class, TAG_STRING, NBTTagString::new);
+        public static final Tag<NBTTagList> LIST = new Tag<>(NBTTagList.class, TAG_LIST, NBTTagList::new);
+        public static final Tag<NBTTagCompound> COMPOUND = new Tag<>(NBTTagCompound.class, TAG_COMPOUND, NBTTagCompound::new);
+        public static final Tag<NBTTagIntArray> INT_ARRAY = new Tag<>(NBTTagIntArray.class, TAG_INT_ARRAY, () -> new NBTTagIntArray(ArrayUtils.EMPTY_INT_ARRAY));
 
-        private final Class<? extends NBTBase> clazz;
+        private final Class<T> clazz;
+        private final int id;
+        final Supplier<T> constructor;
 
-        Tag(Class<? extends NBTBase> clazz) {
+        private Tag(Class<T> clazz, int id, Supplier<T> constructor) {
             this.clazz = clazz;
+            this.id = id;
+            this.constructor = constructor;
         }
 
         /**
@@ -71,7 +76,7 @@ public final class NBT {
          * @return the type id
          */
         public final int id() {
-            return ordinal();
+            return id;
         }
 
         /**
@@ -79,8 +84,21 @@ public final class NBT {
          *
          * @return the class
          */
-        public final Class<? extends NBTBase> getTagClass() {
+        public final Class<T> getTagClass() {
             return clazz;
+        }
+
+        public boolean isInstance(NBTBase nbt) {
+            return nbt.getId() == id;
+        }
+
+        public T cast(NBTBase nbt) {
+            if (nbt.getId() == id) {
+                //noinspection unchecked
+                return (T) nbt;
+            } else {
+                throw new ClassCastException(nbt.getClass() + " cannot be cast to " + clazz);
+            }
         }
 
         /**
@@ -89,9 +107,9 @@ public final class NBT {
          * @param id the type id
          * @return the tag type
          */
-        public static Tag byId(int id) {
+        public static Tag<?> byId(int id) {
             checkArgument(id >= 0 && id <= 11, "NBT type id out of range");
-            return VALUES[id];
+            return BY_ID[id];
         }
 
         /**
@@ -100,8 +118,9 @@ public final class NBT {
          * @param clazz the tag class
          * @return the tag type
          */
-        public static Tag byClass(Class<?> clazz) {
-            Tag t = BY_CLAZZ.get(clazz);
+        public static <T extends NBTBase> Tag<T> byClass(Class<T> clazz) {
+            @SuppressWarnings("unchecked")
+            Tag<T> t = (Tag<T>) BY_CLAZZ.get(clazz);
             if (t == null) {
                 checkNotNull(clazz, "clazz");
                 throw new IllegalArgumentException("Invalid NBT Tag class " + clazz.getName());
@@ -109,13 +128,22 @@ public final class NBT {
             return t;
         }
 
-        private static final Tag[] VALUES = values();
-        private static final ImmutableMap<Class<?>, Tag> BY_CLAZZ;
+        private static final Tag<?>[] BY_ID;
+        private static final ImmutableMap<Class<? extends NBTBase>, Tag<?>> BY_CLAZZ;
 
         static {
-            ImmutableMap.Builder<Class<?>, Tag> b = ImmutableMap.builder();
-            for (Tag tag : VALUES) {
+            Tag<?>[] values = {END, BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, BYTE_ARRAY, STRING, LIST, COMPOUND, INT_ARRAY};
+            int maxId = 0;
+            for (Tag<?> value : values) {
+                maxId = Math.max(maxId, value.id);
+            }
+
+            BY_ID = new Tag[maxId + 1];
+
+            ImmutableMap.Builder<Class<? extends NBTBase>, Tag<?>> b = ImmutableMap.builder();
+            for (Tag<?> tag : values) {
                 b.put(tag.clazz, tag);
+                BY_ID[tag.id] = tag;
             }
             BY_CLAZZ = b.build();
         }
@@ -177,36 +205,18 @@ public final class NBT {
         }
     }
 
-    private static final Map<Class<? extends NBTBase>, Supplier<? extends NBTBase>> defaultCreators;
-
-    static {
-        defaultCreators = ImmutableMap.<Class<? extends NBTBase>, Supplier<? extends NBTBase>>builder()
-                .put(NBTTagByte.class, () -> new NBTTagByte((byte) 0))
-                .put(NBTTagByteArray.class, () -> new NBTTagByteArray(ArrayUtils.EMPTY_BYTE_ARRAY))
-                .put(NBTTagCompound.class, NBTTagCompound::new)
-                .put(NBTTagDouble.class, () -> new NBTTagDouble(0D))
-                .put(NBTTagEnd.class, NBTTagEnd::new)
-                .put(NBTTagFloat.class, () -> new NBTTagFloat(0F))
-                .put(NBTTagInt.class, () -> new NBTTagInt(0))
-                .put(NBTTagIntArray.class, () -> new NBTTagIntArray(ArrayUtils.EMPTY_INT_ARRAY))
-                .put(NBTTagList.class, NBTTagList::new)
-                .put(NBTTagLong.class, () -> new NBTTagLong(0L))
-                .put(NBTTagShort.class, () -> new NBTTagShort((short) 0))
-                .put(NBTTagString.class, () -> new NBTTagString(""))
-                .build();
-    }
 
     /**
      * <p>Get an NBTTag of the given type or create it if it does not exist.</p>
      *
      * @param parent the parent tag
      * @param key    the key
-     * @param clazz  the type of NBTTag
+     * @param tag    the type of NBTTag
      * @return the NBTTag
      */
-    public static <T extends NBTBase> T getOrCreate(NBTTagCompound parent, String key, Class<T> clazz) {
+    public static <T extends NBTBase> T getOrCreate(NBTTagCompound parent, String key, Tag<T> tag) {
         //noinspection unchecked
-        return getOrCreate(parent, key, clazz, (Supplier<T>) defaultCreators.get(clazz));
+        return getOrCreate(parent, key, tag, tag.constructor);
     }
 
     /**
@@ -214,13 +224,14 @@ public final class NBT {
      *
      * @param parent  the parent tag
      * @param key     the key
-     * @param clazz   the type of NBTTag
+     * @param tag     the type of NBTTag
      * @param creator the supplier to call in case the tag is not present
      * @return the NBTTag
      */
-    public static <T extends NBTBase> T getOrCreate(NBTTagCompound parent, String key, Class<T> clazz, Supplier<? extends T> creator) {
+    public static <T extends NBTBase> T getOrCreate(NBTTagCompound parent, String key, Tag<T> tag, Supplier<? extends T> creator) {
         NBTBase nbt = parent.getTag(key);
-        if (nbt == null || !clazz.isInstance(nbt)) {
+        //noinspection ConstantConditions yes it can be null -_-
+        if (nbt == null || !tag.isInstance(nbt)) {
             nbt = creator.get();
             parent.setTag(key, nbt);
         }
@@ -233,13 +244,14 @@ public final class NBT {
      *
      * @param parent  the parent tag
      * @param key     the key
-     * @param clazz   the type of NBTTag
+     * @param tag     the type of NBTTag
      * @param creator the function to call with the key in case the tag is not present
      * @return the NBTTag
      */
-    public static <T extends NBTBase> T getOrCreate(NBTTagCompound parent, String key, Class<T> clazz, Function<? super String, ? extends T> creator) {
+    public static <T extends NBTBase> T getOrCreate(NBTTagCompound parent, String key, Tag<T> tag, Function<? super String, ? extends T> creator) {
         NBTBase nbt = parent.getTag(key);
-        if (nbt == null || !clazz.isInstance(nbt)) {
+        //noinspection ConstantConditions yes it can be null...
+        if (nbt == null || !tag.isInstance(nbt)) {
             nbt = creator.apply(key);
             parent.setTag(key, nbt);
         }
@@ -257,12 +269,7 @@ public final class NBT {
      */
     @Nonnull
     public static NBTTagCompound getOrCreateCompound(NBTTagCompound parent, String key) {
-        NBTBase nbt = parent.getTag(key);
-        if (nbt == null || nbt.getId() != TAG_COMPOUND) {
-            nbt = new NBTTagCompound();
-            parent.setTag(key, nbt);
-        }
-        return (NBTTagCompound) nbt;
+        return getOrCreate(parent, key, Tag.COMPOUND);
     }
 
     /**
@@ -275,12 +282,7 @@ public final class NBT {
      */
     @Nonnull
     public static NBTTagList getOrCreateList(NBTTagCompound parent, String key) {
-        NBTBase nbt = parent.getTag(key);
-        if (nbt == null || nbt.getId() != TAG_LIST) {
-            nbt = new NBTTagList();
-            parent.setTag(key, nbt);
-        }
-        return (NBTTagList) nbt;
+        return getOrCreate(parent, key, Tag.LIST);
     }
 
     /**

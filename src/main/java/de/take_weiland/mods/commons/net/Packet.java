@@ -1,16 +1,8 @@
 package de.take_weiland.mods.commons.net;
 
-import de.take_weiland.mods.commons.internal.net.BaseNettyPacket;
-import de.take_weiland.mods.commons.internal.net.NetworkImpl;
-import de.take_weiland.mods.commons.internal.net.PacketAdditionalMethods;
-import de.take_weiland.mods.commons.internal.net.WrappedPacketWithResponse;
-import net.minecraft.entity.player.EntityPlayerMP;
+import de.take_weiland.mods.commons.internal.net.*;
+import net.minecraft.network.NetworkManager;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -26,41 +18,44 @@ import java.util.concurrent.CompletionStage;
  *
  * @author diesieben07
  */
-public interface Packet extends SimplePacket, PacketBase {
+public interface Packet extends SimplePacket, PacketBase, InternalPacket, PacketWithData {
 
-    /**
-     * <p>The {@code Async} annotation may be used on a class that implements either {@code Packet} or {@code Packet.WithResponse} and
-     * will make any handler for that class execute on the netty thread instead of the the main game thread.</p>
-     */
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.TYPE)
-    @interface Async {
-    }
-
-    /**
-     * <p>The {@code Receiver} annotation may be used on a class that implements either {@code Packet} or {@code Packet.WithResponse} and
-     * defines which logical side may receive this packet. No annotation implies that the Packet can be send both ways. If the packet is received on an invalid Side,
-     * a {@link ProtocolException} will be thrown.</p>
-     */
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.TYPE)
-    @interface Receiver {
-
-        Side value();
-
+    @Override
+    @Deprecated
+    default void _sc$internal$writeTo(MCDataOutput out) throws Exception {
+        out.writeByte(_sc$internal$getData().packetId);
+        writeTo(out);
     }
 
     @Override
-    default void sendToServer() {
-        /**
-         * @see PacketAdditionalMethods
-         */
-        NetworkImpl.sendRawPacketToServer((BaseNettyPacket) this);
+    @Deprecated
+    default int _sc$internal$expectedSize() {
+        return expectedSize() + 1; // packetId
     }
 
     @Override
-    default void sendTo(EntityPlayerMP player) {
-        NetworkImpl.sendRawPacket(player, (BaseNettyPacket) this);
+    @Deprecated
+    default void _sc$internal$receiveDirect(byte side, NetworkManager manager) {
+        PacketData data = _sc$internal$getData();
+        NetworkImpl.validateSide(data.characteristics, side, this);
+        if ((data.characteristics & Network.ASYNC) == 0) {
+            //noinspection unchecked,rawtypes
+            ((PacketHandler) data.handler).handle(this, NetworkImpl.getPlayer(side, manager));
+        } else {
+            //noinspection rawtypes
+            PacketHandler handler = (PacketHandler) data.handler;
+            NetworkImpl.getScheduler(side).execute(() -> {
+                //noinspection unchecked
+                handler.handle(this, NetworkImpl.getPlayer(side, manager));
+                return false;
+            });
+        }
+    }
+
+    @Override
+    @Deprecated
+    default String _sc$internal$channel() {
+        return _sc$internal$getData().channel;
     }
 
     /**
@@ -70,26 +65,15 @@ public interface Packet extends SimplePacket, PacketBase {
      *
      * @see SimplePacket.WithResponse
      */
-    interface WithResponse<R extends Packet.Response> extends SimplePacket.WithResponse<R>, PacketBase {
+    interface WithResponse<R extends Packet.Response> extends SimplePacket.WithResponse<R>, PacketBase, PacketWithData {
 
         @Override
-        default CompletionStage<R> sendToServer() {
-            CompletableFuture<R> future = new CompletableFuture<>();
-            NetworkImpl.sendRawPacketToServer(new WrappedPacketWithResponse<>(this, future));
+        default CompletionStage<R> sendTo(NetworkManager manager) {
+            AcceptingCompletableFuture<R> future = new AcceptingCompletableFuture<>();
+            NetworkImpl.sendPacket(new WrappedPacketWithResponse<>(this, future), manager);
             return future;
         }
 
-        @Override
-        default CompletionStage<R> sendTo(EntityPlayerMP player) {
-            CompletableFuture<R> future = new CompletableFuture<>();
-            NetworkImpl.sendRawPacket(player, new WrappedPacketWithResponse<>(this, future));
-            return future;
-        }
-
-        @Override
-        default net.minecraft.network.Packet toVanillaPacket() {
-            return NetworkImpl.createVanillaWrapper(new WrappedPacketWithResponse<>(this, new CompletableFuture<>()));
-        }
     }
     /**
      * <p>The response for a {@code Packet.WithResponse}.</p>

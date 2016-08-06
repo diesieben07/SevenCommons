@@ -7,9 +7,8 @@ import de.take_weiland.mods.commons.nbt.NBTSerializerFactory;
 import de.take_weiland.mods.commons.reflect.Property;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
-import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.ChunkPosition;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 
@@ -50,12 +49,10 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
             result = ForFluidStack.INSTANCE;
         } else if (FluidTank.class.isAssignableFrom(raw)) {
             result = ForFluidTank.INSTANCE;
-        } else if (raw == ChunkPosition.class) {
-            result = ChunkPositionSerializer.INSTANCE;
-        } else if (raw == ChunkCoordinates.class) {
-            result = ChunkCoordinatesSerializer.INSTANCE;
-        } else if (raw == ChunkCoordIntPair.class) {
-            result = ChunkCoordIntPairSerializer.INSTANCE;
+        } else if (raw == BlockPos.class) {
+            result = BlockPosSerializer.INSTANCE;
+        } else if (raw == ChunkPos.class) {
+            result = ChunkPosSerializer.INSTANCE;
         } else if (raw.isEnum()) {
             result = EnumSerializer.get(raw);
         } else {

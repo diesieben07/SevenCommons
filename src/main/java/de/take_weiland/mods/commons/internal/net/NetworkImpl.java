@@ -1,222 +1,89 @@
 package de.take_weiland.mods.commons.internal.net;
 
 import com.google.common.collect.ImmutableMap;
-import cpw.mods.fml.common.LoaderState;
-import cpw.mods.fml.common.network.FMLNetworkEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.net.*;
-import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.util.Scheduler;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelPromise;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.INetHandler;
 import net.minecraft.network.NetHandlerPlayServer;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.play.client.C17PacketCustomPayload;
-import net.minecraft.network.play.server.S3FPacketCustomPayload;
+import net.minecraft.network.play.INetHandlerPlayClient;
+import net.minecraft.network.play.INetHandlerPlayServer;
+import net.minecraft.network.play.server.SPacketCustomPayload;
+import net.minecraftforge.fml.common.LoaderState;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.Type;
 
-import java.io.IOException;
+import java.lang.invoke.MethodHandleInfo;
+import java.lang.invoke.SerializedLambda;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
+ *
+ * <p>Core parts of the SevenCommons Network system, like sending and receiving packets.</p>
+ *
  * @author diesieben07
  */
 public final class NetworkImpl {
 
     public static final Logger LOGGER = SevenCommons.scLogger("Network");
-
-    /**
-     * <p>Only wrapped ChannelHandlers go in here (via {@link #wrapHandler(ChannelHandler)}. No characteristics check is done on these.</p>
-     */
     private static Map<String, ChannelHandler> channels = new ConcurrentHashMap<>();
 
     private static final String MULTIPART_CHANNEL = "SevenCommons|MP";
+
     private static final int MULTIPART_PREFIX = 0;
     private static final int MULTIPART_DATA = 1;
-
     // receiving
 
-    static boolean handleServerCustomPacket(C17PacketCustomPayload mcPacket, EntityPlayerMP player, SCMessageHandler tracker) throws IOException {
-        String channelName = mcPacket.getChannel();
-        ChannelHandler handler = channels.get(channelName);
-        if (handler != null) {
-            handler.accept(channelName, mcPacket.getData(), player, Side.SERVER);
-            return true;
-        } else if (channelName.equals(MULTIPART_CHANNEL)) {
-            handleMultipartPacket(mcPacket.getData(), tracker, player, Side.SERVER);
-            return true;
-        } else {
-            return false;
+    public static void sendPacket(InternalPacket packet, EntityPlayerMP player) {
+        sendPacket(packet, player.connection.netManager);
+    }
+
+    public static void sendPacket(InternalPacket packet, NetworkManager nm) {
+        nm.channel().writeAndFlush(packet).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    }
+
+    public static Packet<INetHandlerPlayClient> toClientVanillaPacket(InternalPacket packet) {
+        return new SPacketCustomPayload(packet._sc$internal$channel(), encodePacket(packet));
+    }
+
+    public static Packet<INetHandlerPlayServer> toServerVanillaPacket(InternalPacket packet) {
+        return SevenCommons.proxy.newServerboundPacket(packet._sc$internal$channel(), encodePacket(packet));
+    }
+
+    private static PacketBuffer encodePacket(InternalPacket packet) {
+        MCDataOutput out = Network.newOutput(packet._sc$internal$expectedSize());
+        try {
+            packet._sc$internal$writeTo(out);
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Packet %s threw an exception during writing", packet), e);
         }
+        return new PacketBuffer(out.asByteBuf());
     }
-
-    static boolean handleClientCustomPacket(S3FPacketCustomPayload mcPacket, SCMessageHandler tracker) throws IOException {
-        String channelName = mcPacket.func_149169_c();
-        ChannelHandler handler = channels.get(channelName);
-        if (handler != null) {
-            handler.accept(channelName, mcPacket.func_149168_d(), Players.getClient(), Side.CLIENT);
-            return true;
-        } else if (channelName.equals(MULTIPART_CHANNEL)) {
-            handleMultipartPacket(mcPacket.func_149168_d(), tracker, Players.getClient(), Side.CLIENT);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private static void handleMultipartPacket(byte[] data, SCMessageHandler tracker, EntityPlayer player, Side side) throws IOException {
-        if (data[0] == MULTIPART_PREFIX) {
-            MCDataInput in = Network.newInput(data, 1, data.length - 1);
-            String channel = in.readString();
-            int len = in.readVarInt();
-            if (tracker.multipartChannel != null) {
-                throw new IOException("New Multipart packet before old was finished");
-            }
-            tracker.multipartChannel = channel;
-            tracker.multipartData = new byte[len];
-            tracker.multipartPos = 0;
-        } else {
-            int actLen = data.length - 1;
-
-            System.arraycopy(data, 1, tracker.multipartData, tracker.multipartPos, actLen);
-            tracker.multipartPos += actLen;
-            byte[] result;
-            if (tracker.multipartPos == tracker.multipartData.length) {
-                result = tracker.multipartData;
-            } else {
-                result = null;
-            }
-            byte[] complete = result;
-            if (complete != null) {
-                String channel = tracker.multipartChannel;
-                tracker.multipartData = null;
-                tracker.multipartChannel = null;
-                try {
-                    channels.get(channel).accept(channel, complete, player, side);
-                } catch (NullPointerException e) {
-                    throw new IOException("Unknown channel in multipart packet " + channel);
-                }
-            }
-        }
-    }
-
-    private static int positiveVarIntLen(int i) {
-        // divide by 7 and round up see http://stackoverflow.com/a/7446742
-        // actually ((32 - Integer.nOLZ(i)) + 6) / 7
-        return Math.max(1, 38 - Integer.numberOfLeadingZeros(i) / 7);
-    }
-
-    static void writeMultipartPacket(String channel, byte[] data, ChannelHandlerContext ctx, ChannelPromise promise, int maxSize, BiFunction<String, byte[], ? extends net.minecraft.network.Packet> cstr) {
-        int channelLen = channel.length();
-        int dataLen = data.length;
-        MCDataOutput out = Network.newOutput(1 + positiveVarIntLen(channelLen) + (channelLen << 1) + positiveVarIntLen(dataLen));
-        out.writeByte(MULTIPART_PREFIX);
-        out.writeString(channel);
-        out.writeVarInt(dataLen);
-
-        ctx.write(cstr.apply(MULTIPART_CHANNEL, out.backingArray()));
-
-        maxSize--; // need one byte prefix
-
-        int parts = (dataLen + (maxSize - 1)) / maxSize; // divide by maxSize and round up
-        for (int i = 0; i < (parts - 1); i++) {
-            byte[] dataThisPart = new byte[maxSize + 1];
-            dataThisPart[0] = MULTIPART_DATA;
-            System.arraycopy(data, i * maxSize, dataThisPart, 1, maxSize);
-            ctx.write(cstr.apply(MULTIPART_CHANNEL, dataThisPart));
-        }
-
-        int leftover = dataLen - (parts - 1) * maxSize;
-        byte[] dataThisPart = new byte[leftover + 1];
-        dataThisPart[0] = MULTIPART_DATA;
-        System.arraycopy(data, (parts - 1) * maxSize, dataThisPart, 1, leftover);
-        ctx.write(cstr.apply(MULTIPART_CHANNEL, dataThisPart), promise);
-    }
-
-    public static byte[] encodePacket(Packet packet, SimplePacketData data) throws Exception {
-        MCDataOutput out = Network.newOutput(packet.expectedSize() + 1);
-        out.writeByte(data.packetID);
-        packet.writeTo(out);
-        return out.toByteArray();
-    }
-
-    // registering
 
     public static synchronized void register(String channel, ChannelHandler handler) {
         checkNotFrozen();
-        if (channels.putIfAbsent(channel, wrapHandler(handler)) != null) {
+        if (channels.putIfAbsent(channel, handler) != null) {
             throw new IllegalStateException(String.format("Channel %s already registered", channel));
         }
-    }
-
-    private static ChannelHandler wrapHandler(ChannelHandler handler) {
-        byte c = handler.characteristics();
-        if ((c & (Network.BIDIRECTIONAL)) == Network.BIDIRECTIONAL) {
-            c &= ~Network.BIDIRECTIONAL;
-        }
-
-        boolean needCheckSide = (c & Network.CLIENT) != 0 || (c & Network.SERVER) != 0;
-        boolean needSchedule = (c & Network.ASYNC) != 0;
-
-        byte characteristics = c;
-
-        if (!needSchedule && !needCheckSide) { // no side checking or scheduling needed
-            return handler;
-        } else if (!needSchedule) {
-            return (channel, data, player, side) -> {
-                checkSide(handler, side, characteristics);
-                handler.accept(channel, data, player, side);
-            };
-        } else if (!needCheckSide) {
-            return (channel, data, player, side) -> Scheduler.forSide(side).execute(new ScheduledHandlerExecution(handler, channel, data, player, side));
-        } else {
-            return (channel, data, player, side) -> {
-                checkSide(handler, side, characteristics);
-                Scheduler.forSide(side).execute(new ScheduledHandlerExecution(handler, channel, data, player, side));
-            };
-        }
-    }
-
-    private static void checkSide(ChannelHandler handler, Side side, byte characteristics) {
-        if ((characteristics & (1 << side.ordinal())) == 0) {
-            throw new ProtocolException(String.format("Handler %s received packet on invalid side %s", handler, side));
-        }
-    }
-
-    private static final class ScheduledHandlerExecution implements Scheduler.Task {
-        private final ChannelHandler handler;
-        private final String channel;
-        private final byte[] data;
-        private final EntityPlayer player;
-
-        private final Side side;
-
-        public ScheduledHandlerExecution(ChannelHandler handler, String channel, byte[] data, EntityPlayer player, Side side) {
-            this.handler = handler;
-            this.channel = channel;
-            this.data = data;
-            this.player = player;
-            this.side = side;
-        }
-
-        @Override
-        public boolean execute() {
-            handler.accept(channel, data, player, side);
-            return false;
-        }
-
     }
 
     private static synchronized void freeze() {
@@ -232,24 +99,24 @@ public final class NetworkImpl {
     }
 
     public static void handleServersideConnection(FMLNetworkEvent.ServerConnectionFromClientEvent event) {
-        NetHandlerPlayServer handler = (NetHandlerPlayServer) event.handler;
+        NetHandlerPlayServer handler = (NetHandlerPlayServer) event.getHandler();
         ChannelPipeline pipeline = handler.netManager.channel().pipeline();
 
-        if (!event.isLocal) {
-            insertEncoder(pipeline, ToClientEncoder.INSTANCE);
+        if (!event.isLocal()) {
+            insertEncoder(pipeline, SCToServerMessageEncoder.INSTANCE);
         }
 
-        insertHandler(pipeline, new SCMessageHandlerServer(handler.playerEntity));
+        insertHandler(pipeline, new SCMessageHandlerServer(handler.getNetworkManager()));
     }
 
     @SideOnly(Side.CLIENT)
-    public static void handleClientsideConnection(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        NetHandlerPlayClient handler = (NetHandlerPlayClient) event.handler;
+    public static void handleClientConnectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        NetHandlerPlayClient handler = (NetHandlerPlayClient) event.getHandler();
         ChannelPipeline pipeline = handler.getNetworkManager().channel().pipeline();
 
-        if (!event.isLocal) {
+        if (!event.isLocal()) {
             // only need the encoder when not connected locally
-            insertEncoder(pipeline, ToServerEncoder.INSTANCE);
+            insertEncoder(pipeline, SCToServerMessageEncoder.INSTANCE);
         }
         // handler handles both direct messages (for local) and the vanilla-payload packet
         insertHandler(pipeline, SCMessageHandlerClient.INSTANCE);
@@ -268,69 +135,125 @@ public final class NetworkImpl {
     private NetworkImpl() {
     }
 
-    public static void sendRawPacket(Iterable<? extends EntityPlayer> players, BaseNettyPacket packet) {
-        for (EntityPlayer player : players) {
-            sendRawPacket(Players.checkNotClient(player), packet);
+    static boolean handleCustomPayload(String channel, PacketBuffer payload, byte side, NetworkManager manager) {
+        ChannelHandler handler = channels.get(channel);
+        if (handler == null) {
+            return false;
+        } else {
+            handler.accept(channel, payload, side, manager);
+            return true;
         }
     }
 
-    public static void sendRawPacket(EntityPlayerMP player, BaseNettyPacket packet) {
-        player.playerNetServerHandler.netManager.channel()
-                .writeAndFlush(packet)
-                .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    // utilities
+
+    public static EntityPlayer getPlayer(byte side, NetworkManager manager) {
+        return side == Network.CLIENT
+                ? SevenCommons.proxy.getClientPlayer()
+                : ((NetHandlerPlayServer) manager.getNetHandler()).playerEntity;
     }
 
-    public static void sendRawPacketToServer(BaseNettyPacket packet) {
-        SevenCommons.proxy.getClientNetworkManager().channel()
-                .writeAndFlush(packet)
-                .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    public static Scheduler getScheduler(byte side) {
+        return side == Network.CLIENT ? Scheduler.client() : Scheduler.server();
     }
 
-    public static net.minecraft.network.Packet createVanillaWrapper(BaseNettyPacket packet) {
-        return new VanillaWrapper(packet);
+    public static void validateSide(byte characteristics, byte side, Object packet) {
+        if ((characteristics & side) == 0) {
+            throw new ProtocolException("Packet " + packet + " received on wrong side " + (side == Network.CLIENT ? "client" : "server"));
+        }
     }
 
-    private static final class VanillaWrapper extends net.minecraft.network.Packet implements BaseNettyPacket {
+    private static final java.lang.reflect.Type function2ndParam = Function.class.getTypeParameters()[1];
 
-        private final BaseNettyPacket wrapped;
+    public static <P extends PacketBase> Class<P> findPacketClassReflectively(PacketConstructor<P> constructor) {
+        Class<?> myClazz = constructor.getClass();
 
-        VanillaWrapper(BaseNettyPacket wrapped) {
-            this.wrapped = wrapped;
+        TypeToken<?> type = TypeToken.of(myClazz);
+        Class<?> result;
+        result = type.resolveType(function2ndParam).getRawType();
+        if (!PacketBase.class.isAssignableFrom(result)) {
+            result = PacketBase.class;
         }
 
-        @Override
-        public byte _sc$characteristics() {
-            return wrapped._sc$characteristics();
+        if (result == PacketBase.class) { // class is not a real subtype of Packet, so did not find an actual type parameter
+            // try lambda-hackery now
+            try {
+                Method method = myClazz.getDeclaredMethod("writeReplace");
+                method.setAccessible(true);
+                Object serForm = method.invoke(constructor);
+                if (serForm instanceof SerializedLambda) {
+                    SerializedLambda serLambda = (SerializedLambda) serForm;
+
+                    Class<?> returnClass = PacketBase.class;
+                    switch (serLambda.getImplMethodKind()) {
+                        case MethodHandleInfo.REF_newInvokeSpecial:
+                            returnClass = Class.forName(Type.getObjectType(serLambda.getImplClass()).getClassName());
+                            break;
+                        case MethodHandleInfo.REF_invokeInterface:
+                        case MethodHandleInfo.REF_invokeSpecial:
+                        case MethodHandleInfo.REF_invokeStatic:
+                        case MethodHandleInfo.REF_invokeVirtual:
+                            returnClass = Class.forName(Type.getReturnType(serLambda.getImplMethodSignature()).getClassName());
+                            break;
+                    }
+
+                    if (PacketBase.class.isAssignableFrom(returnClass) && returnClass != PacketBase.class) {
+                        result = returnClass;
+                    }
+                }
+            } catch (Exception ignored) {
+            }
         }
-
-        @Override
-        public byte[] _sc$encode() throws Exception {
-            return wrapped._sc$encode();
+        if (result == PacketBase.class) {
+            throw new RuntimeException("Failed to reflectively find type argument of PacketConstructor. " +
+                    "Please either refactor your code according to the docs or override getPacketClass.");
         }
+        //noinspection unchecked
+        return (Class<P>) result;
+    }
 
-        @Override
-        public String _sc$channel() {
-            return wrapped._sc$channel();
+    public static Optional<Side> findReceivingSideReflectively(PacketHandlerBase handler) {
+        PacketHandler.ReceivingSide annotation = findAnnotatedElement(handler).getAnnotation(PacketHandler.ReceivingSide.class);
+        return annotation == null ? Optional.empty() : Optional.of(annotation.value());
+    }
+
+    public static boolean findIsAsyncReflectively(PacketHandlerBase handler) {
+        return findAnnotatedElement(handler).getAnnotation(PacketHandler.Async.class) != null;
+    }
+
+    private static AnnotatedElement findAnnotatedElement(Object functionalInterfaceInstance) {
+        Class<?> clazz = functionalInterfaceInstance.getClass();
+        try {
+            Method writeReplace = clazz.getDeclaredMethod("writeReplace");
+            writeReplace.setAccessible(true);
+            Object serForm = writeReplace.invoke(functionalInterfaceInstance);
+            if (serForm instanceof SerializedLambda) {
+                SerializedLambda serLambda = (SerializedLambda) serForm;
+
+                Class<?> clazzHoldingLambda = Class.forName(serLambda.getImplClass());
+
+                switch (serLambda.getImplMethodKind()) {
+                    case MethodHandleInfo.REF_newInvokeSpecial:
+                        for (Constructor<?> constructor : clazzHoldingLambda.getDeclaredConstructors()) {
+                            if (Type.getConstructorDescriptor(constructor).equals(serLambda.getImplMethodSignature())) {
+                                return constructor;
+                            }
+                        }
+                        break;
+                    case MethodHandleInfo.REF_invokeInterface:
+                    case MethodHandleInfo.REF_invokeSpecial:
+                    case MethodHandleInfo.REF_invokeStatic:
+                    case MethodHandleInfo.REF_invokeVirtual:
+                        for (Method method : clazzHoldingLambda.getDeclaredMethods()) {
+                            if (method.getName().equals(serLambda.getImplMethodName()) && Type.getMethodDescriptor(method).equals(serLambda.getImplMethodSignature())) {
+                                return method;
+                            }
+                        }
+                        break;
+                }
+            }
+        } catch (Exception ignored) {
         }
-
-        @Override
-        public void _sc$handle(EntityPlayer player) {
-            wrapped._sc$handle(player);
-        }
-
-        @Override
-        public void readPacketData(PacketBuffer data) throws IOException {
-
-        }
-
-        @Override
-        public void writePacketData(PacketBuffer data) throws IOException {
-
-        }
-
-        @Override
-        public void processPacket(INetHandler handler) {
-
-        }
+        return clazz;
     }
 }

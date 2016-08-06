@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.client;
 
 import de.take_weiland.mods.commons.internal.GuiScreenProxy;
-import de.take_weiland.mods.commons.inv.Inventories;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -56,13 +55,12 @@ public final class Guis {
     /**
      * <p>Computes the current GUI scale. Calling this method is equivalent to the following:<pre><code>
      * Minecraft mc = Minecraft.getMinecraft();
-     * int scale = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();</code></pre></p>
+     * int scale = new ScaledResolution(mc).getScaleFactor();</code></pre></p>
      *
      * @return the current GUI scale
      */
     public static int computeGuiScale() {
-        Minecraft mc = Minecraft.getMinecraft();
-        return new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();
+        return new ScaledResolution(Minecraft.getMinecraft()).getScaleFactor();
     }
 
     /**
@@ -85,7 +83,7 @@ public final class Guis {
      * @param color     the color
      */
     public static void drawInventoryName(IInventory inventory, int x, int y, int color) {
-        Minecraft.getMinecraft().fontRendererObj.drawString(Inventories.getDisplayName(inventory), x, y, color);
+        Minecraft.getMinecraft().fontRendererObj.drawString(inventory.getDisplayName().getFormattedText(), x, y, color);
     }
 
     private Guis() {

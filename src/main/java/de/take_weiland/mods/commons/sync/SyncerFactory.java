@@ -3,7 +3,7 @@ package de.take_weiland.mods.commons.sync;
 import de.take_weiland.mods.commons.reflect.Property;
 
 /**
- * <p>Factory for {@link Syncer} instances.</p>
+ * <p>Factory for {@link TypeSyncer} instances.</p>
  *
  * @author diesieben07
  */
@@ -15,6 +15,6 @@ public interface SyncerFactory {
      * @param property the property to sync
      * @return a {@code Syncer} or null
      */
-    <VAL> Syncer<VAL, ?, ?> getSyncer(Property<VAL> property);
+    <VAL> TypeSyncer<VAL, ?, ?> getSyncer(Property<VAL> property);
 
 }

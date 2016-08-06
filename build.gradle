@@ -118,11 +118,27 @@ repositories {
 dependencies {
     compile "org.jetbrains:annotations:13.0"
     compile 'com.google.code.findbugs:jsr305:3.0.0'
+
+    compile "org.freemarker:freemarker:2.3.25-incubating"
+    compile 'com.google.googlejavaformat:google-java-format:1.0'
+
     deployerJars "org.apache.maven.wagon:wagon-ftp:2.2"
     testCompile "junit:junit:4.11"
 }
 
 idea.module.inheritOutputDirs = true
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
 
 if (ENV.SC_MAVEN_URL && ENV.TRAVIS_PULL_REQUEST == "false") { // only upload on travis and not for PRs
     uploadArchives {

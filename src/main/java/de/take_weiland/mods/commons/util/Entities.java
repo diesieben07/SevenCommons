@@ -5,20 +5,14 @@ import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.nbt.NBT;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityTracker;
-import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.Packet;
-import net.minecraft.util.*;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.util.ForgeDirection;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.Set;
 
 import static java.lang.invoke.MethodHandles.publicLookup;
@@ -77,25 +71,17 @@ public final class Entities {
 
     /**
      * <p>Get all players tracking the given Entity.</p>
-     * <p>To send a packet to all tracking players use {@link de.take_weiland.mods.commons.net.Packets#sendToAllTracking(Packet, Entity)} instead.</p>
      * <p>This method must only be called on the logical server and the returned Set must not be modified.</p>
      *
      * @param entity the Entity
      * @return a Set of players tracking the entity
      */
-    @SuppressWarnings("unchecked")
     public static Set<EntityPlayerMP> getTrackingPlayers(Entity entity) {
         if (entity.worldObj.isRemote) {
             throw new IllegalArgumentException("Cannot get tracking players on the client");
         }
-        IntHashMap trackerMap;
-        try {
-            trackerMap = (IntHashMap) trackerMapGet.invokeExact(((WorldServer) entity.worldObj).getEntityTracker());
-        } catch (Throwable x) {
-            throw Throwables.propagate(x);
-        }
-        EntityTrackerEntry entry = (EntityTrackerEntry) trackerMap.lookup(entity.getEntityId());
-        return entry == null ? Collections.emptySet() : entry.trackingPlayers;
+        //noinspection unchecked
+        return (Set<EntityPlayerMP>) ((WorldServer) entity.worldObj).getEntityTracker().getTrackingPlayers(entity);
     }
 
     private static final MethodHandle trackerMapGet;
@@ -110,34 +96,7 @@ public final class Entities {
         }
     }
 
-    /**
-     * <p>Get the cardinal direction the given Entity is facing towards.</p>
-     *
-     * @param entity the Entity
-     * @return a cardinal direction (one of {@link ForgeDirection#NORTH},
-     * {@link ForgeDirection#WEST}, {@link ForgeDirection#SOUTH},
-     * {@link ForgeDirection#EAST})
-     */
-    public static ForgeDirection getFacing(Entity entity) {
-        int dir = MathHelper.floor_double((entity.rotationYaw / 90) + 0.5) & 3;
-        return ForgeDirection.VALID_DIRECTIONS[Direction.directionToFacing[dir]];
-    }
-
     private Entities() {
     }
-
-    /**
-     * Gives back the movingobjectposition of the given entity on both server and client
-     * @param entity
-     * @param distance
-     * @return the movingobjectposition
-     */
-    public static MovingObjectPosition rayTrace(EntityLivingBase entity, double distance) {
-        Vec3 vec3 = Vec3.createVectorHelper(entity.posX, entity.posY, entity.posZ);
-        Vec3 vec31 = entity.getLook(1);
-        Vec3 vec32 = vec3.addVector(vec31.xCoord * distance, vec31.yCoord * distance, vec31.zCoord * distance);
-        return entity.worldObj.rayTraceBlocks(vec3, vec32, false, false, true);
-    }
-
 
 }

@@ -1,8 +1,13 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.internal.net.PacketHandlerBaseWithResponse;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.relauncher.Side;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.concurrent.CompletionStage;
 
 import static de.take_weiland.mods.commons.util.Sides.sideOf;
@@ -14,7 +19,31 @@ import static de.take_weiland.mods.commons.util.Sides.sideOf;
  * @author diesieben07
  */
 @FunctionalInterface
-public interface PacketHandler<P extends Packet> {
+public interface PacketHandler<P extends Packet> extends PacketHandlerBase {
+
+    /**
+     * <p>The {@code Async} annotation may be used on a class that implements any of the packet handler interfaces or a method that is used
+     * as a method reference to implement it.</p>
+     * <p>When marked with this annotation a packet handler will execute on the netty thread instead of the the main game thread.</p>
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.TYPE, ElementType.METHOD })
+    @interface Async {
+    }
+
+    /**
+     * <p>The {@code ReceivingSide} annotation may be used on a class that implements any of the packet handler interfaces or a method that is used
+     * as a method reference to implement it.</p>
+     * <p>The value specified sets a valid side for this handler. If a packet for this handler arrives on the opposite side a {@link ProtocolException}
+     * will be thrown. If this annotation is not present, the handler can receive packets on both sides.</p>
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.TYPE, ElementType.METHOD })
+    @interface ReceivingSide {
+
+        Side value();
+
+    }
 
     /**
      * <p>Called when a packet is received.</p>
@@ -95,7 +124,7 @@ public interface PacketHandler<P extends Packet> {
      * <p>Version of {@code PacketHandler} for {@linkplain Packet.WithResponse packets with response}.</p>
      */
     @FunctionalInterface
-    interface WithResponse<P extends Packet.WithResponse<R>, R extends Packet.Response> {
+    interface WithResponse<P extends Packet.WithResponse<R>, R extends Packet.Response> extends PacketHandlerBaseWithResponse.Plain<P, R> {
 
         /**
          * <p>Called when a packet is received.</p>
@@ -105,7 +134,10 @@ public interface PacketHandler<P extends Packet> {
          * @param player the player
          * @return the response
          */
+        @Override
         R handle(P packet, EntityPlayer player);
+
+
 
         /**
          * <p>Version of {@code PacketHandler.WithResponse} that provides a {@link Side} argument specifying the logical side.</p>
@@ -179,7 +211,7 @@ public interface PacketHandler<P extends Packet> {
      * <p>Version of {@code PacketHandler.WithResponse} that provides responses asynchronously.</p></p>
      */
     @FunctionalInterface
-    interface WithAsyncResponse<P extends Packet.WithResponse<R>, R extends Packet.Response> {
+    interface WithAsyncResponse<P extends Packet.WithResponse<R>, R extends Packet.Response> extends PacketHandlerBaseWithResponse.Future<P, R> {
 
         /**
          * <p>Called when a packet is received.</p>
@@ -189,8 +221,8 @@ public interface PacketHandler<P extends Packet> {
          * @param player the player
          * @return the response as a {@code CompletionStage}
          */
+        @Override
         CompletionStage<? extends R> handle(P packet, EntityPlayer player);
-
 
         /**
          * <p>Version of {@code PacketHandler.WithAsyncResponse} that provides a {@link Side} argument specifying the logical side.</p>

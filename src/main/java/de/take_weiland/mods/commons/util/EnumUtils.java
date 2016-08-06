@@ -58,12 +58,13 @@ public final class EnumUtils {
      * @return the type of enum values
      */
     public static <E extends Enum<E>> Class<E> getType(EnumSet<E> enumSet) {
-        try {
-            //noinspection unchecked
-            return (Class<E>) enumSetTypeGetter.invokeExact(enumSet);
-        } catch (Throwable t) {
-            throw JavaUtils.throwUnchecked(t);
+        if (enumSet.isEmpty()) {
+            enumSet = EnumSet.complementOf(enumSet);
         }
+        if (enumSet.isEmpty()) {
+            throw new RuntimeException("Cannot determine enum type of EnumSet with empty enum type");
+        }
+        return enumSet.iterator().next().getDeclaringClass();
     }
 
     public static <E extends Enum<E>> long encodeAsLong(EnumSet<E> set) {
