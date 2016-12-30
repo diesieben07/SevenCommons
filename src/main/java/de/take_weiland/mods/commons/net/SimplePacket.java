@@ -10,6 +10,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.IContainerListener;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -20,6 +21,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Predicate;
@@ -254,9 +256,12 @@ public interface SimplePacket {
      * @param c the container
      */
     default void sendToViewing(Container c) {
-        // the filter makes sure it only contains EntityPlayer's
-        //noinspection unchecked
-        sendTo(Iterables.filter(CommonMethodHandles.getListeners(c), EntityPlayerMP.class));
+        List<IContainerListener> listeners = CommonMethodHandles.getListeners(c);
+        for (IContainerListener listener : listeners) {
+            if (listener instanceof EntityPlayerMP) {
+                sendTo((EntityPlayerMP) listener);
+            }
+        }
     }
 
     /**

@@ -1,10 +1,10 @@
 package de.take_weiland.mods.commons.serialize;
 
-import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.internal.AnnotationNull;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.reflect.Property;
+import de.take_weiland.mods.commons.reflect.PropertyAccess;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -12,52 +12,81 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * <p>A serializer that can serialize values of type {@code T} to a byte stream.</p>
+ * <p>A serializer that can serialize values of type {@code T} to and from a byte stream.</p>
  *
  * @author diesieben07
  */
-public interface ByteStreamSerializer<T> {
+public interface ByteStreamSerializer<T> extends BaseSerializer<T> {
+
+    void write(MCDataOutput out, PropertyAccess<T> property, Object obj);
+
+    void read(MCDataInput in, PropertyAccess<T> property, Object obj);
 
     /**
-     * <p>Serialize the given instance to the OutputStream.</p>
+     * <p>A ByteStreamSerializer for types where de-serialization produces a new instance.
+     * An example is String.</p>
      *
-     * @param instance the instance
-     * @param out      the OutputStream
      */
-    void write(T instance, MCDataOutput out);
-
-    /**
-     * <p>Read an instance of type T from the InputStream.</p>
-     *
-     * @param in the IntputStream
-     * @return the instance
-     */
-    T read(MCDataInput in);
-
-    /**
-     * <p>A serializer that can serialize the contents of objects of type {@code T} to a byte stream.
-     * As opposed to {@link de.take_weiland.mods.commons.serialize.ByteStreamSerializer}
-     * such a serializer never touches the instance being passed in but directly modifies it's contents.</p>
-     * <p>This is used for e.g. FluidTanks.</p>
-     */
-    interface Contents<T> {
+    interface Instance<T> extends ByteStreamSerializer<T> {
 
         /**
-         * <p>Serialize the contents of the given instance to the OutputStream.</p>
+         * <p>Read an instance of type T from the InputStream.</p>
          *
-         * @param instance the instance
-         * @param out      the OutputStream
+         * @param in the InputStream
+         * @return the instance
          */
-        void write(T instance, MCDataOutput out);
+        T read(MCDataInput in);
+
+        /**
+         * <p>Serialize the given instance to the OutputStream.</p>
+         *
+         * @param out      the OutputStream
+         * @param instance the instance
+         */
+        void write(MCDataOutput out, T instance);
+
+        @Override
+        default void write(MCDataOutput out, PropertyAccess<T> property, Object obj) {
+            write(out, property.get(obj));
+        }
+
+        @Override
+        default void read(MCDataInput in, PropertyAccess<T> property, Object obj) {
+            property.set(obj, read(in));
+        }
+    }
+
+    /**
+     * <p>A ByteStreamSerializer for types where de-serialization changes the contents of an existing instance.
+     * An example is FluidTank.</p>
+     */
+    interface Contents<T> extends ByteStreamSerializer<T> {
 
         /**
          * <p>Deserialize the the contents of the given instance from the InputStream.</p>
          *
-         * @param instance the instance
          * @param in       the InputStream
+         * @param instance the instance
          */
-        void read(T instance, MCDataInput in);
+        void read(MCDataInput in, T instance);
 
+        /**
+         * <p>Serialize the contents of the given instance to the OutputStream.</p>
+         *
+         * @param out      the OutputStream
+         * @param instance the instance
+         */
+        void write(MCDataOutput out, T instance);
+
+        @Override
+        default void write(MCDataOutput out, PropertyAccess<T> property, Object obj) {
+            write(out, property.get(obj));
+        }
+
+        @Override
+        default void read(MCDataInput in, PropertyAccess<T> property, Object obj) {
+            read(in, property.get(obj));
+        }
     }
 
     /**
@@ -65,8 +94,8 @@ public interface ByteStreamSerializer<T> {
      * <p>When applied to a method, this method must be static and accept a single parameter of type
      * {@link Property}. It's return type must be any non-primitive type.</p>
      * <p>
-     * <p>When applied to a field, this field must be static and final. It's type must be assignable to {@code ByteStreamSerializer}
-     * resp. {@code ByteStreamSerializer.Contents}. The {@linkplain #method() SerializationMethod filter} must be set when applied
+     * <p>When applied to a field, this field must be static and final. It's type must be assignable to {@code ByteStreamSerializer}.
+     * The {@linkplain #method() SerializationMethod filter} must be set when applied
      * to fields.</p>
      * <p>
      * <p>The TypeSpecification dictates what this provider must provide. The TypeSpecification will only ever report
@@ -98,7 +127,7 @@ public interface ByteStreamSerializer<T> {
          *
          * @return a filter
          */
-        SerializationMethod.Method method() default SerializationMethod.Method.DEFAULT;
+        SerializationMethod method() default SerializationMethod.DEFAULT;
 
     }
 

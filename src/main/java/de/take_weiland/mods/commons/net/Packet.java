@@ -38,7 +38,7 @@ public interface Packet extends SimplePacket, PacketBase, InternalPacket, Packet
     default void _sc$internal$receiveDirect(byte side, NetworkManager manager) {
         PacketData data = _sc$internal$getData();
         NetworkImpl.validateSide(data.characteristics, side, this);
-        if ((data.characteristics & Network.ASYNC) == 0) {
+        if ((data.characteristics & Network.ASYNC) != 0) {
             //noinspection unchecked,rawtypes
             ((PacketHandler) data.handler).handle(this, NetworkImpl.getPlayer(side, manager));
         } else {

@@ -1,71 +1,17 @@
-<#-- @ftlvariable name="" type="de.take_weiland.mods.commons.internal.sync.CompanionTemplateModel" -->
-
-<#macro primitiveSync element fieldId>
-<#-- @ftlvariable name="element" type="de.take_weiland.mods.commons.internal.sync.SyncedProperty" -->
-    if (instance.${element.getter}<#if element.method>()</#if> != this.${element.companionFieldName}) {
-        change = new TypeSyncer.Change(null, instance.${element.getter}<#if element.method>()</#if>);
-        <@eventAdd fieldId=fieldId/>
-        this.${element.companionFieldName} = <@propertyGet property=element/>;
-    }
-</#macro>
-
-<#macro basicObjectSync element, fieldId>
-<#-- @ftlvariable name="element" type="de.take_weiland.mods.commons.internal.sync.SyncedProperty" -->
-    if (!Objects.equals(<@propertyGet property=element/>, this.${element.companionFieldName})) {
-        change = new TypeSyncer.Change(null, instance.${element.getter}<#if element.method>()</#if>);
-        <@eventAdd fieldId=fieldId/>
-        this.${element.companionFieldName} = <@propertyGet property=element/>;
-    }
-</#macro>
-
-<#macro eventAdd fieldId>
-    event.add(${fieldId}, change);
-</#macro>
-
-<#macro propertyGet property>
-<#-- @ftlvariable name="property" type="de.take_weiland.mods.commons.internal.sync.SyncedProperty" -->
-    instance.${property.getter.simpleName}<#if property.method>()</#if>
-</#macro>
-
-<#macro propertySet property value>
-<#-- @ftlvariable name="property" type="de.take_weiland.mods.commons.internal.sync.SyncedProperty" -->
-    instance.${property.setter.simpleName}
-    <#if property.method>
-        (${value})
-    <#else>
-        =${value}
-    </#if>
-</#macro>
-
-<#macro syncMethod inContainer>
-${syncedClass.qualifiedName} instance = (${syncedClass.qualifiedName}) obj;
-
-SyncEvent event = super.check(instance, flags, player);
-TypeSyncer.Change change;
-
-    <#assign fieldId = firstId>
-    <#list members as member>
-        <#if member.inContainer == inContainer>
-            <#assign m = member.syncer.syncMacro>
-            <@.vars[m] element=member fieldId=fieldId />
-            <#assign fieldId++>
-        </#if>
-    </#list>
-
-return event;
-</#macro>
+<#-- @ftlvariable name="" type="de.take_weiland.mods.commons.internal.sync_processing.CompanionTemplateModel" -->
+<#include 'Macros.ftl'>
 
 package ${package};
 
-import de.take_weiland.mods.commons.internal.sync_olds.SyncCompanion;
-import de.take_weiland.mods.commons.internal.sync_olds.SyncEvent;
+import de.take_weiland.mods.commons.internal.sync.SyncEvent;
+import de.take_weiland.mods.commons.internal.sync.ChangedValue;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import net.minecraft.entity.player.EntityPlayerMP;
 import java.util.Objects;
 
-public class ${companionClass} extends SyncCompanion {
+public class ${companionClass} extends ${superClass} {
 
     <#list members as member>
         <#if member.syncer.hasCompanion()>
@@ -85,13 +31,32 @@ public class ${companionClass} extends SyncCompanion {
 
     @Override
     public int applyChanges(Object instance, ChangeIterator values) {
-        return 0;
+        int fieldId = super.applyChanges(instance, values);
+
+        loop:
+        while (true) {
+            switch (fieldId - super.fieldOffset()) {
+                <#assign fieldId = 1>
+                <#list members as member>
+                    case ${fieldId?c}:
+                        <@readChange fieldId=fieldId member=member />
+                        break;
+                    <#assign fieldId++ >
+                </#list>
+                default: <#-- end of stream or unknown id -->
+                    break loop;
+            }
+            fieldId = values.nextFieldId();
+        }
+
+        return fieldId;
     }
 
     @Override
-    public int read(Object instance, MCDataInput in) {
-        return 0;
+    public int fieldOffset() {
+        return super.fieldOffset() + ${members?size?c};
     }
+
 }
 
 

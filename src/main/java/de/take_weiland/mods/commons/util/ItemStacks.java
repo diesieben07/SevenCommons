@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.util;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.primitives.Ints;
 import de.take_weiland.mods.commons.nbt.NBT;
@@ -120,7 +121,7 @@ public final class ItemStacks {
         }
 
         int stackSize = tryParseStackSize(matcher.group(1));
-        Item item = tryParseItem(Objects.firstNonNull(matcher.group(2), matcher.group(3)));
+        Item item = tryParseItem(MoreObjects.firstNonNull(matcher.group(2), matcher.group(3)));
         int meta = tryParseMetadata(matcher.group(4), 0);
         return new ItemStack(item, stackSize, meta);
     }
@@ -167,7 +168,7 @@ public final class ItemStacks {
                 int oreID = OreDictionary.getOreID(oreDictEntry);
                 result.add((stack) -> Ints.contains(OreDictionary.getOreIDs(stack), oreID));
             } else {
-                Item item = tryParseItem(Objects.firstNonNull(matcher.group(3), matcher.group(4)));
+                Item item = tryParseItem(MoreObjects.firstNonNull(matcher.group(3), matcher.group(4)));
                 int metadata = tryParseMetadata(matcher.group(5), OreDictionary.WILDCARD_VALUE);
                 if (metadata == OreDictionary.WILDCARD_VALUE) {
                     result.add((stack) -> stack.getItem() == item);

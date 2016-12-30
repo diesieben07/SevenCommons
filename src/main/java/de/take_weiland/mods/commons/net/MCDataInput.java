@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.net;
 
 import com.google.common.io.ByteArrayDataInput;
 import io.netty.buffer.ByteBuf;
-import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.Item;
@@ -14,9 +13,11 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.registry.IForgeRegistry;
 import net.minecraftforge.fml.common.registry.IForgeRegistryEntry;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.io.*;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.channels.WritableByteChannel;

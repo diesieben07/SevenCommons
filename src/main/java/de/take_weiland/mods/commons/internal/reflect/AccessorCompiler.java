@@ -1,22 +1,35 @@
 package de.take_weiland.mods.commons.internal.reflect;
 
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.asm.ClassInfoClassWriter;
+import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
 import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.reflect.SCReflection;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.implementation.Implementation;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodType;
+import java.lang.invoke.*;
 import java.lang.reflect.*;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodHandles.publicLookup;
 import static java.lang.invoke.MethodType.methodType;
+import static net.bytebuddy.implementation.ExceptionMethod.throwing;
+import static net.bytebuddy.implementation.MethodCall.invoke;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.objectweb.asm.Opcodes.*;
 
 /**
@@ -24,7 +37,112 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public class AccessorCompiler {
 
+    private static final Method FIELD_GET, FIELD_SET;
+
+    static {
+        try {
+            FIELD_GET = Field.class.getMethod("get", Object.class);
+            FIELD_SET = Field.class.getMethod("set", Object.class, Object.class);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static <T> PropertyAccess<T> makeOptimizedProperty(Member member, Property<T> property) {
+        TypeToken<PropertyAccess<T>> typedInterface = new TypeToken<PropertyAccess<T>>() {}.where(new TypeParameter<T>() {}, property.getType());
+
+        Implementation getter;
+        Implementation setter;
+        if (member instanceof Field) {
+            Field field = (Field) member;
+            field.setAccessible(true);
+            getter = invoke(FIELD_GET).on(field).withArgument(0).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC);
+            setter = invoke(FIELD_SET).on(field).withArgument(0, 1).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC);
+        } else {
+            getter = invoke((Method) member).onArgument(0).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC);
+            Method setterCandidate = SCReflection.findSetter((Method) member);
+            if (setterCandidate == null) {
+                setter = throwing(UnsupportedOperationException.class);
+            } else {
+                setter = invoke(setterCandidate).onArgument(0).withArgument(1).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC);
+            }
+        }
+
+        try {
+            DynamicType.Unloaded<Object> clazz = new ByteBuddy()
+                    .subclass(Object.class)
+                    .implement(typedInterface.getType())
+                    .method(named("get")).intercept(getter)
+                    .method(named("set")).intercept(setter)
+                    .make();
+
+
+            //noinspection unchecked
+            return (PropertyAccess<T>) clazz
+                    .load(Thread.currentThread().getContextClassLoader())
+                    .getLoaded()
+                    .newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            // this should never happen
+            throw new RuntimeException();
+        }
+    }
+
+    public static void main(String[] args) throws NoSuchFieldException, NoSuchMethodException, InterruptedException {
+        AnnotatedElement member = String.class.getDeclaredField("value");
+//        AnnotatedElement member = AccessorCompiler.class.getField("foo");
+        Property<?> p = AbstractProperty.newProperty(member);
+        PropertyAccess<?> access = p.optimize();
+
+        System.out.println(access.get("abc"));
+    }
+
+    public static CallSite bootstrapAccessor(MethodHandles.Lookup caller, String name, MethodType type, String className, boolean isMethod) throws ReflectiveOperationException {
+        boolean set = type.returnType() == void.class;
+        checkArgument(type.parameterCount() == (set ? 2 : 1));
+        checkArgument(!type.parameterType(0).isPrimitive());
+
+        Class<?> containingClass = Class.forName(className, true, caller.lookupClass().getClassLoader());
+        final MethodHandle target;
+        if (isMethod) {
+            List<Method> candidates = Stream.of(containingClass.getDeclaredMethods())
+                    .filter(m -> m.getName().equals(name))
+                    .filter(m -> m.getReturnType() == void.class)
+                    .filter(m -> !m.isSynthetic() && !m.isBridge())
+                    .collect(Collectors.toList());
+
+            if (candidates.size() != 1) {
+                throw new IllegalStateException("Could not determine target member uniquely.");
+            } else {
+
+                final Method m;
+                if (set) {
+                    Method setter = SCReflection.findSetter(candidates.get(0));
+                    if (setter == null) {
+                        throw new IllegalArgumentException("Could not find suitable target setter");
+                    } else {
+                        m = setter;
+                    }
+                } else {
+                    m = candidates.get(0);
+                }
+
+                target = publicLookup().unreflect(m).asType(type);
+            }
+        } else {
+            Field f = containingClass.getDeclaredField(name);
+            f.setAccessible(true);
+            if (set) {
+                target = publicLookup().unreflectSetter(f);
+            } else {
+                target = publicLookup().unreflectGetter(f);
+            }
+        }
+
+        return new ConstantCallSite(target);
+    }
+
+    public static <T> PropertyAccess<T> makeOptimizedPropertyold(Member member, Property<T> property) {
         ResolvedMember resolved = resolve(member);
         CompileContextImpl context = emitStart(Type.getInternalName(PropertyAccess.class));
 

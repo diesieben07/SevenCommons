@@ -1,4 +1,4 @@
-package de.take_weiland.mods.commons.internal.sync;
+package de.take_weiland.mods.commons.internal.sync_processing;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
@@ -8,13 +8,15 @@ import java.util.List;
  */
 public final class CompanionTemplateModel {
 
+    private final PendingCompanion pendingCompanion;
     private final String pkg;
     private final String companionClass;
     private final TypeElement syncedClass;
     private final List<SyncedProperty> members;
     private final int firstId;
 
-    public CompanionTemplateModel(String pkg, String companionClass, TypeElement syncedClass, List<SyncedProperty> members, int firstId) {
+    public CompanionTemplateModel(PendingCompanion pendingCompanion, String pkg, String companionClass, TypeElement syncedClass, List<SyncedProperty> members, int firstId) {
+        this.pendingCompanion = pendingCompanion;
         this.pkg = pkg;
         this.companionClass = companionClass;
         this.syncedClass = syncedClass;
@@ -38,8 +40,8 @@ public final class CompanionTemplateModel {
         return syncedClass;
     }
 
-    public int getFirstId() {
-        return firstId;
+    public String getSuperClass() {
+        return pendingCompanion.getSuperClassName();
     }
 
 }

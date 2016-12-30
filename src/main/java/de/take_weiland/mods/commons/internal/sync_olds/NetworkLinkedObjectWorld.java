@@ -32,7 +32,7 @@ public class NetworkLinkedObjectWorld implements NetworkLinkedObjectType<World, 
     }
 
     @Override
-    public void send(World object, SimplePacket packet) {
+    public void sendToTracking(World object, SimplePacket packet) {
         packet.sendToAllIn(object);
     }
 }

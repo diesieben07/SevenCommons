@@ -1,7 +1,7 @@
-package de.take_weiland.mods.commons.internal.sync;
+package de.take_weiland.mods.commons.internal.sync_processing;
 
 import de.take_weiland.mods.commons.ExplicitSetter;
-import de.take_weiland.mods.commons.internal.sync.SyncAnnotationProcessor.ProcessingException;
+import de.take_weiland.mods.commons.sync.Sync;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.AnnotatedConstruct;
@@ -22,12 +22,14 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 public final class SyncedProperty {
 
     private final Element getter, setter;
-    private final CompileTimeSyncer syncer;
+    private final CompileTimeSyncerFactory syncerFactory;
+    private CompileTimeSyncer syncer;
 
-    private SyncedProperty(Element getter, Element setter) {
+
+    private SyncedProperty(Element getter, Element setter, CompileTimeSyncerFactory syncerFactory) {
         this.getter = getter;
         this.setter = setter;
-        this.syncer = CompileTimeSyncer.create(this);
+        this.syncerFactory = syncerFactory;
     }
 
     public boolean isMethod() {
@@ -51,15 +53,29 @@ public final class SyncedProperty {
     }
 
     public boolean getInContainer() {
-        return true;
+        return getter.getAnnotation(Sync.class).inContainer();
     }
 
-    public static SyncedProperty create(ProcessingEnvironment env, Element element) {
+    boolean isReady() {
+        if (syncer == null) {
+            tryInitSyncer();
+        }
+        return syncer != null;
+    }
+
+    private void tryInitSyncer() {
+        Optional<CompileTimeSyncer> candidate = syncerFactory.getSyncer(getter.asType());
+        if (candidate.isPresent()) {
+            syncer = candidate.get();
+        }
+    }
+
+    public static SyncedProperty create(SyncAnnotationProcessor processor, Element element) {
         if (element.getKind() == ElementKind.FIELD) {
-            return new SyncedProperty(element, null);
+            return new SyncedProperty(element, null, processor.getSyncerFactory());
         } else {
             checkArgument(element.getKind() == ElementKind.METHOD);
-            return new SyncedProperty(element, findSetter(env, (ExecutableElement) element).orElse(null));
+            return new SyncedProperty(element, findSetter(processor.getEnv(), (ExecutableElement) element).orElse(null), processor.getSyncerFactory());
         }
     }
 
@@ -159,4 +175,11 @@ public final class SyncedProperty {
         return method.getParameters().size() == 1 && method.getReturnType().getKind() == TypeKind.VOID;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("SyncedProperty{");
+        sb.append("getter=").append(getter);
+        sb.append('}');
+        return sb.toString();
+    }
 }

@@ -62,7 +62,7 @@ final class DefaultCompanionFactory implements CompanionFactory {
 
     int getNextFreeIDFor(Class<?> clazz) {
         if (clazz == Object.class) {
-            return SyncCompanion.FIRST_USEABLE_ID; // ID 0 is taken for end of stream
+            return SyncCompanion.FIRST_USABLE_ID; // ID 0 is taken for end of stream
         }
 
         Class<?> superclass = clazz.getSuperclass();

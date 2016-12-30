@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.tonbt.builtin;
 
 import com.google.common.primitives.Primitives;
 import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.nbt.NBTSerializer;
+import de.take_weiland.mods.commons.serialize.NBTSerializer;
 import de.take_weiland.mods.commons.nbt.NBTSerializerFactory;
 import de.take_weiland.mods.commons.reflect.Property;
 import net.minecraft.item.ItemStack;
@@ -62,7 +62,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         return (NBTSerializer<T>) result;
     }
 
-    private enum ForBool implements NBTSerializer.ForValue<Boolean> {
+    private enum ForBool implements NBTSerializer.Instance<Boolean> {
         INSTANCE;
 
         private static final byte TRUE = 1;
@@ -79,7 +79,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForByte implements NBTSerializer.ForValue<Byte> {
+    private enum ForByte implements NBTSerializer.Instance<Byte> {
         INSTANCE;
 
         @Override
@@ -93,7 +93,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForShort implements NBTSerializer.ForValue<Short> {
+    private enum ForShort implements NBTSerializer.Instance<Short> {
         INSTANCE;
 
 
@@ -108,7 +108,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForChar implements NBTSerializer.ForValue<Character> {
+    private enum ForChar implements NBTSerializer.Instance<Character> {
 
         INSTANCE;
 
@@ -123,7 +123,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForInt implements NBTSerializer.ForValue<Integer> {
+    private enum ForInt implements NBTSerializer.Instance<Integer> {
         INSTANCE;
 
         @Override
@@ -137,7 +137,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForLong implements NBTSerializer.ForValue<Long> {
+    private enum ForLong implements NBTSerializer.Instance<Long> {
 
         INSTANCE;
 
@@ -152,7 +152,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForFloat implements NBTSerializer.ForValue<Float> {
+    private enum ForFloat implements NBTSerializer.Instance<Float> {
 
         INSTANCE;
 
@@ -167,7 +167,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForDouble implements NBTSerializer.ForValue<Double> {
+    private enum ForDouble implements NBTSerializer.Instance<Double> {
 
         INSTANCE;
 
@@ -182,7 +182,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForCharSeq implements NBTSerializer.ForValue<CharSequence> {
+    private enum ForCharSeq implements NBTSerializer.Instance<CharSequence> {
 
         INSTANCE;
 
@@ -197,7 +197,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForItemStack implements NBTSerializer.ForValue<ItemStack> {
+    private enum ForItemStack implements NBTSerializer.Instance<ItemStack> {
 
         INSTANCE;
 
@@ -212,7 +212,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForFluidStack implements NBTSerializer.ForValue<FluidStack> {
+    private enum ForFluidStack implements NBTSerializer.Instance<FluidStack> {
 
         INSTANCE;
 
@@ -227,7 +227,7 @@ public final class DefaultNBTSerializers implements NBTSerializerFactory {
         }
     }
 
-    private enum ForFluidTank implements NBTSerializer.ForContainer<FluidTank> {
+    private enum ForFluidTank implements NBTSerializer.Contents<FluidTank> {
 
         INSTANCE;
 

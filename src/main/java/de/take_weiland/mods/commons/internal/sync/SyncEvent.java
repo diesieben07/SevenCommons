@@ -1,9 +1,10 @@
-package de.take_weiland.mods.commons.internal.sync_olds;
+package de.take_weiland.mods.commons.internal.sync;
 
 import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.internal.net.InternalPacket;
 import de.take_weiland.mods.commons.internal.net.MCDataInputImpl;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
+import de.take_weiland.mods.commons.internal.sync_olds.*;
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
 import de.take_weiland.mods.commons.net.Network;
@@ -39,14 +40,13 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, Interna
     private static final int IEEP = 3;
 
     private int cursor = 0;
-    ChangedValue<?>[] changes = new ChangedValue[3];
+    ChangedValue[] changes = new ChangedValue[3];
 
-    public final void add(int fieldId, TypeSyncer.Change<?> changedValue) {
+    public final void add(ChangedValue changedValue) {
         if (changes.length == cursor) {
             grow();
         }
         changes[cursor++] = changedValue;
-        changedValue.fieldId = fieldId;
     }
 
     final void done() {
@@ -55,7 +55,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, Interna
 
     private void grow() {
         int currLen = changes.length;
-        ChangedValue<?>[] newArr = new ChangedValue[currLen + 2];
+        ChangedValue[] newArr = new ChangedValue[currLen + 2];
         System.arraycopy(changes, 0, newArr, 0, currLen);
         changes = newArr;
     }
@@ -104,19 +104,19 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, Interna
     }
 
     @Override
-    public int fieldId() {
+    public int nextFieldId() {
         if (cursor >= changes.length) {
             return SyncCompanion.FIELD_ID_END;
         }
-        ChangedValue<?> change = changes[cursor];
+        ChangedValue change = changes[cursor];
         return change == null ? SyncCompanion.FIELD_ID_END : change.fieldId;
     }
 
     @Override
     public <T_DATA, T_VAL, T_COM> void apply(TypeSyncer<T_VAL, T_COM, T_DATA> syncer, Object obj, PropertyAccess<T_VAL> property, Object cObj, PropertyAccess<T_COM> companion) {
-        @SuppressWarnings("unchecked")
-        ChangedValue<T_DATA> change = (ChangedValue<T_DATA>) changes[cursor++];
-        syncer.apply(change.data, obj, property, cObj, companion);
+        // TODO
+        ChangedValue change = changes[cursor++];
+//        syncer.apply(change.data, obj, property, cObj, companion);
     }
 
     public void send(Object obj, @Nullable EntityPlayerMP player) {
@@ -134,7 +134,7 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, Interna
     public void _sc$internal$writeTo(MCDataOutput out) throws Exception {
         writeMetaInfoToStream(out);
 
-        for (ChangedValue<?> change : changes) {
+        for (ChangedValue change : changes) {
             if (change == null) {
                 break;
             }

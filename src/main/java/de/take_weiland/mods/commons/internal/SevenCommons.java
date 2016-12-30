@@ -4,13 +4,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import de.take_weiland.mods.commons.client.Rendering;
 import de.take_weiland.mods.commons.crash.Crashing;
 import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.client.worldview.EmptyEntityRenderer;
 import de.take_weiland.mods.commons.internal.client.worldview.ViewEntity;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoSuperCache;
 import de.take_weiland.mods.commons.internal.net.NetworkImpl;
-import de.take_weiland.mods.commons.internal.sync_olds.SyncEvent;
+import de.take_weiland.mods.commons.internal.sync.SyncEvent;
 import de.take_weiland.mods.commons.internal.sync_olds.builtin.BuiltinSyncers;
 import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
 import de.take_weiland.mods.commons.internal.tonbt.builtin.DefaultNBTSerializers;
@@ -86,6 +87,10 @@ public final class SevenCommons extends DummyModContainer {
         instance = this;
 
         source = (File) Launch.blackboard.remove("__sevencommons.source");
+    }
+
+    public static void main(String[] args) {
+        Rendering.drawColoredQuad(0, 0, 100, 100, 0xFF00FF, 128, -2);
     }
 
     public static Logger scLogger(String channel) {

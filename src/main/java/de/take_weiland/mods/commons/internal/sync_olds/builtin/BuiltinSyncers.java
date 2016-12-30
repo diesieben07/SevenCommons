@@ -1,8 +1,8 @@
 package de.take_weiland.mods.commons.internal.sync_olds.builtin;
 
 import com.google.common.primitives.Primitives;
-import de.take_weiland.mods.commons.SerializationMethod;
 import de.take_weiland.mods.commons.reflect.Property;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
 import de.take_weiland.mods.commons.sync.SyncCapacity;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 import de.take_weiland.mods.commons.sync.SyncerFactory;
@@ -29,10 +29,10 @@ public final class BuiltinSyncers implements SyncerFactory {
         Class<? super VAL> type = property.getRawType();
         TypeSyncer<VAL, ?, ?> syncer = null;
 
-        if (property.getSerializationMethod() != SerializationMethod.Method.CONTENTS) {
+        if (property.getSerializationMethod() != SerializationMethod.CONTENTS) {
             syncer = (TypeSyncer<VAL, ?, ?>) getValueSyncer(type);
         }
-        if (syncer == null && property.getSerializationMethod() != SerializationMethod.Method.VALUE) {
+        if (syncer == null && property.getSerializationMethod() != SerializationMethod.VALUE) {
             syncer = (TypeSyncer<VAL, ?, ?>) getContentsSyncer(type, property);
         }
         return syncer;

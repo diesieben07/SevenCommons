@@ -1,8 +1,9 @@
 package de.take_weiland.mods.commons.reflect;
 
 import com.google.common.reflect.TypeToken;
-import de.take_weiland.mods.commons.SerializationMethod;
+import de.take_weiland.mods.commons.serialize.RequestSerializationMethod;
 import de.take_weiland.mods.commons.asm.ASMProperty;
+import de.take_weiland.mods.commons.serialize.SerializationMethod;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -66,10 +67,10 @@ public interface Property<T> extends PropertyAccess<T> {
      *
      * @return the SerializationMethod
      */
-    default SerializationMethod.Method getSerializationMethod() {
-        SerializationMethod annotation = getAnnotation(SerializationMethod.class);
+    default SerializationMethod getSerializationMethod() {
+        RequestSerializationMethod annotation = getAnnotation(RequestSerializationMethod.class);
         if (annotation == null) {
-            return SerializationMethod.Method.DEFAULT;
+            return SerializationMethod.DEFAULT;
         } else {
             return annotation.value();
         }

@@ -134,7 +134,7 @@ public interface TypeSyncer<VAL, COM, DATA> {
     final class Change<T_DATA> extends ChangedValue<T_DATA> {
 
         // TODO
-        public Change(TypeSyncer<?, ?, T_DATA> syncer, T_DATA data) {
+        Change(TypeSyncer<?, ?, T_DATA> syncer, T_DATA data) {
             super(syncer, data);
         }
     }

@@ -32,7 +32,7 @@ public class NetworkLinkedObjectEntity implements NetworkLinkedObjectType<Entity
     }
 
     @Override
-    public void send(Entity object, SimplePacket packet) {
+    public void sendToTracking(Entity object, SimplePacket packet) {
         packet.sendToAllTracking(object);
     }
 }

@@ -718,7 +718,7 @@ public final class MCDataInputImpl extends InputStream implements MCDataInput, S
     }
 
     @Override
-    public int fieldId() {
+    public int nextFieldId() {
         return readVarInt();
     }
 

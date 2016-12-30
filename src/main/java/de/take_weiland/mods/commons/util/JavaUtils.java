@@ -1,25 +1,69 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
-import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.Iterators;
-import de.take_weiland.mods.commons.Unsafe;
-import de.take_weiland.mods.commons.internal.CommonMethodHandles;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.*;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+
+import de.take_weiland.mods.commons.Unsafe;
+import de.take_weiland.mods.commons.internal.CommonMethodHandles;
+
+import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
+import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 
 /**
  * <p>Various utility methods.</p>
  */
 @ParametersAreNonnullByDefault
 public final class JavaUtils {
+
+    public static <IN> Collector<IN, ?, ImmutableList<IN>> toImmutableList() {
+        return new Collector<IN, ImmutableList.Builder<IN>, ImmutableList<IN>>() {
+            @Override
+            public Supplier<ImmutableList.Builder<IN>> supplier() {
+                return ImmutableList::builder;
+            }
+
+            @Override
+            public BiConsumer<ImmutableList.Builder<IN>, IN> accumulator() {
+                return ImmutableList.Builder::add;
+            }
+
+            @Override
+            public BinaryOperator<ImmutableList.Builder<IN>> combiner() {
+                return (left, right) -> left.addAll(right.build());
+            }
+
+            @Override
+            public Function<ImmutableList.Builder<IN>, ImmutableList<IN>> finisher() {
+                return ImmutableList.Builder::build;
+            }
+
+            @Override
+            public Set<Characteristics> characteristics() {
+                return Collections.emptySet();
+            }
+        };
+    }
 
     /**
      * <p>Returns a String representation of the given Object. For arrays uses the appropriate {@code toString} method

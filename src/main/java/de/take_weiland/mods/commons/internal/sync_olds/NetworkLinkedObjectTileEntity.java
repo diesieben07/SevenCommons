@@ -33,7 +33,7 @@ public final class NetworkLinkedObjectTileEntity implements NetworkLinkedObjectT
     }
 
     @Override
-    public void send(TileEntity object, SimplePacket packet) {
+    public void sendToTracking(TileEntity object, SimplePacket packet) {
         packet.sendToAllTracking(object);
     }
 }

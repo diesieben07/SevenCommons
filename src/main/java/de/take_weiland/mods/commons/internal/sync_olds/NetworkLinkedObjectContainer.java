@@ -33,7 +33,7 @@ public class NetworkLinkedObjectContainer implements NetworkLinkedObjectType<Con
     }
 
     @Override
-    public void send(Container object, SimplePacket packet) {
+    public void sendToTracking(Container object, SimplePacket packet) {
         packet.sendToViewing(object);
     }
 }

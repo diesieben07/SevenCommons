@@ -119,11 +119,15 @@ dependencies {
     compile "org.jetbrains:annotations:13.0"
     compile 'com.google.code.findbugs:jsr305:3.0.0'
 
+    compile 'net.bytebuddy:byte-buddy:1.5.7'
+
     compile "org.freemarker:freemarker:2.3.25-incubating"
     compile 'com.google.googlejavaformat:google-java-format:1.0'
 
     deployerJars "org.apache.maven.wagon:wagon-ftp:2.2"
     testCompile "junit:junit:4.11"
+
+    compile files("${System.getProperty('java.home')}/../lib/tools.jar")
 }
 
 idea.module.inheritOutputDirs = true
