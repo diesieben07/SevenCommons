@@ -26,6 +26,7 @@ public final class NBTData {
 
     public static final byte NULL = -1;
     public static final String NULL_KEY = "_sc$null";
+    public static final String WRAPPED_KEY = "_sc$wrap";
 
     private NBTData() {
     }
@@ -164,7 +165,7 @@ public final class NBTData {
      */
     @Nullable
     public static ItemStack readItemStack(@Nullable NBTBase nbt) {
-        return isSerializedNull(nbt, NBT.TAG_COMPOUND) ? null : ItemStack.loadItemStackFromNBT((NBTTagCompound) nbt);
+        return isSerializedNull(nbt, NBT.TAG_COMPOUND) ? null : new ItemStack((NBTTagCompound) nbt);
     }
 
     /**
@@ -276,9 +277,30 @@ public final class NBTData {
      * @see #isSerializedNull(net.minecraft.nbt.NBTBase)
      */
     @Nonnull
-    public static NBTBase serializedNull() {
+    public static NBTTagCompound serializedNull() {
         NBTTagCompound nbt = new NBTTagCompound();
         nbt.setByte(NULL_KEY, NULL);
+        return nbt;
+    }
+
+    public static NBTTagCompound serializedWrapper(NBTBase nbt) {
+        if (nbt.getId() == NBT.TAG_COMPOUND) {
+            return (NBTTagCompound) nbt;
+        } else {
+            NBTTagCompound c = new NBTTagCompound();
+            c.setTag(WRAPPED_KEY, nbt);
+            return c;
+        }
+    }
+
+    public static NBTBase unwrap(NBTBase nbt) {
+        if (nbt.getId() == NBT.TAG_COMPOUND) {
+            NBTTagCompound c = (NBTTagCompound) nbt;
+            NBTBase tag = c.getTag(WRAPPED_KEY);
+            if (tag != null) {
+                return tag;
+            }
+        }
         return nbt;
     }
 
@@ -294,10 +316,23 @@ public final class NBTData {
         return nbt == null || nbt.getId() == NBT.TAG_COMPOUND && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL;
     }
 
-    private static boolean isSerializedNull(@Nullable NBTBase nbt, int id) {
-        return nbt == null
-                || nbt.getId() != id
-                || nbt.getId() == NBT.TAG_COMPOUND && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL;
+    public static boolean idMatches(NBTBase nbt, int id) {
+        if (id == NBT.TAG_ANY) return true;
+        int actualId = nbt.getId();
+        return id == NBT.TAG_NUMBER ? actualId >= 1 && actualId <= 6 : actualId == id;
+    }
+
+    public static boolean isSerializedNull(@Nullable NBTBase nbt, int id) {
+        // null is null
+        if (nbt == null) return true;
+
+        int actualId = nbt.getId();
+
+        // serialized null is null
+        if (actualId == NBT.TAG_COMPOUND && ((NBTTagCompound) nbt).getByte(NULL_KEY) == NULL) return true;
+
+        return id != NBT.TAG_ANY && (id == NBT.TAG_NUMBER ? actualId >= 1 && actualId <= 6 : actualId == id);
+
     }
 
 }

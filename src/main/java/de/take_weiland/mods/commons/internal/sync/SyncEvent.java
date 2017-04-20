@@ -194,12 +194,12 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, Interna
         }
 
         static Object readObjectFromStream(EntityPlayer player, MCDataInput in) {
-            return player.worldObj.getTileEntity(in.readBlockPos());
+            return player.world.getTileEntity(in.readBlockPos());
         }
 
         @Override
         Object getObjectDirect(EntityPlayer player) {
-            return player.worldObj.getTileEntity(pos);
+            return player.world.getTileEntity(pos);
         }
 
         @Override
@@ -238,12 +238,12 @@ public abstract class SyncEvent implements SyncCompanion.ChangeIterator, Interna
         }
 
         static Object readObjectFromStream(EntityPlayer player, MCDataInput in) {
-            return player.worldObj.getEntityByID(in.readInt());
+            return player.world.getEntityByID(in.readInt());
         }
 
         @Override
         Object getObjectDirect(EntityPlayer player) {
-            return player.worldObj.getEntityByID(entityID);
+            return player.world.getEntityByID(entityID);
         }
 
         @Override

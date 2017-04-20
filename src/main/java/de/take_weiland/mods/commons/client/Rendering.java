@@ -7,7 +7,6 @@ import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.texture.ITextureObject;
@@ -66,9 +65,9 @@ public final class Rendering {
     }
 
     /**
-     * <p>Fills a specified area on the screen with the provided {@link net.minecraft.util.IIcon Icon}.</p>
+     * <p>Fills a specified area on the screen with the provided {@link TextureAtlasSprite}.</p>
      *
-     * @param icon   The {@link net.minecraft.util.IIcon Icon} to be displayed
+     * @param icon   The {@link TextureAtlasSprite} to be displayed
      * @param x      The X coordinate to start drawing from
      * @param y      The Y coordinate to start drawing form
      * @param width  The width of the provided icon to draw on the screen
@@ -157,7 +156,7 @@ public final class Rendering {
         if (fluidStack != null) {
             Fluid fluid = fluidStack.getFluid();
             TextureAtlasSprite fluidIcon = getMinecraft().getTextureMapBlocks().getTextureExtry(fluid.getStill(fluidStack).toString());
-            int fluidHeight = MathHelper.ceiling_double_int((fluidStack.amount / (double) tankCapacity) * fullHeight);
+            int fluidHeight = MathHelper.ceil((fluidStack.amount / (double) tankCapacity) * fullHeight);
 
             color(1, 1, 1);
             getMinecraft().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -181,7 +180,7 @@ public final class Rendering {
         if (fluidStack != null) {
             Fluid fluid = fluidStack.getFluid();
             TextureAtlasSprite fluidIcon = getMinecraft().getTextureMapBlocks().getAtlasSprite(fluid.getStill(fluidStack).toString());
-            int fluidWidth = MathHelper.ceiling_float_int((fluidStack.amount / (float) tankCapacity) * fullWidth);
+            int fluidWidth = MathHelper.ceil((fluidStack.amount / (float) tankCapacity) * fullWidth);
 
             color(1, 1, 1);
             renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);

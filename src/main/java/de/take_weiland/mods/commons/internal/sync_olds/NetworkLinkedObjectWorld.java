@@ -18,7 +18,7 @@ public class NetworkLinkedObjectWorld implements NetworkLinkedObjectType<World, 
 
     @Override
     public World read(MCDataInput in, EntityPlayer player) {
-        return player.worldObj;
+        return player.world;
     }
 
     @Override
@@ -28,7 +28,7 @@ public class NetworkLinkedObjectWorld implements NetworkLinkedObjectType<World, 
 
     @Override
     public World getObject(Void data, EntityPlayer player) {
-        return player.worldObj;
+        return player.world;
     }
 
     @Override

@@ -28,7 +28,7 @@ public final class ClientProxy implements SevenCommonsProxy {
 
     @Override
     public EntityPlayer getClientPlayer() {
-        return getMinecraft().thePlayer;
+        return getMinecraft().player;
     }
 
     @Override

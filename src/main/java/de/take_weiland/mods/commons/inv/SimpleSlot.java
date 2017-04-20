@@ -33,13 +33,13 @@ public class SimpleSlot extends Slot implements ContainerAwareSlot {
     }
 
     public void setNormalPosition() {
-        xDisplayPosition = xNormal;
-        yDisplayPosition = yNormal;
+        xPos = xNormal;
+        yPos = yNormal;
     }
 
     public void setDisplayPosition(int x, int y) {
-        xDisplayPosition = x;
-        yDisplayPosition = y;
+        xPos = x;
+        yPos = y;
     }
 
     /**

@@ -38,7 +38,7 @@ public final class Sides {
      * @return the logical side
      */
     public static Side sideOf(Entity entity) {
-        return sideOf(entity.worldObj);
+        return sideOf(entity.world);
     }
 
     /**

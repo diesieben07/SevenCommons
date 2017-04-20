@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.internal.tonbt.builtin;
 
-import de.take_weiland.mods.commons.serialize.NBTSerializer;
+import de.take_weiland.mods.commons.serialize.nbt.NBTSerializer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
@@ -10,9 +10,15 @@ import javax.annotation.Nonnull;
 /**
  * @author diesieben07
  */
-enum ChunkPosSerializer implements NBTSerializer.Instance<ChunkPos> {
+enum ChunkPosSerializer implements NBTSerializer.Value<ChunkPos> {
 
-    INSTANCE;
+    // TODO
+    INSTANCE {
+        @Override
+        public Characteristics characteristics() {
+            return null;
+        }
+    };
 
     @Override
     public ChunkPos read(@Nonnull NBTBase nbt) {

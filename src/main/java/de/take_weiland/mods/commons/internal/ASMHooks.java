@@ -92,7 +92,7 @@ public final class ASMHooks {
 
     public static void tickContainerCompanions(Container container) {
         EntityPlayer player = Containers.getViewer(container);
-        if (player == null || player.worldObj.isRemote) {
+        if (player == null || player.world.isRemote) {
             return;
         }
 
@@ -137,7 +137,7 @@ public final class ASMHooks {
         if (slot == null) {
             return true;
         }
-        if (!slot.canTakeStack(Minecraft.getMinecraft().thePlayer)) {
+        if (!slot.canTakeStack(Minecraft.getMinecraft().player)) {
             return false;
         }
 

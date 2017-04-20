@@ -32,6 +32,4 @@ public @interface ToNbt {
      */
     String key() default "";
 
-    SerializationMethod method() default SerializationMethod.DEFAULT;
-
 }

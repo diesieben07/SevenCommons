@@ -21,7 +21,7 @@ import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry;
 import net.minecraftforge.fml.common.registry.IForgeRegistry;
@@ -677,8 +677,9 @@ public final class MCDataInputImpl extends InputStream implements MCDataInput, S
             return null;
         } else {
             int amount = readVarInt();
+            // TODO
             @SuppressWarnings("deprecation")
-            FluidStack stack = new FluidStack(FluidRegistry.getFluid(id), amount >>> 1);
+            FluidStack stack = new FluidStack(/*FluidRegistry.getFluid(id)*/ (Fluid) null, amount >>> 1);
             if ((amount & 0x1) != 0) {
                 stack.tag = readNBT();
             }

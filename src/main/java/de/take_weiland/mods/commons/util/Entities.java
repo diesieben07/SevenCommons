@@ -77,11 +77,11 @@ public final class Entities {
      * @return a Set of players tracking the entity
      */
     public static Set<EntityPlayerMP> getTrackingPlayers(Entity entity) {
-        if (entity.worldObj.isRemote) {
+        if (entity.world.isRemote) {
             throw new IllegalArgumentException("Cannot get tracking players on the client");
         }
         //noinspection unchecked
-        return (Set<EntityPlayerMP>) ((WorldServer) entity.worldObj).getEntityTracker().getTrackingPlayers(entity);
+        return (Set<EntityPlayerMP>) ((WorldServer) entity.world).getEntityTracker().getTrackingPlayers(entity);
     }
 
     private static final MethodHandle trackerMapGet;

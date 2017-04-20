@@ -66,7 +66,7 @@ public class ChunkUpdateTracker {
         if (data == 0) {
             WorldServerProxy proxy = (WorldServerProxy) chunk.getWorld();
             long[] arr = proxy._sc$getChangedChunks();
-            arr = appendChunkMark(arr, ChunkPos.chunkXZ2Int(chunk.xPosition, chunk.zPosition));
+            arr = appendChunkMark(arr, ChunkPos.asLong(chunk.xPosition, chunk.zPosition));
             proxy._sc$setChangedChunks(arr);
         }
 

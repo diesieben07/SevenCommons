@@ -43,6 +43,11 @@ final class FieldProperty<T> extends AbstractProperty<T, Field> {
     }
 
     @Override
+    public boolean isReadOnly() {
+        return Modifier.isFinal(member.getModifiers());
+    }
+
+    @Override
     public String getName() {
         return member.getName();
     }

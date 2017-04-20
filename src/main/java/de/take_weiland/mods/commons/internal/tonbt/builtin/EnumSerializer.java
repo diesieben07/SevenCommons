@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.tonbt.builtin;
 
 import de.take_weiland.mods.commons.nbt.NBT;
-import de.take_weiland.mods.commons.serialize.NBTSerializer;
+import de.take_weiland.mods.commons.serialize.nbt.NBTSerializer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagString;
 
@@ -12,7 +12,9 @@ import java.util.Map;
 /**
  * @author diesieben07
  */
-final class EnumSerializer<E extends Enum<E>> implements NBTSerializer.Instance<E> {
+final class EnumSerializer<E extends Enum<E>> implements NBTSerializer.Value<E> {
+
+    // TODO
 
     private static final Map<Class<?>, NBTSerializer<?>> cache = new HashMap<>();
 
@@ -39,5 +41,10 @@ final class EnumSerializer<E extends Enum<E>> implements NBTSerializer.Instance<
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    @Override
+    public Characteristics characteristics() {
+        return null;
     }
 }

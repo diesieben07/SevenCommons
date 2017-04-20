@@ -7,6 +7,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
+
 /**
  * <p>Abstract base class for an inventory Container.</p>
  * <p>This implementation handles one inventory plus the player inventory.</p>
@@ -106,9 +108,10 @@ public abstract class AbstractContainer<T extends IInventory> extends Container 
 
     @Override
     public boolean canInteractWith(EntityPlayer player) {
-        return inventory.isUseableByPlayer(player);
+        return inventory.isUsableByPlayer(player);
     }
 
+    @Nonnull
     @Override
     public ItemStack transferStackInSlot(EntityPlayer player, int slot) {
         return Containers.handleShiftClick(this, player, slot);

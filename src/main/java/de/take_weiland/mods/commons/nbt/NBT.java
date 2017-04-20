@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.nbt;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import net.minecraft.nbt.*;
@@ -16,6 +17,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -42,29 +44,37 @@ public final class NBT {
     public static final int TAG_COMPOUND = Constants.NBT.TAG_COMPOUND;
     public static final int TAG_INT_ARRAY = Constants.NBT.TAG_INT_ARRAY;
 
+    public static final int TAG_NUMBER = Constants.NBT.TAG_ANY_NUMERIC;
+    public static final int TAG_ANY = -1;
+
     /**
      * <p>An enumeration of all NBT tag types.</p>
      */
     public static final class Tag<T extends NBTBase> {
 
-        public static final Tag<NBTTagEnd> END = new Tag<>(NBTTagEnd.class, TAG_END, NBTTagEnd::new);
-        public static final Tag<NBTTagByte> BYTE = new Tag<>(NBTTagByte.class, TAG_BYTE, () -> new NBTTagByte((byte) 0));
-        public static final Tag<NBTTagShort> SHORT = new Tag<>(NBTTagShort.class, TAG_SHORT, NBTTagShort::new);
-        public static final Tag<NBTTagInt> INT = new Tag<>(NBTTagInt.class, TAG_INT, () -> new NBTTagInt(0));
-        public static final Tag<NBTTagLong> LONG = new Tag<>(NBTTagLong.class, TAG_LONG, () -> new NBTTagLong(0));
-        public static final Tag<NBTTagFloat> FLOAT = new Tag<>(NBTTagFloat.class, TAG_FLOAT, () -> new NBTTagFloat(0));
-        public static final Tag<NBTTagDouble> DOUBLE = new Tag<>(NBTTagDouble.class, TAG_DOUBLE, () -> new NBTTagDouble(0));
-        public static final Tag<NBTTagByteArray> BYTE_ARRAY = new Tag<>(NBTTagByteArray.class, TAG_BYTE_ARRAY, () -> new NBTTagByteArray(ArrayUtils.EMPTY_BYTE_ARRAY));
-        public static final Tag<NBTTagString> STRING = new Tag<>(NBTTagString.class, TAG_STRING, NBTTagString::new);
-        public static final Tag<NBTTagList> LIST = new Tag<>(NBTTagList.class, TAG_LIST, NBTTagList::new);
-        public static final Tag<NBTTagCompound> COMPOUND = new Tag<>(NBTTagCompound.class, TAG_COMPOUND, NBTTagCompound::new);
-        public static final Tag<NBTTagIntArray> INT_ARRAY = new Tag<>(NBTTagIntArray.class, TAG_INT_ARRAY, () -> new NBTTagIntArray(ArrayUtils.EMPTY_INT_ARRAY));
+        public static final Tag<NBTTagEnd> END = new Tag<>("end", NBTTagEnd.class, TAG_END, NBTTagEnd::new);
+        public static final Tag<NBTTagByte> BYTE = new Tag<>("byte", NBTTagByte.class, TAG_BYTE, () -> new NBTTagByte((byte) 0));
+        public static final Tag<NBTTagShort> SHORT = new Tag<>("short", NBTTagShort.class, TAG_SHORT, NBTTagShort::new);
+        public static final Tag<NBTTagInt> INT = new Tag<>("int", NBTTagInt.class, TAG_INT, () -> new NBTTagInt(0));
+        public static final Tag<NBTTagLong> LONG = new Tag<>("long", NBTTagLong.class, TAG_LONG, () -> new NBTTagLong(0));
+        public static final Tag<NBTTagFloat> FLOAT = new Tag<>("float", NBTTagFloat.class, TAG_FLOAT, () -> new NBTTagFloat(0));
+        public static final Tag<NBTTagDouble> DOUBLE = new Tag<>("double", NBTTagDouble.class, TAG_DOUBLE, () -> new NBTTagDouble(0));
+        public static final Tag<NBTTagByteArray> BYTE_ARRAY = new Tag<>("byte array", NBTTagByteArray.class, TAG_BYTE_ARRAY, () -> new NBTTagByteArray(ArrayUtils.EMPTY_BYTE_ARRAY));
+        public static final Tag<NBTTagString> STRING = new Tag<>("strong", NBTTagString.class, TAG_STRING, NBTTagString::new);
+        public static final Tag<NBTTagList> LIST = new Tag<>("list", NBTTagList.class, TAG_LIST, NBTTagList::new);
+        public static final Tag<NBTTagCompound> COMPOUND = new Tag<>("compound", NBTTagCompound.class, TAG_COMPOUND, NBTTagCompound::new);
+        public static final Tag<NBTTagIntArray> INT_ARRAY = new Tag<>("int array", NBTTagIntArray.class, TAG_INT_ARRAY, () -> new NBTTagIntArray(ArrayUtils.EMPTY_INT_ARRAY));
 
+        public static final Set<Tag<?>> ALL = ImmutableSet.of(END, BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, BYTE_ARRAY, STRING, LIST, COMPOUND, INT_ARRAY);
+        public static final Set<Tag<?>> NUMERIC = ImmutableSet.of(BYTE, SHORT, INT, LONG, FLOAT, DOUBLE);
+
+        private final String name;
         private final Class<T> clazz;
         private final int id;
         final Supplier<T> constructor;
 
-        private Tag(Class<T> clazz, int id, Supplier<T> constructor) {
+        private Tag(String name, Class<T> clazz, int id, Supplier<T> constructor) {
+            this.name = name;
             this.clazz = clazz;
             this.id = id;
             this.constructor = constructor;
@@ -101,6 +111,15 @@ public final class NBT {
             }
         }
 
+        public T newInstance() {
+            return constructor.get();
+        }
+
+        @Override
+        public String toString() {
+            return "NBT " + name;
+        }
+
         /**
          * <p>Get the tag type specified by the given type id.</p>
          *
@@ -132,16 +151,13 @@ public final class NBT {
         private static final ImmutableMap<Class<? extends NBTBase>, Tag<?>> BY_CLAZZ;
 
         static {
-            Tag<?>[] values = {END, BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, BYTE_ARRAY, STRING, LIST, COMPOUND, INT_ARRAY};
-            int maxId = 0;
-            for (Tag<?> value : values) {
-                maxId = Math.max(maxId, value.id);
-            }
-
+            int maxId = ALL.stream()
+                    .mapToInt(Tag::id)
+                    .max().orElseThrow(IllegalStateException::new);
             BY_ID = new Tag[maxId + 1];
 
             ImmutableMap.Builder<Class<? extends NBTBase>, Tag<?>> b = ImmutableMap.builder();
-            for (Tag<?> tag : values) {
+            for (Tag<?> tag : ALL) {
                 b.put(tag.clazz, tag);
                 BY_ID[tag.id] = tag;
             }

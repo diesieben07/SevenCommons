@@ -99,6 +99,14 @@ public interface PropertyAccess<T> extends Function<Object, T>, BiConsumer<Objec
         set(o, (T) (Object) v);
     }
 
+    default boolean isNull(Object o) {
+        return get(o) == null;
+    }
+
+    default void setNull(Object o) {
+        set(o, null);
+    }
+
     @Override
     default void accept(Object o, T t) {
         set(o, t);

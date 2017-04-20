@@ -180,7 +180,7 @@ public interface SimplePacket {
      * @param radius the radius
      */
     default void sendToAllNear(Entity entity, double radius) {
-        sendToAllNear(entity.worldObj, entity.posX, entity.posY, entity.posZ, radius);
+        sendToAllNear(entity.world, entity.posX, entity.posY, entity.posZ, radius);
     }
 
     /**
@@ -441,7 +441,7 @@ public interface SimplePacket {
          * @return a {@code CompletableFuture} for each player representing their response
          */
         default Map<EntityPlayerMP, CompletionStage<R>> sendToAllNear(Entity entity, double radius) {
-            return sendToAllNear(entity.worldObj, entity.posX, entity.posY, entity.posZ, radius);
+            return sendToAllNear(entity.world, entity.posX, entity.posY, entity.posZ, radius);
         }
 
         /**

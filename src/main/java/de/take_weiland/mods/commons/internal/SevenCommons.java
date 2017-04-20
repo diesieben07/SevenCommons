@@ -136,7 +136,7 @@ public final class SevenCommons extends DummyModContainer {
         }
     }
 
-    public void universalPreInit(FMLPreInitializationEvent event) {
+    private void universalPreInit(FMLPreInitializationEvent event) {
         config = new Configuration(event.getSuggestedConfigurationFile());
         config.load();
 
@@ -168,6 +168,8 @@ public final class SevenCommons extends DummyModContainer {
 
         Syncing.registerFactory(Object.class, new BuiltinSyncers());
         ToNbtFactories.registerFactory(Object.class, new DefaultNBTSerializers());
+
+//        MinecraftForge.EVENT_BUS.register();
 
         if (config.hasChanged()) {
             config.save();
@@ -231,12 +233,12 @@ public final class SevenCommons extends DummyModContainer {
     public void onServerStart(FMLServerStartingEvent event) {
         event.registerServerCommand(new CommandBase() {
             @Override
-            public String getCommandName() {
+            public String getName() {
                 return "loadchunk";
             }
 
             @Override
-            public String getCommandUsage(ICommandSender sender) {
+            public String getUsage(ICommandSender sender) {
                 return "loadchunk <dim> <x>, <z>, <radius> [\"un\"]";
             }
 
@@ -267,12 +269,12 @@ public final class SevenCommons extends DummyModContainer {
 
         event.registerServerCommand(new CommandBase() {
             @Override
-            public String getCommandName() {
+            public String getName() {
                 return "blockupdate";
             }
 
             @Override
-            public String getCommandUsage(ICommandSender sender) {
+            public String getUsage(ICommandSender sender) {
                 return "blockupdate <x>, <y>, <z>";
             }
 

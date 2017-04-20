@@ -31,7 +31,7 @@ public class VanillaPacketPrefixes {
 
     public static void writePrefix(PacketBuffer buf, VanillaPacketProxy proxy) {
         if (proxy._sc$targetDimension() != NOOP_DIM_ID) {
-            buf.writeVarIntToBuffer(PREFIX_ID);
+            buf.writeVarInt(PREFIX_ID);
         }
     }
 
@@ -75,11 +75,11 @@ public class VanillaPacketPrefixes {
         }
 
         int targetDim = ((VanillaPacketProxy) packet)._sc$targetDimension();
-        WorldClient world = getMinecraft().theWorld;
+        WorldClient world = getMinecraft().world;
         if (targetDim != NOOP_DIM_ID && targetDim != world.provider.getDimension()) {
             clientWorldBackup = world;
             WorldClient newWorld = WorldViewImpl.getOrCreateWorld(targetDim);
-            getMinecraft().theWorld = newWorld;
+            getMinecraft().world = newWorld;
             ClientProxy.netHandlerClientWorldSet.invokeExact(getMinecraft().getConnection(), newWorld);
         }
     }
@@ -92,7 +92,7 @@ public class VanillaPacketPrefixes {
 
         WorldClient oldWorld = clientWorldBackup;
         if (oldWorld != null) {
-            getMinecraft().theWorld = oldWorld;
+            getMinecraft().world = oldWorld;
             ClientProxy.netHandlerClientWorldSet.invokeExact(getMinecraft().getConnection(), oldWorld);
             clientWorldBackup = null;
         }

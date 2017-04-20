@@ -150,7 +150,7 @@ public final class NetworkImpl {
     public static EntityPlayer getPlayer(byte side, NetworkManager manager) {
         return side == Network.CLIENT
                 ? SevenCommons.proxy.getClientPlayer()
-                : ((NetHandlerPlayServer) manager.getNetHandler()).playerEntity;
+                : ((NetHandlerPlayServer) manager.getNetHandler()).player;
     }
 
     public static Scheduler getScheduler(byte side) {

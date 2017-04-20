@@ -1,14 +1,16 @@
 package de.take_weiland.mods.commons.reflect;
 
 import com.google.common.reflect.TypeToken;
+import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
 import de.take_weiland.mods.commons.serialize.RequestSerializationMethod;
 import de.take_weiland.mods.commons.asm.ASMProperty;
 import de.take_weiland.mods.commons.serialize.SerializationMethod;
 
+import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Member;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * <p>Information about a Property.</p>
@@ -16,6 +18,36 @@ import java.lang.reflect.Modifier;
  * @author diesieben07
  */
 public interface Property<T> extends PropertyAccess<T> {
+
+    static Property<?> create(Field field) {
+        return AbstractProperty.newProperty(field);
+    }
+
+    static <T> Property<T> create(Field field, Class<T> type) {
+        return create(field, TypeToken.of(type));
+    }
+
+    static <T> Property<T> create(Field field, TypeToken<T> type) {
+        checkArgument(TypeToken.of(field.getGenericType()).equals(type));
+        // this is guarded by the equals check
+        //noinspection unchecked
+        return (Property<T>) create(field);
+    }
+
+    static Property<?> create(Method method) {
+        return AbstractProperty.newProperty(method);
+    }
+
+    static <T> Property<T> create(Method method, Class<T> type) {
+        return create(method, TypeToken.of(type));
+    }
+
+    static <T> Property<T> create(Method method, TypeToken<T> type) {
+        checkArgument(TypeToken.of(method.getGenericReturnType()).equals(type));
+        // this is guarded by the equals check
+        //noinspection unchecked
+        return (Property<T>) create(method);
+    }
 
     /**
      * <p>Get the underlying Member for this property. For a getter/setter based property this returns the getter method.</p>
@@ -40,6 +72,8 @@ public interface Property<T> extends PropertyAccess<T> {
     default boolean isStatic() {
         return Modifier.isStatic(getMember().getModifiers());
     }
+
+    boolean isReadOnly();
 
     /**
      * <p>The name of this property.</p>
@@ -67,10 +101,11 @@ public interface Property<T> extends PropertyAccess<T> {
      *
      * @return the SerializationMethod
      */
+    @Nullable
     default SerializationMethod getSerializationMethod() {
         RequestSerializationMethod annotation = getAnnotation(RequestSerializationMethod.class);
         if (annotation == null) {
-            return SerializationMethod.DEFAULT;
+            return null;
         } else {
             return annotation.value();
         }

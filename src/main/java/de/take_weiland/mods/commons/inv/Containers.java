@@ -155,27 +155,27 @@ public final class Containers {
     // ugly copy paste is ugly
     private static boolean mergeToTarget(InventoryPlayer playerInv, Slot sourceSlot, List<Slot> slots, ShiftClickTarget target) {
         ItemStack sourceStack = sourceSlot.getStack();
-        int originalSize = sourceStack.stackSize;
+        int originalSize = sourceStack.getCount();
 
         // first pass, try merge with existing stacks
         target.reset();
-        while (sourceStack.stackSize > 0 && target.hasNext()) {
+        while (sourceStack.getCount() > 0 && target.hasNext()) {
             Slot targetSlot = slots.get(target.next());
             if (targetSlot.inventory != playerInv) {
                 ItemStack targetStack = targetSlot.getStack();
                 if (ItemStacks.equal(targetStack, sourceStack)) {
                     int targetMax = Math.min(targetSlot.getSlotStackLimit(), targetStack.getMaxStackSize());
-                    int toTransfer = Math.min(sourceStack.stackSize, targetMax - targetStack.stackSize);
+                    int toTransfer = Math.min(sourceStack.getCount(), targetMax - targetStack.getCount());
                     if (toTransfer > 0) {
-                        targetStack.stackSize += toTransfer;
-                        sourceStack.stackSize -= toTransfer;
+                        targetStack.grow(toTransfer);
+                        sourceStack.shrink(toTransfer);
                         targetSlot.onSlotChanged();
                     }
                 }
             }
         }
-        if (sourceStack.stackSize == 0) {
-            sourceSlot.putStack(null);
+        if (sourceStack.getCount() == 0) {
+            sourceSlot.putStack(ItemStack.EMPTY);
             return true;
         }
 
@@ -185,11 +185,11 @@ public final class Containers {
             Slot targetSlot = slots.get(target.next());
             if (targetSlot.inventory != playerInv && !targetSlot.getHasStack() && targetSlot.isItemValid(sourceStack)) {
                 targetSlot.putStack(sourceStack);
-                sourceSlot.putStack(null);
+                sourceSlot.putStack(ItemStack.EMPTY);
                 return true;
             }
         }
-        if (originalSize != sourceStack.stackSize) {
+        if (originalSize != sourceStack.getCount()) {
             sourceSlot.onSlotChanged();
             return true;
         } else {
@@ -201,7 +201,7 @@ public final class Containers {
     private static boolean mergeStack(InventoryPlayer playerInv, boolean mergeIntoPlayer, Slot sourceSlot, List<Slot> slots, boolean reverse) {
         ItemStack sourceStack = sourceSlot.getStack();
 
-        int originalSize = sourceStack.stackSize;
+        int originalSize = sourceStack.getCount();
 
         int len = slots.size();
         int idx;
@@ -211,16 +211,16 @@ public final class Containers {
         if (sourceStack.isStackable()) {
             idx = reverse ? len - 1 : 0;
 
-            while (sourceStack.stackSize > 0 && (reverse ? idx >= 0 : idx < len)) {
+            while (sourceStack.getCount() > 0 && (reverse ? idx >= 0 : idx < len)) {
                 Slot targetSlot = slots.get(idx);
                 if ((targetSlot.inventory == playerInv) == mergeIntoPlayer) {
                     ItemStack target = targetSlot.getStack();
                     if (ItemStacks.equal(sourceStack, target)) { // also checks target != null, because stack is never null
                         int targetMax = Math.min(targetSlot.getSlotStackLimit(), target.getMaxStackSize());
-                        int toTransfer = Math.min(sourceStack.stackSize, targetMax - target.stackSize);
+                        int toTransfer = Math.min(sourceStack.getCount(), targetMax - target.getCount());
                         if (toTransfer > 0) {
-                            target.stackSize += toTransfer;
-                            sourceStack.stackSize -= toTransfer;
+                            target.grow(toTransfer);
+                            sourceStack.shrink(toTransfer);
                             targetSlot.onSlotChanged();
                         }
                     }
@@ -232,8 +232,8 @@ public final class Containers {
                     idx++;
                 }
             }
-            if (sourceStack.stackSize == 0) {
-                sourceSlot.putStack(null);
+            if (sourceStack.isEmpty()) {
+                sourceSlot.putStack(ItemStack.EMPTY);
                 return true;
             }
         }
@@ -245,7 +245,7 @@ public final class Containers {
             if ((targetSlot.inventory == playerInv) == mergeIntoPlayer
                     && !targetSlot.getHasStack() && targetSlot.isItemValid(sourceStack)) {
                 targetSlot.putStack(sourceStack);
-                sourceSlot.putStack(null);
+                sourceSlot.putStack(ItemStack.EMPTY);
                 return true;
             }
 
@@ -257,7 +257,7 @@ public final class Containers {
         }
 
         // we had success in merging only a partial stack
-        if (sourceStack.stackSize != originalSize) {
+        if (sourceStack.getCount() != originalSize) {
             sourceSlot.onSlotChanged();
             return true;
         }

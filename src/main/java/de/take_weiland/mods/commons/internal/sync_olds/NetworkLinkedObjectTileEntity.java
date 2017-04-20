@@ -19,7 +19,7 @@ public final class NetworkLinkedObjectTileEntity implements NetworkLinkedObjectT
 
     @Override
     public TileEntity read(MCDataInput in, EntityPlayer player) {
-        return player.worldObj.getTileEntity(in.readBlockPos());
+        return player.world.getTileEntity(in.readBlockPos());
     }
 
     @Override
@@ -29,7 +29,7 @@ public final class NetworkLinkedObjectTileEntity implements NetworkLinkedObjectT
 
     @Override
     public TileEntity getObject(BlockPos pos, EntityPlayer player) {
-        return player.worldObj.getTileEntity(pos);
+        return player.world.getTileEntity(pos);
     }
 
     @Override

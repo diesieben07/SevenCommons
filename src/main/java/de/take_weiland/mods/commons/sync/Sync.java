@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.sync;
 
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -46,7 +44,6 @@ public @interface Sync {
      *
      * @return the method
      */
-    SerializationMethod method() default SerializationMethod.DEFAULT;
 
     /**
      * <p>Set this to true if the given property should be synced as a Container property when the synced object is viewed

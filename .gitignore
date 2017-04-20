@@ -9,3 +9,4 @@
 !/COPYING.lesser
 !build.gradle
 !.travis.yml
+!gradle.properties

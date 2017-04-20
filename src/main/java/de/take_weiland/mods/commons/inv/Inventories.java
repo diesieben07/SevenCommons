@@ -64,8 +64,8 @@ public final class Inventories {
                     float yRand = rand.nextFloat() * 0.8F + 0.1F;
                     float zRand = rand.nextFloat() * 0.8F + 0.1F;
 
-                    while (stack.stackSize > 0) {
-                        int partialStackSize = Math.min(stack.stackSize, rand.nextInt(21) + 10);
+                    while (stack.getCount() > 0) {
+                        int partialStackSize = Math.min(stack.getCount(), rand.nextInt(21) + 10);
 
                         ItemStack stackToSpawn = stack.splitStack(partialStackSize);
                         EntityItem itemEntity = new EntityItem(world, x + xRand, y + yRand, z + zRand, stackToSpawn);
@@ -73,7 +73,7 @@ public final class Inventories {
                         itemEntity.motionX = rand.nextGaussian() * 0.05F;
                         itemEntity.motionY = rand.nextGaussian() * 0.05F + 0.2F;
                         itemEntity.motionZ = rand.nextGaussian() * 0.05F;
-                        world.spawnEntityInWorld(itemEntity);
+                        world.spawnEntity(itemEntity);
                     }
                 }
             }
@@ -98,9 +98,7 @@ public final class Inventories {
      *
      * @param stack the ItemStack to store
      * @param world the world
-     * @param x     x coordinate
-     * @param y     y coordinate
-     * @param z     z coordinate
+     * @param pos   the block position
      * @return any leftover items that could not be stored or null if the whole stack could be stored
      */
     @Nullable
@@ -114,9 +112,7 @@ public final class Inventories {
      *
      * @param stack        the ItemStack to store
      * @param world        the world
-     * @param x            x coordinate
-     * @param y            y coordinate
-     * @param z            z coordinate
+     * @param pos          the block position
      * @param dispenseSide the side to dispense any leftover items
      * @return any leftover items that could not be stored or dispensed or null if the whole stack could be stored or dispensed
      */
@@ -159,7 +155,7 @@ public final class Inventories {
             item.motionX = dispenseSide.getFrontOffsetX() / 8d;
             item.motionY = dispenseSide.getFrontOffsetY() / 8d;
             item.motionZ = dispenseSide.getFrontOffsetZ() / 8d;
-            world.spawnEntityInWorld(item);
+            world.spawnEntity(item);
             return null;
         }
         return result;

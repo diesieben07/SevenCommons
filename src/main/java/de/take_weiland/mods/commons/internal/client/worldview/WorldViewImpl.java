@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import org.lwjgl.BufferUtils;
@@ -90,8 +91,8 @@ public class WorldViewImpl implements WorldView {
     public static WorldClient getOrCreateWorld(int dimension) {
         WorldClient world = clientWorlds.get(dimension);
         if (world == null) {
-            WorldSettings settings = new WorldSettings(0, WorldSettings.GameType.SURVIVAL, false, false, WorldType.DEFAULT);
-            world = new ClientOtherDimWorld(getMinecraft().getConnection(), settings, dimension, getMinecraft().theWorld.getDifficulty(), getMinecraft().theWorld.theProfiler);
+            WorldSettings settings = new WorldSettings(0, GameType.SURVIVAL, false, false, WorldType.DEFAULT);
+            world = new ClientOtherDimWorld(getMinecraft().getConnection(), settings, dimension, getMinecraft().world.getDifficulty(), getMinecraft().world.profiler);
 
             WorldClient wc = world;
             new PacketRequestWorldInfo(dimension).sendToServer()
@@ -106,16 +107,16 @@ public class WorldViewImpl implements WorldView {
     }
 
     public static void tick() {
-        if (getMinecraft().theWorld != null && !getMinecraft().isGamePaused()) {
+        if (getMinecraft().world != null && !getMinecraft().isGamePaused()) {
             clientWorlds.forEach((id, world) -> {
-                WorldClient mainWorld = getMinecraft().theWorld;
+                WorldClient mainWorld = getMinecraft().world;
                 if (world != mainWorld) {
-                    getMinecraft().theWorld = world;
+                    getMinecraft().world = world;
 
                     world.updateEntities();
                     world.tick();
 
-                    getMinecraft().theWorld = mainWorld;
+                    getMinecraft().world = mainWorld;
                 }
             });
         }
@@ -156,7 +157,7 @@ public class WorldViewImpl implements WorldView {
         rg.setWorldAndLoadRenderers(world);
         viewport = new ViewEntity(world);
         updateViewportPosition();
-        world.spawnEntityInWorld(viewport);
+        world.spawnEntity(viewport);
     }
 
     private void updateViewportPosition() {
@@ -182,7 +183,7 @@ public class WorldViewImpl implements WorldView {
 
         RenderGlobal renderGlobalBackup = mc.renderGlobal;
         Entity viewportBackup = mc.getRenderViewEntity();
-        WorldClient worldBackup = mc.theWorld;
+        WorldClient worldBackup = mc.world;
         ParticleManager effectRendererBackup = mc.effectRenderer;
         int heightBackup = mc.displayHeight;
         int widthBackup = mc.displayWidth;
@@ -203,8 +204,8 @@ public class WorldViewImpl implements WorldView {
         ((EntityRendererProxy) entityRenderer)._sc$setFovModifierHand(1F);
         ((EntityRendererProxy) entityRenderer)._sc$setFovModifierHandPrev(1F);
 
-        mc.theWorld = getOrCreateWorld(dimension);
-        mc.getRenderManager().set(mc.theWorld);
+        mc.world = getOrCreateWorld(dimension);
+        mc.getRenderManager().setWorld(mc.world);
 
         glViewport(0, 0, mc.displayWidth, mc.displayHeight);
         glBindTexture(GL11.GL_TEXTURE_2D, 0);
@@ -230,10 +231,10 @@ public class WorldViewImpl implements WorldView {
         mc.displayWidth = widthBackup;
         mc.renderGlobal = renderGlobalBackup;
         mc.setRenderViewEntity(viewportBackup);
-        mc.theWorld = worldBackup;
+        mc.world = worldBackup;
         mc.effectRenderer = effectRendererBackup;
 
-        mc.getRenderManager().set(worldBackup);
+        mc.getRenderManager().setWorld(worldBackup);
         mc.entityRenderer.updateRenderer();
     }
 

@@ -18,7 +18,6 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -494,7 +493,8 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
         if (stack == null) {
             writeShiftedVarInt(-1);
         } else {
-            writeShiftedVarInt(FluidRegistry.getFluidID(stack.getFluid()));
+            // TODO
+            writeShiftedVarInt(0); //FluidRegistry.getFluidID(stack.getFluid()));
             if (stack.tag == null) {
                 writeVarInt(stack.amount << 1);
             } else {
@@ -556,9 +556,9 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
             writeVarInt(stack.getItemDamage());
             NBTTagCompound nbt = stack.getTagCompound();
             if (nbt == null) {
-                writeByte(stack.stackSize & 0x7F);
+                writeByte(stack.getCount() & 0x7F);
             } else {
-                writeByte(stack.stackSize & 0x7F | 0x80);
+                writeByte(stack.getCount() & 0x7F | 0x80);
                 writeNBT(nbt);
             }
 
@@ -635,7 +635,7 @@ public final class MCDataOutputImpl extends OutputStream implements MCDataOutput
 
             @SuppressWarnings("deprecation")
             IBlockState stateFromMeta = block.getStateFromMeta(meta);
-            for (IProperty<?> property : state.getPropertyNames()) {
+            for (IProperty<?> property : state.getPropertyKeys()) {
                 maybeWriteProperty(property, state, stateFromMeta);
             }
             writeString(null);

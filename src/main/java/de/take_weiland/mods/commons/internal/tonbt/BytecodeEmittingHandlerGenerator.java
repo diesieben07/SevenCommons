@@ -4,7 +4,8 @@ import de.take_weiland.mods.commons.asm.MCPNames;
 import de.take_weiland.mods.commons.internal.SRGConstants;
 import de.take_weiland.mods.commons.internal.prop.AbstractProperty;
 import de.take_weiland.mods.commons.nbt.NBTData;
-import de.take_weiland.mods.commons.serialize.NBTSerializer;
+import de.take_weiland.mods.commons.serialize.SerializationException;
+import de.take_weiland.mods.commons.serialize.nbt.NBTSerializer;
 import de.take_weiland.mods.commons.nbt.ToNbt;
 import de.take_weiland.mods.commons.reflect.Property;
 import de.take_weiland.mods.commons.reflect.PropertyAccess;
@@ -92,15 +93,15 @@ public final class BytecodeEmittingHandlerGenerator {
 
     private void genFields() {
         String nbtSerializerDesc = Type.getDescriptor(NBTSerializer.class);
-        String nbtSerializerValDesc = Type.getDescriptor(NBTSerializer.Instance.class);
+        String nbtSerializerValDesc = Type.getDescriptor(NBTSerializer.Value.class);
         String nbtSerializerContDesc = Type.getDescriptor(NBTSerializer.Contents.class);
         String propertyAccessDesc = Type.getDescriptor(PropertyAccess.class);
 
         for (Map.Entry<Property<?>, NBTSerializer<?>> entry : properties.entrySet()) {
             Property<?> property = entry.getKey();
             NBTSerializer<?> ser = entry.getValue();
-            String serFieldDesc = ser instanceof NBTSerializer.Instance ? nbtSerializerValDesc
-                                                                        : ser instanceof NBTSerializer.Contents ? nbtSerializerContDesc
+            String serFieldDesc = ser instanceof NBTSerializer.Value ? nbtSerializerValDesc
+                                                                     : ser instanceof NBTSerializer.Contents ? nbtSerializerContDesc
                                                                                                                 : nbtSerializerDesc;
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, identFor(property, SERIALIZER), serFieldDesc, null, null).visitEnd();
             cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, identFor(property, PROP_ACC), propertyAccessDesc, null, null).visitEnd();
@@ -240,8 +241,8 @@ public final class BytecodeEmittingHandlerGenerator {
     }
 
     private Class<?> getSerializerType(NBTSerializer<?> serializer) {
-        if (serializer instanceof NBTSerializer.Instance) {
-            return NBTSerializer.Instance.class;
+        if (serializer instanceof NBTSerializer.Value) {
+            return NBTSerializer.Value.class;
         } else if (serializer instanceof NBTSerializer.Contents) {
             return NBTSerializer.Contents.class;
         } else {
@@ -334,7 +335,11 @@ public final class BytecodeEmittingHandlerGenerator {
 
     public static <T> NBTBase write(NBTSerializer<T> serializer, T val) {
         // TODO!
-        return val == null ? NBTData.serializedNull() : ((NBTSerializer.Instance<T>) serializer).write(val);
+        try {
+            return val == null ? NBTData.serializedNull() : ((NBTSerializer.Value<T>) serializer).write(val);
+        } catch (SerializationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

@@ -88,7 +88,7 @@ public interface WorldView {
      * @return a new WorldView
      */
     static WorldView create(int texWidth, int texHeight, int dimension, double x, double y, double z, float pitch, float yaw, int frames, TimeUnit unit) {
-        if (getMinecraft().thePlayer == null) {
+        if (getMinecraft().player == null) {
             throw new IllegalStateException("No client world loaded");
         }
         checkArgument(frames >= -1);

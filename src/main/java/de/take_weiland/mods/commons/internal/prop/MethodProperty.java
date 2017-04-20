@@ -16,7 +16,17 @@ final class MethodProperty<T> extends AbstractProperty<T, Method> {
 
     private final Method setter;
 
-    MethodProperty(Method member) {
+    static <T> MethodProperty<T> create(Method member) {
+        if (member.getReturnType() == void.class) {
+            throw new IllegalArgumentException("Getter must not return void");
+        }
+        if (member.getParameterCount() != 0) {
+            throw new IllegalArgumentException("Getter must not take parameters");
+        }
+        return new MethodProperty<>(member);
+    }
+
+    private MethodProperty(Method member) {
         super(member);
         setter = SCReflection.findSetter(member);
         if (setter != null) {
@@ -59,6 +69,11 @@ final class MethodProperty<T> extends AbstractProperty<T, Method> {
     @Override
     TypeToken<?> resolveType() {
         return TypeToken.of(member.getGenericReturnType());
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return setter == null;
     }
 
     @Override

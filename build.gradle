@@ -1,4 +1,6 @@
 buildscript {
+
+
     repositories {
         jcenter()
         maven {
@@ -8,12 +10,15 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
+
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'kotlin'
 
 version = "0.1"
 def ENV = System.getenv()
@@ -27,13 +32,13 @@ group = "de.take_weiland.mods.commons" // http://maven.apache.org/guides/mini/gu
 archivesBaseName = "SevenCommons"
 
 minecraft {
-    version = "1.9.4-12.17.0.1964"
-    runDir = "eclipse"
+    version = "1.11.2-13.20.0.2228"
+    runDir = "run"
 
     replaceIn "internal/SevenCommons.java"
     replace "@VERSION@", project.version
 
-    mappings = "snapshot_20160616"
+    mappings = "snapshot_20170210"
 }
 
 jar {
@@ -62,10 +67,6 @@ processResources
                 exclude 'mcmod.info'
             }
         }
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.4'
-}
 
 //task deobfJar(type: Jar) {
 //    from sourceSets.main.output
@@ -113,6 +114,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -121,13 +123,14 @@ dependencies {
 
     compile 'net.bytebuddy:byte-buddy:1.5.7'
 
-    compile "org.freemarker:freemarker:2.3.25-incubating"
-    compile 'com.google.googlejavaformat:google-java-format:1.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     deployerJars "org.apache.maven.wagon:wagon-ftp:2.2"
     testCompile "junit:junit:4.11"
-
-    compile files("${System.getProperty('java.home')}/../lib/tools.jar")
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.14'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.14'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-nio:0.14'
 }
 
 idea.module.inheritOutputDirs = true
@@ -152,5 +155,11 @@ if (ENV.SC_MAVEN_URL && ENV.TRAVIS_PULL_REQUEST == "false") { // only upload on 
                 authentication(userName: ENV.SC_MAVEN_USER, password: ENV.SC_MAVEN_PASS)
             }
         }
+    }
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
     }
 }

@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.tonbt;
 
 import de.take_weiland.mods.commons.internal.SevenCommons;
 import de.take_weiland.mods.commons.internal.TypeToFactoryMap;
-import de.take_weiland.mods.commons.serialize.NBTSerializer;
+import de.take_weiland.mods.commons.serialize.nbt.NBTSerializer;
 import de.take_weiland.mods.commons.nbt.NBTSerializerFactory;
 import de.take_weiland.mods.commons.reflect.Property;
 import net.minecraftforge.fml.common.LoaderState;

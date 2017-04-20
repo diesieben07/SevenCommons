@@ -20,7 +20,7 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
         if (member instanceof Field) {
             return new FieldProperty<>((Field) member);
         } else if (member instanceof Method) {
-            return new MethodProperty<>((Method) member);
+            return MethodProperty.create((Method) member);
         } else {
             throw new IllegalArgumentException();
         }
@@ -80,7 +80,7 @@ public abstract class AbstractProperty<T, MEM extends AccessibleObject & Member 
 
     @Override
     public final String toString() {
-        return "TypeSpec of type " + getType();
+        return (isReadOnly() ? "Read-only " : "") + "Property of " + member;
     }
 
     static RuntimeException immutableEx() {

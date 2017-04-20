@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.tonbt.builtin;
 
 import com.google.common.primitives.UnsignedBytes;
-import de.take_weiland.mods.commons.serialize.NBTSerializer;
+import de.take_weiland.mods.commons.serialize.nbt.NBTSerializer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
@@ -11,8 +11,14 @@ import javax.annotation.Nonnull;
 /**
  * @author diesieben07
  */
-enum BlockPosSerializer implements NBTSerializer.Instance<BlockPos> {
-    INSTANCE;
+enum BlockPosSerializer implements NBTSerializer.Value<BlockPos> {
+    // TODO
+    INSTANCE {
+        @Override
+        public Characteristics characteristics() {
+            return null;
+        }
+    };
 
     @Override
     public BlockPos read(@Nonnull NBTBase nbt) {

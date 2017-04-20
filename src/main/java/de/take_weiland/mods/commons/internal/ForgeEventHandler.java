@@ -104,7 +104,7 @@ public final class ForgeEventHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void startTrackingChunk(ChunkWatchEvent.Watch event) {
-        Chunk chunk = event.getPlayer().worldObj.getChunkFromChunkCoords(event.getChunk().chunkXPos, event.getChunk().chunkZPos);
+        Chunk chunk = event.getPlayer().world.getChunkFromChunkCoords(event.getChunk().chunkXPos, event.getChunk().chunkZPos);
         //noinspection unchecked
         chunk.getTileEntityMap().forEach((key, te) -> {
             SyncCompanion companion = ((SyncedObjectProxy) te)._sc$getCompanion();
@@ -182,6 +182,11 @@ public final class ForgeEventHandler {
 
         @Override
         public void spawnParticle(int particleID, boolean ignoreRange, double xCoord, double yCoord, double zCoord, double xSpeed, double ySpeed, double zSpeed, int... parameters) {
+
+        }
+
+        @Override
+        public void spawnParticle(int p_190570_1_, boolean p_190570_2_, boolean p_190570_3_, double p_190570_4_, double p_190570_6_, double p_190570_8_, double p_190570_10_, double p_190570_12_, double p_190570_14_, int... p_190570_16_) {
 
         }
 

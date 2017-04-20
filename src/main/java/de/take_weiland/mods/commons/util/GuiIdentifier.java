@@ -10,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -108,11 +109,11 @@ public interface GuiIdentifier {
      * @param z      3rd argument
      */
     default void open(EntityPlayer player, int x, int y, int z) {
-        player.openGui(mod(), ordinal(), player.worldObj, x, y, z);
+        player.openGui(mod(), ordinal(), player.world, x, y, z);
     }
 
     default void open(EntityPlayer player, Vec3i pos) {
-        player.openGui(mod(), ordinal(), player.worldObj, pos.getX(), pos.getY(), pos.getZ());
+        player.openGui(mod(), ordinal(), player.world, pos.getX(), pos.getY(), pos.getZ());
     }
 
     /**

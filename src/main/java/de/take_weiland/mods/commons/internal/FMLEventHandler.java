@@ -26,7 +26,7 @@ public final class FMLEventHandler {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public void renderTick(TickEvent.RenderTickEvent event) {
-        if (getMinecraft().theWorld != null && event.phase == TickEvent.Phase.END) {
+        if (getMinecraft().world != null && event.phase == TickEvent.Phase.END) {
             WorldViewImpl.renderAll();
         }
     }

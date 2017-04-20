@@ -39,7 +39,7 @@ public final class Players {
      * @throws IllegalStateException if the player is not a server-side player
      */
     public static EntityPlayerMP checkNotClient(EntityPlayer player) {
-        if (player.worldObj.isRemote) {
+        if (player.world.isRemote) {
             throw new IllegalStateException("Expected a serverside player!");
         }
         return (EntityPlayerMP) player;
@@ -128,7 +128,7 @@ public final class Players {
      * @return all players
      */
     public static List<EntityPlayerMP> getAll() {
-        return getSCM().getPlayerList();
+        return getSCM().getPlayers();
     }
 
     /**
@@ -188,7 +188,7 @@ public final class Players {
     }
 
     /**
-     * <p>Get the client player ({@link net.minecraft.client.Minecraft#thePlayer}) in a safe manner. This method can
+     * <p>Get the client player ({@link net.minecraft.client.Minecraft#player}) in a safe manner. This method can
      * be referenced in common code without crashing a Dedicated Server, but still must only be called from a client thread.</p>
      *
      * @return the client player

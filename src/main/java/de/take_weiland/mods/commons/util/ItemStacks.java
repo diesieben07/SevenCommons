@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.util;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.primitives.Ints;
 import de.take_weiland.mods.commons.nbt.NBT;
@@ -66,7 +65,7 @@ public final class ItemStacks {
      */
     @Contract("null, null -> true; null, !null -> false; !null, null -> false")
     public static boolean identical(@Nullable ItemStack a, @Nullable ItemStack b) {
-        return a == b || (a != null && b != null && equalsImpl(a, b) && a.stackSize == b.stackSize);
+        return a == b || (a != null && b != null && equalsImpl(a, b) && a.getCount() == b.getCount());
     }
 
     /**
@@ -81,7 +80,7 @@ public final class ItemStacks {
         } else {
             int result = stack.getItem().hashCode();
             result = 31 * result + (stack.getMetadata() << 16);
-            result = 31 * result + stack.stackSize;
+            result = 31 * result + stack.getCount();
             result = 31 * result + (stack.getTagCompound() != null ? stack.getTagCompound().hashCode() : 0);
             return result;
         }
@@ -121,7 +120,7 @@ public final class ItemStacks {
         }
 
         int stackSize = tryParseStackSize(matcher.group(1));
-        Item item = tryParseItem(MoreObjects.firstNonNull(matcher.group(2), matcher.group(3)));
+        Item item = tryParseItem(Objects.firstNonNull(matcher.group(2), matcher.group(3)));
         int meta = tryParseMetadata(matcher.group(4), 0);
         return new ItemStack(item, stackSize, meta);
     }
@@ -137,7 +136,7 @@ public final class ItemStacks {
      * "@" or "|" it must be enclosed in quotes.</li>
      * </ul></p>
      *
-     * @param definition the defintion
+     * @param definition the definition
      * @return the parsed Predicate
      * @throws InvalidStackDefinition if the definition is invalid
      */
@@ -168,7 +167,7 @@ public final class ItemStacks {
                 int oreID = OreDictionary.getOreID(oreDictEntry);
                 result.add((stack) -> Ints.contains(OreDictionary.getOreIDs(stack), oreID));
             } else {
-                Item item = tryParseItem(MoreObjects.firstNonNull(matcher.group(3), matcher.group(4)));
+                Item item = tryParseItem(Objects.firstNonNull(matcher.group(3), matcher.group(4)));
                 int metadata = tryParseMetadata(matcher.group(5), OreDictionary.WILDCARD_VALUE);
                 if (metadata == OreDictionary.WILDCARD_VALUE) {
                     result.add((stack) -> stack.getItem() == item);
@@ -265,7 +264,7 @@ public final class ItemStacks {
     }
 
     private static boolean fitsIntoImpl(ItemStack from, ItemStack into) {
-        return equalsImpl(from, into) && from.stackSize + into.stackSize <= into.getMaxStackSize();
+        return equalsImpl(from, into) && from.getCount() + into.getCount() <= into.getMaxStackSize();
     }
 
 
@@ -286,8 +285,8 @@ public final class ItemStacks {
      * <li>If {@code from} is null, returns {@code into}.</li>
      * <li>If {@code into} is null, sets {@code from}'s stackSize to 0 and returns a copy of the original {@code from}.</li>
      * <li>If neither {@code from} nor {@code into} are null and {@code force} is true or {@link #equal(ItemStack, ItemStack)}
-     * returns true for {@code from} and {@code into} determines the number of items to transfer by {@code min(into.maxStackSize - into.stackSize, from.stackSize}.
-     * Then increases {@code into.stackSize} by the number of items to transfer and decreases {@code from.stackSize} by the number of items to transfer. Then returns
+     * returns true for {@code from} and {@code into} determines the number of items to transfer by {@code min(into.maxStackSize - into.getCount(), from.getCount()}.
+     * Then increases {@code into.getCount()} by the number of items to transfer and decreases {@code from.getCount()} by the number of items to transfer. Then returns
      * {@code into}.</li>
      * <li>Otherwise does nothing and returns {@code into}.</li>
      * </ul></p>
@@ -304,14 +303,14 @@ public final class ItemStacks {
 
         if (into == null) {
             ItemStack result = from.copy();
-            from.stackSize = 0;
+            from.setCount(0);
             return result;
         }
 
         if (force || equalsImpl(from, into)) {
-            int transferCount = Math.min(into.getMaxStackSize() - into.stackSize, from.stackSize);
-            from.stackSize -= transferCount;
-            into.stackSize += transferCount;
+            int transferCount = Math.min(into.getMaxStackSize() - into.getCount(), from.getCount());
+            from.shrink(transferCount);
+            into.grow(transferCount);
         }
         return into;
     }
@@ -334,7 +333,7 @@ public final class ItemStacks {
      */
     @Contract("null -> null")
     public static ItemStack emptyToNull(@Nullable ItemStack stack) {
-        return stack == null || stack.stackSize <= 0 ? null : stack;
+        return stack == null || stack.getCount() <= 0 ? null : stack;
     }
 
     /**
@@ -356,11 +355,11 @@ public final class ItemStacks {
      * @return the decreased stack or null if the stack is now empty
      */
     public static ItemStack decreaseSize(ItemStack stack, int n) {
-        int size = stack.stackSize;
+        int size = stack.getCount();
         if (n >= size) {
             return null;
         } else if (n > 0) {
-            stack.stackSize = size - n;
+            stack.setCount(size - n);
             return stack;
         } else {
             throw new IllegalArgumentException("Cannot decrease by " + n);

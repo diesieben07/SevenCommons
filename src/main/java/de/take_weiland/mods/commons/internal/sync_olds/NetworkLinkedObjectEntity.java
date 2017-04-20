@@ -18,7 +18,7 @@ public class NetworkLinkedObjectEntity implements NetworkLinkedObjectType<Entity
 
     @Override
     public Entity read(MCDataInput in, EntityPlayer player) {
-        return player.worldObj.getEntityByID(in.readInt());
+        return player.world.getEntityByID(in.readInt());
     }
 
     @Override
@@ -28,7 +28,7 @@ public class NetworkLinkedObjectEntity implements NetworkLinkedObjectType<Entity
 
     @Override
     public Entity getObject(Integer id, EntityPlayer player) {
-        return player.worldObj.getEntityByID(id);
+        return player.world.getEntityByID(id);
     }
 
     @Override
