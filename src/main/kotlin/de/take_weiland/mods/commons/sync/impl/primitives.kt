@@ -16,12 +16,7 @@ inline fun sync(initialValue: Long) = LongSyncedProperty(initialValue)
 inline fun sync(initialValue: Float) = FloatSyncedProperty(initialValue)
 inline fun sync(initialValue: Double) = DoubleSyncedProperty(initialValue)
 
-class BooleanSyncedProperty(private var value: Boolean) : BaseSyncedProperty<Boolean>() {
-
-    override operator fun provideDelegate(obj: Any, property: KProperty<*>): BooleanSyncedProperty {
-        super.provideDelegate(obj, property)
-        return this
-    }
+class BooleanSyncedProperty(private var value: Boolean) : BaseSyncedProperty<Boolean, BooleanSyncedProperty>() {
 
     operator fun getValue(self: Any, property: KProperty<*>): Boolean = value
 
@@ -33,12 +28,7 @@ class BooleanSyncedProperty(private var value: Boolean) : BaseSyncedProperty<Boo
     }
 }
 
-class ByteSyncedProperty(private var value: Byte) : BaseSyncedProperty<Byte>() {
-
-    override operator fun provideDelegate(obj: Any, property: KProperty<*>): ByteSyncedProperty {
-        super.provideDelegate(obj, property)
-        return this
-    }
+class ByteSyncedProperty(private var value: Byte) : BaseSyncedProperty<Byte, ByteSyncedProperty>() {
 
     operator fun getValue(self: Any, property: KProperty<*>): Byte = value
 
@@ -50,12 +40,7 @@ class ByteSyncedProperty(private var value: Byte) : BaseSyncedProperty<Byte>() {
     }
 }
 
-class CharSyncedProperty(private var value: Char) : BaseSyncedProperty<Char>() {
-
-    override operator fun provideDelegate(obj: Any, property: KProperty<*>): CharSyncedProperty {
-        super.provideDelegate(obj, property)
-        return this
-    }
+class CharSyncedProperty(private var value: Char) : BaseSyncedProperty<Char, CharSyncedProperty>() {
 
     operator fun getValue(self: Any, property: KProperty<*>): Char = value
 
@@ -67,12 +52,7 @@ class CharSyncedProperty(private var value: Char) : BaseSyncedProperty<Char>() {
     }
 }
 
-class ShortSyncedProperty(private var value: Short) : BaseSyncedProperty<Short>() {
-
-    override operator fun provideDelegate(obj: Any, property: KProperty<*>): ShortSyncedProperty {
-        super.provideDelegate(obj, property)
-        return this
-    }
+class ShortSyncedProperty(private var value: Short) : BaseSyncedProperty<Short, ShortSyncedProperty>() {
 
     operator fun getValue(self: Any, property: KProperty<*>): Short = value
 
@@ -84,12 +64,7 @@ class ShortSyncedProperty(private var value: Short) : BaseSyncedProperty<Short>(
     }
 }
 
-class IntSyncedProperty(private var value: Int) : BaseSyncedProperty<Int>() {
-
-    override operator fun provideDelegate(obj: Any, property: KProperty<*>): IntSyncedProperty {
-        super.provideDelegate(obj, property)
-        return this
-    }
+class IntSyncedProperty(private var value: Int) : BaseSyncedProperty<Int, IntSyncedProperty>() {
 
     operator fun getValue(self: Any, property: KProperty<*>): Int = value
 
@@ -101,14 +76,10 @@ class IntSyncedProperty(private var value: Int) : BaseSyncedProperty<Int>() {
     }
 }
 
-class LongSyncedProperty(private var value: Long) : BaseSyncedProperty<Long>() {
-    
-    override operator fun provideDelegate(obj: Any, property: KProperty<*>): LongSyncedProperty {
-        super.provideDelegate(obj, property)
-        return this
-    }
+class LongSyncedProperty(private var value: Long) : BaseSyncedProperty<Long, LongSyncedProperty>() {
 
     operator fun getValue(self: Any, property: KProperty<*>): Long = value
+
     operator fun setValue(self: Any, property: KProperty<*>, newValue: Long) {
         if (value != newValue) {
             value = newValue
@@ -118,14 +89,10 @@ class LongSyncedProperty(private var value: Long) : BaseSyncedProperty<Long>() {
 
 }
 
-class FloatSyncedProperty(private var value: Float) : BaseSyncedProperty<Float>() {
-
-    override operator fun provideDelegate(obj: Any, property: KProperty<*>): FloatSyncedProperty {
-        super.provideDelegate(obj, property)
-        return this
-    }
+class FloatSyncedProperty(private var value: Float) : BaseSyncedProperty<Float, FloatSyncedProperty>() {
 
     operator fun getValue(self: Any, property: KProperty<*>): Float = value
+
     operator fun setValue(self: Any, property: KProperty<*>, newValue: Float) {
         if (value != newValue) {
             value = newValue
@@ -135,14 +102,10 @@ class FloatSyncedProperty(private var value: Float) : BaseSyncedProperty<Float>(
 
 }
 
-class DoubleSyncedProperty(private var value: Double) : BaseSyncedProperty<Double>() {
-
-    override operator fun provideDelegate(obj: Any, property: KProperty<*>): DoubleSyncedProperty {
-        super.provideDelegate(obj, property)
-        return this
-    }
+class DoubleSyncedProperty(private var value: Double) : BaseSyncedProperty<Double, DoubleSyncedProperty>() {
 
     operator fun getValue(self: Any, property: KProperty<*>): Double = value
+
     operator fun setValue(self: Any, property: KProperty<*>, newValue: Double) {
         if (value != newValue) {
             value = newValue

@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync;
 
 import kotlin.jvm.JvmClassMappingKt;
+import kotlin.jvm.JvmMultifileClass;
 import kotlin.reflect.KClass;
 import kotlin.reflect.KProperty1;
 import kotlin.reflect.full.KClasses;
@@ -25,6 +26,22 @@ final class SyncedPropertyJavaHelper {
             getSyncedProperties0(javaClass, obj, result);
         } while ((javaClass = javaClass.getSuperclass()) != null);
 
+        return result;
+    }
+
+    static <T> int getPropertyId(@Nonnull KProperty1<T, ?> property, KClass<T> clazz, T obj) {
+        return getDirectSyncedProperties(clazz, obj).indexOf(property);
+    }
+
+    @Nonnull
+    static <T> List<KProperty1<? super T, ?>> getDirectSyncedProperties(@Nonnull Class<T> clazz, @Nonnull T obj) {
+        return getSyncedProperties(JvmClassMappingKt.getKotlinClass(clazz), obj);
+    }
+
+    @Nonnull
+    static <T> List<KProperty1<? super T, ?>> getDirectSyncedProperties(@Nonnull KClass<T> clazz, @Nonnull T obj) {
+        List<KProperty1<? super T, ?>> result = new ArrayList<>();
+        getSyncedProperties0(JvmClassMappingKt.getJavaClass(clazz), obj, result);
         return result;
     }
 
