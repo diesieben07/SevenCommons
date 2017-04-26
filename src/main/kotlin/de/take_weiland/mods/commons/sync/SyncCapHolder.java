@@ -8,12 +8,12 @@ import javax.annotation.Nonnull;
 /**
  * @author diesieben07
  */
-class SyncCapHolder {
+final class SyncCapHolder {
 
     // yay.
     @SuppressWarnings("ConstantConditions")
     @CapabilityInject(SyncCapability.class)
     @Nonnull
-    static final Capability<SyncCapability> SYNC_CAP_KEY = null;
+    static final Capability<SyncCapability<?>> SYNC_CAP_KEY = null;
 
 }

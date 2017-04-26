@@ -19,6 +19,7 @@ import de.take_weiland.mods.commons.internal.worldview.PacketRequestWorldInfo;
 import de.take_weiland.mods.commons.internal.worldview.PacketWorldInfo;
 import de.take_weiland.mods.commons.net.Network;
 import de.take_weiland.mods.commons.sync.Syncing;
+import de.take_weiland.mods.commons.sync.TestBlock;
 import de.take_weiland.mods.commons.util.Logging;
 import de.take_weiland.mods.commons.util.Scheduler;
 import de.take_weiland.mods.commons.worldview.ClientChunks;
@@ -41,6 +42,7 @@ import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLStateEvent;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.Logger;
@@ -170,6 +172,8 @@ public final class SevenCommons extends DummyModContainer {
         ToNbtFactories.registerFactory(Object.class, new DefaultNBTSerializers());
 
 //        MinecraftForge.EVENT_BUS.register();
+
+        GameRegistry.register(new TestBlock());
 
         if (config.hasChanged()) {
             config.save();

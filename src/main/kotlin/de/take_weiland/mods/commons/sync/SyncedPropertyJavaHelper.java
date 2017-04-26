@@ -1,14 +1,14 @@
 package de.take_weiland.mods.commons.sync;
 
+import com.google.common.collect.ImmutableList;
+import kotlin.Pair;
 import kotlin.jvm.JvmClassMappingKt;
-import kotlin.jvm.JvmMultifileClass;
 import kotlin.reflect.KClass;
 import kotlin.reflect.KProperty1;
 import kotlin.reflect.full.KClasses;
 import kotlin.reflect.jvm.KCallablesJvm;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -17,41 +17,35 @@ import java.util.List;
  */
 final class SyncedPropertyJavaHelper {
 
-    @Nonnull
-    static <T> List<KProperty1<? super T, ?>> getSyncedProperties(@Nonnull KClass<T> clazz, @Nonnull T obj) {
-        List<KProperty1<? super T, ?>> result = new ArrayList<>();
-
-        Class<? super T> javaClass = JvmClassMappingKt.getJavaClass(clazz);
+    static <T> Pair<KClass<? super T>, KProperty1<? super T, ?>> getPropertyInfo(BaseSyncedProperty property, Class<? super T> baseClass, T obj) {
+        Class<? super T> currentClass = baseClass;
         do {
-            getSyncedProperties0(javaClass, obj, result);
-        } while ((javaClass = javaClass.getSuperclass()) != null);
-
-        return result;
+            KClass<? super T> kotlinClass = JvmClassMappingKt.getKotlinClass(currentClass);
+            Collection<? extends KProperty1<? super T, ?>> declaredMemberProperties = KClasses.getDeclaredMemberProperties(kotlinClass);
+            for (KProperty1<? super T, ?> declaredMemberProperty : declaredMemberProperties) {
+                KCallablesJvm.setAccessible(declaredMemberProperty, true);
+                if (declaredMemberProperty.getDelegate(obj) == property) {
+                    return new Pair<>(kotlinClass, declaredMemberProperty);
+                }
+            }
+        } while ((currentClass = currentClass.getSuperclass()) != null);
+        throw new IllegalArgumentException("Property not in class hierarchy");
     }
 
-    static <T> int getPropertyId(@Nonnull KProperty1<T, ?> property, KClass<T> clazz, T obj) {
-        return getDirectSyncedProperties(clazz, obj).indexOf(property);
-    }
-
-    @Nonnull
-    static <T> List<KProperty1<? super T, ?>> getDirectSyncedProperties(@Nonnull Class<T> clazz, @Nonnull T obj) {
-        return getSyncedProperties(JvmClassMappingKt.getKotlinClass(clazz), obj);
-    }
-
-    @Nonnull
-    static <T> List<KProperty1<? super T, ?>> getDirectSyncedProperties(@Nonnull KClass<T> clazz, @Nonnull T obj) {
-        List<KProperty1<? super T, ?>> result = new ArrayList<>();
-        getSyncedProperties0(JvmClassMappingKt.getJavaClass(clazz), obj, result);
-        return result;
-    }
-
-    private static <T> void getSyncedProperties0(@Nonnull Class<? super T> clazz, @Nonnull T obj, List<KProperty1<? super T, ?>> result) {
-        Collection<? extends KProperty1<? super T, ?>> declaredMemberProperties = KClasses.getDeclaredMemberProperties(JvmClassMappingKt.getKotlinClass(clazz));
-        for (KProperty1<? super T, ?> property : declaredMemberProperties) {
-            KCallablesJvm.setAccessible(property, true);
-            if (property.getDelegate(obj) instanceof BaseSyncedProperty) {
-                result.add(property);
+    static <T> int getPropertyId(@Nonnull KProperty1<? super T, ?> property, KClass<? super T> clazz, T obj) {
+        List<? extends KProperty1<? super T, ?>> declaredMemberProperties = ImmutableList.copyOf(KClasses.getDeclaredMemberProperties(clazz));
+        int id = 0;
+        for (KProperty1<? super T, ?> memberProperty : declaredMemberProperties) {
+            if (memberProperty.equals(property)) {
+                return id;
+            } else {
+                KCallablesJvm.setAccessible(memberProperty, true);
+                if (memberProperty.getDelegate(obj) instanceof BaseSyncedProperty) {
+                    id++;
+                }
             }
         }
+        throw new IllegalArgumentException("Property not part of class.");
     }
+
 }

@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync
 
 import de.take_weiland.mods.commons.sync.impl.sync
+import de.take_weiland.mods.commons.util.isServer
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.ITickable
 
@@ -14,7 +15,7 @@ open class Test : TileEntity(), ITickable {
     open var blubb: Boolean by sync(false)
 
     override fun update() {
-        bla++
+        if (isServer) bla++
     }
 }
 
@@ -23,15 +24,7 @@ class Foo : Test() {
     var fuzzy: Char by sync('0')
 
     override var bla: Int
-        get() = 2
-        set(value) { }
+        get() = super.bla
+        set(value) { super.bla = value }
 
-}
-
-fun bla(name: String, age: Int = 30) {
-    println("$name is $age")
-}
-
-fun main(args: Array<String>) {
-    bla(name = "hello")
 }
