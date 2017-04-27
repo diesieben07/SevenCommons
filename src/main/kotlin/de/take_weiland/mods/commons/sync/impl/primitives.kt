@@ -9,6 +9,7 @@ import kotlin.reflect.KProperty
 
 // type-aliases + overloading :D
 inline fun <R : ICapabilityProvider> sync(initialValue: Boolean) = BooleanSyncedProperty<R>(initialValue)
+
 inline fun <R : ICapabilityProvider> sync(initialValue: Byte) = ByteSyncedProperty<R>(initialValue)
 inline fun <R : ICapabilityProvider> sync(initialValue: Char) = CharSyncedProperty<R>(initialValue)
 inline fun <R : ICapabilityProvider> sync(initialValue: Short) = ShortSyncedProperty<R>(initialValue)
@@ -18,6 +19,11 @@ inline fun <R : ICapabilityProvider> sync(initialValue: Float) = FloatSyncedProp
 inline fun <R : ICapabilityProvider> sync(initialValue: Double) = DoubleSyncedProperty<R>(initialValue)
 
 class BooleanSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Boolean) : BaseSyncedProperty() {
+
+//    inline operator fun provideDelegate(self: R, property: KProperty<*>): BooleanSyncedProperty<R> {
+//        init(self, property)
+//        return this
+//    }
 
     inline operator fun getValue(self: R, property: KProperty<*>): Boolean = value
 
@@ -31,6 +37,11 @@ class BooleanSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Boolea
 
 class ByteSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Byte) : BaseSyncedProperty() {
 
+    inline operator fun provideDelegate(self: R, property: KProperty<*>): ByteSyncedProperty<R> {
+        init(self, property)
+        return this
+    }
+
     inline operator fun getValue(self: R, property: KProperty<*>): Byte = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Byte) {
@@ -42,6 +53,11 @@ class ByteSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Byte) : B
 }
 
 class CharSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Char) : BaseSyncedProperty() {
+
+    inline operator fun provideDelegate(self: R, property: KProperty<*>): CharSyncedProperty<R> {
+        init(self, property)
+        return this
+    }
 
     inline operator fun getValue(self: R, property: KProperty<*>): Char = value
 
@@ -55,6 +71,11 @@ class CharSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Char) : B
 
 class ShortSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Short) : BaseSyncedProperty() {
 
+    inline operator fun provideDelegate(self: R, property: KProperty<*>): ShortSyncedProperty<R> {
+        init(self, property)
+        return this
+    }
+
     inline operator fun getValue(self: R, property: KProperty<*>): Short = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Short) {
@@ -67,6 +88,11 @@ class ShortSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Short) :
 
 class IntSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Int) : BaseSyncedProperty() {
 
+    inline operator fun provideDelegate(self: R, property: KProperty<*>): IntSyncedProperty<R> {
+        init(self, property)
+        return this
+    }
+
     inline operator fun getValue(self: R, property: KProperty<*>): Int = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Int) {
@@ -78,6 +104,11 @@ class IntSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Int) : Bas
 }
 
 class LongSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Long) : BaseSyncedProperty() {
+
+    inline operator fun provideDelegate(self: R, property: KProperty<*>): LongSyncedProperty<R> {
+        init(self, property)
+        return this
+    }
 
     inline operator fun getValue(self: R, property: KProperty<*>): Long = value
 
@@ -92,6 +123,11 @@ class LongSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Long) : B
 
 class FloatSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Float) : BaseSyncedProperty() {
 
+    inline operator fun provideDelegate(self: R, property: KProperty<*>): FloatSyncedProperty<R> {
+        init(self, property)
+        return this
+    }
+
     inline operator fun getValue(self: R, property: KProperty<*>): Float = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Float) {
@@ -104,6 +140,11 @@ class FloatSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Float) :
 }
 
 class DoubleSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Double) : BaseSyncedProperty() {
+
+    inline operator fun provideDelegate(self: R, property: KProperty<*>): DoubleSyncedProperty<R> {
+        init(self, property)
+        return this
+    }
 
     inline operator fun getValue(self: R, property: KProperty<*>): Double = value
 

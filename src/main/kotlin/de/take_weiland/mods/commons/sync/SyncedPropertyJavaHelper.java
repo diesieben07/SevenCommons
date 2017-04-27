@@ -4,13 +4,17 @@ import com.google.common.collect.ImmutableList;
 import kotlin.Pair;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KClass;
+import kotlin.reflect.KProperty;
 import kotlin.reflect.KProperty1;
 import kotlin.reflect.full.KClasses;
 import kotlin.reflect.jvm.KCallablesJvm;
+import kotlin.reflect.jvm.ReflectJvmMapping;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.List;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author diesieben07
@@ -32,15 +36,18 @@ final class SyncedPropertyJavaHelper {
         throw new IllegalArgumentException("Property not in class hierarchy");
     }
 
-    static <T> int getPropertyId(@Nonnull KProperty1<? super T, ?> property, KClass<? super T> clazz, T obj) {
-        List<? extends KProperty1<? super T, ?>> declaredMemberProperties = ImmutableList.copyOf(KClasses.getDeclaredMemberProperties(clazz));
+    static int getPropertyId(KProperty1<?, ?> property, Object obj) {
+        Class<?> declaringClass = checkNotNull(ReflectJvmMapping.getJavaGetter(property)).getDeclaringClass();
+        KClass<?> kotlinClass = JvmClassMappingKt.getKotlinClass(declaringClass);
+
+        List<? extends KProperty1<?, ?>> declaredMemberProperties = ImmutableList.copyOf(KClasses.getDeclaredMemberProperties(kotlinClass));
         int id = 0;
-        for (KProperty1<? super T, ?> memberProperty : declaredMemberProperties) {
+        for (KProperty1<?, ?> memberProperty : declaredMemberProperties) {
             if (memberProperty.equals(property)) {
-                return id;
+                return (id << SyncCapabilityKt.CLASS_ID_BITS) | SyncCapabilityKt.getId(kotlinClass);
             } else {
                 KCallablesJvm.setAccessible(memberProperty, true);
-                if (memberProperty.getDelegate(obj) instanceof BaseSyncedProperty) {
+                if (((KProperty1) memberProperty).getDelegate(obj) instanceof BaseSyncedProperty) {
                     id++;
                 }
             }
