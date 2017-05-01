@@ -16,15 +16,10 @@ open class Test : TileEntity(), ITickable {
 
     override fun update() {
         if (isServer) bla++
+
     }
 }
 
 class Foo : Test() {
-
-    var fuzzy: Char by sync('0')
-
-    override var bla: Int
-        get() = super.bla
-        set(value) { super.bla = value }
 
 }

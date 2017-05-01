@@ -11,8 +11,11 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.INetHandlerPlayServer;
 import net.minecraft.network.play.client.CPacketCustomPayload;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
@@ -26,9 +29,16 @@ public final class ClientProxy implements SevenCommonsProxy {
         getMinecraft().getConnection().sendPacket(p);
     }
 
+    @Nonnull
     @Override
     public EntityPlayer getClientPlayer() {
         return getMinecraft().player;
+    }
+
+    @Nonnull
+    @Override
+    public World getClientWorld() {
+        return getMinecraft().world;
     }
 
     @Override

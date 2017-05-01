@@ -1,61 +1,111 @@
 package de.take_weiland.mods.commons.sync
 
-import net.minecraftforge.common.capabilities.ICapabilityProvider
-import java.util.concurrent.ConcurrentHashMap
+import de.take_weiland.mods.commons.util.isServer
+import gnu.trove.set.hash.THashSet
+import net.minecraft.entity.Entity
+import net.minecraft.inventory.Container
+import net.minecraft.tileentity.TileEntity
+import net.minecraft.world.World
+import java.util.*
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.jvm.javaGetter
 
-abstract class BaseSyncedProperty internal constructor() {
+abstract class SyncedProperty<out R : Any>(private val obj: R) {
 
-    @JvmField
-    var property: KProperty1<*, *>? = null
-    @JvmField
-    var obj: Any? = null
+    private var id: Int = -1
 
-    internal var id0: Int = -1
-    internal inline fun getId(): Int = id0.let {
-        if (it == -1) idCache.computeIfAbsent(property, {
-            SyncedPropertyJavaHelper.getPropertyId(property, obj)
-        }) else it
-    }
+    private lateinit var containerType: SyncedContainerType<R>
 
-    fun init(obj: Any, property: KProperty<*>) {
-        this.property = property as? KProperty1<*, *> ?: throw UnsupportedOperationException("Cannot sync static field")
-        this.obj = obj
-    }
+    internal val world: World
+        get() = containerType.getWorld(obj)
 
-    inline operator fun <T : BaseSyncedProperty> T.provideDelegate(obj: Any, property: KProperty<*>): T {
-        init(obj, property)
-        return this
+    fun init(property: KProperty<*>, containerType: SyncedContainerType<R>) {
+        this.id = (property as? KProperty1<*, *> ?: throw UnsupportedOperationException("Only member properties in a class can be synced.")).getPropertyId()
+        this.containerType = containerType
     }
 
 }
 
-// ID is built as follows:
-//      - Lowest 3 bits are class ID, starting with 0 at the top. Top is the class extending from e.g. TileEntity.
-//        Classes without synced properties are still counted
-//        This allows for a 7-deep hierarchy, which should be plenty
-//      - Rest is property id, in order of definition in the source file.
-// This allows classes to add synced properties without changing other classes' IDs
-// The ID will fit in one VarInt byte so long as there are no more than 16 synced properties in a class
-// Longer IDs appear on a per-class basis, so only classes with more than 16 properties get longer IDs.
+operator fun <R : TileEntity, T : SyncedProperty<R>> T.provideDelegate(obj: R, property: KProperty<*>): T {
+    init(property, TileEntitySyncedType)
+    return this
+}
 
-private val idCache = ConcurrentHashMap<KProperty1<*, *>?, Int>()
+operator fun <R : Entity, T : SyncedProperty<R>> T.provideDelegate(obj: R, property: KProperty<*>): T {
+    init(property, EntitySyncedType)
+    return this
+}
 
-abstract class SyncedProperty<T, R : ICapabilityProvider> : BaseSyncedProperty() {
+operator fun <R : Container, T : SyncedProperty<R>> T.provideDelegate(obj: R, property: KProperty<*>): T {
+    init(property, ContainerSyncedType)
+    return this
+}
 
-    abstract operator fun getValue(obj: R, property: KProperty<*>): T
-    abstract operator fun setValue(obj: R, property: KProperty<*>, newValue: T)
+interface TickingProperty {
+
+    fun update()
 
 }
 
+class SyncedPropertyImmutable<T, R : Any>(@JvmField var value: T, obj: R) : SyncedProperty<R>(obj) {
 
+    inline operator fun getValue(obj: R, property: KProperty<*>): T = value
 
-private fun ICapabilityProvider.getSyncCapability() = getCapability(SyncCapHolder.SYNC_CAP_KEY, null)!!
+    inline operator fun setValue(obj: R, property: KProperty<*>, newValue: T) {
+        if (value != newValue) {
+            value = newValue
+            markDirty()
+        }
+    }
 
-fun <C : ICapabilityProvider> BaseSyncedProperty.markDirty(self: C) {
-    self.getSyncCapability().markDirty(this)
+}
+
+class SyncedPropertyIdentityImmutable<T, R : Any>(@JvmField var value: T, obj: R) : SyncedProperty<R>(obj) {
+
+    inline operator fun getValue(obj: R, property: KProperty<*>): T = value
+
+    inline operator fun setValue(obj: R, property: KProperty<*>, newValue: T) {
+        if (value !== newValue) {
+            value = newValue
+            markDirty()
+        }
+    }
+
+}
+
+abstract class SyncedPropertyMutable<T, R : Any>(@JvmField var value: T, obj: R) : SyncedProperty<R>(obj), TickingProperty {
+
+    @JvmField
+    var oldValue = value
+
+    inline operator fun getValue(obj: R, property: KProperty<*>): T = value
+
+    inline operator fun setValue(obj: R, property: KProperty<*>, newValue: T) {
+        value = newValue
+    }
+
+    override fun update() {
+        value.let {
+            if (it != oldValue) {
+                oldValue = value.copy()
+                markDirty()
+            }
+        }
+    }
+
+    protected abstract fun T.copy() : T
+
+}
+
+val dirtyProperties = WeakHashMap<World, MutableSet<SyncedProperty<*>>>()
+
+fun SyncedProperty<*>.markDirty() {
+    world.let { world ->
+        if (world.isServer) {
+            (dirtyProperties[world] ?: (THashSet<SyncedProperty<*>>().also { dirtyProperties[world] = it })) += this
+        }
+    }
 }
 
 fun main(args: Array<String>) {

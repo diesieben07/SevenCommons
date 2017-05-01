@@ -6,6 +6,13 @@ import com.google.common.collect.ImmutableSet
 /**
  * @author diesieben07
  */
+inline fun <T> List<T>.fastForEach(body: (T) -> Unit) {
+    val end = size
+    var i = 0
+    while (i < end) body(this[i++])
+}
+
+
 inline fun <T> immutableSetOf() = ImmutableSet.of<T>()
 inline fun <T> immutableSetOf(e1: T) = ImmutableSet.of(e1)
 inline fun <T> immutableSetOf(e1: T, e2: T) = ImmutableSet.of(e1, e2)

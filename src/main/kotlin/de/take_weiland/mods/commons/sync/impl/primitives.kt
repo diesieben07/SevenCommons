@@ -2,156 +2,114 @@
 
 package de.take_weiland.mods.commons.sync.impl
 
-import de.take_weiland.mods.commons.sync.BaseSyncedProperty
+import de.take_weiland.mods.commons.sync.SyncedProperty
 import de.take_weiland.mods.commons.sync.markDirty
-import net.minecraftforge.common.capabilities.ICapabilityProvider
 import kotlin.reflect.KProperty
 
 // type-aliases + overloading :D
-inline fun <R : ICapabilityProvider> sync(initialValue: Boolean) = BooleanSyncedProperty<R>(initialValue)
+inline fun <R : Any> R.sync(initialValue: Boolean) = BooleanSyncedProperty(initialValue, this)
+inline fun <R : Any> R.sync(initialValue: Byte) = ByteSyncedProperty(initialValue, this)
+inline fun <R : Any> R.sync(initialValue: Char) = CharSyncedProperty(initialValue, this)
+inline fun <R : Any> R.sync(initialValue: Short) = ShortSyncedProperty(initialValue, this)
+inline fun <R : Any> R.sync(initialValue: Int) = IntSyncedProperty(initialValue, this)
+inline fun <R : Any> R.sync(initialValue: Long) = LongSyncedProperty(initialValue, this)
+inline fun <R : Any> R.sync(initialValue: Float) = FloatSyncedProperty(initialValue, this)
+inline fun <R : Any> R.sync(initialValue: Double) = DoubleSyncedProperty(initialValue, this)
 
-inline fun <R : ICapabilityProvider> sync(initialValue: Byte) = ByteSyncedProperty<R>(initialValue)
-inline fun <R : ICapabilityProvider> sync(initialValue: Char) = CharSyncedProperty<R>(initialValue)
-inline fun <R : ICapabilityProvider> sync(initialValue: Short) = ShortSyncedProperty<R>(initialValue)
-inline fun <R : ICapabilityProvider> sync(initialValue: Int) = IntSyncedProperty<R>(initialValue)
-inline fun <R : ICapabilityProvider> sync(initialValue: Long) = LongSyncedProperty<R>(initialValue)
-inline fun <R : ICapabilityProvider> sync(initialValue: Float) = FloatSyncedProperty<R>(initialValue)
-inline fun <R : ICapabilityProvider> sync(initialValue: Double) = DoubleSyncedProperty<R>(initialValue)
-
-class BooleanSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Boolean) : BaseSyncedProperty() {
-
-//    inline operator fun provideDelegate(self: R, property: KProperty<*>): BooleanSyncedProperty<R> {
-//        init(self, property)
-//        return this
-//    }
+class BooleanSyncedProperty<R : Any>(@JvmField var value: Boolean, obj: R) : SyncedProperty<R>(obj) {
 
     inline operator fun getValue(self: R, property: KProperty<*>): Boolean = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Boolean) {
         if (value != newValue) {
             value = newValue
-            markDirty(self)
+            markDirty()
         }
     }
 }
 
-class ByteSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Byte) : BaseSyncedProperty() {
-
-    inline operator fun provideDelegate(self: R, property: KProperty<*>): ByteSyncedProperty<R> {
-        init(self, property)
-        return this
-    }
+class ByteSyncedProperty<R : Any>(@JvmField var value: Byte, obj: R) : SyncedProperty<R>(obj) {
 
     inline operator fun getValue(self: R, property: KProperty<*>): Byte = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Byte) {
         if (value != newValue) {
             value = newValue
-            markDirty(self)
+            markDirty()
         }
     }
 }
 
-class CharSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Char) : BaseSyncedProperty() {
-
-    inline operator fun provideDelegate(self: R, property: KProperty<*>): CharSyncedProperty<R> {
-        init(self, property)
-        return this
-    }
+class CharSyncedProperty<R : Any>(@JvmField var value: Char, obj: R) : SyncedProperty<R>(obj) {
 
     inline operator fun getValue(self: R, property: KProperty<*>): Char = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Char) {
         if (value != newValue) {
             value = newValue
-            markDirty(self)
+            markDirty()
         }
     }
 }
 
-class ShortSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Short) : BaseSyncedProperty() {
-
-    inline operator fun provideDelegate(self: R, property: KProperty<*>): ShortSyncedProperty<R> {
-        init(self, property)
-        return this
-    }
+class ShortSyncedProperty<R : Any>(@JvmField var value: Short, obj: R) : SyncedProperty<R>(obj) {
 
     inline operator fun getValue(self: R, property: KProperty<*>): Short = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Short) {
         if (value != newValue) {
             value = newValue
-            markDirty(self)
+            markDirty()
         }
     }
 }
 
-class IntSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Int) : BaseSyncedProperty() {
-
-    inline operator fun provideDelegate(self: R, property: KProperty<*>): IntSyncedProperty<R> {
-        init(self, property)
-        return this
-    }
+class IntSyncedProperty<R : Any>(@JvmField var value: Int, obj: R) : SyncedProperty<R>(obj) {
 
     inline operator fun getValue(self: R, property: KProperty<*>): Int = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Int) {
         if (value != newValue) {
             value = newValue
-            markDirty(self)
+            markDirty()
         }
     }
 }
 
-class LongSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Long) : BaseSyncedProperty() {
-
-    inline operator fun provideDelegate(self: R, property: KProperty<*>): LongSyncedProperty<R> {
-        init(self, property)
-        return this
-    }
+class LongSyncedProperty<R : Any>(@JvmField var value: Long, obj: R) : SyncedProperty<R>(obj) {
 
     inline operator fun getValue(self: R, property: KProperty<*>): Long = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Long) {
         if (value != newValue) {
             value = newValue
-            markDirty(self)
+            markDirty()
         }
     }
 
 }
 
-class FloatSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Float) : BaseSyncedProperty() {
-
-    inline operator fun provideDelegate(self: R, property: KProperty<*>): FloatSyncedProperty<R> {
-        init(self, property)
-        return this
-    }
+class FloatSyncedProperty<R : Any>(@JvmField var value: Float, obj: R) : SyncedProperty<R>(obj) {
 
     inline operator fun getValue(self: R, property: KProperty<*>): Float = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Float) {
         if (value != newValue) {
             value = newValue
-            markDirty(self)
+            markDirty()
         }
     }
 
 }
 
-class DoubleSyncedProperty<R : ICapabilityProvider>(@JvmField var value: Double) : BaseSyncedProperty() {
-
-    inline operator fun provideDelegate(self: R, property: KProperty<*>): DoubleSyncedProperty<R> {
-        init(self, property)
-        return this
-    }
+class DoubleSyncedProperty<R : Any>(@JvmField var value: Double, obj: R) : SyncedProperty<R>(obj) {
 
     inline operator fun getValue(self: R, property: KProperty<*>): Double = value
 
     inline operator fun setValue(self: R, property: KProperty<*>, newValue: Double) {
         if (value != newValue) {
             value = newValue
-            markDirty(self)
+            markDirty()
         }
     }
 

@@ -24,21 +24,6 @@ public class TestMod {
         GameRegistry.register(block);
         GameRegistry.register(new ItemBlock(block).setRegistryName(block.getRegistryName()));
         GameRegistry.registerTileEntity(Foo.class, "sevencommons:foo");
-
-        CapabilityManager.INSTANCE.register(SyncCapability.class, new Capability.IStorage<SyncCapability>() {
-            @Nullable
-            @Override
-            public NBTBase writeNBT(Capability<SyncCapability> capability, SyncCapability instance, EnumFacing side) {
-                return null;
-            }
-
-            @Override
-            public void readNBT(Capability<SyncCapability> capability, SyncCapability instance, EnumFacing side, NBTBase nbt) {
-
-            }
-        }, (Callable<SyncCapability>) () -> {
-            throw new UnsupportedOperationException();
-        });
     }
 
 }

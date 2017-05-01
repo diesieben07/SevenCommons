@@ -12,12 +12,12 @@ import java.util.List;
 /**
  * @author diesieben07
  */
-final class SCMethodHandles {
+public final class SCMethodHandles {
 
     private static final MethodHandle containerListenersMH;
 
     @SuppressWarnings("unchecked")
-    static List<IContainerListener> getListeners(Container c) throws Throwable {
+    public static List<IContainerListener> getListeners(Container c) throws Throwable {
         return (List<IContainerListener>) containerListenersMH.invokeExact(c);
     }
 
@@ -30,5 +30,7 @@ final class SCMethodHandles {
             throw Throwables.propagate(e);
         }
     }
+
+    private SCMethodHandles() {}
 
 }

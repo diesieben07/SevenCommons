@@ -5,7 +5,11 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.INetHandlerPlayServer;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nonnull;
 
 public class ServerProxy implements SevenCommonsProxy {
 
@@ -18,9 +22,16 @@ public class ServerProxy implements SevenCommonsProxy {
         throw new IllegalStateException("Server cannot send Packet to itself!");
     }
 
+    @NotNull
     @Override
     public EntityPlayer getClientPlayer() {
         throw new IllegalStateException("Server has no client player!");
+    }
+
+    @Nonnull
+    @Override
+    public World getClientWorld() {
+        throw new IllegalStateException("Server has no client world");
     }
 
     @Override
