@@ -12,6 +12,15 @@ inline fun <T> List<T>.fastForEach(body: (T) -> Unit) {
     while (i < end) body(this[i++])
 }
 
+inline fun <reified T> Iterable<*>.forEachOfType(body: (T) -> Unit) {
+    for (element in this) {
+        if (element is T) body(element)
+    }
+}
+
+inline fun <K, V : Any> MutableMap<K, V>.fastComputeIfAbsent(key: K, crossinline supplier: (K) -> V): V {
+    return get(key) ?: computeIfAbsent(key, { key -> supplier(key) })
+}
 
 inline fun <T> immutableSetOf() = ImmutableSet.of<T>()
 inline fun <T> immutableSetOf(e1: T) = ImmutableSet.of(e1)

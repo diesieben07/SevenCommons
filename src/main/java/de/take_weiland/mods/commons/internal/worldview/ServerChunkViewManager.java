@@ -58,7 +58,7 @@ public class ServerChunkViewManager {
             WorldServer world = DimensionManager.getWorld(dimension);
             // only send unload packet if world is loaded and player is not still tracking
             if (world != null && !Players.getTrackingChunk(world, chunkX, chunkZ).contains(player)) {
-                SimplePacket.of(chunkUnloadPacket(world.getChunkFromChunkCoords(chunkX, chunkZ))).sendTo(player);
+                SimplePacket.Companion.of(chunkUnloadPacket(world.getChunkFromChunkCoords(chunkX, chunkZ))).sendTo(player);
             }
         }
     }
@@ -94,7 +94,7 @@ public class ServerChunkViewManager {
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
             Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
             if (it.hasNext()) {
-                SimplePacket.of(chunkUnloadPacket(chunk)).sendTo(it);
+                SimplePacket.Companion.of(chunkUnloadPacket(chunk)).sendTo(it);
             }
         }
     }
@@ -151,7 +151,7 @@ public class ServerChunkViewManager {
                 // this is ok since those other players are ok to see the packet without dimension ID set as they are guaranteed to be in the correct dimension
                 ((VanillaPacketProxy) packet)._sc$setTargetDimension(dimension);
             }
-            SimplePacket.of(packet).sendTo(player);
+            SimplePacket.Companion.of(packet).sendTo(player);
         }
     }
 

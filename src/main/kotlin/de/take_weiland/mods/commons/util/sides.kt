@@ -21,6 +21,8 @@ inline fun World.ifServer(body: WorldServer.() -> Unit) {
     if (isServer) (this as WorldServer).body()
 }
 
+inline fun World.requireServer(): WorldServer = if (isServer) this as WorldServer else throw IllegalStateException("WorldServer expected")
+
 val TileEntity.side inline get() = world.side
 val TileEntity.isServer inline get() = world.isServer
 val TileEntity.isClient inline get() = world.isClient

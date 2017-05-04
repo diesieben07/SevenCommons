@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync
 
 import de.take_weiland.mods.commons.internal.SevenCommons
+import de.take_weiland.mods.commons.net.SimplePacket
 import de.take_weiland.mods.commons.util.fastForEach
 import de.take_weiland.mods.commons.util.listeners
 import net.minecraft.entity.Entity
@@ -16,17 +17,30 @@ interface SyncedContainerType<in T> {
 
     fun getWorld(obj: T): World
 
+    fun sendPacket(obj: T, packet: SimplePacket)
+
+}
+
+inline fun <T> SimplePacket.sendTo(obj: T, containerType: SyncedContainerType<T>) {
+    containerType.sendPacket(obj, this)
 }
 
 object TileEntitySyncedType : SyncedContainerType<TileEntity> {
 
     override fun getWorld(obj: TileEntity): World = obj.world
+
+    override fun sendPacket(obj: TileEntity, packet: SimplePacket) {
+        packet.sendToAllTracking(obj)
+    }
 }
 
 object EntitySyncedType : SyncedContainerType<Entity> {
 
     override fun getWorld(obj: Entity): World = obj.world
 
+    override fun sendPacket(obj: Entity, packet: SimplePacket) {
+        packet.sendToAllTracking(obj)
+    }
 }
 
 object ContainerSyncedType : SyncedContainerType<Container> {
@@ -38,4 +52,7 @@ object ContainerSyncedType : SyncedContainerType<Container> {
         return SevenCommons.proxy.clientWorld
     }
 
+    override fun sendPacket(obj: Container, packet: SimplePacket) {
+        packet.sendToViewing(obj)
+    }
 }

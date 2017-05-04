@@ -1,43 +1,43 @@
 package de.take_weiland.mods.commons.sync
 
-import de.take_weiland.mods.commons.util.isServer
-import gnu.trove.set.hash.THashSet
+import de.take_weiland.mods.commons.net.MCDataOutput
+import de.take_weiland.mods.commons.util.fastComputeIfAbsent
 import net.minecraft.entity.Entity
 import net.minecraft.inventory.Container
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.world.World
-import java.util.*
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
-import kotlin.reflect.jvm.javaGetter
 
-abstract class SyncedProperty<out R : Any>(private val obj: R) {
+abstract class SyncedProperty<CONTAINER, DATA>(private val obj: CONTAINER) {
 
-    private var id: Int = -1
+    var id: Int = -1
 
-    private lateinit var containerType: SyncedContainerType<R>
+    internal lateinit var containerType: SyncedContainerType<CONTAINER>
 
     internal val world: World
         get() = containerType.getWorld(obj)
 
-    fun init(property: KProperty<*>, containerType: SyncedContainerType<R>) {
+    fun init(property: KProperty<*>, containerType: SyncedContainerType<CONTAINER>) {
         this.id = (property as? KProperty1<*, *> ?: throw UnsupportedOperationException("Only member properties in a class can be synced.")).getPropertyId()
         this.containerType = containerType
     }
 
+    abstract fun write(out: MCDataOutput): DATA
+
 }
 
-operator fun <R : TileEntity, T : SyncedProperty<R>> T.provideDelegate(obj: R, property: KProperty<*>): T {
+operator fun <C : TileEntity, P : SyncedProperty<C, *>> P.provideDelegate(obj: C, property: KProperty<*>): P {
     init(property, TileEntitySyncedType)
     return this
 }
 
-operator fun <R : Entity, T : SyncedProperty<R>> T.provideDelegate(obj: R, property: KProperty<*>): T {
+operator fun <C : Entity, P : SyncedProperty<C, *>> P.provideDelegate(obj: C, property: KProperty<*>): P {
     init(property, EntitySyncedType)
     return this
 }
 
-operator fun <R : Container, T : SyncedProperty<R>> T.provideDelegate(obj: R, property: KProperty<*>): T {
+operator fun <C : Container, P : SyncedProperty<C, *>> P.provideDelegate(obj: C, property: KProperty<*>): P {
     init(property, ContainerSyncedType)
     return this
 }
@@ -48,40 +48,46 @@ interface TickingProperty {
 
 }
 
-class SyncedPropertyImmutable<T, R : Any>(@JvmField var value: T, obj: R) : SyncedProperty<R>(obj) {
+class SyncedPropertyImmutable<C, T>(obj: C, @JvmField var value: T) : SyncedProperty<C, T>(obj) {
 
-    inline operator fun getValue(obj: R, property: KProperty<*>): T = value
+    inline operator fun getValue(obj: C, property: KProperty<*>): T = value
 
-    inline operator fun setValue(obj: R, property: KProperty<*>, newValue: T) {
+    inline operator fun setValue(obj: C, property: KProperty<*>, newValue: T) {
         if (value != newValue) {
             value = newValue
-            markDirty()
+            markDirty(obj, newValue)
         }
     }
 
+    override fun write(out: MCDataOutput): T {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }
 
-class SyncedPropertyIdentityImmutable<T, R : Any>(@JvmField var value: T, obj: R) : SyncedProperty<R>(obj) {
+class SyncedPropertyIdentityImmutable<C, T>(obj: C, @JvmField var value: T) : SyncedProperty<C, T>(obj) {
 
-    inline operator fun getValue(obj: R, property: KProperty<*>): T = value
+    inline operator fun getValue(obj: C, property: KProperty<*>): T = value
 
-    inline operator fun setValue(obj: R, property: KProperty<*>, newValue: T) {
+    inline operator fun setValue(obj: C, property: KProperty<*>, newValue: T) {
         if (value !== newValue) {
             value = newValue
-            markDirty()
+            markDirty(obj, newValue)
         }
     }
 
+    override fun write(out: MCDataOutput): T {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }
 
-abstract class SyncedPropertyMutable<T, R : Any>(@JvmField var value: T, obj: R) : SyncedProperty<R>(obj), TickingProperty {
+abstract class SyncedPropertyMutable<C, T>(@JvmField var value: T, obj: C) : SyncedProperty<C, T>(obj), TickingProperty {
 
     @JvmField
     var oldValue = value
 
-    inline operator fun getValue(obj: R, property: KProperty<*>): T = value
+    inline operator fun getValue(obj: C, property: KProperty<*>): T = value
 
-    inline operator fun setValue(obj: R, property: KProperty<*>, newValue: T) {
+    inline operator fun setValue(obj: C, property: KProperty<*>, newValue: T) {
         value = newValue
     }
 
@@ -89,7 +95,7 @@ abstract class SyncedPropertyMutable<T, R : Any>(@JvmField var value: T, obj: R)
         value.let {
             if (it != oldValue) {
                 oldValue = value.copy()
-                markDirty()
+//                markDirty()
             }
         }
     }
@@ -98,16 +104,8 @@ abstract class SyncedPropertyMutable<T, R : Any>(@JvmField var value: T, obj: R)
 
 }
 
-val dirtyProperties = WeakHashMap<World, MutableSet<SyncedProperty<*>>>()
+internal val dirtyProperties = HashMap<Any?, ChangedPropertyStore<Any?>>()
 
-fun SyncedProperty<*>.markDirty() {
-    world.let { world ->
-        if (world.isServer) {
-            (dirtyProperties[world] ?: (THashSet<SyncedProperty<*>>().also { dirtyProperties[world] = it })) += this
-        }
-    }
-}
-
-fun main(args: Array<String>) {
-    println(Test::bla.javaGetter)
+fun <CONTAINER, DATA> SyncedProperty<CONTAINER,DATA>.markDirty(obj: CONTAINER, data: DATA) {
+    dirtyProperties.fastComputeIfAbsent(obj) { ChangedPropertyStore() }.put(id, data)
 }

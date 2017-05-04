@@ -1,6 +1,4 @@
 buildscript {
-
-
     repositories {
         jcenter()
         maven {
@@ -38,7 +36,7 @@ minecraft {
     replaceIn "internal/SevenCommons.java"
     replace "@VERSION@", project.version
 
-    mappings = "snapshot_20170210"
+    mappings = "snapshot_20170501"
 }
 
 jar {
@@ -90,13 +88,20 @@ task compileLoader(type: JavaCompile) {
     targetCompatibility = 1.6
 }
 
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 compileJava {
     exclude 'de/take_weiland/mods/commons/internal/SevenCommonsLoader*'
     exclude 'de/take_weiland/mods/commons/util/JavaCompatibility*'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
     options.encoding = 'UTF-8'
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 }
 
 tasks.compileJava.dependsOn('compileLoader')
