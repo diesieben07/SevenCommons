@@ -10,7 +10,6 @@ import net.minecraft.tileentity.TileEntity
 import java.lang.reflect.Field
 import java.lang.reflect.Member
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.jvm.internal.CallableReference
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
@@ -28,7 +27,7 @@ import kotlin.reflect.jvm.javaGetter
 
 fun KProperty1<*, *>.getPropertyId(): Int {
     return propertyIdCache[this] ?: propertyIdCache.computeIfAbsent(this) {
-        val declaringClass = getDeclaringClass()
+        val declaringClass = declaringClass
         val idInClass = declaringClass.kotlin.declaredMemberProperties.asSequence()
                 .filter { it.delegateType.let { it != null && SyncedProperty::class.java.isAssignableFrom(it) } }
                 .indexOf(this)
@@ -57,19 +56,21 @@ private fun <T : Any> Class<T>.getClassId(): Int {
     return if (id > MAX_CLASS_ID) throw UnsupportedOperationException("Class hierarchy too deep for synced properties") else id
 }
 
-private fun KProperty1<*, *>.getDeclaringClass(): Class<*> = (javaField as Member? ?: javaGetter)?.declaringClass ?: throw IllegalArgumentException("Property does not have getter or field.")
+private val KProperty<*>.declaringClass: Class<*>
+    get() = (javaField as Member? ?: javaGetter)?.declaringClass ?: throw IllegalArgumentException("Property does not have getter or field.")
 
-private val kProperty1ImplClass: Class<*> = Class.forName("kotlin.reflect.jvm.internal.KProperty1Impl")
-private val kProperty1DelegateFieldLazy = kProperty1ImplClass.getDeclaredField("delegateField").also {
-    it.isAccessible = true
-}
-
-private infix fun Any.instanceOf(clazz: Class<*>) = clazz.isInstance(this)
+private infix fun Any?.instanceOf(clazz: Class<*>) = clazz.isInstance(this)
 
 private val KProperty<*>.delegateField : Field?
-    get() = (((this as? CallableReference)?.compute() ?: this) as Any).takeIf { it instanceOf kProperty1ImplClass }
-            ?.let { kProperty1DelegateFieldLazy[it] as Lazy<*> }
-            ?.let { it.value as Field? }
+    get() = try {
+        declaringClass.getDeclaredField("$name\$delegate")
+    } catch (x: NoSuchFieldException) {
+        null
+    }
 
 private val KProperty<*>.delegateType : Class<*>?
     get() = delegateField?.type
+
+fun main(args: Array<String>) {
+    println(Test::bla.delegateType)
+}

@@ -29,19 +29,9 @@ inline fun NBTTagList.forEach(action: (String) -> Unit) {
     forEach<NBTTagString> { action(it.string) }
 }
 
-inline operator fun NBTTagList.plusAssign(value: String) {
-    this += NBTTagString(value)
-}
+operator fun NBTTagList.plusAssign(tag: NBTBase) = appendTag(tag)
+operator fun NBTTagList.iterator(): MutableIterator<NBTBase> = tagList.iterator()
 
-inline operator fun NBTTagList.plusAssign(tag: NBTBase) = this.appendTag(tag)
-inline operator fun NBTTagList.iterator() = NBTTagListIterator(this)
-
-class NBTTagListIterator(private val list: NBTTagList) {
-
-    private var index = 0
-
-    operator fun hasNext() = index < list.tagCount()
-
-    operator fun next(): NBTBase = list[index++]
-
+operator fun NBTTagList.plusAssign(value: String) {
+    appendTag(NBTTagString(value))
 }

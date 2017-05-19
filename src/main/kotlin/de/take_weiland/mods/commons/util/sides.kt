@@ -1,12 +1,13 @@
 package de.take_weiland.mods.commons.util
 
-import de.take_weiland.mods.commons.util.SCMethodHandles.getListeners
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.inventory.Container
+import net.minecraft.server.MinecraftServer
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.world.World
 import net.minecraft.world.WorldServer
+import net.minecraftforge.fml.common.FMLCommonHandler
 import net.minecraftforge.fml.relauncher.Side
 
 /**
@@ -32,5 +33,7 @@ val Entity.isServer inline get() = world.isServer
 val Entity.isClient inline get() = world.isClient
 
 val Container.side get(): Side = if (isClient) Side.CLIENT else Side.SERVER
-val Container.isServer get() = getListeners(this).any { it is EntityPlayerMP }
+val Container.isServer get() = listeners.any { it is EntityPlayerMP }
 val Container.isClient inline get() = !isServer
+
+val serverInstance : MinecraftServer get() = FMLCommonHandler.instance().minecraftServerInstance

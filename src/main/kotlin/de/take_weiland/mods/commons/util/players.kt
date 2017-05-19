@@ -1,7 +1,9 @@
 package de.take_weiland.mods.commons.util
 
+import de.take_weiland.mods.commons.internal.SevenCommons
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.player.EntityPlayerMP
+import net.minecraft.world.World
 import net.minecraft.world.WorldServer
 
 /**
@@ -12,8 +14,14 @@ inline fun EntityPlayer.requireServer(): EntityPlayerMP = if (isServer) this as 
 @Deprecated(message = "This call does nothing, player is already serverside.", replaceWith = ReplaceWith("this"))
 inline fun EntityPlayerMP.requireServer(): EntityPlayerMP = this
 
+val allPlayers get(): List<EntityPlayerMP> = serverInstance.playerList.players
+
+val clientPlayer get(): EntityPlayer = SevenCommons.proxy.clientPlayer
+
 fun WorldServer.getTrackingPlayers(chunkX: Int, chunkZ: Int): List<EntityPlayerMP> {
-    playerChunkMap.getEntry(chunkX, chunkZ).run {
-        return if (this == null) emptyList() else players
-    }
+    return playerChunkMap.getEntry(chunkX, chunkZ)?.players ?: emptyList()
 }
+
+val World.players get(): List<EntityPlayer> = playerEntities
+@Suppress("UNCHECKED_CAST")
+val WorldServer.players get(): List<EntityPlayerMP> = playerEntities as List<EntityPlayerMP>

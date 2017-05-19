@@ -164,7 +164,7 @@ public final class ASMHooks {
             for (int i = 0, len = invs.size(); i < len; i++) {
                 IInventory inv = invs.get(i);
                 if (inv.hasCustomName()) {
-                    new PacketInventoryName(container.windowId, i, inv.getDisplayName()).sendTo(player);
+//                    SimplePacketKt.sendTo(new PacketInventoryName(container.windowId, i, inv.getDisplayName()), player);
                 }
                 if (inv instanceof PlayerAwareInventory) {
                     ((PlayerAwareInventory) inv)._sc$onPlayerViewContainer(container, i, player);

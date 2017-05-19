@@ -154,10 +154,10 @@ public final class SevenCommons extends DummyModContainer {
                 .register(3, PacketRequestWorldInfo::new, PacketWorldInfo::new, PacketRequestWorldInfo::handle)
                 .build();
 
-        NetworkImpl.register(SyncEvent.CHANNEL, (channel, data, side, manager) -> {
+        NetworkImpl.register(SyncEvent.Companion.getCHANNEL(), (channel, data, side, manager) -> {
             if (side == Network.CLIENT) {
                 Scheduler.client().execute(() -> {
-                    SyncEvent.handle(data);
+                    SyncEvent.Companion.handle(data);
                     return false;
                 });
             }

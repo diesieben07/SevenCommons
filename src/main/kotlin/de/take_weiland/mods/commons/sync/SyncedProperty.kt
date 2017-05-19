@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.sync
 
 import de.take_weiland.mods.commons.net.MCDataOutput
-import de.take_weiland.mods.commons.util.fastComputeIfAbsent
 import net.minecraft.entity.Entity
 import net.minecraft.inventory.Container
 import net.minecraft.tileentity.TileEntity
@@ -104,8 +103,8 @@ abstract class SyncedPropertyMutable<C, T>(@JvmField var value: T, obj: C) : Syn
 
 }
 
-internal val dirtyProperties = HashMap<Any?, ChangedPropertyStore<Any?>>()
+internal val dirtyProperties = ChangedPropertyStore()
 
 fun <CONTAINER, DATA> SyncedProperty<CONTAINER,DATA>.markDirty(obj: CONTAINER, data: DATA) {
-    dirtyProperties.fastComputeIfAbsent(obj) { ChangedPropertyStore() }.put(id, data)
+    dirtyProperties[obj, id] = data
 }

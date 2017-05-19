@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.sync_olds;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.net.SimplePacket;
+import de.take_weiland.mods.commons.net.simple.SimplePacket;
 import de.take_weiland.mods.commons.sync.NetworkLinkedObjectType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
@@ -34,6 +34,6 @@ public final class NetworkLinkedObjectTileEntity implements NetworkLinkedObjectT
 
     @Override
     public void sendToTracking(TileEntity object, SimplePacket packet) {
-        packet.sendToAllTracking(object);
+//        SimplePacketKt.sendToTracking(packet, object);
     }
 }

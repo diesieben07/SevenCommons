@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent
 @SubscribeEvent
 fun worldTick(event: TickEvent.WorldTickEvent) {
     if (event.world.isServer) {
-        dirtyProperties[event.world]?.takeUnless { it.isEmpty() }?.run {
+        dirtyProperties.forEach { (key, value) ->
 
         }
     }

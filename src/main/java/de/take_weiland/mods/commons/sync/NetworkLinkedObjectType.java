@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.sync;
 
 import de.take_weiland.mods.commons.net.MCDataInput;
 import de.take_weiland.mods.commons.net.MCDataOutput;
-import de.take_weiland.mods.commons.net.SimplePacket;
+import de.take_weiland.mods.commons.net.simple.SimplePacket;
 import net.minecraft.entity.player.EntityPlayer;
 
 /**

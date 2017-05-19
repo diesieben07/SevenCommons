@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal.transformers.net;
 
 import com.google.common.collect.ObjectArrays;
-import de.take_weiland.mods.commons.net.SimplePacket;
+import de.take_weiland.mods.commons.net.simple.SimplePacket;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;

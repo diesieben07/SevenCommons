@@ -95,12 +95,12 @@ public class WorldViewImpl implements WorldView {
             world = new ClientOtherDimWorld(getMinecraft().getConnection(), settings, dimension, getMinecraft().world.getDifficulty(), getMinecraft().world.profiler);
 
             WorldClient wc = world;
-            new PacketRequestWorldInfo(dimension).sendToServer()
-                    .thenAcceptAsync(packet -> {
-                        wc.setSpawnPoint(packet.spawn);
-                        wc.setSkylightSubtracted(packet.skylightSubtracted);
-                        wc.setWorldTime(packet.worldTime);
-                    }, Scheduler.client());
+//            new PacketRequestWorldInfo(dimension).sendToServer()
+//                    .thenAcceptAsync(packet -> {
+//                        wc.setSpawnPoint(packet.spawn);
+//                        wc.setSkylightSubtracted(packet.skylightSubtracted);
+//                        wc.setWorldTime(packet.worldTime);
+//                    }, Scheduler.client());
             setWorld(dimension, world);
         }
         return world;

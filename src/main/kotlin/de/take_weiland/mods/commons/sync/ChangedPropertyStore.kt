@@ -3,36 +3,38 @@ package de.take_weiland.mods.commons.sync
 /**
  * @author diesieben07
  */
+typealias ChangedPropertyStore = HashMap<Any?, Array<Any?>>
 
-internal class ChangedPropertyStore<V>  {
-
-    var map = arrayOfNulls<Any?>(5)
-
-    fun get(key: Int): V? {
-        return if (key < map.size) unmaskNull(map[key]) else null
+operator fun ChangedPropertyStore.set(obj: Any?, key: Int, value: Any?) {
+    var arr = get(obj)
+    if (arr == null) {
+        arr = arrayOfNulls(key + 1)
+        put(obj, arr)
+    } else if (arr.size <= key) {
+        arr = arr.copyOf(key + 1)
+        put(obj, arr)
     }
 
-    fun put(key: Int, value: V) {
-        if (key >= map.size) {
-            map = map.copyOf(key + 1)
-        }
-        map[key] = maskNull(value)
-    }
-
-    inline fun forEach(body: (Int, V) -> Unit) {
-        map.let { map ->
-            for (i in map.indices) {
-                val v = map[i]
-                if (v != null) body(i, unmaskNull(v))
-            }
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    inline fun unmaskNull(value: Any?): V = (if (value === Companion) null else value) as V
-    private fun maskNull(value: V): Any? = value ?: Companion
-
-    companion object
-
+    arr[key] = value
 }
 
+operator fun ChangedPropertyStore.get(obj: Any?, key: Int): Any? {
+    val arr = get(obj)
+    return if (arr != null && arr.size > key) {
+        arr[key]
+    } else {
+        null
+    }
+}
+
+inline fun Any?.isMaskedNull(): Boolean = this === MaskedNull
+
+inline fun Any?.maskNull(): Any {
+    return this ?: MaskedNull
+}
+
+inline fun Any?.unmaskNull(): Any? {
+    return if (this === MaskedNull) null else this
+}
+
+object MaskedNull

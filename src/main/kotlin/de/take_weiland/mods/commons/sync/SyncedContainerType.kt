@@ -1,9 +1,8 @@
 package de.take_weiland.mods.commons.sync
 
 import de.take_weiland.mods.commons.internal.SevenCommons
-import de.take_weiland.mods.commons.net.SimplePacket
+import de.take_weiland.mods.commons.net.simple.SimplePacket
 import de.take_weiland.mods.commons.util.fastForEach
-import de.take_weiland.mods.commons.util.listeners
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.inventory.Container
@@ -30,7 +29,7 @@ object TileEntitySyncedType : SyncedContainerType<TileEntity> {
     override fun getWorld(obj: TileEntity): World = obj.world
 
     override fun sendPacket(obj: TileEntity, packet: SimplePacket) {
-        packet.sendToAllTracking(obj)
+//        packet.sendToTracking(obj)
     }
 }
 
@@ -39,7 +38,7 @@ object EntitySyncedType : SyncedContainerType<Entity> {
     override fun getWorld(obj: Entity): World = obj.world
 
     override fun sendPacket(obj: Entity, packet: SimplePacket) {
-        packet.sendToAllTracking(obj)
+//        packet.sendToTracking(obj)
     }
 }
 
@@ -53,6 +52,6 @@ object ContainerSyncedType : SyncedContainerType<Container> {
     }
 
     override fun sendPacket(obj: Container, packet: SimplePacket) {
-        packet.sendToViewing(obj)
+//        packet.sendToTracking(obj)
     }
 }

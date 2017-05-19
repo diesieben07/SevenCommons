@@ -1,5 +1,7 @@
 package de.take_weiland.mods.commons.net;
 
+import de.take_weiland.mods.commons.net.simple.SimplePacket;
+
 /**
  * @author diesieben07
  */

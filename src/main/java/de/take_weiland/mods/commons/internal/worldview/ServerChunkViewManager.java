@@ -2,7 +2,7 @@ package de.take_weiland.mods.commons.internal.worldview;
 
 import de.take_weiland.mods.commons.internal.EntityPlayerMPProxy;
 import de.take_weiland.mods.commons.internal.WorldProxy;
-import de.take_weiland.mods.commons.net.SimplePacket;
+import de.take_weiland.mods.commons.net.simple.SimplePacket;
 import de.take_weiland.mods.commons.util.Players;
 import de.take_weiland.mods.commons.worldview.DimensionalChunk;
 import gnu.trove.impl.hash.TPrimitiveHash;
@@ -45,7 +45,7 @@ public class ServerChunkViewManager {
             // if world and chunk are loaded and player is not already tracking through vanilla mechanics we need to tell them about the chunk
             if (world != null && ((WorldProxy) world)._sc$chunkExists(chunkX, chunkZ) && !Players.getTrackingChunk(world, chunkX, chunkZ).contains(player)) {
                 Chunk chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
-                chunkPacket(chunk, INIT_NEW).sendTo(player);
+//                SimplePacketKt.sendTo(chunkPacket(chunk, INIT_NEW), player);
             }
         }
     }
@@ -58,7 +58,7 @@ public class ServerChunkViewManager {
             WorldServer world = DimensionManager.getWorld(dimension);
             // only send unload packet if world is loaded and player is not still tracking
             if (world != null && !Players.getTrackingChunk(world, chunkX, chunkZ).contains(player)) {
-                SimplePacket.Companion.of(chunkUnloadPacket(world.getChunkFromChunkCoords(chunkX, chunkZ))).sendTo(player);
+//                SimplePacket.Companion.of(chunkUnloadPacket(world.getChunkFromChunkCoords(chunkX, chunkZ))).sendTo(player);
             }
         }
     }
@@ -84,7 +84,7 @@ public class ServerChunkViewManager {
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
             Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
             if (it.hasNext()) {
-                chunkPacket(chunk, INIT_NEW).sendTo(it);
+//                chunkPacket(chunk, INIT_NEW).sendTo(it);
             }
         }
     }
@@ -94,7 +94,7 @@ public class ServerChunkViewManager {
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
             Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
             if (it.hasNext()) {
-                SimplePacket.Companion.of(chunkUnloadPacket(chunk)).sendTo(it);
+//                SimplePacket.Companion.of(chunkUnloadPacket(chunk)).sendTo(it);
             }
         }
     }
@@ -151,7 +151,7 @@ public class ServerChunkViewManager {
                 // this is ok since those other players are ok to see the packet without dimension ID set as they are guaranteed to be in the correct dimension
                 ((VanillaPacketProxy) packet)._sc$setTargetDimension(dimension);
             }
-            SimplePacket.Companion.of(packet).sendTo(player);
+//            SimplePacket.Companion.of(packet).sendTo(player);
         }
     }
 
@@ -193,7 +193,7 @@ public class ServerChunkViewManager {
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
             Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
             if (it.hasNext()) {
-                chunkPacket(chunk, yLayers).sendTo(it);
+//                chunkPacket(chunk, yLayers).sendTo(it);
             }
         }
     }
@@ -204,7 +204,7 @@ public class ServerChunkViewManager {
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
             Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
             if (it.hasNext()) {
-                blockChangePacket(chunk.getWorld(), x + (chunk.xPosition << 4), y, z + (chunk.zPosition << 4)).sendTo(it);
+//                blockChangePacket(chunk.getWorld(), x + (chunk.xPosition << 4), y, z + (chunk.zPosition << 4)).sendTo(it);
             }
         }
     }
@@ -223,7 +223,7 @@ public class ServerChunkViewManager {
 //        } else {
 //            return SimplePacket.of(packet);
 //        }
-        return manager -> {};
+        return null;
     }
 
     private static Packet chunkUnloadPacket(Chunk chunk) {
@@ -243,7 +243,7 @@ public class ServerChunkViewManager {
 //        ((VanillaPacketProxy) packet)._sc$setTargetDimension(chunk.worldObj.provider.dimensionId);
 //
 //        return createConcatPacket(SimplePacket.of(packet), tileEntityPackets(chunk, yLayers));
-        return manager -> {};
+        return null;
     }
 
     private static final SimplePacket[] emptyArr = new SimplePacket[0];
@@ -272,19 +272,11 @@ public class ServerChunkViewManager {
     }
 
     private static SimplePacket createConcatPacket(SimplePacket a, SimplePacket[] b) {
-        return manager -> {
-            a.sendTo(manager);
-            for (SimplePacket simplePacket : b) {
-                simplePacket.sendTo(manager);
-            }
-        };
+        return null;
     }
 
     private static SimplePacket createConcatPacket(SimplePacket a, SimplePacket b) {
-        return manager -> {
-            a.sendTo(manager);
-            b.sendTo(manager);
-        };
+        return null;
     }
 
     // remove player from given chunk
