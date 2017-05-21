@@ -22,7 +22,7 @@ abstract class SyncedProperty<CONTAINER, DATA>(private val obj: CONTAINER) {
         this.containerType = containerType
     }
 
-    abstract fun write(out: MCDataOutput): DATA
+    abstract fun write(out: MCDataOutput, data: DATA)
 
 }
 
@@ -58,7 +58,7 @@ class SyncedPropertyImmutable<C, T>(obj: C, @JvmField var value: T) : SyncedProp
         }
     }
 
-    override fun write(out: MCDataOutput): T {
+    override fun write(out: MCDataOutput, data: T) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
@@ -74,7 +74,7 @@ class SyncedPropertyIdentityImmutable<C, T>(obj: C, @JvmField var value: T) : Sy
         }
     }
 
-    override fun write(out: MCDataOutput): T {
+    override fun write(out: MCDataOutput, data: T) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

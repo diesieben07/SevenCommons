@@ -9,6 +9,7 @@ import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 import de.take_weiland.mods.commons.util.EnumUtils;
 import io.netty.buffer.ByteBuf;
+import kotlin.StandardKt;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
@@ -726,6 +727,10 @@ public final class MCDataInputImpl extends InputStream implements MCDataInput, S
     @Override
     public <T_DATA, T_VAL, T_COM> void apply(TypeSyncer<T_VAL, T_COM, T_DATA> syncer, Object obj, PropertyAccess<T_VAL> property, Object cObj, PropertyAccess<T_COM> companion) {
         syncer.apply(this, obj, property, cObj, companion);
+    }
+
+    public static void main(String[] args) {
+        StandardKt.
     }
 
 }
