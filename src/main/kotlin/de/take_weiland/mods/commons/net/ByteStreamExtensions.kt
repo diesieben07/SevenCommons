@@ -2,16 +2,22 @@ package de.take_weiland.mods.commons.net
 
 import com.google.common.base.Utf8
 import de.take_weiland.mods.commons.internal.sharedEnumConstants
+import de.take_weiland.mods.commons.util.registryName
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.ByteBufInputStream
 import io.netty.buffer.ByteBufOutputStream
 import io.netty.buffer.Unpooled
 import io.netty.util.CharsetUtil
 import net.minecraft.block.Block
-import net.minecraft.block.properties.IProperty
 import net.minecraft.block.state.IBlockState
+import net.minecraft.item.Item
+import net.minecraft.util.ResourceLocation
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
+import net.minecraft.util.registry.RegistryNamespacedDefaultedByKey
+import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry
+import net.minecraftforge.fml.common.registry.GameRegistry
+import net.minecraftforge.fml.common.registry.IForgeRegistryEntry
 import java.io.DataInput
 import java.io.DataOutput
 import java.io.InputStream
@@ -348,23 +354,58 @@ fun ByteBuf.writeBlockState(value: IBlockState) {
     writeShort(Block.getStateId(value))
 }
 
-fun ByteBuf.readRichBlockState(): IBlockState {
+fun ByteBuf.readFullBlockState(): IBlockState {
     var state = readBlockState()
     val stateContainer = state.block.blockState
     do {
         val propertyName = readNullable { readString() } ?: return state
-        val prop = stateContainer.getProperty(propertyName)
-        prop?.let { state = readPropertyValue(state, it as IProperty<Any>) }
+        val propertyValue = readString()
+        // has to be in Java, Kotlin type system does not seem to support this :(
+        state = FullBlockStateCodec.parseAndApply(propertyName, propertyValue, state, stateContainer)
     } while (true)
 }
 
-private fun <T : Comparable<T>> ByteBuf.readPropertyValue(state: IBlockState, property: IProperty<T>): IBlockState {
-    return property.parseValue(readString()).orNull()?.let { state.withProperty(property, it) } ?: state
+fun ByteBuf.writeFullBlockState(value: IBlockState) {
+    val block = value.block
+    val meta = block.getMetaFromState(value)
+
+    writeShort(Block.getIdFromBlock(block) or (meta shl 12))
+
+    val stateFromMeta = block.getStateFromMeta(meta)
+    FullBlockStateCodec.writeNeededProperties(this, value, stateFromMeta)
 }
 
-@Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
-private inline fun <E : Enum<E>> ByteBuf.readEnumUnchecked(valueClass : Class<*>): E {
-    return readEnum(valueClass as Class<E>)
+fun <V : IForgeRegistryEntry<V>> ByteBuf.writeRegistryEntry(entry: V) {
+    val registry = requireNotNull(GameRegistry.findRegistry(entry.registryType)) { "Unknown registry type ${entry.registryType} for entry $entry" }
+    val id = (registry as FMLControlledNamespacedRegistry<V>).getId(entry)
+    require(id != -1) { "Registry entry ${entry.registryName} ($entry) is not registered" }
+    writeVarInt(id)
+}
+
+inline fun <reified V : IForgeRegistryEntry<V>> ByteBuf.readRegistryEntry(): V = readRegistryEntry(V::class.java)
+
+fun <V : IForgeRegistryEntry<V>> ByteBuf.readRegistryEntry(cls: Class<V>): V {
+    val registry = GameRegistry.findRegistry(cls)
+    require(registry != null) { "Unknown registry type ${cls.name}" }
+    val id = readVarInt()
+    val thing = (registry as FMLControlledNamespacedRegistry<V>).getRaw(id)
+    return checkNotNull(thing) { "Received invalid id $id for registry ${registry.registryName}" }
+}
+
+fun ByteBuf.readBlock(): Block {
+    return Block.REGISTRY.getObjectById(readShort().toInt())
+}
+
+fun ByteBuf.writeBlock(block: Block) {
+    writeShort(Block.REGISTRY.getIDForObject(block))
+}
+
+fun ByteBuf.readItem(): Item {
+    return (Item.REGISTRY as RegistryNamespacedDefaultedByKey<ResourceLocation, Item>).getObjectById(readShort().toInt())
+}
+
+fun ByteBuf.writeItem(item: Item) {
+    writeShort(Item.REGISTRY.getIDForObject(item))
 }
 
 fun main(args: Array<String>) {

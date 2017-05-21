@@ -36,7 +36,7 @@ group = "de.take_weiland.mods.commons" // http://maven.apache.org/guides/mini/gu
 archivesBaseName = "SevenCommons"
 
 minecraft {
-    version = "1.11.2-13.20.0.2228"
+    version = "1.11.2-13.20.0.2303"
     runDir = "run"
 
     replaceIn "internal/SevenCommons.java"
