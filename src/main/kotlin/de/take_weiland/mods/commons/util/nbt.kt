@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.util
 
 import net.minecraft.nbt.NBTBase
+import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagList
 import net.minecraft.nbt.NBTTagString
 
@@ -34,4 +35,8 @@ operator fun NBTTagList.iterator(): MutableIterator<NBTBase> = tagList.iterator(
 
 operator fun NBTTagList.plusAssign(value: String) {
     appendTag(NBTTagString(value))
+}
+
+inline fun NBTTagCompound.forEach(crossinline action: (String, NBTBase) -> Unit) {
+    tagMap.forEach({ k, v -> action(k, v) })
 }

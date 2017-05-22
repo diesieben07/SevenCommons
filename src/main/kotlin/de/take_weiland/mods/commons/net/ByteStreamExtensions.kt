@@ -11,6 +11,9 @@ import io.netty.util.CharsetUtil
 import net.minecraft.block.Block
 import net.minecraft.block.state.IBlockState
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.nbt.NBTBase
+import net.minecraft.nbt.NBTSizeTracker
 import net.minecraft.util.ResourceLocation
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
@@ -361,7 +364,7 @@ fun ByteBuf.readFullBlockState(): IBlockState {
         val propertyName = readNullable { readString() } ?: return state
         val propertyValue = readString()
         // has to be in Java, Kotlin type system does not seem to support this :(
-        state = FullBlockStateCodec.parseAndApply(propertyName, propertyValue, state, stateContainer)
+        state = ByteStreamExtensionsJavaCode.parseAndApply(propertyName, propertyValue, state, stateContainer)
     } while (true)
 }
 
@@ -372,7 +375,7 @@ fun ByteBuf.writeFullBlockState(value: IBlockState) {
     writeShort(Block.getIdFromBlock(block) or (meta shl 12))
 
     val stateFromMeta = block.getStateFromMeta(meta)
-    FullBlockStateCodec.writeNeededProperties(this, value, stateFromMeta)
+    ByteStreamExtensionsJavaCode.writeNeededProperties(this, value, stateFromMeta)
 }
 
 fun <V : IForgeRegistryEntry<V>> ByteBuf.writeRegistryEntry(entry: V) {
@@ -406,6 +409,42 @@ fun ByteBuf.readItem(): Item {
 
 fun ByteBuf.writeItem(item: Item) {
     writeShort(Item.REGISTRY.getIDForObject(item))
+}
+
+fun ByteBuf.writeItemStack(stack: ItemStack) {
+    val item = stack.item
+    writeItem(item)
+    writeShort(stack.metadata)
+    writeByte(stack.count)
+    if (item.isDamageable || item.shareTag) {
+        val nbt = item.getNBTShareTag(stack)
+        if (nbt != null) {
+            writeByte(1)
+            nbt.write(asDataOutput())
+        } else {
+            writeByte(0)
+        }
+    } else {
+        writeByte(0)
+    }
+}
+
+fun ByteBuf.writeNbt(nbt: NBTBase) {
+    writeByte(nbt.id)
+    nbt.write(asDataOutput())
+}
+
+fun ByteBuf.readNbt(): NBTBase {
+    val typeId = readByte()
+    val nbt = checkNotNull(NBTBase.createNewByType(typeId)) { "Received invalid NBT type ID $typeId."}
+    nbt.read(asDataInput(), 0, NBTSizeTracker.INFINITE)
+    return nbt
+}
+
+@JvmName("readNbtTyped")
+inline fun <reified T : NBTBase> ByteBuf.readNbt(): T {
+    val nbt = readNbt()
+    return nbt as? T ?: throw IllegalStateException("Received unexpected NBT type ${nbt.javaClass.simpleName}, expected ${T::class.java.simpleName}.")
 }
 
 fun main(args: Array<String>) {
