@@ -9,7 +9,6 @@ import de.take_weiland.mods.commons.reflect.PropertyAccess;
 import de.take_weiland.mods.commons.sync.TypeSyncer;
 import de.take_weiland.mods.commons.util.EnumUtils;
 import io.netty.buffer.ByteBuf;
-import kotlin.StandardKt;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
@@ -730,7 +729,7 @@ public final class MCDataInputImpl extends InputStream implements MCDataInput, S
     }
 
     public static void main(String[] args) {
-        StandardKt.
+//        StandardKt.
     }
 
 }

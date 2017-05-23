@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.net
 
 import com.google.common.base.Utf8
 import de.take_weiland.mods.commons.internal.sharedEnumConstants
+import de.take_weiland.mods.commons.util.nbt
 import de.take_weiland.mods.commons.util.registryName
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.ByteBufInputStream
@@ -14,6 +15,7 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTBase
 import net.minecraft.nbt.NBTSizeTracker
+import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.util.ResourceLocation
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
@@ -411,27 +413,27 @@ fun ByteBuf.writeItem(item: Item) {
     writeShort(Item.REGISTRY.getIDForObject(item))
 }
 
+fun ByteBuf.readItemStack(): ItemStack {
+    val item = readItem()
+    val meta = readShort().toInt()
+    val countNbtFlag = readByte().toInt()
+    return ItemStack(item, countNbtFlag and 0x7F, meta).apply {
+        if ((countNbtFlag and 0x80) != 0) {
+            nbt = NBTTagCompound().apply { read(asDataInput(), 0, NBTSizeTracker.INFINITE) }
+        }
+    }
+}
+
 fun ByteBuf.writeItemStack(stack: ItemStack) {
     val item = stack.item
     writeItem(item)
     writeShort(stack.metadata)
-    writeByte(stack.count)
-    if (item.isDamageable || item.shareTag) {
-        val nbt = item.getNBTShareTag(stack)
-        if (nbt != null) {
-            writeByte(1)
-            nbt.write(asDataOutput())
-        } else {
-            writeByte(0)
-        }
-    } else {
-        writeByte(0)
-    }
-}
 
-fun ByteBuf.writeNbt(nbt: NBTBase) {
-    writeByte(nbt.id)
-    nbt.write(asDataOutput())
+    val nbt = if (item.isDamageable || item.shareTag) item.getNBTShareTag(stack) else null
+    val countNbtFlag = (stack.count and 0x7F) or if (nbt != null) 0x80 else 0
+    writeByte(countNbtFlag)
+
+    nbt?.write(asDataOutput())
 }
 
 fun ByteBuf.readNbt(): NBTBase {
@@ -439,6 +441,11 @@ fun ByteBuf.readNbt(): NBTBase {
     val nbt = checkNotNull(NBTBase.createNewByType(typeId)) { "Received invalid NBT type ID $typeId."}
     nbt.read(asDataInput(), 0, NBTSizeTracker.INFINITE)
     return nbt
+}
+
+fun ByteBuf.writeNbt(nbt: NBTBase) {
+    writeByte(nbt.id)
+    nbt.write(asDataOutput())
 }
 
 @JvmName("readNbtTyped")
