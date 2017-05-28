@@ -8,7 +8,7 @@ package de.take_weiland.mods.commons.net.simple
  *
  * @author diesieben07
  */
-interface MultiResultBuilder<out MultiResult, out Builder : MultiResultBuilder<MultiResult, Builder>> : Sendable<Unit, MultiResult, Builder> {
+interface MultiResultBuilder<out Result, out MultiResult, out Builder : MultiResultBuilder<Result, MultiResult, Builder>> : Sendable<Result, MultiResult, Builder> {
 
     /**
      * Finish this multi-send operation.

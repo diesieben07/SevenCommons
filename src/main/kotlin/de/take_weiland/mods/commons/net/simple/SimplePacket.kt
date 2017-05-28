@@ -8,7 +8,7 @@ import java.util.concurrent.CompletionStage
  *
  * @author diesieben07
  */
-interface SimplePacket : Sendable<Unit, Unit, SimplePacket>, MultiResultBuilder<Unit, SimplePacket> {
+interface SimplePacket : Sendable<Unit, Unit, SimplePacket>, MultiResultBuilder<Unit, Unit, SimplePacket> {
 
     override fun newMultiResultBuilder(): SimplePacket {
         return this
@@ -36,7 +36,6 @@ interface SimplePacket : Sendable<Unit, Unit, SimplePacket>, MultiResultBuilder<
                 override fun sendTo(manager: NetworkManager) {
                     this@WithResponse.sendTo(manager)
                 }
-
             }
         }
 

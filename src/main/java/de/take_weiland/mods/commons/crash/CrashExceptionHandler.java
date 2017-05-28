@@ -27,7 +27,7 @@ enum CrashExceptionHandler implements Thread.UncaughtExceptionHandler {
             cat.addCrashSection("Thread Status", t.getState());
             re = new ReportedException(cr);
         }
-        Scheduler.forSide(Sides.environment()).execute(new Scheduler.Task() {
+        Scheduler.Companion.forSide(Sides.environment()).execute(new Scheduler.Task() {
             @Override
             public boolean execute() {
                 throw re;

@@ -10,9 +10,9 @@ import java.util.function.BiConsumer;
  */
 public class AcceptingCompletableFuture<T> extends CompletableFuture<T> implements BiConsumer<T, Throwable> {
     @Override
-    public void accept(T t, Throwable x) {
+    public void accept(T r, Throwable x) {
         if (x == null) {
-            complete(t);
+            complete(r);
         } else {
             completeExceptionally(x);
         }

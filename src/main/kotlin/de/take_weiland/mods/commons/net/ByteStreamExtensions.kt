@@ -443,15 +443,15 @@ fun ByteBuf.readNbt(): NBTBase {
     return nbt
 }
 
-fun ByteBuf.writeNbt(nbt: NBTBase) {
-    writeByte(nbt.id)
-    nbt.write(asDataOutput())
-}
-
 @JvmName("readNbtTyped")
 inline fun <reified T : NBTBase> ByteBuf.readNbt(): T {
     val nbt = readNbt()
     return nbt as? T ?: throw IllegalStateException("Received unexpected NBT type ${nbt.javaClass.simpleName}, expected ${T::class.java.simpleName}.")
+}
+
+fun ByteBuf.writeNbt(nbt: NBTBase) {
+    writeByte(nbt.id)
+    nbt.write(asDataOutput())
 }
 
 fun main(args: Array<String>) {

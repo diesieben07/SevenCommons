@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.util
 
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 
 /**
@@ -21,6 +22,10 @@ inline fun <reified T> Iterable<*>.forEachOfType(body: (T) -> Unit) {
 inline fun <K, V : Any> MutableMap<K, V>.fastComputeIfAbsent(key: K, crossinline supplier: (K) -> V): V {
     return get(key) ?: computeIfAbsent(key, { key -> supplier(key) })
 }
+
+inline fun <T : Any> Iterable<T>.toImmutableList(): List<T> = ImmutableList.copyOf(this)
+inline fun <T : Any> Sequence<T>.toImmutableList(): List<T> = ImmutableList.copyOf(this.asIterable())
+inline fun <K : Any, V : Any> Map<out K, V>.toImmutable(): Map<K, V> = ImmutableMap.copyOf(this)
 
 inline fun <T> immutableSetOf() = ImmutableSet.of<T>()
 inline fun <T> immutableSetOf(e1: T) = ImmutableSet.of(e1)

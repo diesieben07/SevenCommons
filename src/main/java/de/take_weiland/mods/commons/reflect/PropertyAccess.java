@@ -108,8 +108,8 @@ public interface PropertyAccess<T> extends Function<Object, T>, BiConsumer<Objec
     }
 
     @Override
-    default void accept(Object o, T t) {
-        set(o, t);
+    default void accept(Object o, T r) {
+        set(o, r);
     }
 
     @Override

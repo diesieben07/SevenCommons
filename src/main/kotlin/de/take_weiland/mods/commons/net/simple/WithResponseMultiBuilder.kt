@@ -10,12 +10,14 @@ import java.util.concurrent.CompletionStage
  *
  * @author diesieben07
  */
-class WithResponseMultiBuilder<out Result>(private val packet: SimplePacket.WithResponse<Result>) : MultiResultBuilder<Map<NetworkManager, CompletionStage<out Result>>, WithResponseMultiBuilder<Result>> {
+class WithResponseMultiBuilder<out Result>(private val packet: SimplePacket.WithResponse<Result>) : MultiResultBuilder<CompletionStage<out Result>, Map<NetworkManager, CompletionStage<out Result>>, WithResponseMultiBuilder<Result>> {
 
     private val map = HashMap<NetworkManager, CompletionStage<out Result>>()
 
-    override fun sendTo(manager: NetworkManager) {
-        map.put(manager, packet.sendTo(manager))
+    override fun sendTo(manager: NetworkManager): CompletionStage<out Result> {
+        val result = packet.sendTo(manager)
+        map.put(manager, result)
+        return result
     }
 
     override fun finish(): Map<NetworkManager, CompletionStage<out Result>> {

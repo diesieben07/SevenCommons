@@ -12,7 +12,7 @@ import net.minecraft.network.NetworkManager
  * @author diesieben07
  */
 @SendableDsl
-interface Sendable<out Result, out MultiResult, out Builder : MultiResultBuilder<MultiResult, Builder>> {
+interface Sendable<out Result, out MultiResult, out Builder : MultiResultBuilder<Result, MultiResult, Builder>> {
 
     /**
      * Send this to the given `NetworkManager`.
@@ -38,7 +38,7 @@ interface Sendable<out Result, out MultiResult, out Builder : MultiResultBuilder
  * }
  * ```
  */
-inline fun <Result, MultiResult, Builder : MultiResultBuilder<MultiResult, Builder>> Sendable<Result, MultiResult, Builder>.sendMulti(body: Builder.() -> Unit): MultiResult {
+inline fun <Result, MultiResult, Builder : MultiResultBuilder<Result, MultiResult, Builder>> Sendable<Result, MultiResult, Builder>.sendMulti(body: Builder.() -> Unit): MultiResult {
     return newMultiResultBuilder().also(body).finish()
 }
 
