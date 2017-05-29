@@ -156,7 +156,7 @@ public final class SevenCommons extends DummyModContainer {
 
         NetworkImpl.register(SyncEvent.Companion.getCHANNEL(), (channel, data, side, manager) -> {
             if (side == Network.CLIENT) {
-                Scheduler.Companion.client().execute(() -> {
+                Scheduler.Companion.getClient().execute(() -> {
                     SyncEvent.Companion.handle(data);
                     return false;
                 });

@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.net
 
 import de.take_weiland.mods.commons.internal.net.*
 import de.take_weiland.mods.commons.net.simple.SimplePacket
-import de.take_weiland.mods.commons.util.Scheduler
 import net.minecraft.network.NetworkManager
 import java.util.concurrent.CompletionStage
 import kotlin.experimental.and
@@ -50,10 +49,9 @@ interface Packet : SimplePacket, PacketBase, InternalPacket, PacketWithData {
         } else {
 
             val handler = data.handler as PacketHandler<*>
-            NetworkImpl.getScheduler(side).execute(Scheduler.Task {
+            NetworkImpl.getScheduler(side).run {
                 (handler as PacketHandler<Packet>).handle(this, NetworkImpl.getPlayer(side, manager))
-                false
-            })
+            }
         }
     }
 

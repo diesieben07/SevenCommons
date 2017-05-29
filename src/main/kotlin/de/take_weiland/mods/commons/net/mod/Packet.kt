@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.net.mod
 
 import de.take_weiland.mods.commons.net.simple.SimplePacket
+import de.take_weiland.mods.commons.util.thread
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.NetworkManager
@@ -17,7 +18,17 @@ interface BasePacket {
 
 }
 
-interface Packet : BasePacket, SimplePacket {
+interface AsyncReceive {
+
+    fun receiveAsync(player: EntityPlayer)
+
+}
+
+interface Packet : BasePacket, SimplePacket, AsyncReceive {
+
+    override fun receiveAsync(player: EntityPlayer) {
+        player.thread.run { receive(player) }
+    }
 
     fun receive(player: EntityPlayer)
 
@@ -25,7 +36,13 @@ interface Packet : BasePacket, SimplePacket {
         manager.channel().writeAndFlush(this)
     }
 
-    interface Async : Packet
+    interface Async : Packet {
+
+        override fun receiveAsync(player: EntityPlayer) {
+            receive(player)
+        }
+
+    }
 
     interface WithResponse<out R : Response> : BasePacket, SimplePacket.WithResponse<R> {
 
@@ -35,14 +52,29 @@ interface Packet : BasePacket, SimplePacket {
             return WrappedPacketWithResponse(this).also { manager.channel().writeAndFlush(it) }
         }
 
-        interface Async<out R : Response> : BasePacket, SimplePacket.WithResponse<R> {
-
-            fun receive(player: EntityPlayer) : CompletionStage<out R>
+        interface Async<out R : Response> : WithResponse<R> {
 
             override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
-                return WrappedPacketWithResponse
+                return WrappedPacketWithResponseAsync(this).also { manager.channel().writeAndFlush(it) }
             }
 
+        }
+
+    }
+
+    interface WithAsyncResponse<out R : Response> : BasePacket, SimplePacket.WithResponse<R> {
+
+        fun receive(player: EntityPlayer) : CompletionStage<out R>
+
+        override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
+            return WrappedPacketWithAsyncResponse(this).also { manager.channel().writeAndFlush(it) }
+        }
+
+        interface Async<out R : Response> : WithAsyncResponse<R> {
+
+            override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
+                return WrappedPacketWithAsyncResponseAsync(this).also { manager.channel().writeAndFlush(it) }
+            }
         }
 
     }

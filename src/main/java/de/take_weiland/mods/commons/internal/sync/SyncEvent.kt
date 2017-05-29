@@ -101,7 +101,7 @@ abstract class SyncEvent : SyncCompanion.ChangeIterator, InternalPacket, Schedul
     }
 
     override fun `_sc$internal$receiveDirect`(side: Byte, manager: NetworkManager) {
-        Scheduler.client().execute(this)
+        Scheduler.client.execute(this)
     }
 
     override fun execute(): Boolean {

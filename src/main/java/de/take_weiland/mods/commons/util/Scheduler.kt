@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions.checkArgument
 import com.google.common.primitives.Ints
 import de.take_weiland.mods.commons.internal.SchedulerBase
 import de.take_weiland.mods.commons.internal.SevenCommons
+import net.minecraft.entity.Entity
+import net.minecraft.world.World
 import net.minecraftforge.fml.common.FMLCommonHandler
 import net.minecraftforge.fml.relauncher.Side
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -41,12 +43,33 @@ class Scheduler private constructor() : SchedulerBase() {
     }
 
     override fun execute(task: Runnable) {
-        execute {
-            task.run()
-            false
-        }
+        run(task::run)
     }
 
+    /**
+     * Execute the given task once.
+     */
+    inline fun run(crossinline task: () -> Unit) {
+        execute(object : Task {
+            override fun execute(): Boolean {
+                task()
+                return false
+            }
+        })
+    }
+
+    /**
+     * Execute the given task until it returns false.
+     */
+    inline fun runUntil(crossinline task: () -> Boolean) {
+        execute(object : Task {
+            override fun execute(): Boolean = task()
+        })
+    }
+
+    /**
+     * Execute the given task until it returns false.
+     */
     fun execute(task: Task) {
         inputQueue.offer(task)
     }
@@ -61,7 +84,7 @@ class Scheduler private constructor() : SchedulerBase() {
     override fun tick() {
         var activeTasks = this.activeTasks
         var size = this.size
-        run {
+        kotlin.run {
             // handle existing tasks
 
             // move through task list and simultaneously execute tasks and compact the list
@@ -90,7 +113,7 @@ class Scheduler private constructor() : SchedulerBase() {
                 size = free
             }
         }
-        run {
+        kotlin.run {
             // handle new tasks
             while (true) {
                 inputQueue.poll()?.let { task ->
@@ -194,28 +217,42 @@ class Scheduler private constructor() : SchedulerBase() {
 
     companion object {
 
+        /**
+         * The Scheduler that executes tasks on the server thread.
+         */
+        @JvmField
         val server: Scheduler = Scheduler()
-        val client: Scheduler? = if (FMLCommonHandler.instance().side.isClient) {
+
+        @JvmStatic
+        private val client0: Scheduler? = if (FMLCommonHandler.instance().side.isClient) {
             Scheduler()
         } else {
             null
         }
 
         /**
+         * The Scheduler that executes
+         */
+        @get:JvmStatic
+        val client: Scheduler
+            get() = requireNotNull(client0) { "Client Scheduler not available on the server." }
+
+        /**
          *
-         * Return [.client] if `side` is `Side.CLIENT`, [.server] otherwise.
+         * Return [client] if `side` is `Side.CLIENT`, [server] otherwise.
 
          * @param side the side
          * *
          * @return a Scheduler for the side
          */
+        @JvmStatic
         fun forSide(side: Side): Scheduler {
-            return if (side == Side.CLIENT) requireNotNull(client) { "Cannot get client scheduler on the server" } else server
+            return if (side == Side.CLIENT) client else server
         }
     }
 }
 
-private inline fun Scheduler.Task.checkedExecute(): Boolean {
+private fun Scheduler.Task.checkedExecute(): Boolean {
     try {
         return execute()
     } catch (x: Throwable) {
@@ -224,20 +261,22 @@ private inline fun Scheduler.Task.checkedExecute(): Boolean {
     }
 }
 
+/**
+ * Execute the given task on the main server thread.
+ */
 inline fun serverThread(crossinline task: () -> Unit) {
-    onScheduler(Scheduler.server, task)
+    Scheduler.server.run(task)
 }
 
+/**
+ * Execute the given task on the main client thread.
+ */
 inline fun clientThread(crossinline task: () -> Unit) {
-    onScheduler(Scheduler.client!!, task)
+    Scheduler.client.run(task)
 }
 
-@PublishedApi
-internal inline fun onScheduler(scheduler: Scheduler, crossinline task: () -> Unit) {
-    scheduler.execute(object : Scheduler.Task {
-        override fun execute(): Boolean {
-            task()
-            return false
-        }
-    })
-}
+val Entity.thread: Scheduler
+    inline get() = world.thread
+
+val World.thread: Scheduler
+    inline get() = if (isRemote) Scheduler.client else Scheduler.server

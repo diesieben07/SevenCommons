@@ -3,7 +3,6 @@ package de.take_weiland.mods.commons.internal.net
 import de.take_weiland.mods.commons.net.MCDataOutput
 import de.take_weiland.mods.commons.net.Network
 import de.take_weiland.mods.commons.net.Packet
-import de.take_weiland.mods.commons.util.Scheduler
 import net.minecraft.network.NetworkManager
 import kotlin.experimental.and
 
@@ -18,10 +17,9 @@ class WrappedPacketWithResponse<P : Packet.WithResponse<R>, R : Packet.Response>
 
         val handler = data.handler as PacketHandlerBaseWithResponse<P, R>
         if (data.characteristics and Network.ASYNC == 0.toByte()) {
-            NetworkImpl.getScheduler(side).execute(Scheduler.Task {
+            NetworkImpl.getScheduler(side).run {
                 handler.`_sc$internal$handleInto`(original, future, side, manager)
-                false
-            })
+            }
         } else {
             handler.`_sc$internal$handleInto`(original, future, side, manager)
         }

@@ -79,13 +79,13 @@ public final class FMLEventHandler {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public void clientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
-        Scheduler.Companion.client().execute(WorldViewImpl::cleanup);
+        Scheduler.Companion.getClient().execute(WorldViewImpl::cleanup);
     }
 
     @SubscribeEvent
     public void serverTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
-            ((SchedulerBase) Scheduler.Companion.getServer()).tick();
+            ((SchedulerBase) Scheduler.server).tick();
         }
     }
 
