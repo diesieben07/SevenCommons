@@ -1,55 +1,37 @@
+@file:Mod.EventBusSubscriber(modid = "sctestmod")
+
 package de.take_weiland.mods.commons.net
 
-import kotlin.reflect.KMutableProperty0
-import kotlin.reflect.KProperty
-import kotlin.reflect.KProperty0
+import de.take_weiland.mods.commons.net.packet.NamePacket
+import de.take_weiland.mods.commons.net.packet.raw.PacketChannel
+import de.take_weiland.mods.commons.net.packet.readNamePacket
+import de.take_weiland.mods.commons.net.simple.sendTo
+import de.take_weiland.mods.commons.util.isServer
+import io.netty.buffer.ByteBuf
+import net.minecraftforge.event.entity.player.PlayerInteractEvent
+import net.minecraftforge.fml.common.Mod
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 
 /**
  * @author diesieben07
  */
-inline fun test(provider: () -> (() -> String)): String {
-    return provider()()
-}
+@Mod(modid = "sctestmod")
+class TestMod {
 
-class Bla {
-
-    companion object {
-
-        @JvmStatic
-        fun String.foo(): String {
-            return this.toLowerCase()
+    @Mod.EventHandler
+    fun preInit(event: FMLPreInitializationEvent) {
+        PacketChannel("SevenCommons") {
+            +ByteBuf::readNamePacket
         }
-
     }
 
 }
-class A {
 
-    var a: Int = 5
 
-}
-
-class B(a: A) {
-
-    var b: Int by a::a
-
-}
-
-operator fun <T> KProperty0<T>.getValue(obj: Any, property: KProperty<*>): T {
-    return get()
-}
-
-operator fun <T> KMutableProperty0<T>.setValue(obj: Any, property: KProperty<*>, value: T): Unit {
-    set(value)
-}
-
-val s: String = "hello"
-
-fun main(args: Array<String>) {
-    var a = 3
-    val b = 3
-    when (++a > b) {
-        true -> println("yes")
-        false -> println("false")
+@SubscribeEvent
+fun rightClick(event: PlayerInteractEvent.RightClickBlock) {
+    if (event.world.isServer) {
+        NamePacket("hello").sendTo(event.entityPlayer)
     }
 }

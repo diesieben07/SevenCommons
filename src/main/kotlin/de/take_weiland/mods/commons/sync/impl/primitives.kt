@@ -17,16 +17,22 @@
 //inline fun <R : Any> R.sync(initialValue: Float) = FloatSyncedProperty(initialValue, this)
 //inline fun <R : Any> R.sync(initialValue: Double) = DoubleSyncedProperty(initialValue, this)
 //
-//class BooleanSyncedProperty<R : Any>(@JvmField var value: Boolean, obj: R) : SyncedProperty<R>(obj) {
+//class BooleanSyncedProperty<R : Any>(@JvmField var value: Boolean, obj: R) : SyncedProperty<R, Boolean, Boolean>(obj) {
 //
 //    inline operator fun getValue(self: R, property: KProperty<*>): Boolean = value
 //
 //    inline operator fun setValue(self: R, property: KProperty<*>, newValue: Boolean) {
 //        if (value != newValue) {
 //            value = newValue
-//            markDirty()
+//            markDirty(self, newValue)
 //        }
 //    }
+//
+//    override fun read(data: Boolean) {
+//        property.set(obj, data)
+//    }
+//
+//
 //}
 //
 //class ByteSyncedProperty<R : Any>(@JvmField var value: Byte, obj: R) : SyncedProperty<R>(obj) {

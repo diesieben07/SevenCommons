@@ -53,7 +53,7 @@ public final class ForgeEventHandler {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     @SideOnly(Side.CLIENT)
     public void onScreenInit(GuiScreenEvent.InitGuiEvent.Pre event) {
-        ((GuiScreenProxy) event.getGui())._sc$textFields().clear();
+//        ((GuiScreenProxy) event.getGui())._sc$textFields().clear();
     }
 
     @SubscribeEvent
@@ -69,10 +69,11 @@ public final class ForgeEventHandler {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public void onScreenDraw(GuiScreenEvent.DrawScreenEvent.Post event) {
-        List<GuiTextField> fields = ((GuiScreenProxy) event.getGui())._sc$textFields();
-        for (int i = 0, fieldsSize = fields.size(); i < fieldsSize; i++) {
-            fields.get(i).drawTextBox();
-        }
+        // TODO
+//        List<GuiTextField> fields = ((GuiScreenProxy) event.getGui())._sc$textFields();
+//        for (int i = 0, fieldsSize = fields.size(); i < fieldsSize; i++) {
+//            fields.get(i).drawTextBox();
+//        }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -88,12 +89,13 @@ public final class ForgeEventHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void startTracking(PlayerEvent.StartTracking event) {
-        SyncCompanion companion = ((SyncedObjectProxy) event.getTarget())._sc$getCompanion();
-        EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
-
-        if (companion != null) {
-            companion.check(event.getTarget(), 0, player);
-        }
+        // TODO
+//        SyncCompanion companion = ((SyncedObjectProxy) event.getTarget())._sc$getCompanion();
+//        EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
+//
+//        if (companion != null) {
+//            companion.check(event.getTarget(), 0, player);
+//        }
     }
 
     @SubscribeEvent

@@ -24,7 +24,7 @@ inline fun <K, V : Any> MutableMap<K, V>.fastComputeIfAbsent(key: K, crossinline
 }
 
 inline fun <T : Any> Iterable<T>.toImmutableList(): List<T> = ImmutableList.copyOf(this)
-inline fun <T : Any> Sequence<T>.toImmutableList(): List<T> = ImmutableList.copyOf(this.asIterable())
+inline fun <T : Any> Sequence<T>.toImmutableList(): List<T> = ImmutableList.copyOf(this.iterator())
 inline fun <K : Any, V : Any> Map<out K, V>.toImmutable(): Map<K, V> = ImmutableMap.copyOf(this)
 
 inline fun <T> immutableSetOf() = ImmutableSet.of<T>()

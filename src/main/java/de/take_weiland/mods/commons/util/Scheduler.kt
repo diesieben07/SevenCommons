@@ -275,8 +275,14 @@ inline fun clientThread(crossinline task: () -> Unit) {
     Scheduler.client.run(task)
 }
 
+/**
+ * The `Scheduler` corresponding to the side of this `Entity`.
+ */
 val Entity.thread: Scheduler
     inline get() = world.thread
 
+/**
+ * The `Scheduler` corresponding to the side of this `World`.
+ */
 val World.thread: Scheduler
     inline get() = if (isRemote) Scheduler.client else Scheduler.server

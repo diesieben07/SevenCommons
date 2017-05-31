@@ -9,7 +9,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-@IFMLLoadingPlugin.MCVersion("1.7.10")
+@IFMLLoadingPlugin.MCVersion("1.11.2")
 @IFMLLoadingPlugin.SortingIndex(1001) // get after deobfuscation
 @IFMLLoadingPlugin.TransformerExclusions({
         "de.take_weiland.mods.commons.asm.",

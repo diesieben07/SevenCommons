@@ -1,6 +1,8 @@
-package de.take_weiland.mods.commons.net.mod
+package de.take_weiland.mods.commons.net.packet
 
+import de.take_weiland.mods.commons.net.packet.raw.ReceivingNettyAwarePacket
 import de.take_weiland.mods.commons.util.thread
+import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
 import java.util.concurrent.CompletableFuture
 import java.util.function.BiConsumer
@@ -8,7 +10,14 @@ import java.util.function.BiConsumer
 /**
  * @author diesieben07
  */
-internal open class WrappedPacketWithResponseAsync<R : Packet.Response, out P : Packet.WithResponse<R>>(val packet: P) : CompletableFuture<R>(), AsyncReceive {
+internal open class WrappedPacketWithResponseAsync<R : Packet.Response, out P : Packet.WithResponse<R>>(val packet: P) : CompletableFuture<R>(), ReceivingNettyAwarePacket {
+
+    override val channel: String
+        get() = packet.data.channel
+
+    override fun writeForRemote(buf: ByteBuf) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     override fun receiveAsync(player: EntityPlayer) {
         try {
@@ -28,7 +37,14 @@ internal class WrappedPacketWithResponse<R : Packet.Response, out P : Packet.Wit
     }
 }
 
-internal open class WrappedPacketWithAsyncResponseAsync<R : Packet.Response, out P : Packet.WithAsyncResponse<R>>(val packet: P) : CompletableFuture<R>(), BiConsumer<R?, Throwable?>, AsyncReceive {
+internal open class WrappedPacketWithAsyncResponseAsync<R : Packet.Response, out P : Packet.WithAsyncResponse<R>>(val packet: P) : CompletableFuture<R>(), BiConsumer<R?, Throwable?>, ReceivingNettyAwarePacket {
+
+    override val channel: String
+        get() = packet.data.channel
+
+    override fun writeForRemote(buf: ByteBuf) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     override fun receiveAsync(player: EntityPlayer) {
         try {

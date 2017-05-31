@@ -7,6 +7,7 @@ import de.take_weiland.mods.commons.internal.worldview.ServerChunkViewManager;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -19,27 +20,28 @@ import static net.minecraft.client.Minecraft.getMinecraft;
 /**
  * @author diesieben07
  */
+@Mod.EventBusSubscriber(modid = SevenCommons.MOD_ID)
 public final class FMLEventHandler {
 
     public static final String INV_IN_USE_KEY = "_sc$iteminv$inUse";
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void renderTick(TickEvent.RenderTickEvent event) {
+    public static void renderTick(TickEvent.RenderTickEvent event) {
         if (getMinecraft().world != null && event.phase == TickEvent.Phase.END) {
             WorldViewImpl.renderAll();
         }
     }
 
     @SubscribeEvent
-    public void onConfigChange(ConfigChangedEvent.OnConfigChangedEvent event) {
+    public static void onConfigChange(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (event.getModID().equals(SevenCommons.MOD_ID)) {
             SevenCommons.syncConfig(false);
         }
     }
 
     @SubscribeEvent
-    public void playerTick(TickEvent.PlayerTickEvent event) {
+    public static void playerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase == TickEvent.Phase.START && event.side.isServer() && event.player.openContainer == event.player.inventoryContainer) {
             ItemStack current = event.player.inventory.getCurrentItem();
             if (current != null && current.getTagCompound() != null) {
@@ -49,41 +51,41 @@ public final class FMLEventHandler {
     }
 
     @SubscribeEvent
-    public void worldTick(TickEvent.WorldTickEvent event) {
+    public static void worldTick(TickEvent.WorldTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             ChunkUpdateTracker.postWorldTick(event.world);
         }
     }
 
     @SubscribeEvent
-    public void playerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+    public static void playerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         UsernameCache.onPlayerLogin(event.player);
     }
 
     @SubscribeEvent
-    public void playerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+    public static void playerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         ServerChunkViewManager.onPlayerLogout(event.player);
     }
-
-    @SubscribeEvent
-    public void serverConnectionFromClient(FMLNetworkEvent.ServerConnectionFromClientEvent event) {
-        NetworkImpl.handleServersideConnection(event);
-    }
+//
+//    @SubscribeEvent
+//    public static void serverConnectionFromClient(FMLNetworkEvent.ServerConnectionFromClientEvent event) {
+//        NetworkImpl.handleServersideConnection(event);
+//    }
+//
+//    @SubscribeEvent
+//    @SideOnly(Side.CLIENT)
+//    public static void clientConnectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+//        NetworkImpl.handleClientConnectedToServer(event);
+//    }
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void clientConnectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        NetworkImpl.handleClientConnectedToServer(event);
-    }
-
-    @SubscribeEvent
-    @SideOnly(Side.CLIENT)
-    public void clientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+    public static void clientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
         Scheduler.Companion.getClient().execute(WorldViewImpl::cleanup);
     }
 
     @SubscribeEvent
-    public void serverTick(TickEvent.ServerTickEvent event) {
+    public static void serverTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             ((SchedulerBase) Scheduler.server).tick();
         }
@@ -91,7 +93,7 @@ public final class FMLEventHandler {
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void clientTick(TickEvent.ClientTickEvent event) {
+    public static void clientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             ((SchedulerBase) Scheduler.Companion.getClient()).tick();
             WorldViewImpl.tick();

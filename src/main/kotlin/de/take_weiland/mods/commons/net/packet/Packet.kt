@@ -1,5 +1,6 @@
-package de.take_weiland.mods.commons.net.mod
+package de.take_weiland.mods.commons.net.packet
 
+import de.take_weiland.mods.commons.net.packet.raw.ReceivingNettyAwarePacket
 import de.take_weiland.mods.commons.net.simple.SimplePacket
 import de.take_weiland.mods.commons.util.thread
 import io.netty.buffer.ByteBuf
@@ -10,31 +11,40 @@ import java.util.concurrent.CompletionStage
 /**
  * @author diesieben07
  */
+const val defaultExpectedPacketSize = 32
+
 interface BasePacket {
 
-    fun ByteBuf.writeTo()
+    fun ByteBuf.write()
 
-    val expectedSize: Int get() = 32
-
-}
-
-interface AsyncReceive {
-
-    fun receiveAsync(player: EntityPlayer)
+    val expectedSize: Int get() = defaultExpectedPacketSize
 
 }
 
-interface Packet : BasePacket, SimplePacket, AsyncReceive {
+interface ReceivablePacket : BasePacket, ReceivingNettyAwarePacket {
+
+
+
+}
+
+interface Packet : ReceivablePacket, SimplePacket {
+
+    fun receive(player: EntityPlayer)
+
+    override fun writeForRemote(buf: ByteBuf) {
+        buf.writeByte(data.packetId)
+        buf.write()
+    }
+
+    override val expectedSize: Int
+        get() = super.expectedSize
 
     override fun receiveAsync(player: EntityPlayer) {
         player.thread.run { receive(player) }
     }
 
-    fun receive(player: EntityPlayer)
-
-    override fun sendTo(manager: NetworkManager) {
-        manager.channel().writeAndFlush(this)
-    }
+    override val channel: String
+        get() = data.channel
 
     interface Async : Packet {
 
@@ -57,7 +67,6 @@ interface Packet : BasePacket, SimplePacket, AsyncReceive {
             override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
                 return WrappedPacketWithResponseAsync(this).also { manager.channel().writeAndFlush(it) }
             }
-
         }
 
     }

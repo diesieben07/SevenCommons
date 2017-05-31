@@ -23,6 +23,8 @@ public class ChunkUpdateTracker {
     private static final int MASK_CHUNK_LAYERS  = 0xFFFF;
 
     public static void postWorldTick(World world) {
+        if (true) return;
+
         long[] changedChunks = ((WorldServerProxy) world)._sc$getChangedChunks();
         if (changedChunks != null) {
             for (int i = 1, limit = (int) changedChunks[0]; i < limit; i++) {

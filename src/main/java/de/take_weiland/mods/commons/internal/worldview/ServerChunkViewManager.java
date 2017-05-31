@@ -67,6 +67,9 @@ public class ServerChunkViewManager {
 
     // remove players logging out from the lists of chunks they are viewing
     public static void onPlayerLogout(EntityPlayer player) {
+        // TODO
+        if (true) return;
+
         TLongHashSet chunks = ((EntityPlayerMPProxy) player)._sc$viewedChunks();
         byte[] states = chunks._states;
         long[] set = chunks._set;
