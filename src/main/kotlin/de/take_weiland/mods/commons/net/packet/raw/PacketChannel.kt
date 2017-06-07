@@ -11,12 +11,12 @@ interface PacketChannel {
 
     val channel: String
 
-    fun receive(buf: ByteBuf, player: EntityPlayer)
+    fun receive(buf: ByteBuf, player: EntityPlayer?)
 
     companion object {
 
-        inline operator fun invoke(channelName: String, body: DefaultPacketChannelBuilder.() -> Unit) {
-            builder(channelName).body()
+        inline operator fun invoke(channelName: String, body: DefaultPacketChannelBuilder.() -> Unit): PacketChannel {
+            return builder(channelName).also(body).build()
         }
 
         fun builder(channelName: String): DefaultPacketChannelBuilder {

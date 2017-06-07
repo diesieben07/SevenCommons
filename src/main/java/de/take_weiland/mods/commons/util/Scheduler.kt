@@ -82,57 +82,55 @@ class Scheduler private constructor() : SchedulerBase() {
     private var size = 0 // actual number of tasks in the above array, used for adding to the end
 
     override fun tick() {
-        var activeTasks = this.activeTasks
-        var size = this.size
-        kotlin.run {
-            // handle existing tasks
+        // handle existing tasks
 
-            // move through task list and simultaneously execute tasks and compact the list
-            // by moving non-removed tasks to the new end of the list if needed
-            var idx = 0
-            var free = -1
-            while (idx < size) {
-                val t = activeTasks[idx]
-                if (!t!!.checkedExecute()) {
-                    // task needs to be removed, null out it's slot
-                    activeTasks[idx] = null
-                    if (free == -1) {
-                        // if this is the first task to be removed, set it as the compaction target
-                        free = idx
-                    }
-                } else if (free != -1) {
-                    // we had to remove one or more tasks earlier in the list,
-                    // move this one there to keep the list continuous
-                    activeTasks[free++] = t
-                    activeTasks[idx] = null
+        // move through task list and simultaneously execute tasks and compact the list
+        // by moving non-removed tasks to the new end of the list if needed
+        var idx = 0
+        var free = -1
+        while (idx < size) {
+            val t = activeTasks[idx]
+            if (!t!!.checkedExecute()) {
+                // task needs to be removed, null out it's slot
+                activeTasks[idx] = null
+                if (free == -1) {
+                    // if this is the first task to be removed, set it as the compaction target
+                    free = idx
                 }
-                idx++
+            } else if (free != -1) {
+                // we had to remove one or more tasks earlier in the list,
+                // move this one there to keep the list continuous
+                activeTasks[free++] = t
+                activeTasks[idx] = null
             }
-            // we had to remove at least one task, adjust the size
-            if (free != -1) {
-                size = free
-            }
+            idx++
         }
-        kotlin.run {
-            // handle new tasks
-            while (true) {
-                inputQueue.poll()?.let { task ->
-                    // only add task to the active list if it wants to keep executing
-                    // avoids unnecessary work for one-off tasks
-                    if (task.checkedExecute()) {
-                        if (size == activeTasks.size) {
-                            // we are full
-                            val newArr = arrayOfNulls<Task>(size shl 1)
-                            System.arraycopy(activeTasks, 0, newArr, 0, size)
-                            this.activeTasks = newArr
-                            activeTasks = this.activeTasks
-                        }
-                        activeTasks[size++] = task
+        // we had to remove at least one task, adjust the size
+        if (free != -1) {
+            size = free
+        }
+
+
+        // handle new tasks
+        while (true) {
+            val task = inputQueue.poll()
+            if (task == null) {
+                break
+            } else {
+                // only add task to the active list if it wants to keep executing
+                // avoids unnecessary work for one-off tasks
+                if (task.checkedExecute()) {
+                    if (size == activeTasks.size) {
+                        // we are full
+                        val newArr = arrayOfNulls<Task>(size shl 1)
+                        System.arraycopy(activeTasks, 0, newArr, 0, size)
+                        this.activeTasks = newArr
+                        activeTasks = this.activeTasks
                     }
-                } ?: break
+                    activeTasks[size++] = task
+                }
             }
         }
-        this.size = size
     }
 
     interface Task {
@@ -220,10 +218,8 @@ class Scheduler private constructor() : SchedulerBase() {
         /**
          * The Scheduler that executes tasks on the server thread.
          */
-        @JvmField
         val server: Scheduler = Scheduler()
 
-        @JvmStatic
         private val client0: Scheduler? = if (FMLCommonHandler.instance().side.isClient) {
             Scheduler()
         } else {
@@ -233,7 +229,6 @@ class Scheduler private constructor() : SchedulerBase() {
         /**
          * The Scheduler that executes
          */
-        @get:JvmStatic
         val client: Scheduler
             get() = requireNotNull(client0) { "Client Scheduler not available on the server." }
 
@@ -245,14 +240,13 @@ class Scheduler private constructor() : SchedulerBase() {
          * *
          * @return a Scheduler for the side
          */
-        @JvmStatic
         fun forSide(side: Side): Scheduler {
             return if (side == Side.CLIENT) client else server
         }
     }
 }
 
-private fun Scheduler.Task.checkedExecute(): Boolean {
+internal fun Scheduler.Task.checkedExecute(): Boolean {
     try {
         return execute()
     } catch (x: Throwable) {

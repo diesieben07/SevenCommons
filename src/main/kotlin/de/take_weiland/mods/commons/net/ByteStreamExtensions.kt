@@ -162,7 +162,7 @@ fun ByteBuf.readVarInt(): Int {
         val read = readByte().toInt()
         result = result or ((read and 0x7f) shl shift)
 
-        if (read and 0x80 == 0x80) {
+        if (read and 0x80 != 0x80) {
             return result
         }
         shift += 7
@@ -330,7 +330,18 @@ fun <E : Enum<E>> ByteBuf.writeEnumSet(cls: Class<E>, value: EnumSet<E>) {
     }
 }
 
+inline fun <T> ByteBuf.writeList(list: Collection<T>, writer: ByteBuf.(T) -> Unit) {
+    writeVarInt(list.size)
+    list.forEach { writer(it) }
+}
 
+inline fun <K, V> ByteBuf.writeMap(map: Map<out K, V>, keyWriter: ByteBuf.(K) -> Unit, valueWriter: ByteBuf.(V) -> Unit) {
+    writeVarInt(map.size)
+    for ((k, v) in map) {
+        keyWriter(k)
+        valueWriter(v)
+    }
+}
 
 // Minecraft types
 

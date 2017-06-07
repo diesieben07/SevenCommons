@@ -1,8 +1,7 @@
 package de.take_weiland.mods.commons.net.packet
 
-import de.take_weiland.mods.commons.net.packet.raw.ReceivingNettyAwarePacket
+import de.take_weiland.mods.commons.net.packet.raw.CustomPayloadPacket
 import de.take_weiland.mods.commons.net.simple.SimplePacket
-import de.take_weiland.mods.commons.util.thread
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.NetworkManager
@@ -13,6 +12,12 @@ import java.util.concurrent.CompletionStage
  */
 const val defaultExpectedPacketSize = 32
 
+interface PacketReader<out T : BasePacket> {
+
+    fun ByteBuf.read(): T
+
+}
+
 interface BasePacket {
 
     fun ByteBuf.write()
@@ -21,34 +26,38 @@ interface BasePacket {
 
 }
 
-interface ReceivablePacket : BasePacket, ReceivingNettyAwarePacket {
+interface BasePacketNoResponse : BasePacket, CustomPayloadPacket, SimplePacket {
 
-
-
-}
-
-interface Packet : ReceivablePacket, SimplePacket {
-
-    fun receive(player: EntityPlayer)
-
-    override fun writeForRemote(buf: ByteBuf) {
-        buf.writeByte(data.packetId)
+    @Deprecated(message = "internal", level = DeprecationLevel.HIDDEN)
+    override fun writePayload(buf: ByteBuf) {
+        buf.writePacketId(data.packetId)
         buf.write()
     }
 
-    override val expectedSize: Int
-        get() = super.expectedSize
+    @Deprecated(message = "internal", level = DeprecationLevel.HIDDEN)
+    override val expectedPayloadSize: Int
+        get() = expectedSize + 1
 
-    override fun receiveAsync(player: EntityPlayer) {
-        player.thread.run { receive(player) }
-    }
-
+    @Deprecated(message = "internal", level = DeprecationLevel.HIDDEN)
     override val channel: String
         get() = data.channel
 
-    interface Async : Packet {
+    override fun sendTo(manager: NetworkManager) {
+        manager.channel().writeAndFlush(this)
+    }
 
-        override fun receiveAsync(player: EntityPlayer) {
+}
+
+interface Packet : BasePacketNoResponse {
+
+    fun receive(player: EntityPlayer)
+
+    interface Async : BasePacketNoResponse {
+
+        fun receive(player: EntityPlayer?)
+
+        @Deprecated(message = "internal", level = DeprecationLevel.HIDDEN)
+        override fun receiveAsync(player: EntityPlayer?) {
             receive(player)
         }
 
@@ -56,38 +65,49 @@ interface Packet : ReceivablePacket, SimplePacket {
 
     interface WithResponse<out R : Response> : BasePacket, SimplePacket.WithResponse<R> {
 
-        fun receive(player: EntityPlayer) : R
+        fun receive(player: EntityPlayer): R
 
-        override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
-            return WrappedPacketWithResponse(this).also { manager.channel().writeAndFlush(it) }
-        }
+        interface Async<out R : Response> : BasePacket, SimplePacket.WithResponse<R> {
 
-        interface Async<out R : Response> : WithResponse<R> {
+            fun receive(player: EntityPlayer?): R
 
             override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
-                return WrappedPacketWithResponseAsync(this).also { manager.channel().writeAndFlush(it) }
+                return WrappedPacketWithResponseAsync(this, manager).also { manager.channel().writeAndFlush(it) }
             }
+        }
+
+        override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
+            return WrappedPacketWithResponse(this, manager).also { manager.channel().writeAndFlush(it) }
         }
 
     }
 
     interface WithAsyncResponse<out R : Response> : BasePacket, SimplePacket.WithResponse<R> {
 
-        fun receive(player: EntityPlayer) : CompletionStage<out R>
+        fun receive(player: EntityPlayer): CompletionStage<out R>
 
         override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
-            return WrappedPacketWithAsyncResponse(this).also { manager.channel().writeAndFlush(it) }
+            return WrappedPacketWithAsyncResponse(this, manager).also { manager.channel().writeAndFlush(it) }
         }
 
-        interface Async<out R : Response> : WithAsyncResponse<R> {
+        interface Async<out R : Response> : BasePacket, SimplePacket.WithResponse<R> {
+
+            fun receive(player: EntityPlayer?): CompletionStage<out R>
 
             override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
-                return WrappedPacketWithAsyncResponseAsync(this).also { manager.channel().writeAndFlush(it) }
+                return WrappedPacketWithAsyncResponseAsync(this, manager).also { manager.channel().writeAndFlush(it) }
             }
         }
 
     }
 
     interface Response : BasePacket
+
+    // Internal Methods
+
+    @Deprecated(message = "internal", level = DeprecationLevel.HIDDEN)
+    override fun receiveAsync(player: EntityPlayer?) {
+        player.runPacketOnThread(this::receive)
+    }
 
 }

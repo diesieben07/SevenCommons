@@ -154,7 +154,7 @@ public final class NetworkImpl {
     }
 
     public static Scheduler getScheduler(byte side) {
-        return side == Network.CLIENT ? Scheduler.Companion.getClient() : Scheduler.server;
+        return side == Network.CLIENT ? Scheduler.Companion.getClient() : Scheduler.Companion.getServer();
     }
 
     public static void validateSide(byte characteristics, byte side, Object packet) {

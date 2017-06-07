@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.internal;
 
 import de.take_weiland.mods.commons.internal.client.worldview.WorldViewImpl;
-import de.take_weiland.mods.commons.internal.net.NetworkImpl;
 import de.take_weiland.mods.commons.internal.worldview.ChunkUpdateTracker;
 import de.take_weiland.mods.commons.internal.worldview.ServerChunkViewManager;
 import de.take_weiland.mods.commons.util.Scheduler;
@@ -87,7 +86,7 @@ public final class FMLEventHandler {
     @SubscribeEvent
     public static void serverTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
-            ((SchedulerBase) Scheduler.server).tick();
+            ((SchedulerBase) Scheduler.Companion.getServer()).tick();
         }
     }
 

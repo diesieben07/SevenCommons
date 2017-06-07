@@ -1,29 +1,20 @@
 package de.take_weiland.mods.commons.internal;
 
 import de.take_weiland.mods.commons.client.ScreenWithParent;
-import de.take_weiland.mods.commons.internal.sync_olds.SyncCompanion;
-import de.take_weiland.mods.commons.internal.sync_olds.SyncedObjectProxy;
-import de.take_weiland.mods.commons.internal.worldview.ServerChunkViewManager;
-import gnu.trove.set.hash.TLongHashSet;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.ChunkEvent;
-import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -31,7 +22,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
-import java.util.List;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 
@@ -98,37 +88,37 @@ public final class ForgeEventHandler {
 //        }
     }
 
-    @SubscribeEvent
-    public void onPlayerClone(PlayerEvent.Clone event) {
-        TLongHashSet old = ((EntityPlayerMPProxy) event.getOriginal())._sc$viewedChunks();
-        ((EntityPlayerMPProxy) event.getEntityPlayer())._sc$viewedChunks().addAll(old);
-    }
-
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void startTrackingChunk(ChunkWatchEvent.Watch event) {
-        Chunk chunk = event.getPlayer().world.getChunkFromChunkCoords(event.getChunk().chunkXPos, event.getChunk().chunkZPos);
-        //noinspection unchecked
-        chunk.getTileEntityMap().forEach((key, te) -> {
-            SyncCompanion companion = ((SyncedObjectProxy) te)._sc$getCompanion();
-            if (companion != null) {
-                companion.check(te, 0, event.getPlayer());
-            }
-        });
-    }
-
-    @SubscribeEvent
-    public void onChunkLoad(ChunkEvent.Load event) {
-        if (!event.getWorld().isRemote) {
-            ServerChunkViewManager.onChunkLoad(event.getChunk());
-        }
-    }
-
-    @SubscribeEvent
-    public void onChunkUnload(ChunkEvent.Unload event) {
-        if (!event.getWorld().isRemote) {
-            ServerChunkViewManager.onChunkUnload(event.getChunk());
-        }
-    }
+//    @SubscribeEvent
+//    public void onPlayerClone(PlayerEvent.Clone event) {
+//        TLongHashSet old = ((EntityPlayerMPProxy) event.getOriginal())._sc$viewedChunks();
+//        ((EntityPlayerMPProxy) event.getEntityPlayer())._sc$viewedChunks().addAll(old);
+//    }
+//
+//    @SubscribeEvent(priority = EventPriority.HIGHEST)
+//    public void startTrackingChunk(ChunkWatchEvent.Watch event) {
+//        Chunk chunk = event.getPlayer().world.getChunkFromChunkCoords(event.getChunk().chunkXPos, event.getChunk().chunkZPos);
+//        //noinspection unchecked
+//        chunk.getTileEntityMap().forEach((key, te) -> {
+//            SyncCompanion companion = ((SyncedObjectProxy) te)._sc$getCompanion();
+//            if (companion != null) {
+//                companion.check(te, 0, event.getPlayer());
+//            }
+//        });
+//    }
+//
+//    @SubscribeEvent
+//    public void onChunkLoad(ChunkEvent.Load event) {
+//        if (!event.getWorld().isRemote) {
+//            ServerChunkViewManager.onChunkLoad(event.getChunk());
+//        }
+//    }
+//
+//    @SubscribeEvent
+//    public void onChunkUnload(ChunkEvent.Unload event) {
+//        if (!event.getWorld().isRemote) {
+//            ServerChunkViewManager.onChunkUnload(event.getChunk());
+//        }
+//    }
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
