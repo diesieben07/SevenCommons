@@ -1,41 +1,32 @@
-//package de.take_weiland.mods.commons.sync
-//
-//import de.take_weiland.mods.commons.net.packet.raw.NettyAsyncReceive
-//import de.take_weiland.mods.commons.net.simple.SimplePacket
-//import de.take_weiland.mods.commons.util.thread
-//import io.netty.buffer.ByteBuf
-//import net.minecraft.entity.Entity
-//import net.minecraft.entity.player.EntityPlayer
-//import net.minecraft.inventory.Container
-//import net.minecraft.network.NetworkManager
-//import net.minecraft.tileentity.TileEntity
-//import net.minecraft.world.World
-//import kotlin.reflect.KMutableProperty1
-//import kotlin.reflect.KProperty
-//
-//abstract class SyncedProperty<CONTAINER, TYPE, in DATA>(protected val obj: CONTAINER) {
-//
-//    var id: Int = -1
-//
-//    internal lateinit var property: KMutableProperty1<in CONTAINER, TYPE>
-//    internal lateinit var containerType: SyncedContainerType<CONTAINER>
-//
-//    internal val world: World
-//        get() = containerType.getWorld(obj)
-//
-//    fun init(property: KProperty<*>, containerType: SyncedContainerType<CONTAINER>) {
-//        if (property !is KMutableProperty1<*, *>) throw UnsupportedOperationException("Only mutable member properties in a class can be synced.")
-//        this.id = property.getPropertyId()
-//        this.containerType = containerType
-//        @Suppress("UNCHECKED_CAST")
-//        this.property = property as KMutableProperty1<in CONTAINER, TYPE>
-//    }
-//
+package de.take_weiland.mods.commons.sync
+
+import net.minecraft.world.World
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty
+
+abstract class SyncedProperty<CONTAINER, TYPE>(protected val obj: CONTAINER) {
+
+    var id: Int = -1
+
+    internal lateinit var property: KMutableProperty1<in CONTAINER, TYPE>
+    internal lateinit var containerType: SyncedContainerType<CONTAINER, *>
+
+    internal val world: World
+        get() = containerType.getWorld(obj)
+
+    fun init(property: KProperty<*>, containerType: SyncedContainerType<CONTAINER, *>) {
+        if (property !is KMutableProperty1<*, *>) throw UnsupportedOperationException("Only mutable member properties in a class can be synced.")
+        this.id = property.getPropertyId()
+        this.containerType = containerType
+        @Suppress("UNCHECKED_CAST")
+        this.property = property as KMutableProperty1<in CONTAINER, TYPE>
+    }
+
 //    abstract fun write(out: ByteBuf, data: DATA)
 //    abstract fun read(input: ByteBuf)
 //    abstract fun read(data: DATA)
-//
-//}
+
+}
 //
 //operator fun <C : TileEntity, P : SyncedProperty<C, *, *>> P.provideDelegate(obj: C, property: KProperty<*>): P {
 //    init(property, TileEntitySyncedType)
@@ -51,13 +42,13 @@
 //    init(property, ContainerSyncedType)
 //    return this
 //}
-//
-//interface TickingProperty {
-//
-//    fun update()
-//
-//}
-//
+
+interface TickingProperty {
+
+    fun update()
+
+}
+
 //abstract class SyncEvent<TYPE, DATA>(val newValue: TYPE) : SimplePacket, NettyAsyncReceive {
 //
 //    abstract fun write(buf: ByteBuf)
@@ -132,8 +123,8 @@
 ////    protected abstract fun TYPE.copy(): TYPE
 ////
 ////}
-//
-//internal val dirtyProperties = ChangedPropertyStore()
+
+internal val dirtyProperties = ChangedPropertyStore()
 //
 //fun <CONTAINER, TYPE, DATA> SyncedProperty<CONTAINER, TYPE, DATA>.markDirty(obj: CONTAINER, data: DATA) {
 //    dirtyProperties[obj, id] = data

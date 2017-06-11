@@ -24,8 +24,6 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 
-typealias VanillaPacket<T> = net.minecraft.network.Packet<T>
-
 @SubscribeEvent
 @SideOnly(Side.CLIENT)
 fun clientConnectionToServer(event: FMLNetworkEvent.ClientConnectedToServerEvent) {

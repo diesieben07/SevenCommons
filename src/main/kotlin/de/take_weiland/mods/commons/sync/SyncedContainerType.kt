@@ -26,12 +26,20 @@ interface SyncedContainerType<T, DATA> {
 
     fun serialize(obj: T): DATA
 
-    fun deserialize(player: EntityPlayer, data: DATA): T?
+    fun deserializeUntyped(player: EntityPlayer, data: DATA): T?
 
     fun serialize(buf: ByteBuf, obj: T)
 
-    fun deserialize(player: EntityPlayer, buf: ByteBuf): T?
+    fun deserializeUntyped(player: EntityPlayer, buf: ByteBuf): T?
 
+}
+
+inline fun <T, DATA, reified R : T> SyncedContainerType<T, DATA>.deserialize(player: EntityPlayer, data: DATA): R? {
+    return deserializeUntyped(player, data) as? R
+}
+
+inline fun <T, DATA, reified R : T> SyncedContainerType<T, DATA>.deserialize(player: EntityPlayer, buf: ByteBuf): R? {
+    return deserializeUntyped(player, buf) as? R
 }
 
 inline fun <T> SimplePacket.sendTo(obj: T, containerType: SyncedContainerType<T, *>) {
@@ -50,7 +58,7 @@ object TileEntitySyncedType : SyncedContainerType<TileEntity, BlockPos> {
         return obj.pos
     }
 
-    override fun deserialize(player: EntityPlayer, data: BlockPos): TileEntity? {
+    override fun deserializeUntyped(player: EntityPlayer, data: BlockPos): TileEntity? {
         return player.world.getTileEntity(data)
     }
 
@@ -58,7 +66,7 @@ object TileEntitySyncedType : SyncedContainerType<TileEntity, BlockPos> {
         buf.writeBlockPos(obj.pos)
     }
 
-    override fun deserialize(player: EntityPlayer, buf: ByteBuf): TileEntity? {
+    override fun deserializeUntyped(player: EntityPlayer, buf: ByteBuf): TileEntity? {
         return player.world.getTileEntity(buf.readBlockPos())
     }
 }
@@ -75,7 +83,7 @@ object EntitySyncedType : SyncedContainerType<Entity, Int> {
         return obj.entityId
     }
 
-    override fun deserialize(player: EntityPlayer, data: Int): Entity? {
+    override fun deserializeUntyped(player: EntityPlayer, data: Int): Entity? {
         return player.world.getEntityByID(data)
     }
 
@@ -83,7 +91,7 @@ object EntitySyncedType : SyncedContainerType<Entity, Int> {
         buf.writeInt(obj.entityId)
     }
 
-    override fun deserialize(player: EntityPlayer, buf: ByteBuf): Entity? {
+    override fun deserializeUntyped(player: EntityPlayer, buf: ByteBuf): Entity? {
         return player.world.getEntityByID(buf.readInt())
     }
 }
@@ -105,7 +113,7 @@ object ContainerSyncedType : SyncedContainerType<Container, Byte> {
         return obj.windowId.toByte()
     }
 
-    override fun deserialize(player: EntityPlayer, data: Byte): Container? {
+    override fun deserializeUntyped(player: EntityPlayer, data: Byte): Container? {
         return player.openContainer.takeIf { it.windowId.toByte() == data }
     }
 
@@ -113,7 +121,7 @@ object ContainerSyncedType : SyncedContainerType<Container, Byte> {
         buf.writeByte(obj.windowId)
     }
 
-    override fun deserialize(player: EntityPlayer, buf: ByteBuf): Container? {
+    override fun deserializeUntyped(player: EntityPlayer, buf: ByteBuf): Container? {
         val id = buf.readByte()
         return player.openContainer.takeIf { it.windowId.toByte() == id }
     }
