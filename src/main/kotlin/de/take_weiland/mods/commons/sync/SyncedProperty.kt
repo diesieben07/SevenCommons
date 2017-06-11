@@ -4,23 +4,20 @@ import net.minecraft.world.World
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty
 
-abstract class SyncedProperty<CONTAINER, TYPE>(protected val obj: CONTAINER) {
+abstract class SyncedProperty<CONTAINER, TYPE, C_DATA>(protected val obj: CONTAINER, property: KProperty<*>, protected val containerType: SyncedContainerType<CONTAINER, C_DATA>) {
 
-    var id: Int = -1
+    protected val id: Int
+    protected val property: KMutableProperty1<in CONTAINER, TYPE>
 
-    internal lateinit var property: KMutableProperty1<in CONTAINER, TYPE>
-    internal lateinit var containerType: SyncedContainerType<CONTAINER, *>
-
-    internal val world: World
-        get() = containerType.getWorld(obj)
-
-    fun init(property: KProperty<*>, containerType: SyncedContainerType<CONTAINER, *>) {
+    init {
         if (property !is KMutableProperty1<*, *>) throw UnsupportedOperationException("Only mutable member properties in a class can be synced.")
-        this.id = property.getPropertyId()
-        this.containerType = containerType
+        id = property.getPropertyId()
         @Suppress("UNCHECKED_CAST")
         this.property = property as KMutableProperty1<in CONTAINER, TYPE>
     }
+
+    internal val world: World
+        get() = containerType.getWorld(obj)
 
 //    abstract fun write(out: ByteBuf, data: DATA)
 //    abstract fun read(input: ByteBuf)

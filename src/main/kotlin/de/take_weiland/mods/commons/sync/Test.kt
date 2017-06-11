@@ -8,7 +8,7 @@ import net.minecraft.tileentity.TileEntity
 
 open class Test : TileEntity() {
 
-    var bla: Int by (sync()(0))
+    var bla: Int by sync { int(0) }
 ////    open var blubb: Boolean by sync(false)
 //
 //    override fun update() {
