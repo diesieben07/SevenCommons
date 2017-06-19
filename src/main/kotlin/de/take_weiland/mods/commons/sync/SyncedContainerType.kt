@@ -1,6 +1,5 @@
 package de.take_weiland.mods.commons.sync
 
-import de.take_weiland.mods.commons.internal.SevenCommons
 import de.take_weiland.mods.commons.net.readBlockPos
 import de.take_weiland.mods.commons.net.simple.SimplePacket
 import de.take_weiland.mods.commons.net.simple.sendToTracking
@@ -18,9 +17,9 @@ import net.minecraft.world.World
 /**
  * @author diesieben07
  */
-interface SyncedContainerType<T, DATA> {
+interface SyncedContainerType<T : Any, DATA> {
 
-    fun getWorld(obj: T): World
+    fun getServerWorld(obj: T): World
 
     fun sendPacket(obj: T, packet: SimplePacket)
 
@@ -34,21 +33,30 @@ interface SyncedContainerType<T, DATA> {
 
 }
 
-inline fun <T, DATA, reified R : T> SyncedContainerType<T, DATA>.deserialize(player: EntityPlayer, data: DATA): R? {
+fun <T : Any> findContainerType(value: T): SyncedContainerType<T, *> {
+    @Suppress("UNCHECKED_CAST")
+    return when (value) {
+        is TileEntity -> TileEntitySyncedType
+        is Entity -> EntitySyncedType
+        else -> throw IllegalArgumentException("Unknown container $value for synced property.")
+    } as SyncedContainerType<T, *>
+}
+
+inline fun <T : Any, DATA, reified R : T> SyncedContainerType<T, DATA>.deserialize(player: EntityPlayer, data: DATA): R? {
     return deserializeUntyped(player, data) as? R
 }
 
-inline fun <T, DATA, reified R : T> SyncedContainerType<T, DATA>.deserialize(player: EntityPlayer, buf: ByteBuf): R? {
+inline fun <T : Any, DATA, reified R : T> SyncedContainerType<T, DATA>.deserialize(player: EntityPlayer, buf: ByteBuf): R? {
     return deserializeUntyped(player, buf) as? R
 }
 
-inline fun <T> SimplePacket.sendTo(obj: T, containerType: SyncedContainerType<T, *>) {
+inline fun <T : Any> SimplePacket.sendTo(obj: T, containerType: SyncedContainerType<T, *>) {
     containerType.sendPacket(obj, this)
 }
 
 object TileEntitySyncedType : SyncedContainerType<TileEntity, BlockPos> {
 
-    override fun getWorld(obj: TileEntity): World = obj.world
+    override fun getServerWorld(obj: TileEntity): World = obj.world
 
     override fun sendPacket(obj: TileEntity, packet: SimplePacket) {
         packet.sendToTracking(obj)
@@ -73,7 +81,7 @@ object TileEntitySyncedType : SyncedContainerType<TileEntity, BlockPos> {
 
 object EntitySyncedType : SyncedContainerType<Entity, Int> {
 
-    override fun getWorld(obj: Entity): World = obj.world
+    override fun getServerWorld(obj: Entity): World = obj.world
 
     override fun sendPacket(obj: Entity, packet: SimplePacket) {
         packet.sendToTracking(obj)
@@ -98,11 +106,11 @@ object EntitySyncedType : SyncedContainerType<Entity, Int> {
 
 object ContainerSyncedType : SyncedContainerType<Container, Byte> {
 
-    override fun getWorld(obj: Container): World {
+    override fun getServerWorld(obj: Container): World {
         obj.listeners.fastForEach {
             if (it is EntityPlayerMP) return it.world
         }
-        return SevenCommons.proxy.clientWorld
+        throw IllegalStateException("Container is not attached to server-side player.")
     }
 
     override fun sendPacket(obj: Container, packet: SimplePacket) {
@@ -126,3 +134,4 @@ object ContainerSyncedType : SyncedContainerType<Container, Byte> {
         return player.openContainer.takeIf { it.windowId.toByte() == id }
     }
 }
+

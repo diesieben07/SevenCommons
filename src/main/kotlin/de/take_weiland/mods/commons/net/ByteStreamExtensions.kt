@@ -465,6 +465,14 @@ fun ByteBuf.writeNbt(nbt: NBTBase) {
     nbt.write(asDataOutput())
 }
 
+fun ByteBuf.writeResourceLocation(resourceLocation: ResourceLocation) {
+    writeString(resourceLocation.toString())
+}
+
+fun ByteBuf.readResourceLocation(): ResourceLocation {
+    return ResourceLocation(readString())
+}
+
 fun main(args: Array<String>) {
     val buf = Unpooled.buffer()
     val set = EnumSet.of(RetentionPolicy.RUNTIME, RetentionPolicy.SOURCE)
