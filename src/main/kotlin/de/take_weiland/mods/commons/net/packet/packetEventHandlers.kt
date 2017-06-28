@@ -61,11 +61,12 @@ internal fun tryReceive(channel: String, buf: ByteBuf, player: EntityPlayer?): B
 private abstract class SCMessageHandler : ChannelInboundHandlerAdapter() {
 
     abstract val player: EntityPlayer?
+    abstract val side: Side
 
     final override fun channelRead(ctx: ChannelHandlerContext, msg: Any?) {
         when (msg) {
             is CustomPayloadPacket ->
-                msg.receiveAsync(player)
+                msg.receiveAsync(side, player)
             is SPacketCustomPayload -> if (!tryReceive(msg.channel, msg.data, player)) super.channelRead(ctx, msg)
             is CPacketCustomPayload -> if (!tryReceive(msg.channelName, msg.bufferData, player)) super.channelRead(ctx, msg)
             else -> super.channelRead(ctx, msg)
@@ -82,9 +83,12 @@ private abstract class SCMessageHandler : ChannelInboundHandlerAdapter() {
 @ChannelHandler.Sharable
 private object SCMessageHanderClient : SCMessageHandler() {
     override val player: EntityPlayer? get() = Minecraft.getMinecraft().player
+    override val side get() = Side.CLIENT
 }
 
-private class SCMessageHandlerServer(override val player: EntityPlayerMP) : SCMessageHandler()
+private class SCMessageHandlerServer(override val player: EntityPlayerMP) : SCMessageHandler() {
+    override val side get() = Side.SERVER
+}
 
 // see EnumConnectionState
 private const val c2sCustomPacketId = 9

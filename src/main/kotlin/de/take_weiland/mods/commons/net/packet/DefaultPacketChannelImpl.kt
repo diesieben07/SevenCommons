@@ -4,9 +4,11 @@ import de.take_weiland.mods.commons.net.ProtocolException
 import de.take_weiland.mods.commons.net.packet.raw.CustomPayloadPacket
 import de.take_weiland.mods.commons.net.packet.raw.DefaultPacketChannelBuilder
 import de.take_weiland.mods.commons.net.packet.raw.PacketChannel
+import de.take_weiland.mods.commons.util.side
 import de.take_weiland.mods.commons.util.toImmutable
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraftforge.fml.relauncher.Side
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -22,7 +24,7 @@ internal class DefaultPacketChannelImpl(override val channel: String, packets: I
         val packet = packets.getOrNull(id)
         packet?.run {
             val pkt = with (reader) { buf.read() }
-            (pkt as? CustomPayloadPacket)?.receiveAsync(player) ?: throw ProtocolException("Received invalid packet $pkt")
+            (pkt as? CustomPayloadPacket)?.receiveAsync(player?.side ?: Side.CLIENT, player) ?: throw ProtocolException("Received invalid packet $pkt")
         } ?: throw ProtocolException("Unknown packetId $id on channel $channel")
     }
 

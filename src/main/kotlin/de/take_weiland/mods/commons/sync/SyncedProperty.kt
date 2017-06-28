@@ -1,9 +1,10 @@
 package de.take_weiland.mods.commons.sync
 
+import io.netty.buffer.ByteBuf
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty
 
-abstract class SyncedProperty {
+abstract class SyncedProperty<DATA> {
 
     var id: Int = -1
         get() = if (field >= 0) field else throw IllegalStateException("SyncedProperty not initialized.")
@@ -11,11 +12,21 @@ abstract class SyncedProperty {
             field = value
         }
 
+    abstract fun writeData(buf: ByteBuf, data: DATA)
+    abstract fun readData(buf: ByteBuf): DATA
+
+    protected fun init(property: KProperty<*>) {
+        if (property !is KMutableProperty1<*, *>) throw UnsupportedOperationException("Only mutable member properties in a class can be synced.")
+        id = property.getPropertyId()
+    }
+
+    @PublishedApi
+    internal fun accessInit(property: KProperty<*>) = init(property)
+
 }
 
-operator fun <T : SyncedProperty> T.provideDelegate(obj: Any?, property: KProperty<*>): T {
-    if (property !is KMutableProperty1<*, *>) throw UnsupportedOperationException("Only mutable member properties in a class can be synced.")
-    id = property.getPropertyId()
+inline operator fun <T : SyncedProperty<*>> T.provideDelegate(obj: Any?, property: KProperty<*>): T {
+    accessInit(property)
     return this
 }
 
@@ -27,12 +38,10 @@ interface TickingProperty {
 
 internal val changedProperties = HashMap<Any, MutableList<ChangedProperty<*>>>()
 
-private fun changesFor(obj: Any) = changedProperties.computeIfAbsent(obj) { ArrayList() }
-
-fun <CONTAINER : Any> SyncedProperty.markDirty(obj: CONTAINER, change: ChangedProperty<*>) {
-    changedProperties.computeIfAbsent(obj) { ArrayList() } += change
+private fun changesFor(obj: Any) = with(changedProperties) {
+    get(obj) ?: ArrayList<ChangedProperty<*>>().also { put(obj, it) }
 }
 
-fun SyncedProperty.markDirty(obj: Any, newValue: Int) {
-    changesFor(obj) += ChangedProperty.Int(id, newValue)
+fun <DATA> SyncedProperty<DATA>.markDirty(obj: Any, newValue: DATA) {
+    changesFor(obj) += ChangedProperty.Obj(this, newValue)
 }

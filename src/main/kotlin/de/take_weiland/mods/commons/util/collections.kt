@@ -19,6 +19,17 @@ inline fun <reified T> Iterable<*>.forEachOfType(body: (T) -> Unit) {
     }
 }
 
+inline fun <reified T> createArraySequentially(size: Int, body: () -> T): Array<T> {
+    val array = arrayOfNulls<T?>(size)
+    var i = 0
+    while (i < size) {
+        array[i] = body()
+        i++
+    }
+    @Suppress("UNCHECKED_CAST")
+    return array as Array<T>
+}
+
 inline fun <K, V : Any> MutableMap<K, V>.fastComputeIfAbsent(key: K, crossinline supplier: (K) -> V): V {
     return get(key) ?: computeIfAbsent(key, { key -> supplier(key) })
 }

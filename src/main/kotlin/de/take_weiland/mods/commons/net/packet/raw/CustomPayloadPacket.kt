@@ -1,8 +1,11 @@
 package de.take_weiland.mods.commons.net.packet.raw
 
 import de.take_weiland.mods.commons.net.packet.defaultExpectedPacketSize
+import de.take_weiland.mods.commons.net.simple.SimplePacket
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.NetworkManager
+import net.minecraftforge.fml.relauncher.Side
 
 /**
  * @author diesieben07
@@ -29,6 +32,13 @@ interface CustomPayloadPacket {
      */
     fun writePayload(buf: ByteBuf)
 
-    fun receiveAsync(player: EntityPlayer?)
+    fun receiveAsync(side: Side, player: EntityPlayer?)
+
+    interface Sendable : CustomPayloadPacket, SimplePacket {
+
+        override fun sendTo(manager: NetworkManager) {
+            manager.channel().writeAndFlush(this)
+        }
+    }
 
 }

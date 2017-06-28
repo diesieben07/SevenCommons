@@ -4,6 +4,7 @@ import de.take_weiland.mods.commons.net.readString
 import de.take_weiland.mods.commons.net.writeString
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraftforge.fml.relauncher.Side
 
 class NamePacket(val name: String) : Packet.Async {
 
@@ -15,7 +16,7 @@ class NamePacket(val name: String) : Packet.Async {
         override fun ByteBuf.read() = NamePacket(name = readString())
     }
 
-    override fun receive(player: EntityPlayer?) {
+    override fun receive(side: Side, player: EntityPlayer?) {
         println("received $name for $player")
     }
 

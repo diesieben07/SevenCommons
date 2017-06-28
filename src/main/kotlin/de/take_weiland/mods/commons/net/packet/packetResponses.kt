@@ -6,6 +6,7 @@ import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.EnumPacketDirection
 import net.minecraft.network.NetworkManager
+import net.minecraftforge.fml.relauncher.Side
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.function.BiConsumer
@@ -54,7 +55,7 @@ internal abstract class WrappedPacketWithResponseBase<R : Packet.Response, out P
 
 internal class WrappedPacketWithResponseAsync<R : Packet.Response, out P : Packet.WithResponse.Async<R>>(packet: P, manager: NetworkManager) : WrappedPacketWithResponseBase<R, P>(packet, manager) {
 
-    override fun receiveAsync(player: EntityPlayer?) {
+    override fun receiveAsync(side: Side, player: EntityPlayer?) {
         try {
             complete(packet.receive(player))
         } catch (x: Throwable) {
@@ -65,7 +66,7 @@ internal class WrappedPacketWithResponseAsync<R : Packet.Response, out P : Packe
 
 internal class WrappedPacketWithResponse<R : Packet.Response, out P : Packet.WithResponse<R>>(packet: P, manager: NetworkManager) : WrappedPacketWithResponseBase<R, P>(packet, manager) {
 
-    override fun receiveAsync(player: EntityPlayer?) {
+    override fun receiveAsync(side: Side, player: EntityPlayer?) {
         player.runPacketOnThread {
             try {
                 complete(packet.receive(it))
@@ -78,7 +79,7 @@ internal class WrappedPacketWithResponse<R : Packet.Response, out P : Packet.Wit
 
 internal class WrappedPacketWithAsyncResponseAsync<R : Packet.Response, out P : Packet.WithAsyncResponse.Async<R>>(packet: P, manager: NetworkManager) : WrappedPacketWithResponseBase<R, P>(packet, manager), BiConsumer<R?, Throwable?> {
 
-    override fun receiveAsync(player: EntityPlayer?) {
+    override fun receiveAsync(side: Side, player: EntityPlayer?) {
         try {
             packet.receive(player).whenComplete(this)
         } catch (x: Throwable) {
@@ -101,7 +102,7 @@ internal class WrappedPacketWithAsyncResponse<R : Packet.Response, out P : Packe
         }
     }
 
-    override fun receiveAsync(player: EntityPlayer?) {
+    override fun receiveAsync(side: Side, player: EntityPlayer?) {
         player.runPacketOnThread {
             try {
                 packet.receive(it).whenComplete(this)

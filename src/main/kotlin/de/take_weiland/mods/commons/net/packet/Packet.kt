@@ -5,6 +5,7 @@ import de.take_weiland.mods.commons.net.simple.SimplePacket
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.NetworkManager
+import net.minecraftforge.fml.relauncher.Side
 import java.util.concurrent.CompletionStage
 
 /**
@@ -26,7 +27,7 @@ interface BasePacket {
 
 }
 
-interface BasePacketNoResponse : BasePacket, CustomPayloadPacket, SimplePacket {
+interface BasePacketNoResponse : BasePacket, CustomPayloadPacket.Sendable {
 
     @Deprecated(message = "internal", level = DeprecationLevel.HIDDEN)
     override fun writePayload(buf: ByteBuf) {
@@ -42,9 +43,7 @@ interface BasePacketNoResponse : BasePacket, CustomPayloadPacket, SimplePacket {
     override val channel: String
         get() = data.channel
 
-    override fun sendTo(manager: NetworkManager) {
-        manager.channel().writeAndFlush(this)
-    }
+    abstract override fun receiveAsync(side: Side, player: EntityPlayer?)
 
 }
 
@@ -54,11 +53,11 @@ interface Packet : BasePacketNoResponse {
 
     interface Async : BasePacketNoResponse {
 
-        fun receive(player: EntityPlayer?)
+        fun receive(side: Side, player: EntityPlayer?)
 
         @Deprecated(message = "internal", level = DeprecationLevel.HIDDEN)
-        override fun receiveAsync(player: EntityPlayer?) {
-            receive(player)
+        override fun receiveAsync(side: Side, player: EntityPlayer?) {
+            receive(side, player)
         }
 
     }
@@ -106,7 +105,7 @@ interface Packet : BasePacketNoResponse {
     // Internal Methods
 
     @Deprecated(message = "internal", level = DeprecationLevel.HIDDEN)
-    override fun receiveAsync(player: EntityPlayer?) {
+    override fun receiveAsync(side: Side, player: EntityPlayer?) {
         player.runPacketOnThread(this::receive)
     }
 

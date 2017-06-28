@@ -2,6 +2,7 @@ package de.take_weiland.mods.commons.net
 
 import com.google.common.base.Utf8
 import de.take_weiland.mods.commons.internal.sharedEnumConstants
+import de.take_weiland.mods.commons.util.createArraySequentially
 import de.take_weiland.mods.commons.util.nbt
 import de.take_weiland.mods.commons.util.registryName
 import io.netty.buffer.ByteBuf
@@ -333,6 +334,17 @@ fun <E : Enum<E>> ByteBuf.writeEnumSet(cls: Class<E>, value: EnumSet<E>) {
 inline fun <T> ByteBuf.writeList(list: Collection<T>, writer: ByteBuf.(T) -> Unit) {
     writeVarInt(list.size)
     list.forEach { writer(it) }
+}
+
+inline fun <reified T> ByteBuf.readList(reader: ByteBuf.() -> T): List<T> {
+    val size = readVarInt()
+    return createArraySequentially(size) {
+        reader()
+    }.asList()
+}
+
+inline fun ByteBuf.readList(reader: ByteBuf.() -> Unit) {
+    repeat(readVarInt()) { reader() }
 }
 
 inline fun <K, V> ByteBuf.writeMap(map: Map<out K, V>, keyWriter: ByteBuf.(K) -> Unit, valueWriter: ByteBuf.(V) -> Unit) {

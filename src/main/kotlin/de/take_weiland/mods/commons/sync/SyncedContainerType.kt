@@ -4,11 +4,9 @@ import de.take_weiland.mods.commons.net.readBlockPos
 import de.take_weiland.mods.commons.net.simple.SimplePacket
 import de.take_weiland.mods.commons.net.simple.sendToTracking
 import de.take_weiland.mods.commons.net.writeBlockPos
-import de.take_weiland.mods.commons.util.fastForEach
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.inventory.Container
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.math.BlockPos
@@ -30,6 +28,15 @@ interface SyncedContainerType<T : Any, DATA> {
     fun serialize(buf: ByteBuf, obj: T)
 
     fun deserializeUntyped(player: EntityPlayer, buf: ByteBuf): T?
+
+    companion object {
+
+//        val REGISTRY = RegistryBuilder<SyncedContainerType<*, *>>()
+//                .disableOverrides()
+//                .disableSaving()
+//                .setDefaultKey()
+
+    }
 
 }
 
@@ -107,9 +114,9 @@ object EntitySyncedType : SyncedContainerType<Entity, Int> {
 object ContainerSyncedType : SyncedContainerType<Container, Byte> {
 
     override fun getServerWorld(obj: Container): World {
-        obj.listeners.fastForEach {
-            if (it is EntityPlayerMP) return it.world
-        }
+//        obj.listeners.fastForEach {
+//            if (it is EntityPlayerMP) return it.world
+//        }
         throw IllegalStateException("Container is not attached to server-side player.")
     }
 
