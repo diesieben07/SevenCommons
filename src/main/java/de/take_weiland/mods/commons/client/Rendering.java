@@ -7,8 +7,8 @@ import de.take_weiland.mods.commons.util.JavaUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -75,7 +75,7 @@ public final class Rendering {
      */
     public static void fillAreaWithIcon(TextureAtlasSprite icon, int x, int y, int width, int height) {
         Tessellator t = Tessellator.getInstance();
-        VertexBuffer b = t.getBuffer();
+        BufferBuilder b = t.getBuffer();
         b.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 
         float zLevel = getZLevel();
@@ -133,7 +133,7 @@ public final class Rendering {
     }
 
     private static void drawRect(float x, float y, float width, float height, float z, float u, float v, float maxU, float maxV) {
-        VertexBuffer b = Tessellator.getInstance().getBuffer();
+        BufferBuilder b = Tessellator.getInstance().getBuffer();
 
         b.pos(x, y + height, z).tex(u, maxV).endVertex();
         b.pos(x + width, y + height, z).tex(maxU, maxV).endVertex();
@@ -271,7 +271,7 @@ public final class Rendering {
         color(cr, cg, cb, alpha);
 
         Tessellator t = Tessellator.getInstance();
-        VertexBuffer b = t.getBuffer();
+        BufferBuilder b = t.getBuffer();
 
         b.begin(GL_QUADS, DefaultVertexFormats.POSITION);
 
@@ -474,7 +474,7 @@ public final class Rendering {
     }
 
     private static void verticalGradient0(int x, int y, int width, int height, int fromAlpha, int toAlpha, float zLevel, float r1, float g1, float b1, float r2, float g2, float b2) {
-        VertexBuffer b = Tessellator.getInstance().getBuffer();
+        BufferBuilder b = Tessellator.getInstance().getBuffer();
 
         b.color(r1, g1, b1, fromAlpha / 255f).pos(x, y + height, zLevel).endVertex();
         b.color(r1, g1, b1, fromAlpha / 255f).pos(x + width, y + height, zLevel).endVertex();
@@ -483,7 +483,7 @@ public final class Rendering {
     }
 
     private static void horizontalGradient0(int x, int y, int width, int height, int fromAlpha, int toAlpha, float zLevel, float r1, float g1, float b1, float r2, float g2, float b2) {
-        VertexBuffer b = Tessellator.getInstance().getBuffer();
+        BufferBuilder b = Tessellator.getInstance().getBuffer();
 
         b.color(r1, g1, b1, fromAlpha / 255f).pos(x, y + height, zLevel).endVertex();
         b.color(r2, g2, b2, toAlpha / 255F).pos(x + width, y + height, zLevel).endVertex();
@@ -584,7 +584,7 @@ public final class Rendering {
      */
     public static void drawTexturedQuad(int x, int y, int width, int height, float uStart, float vStart, float uEnd, float vEnd, float zLevel) {
         Tessellator t = Tessellator.getInstance();
-        VertexBuffer b = t.getBuffer();
+        BufferBuilder b = t.getBuffer();
 
         b.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         b.pos(x, y + height, zLevel).tex(uStart, vEnd).endVertex();
@@ -618,7 +618,7 @@ public final class Rendering {
      */
     public static void drawTexturedQuadFit(int x, int y, int width, int height, float zLevel) {
         Tessellator t = Tessellator.getInstance();
-        VertexBuffer b = t.getBuffer();
+        BufferBuilder b = t.getBuffer();
 
         b.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         b.pos(x, y + height, zLevel).tex(0, 1).endVertex();

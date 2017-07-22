@@ -86,11 +86,12 @@ class Scheduler private constructor() : SchedulerBase() {
 
         // move through task list and simultaneously execute tasks and compact the list
         // by moving non-removed tasks to the new end of the list if needed
-        var idx = 0
         var free = -1
-        while (idx < size) {
-            val t = activeTasks[idx]
-            if (!t!!.checkedExecute()) {
+
+        for (idx in activeTasks.indices) {
+            val task = activeTasks[idx] ?: break
+
+            if (!task.checkedExecute()) {
                 // task needs to be removed, null out it's slot
                 activeTasks[idx] = null
                 if (free == -1) {
@@ -100,35 +101,30 @@ class Scheduler private constructor() : SchedulerBase() {
             } else if (free != -1) {
                 // we had to remove one or more tasks earlier in the list,
                 // move this one there to keep the list continuous
-                activeTasks[free++] = t
+                activeTasks[free++] = task
                 activeTasks[idx] = null
             }
-            idx++
         }
-        // we had to remove at least one task, adjust the size
+
         if (free != -1) {
             size = free
         }
 
-
         // handle new tasks
         while (true) {
-            val task = inputQueue.poll()
-            if (task == null) {
-                break
-            } else {
-                // only add task to the active list if it wants to keep executing
-                // avoids unnecessary work for one-off tasks
-                if (task.checkedExecute()) {
-                    if (size == activeTasks.size) {
-                        // we are full
-                        val newArr = arrayOfNulls<Task>(size shl 1)
-                        System.arraycopy(activeTasks, 0, newArr, 0, size)
-                        this.activeTasks = newArr
-                        activeTasks = this.activeTasks
-                    }
-                    activeTasks[size++] = task
+            val task = inputQueue.poll() ?: break
+
+            // only add task to the active list if it wants to keep executing
+            // avoids unnecessary work for one-off tasks
+            if (task.checkedExecute()) {
+                if (size == activeTasks.size) {
+                    // we are full
+                    val newArr = arrayOfNulls<Task>(size shl 1)
+                    System.arraycopy(activeTasks, 0, newArr, 0, size)
+                    this.activeTasks = newArr
+                    activeTasks = this.activeTasks
                 }
+                activeTasks[size++] = task
             }
         }
     }

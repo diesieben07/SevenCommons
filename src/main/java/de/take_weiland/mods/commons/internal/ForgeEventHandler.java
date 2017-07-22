@@ -31,12 +31,12 @@ import static net.minecraft.client.Minecraft.getMinecraft;
 public final class ForgeEventHandler {
 
     @SubscribeEvent
-    public void attachCapabilities(AttachCapabilitiesEvent.Entity event) {
+    public void attachCapabilitiesEntity(AttachCapabilitiesEvent<Entity> event) {
 
     }
 
     @SubscribeEvent
-    public void attachCapabilities(AttachCapabilitiesEvent.TileEntity event) {
+    public void attachCapabilities(AttachCapabilitiesEvent<TileEntity> event) {
 
     }
 

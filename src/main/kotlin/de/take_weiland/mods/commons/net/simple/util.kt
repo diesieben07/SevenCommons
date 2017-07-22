@@ -189,7 +189,7 @@ fun <R, M, B : MultiResultBuilder<R, M, B>> Sendable<R, M, B>.sendToTrackingChun
  * Send this packet to all players tracking the given chunk.
  */
 fun <R, M, B : MultiResultBuilder<R, M, B>> Sendable<R, M, B>.sendToTracking(chunk: Chunk): M {
-    return sendToTrackingChunk(chunk.world as WorldServer, chunk.xPosition, chunk.zPosition)
+    return sendToTrackingChunk(chunk.world as WorldServer, chunk.x, chunk.z)
 }
 
 /**
@@ -320,7 +320,7 @@ fun <R, M, B : MultiResultBuilder<R, M, B>> Sendable<R, M, B>.sendToNear(entity:
     return sendToNear(entity.world as WorldServer, entity.posX, entity.posY, entity.posZ, radius)
 }
 
-fun <R, M, B : MultiResultBuilder<R, M, B>> Sendable<R, M, B>.discardResponse(): SimplePacket {
+fun AnySendable.discardResponse(): SimplePacket {
     return if (this is SimplePacket) this else object : SimplePacket {
         override fun sendTo(manager: NetworkManager) {
             this@discardResponse.sendTo(manager)

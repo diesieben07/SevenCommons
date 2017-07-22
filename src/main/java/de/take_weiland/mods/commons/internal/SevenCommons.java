@@ -1,8 +1,5 @@
 package de.take_weiland.mods.commons.internal;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.take_weiland.mods.commons.client.Rendering;
 import de.take_weiland.mods.commons.crash.Crashing;
@@ -10,43 +7,28 @@ import de.take_weiland.mods.commons.internal.client.ClientProxy;
 import de.take_weiland.mods.commons.internal.client.worldview.EmptyEntityRenderer;
 import de.take_weiland.mods.commons.internal.client.worldview.ViewEntity;
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoSuperCache;
-import de.take_weiland.mods.commons.internal.net.NetworkImpl;
-import de.take_weiland.mods.commons.internal.sync.SyncEvent;
-import de.take_weiland.mods.commons.internal.sync_olds.builtin.BuiltinSyncers;
-import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
-import de.take_weiland.mods.commons.internal.tonbt.builtin.DefaultNBTSerializers;
-import de.take_weiland.mods.commons.internal.worldview.PacketRequestWorldInfo;
-import de.take_weiland.mods.commons.internal.worldview.PacketWorldInfo;
-import de.take_weiland.mods.commons.net.Network;
-import de.take_weiland.mods.commons.sync.Syncing;
-import de.take_weiland.mods.commons.sync.TestBlock;
 import de.take_weiland.mods.commons.util.Logging;
-import de.take_weiland.mods.commons.util.Scheduler;
 import de.take_weiland.mods.commons.worldview.ClientChunks;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.launchwrapper.Launch;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
-import net.minecraftforge.fml.client.FMLFileResourcePack;
-import net.minecraftforge.fml.client.FMLFolderResourcePack;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.common.*;
+import net.minecraftforge.fml.common.LoaderState;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.discovery.ASMDataTable;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLStateEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
-import java.io.File;
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -145,32 +127,17 @@ public final class SevenCommons {
 
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
 
-        Network.newSimpleChannel("SevenCommons")
-                .register(0, PacketContainerButton::new, PacketContainerButton::handle)
-                .register(1, PacketInventoryName::new, PacketInventoryName::handle)
-                .register(3, PacketRequestWorldInfo::new, PacketWorldInfo::new, PacketRequestWorldInfo::handle)
-                .build();
-
-        NetworkImpl.register(SyncEvent.Companion.getCHANNEL(), (channel, data, side, manager) -> {
-            if (side == Network.CLIENT) {
-                Scheduler.Companion.getClient().execute(() -> {
-                    SyncEvent.Companion.handle(data);
-                    return false;
-                });
-            }
-        });
-
+//        Network.newSimpleChannel("SevenCommons")
+//                .register(0, PacketContainerButton::new, PacketContainerButton::handle)
+//                .register(1, PacketInventoryName::new, PacketInventoryName::handle)
+//                .register(3, PacketRequestWorldInfo::new, PacketWorldInfo::new, PacketRequestWorldInfo::handle)
+//                .build();
 
         ClassInfoSuperCache.preInit();
 
         proxy.preInit(event);
 
-        Syncing.registerFactory(Object.class, new BuiltinSyncers());
-        ToNbtFactories.registerFactory(Object.class, new DefaultNBTSerializers());
-
 //        MinecraftForge.EVENT_BUS.register();
-
-        GameRegistry.register(new TestBlock());
 
         if (config.hasChanged()) {
             config.save();

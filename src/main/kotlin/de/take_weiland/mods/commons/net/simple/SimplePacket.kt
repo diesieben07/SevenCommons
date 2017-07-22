@@ -26,19 +26,6 @@ interface SimplePacket : Sendable<Unit, Unit, SimplePacket>, MultiResultBuilder<
         override fun newMultiResultBuilder(): WithResponseMultiBuilder<Result> {
             return WithResponseMultiBuilder(this)
         }
-
-        /**
-         * Create a packet that ignores the response.
-         */
-        fun discardResponse(): SimplePacket {
-            return object : SimplePacket {
-
-                override fun sendTo(manager: NetworkManager) {
-                    this@WithResponse.sendTo(manager)
-                }
-            }
-        }
-
     }
 
 }

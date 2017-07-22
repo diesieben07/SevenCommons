@@ -11,7 +11,7 @@ import net.minecraftforge.fml.relauncher.Side
  *
  * Implement this on your Container to make it applicable to handling GUI Buttons.
  *
- * Call [.triggerButton] on the client to trigger the button
+ * Call [triggerButton] on the client to trigger the button
  * on both client and server.
  */
 interface ButtonContainer {
@@ -30,7 +30,7 @@ interface ButtonContainer {
 
     /**
      *
-     * Trigger the given button. This method will call [.onButtonClick]
+     * Trigger the given button. This method will call [onButtonClick]
      * on both client and server.
      *
      * This method must only be called from the client thread and will throw a `ClassCastException` if this interface

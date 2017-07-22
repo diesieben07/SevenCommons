@@ -38,8 +38,8 @@ public class SimpleGuiButton extends GuiButton {
      * @param y
      */
     public void setPosition(int x, int y) {
-        this.xPosition = x;
-        this.yPosition = y;
+        this.x = x;
+        this.y = y;
     }
 
     /**

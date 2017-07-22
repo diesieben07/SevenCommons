@@ -16,6 +16,26 @@ import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaGetter
 
+fun <T : Any> propertyById(container: T, id: Int): SyncedProperty<*>? {
+    @Suppress("UNCHECKED_CAST")
+    return (ByIdCache[container.javaClass]?.get(id) as KProperty1<T, *>?)?.getDelegate(container) as SyncedProperty<*>?
+}
+
+private object ByIdCache : ClassValue<Array<KProperty1<*, *>>?>() {
+
+    override fun computeValue(type: Class<*>): Array<KProperty1<*, *>>? {
+        return doCompute(type)
+    }
+
+    private fun <T : Any> doCompute(type: Class<T>): Array<KProperty1<*, *>>? {
+        return type.kotlin.declaredMemberProperties
+                .filter { it.delegateType?.isSubtypeOf(SyncedProperty::class.java) ?: false }
+                .takeIf { it.isNotEmpty() }
+                ?.toTypedArray()
+    }
+
+}
+
 // ID is built as follows:
 //      - Lowest 3 bits are class ID, starting with 0 at the top. Top is the class extending from e.g. TileEntity.
 //        Classes without synced properties are still counted
@@ -29,13 +49,17 @@ fun KProperty1<*, *>.getPropertyId(): Int {
     return propertyIdCache[this] ?: propertyIdCache.computeIfAbsent(this) {
         val declaringClass = declaringClass
         val idInClass = declaringClass.kotlin.declaredMemberProperties.asSequence()
-                .filter { it.delegateType.let { it != null && SyncedProperty::class.java.isAssignableFrom(it) } }
+                .filter { it.delegateType?.isSubtypeOf(SyncedProperty::class.java) ?: false }
                 .indexOf(this)
 
         if (idInClass < 0) throw IllegalStateException("Property not in it's declaring class?")
 
         declaringClass.getClassId() or (idInClass shl CLASS_ID_BITS)
     }
+}
+
+private fun Class<*>.isSubtypeOf(other: Class<*>): Boolean {
+    return other.isAssignableFrom(this)
 }
 
 private val propertyIdCache = ConcurrentHashMap<KProperty1<*, *>, Int>()

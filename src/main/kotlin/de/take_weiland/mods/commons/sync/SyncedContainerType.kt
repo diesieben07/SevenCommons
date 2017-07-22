@@ -1,6 +1,7 @@
 package de.take_weiland.mods.commons.sync
 
 import de.take_weiland.mods.commons.net.readBlockPos
+import de.take_weiland.mods.commons.net.simple.AnySendable
 import de.take_weiland.mods.commons.net.simple.SimplePacket
 import de.take_weiland.mods.commons.net.simple.sendToTracking
 import de.take_weiland.mods.commons.net.writeBlockPos
@@ -19,7 +20,9 @@ interface SyncedContainerType<T : Any, DATA> {
 
     fun getServerWorld(obj: T): World
 
-    fun sendPacket(obj: T, packet: SimplePacket)
+    fun sendPacket(obj: T, packet: AnySendable)
+
+    fun <P> createChangedProperty(obj: T, property: SyncedProperty<P>, payload: P): ChangedProperty<P> = TODO()
 
     fun serialize(obj: T): DATA
 
@@ -65,8 +68,12 @@ object TileEntitySyncedType : SyncedContainerType<TileEntity, BlockPos> {
 
     override fun getServerWorld(obj: TileEntity): World = obj.world
 
-    override fun sendPacket(obj: TileEntity, packet: SimplePacket) {
+    override fun sendPacket(obj: TileEntity, packet: AnySendable) {
         packet.sendToTracking(obj)
+    }
+
+    override fun <P> createChangedProperty(obj: TileEntity, property: SyncedProperty<P>, payload: P): ChangedProperty<P> {
+        return TileEntityChangedProperty(property, obj.pos, payload)
     }
 
     override fun serialize(obj: TileEntity): BlockPos {
@@ -84,13 +91,23 @@ object TileEntitySyncedType : SyncedContainerType<TileEntity, BlockPos> {
     override fun deserializeUntyped(player: EntityPlayer, buf: ByteBuf): TileEntity? {
         return player.world.getTileEntity(buf.readBlockPos())
     }
+
 }
+
+internal class TileEntityChangedProperty<PAYLOAD>(property: SyncedProperty<PAYLOAD>, val pos: BlockPos, override val payload: PAYLOAD) : ChangedProperty<PAYLOAD>(property) {
+
+    override fun writeContainerData(buf: ByteBuf) {
+        buf.writeBlockPos(pos)
+    }
+
+}
+
 
 object EntitySyncedType : SyncedContainerType<Entity, Int> {
 
     override fun getServerWorld(obj: Entity): World = obj.world
 
-    override fun sendPacket(obj: Entity, packet: SimplePacket) {
+    override fun sendPacket(obj: Entity, packet: AnySendable) {
         packet.sendToTracking(obj)
     }
 
@@ -120,7 +137,7 @@ object ContainerSyncedType : SyncedContainerType<Container, Byte> {
         throw IllegalStateException("Container is not attached to server-side player.")
     }
 
-    override fun sendPacket(obj: Container, packet: SimplePacket) {
+    override fun sendPacket(obj: Container, packet: AnySendable) {
         packet.sendToTracking(obj)
     }
 

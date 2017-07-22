@@ -21,10 +21,17 @@ interface Sendable<out Result, out MultiResult, out Builder : MultiResultBuilder
 
     /**
      * Create a builder for sending this to multiple receivers. Usually used via [sendMulti].
+     *
+     * The builder must be closed using [MultiResultBuilder.finish], otherwise packets might not be sent.
      */
     fun newMultiResultBuilder(): Builder
 
 }
+
+/**
+ * Allows for a simpler notation of "anything that can be sent as a packet".
+ */
+typealias AnySendable = Sendable<*, *, *>
 
 /**
  * Helper method to conveniently send this packet to multiple receivers. Mostly useful for packets with responses.

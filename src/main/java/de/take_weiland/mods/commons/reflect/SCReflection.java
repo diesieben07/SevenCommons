@@ -6,8 +6,6 @@ import com.google.common.reflect.Reflection;
 import de.take_weiland.mods.commons.ExplicitSetter;
 import de.take_weiland.mods.commons.asm.ASMUtils;
 import de.take_weiland.mods.commons.internal.SevenCommons;
-import de.take_weiland.mods.commons.internal.reflect.MethodHandleStrategy;
-import de.take_weiland.mods.commons.internal.reflect.ReflectionStrategy;
 import net.minecraft.launchwrapper.Launch;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
@@ -36,30 +34,8 @@ import static java.lang.invoke.MethodHandles.publicLookup;
 public final class SCReflection {
 
     private static final Logger logger = SevenCommons.scLogger("Reflection");
-    private static final ReflectionStrategy strategy = selectStrategy();
     private static final AtomicInteger nextDynClassId = new AtomicInteger(0);
     private static final boolean DEBUG = Boolean.getBoolean("sevencommons.reflect.debug");
-
-    /**
-     * <p>Create an object that implements the given Accessor Interface. The result of this method should be permanently cached,
-     * because this operation is likely to be relatively expensive.</p>
-     * <p>The given class must be an interface and must not extend any other interfaces.
-     * All abstract methods must be marked with one of {@link de.take_weiland.mods.commons.reflect.Getter},
-     * {@link de.take_weiland.mods.commons.reflect.Setter}, {@link de.take_weiland.mods.commons.reflect.Invoke} or {@link de.take_weiland.mods.commons.reflect.Construct}
-     * and comply with the respective contract.</p>
-     *
-     * @param clazz the Accessor Interface
-     * @return a newly created object, implementing the given interface
-     */
-    public static <T> T createAccessor(Class<T> clazz) {
-        try {
-            return strategy.createAccessor(clazz);
-        } catch (IllegalAccessorException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new IllegalAccessorException("Failed to parse accessor interface " + clazz.getName(), e);
-        }
-    }
 
     /**
      * <p>Will try to find the corresponding setter method to the given method.</p>
@@ -230,10 +206,6 @@ public final class SCReflection {
      */
     public static String nextDynamicClassName(String pkg) {
         return ASMUtils.internalName(pkg) + "/_sc_dyn_" + nextDynClassId.getAndIncrement();
-    }
-
-    private static ReflectionStrategy selectStrategy() {
-        return new MethodHandleStrategy();
     }
 
     private SCReflection() {

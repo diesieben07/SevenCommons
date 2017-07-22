@@ -1,23 +1,13 @@
 package de.take_weiland.mods.commons.internal;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import de.take_weiland.mods.commons.SaveWorldsEvent;
-import de.take_weiland.mods.commons.internal.sync_olds.SyncCompanion;
-import de.take_weiland.mods.commons.internal.sync_olds.SyncedObjectProxy;
-import de.take_weiland.mods.commons.internal.tonbt.ToNbtFactories;
-import de.take_weiland.mods.commons.internal.tonbt.ToNbtHandler;
-import de.take_weiland.mods.commons.inv.Containers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -84,53 +74,13 @@ public final class ASMHooks {
         MinecraftForge.EVENT_BUS.post(new SaveWorldsEvent(!dontLog));
     }
 
-    public static void invokeSyncCompanionCheck(Object obj, SyncCompanion companion) {
-        if (companion != null) {
-            companion.check(obj, 0, null);
-        }
-    }
-
-    public static void tickContainerCompanions(Container container) {
-        EntityPlayer player = Containers.getViewer(container);
-        if (player == null || player.world.isRemote) {
-            return;
-        }
-
-        SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();
-        if (companion != null) {
-            companion.check(container, 0, null);
-        }
-
-        ImmutableList<IInventory> list = ((ContainerProxy) container)._sc$getInventories().asList();
-
-        for (int i = 0, len = list.size(); i < len; i++) {
-            IInventory inv = list.get(i);
-            if (inv instanceof SyncedObjectProxy) {
-                companion = ((SyncedObjectProxy) inv)._sc$getCompanion();
-                if (companion != null) {
-                    companion.checkInContainer(inv, 0, (EntityPlayerMP) player);
-                }
-            }
-        }
-    }
-
     public static final String WRITE_NBT_HOOK = "writeToNbtHook";
 
-    public static void writeToNbtHook(Object obj, NBTTagCompound nbt) {
-        ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
-        if (handler != null) {
-            handler.write(obj, nbt);
-        }
-    }
+
 
     public static final String READ_NBT_HOOK = "readFromNbtHook";
 
-    public static void readFromNbtHook(Object obj, NBTTagCompound nbt) {
-        ToNbtHandler handler = ToNbtFactories.handlerFor(obj.getClass());
-        if (handler != null) {
-            handler.read(obj, nbt);
-        }
-    }
+
 
     @SideOnly(Side.CLIENT)
     public static boolean canNumberKeyMove(Slot slot) {
@@ -153,35 +103,6 @@ public final class ASMHooks {
             }
         }
         return true;
-    }
-
-    public static void onListenerAdded(Container container, IContainerListener listener) throws Throwable {
-        if (listener instanceof EntityPlayerMP) {
-            EntityPlayerMP player = (EntityPlayerMP) listener;
-
-            // TODO!
-            List<IInventory> invs = Containers.getInventories(container).asList();
-            for (int i = 0, len = invs.size(); i < len; i++) {
-                IInventory inv = invs.get(i);
-                if (inv.hasCustomName()) {
-//                    SimplePacketKt.sendTo(new PacketInventoryName(container.windowId, i, inv.getDisplayName()), player);
-                }
-                if (inv instanceof PlayerAwareInventory) {
-                    ((PlayerAwareInventory) inv)._sc$onPlayerViewContainer(container, i, player);
-                }
-                if (inv instanceof SyncedObjectProxy) {
-                    SyncCompanion companion = ((SyncedObjectProxy) inv)._sc$getCompanion();
-                    if (companion != null) {
-                        companion.checkInContainer(inv, SyncCompanion.FORCE_CHECK, player);
-                    }
-                }
-            }
-
-            SyncCompanion companion = ((SyncedObjectProxy) container)._sc$getCompanion();
-            if (companion != null) {
-                companion.check(container, SyncCompanion.FORCE_CHECK, (EntityPlayerMP) listener);
-            }
-        }
     }
 
     public static ImmutableSet<IInventory> findContainerInvs(Container container) {

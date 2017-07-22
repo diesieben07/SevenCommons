@@ -1,7 +1,6 @@
 package de.take_weiland.mods.commons.inv;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableSet;
 import de.take_weiland.mods.commons.internal.CommonMethodHandles;
 import de.take_weiland.mods.commons.internal.ContainerProxy;
 import de.take_weiland.mods.commons.internal.SevenCommons;
@@ -15,6 +14,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -70,7 +70,7 @@ public final class Containers {
      * @param container the Container
      * @return all inventories
      */
-    public static ImmutableSet<IInventory> getInventories(Container container) {
+    public static Collection<IInventory> getInventories(Container container) {
         return ((ContainerProxy) container)._sc$getInventories();
     }
 

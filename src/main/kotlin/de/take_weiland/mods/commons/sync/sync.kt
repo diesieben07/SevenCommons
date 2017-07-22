@@ -9,13 +9,19 @@ internal const val syncChannel = "SC|Sync"
 inline fun <CONTAINER: Any> CONTAINER.sync(initialValue: Int) = IntSyncedProperty<CONTAINER>(initialValue)
 
 class IntSyncedProperty<in CONTAINER : Any>(@JvmField var value: Int) : SyncedProperty<Int>() {
-    override fun writeData(buf: ByteBuf, data: Int) {
+    override fun receivePayload(payload: Int) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun writePayload(buf: ByteBuf, data: Int) {
         buf.writeInt(data)
     }
 
-    override fun readData(buf: ByteBuf): Int {
-        return buf.readInt()
+    override fun receivePayload(buf: ByteBuf) {
+//        return buf.readInt()
     }
+
+
 
     inline operator fun getValue(obj: CONTAINER, property: KProperty<*>): Int {
         return value

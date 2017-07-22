@@ -51,11 +51,11 @@ public class GuiButtonImage extends GuiButton {
     }
 
     @Override
-    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+    public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
         if (this.visible) {
             mc.getTextureManager().bindTexture(texture);
             glColor3f(1, 1, 1);
-            hovered = mouseX >= xPosition && mouseY >= yPosition && mouseX < xPosition + width && mouseY < yPosition + height;
+            hovered = mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
             int hoverState = getHoverState(hovered);
 
             glEnable(GL_BLEND);
@@ -63,7 +63,7 @@ public class GuiButtonImage extends GuiButton {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // why?
 
             float vOff = (vEnd - vStart) * hoverState;
-            Rendering.drawTexturedQuad(xPosition, yPosition, width, height, uStart, vStart + vOff, uEnd, vEnd + vOff, zLevel);
+            Rendering.drawTexturedQuad(x, y, width, height, uStart, vStart + vOff, uEnd, vEnd + vOff, zLevel);
 
             mouseDragged(mc, mouseX, mouseY);
         }

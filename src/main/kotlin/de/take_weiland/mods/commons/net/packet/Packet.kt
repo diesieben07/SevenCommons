@@ -27,7 +27,7 @@ interface BasePacket {
 
 }
 
-interface BasePacketNoResponse : BasePacket, CustomPayloadPacket.Sendable {
+interface BasePacketNoResponse : BasePacket, CustomPayloadPacket {
 
     @Deprecated(message = "internal", level = DeprecationLevel.HIDDEN)
     override fun writePayload(buf: ByteBuf) {
@@ -71,12 +71,14 @@ interface Packet : BasePacketNoResponse {
             fun receive(player: EntityPlayer?): R
 
             override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
-                return WrappedPacketWithResponseAsync(this, manager).also { manager.channel().writeAndFlush(it) }
+                return WrappedPacketWithResponseAsync(this, manager)
+                        .also { manager.channel().writeAndFlush(it) }
             }
         }
 
         override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
-            return WrappedPacketWithResponse(this, manager).also { manager.channel().writeAndFlush(it) }
+            return WrappedPacketWithResponse(this, manager)
+                    .also { manager.channel().writeAndFlush(it) }
         }
 
     }
@@ -86,7 +88,8 @@ interface Packet : BasePacketNoResponse {
         fun receive(player: EntityPlayer): CompletionStage<out R>
 
         override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
-            return WrappedPacketWithAsyncResponse(this, manager).also { manager.channel().writeAndFlush(it) }
+            return WrappedPacketWithAsyncResponse(this, manager)
+                    .also { manager.channel().writeAndFlush(it) }
         }
 
         interface Async<out R : Response> : BasePacket, SimplePacket.WithResponse<R> {
@@ -94,7 +97,8 @@ interface Packet : BasePacketNoResponse {
             fun receive(player: EntityPlayer?): CompletionStage<out R>
 
             override fun sendTo(manager: NetworkManager): CompletionStage<out R> {
-                return WrappedPacketWithAsyncResponseAsync(this, manager).also { manager.channel().writeAndFlush(it) }
+                return WrappedPacketWithAsyncResponseAsync(this, manager)
+                        .also { manager.channel().writeAndFlush(it) }
             }
         }
 

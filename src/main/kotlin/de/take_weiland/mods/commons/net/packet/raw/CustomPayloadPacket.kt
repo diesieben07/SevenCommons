@@ -8,9 +8,14 @@ import net.minecraft.network.NetworkManager
 import net.minecraftforge.fml.relauncher.Side
 
 /**
+ * A basic custom payload packet. Such a packet will either be received directly via `receiveAsync` or remotely using a
+ * `PacketChannel`.
+ *
+ * Usually the simpler [de.take_weiland.mods.commons.net.packet.Packet] API should be used.
+ *
  * @author diesieben07
  */
-interface CustomPayloadPacket {
+interface CustomPayloadPacket : SimplePacket {
 
     /**
      * The channel this packet should be send on
@@ -32,13 +37,16 @@ interface CustomPayloadPacket {
      */
     fun writePayload(buf: ByteBuf)
 
+    /**
+     * Called when this packet is received directly on a local channel.
+     *
+     * @param side the logical side receiving this packet
+     * @param player the player receiving the packet, may be null on the client.
+     */
     fun receiveAsync(side: Side, player: EntityPlayer?)
 
-    interface Sendable : CustomPayloadPacket, SimplePacket {
-
-        override fun sendTo(manager: NetworkManager) {
-            manager.channel().writeAndFlush(this)
-        }
+    override fun sendTo(manager: NetworkManager) {
+        manager.channel().writeAndFlush(this)
     }
 
 }

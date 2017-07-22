@@ -85,7 +85,7 @@ public class ServerChunkViewManager {
     public static void onChunkLoad(Chunk chunk) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
-            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
+            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.x, chunk.z);
             if (it.hasNext()) {
 //                chunkPacket(chunk, INIT_NEW).sendTo(it);
             }
@@ -95,7 +95,7 @@ public class ServerChunkViewManager {
     public static void onChunkUnload(Chunk chunk) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
-            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
+            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.x, chunk.z);
             if (it.hasNext()) {
 //                SimplePacket.Companion.of(chunkUnloadPacket(chunk)).sendTo(it);
             }
@@ -194,7 +194,7 @@ public class ServerChunkViewManager {
     static void onChunkLayersChanged(Chunk chunk, int yLayers) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
-            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
+            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.x, chunk.z);
             if (it.hasNext()) {
 //                chunkPacket(chunk, yLayers).sendTo(it);
             }
@@ -205,7 +205,7 @@ public class ServerChunkViewManager {
     static void onSingleBlockChanged(Chunk chunk, int x, int y, int z) {
         ChunkInstance chunkInstance = chunkData.get(encodeChunk(chunk));
         if (chunkInstance != null && !chunkInstance.players.isEmpty()) {
-            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.xPosition, chunk.zPosition);
+            Iterator<EntityPlayer> it = chunkInstance.notAlreadyTrackingIterator(chunk.getWorld(), chunk.x, chunk.z);
             if (it.hasNext()) {
 //                blockChangePacket(chunk.getWorld(), x + (chunk.xPosition << 4), y, z + (chunk.zPosition << 4)).sendTo(it);
             }
@@ -314,7 +314,7 @@ public class ServerChunkViewManager {
     private static final long CHUNK_COORD_SIGN_BIT = 0x20_0000L;
 
     private static long encodeChunk(Chunk chunk) {
-        return encodeChunk(chunk.getWorld().provider.getDimension(), chunk.xPosition, chunk.zPosition);
+        return encodeChunk(chunk.getWorld().provider.getDimension(), chunk.x, chunk.z);
     }
 
     // encode dimension, chunkX and chunkZ into a single long

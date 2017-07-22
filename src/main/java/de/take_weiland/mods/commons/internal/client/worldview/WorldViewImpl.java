@@ -2,7 +2,6 @@ package de.take_weiland.mods.commons.internal.client.worldview;
 
 import de.take_weiland.mods.commons.client.worldview.WorldView;
 import de.take_weiland.mods.commons.internal.EntityRendererProxy;
-import de.take_weiland.mods.commons.internal.worldview.PacketRequestWorldInfo;
 import de.take_weiland.mods.commons.util.Scheduler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;

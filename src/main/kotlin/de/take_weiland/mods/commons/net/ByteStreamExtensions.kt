@@ -4,7 +4,6 @@ import com.google.common.base.Utf8
 import de.take_weiland.mods.commons.internal.sharedEnumConstants
 import de.take_weiland.mods.commons.util.createArraySequentially
 import de.take_weiland.mods.commons.util.nbt
-import de.take_weiland.mods.commons.util.registryName
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.ByteBufInputStream
 import io.netty.buffer.ByteBufOutputStream
@@ -21,9 +20,10 @@ import net.minecraft.util.ResourceLocation
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.registry.RegistryNamespacedDefaultedByKey
-import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry
 import net.minecraftforge.fml.common.registry.GameRegistry
-import net.minecraftforge.fml.common.registry.IForgeRegistryEntry
+import net.minecraftforge.registries.ForgeRegistry
+import net.minecraftforge.registries.IForgeRegistryEntry
+import net.minecraftforge.registries.RegistryManager
 import java.io.DataInput
 import java.io.DataOutput
 import java.io.InputStream
@@ -230,7 +230,7 @@ fun ByteBuf.writeString(value: String) {
     writeVarInt(utf8Len)
     if (utf8Len != 0) {
         // TODO something better?
-        val encoder = CharsetUtil.getEncoder(StandardCharsets.UTF_8)
+        val encoder = CharsetUtil.encoder(StandardCharsets.UTF_8)
         val dstBuf = internalNioBuffer(writerIndex, utf8Len)
 
         var cr = encoder.encode(CharBuffer.wrap(value), dstBuf, true)
@@ -362,8 +362,8 @@ fun ByteBuf.readChunkPos(): ChunkPos {
 }
 
 fun ByteBuf.writeChunkPos(value: ChunkPos) {
-    writeMedium(value.chunkXPos)
-    writeMedium(value.chunkZPos)
+    writeMedium(value.x)
+    writeMedium(value.z)
 }
 
 fun ByteBuf.readBlockPos(): BlockPos {
@@ -405,7 +405,7 @@ fun ByteBuf.writeFullBlockState(value: IBlockState) {
 
 fun <V : IForgeRegistryEntry<V>> ByteBuf.writeRegistryEntry(entry: V) {
     val registry = requireNotNull(GameRegistry.findRegistry(entry.registryType)) { "Unknown registry type ${entry.registryType} for entry $entry" }
-    val id = (registry as FMLControlledNamespacedRegistry<V>).getId(entry)
+    val id = (registry as ForgeRegistry<V>).getID(entry)
     require(id != -1) { "Registry entry ${entry.registryName} ($entry) is not registered" }
     writeVarInt(id)
 }
@@ -416,8 +416,8 @@ fun <V : IForgeRegistryEntry<V>> ByteBuf.readRegistryEntry(cls: Class<V>): V {
     val registry = GameRegistry.findRegistry(cls)
     require(registry != null) { "Unknown registry type ${cls.name}" }
     val id = readVarInt()
-    val thing = (registry as FMLControlledNamespacedRegistry<V>).getRaw(id)
-    return checkNotNull(thing) { "Received invalid id $id for registry ${registry.registryName}" }
+    val thing = (registry as ForgeRegistry<V>).getRaw(id)
+    return checkNotNull(thing) { "Received invalid id $id for registry ${RegistryManager.ACTIVE.getName(registry)}" }
 }
 
 fun ByteBuf.readBlock(): Block {

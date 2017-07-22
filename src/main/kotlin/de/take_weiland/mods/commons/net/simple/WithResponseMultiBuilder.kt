@@ -15,9 +15,9 @@ class WithResponseMultiBuilder<out Result>(private val packet: SimplePacket.With
     private val map = HashMap<NetworkManager, CompletionStage<out Result>>()
 
     override fun sendTo(manager: NetworkManager): CompletionStage<out Result> {
-        val result = packet.sendTo(manager)
-        map.put(manager, result)
-        return result
+        return packet.sendTo(manager).also { result ->
+            map.put(manager, result)
+        }
     }
 
     override fun finish(): Map<NetworkManager, CompletionStage<out Result>> {

@@ -1,21 +1,19 @@
 package de.take_weiland.mods.commons.sync
 
-import kotlin.Int as kInt
+import io.netty.buffer.ByteBuf
 
 /**
  * @author diesieben07
  */
-sealed class ChangedProperty<T>(val property: SyncedProperty<T>) {
+abstract class ChangedProperty<PAYLOAD>(val property: SyncedProperty<PAYLOAD>) {
 
-    abstract val valueGeneric: T
+    abstract val payload: PAYLOAD
 
-    class Obj<T>(property: SyncedProperty<T>, val value: T) : ChangedProperty<T>(property) {
-        override val valueGeneric get() = value
+    fun write(buf: ByteBuf) {
+        writeContainerData(buf)
+        property.writePayload(buf, payload)
     }
 
-    class Int(property: SyncedProperty<kInt>, val value: kInt) : ChangedProperty<kInt>(property) {
-        override val valueGeneric get() = value
-    }
+    protected abstract fun writeContainerData(buf: ByteBuf)
 
 }
-

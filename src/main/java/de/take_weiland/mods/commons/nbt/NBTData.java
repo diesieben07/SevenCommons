@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.nbt;
 
-import de.take_weiland.mods.commons.serialize.Deserializer;
-import de.take_weiland.mods.commons.serialize.Serializer;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -9,8 +7,8 @@ import net.minecraft.nbt.*;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.common.registry.IForgeRegistry;
-import net.minecraftforge.fml.common.registry.IForgeRegistryEntry;
+import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.Nonnull;
@@ -38,7 +36,6 @@ public final class NBTData {
      * @return NBT data
      */
     @Nonnull
-    @Serializer
     public static NBTBase writeString(@Nullable String s) {
         return s == null ? serializedNull() : new NBTTagString(s);
     }
@@ -50,7 +47,6 @@ public final class NBTData {
      * @return a String
      */
     @Nullable
-    @Deserializer
     public static String readString(@Nullable NBTBase nbt) {
         if (isSerializedNull(nbt, NBT.TAG_STRING)) {
             return null;
@@ -60,25 +56,21 @@ public final class NBTData {
     }
 
     @Nonnull
-    @Serializer
     public static NBTBase writeBlock(@Nullable Block block) {
         return writeRegistryEntry(block);
     }
 
     @Nullable
-    @Deserializer
     public static Block readBlock(@Nullable NBTBase nbt) {
         return readRegistryEntry(nbt, ForgeRegistries.BLOCKS);
     }
 
     @Nonnull
-    @Serializer
     public static NBTBase writeItem(@Nullable Item item) {
         return writeRegistryEntry(item);
     }
 
     @Nullable
-    @Deserializer
     public static Item readItem(@Nullable NBTBase nbt) {
         return readRegistryEntry(nbt, ForgeRegistries.ITEMS);
     }
