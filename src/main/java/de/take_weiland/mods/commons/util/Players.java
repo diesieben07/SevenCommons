@@ -194,7 +194,7 @@ public final class Players {
      * @return the client player
      */
     public static EntityPlayer getClient() {
-        return SevenCommons.proxy.getClientPlayer();
+        return SevenCommons.INSTANCE.getProxy().getClientPlayer();
     }
 
     /**

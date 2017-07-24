@@ -33,7 +33,7 @@ import static java.lang.invoke.MethodHandles.publicLookup;
 @ParametersAreNonnullByDefault
 public final class SCReflection {
 
-    private static final Logger logger = SevenCommons.scLogger("Reflection");
+    private static final Logger logger = SevenCommons.INSTANCE.scLogger("Reflection");
     private static final AtomicInteger nextDynClassId = new AtomicInteger(0);
     private static final boolean DEBUG = Boolean.getBoolean("sevencommons.reflect.debug");
 

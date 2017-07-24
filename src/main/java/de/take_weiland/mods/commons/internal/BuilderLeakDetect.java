@@ -60,10 +60,10 @@ public final class BuilderLeakDetect {
                 try {
                     BuilderRef ref = (BuilderRef) queue.remove();
                     if (ref.description != null) {
-                        SevenCommons.log.fatal(String.format("Builder %s has been garbage collected without being built", ref.description));
+                        SevenCommons.INSTANCE.getLog().fatal(String.format("Builder %s has been garbage collected without being built", ref.description));
                     }
                 } catch (InterruptedException e) {
-                    SevenCommons.log.warn("Builder misuse detection thread interrupted, exiting", e);
+                    SevenCommons.INSTANCE.getLog().warn("Builder misuse detection thread interrupted, exiting", e);
                     break;
                 }
             }

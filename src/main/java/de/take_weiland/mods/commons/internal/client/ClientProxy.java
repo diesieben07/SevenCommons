@@ -13,7 +13,8 @@ import net.minecraft.network.play.INetHandlerPlayServer;
 import net.minecraft.network.play.client.CPacketCustomPayload;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import java.lang.invoke.MethodHandle;
@@ -22,6 +23,7 @@ import java.lang.reflect.Field;
 
 import static net.minecraft.client.Minecraft.getMinecraft;
 
+@SideOnly(Side.CLIENT)
 public final class ClientProxy implements SevenCommonsProxy {
 
     @Override

@@ -35,7 +35,7 @@ public final class FMLEventHandler {
     @SubscribeEvent
     public static void onConfigChange(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (event.getModID().equals(SevenCommons.MOD_ID)) {
-            SevenCommons.syncConfig(false);
+            SevenCommons.INSTANCE.syncConfig(false);
         }
     }
 

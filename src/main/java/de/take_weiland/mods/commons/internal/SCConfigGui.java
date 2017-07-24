@@ -20,13 +20,13 @@ public class SCConfigGui extends GuiConfig {
     public SCConfigGui(GuiScreen parent) {
         super(parent,
                 createConfigElements(),
-                SevenCommons.MOD_ID, false, false, GuiConfig.getAbridgedConfigPath(SevenCommons.config.toString()));
+                SevenCommons.MOD_ID, false, false, GuiConfig.getAbridgedConfigPath(SevenCommons.INSTANCE.getConfig().toString()));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static List<IConfigElement> createConfigElements() {
         return ImmutableList.<IConfigElement>builder()
-                .addAll(new ConfigElement(SevenCommons.config.getCategory(Configuration.CATEGORY_GENERAL)).getChildElements())
+                .addAll(new ConfigElement(SevenCommons.INSTANCE.getConfig().getCategory(Configuration.CATEGORY_GENERAL)).getChildElements())
                 .build();
     }
 

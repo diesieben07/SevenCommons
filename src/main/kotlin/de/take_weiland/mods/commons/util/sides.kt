@@ -14,6 +14,8 @@ import net.minecraftforge.fml.relauncher.Side
  * @author diesieben07
  */
 
+val physicalSide get() = FMLCommonHandler.instance().side
+
 val World.side inline get() = if (isRemote) Side.CLIENT else Side.SERVER
 val World.isServer inline get() = !isRemote
 val World.isClient inline get() = isRemote

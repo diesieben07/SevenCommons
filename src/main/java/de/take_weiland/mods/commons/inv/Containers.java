@@ -89,7 +89,7 @@ public final class Containers {
                 return (EntityPlayer) listener;
             }
         }
-        return SevenCommons.proxy.getClientPlayer();
+        return SevenCommons.INSTANCE.getProxy().getClientPlayer();
     }
 
     /**

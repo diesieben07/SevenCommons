@@ -17,7 +17,7 @@ public final class Async {
      * @return a common executor
      */
     public static ScheduledExecutorService commonExecutor() {
-        return SevenCommons.commonScheduler;
+        return SevenCommons.INSTANCE.getCommonScheduler();
     }
 
     private Async() { }

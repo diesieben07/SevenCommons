@@ -1,16 +1,5 @@
 package de.take_weiland.mods.commons.internal.transformers;
 
-import de.take_weiland.mods.commons.asm.MCPNames;
-import de.take_weiland.mods.commons.internal.ChunkProxy;
-import de.take_weiland.mods.commons.internal.EntityPlayerMPProxy;
-import de.take_weiland.mods.commons.internal.SRGConstants;
-import de.take_weiland.mods.commons.internal.WorldServerProxy;
-import de.take_weiland.mods.commons.internal.transformers.net.SimplePacketWithResponseTransformer;
-import de.take_weiland.mods.commons.internal.transformers.sync.*;
-import de.take_weiland.mods.commons.internal.transformers.tonbt.TileEntityNBTHook;
-import de.take_weiland.mods.commons.internal.worldview.VanillaPacketProxy;
-import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
-
 import java.util.function.Predicate;
 
 /**

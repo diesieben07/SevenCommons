@@ -1,7 +1,5 @@
 package de.take_weiland.mods.commons.nbt;
 
-import de.take_weiland.mods.commons.serialize.SerializationMethod;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
