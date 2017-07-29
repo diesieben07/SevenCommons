@@ -2,6 +2,8 @@ package de.take_weiland.mods.commons.sync
 
 import de.take_weiland.mods.commons.net.packet.raw.CustomPayloadPacket
 import de.take_weiland.mods.commons.net.writeVarInt
+import de.take_weiland.mods.commons.util.clientPlayer
+import de.take_weiland.mods.commons.util.clientThread
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraftforge.fml.relauncher.Side
@@ -9,17 +11,15 @@ import net.minecraftforge.fml.relauncher.Side
 /**
  * @author diesieben07
  */
-abstract class ChangedPropertyList<CONTAINER> : ArrayList<Any?>(4), CustomPayloadPacket {
+abstract class ChangedPropertyList<CONTAINER : Any> : ArrayList<Any?>(4), CustomPayloadPacket {
 
-    final override val channel: String
-        get() = syncChannel
+    abstract val containerType: SyncedContainerType<CONTAINER>
 
-    abstract fun grabData(container: CONTAINER)
-
-    protected abstract fun writeData(buf: ByteBuf)
+    protected abstract fun writeContainerData(buf: ByteBuf)
+    protected abstract fun getContainer(player: EntityPlayer): CONTAINER?
 
     override fun writePayload(buf: ByteBuf) {
-        writeData(buf)
+        writeContainerData(buf)
         buf.writeVarInt(size shr 1)
         var i = 0
         while (i < size) {
@@ -33,7 +33,28 @@ abstract class ChangedPropertyList<CONTAINER> : ArrayList<Any?>(4), CustomPayloa
         }
     }
 
+    fun <P> addChange(property: SyncedProperty<P>, payload: P) {
+        this += property
+        this += payload
+    }
+
     override fun receiveAsync(side: Side, player: EntityPlayer?) {
-//        propertyById
+        clientThread {
+            val container = getContainer(clientPlayer)
+            if (container != null) {
+                val accessor = PropertyAccessorCache.get(container.javaClass)
+
+                var i = 0
+                while (i < size) {
+                    val remoteProperty = this[i] as SyncedProperty<*>
+
+                    @Suppress("UNCHECKED_CAST")
+                    val property = PropertyAccessorHelpers.accessProperty(accessor, container, remoteProperty.id) as SyncedProperty<Any?>
+                    property.receivePayload(this[i+1])
+
+                    i += 2
+                }
+            }
+        }
     }
 }

@@ -16,55 +16,32 @@ import net.minecraft.world.World
 /**
  * @author diesieben07
  */
-interface SyncedContainerType<T : Any, DATA> {
+interface SyncedContainerType<T : Any> {
 
     fun getServerWorld(obj: T): World
 
     fun sendPacket(obj: T, packet: AnySendable)
 
-    fun <P> createChangedProperty(obj: T, property: SyncedProperty<P>, payload: P): ChangedProperty<P> = TODO()
-
-    fun serialize(obj: T): DATA
-
-    fun deserializeUntyped(player: EntityPlayer, data: DATA): T?
-
-    fun serialize(buf: ByteBuf, obj: T)
+    fun createChangedPropertyList(obj: T): ChangedPropertyList<T>
 
     fun deserializeUntyped(player: EntityPlayer, buf: ByteBuf): T?
 
-    companion object {
-
-//        val REGISTRY = RegistryBuilder<SyncedContainerType<*, *>>()
-//                .disableOverrides()
-//                .disableSaving()
-//                .setDefaultKey()
-
-    }
-
 }
 
-fun <T : Any> findContainerType(value: T): SyncedContainerType<T, *> {
+fun <T : Any> findContainerType(value: T): SyncedContainerType<T> {
     @Suppress("UNCHECKED_CAST")
     return when (value) {
         is TileEntity -> TileEntitySyncedType
         is Entity -> EntitySyncedType
         else -> throw IllegalArgumentException("Unknown container $value for synced property.")
-    } as SyncedContainerType<T, *>
+    } as SyncedContainerType<T>
 }
 
-inline fun <T : Any, DATA, reified R : T> SyncedContainerType<T, DATA>.deserialize(player: EntityPlayer, data: DATA): R? {
-    return deserializeUntyped(player, data) as? R
-}
-
-inline fun <T : Any, DATA, reified R : T> SyncedContainerType<T, DATA>.deserialize(player: EntityPlayer, buf: ByteBuf): R? {
-    return deserializeUntyped(player, buf) as? R
-}
-
-inline fun <T : Any> SimplePacket.sendTo(obj: T, containerType: SyncedContainerType<T, *>) {
+inline fun <T : Any> SimplePacket.sendTo(obj: T, containerType: SyncedContainerType<T>) {
     containerType.sendPacket(obj, this)
 }
 
-object TileEntitySyncedType : SyncedContainerType<TileEntity, BlockPos> {
+object TileEntitySyncedType : SyncedContainerType<TileEntity> {
 
     override fun getServerWorld(obj: TileEntity): World = obj.world
 
@@ -72,20 +49,8 @@ object TileEntitySyncedType : SyncedContainerType<TileEntity, BlockPos> {
         packet.sendToTracking(obj)
     }
 
-    override fun <P> createChangedProperty(obj: TileEntity, property: SyncedProperty<P>, payload: P): ChangedProperty<P> {
-        return TileEntityChangedProperty(property, obj.pos, payload)
-    }
-
-    override fun serialize(obj: TileEntity): BlockPos {
-        return obj.pos
-    }
-
-    override fun deserializeUntyped(player: EntityPlayer, data: BlockPos): TileEntity? {
-        return player.world.getTileEntity(data)
-    }
-
-    override fun serialize(buf: ByteBuf, obj: TileEntity) {
-        buf.writeBlockPos(obj.pos)
+    override fun createChangedPropertyList(obj: TileEntity): ChangedPropertyList<TileEntity> {
+        return TileEntityChangedPropertyList(obj.pos)
     }
 
     override fun deserializeUntyped(player: EntityPlayer, buf: ByteBuf): TileEntity? {
@@ -94,16 +59,30 @@ object TileEntitySyncedType : SyncedContainerType<TileEntity, BlockPos> {
 
 }
 
-internal class TileEntityChangedProperty<PAYLOAD>(property: SyncedProperty<PAYLOAD>, val pos: BlockPos, override val payload: PAYLOAD) : ChangedProperty<PAYLOAD>(property) {
+internal class TileEntityChangedPropertyList(val pos: BlockPos) : ChangedPropertyList<TileEntity>() {
+
+    override val containerType: SyncedContainerType<TileEntity>
+        get() = TileEntitySyncedType
+
+    override val channel: String
+        get() = "sevencommons_syncte"
 
     override fun writeContainerData(buf: ByteBuf) {
         buf.writeBlockPos(pos)
     }
 
+    override fun getContainer(player: EntityPlayer): TileEntity? {
+        return player.world.getTileEntity(pos)
+    }
+
 }
 
 
-object EntitySyncedType : SyncedContainerType<Entity, Int> {
+object EntitySyncedType : SyncedContainerType<Entity> {
+
+    override fun createChangedPropertyList(obj: Entity): ChangedPropertyList<Entity> {
+        return EntityChangedPropertyList(obj.entityId)
+    }
 
     override fun getServerWorld(obj: Entity): World = obj.world
 
@@ -111,29 +90,36 @@ object EntitySyncedType : SyncedContainerType<Entity, Int> {
         packet.sendToTracking(obj)
     }
 
-    override fun serialize(obj: Entity): Int {
-        return obj.entityId
-    }
-
-    override fun deserializeUntyped(player: EntityPlayer, data: Int): Entity? {
-        return player.world.getEntityByID(data)
-    }
-
-    override fun serialize(buf: ByteBuf, obj: Entity) {
-        buf.writeInt(obj.entityId)
-    }
-
     override fun deserializeUntyped(player: EntityPlayer, buf: ByteBuf): Entity? {
         return player.world.getEntityByID(buf.readInt())
     }
 }
 
-object ContainerSyncedType : SyncedContainerType<Container, Byte> {
+internal class EntityChangedPropertyList(val id: Int) : ChangedPropertyList<Entity>() {
+
+    override val containerType: SyncedContainerType<Entity>
+        get() = EntitySyncedType
+
+    override val channel: String
+        get() = "sevencommons:syncent"
+
+    override fun writeContainerData(buf: ByteBuf) {
+        buf.writeInt(id)
+    }
+
+    override fun getContainer(player: EntityPlayer): Entity? {
+        return player.world.getEntityByID(id)
+    }
+
+}
+
+object ContainerSyncedType : SyncedContainerType<Container> {
+
+    override fun createChangedPropertyList(obj: Container): ChangedPropertyList<Container> {
+        return ContainerChangedPropertyList(obj.windowId)
+    }
 
     override fun getServerWorld(obj: Container): World {
-//        obj.listeners.fastForEach {
-//            if (it is EntityPlayerMP) return it.world
-//        }
         throw IllegalStateException("Container is not attached to server-side player.")
     }
 
@@ -141,21 +127,27 @@ object ContainerSyncedType : SyncedContainerType<Container, Byte> {
         packet.sendToTracking(obj)
     }
 
-    override fun serialize(obj: Container): Byte {
-        return obj.windowId.toByte()
-    }
-
-    override fun deserializeUntyped(player: EntityPlayer, data: Byte): Container? {
-        return player.openContainer.takeIf { it.windowId.toByte() == data }
-    }
-
-    override fun serialize(buf: ByteBuf, obj: Container) {
-        buf.writeByte(obj.windowId)
-    }
-
     override fun deserializeUntyped(player: EntityPlayer, buf: ByteBuf): Container? {
         val id = buf.readByte()
         return player.openContainer.takeIf { it.windowId.toByte() == id }
     }
+}
+
+internal class ContainerChangedPropertyList(val windowId: Int) : ChangedPropertyList<Container>() {
+
+    override val containerType: SyncedContainerType<Container>
+        get() = ContainerSyncedType
+
+    override val channel: String
+        get() = "sevencommons:syncct"
+
+    override fun writeContainerData(buf: ByteBuf) {
+        buf.writeByte(windowId)
+    }
+
+    override fun getContainer(player: EntityPlayer): Container? {
+        return player.openContainer.takeIf { it.windowId == windowId }
+    }
+
 }
 

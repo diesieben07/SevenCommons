@@ -9,19 +9,27 @@ import de.take_weiland.mods.commons.internal.client.worldview.EmptyEntityRendere
 import de.take_weiland.mods.commons.internal.client.worldview.ViewEntity
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoSuperCache
 import de.take_weiland.mods.commons.proxy.sidedProxy
+import de.take_weiland.mods.commons.sync.TestBlock
 import de.take_weiland.mods.commons.util.Logging
 import de.take_weiland.mods.commons.worldview.ClientChunks
+import net.minecraft.block.Block
 import net.minecraft.command.CommandBase
 import net.minecraft.command.CommandException
 import net.minecraft.command.ICommandSender
+import net.minecraft.item.Item
+import net.minecraft.item.ItemBlock
 import net.minecraft.server.MinecraftServer
+import net.minecraft.util.ResourceLocation
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.common.config.Configuration
+import net.minecraftforge.event.RegistryEvent
 import net.minecraftforge.fml.client.registry.RenderingRegistry
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.discovery.ASMDataTable
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
+import net.minecraftforge.fml.common.registry.ForgeRegistries
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.apache.logging.log4j.Logger
@@ -31,6 +39,7 @@ import java.util.concurrent.TimeUnit
 
 
 @Mod(modid = SevenCommons.MOD_ID, name = "SevenCommons", version = SevenCommons.VERSION, modLanguageAdapter = KotlinLanguageAdapter.name)
+@Mod.EventBusSubscriber
 object SevenCommons {
 
     val log: Logger = Logging.getLogger("SevenCommons")
@@ -48,8 +57,21 @@ object SevenCommons {
     @Mod.EventHandler
     fun clientPreInit(event: FMLPreInitializationEvent) {
         clientMainThreadID = Thread.currentThread().id
-        RenderingRegistry.registerEntityRenderingHandler(ViewEntity::class.java, { EmptyEntityRenderer(it) })
+        RenderingRegistry.registerEntityRenderingHandler(ViewEntity::class.java, ::EmptyEntityRenderer)
         universalPreInit(event)
+    }
+
+    @JvmStatic
+    @SubscribeEvent
+    fun registerBlocks(event: RegistryEvent.Register<Block>) {
+        event.registry.register(TestBlock().setRegistryName("testblock"))
+    }
+
+    @JvmStatic
+    @SubscribeEvent
+    fun registerItems(event: RegistryEvent.Register<Item>) {
+        val block = ForgeRegistries.BLOCKS.getValue(ResourceLocation(MOD_ID, "testblock"))!!
+        event.registry.register(ItemBlock(block).setRegistryName(block.registryName))
     }
 
     @SideOnly(Side.SERVER)

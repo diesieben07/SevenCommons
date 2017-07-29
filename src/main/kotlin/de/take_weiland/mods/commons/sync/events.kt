@@ -1,46 +1,26 @@
-@file:Mod.EventBusSubscriber(modid = "sevencommons")
+@file:Mod.EventBusSubscriber(modid = SevenCommons.MOD_ID)
 package de.take_weiland.mods.commons.sync
 
+import de.take_weiland.mods.commons.internal.SevenCommons
 import net.minecraftforge.fml.common.Mod
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
+import net.minecraftforge.fml.common.gameevent.TickEvent
 
 /**
  * @author diesieben07
  */
-//@SubscribeEvent
-//fun serverTick(event: TickEvent.ServerTickEvent) {
-//    changedProperties.forEach { (key, value) ->
-//        handleChangedProperties(key, value)
-//    }
-//
-//    changedProperties.clear()
-//}
-//
-//fun <T : Any> handleChangedProperties(obj: T, changed: List<ChangedProperty<*>>) {
-//    val containerType: SyncedContainerType<T, *> = findContainerType(obj)
-//
-//
-//
-//    containerType.sendPacket(obj, object : CustomPayloadPacket {
-//
-//        override val channel: String
-//            get() = syncChannel
-//
-//        override fun writePayload(buf: ByteBuf) {
-//
-//            buf.writeList(changed) {
-//                it.write(this)
-//            }
-//        }
-//
-//        override fun receiveAsync(side: Side, player: EntityPlayer?) {
-//            if (side.isClient) {
-//                containerType.serialize(obj)
-//            }
-//        }
-//    })
-//}
-//
-//internal fun <T> ChangedProperty.write(buf: ByteBuf) {
-//    buf.writeVarInt(property.id)
-//    property.writeData(buf, valueGeneric)
-//}
+@SubscribeEvent
+fun serverTick(event: TickEvent.ServerTickEvent) {
+    if (changedProperties.isNotEmpty()) {
+        changedProperties.forEach { (key, value) ->
+            @Suppress("UNCHECKED_CAST")
+            handleChangedProperties(key, value as ChangedPropertyList<Any>)
+        }
+
+        changedProperties.clear()
+    }
+}
+
+fun <T : Any> handleChangedProperties(obj: T, changed: ChangedPropertyList<T>) {
+    changed.containerType.sendPacket(obj, changed)
+}

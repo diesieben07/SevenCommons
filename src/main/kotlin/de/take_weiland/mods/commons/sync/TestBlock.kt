@@ -10,12 +10,8 @@ import net.minecraft.world.World
  */
 class TestBlock : Block(Material.ROCK) {
 
-    init {
-        setRegistryName("testBlock")
-    }
-
     override fun hasTileEntity(state: IBlockState?) = true
 
-    override fun createTileEntity(world: World?, state: IBlockState?) = Foo()
+    override fun createTileEntity(world: World?, state: IBlockState?) = Test()
 
 }

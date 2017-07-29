@@ -38,12 +38,17 @@ interface TickingProperty {
 
 }
 
-internal val changedProperties = HashMap<Any, MutableList<ChangedProperty<*>>>()
+internal val changedProperties = HashMap<Any, ChangedPropertyList<*>>()
 
-//private fun changesFor(obj: Any) = with(changedProperties) {
-//    get(obj) ?: ArrayList<ChangedProperty>().also { put(obj, it) }
-//}
+private fun changesFor(obj: Any): ChangedPropertyList<*> = with(changedProperties) {
+    val changes = this[obj]
+    if (changes != null) return changes
 
-fun <DATA> SyncedProperty<DATA>.markDirty(obj: Any, newValue: DATA) {
-//    changesFor(obj) += ChangedProperty.ForRef(this, newValue)
+    val newChangeList = findContainerType(obj).createChangedPropertyList(obj)
+    this[obj] = newChangeList
+    return newChangeList
+}
+
+fun <PAYLOAD> SyncedProperty<PAYLOAD>.markDirty(obj: Any, newValue: PAYLOAD) {
+    changesFor(obj).addChange(this, newValue)
 }
