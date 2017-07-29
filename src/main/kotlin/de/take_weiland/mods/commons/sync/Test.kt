@@ -10,7 +10,7 @@ import java.util.*
  * @author diesieben07
  */
 
-open class Test : TileEntity(), SyncEnabled, ITickable {
+open class Test : TileEntity(), ITickable {
 
     var bla: Int by sync(0)
 
@@ -18,7 +18,7 @@ open class Test : TileEntity(), SyncEnabled, ITickable {
 
     override fun update() {
         tick++
-        if (tick.rem(100) == 0) {
+        if (world.totalWorldTime.rem(100) == 0L) {
             if (isServer) {
                 bla = Random().nextInt(30)
                 for (player in world.playerEntities) {

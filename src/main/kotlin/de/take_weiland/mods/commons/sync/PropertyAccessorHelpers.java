@@ -1,5 +1,6 @@
 package de.take_weiland.mods.commons.sync;
 
+import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 
 /**
@@ -7,8 +8,13 @@ import java.lang.invoke.MethodHandle;
  */
 final class PropertyAccessorHelpers {
 
+    @Nullable
     static SyncedProperty<?> accessProperty(MethodHandle accessor, Object container, int id) throws Throwable {
-        return (SyncedProperty<?>) accessor.invokeExact((Object) container, (int) id);
+        try {
+            return (SyncedProperty<?>) accessor.invokeExact((Object) container, (int) id);
+        } catch (ArrayIndexOutOfBoundsException aioobe) {
+            return null;
+        }
     }
 
 }

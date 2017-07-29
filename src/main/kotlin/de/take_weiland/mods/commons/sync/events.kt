@@ -22,5 +22,5 @@ fun serverTick(event: TickEvent.ServerTickEvent) {
 }
 
 fun <T : Any> handleChangedProperties(obj: T, changed: ChangedPropertyList<T>) {
-    changed.containerType.sendPacket(obj, changed)
+    changed.send(obj)
 }

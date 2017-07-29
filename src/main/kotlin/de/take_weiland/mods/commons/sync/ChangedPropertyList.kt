@@ -13,10 +13,15 @@ import net.minecraftforge.fml.relauncher.Side
  */
 abstract class ChangedPropertyList<CONTAINER : Any> : ArrayList<Any?>(4), CustomPayloadPacket {
 
+    final override val channel: String
+        get() = containerType.channel
+
     abstract val containerType: SyncedContainerType<CONTAINER>
 
     protected abstract fun writeContainerData(buf: ByteBuf)
     protected abstract fun getContainer(player: EntityPlayer): CONTAINER?
+
+    abstract fun send(obj: CONTAINER)
 
     override fun writePayload(buf: ByteBuf) {
         writeContainerData(buf)
@@ -49,8 +54,8 @@ abstract class ChangedPropertyList<CONTAINER : Any> : ArrayList<Any?>(4), Custom
                     val remoteProperty = this[i] as SyncedProperty<*>
 
                     @Suppress("UNCHECKED_CAST")
-                    val property = PropertyAccessorHelpers.accessProperty(accessor, container, remoteProperty.id) as SyncedProperty<Any?>
-                    property.receivePayload(this[i+1])
+                    val property = PropertyAccessorHelpers.accessProperty(accessor, container, remoteProperty.id) as SyncedProperty<Any?>?
+                    property?.receivePayload(this[i+1])
 
                     i += 2
                 }

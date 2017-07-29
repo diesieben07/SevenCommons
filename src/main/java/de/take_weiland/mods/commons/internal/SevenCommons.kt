@@ -8,8 +8,9 @@ import de.take_weiland.mods.commons.internal.client.ClientProxy
 import de.take_weiland.mods.commons.internal.client.worldview.EmptyEntityRenderer
 import de.take_weiland.mods.commons.internal.client.worldview.ViewEntity
 import de.take_weiland.mods.commons.internal.exclude.ClassInfoSuperCache
+import de.take_weiland.mods.commons.net.packet.raw.PacketChannel
 import de.take_weiland.mods.commons.proxy.sidedProxy
-import de.take_weiland.mods.commons.sync.TestBlock
+import de.take_weiland.mods.commons.sync.*
 import de.take_weiland.mods.commons.util.Logging
 import de.take_weiland.mods.commons.worldview.ClientChunks
 import net.minecraft.block.Block
@@ -30,6 +31,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.registry.ForgeRegistries
+import net.minecraftforge.fml.common.registry.GameRegistry
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.apache.logging.log4j.Logger
@@ -65,6 +67,7 @@ object SevenCommons {
     @SubscribeEvent
     fun registerBlocks(event: RegistryEvent.Register<Block>) {
         event.registry.register(TestBlock().setRegistryName("testblock"))
+        GameRegistry.registerTileEntity(Test::class.java, "sevencommons:test_tile")
     }
 
     @JvmStatic
@@ -106,6 +109,12 @@ object SevenCommons {
 
         if (config.hasChanged()) {
             config.save()
+        }
+
+        with(PacketChannel) {
+            register(TileEntitySyncedType)
+            register(EntitySyncedType)
+            register(ContainerSyncedType)
         }
     }
 

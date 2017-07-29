@@ -6,6 +6,7 @@
 package de.take_weiland.mods.commons.net.packet
 
 import de.take_weiland.mods.commons.net.packet.raw.CustomPayloadPacket
+import de.take_weiland.mods.commons.net.packet.raw.getPacketChannel
 import de.take_weiland.mods.commons.net.readString
 import de.take_weiland.mods.commons.net.readerIndex
 import de.take_weiland.mods.commons.net.writeString
@@ -49,9 +50,10 @@ private fun setupPipeline(event: FMLNetworkEvent<*>, handler: SCMessageHandler, 
 }
 
 internal fun tryReceive(channel: String, buf: ByteBuf, player: EntityPlayer?): Boolean {
-    val packetChannel = globalPacketChannelMap[channel]
+    val packetChannel = getPacketChannel(channel)
     if (packetChannel != null) {
         packetChannel.receive(buf, player)
+        if (packetChannel.autoRelease) buf.release()
         return true
     } else {
         return false

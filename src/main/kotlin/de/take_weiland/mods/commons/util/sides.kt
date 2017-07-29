@@ -38,4 +38,6 @@ val Container.side get(): Side = if (isClient) Side.CLIENT else Side.SERVER
 val Container.isServer get() = listeners.any { it is EntityPlayerMP }
 val Container.isClient inline get() = !isServer
 
-val serverInstance : MinecraftServer get() = FMLCommonHandler.instance().minecraftServerInstance
+val serverInstance : MinecraftServer get() = requireNotNull(FMLCommonHandler.instance().minecraftServerInstance) {
+    "Not on a server."
+}

@@ -14,12 +14,12 @@ class IntSyncedProperty<in CONTAINER : Any>(@JvmField var value: Int) : SyncedPr
         value = payload
     }
 
-    override fun writePayload(buf: ByteBuf, data: Int) {
-        buf.writeInt(data)
+    override fun receivePayload(buf: ByteBuf) {
+        value = buf.readInt()
     }
 
-    override fun receivePayload(buf: ByteBuf) {
-//        return buf.readInt()
+    override fun writePayload(buf: ByteBuf, data: Int) {
+        buf.writeInt(data)
     }
 
 

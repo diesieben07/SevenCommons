@@ -7,34 +7,11 @@ import com.google.common.collect.ImmutableSet
 import net.minecraft.entity.Entity
 import net.minecraft.inventory.Container
 import net.minecraft.tileentity.TileEntity
-import java.lang.reflect.Field
-import java.lang.reflect.Member
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.jvm.internal.PropertyReference
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.jvm.javaField
-import kotlin.reflect.jvm.javaGetter
-
-fun <T : Any> propertyById(container: T, id: Int): SyncedProperty<*>? {
-    @Suppress("UNCHECKED_CAST")
-    return (ByIdCache[container.javaClass]?.get(id) as KProperty1<T, *>?)?.getDelegate(container) as SyncedProperty<*>?
-}
-
-private object ByIdCache : ClassValue<Array<KProperty1<*, *>>?>() {
-
-    override fun computeValue(type: Class<*>): Array<KProperty1<*, *>>? {
-        return doCompute(type)
-    }
-
-    private fun <T : Any> doCompute(type: Class<T>): Array<KProperty1<*, *>>? {
-        return type.kotlin.declaredMemberProperties
-                .filter { it.delegateType?.isSubtypeOf(SyncedProperty::class.java) ?: false }
-                .takeIf { it.isNotEmpty() }
-                ?.toTypedArray()
-    }
-
-}
 
 // ID is built as follows:
 //      - Lowest 3 bits are class ID, starting with 0 at the top. Top is the class extending from e.g. TileEntity.
@@ -47,19 +24,19 @@ private object ByIdCache : ClassValue<Array<KProperty1<*, *>>?>() {
 
 fun KProperty1<*, *>.getPropertyId(): Int {
     return propertyIdCache[this] ?: propertyIdCache.computeIfAbsent(this) {
-        val declaringClass = declaringClass
-        val idInClass = declaringClass.kotlin.declaredMemberProperties.asSequence()
-                .filter { it.delegateType?.isSubtypeOf(SyncedProperty::class.java) ?: false }
-                .indexOf(this)
+        val owner = (this as PropertyReference).owner
+        require(owner is KClass<*>) { "Can only use synced properties inside a class." }
+        val declaringClass = (owner as KClass<*>).java // this works because we are only called from a delegated property
+        val delegatedPropertiesField = declaringClass.getDeclaredField("\$\$delegatedProperties")
+        delegatedPropertiesField.isAccessible = true
 
+        @Suppress("UNCHECKED_CAST")
+        val delegatedProperties = delegatedPropertiesField[null] as Array<KProperty<*>>
+
+        val idInClass = delegatedProperties.indexOfFirst { it == this }
         if (idInClass < 0) throw IllegalStateException("Property not in it's declaring class?")
-
         declaringClass.getClassId() or (idInClass shl CLASS_ID_BITS)
     }
-}
-
-private fun Class<*>.isSubtypeOf(other: Class<*>): Boolean {
-    return other.isAssignableFrom(this)
 }
 
 private val propertyIdCache = ConcurrentHashMap<KProperty1<*, *>, Int>()
@@ -80,16 +57,3 @@ private fun <T : Any> Class<T>.getClassId(): Int {
 
     if (id > MAX_CLASS_ID) throw UnsupportedOperationException("Class hierarchy too deep for synced properties") else return id
 }
-
-private val KProperty<*>.declaringClass: Class<*>
-    get() = (javaField as Member? ?: javaGetter)?.declaringClass ?: throw IllegalArgumentException("Property does not have getter or field.")
-
-private val KProperty<*>.delegateField : Field?
-    get() = try {
-        declaringClass.getDeclaredField("$name\$delegate")
-    } catch (x: NoSuchFieldException) {
-        null
-    }
-
-private val KProperty<*>.delegateType : Class<*>?
-    get() = delegateField?.type

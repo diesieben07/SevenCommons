@@ -5,7 +5,6 @@ import de.take_weiland.mods.commons.net.packet.raw.CustomPayloadPacket
 import de.take_weiland.mods.commons.net.packet.raw.DefaultPacketChannelBuilder
 import de.take_weiland.mods.commons.net.packet.raw.PacketChannel
 import de.take_weiland.mods.commons.util.side
-import de.take_weiland.mods.commons.util.toImmutable
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraftforge.fml.relauncher.Side
@@ -17,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap
 internal class DefaultPacketChannelImpl(override val channel: String, packets: Iterable<RegisteredPacket<*>>) : PacketChannel {
 
     private val packets = packets.toList().toTypedArray()
-    private val packetsByClass = packets.associateBy { it.packetClass }.toImmutable()
 
     override fun receive(buf: ByteBuf, player: EntityPlayer?) {
         val id = buf.readPacketId()
@@ -45,7 +43,7 @@ internal class DefaultPacketChannelBuilderImpl(channelName: String) : DefaultPac
     override fun build(): PacketChannel {
         globalDataStorageMap.putAll(packets)
         return DefaultPacketChannelImpl(channelName, packets.values).also {
-            if (globalPacketChannelMap.putIfAbsent(channelName, it) != null) throw IllegalArgumentException("Channel $channelName was already registered.")
+            PacketChannel.register(it)
         }
     }
 }
@@ -53,7 +51,6 @@ internal class DefaultPacketChannelBuilderImpl(channelName: String) : DefaultPac
 internal data class RegisteredPacket<T : BasePacket>(val packetId: Int, val channel: String, val packetClass: Class<T>, val reader: PacketReader<T>)
 
 private val globalDataStorageMap = ConcurrentHashMap<Class<*>, RegisteredPacket<*>>()
-internal val globalPacketChannelMap = ConcurrentHashMap<String, PacketChannel>()
 
 internal object GlobalPacketDataStorage : ClassValue<RegisteredPacket<*>>() {
 
