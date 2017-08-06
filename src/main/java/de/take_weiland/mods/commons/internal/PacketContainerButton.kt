@@ -1,7 +1,7 @@
 package de.take_weiland.mods.commons.internal
 
 import de.take_weiland.mods.commons.inv.ButtonContainer
-import de.take_weiland.mods.commons.net.packet.Packet
+import de.take_weiland.mods.commons.net.packet.mod.Packet
 import de.take_weiland.mods.commons.net.readVarInt
 import de.take_weiland.mods.commons.net.writeVarInt
 import io.netty.buffer.ByteBuf
@@ -26,12 +26,12 @@ class PacketContainerButton : Packet {
         this.buttonId = buf.readVarInt()
     }
 
-    override fun ByteBuf.write() {
-        writeByte(windowId)
-        writeVarInt(buttonId)
+    override fun write(buf: ByteBuf) {
+        buf.writeByte(this.windowId)
+        buf.writeVarInt(this.buttonId)
     }
 
-    override fun receive(player: EntityPlayer) {
+    override fun receive(side: Side, player: EntityPlayer) {
         if (player.openContainer.windowId == windowId && player.openContainer is ButtonContainer) {
             (player.openContainer as ButtonContainer).onButtonClick(Side.SERVER, player, buttonId)
         }

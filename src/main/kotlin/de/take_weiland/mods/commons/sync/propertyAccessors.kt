@@ -10,11 +10,6 @@ import java.lang.reflect.Modifier
 /**
  * @author diesieben07
  */
-
-fun main(args: Array<String>) {
-    println(Void.TYPE)
-}
-
 internal object PropertyAccessorCache : ClassValue<MethodHandle>() {
 
     override fun computeValue(type: Class<*>): MethodHandle {

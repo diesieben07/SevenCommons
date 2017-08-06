@@ -10,17 +10,28 @@ import de.take_weiland.mods.commons.util.clientThread
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.inventory.Container
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraftforge.fml.relauncher.Side
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * @author diesieben07
  */
-abstract class SyncedContainerType<T : Any> : PacketChannel {
+abstract class SyncedContainerType<T : Any>(baseType: Class<T>) : PacketChannel {
 
-    abstract fun getServerWorld(obj: T): World
+    init {
+        @Suppress("LeakingThis")
+        val previousValue = containerTypeMap.putIfAbsent(baseType, this)
+        require(previousValue == null) {
+            "SyncedContainerType for base type ${baseType.name} already registered."
+        }
+    }
+
+    abstract fun getWorld(obj: T): World
 
     abstract fun createChangedPropertyList(obj: T): ChangedPropertyList<T>
 
@@ -29,7 +40,7 @@ abstract class SyncedContainerType<T : Any> : PacketChannel {
     final override val autoRelease: Boolean
         get() = false
 
-    final override fun receive(buf: ByteBuf, player: EntityPlayer?) {
+    final override fun receive(buf: ByteBuf, side: Side, player: EntityPlayer?) {
         clientThread {
             try {
                 val container = readContainerData(buf, clientPlayer)
@@ -57,19 +68,31 @@ abstract class SyncedContainerType<T : Any> : PacketChannel {
 
 internal fun <T : Any> findContainerType(value: T): SyncedContainerType<T> {
     @Suppress("UNCHECKED_CAST")
-    return when (value) {
-        is TileEntity -> TileEntitySyncedType
-        is Entity -> EntitySyncedType
-        else -> throw IllegalArgumentException("Unknown container $value for synced property.")
-    } as SyncedContainerType<T>
+    return ContainerTypeCache[value.javaClass] as SyncedContainerType<T>? ?: throw IllegalArgumentException("Unknown container $value for synced property.")
 }
 
-object TileEntitySyncedType : SyncedContainerType<TileEntity>() {
+internal val containerTypeMap = ConcurrentHashMap<Class<*>, SyncedContainerType<*>>()
+
+internal object ContainerTypeCache : ClassValue<SyncedContainerType<*>?>() {
+
+    override fun computeValue(type: Class<*>): SyncedContainerType<*>? {
+        var currentType = type
+        while (currentType != Any::class.java) {
+            val containerType = containerTypeMap[currentType]
+            if (containerType != null) return containerType
+            currentType = currentType.superclass
+        }
+        return null
+    }
+
+}
+
+object TileEntitySyncedType : SyncedContainerType<TileEntity>(TileEntity::class.java) {
 
     override val channel: String
         get() = "sevencommons_syncte"
 
-    override fun getServerWorld(obj: TileEntity): World = obj.world
+    override fun getWorld(obj: TileEntity): World = obj.world
 
     override fun createChangedPropertyList(obj: TileEntity): TileEntityChangedPropertyList {
         return TileEntityChangedPropertyList(obj.pos)
@@ -101,7 +124,7 @@ class TileEntityChangedPropertyList(internal val pos: BlockPos) : ChangedPropert
 }
 
 
-object EntitySyncedType : SyncedContainerType<Entity>() {
+object EntitySyncedType : SyncedContainerType<Entity>(Entity::class.java) {
 
     override val channel: String
         get() = "sevencommons:syncent"
@@ -110,7 +133,7 @@ object EntitySyncedType : SyncedContainerType<Entity>() {
         return EntityChangedPropertyList(obj.entityId)
     }
 
-    override fun getServerWorld(obj: Entity): World = obj.world
+    override fun getWorld(obj: Entity): World = obj.world
 
     override fun readContainerData(buf: ByteBuf, player: EntityPlayer): Entity? {
         return player.world.getEntityByID(buf.readInt())
@@ -136,7 +159,7 @@ internal class EntityChangedPropertyList(val id: Int) : ChangedPropertyList<Enti
 
 }
 
-object ContainerSyncedType : SyncedContainerType<Container>() {
+object ContainerSyncedType : SyncedContainerType<Container>(Container::class.java) {
 
     override val channel: String
         get() = "sevencommons:syncct"
@@ -145,8 +168,11 @@ object ContainerSyncedType : SyncedContainerType<Container>() {
         return ContainerChangedPropertyList(obj.windowId)
     }
 
-    override fun getServerWorld(obj: Container): World {
-        throw IllegalStateException("Container is not attached to server-side player.")
+    override fun getWorld(obj: Container): World {
+        for (listener in obj.listeners) {
+            if (listener is EntityPlayerMP) return listener.world
+        }
+        return clientPlayer.world
     }
 
     override fun readContainerData(buf: ByteBuf, player: EntityPlayer): Container? {

@@ -10,17 +10,12 @@ import net.minecraftforge.fml.common.gameevent.TickEvent
  * @author diesieben07
  */
 @SubscribeEvent
-fun serverTick(event: TickEvent.ServerTickEvent) {
-    if (changedProperties.isNotEmpty()) {
+internal fun serverTick(event: TickEvent.ServerTickEvent) {
+    if (event.phase == TickEvent.Phase.END && changedProperties.isNotEmpty()) {
         changedProperties.forEach { (key, value) ->
             @Suppress("UNCHECKED_CAST")
-            handleChangedProperties(key, value as ChangedPropertyList<Any>)
+            (value as ChangedPropertyList<Any>).send(key)
         }
-
         changedProperties.clear()
     }
-}
-
-fun <T : Any> handleChangedProperties(obj: T, changed: ChangedPropertyList<T>) {
-    changed.send(obj)
 }

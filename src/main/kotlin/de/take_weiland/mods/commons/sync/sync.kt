@@ -3,9 +3,6 @@ package de.take_weiland.mods.commons.sync
 import io.netty.buffer.ByteBuf
 import kotlin.reflect.KProperty
 
-
-internal const val syncChannel = "SC|Sync"
-
 inline fun <CONTAINER: Any> CONTAINER.sync(initialValue: Int) = IntSyncedProperty<CONTAINER>(initialValue)
 
 class IntSyncedProperty<in CONTAINER : Any>(@JvmField var value: Int) : SyncedProperty<Int>() {
@@ -18,11 +15,9 @@ class IntSyncedProperty<in CONTAINER : Any>(@JvmField var value: Int) : SyncedPr
         value = buf.readInt()
     }
 
-    override fun writePayload(buf: ByteBuf, data: Int) {
-        buf.writeInt(data)
+    override fun writePayload(buf: ByteBuf, payload: Int) {
+        buf.writeInt(payload)
     }
-
-
 
     inline operator fun getValue(obj: CONTAINER, property: KProperty<*>): Int {
         return value

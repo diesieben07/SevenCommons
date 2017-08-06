@@ -1,6 +1,6 @@
 package de.take_weiland.mods.commons.net.packet.raw
 
-import de.take_weiland.mods.commons.net.packet.defaultExpectedPacketSize
+import de.take_weiland.mods.commons.net.packet.mod.defaultExpectedPacketSize
 import de.take_weiland.mods.commons.net.simple.SimplePacket
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer

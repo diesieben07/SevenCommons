@@ -19,24 +19,21 @@ import net.minecraftforge.fml.common.FMLCommonHandler
 /**
  * Send this packet to the given player.
  */
-@Suppress("NOTHING_TO_INLINE")
-inline fun <R> Sendable<R, *, *>.sendTo(player: EntityPlayerMP): R {
+fun <R> Sendable<R, *, *>.sendTo(player: EntityPlayerMP): R {
     return sendTo(player.connection.netManager)
 }
 
 /**
  * Send this packet to the given player.
  */
-@Suppress("NOTHING_TO_INLINE")
-inline fun <R> Sendable<R, *, *>.sendTo(player: EntityPlayer): R {
+fun <R> Sendable<R, *, *>.sendTo(player: EntityPlayer): R {
     return sendTo((player as EntityPlayerMP).connection.netManager)
 }
 
 /**
  * Send this packet to the server.
  */
-@Suppress("NOTHING_TO_INLINE")
-inline fun <R> Sendable<R, *, *>.sendToServer(): R {
+fun <R> Sendable<R, *, *>.sendToServer(): R {
     return sendTo(FMLCommonHandler.instance().clientToServerNetworkManager)
 }
 
@@ -94,17 +91,15 @@ inline fun <R, M, B : MultiResultBuilder<R, M, B>> Sendable<R, M, B>.sendTo(vara
 /**
  * Send this packet to the given players.
  */
-@Suppress("NOTHING_TO_INLINE")
-inline fun <R, M, B : MultiResultBuilder<R, M, B>> Sendable<R, M, B>.sendTo(players: Iterable<EntityPlayer>): M {
+fun <R, M, B : MultiResultBuilder<R, M, B>> Sendable<R, M, B>.sendTo(players: Iterable<EntityPlayer>): M {
     return sendTo(players.iterator())
 }
 
 /**
  * Send this packet to the given players.
  */
-@Suppress("NOTHING_TO_INLINE")
 @JvmName("sendToPlayersMP")
-inline fun <R, M, B : MultiResultBuilder<R, M, B>> Sendable<R, M, B>.sendTo(players: Iterable<EntityPlayerMP>): M {
+fun <R, M, B : MultiResultBuilder<R, M, B>> Sendable<R, M, B>.sendTo(players: Iterable<EntityPlayerMP>): M {
     return sendTo(players.iterator())
 }
 

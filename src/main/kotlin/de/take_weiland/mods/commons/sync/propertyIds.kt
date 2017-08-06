@@ -22,8 +22,13 @@ import kotlin.reflect.KProperty1
 // The ID will fit in one VarInt byte so long as there are no more than 16 synced properties in a class
 // Longer IDs appear on a per-class basis, so only classes with more than 16 properties get longer IDs.
 
-fun KProperty1<*, *>.getPropertyId(): Int {
-    return propertyIdCache[this] ?: propertyIdCache.computeIfAbsent(this) {
+@Suppress("NOTHING_TO_INLINE") // we want this to be as fast as possible
+internal inline fun KProperty1<*, *>.getPropertyId(): Int {
+    return propertyIdCache[this] ?: getPropertyIdFallback()
+}
+
+internal fun KProperty1<*, *>.getPropertyIdFallback(): Int {
+    return propertyIdCache.computeIfAbsent(this) {
         val owner = (this as PropertyReference).owner
         require(owner is KClass<*>) { "Can only use synced properties inside a class." }
         val declaringClass = (owner as KClass<*>).java // this works because we are only called from a delegated property
@@ -39,7 +44,7 @@ fun KProperty1<*, *>.getPropertyId(): Int {
     }
 }
 
-private val propertyIdCache = ConcurrentHashMap<KProperty1<*, *>, Int>()
+internal val propertyIdCache = ConcurrentHashMap<KProperty1<*, *>, Int>()
 
 private const val CLASS_ID_BITS = 3
 private const val MAX_CLASS_ID = (1 shl (CLASS_ID_BITS + 1)) - 1

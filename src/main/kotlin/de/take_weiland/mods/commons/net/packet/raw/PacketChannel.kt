@@ -1,11 +1,13 @@
 package de.take_weiland.mods.commons.net.packet.raw
 
 import com.google.common.collect.ImmutableMap
-import de.take_weiland.mods.commons.net.packet.DefaultPacketChannelBuilderImpl
+import de.take_weiland.mods.commons.net.packet.SimplePacketChannelBuilder
+import de.take_weiland.mods.commons.net.packet.SimplePacketChannelBuilderImpl
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraftforge.fml.common.Loader
 import net.minecraftforge.fml.common.LoaderState
+import net.minecraftforge.fml.relauncher.Side
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -26,7 +28,7 @@ interface PacketChannel {
      * @param buf the payload of the packet
      * @param player the player receiving the packet, may be `null` on the client
      */
-    fun receive(buf: ByteBuf, player: EntityPlayer?)
+    fun receive(buf: ByteBuf, side: Side, player: EntityPlayer?)
 
     /**
      * Whether to automatically release the buffer after [receive] has returned. If this property is set to `false`,
@@ -34,15 +36,19 @@ interface PacketChannel {
      */
     val autoRelease: Boolean get() = true
 
+    object Simple {
+
+        inline operator fun invoke(channelName: String, body: SimplePacketChannelBuilder.() -> Unit): PacketChannel {
+            return builder(channelName).also(body).create()
+        }
+
+        fun builder(channelName: String): SimplePacketChannelBuilder {
+            return SimplePacketChannelBuilderImpl(channelName)
+        }
+
+    }
+
     companion object {
-
-        inline operator fun invoke(channelName: String, body: DefaultPacketChannelBuilder.() -> Unit): PacketChannel {
-            return builder(channelName).also(body).build()
-        }
-
-        fun builder(channelName: String): DefaultPacketChannelBuilder {
-            return DefaultPacketChannelBuilderImpl(channelName)
-        }
 
         fun register(channel: PacketChannel) {
             val lastValue = globalPacketChannelMap.putIfAbsent(channel.channel, channel)

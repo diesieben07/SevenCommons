@@ -1,15 +1,17 @@
 package de.take_weiland.mods.commons.net.packet
 
+import de.take_weiland.mods.commons.net.packet.mod.Packet
+import de.take_weiland.mods.commons.net.packet.mod.PacketReader
 import de.take_weiland.mods.commons.net.readString
 import de.take_weiland.mods.commons.net.writeString
 import io.netty.buffer.ByteBuf
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraftforge.fml.relauncher.Side
 
-class NamePacket(val name: String) : Packet.Async {
+class NamePacket(val name: String) : Packet.Async() {
 
-    override fun ByteBuf.write() {
-        writeString(name)
+    override fun write(buf: ByteBuf) {
+        buf.writeString(this.name)
     }
 
     companion object Reader : PacketReader<NamePacket> {

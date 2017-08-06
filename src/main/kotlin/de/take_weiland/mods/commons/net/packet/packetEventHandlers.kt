@@ -49,10 +49,10 @@ private fun setupPipeline(event: FMLNetworkEvent<*>, handler: SCMessageHandler, 
     pipeline.addBefore("packet_handler", "sevencommons:handler", handler)
 }
 
-internal fun tryReceive(channel: String, buf: ByteBuf, player: EntityPlayer?): Boolean {
+internal fun tryReceive(channel: String, buf: ByteBuf, side: Side, player: EntityPlayer?): Boolean {
     val packetChannel = getPacketChannel(channel)
     if (packetChannel != null) {
-        packetChannel.receive(buf, player)
+        packetChannel.receive(buf, side, player)
         if (packetChannel.autoRelease) buf.release()
         return true
     } else {
@@ -69,8 +69,8 @@ private abstract class SCMessageHandler : ChannelInboundHandlerAdapter() {
         when (msg) {
             is CustomPayloadPacket ->
                 msg.receiveAsync(side, player)
-            is SPacketCustomPayload -> if (!tryReceive(msg.channel, msg.data, player)) super.channelRead(ctx, msg)
-            is CPacketCustomPayload -> if (!tryReceive(msg.channelName, msg.bufferData, player)) super.channelRead(ctx, msg)
+            is SPacketCustomPayload -> if (!tryReceive(msg.channel, msg.data, side, player)) super.channelRead(ctx, msg)
+            is CPacketCustomPayload -> if (!tryReceive(msg.channelName, msg.bufferData, side, player)) super.channelRead(ctx, msg)
             else -> super.channelRead(ctx, msg)
         }
     }
@@ -99,6 +99,7 @@ private const val s2cCustomPacketId = 24
 private abstract class SCMessageDecoder : ChannelInboundHandlerAdapter() {
 
     abstract val player: EntityPlayer?
+    abstract val side: Side
 
     override fun channelRead(ctx: ChannelHandlerContext?, msg: Any?) {
         if (msg is ByteBuf) {
@@ -107,7 +108,7 @@ private abstract class SCMessageDecoder : ChannelInboundHandlerAdapter() {
             if (id == c2sCustomPacketId || id == s2cCustomPacketId) {
                 msg.readerIndex = idx + 1
                 val channel = msg.readString()
-                if (tryReceive(channel, msg, player)) {
+                if (tryReceive(channel, msg, side, player)) {
                     return
                 } else {
                     msg.readerIndex = idx
@@ -119,11 +120,16 @@ private abstract class SCMessageDecoder : ChannelInboundHandlerAdapter() {
 
 }
 
+@SideOnly(Side.CLIENT)
+@ChannelHandler.Sharable
 private object SCMessageDecoderClient : SCMessageDecoder() {
     override val player: EntityPlayer? get() = Minecraft.getMinecraft().player
+    override val side get() = Side.CLIENT
 }
 
-private class SCMessageDecoderServer(override val player: EntityPlayer) : SCMessageDecoder()
+private class SCMessageDecoderServer(override val player: EntityPlayer) : SCMessageDecoder() {
+    override val side get() = Side.SERVER
+}
 
 abstract class SCMessageEncoder : ChannelOutboundHandlerAdapter() {
 
