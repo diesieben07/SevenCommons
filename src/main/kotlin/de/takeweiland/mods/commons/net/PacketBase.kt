@@ -5,11 +5,9 @@ import io.netty.buffer.ByteBuf
 /**
  * @author Take Weiland
  */
-abstract class PacketBase<R> internal constructor() : NetworkSendable<R> {
+abstract class PacketBase {
 
-    open val expectedSize: Int get() = 32
-
-    internal open val channel: String get() = TODO()
+    val expectedSize: Int get() = 32
 
     abstract fun write(buf: ByteBuf)
 

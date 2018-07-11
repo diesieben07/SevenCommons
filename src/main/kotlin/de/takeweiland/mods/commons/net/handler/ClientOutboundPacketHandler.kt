@@ -11,7 +11,7 @@ import net.minecraftforge.fml.relauncher.SideOnly
 @SideOnly(Side.CLIENT)
 @ChannelHandler.Sharable
 internal object ClientOutboundPacketHandler : OutboundPacketHandler() {
-    override fun constructPacket(channel: String, buf: ByteBuf): Packet<*> {
+    override fun invoke(channel: String, buf: ByteBuf): Packet<*> {
         return CPacketCustomPayload(channel, PacketBuffer(buf))
     }
 }

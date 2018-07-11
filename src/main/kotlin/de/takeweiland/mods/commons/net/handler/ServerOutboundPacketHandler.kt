@@ -12,7 +12,7 @@ import net.minecraft.network.play.server.SPacketCustomPayload
 @ChannelHandler.Sharable
 internal object ServerOutboundPacketHandler : OutboundPacketHandler() {
 
-    override fun constructPacket(channel: String, buf: ByteBuf): Packet<*> {
+    override fun invoke(channel: String, buf: ByteBuf): Packet<*> {
         return SPacketCustomPayload(channel, PacketBuffer(buf))
     }
 }

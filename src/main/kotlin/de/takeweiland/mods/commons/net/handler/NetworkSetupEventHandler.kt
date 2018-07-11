@@ -20,7 +20,7 @@ internal fun clientConnectedToServer(event: FMLNetworkEvent.ClientConnectedToSer
     val channel = nh.networkManager.channel()
 
     insertInboundHandler(channel, ClientInboundPacketHandler)
-    insertOutboundHandler(channel, ClientOutboundPacketHandler)
+    if (!nh.networkManager.isLocalChannel) insertOutboundHandler(channel, ClientOutboundPacketHandler)
 }
 
 @SubscribeEvent
@@ -29,7 +29,7 @@ internal fun serverConnectionFromClient(event: FMLNetworkEvent.ServerConnectionF
     val channel = nh.netManager.channel()
 
     insertInboundHandler(channel, ServerInboundPacketHandler(nh.player))
-    insertOutboundHandler(channel, ServerOutboundPacketHandler)
+    if (!nh.netManager.isLocalChannel) insertOutboundHandler(channel, ServerOutboundPacketHandler)
 }
 
 private const val VANILLA_PACKET_HANDLER = "packet_handler"

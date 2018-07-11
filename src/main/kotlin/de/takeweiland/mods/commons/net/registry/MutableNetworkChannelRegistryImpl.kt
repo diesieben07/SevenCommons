@@ -1,20 +1,20 @@
 package de.takeweiland.mods.commons.net.registry
 
 import com.google.common.collect.ImmutableMap
-import de.takeweiland.mods.commons.net.base.NetworkChannel
+import de.takeweiland.mods.commons.net.base.AsyncNetworkChannel
 import net.minecraftforge.fml.common.network.NetworkRegistry
 import net.minecraftforge.fml.relauncher.Side
 import java.util.*
 
 internal class MutableNetworkChannelRegistryImpl : MutableNetworkChannelRegistry {
 
-    private val map = HashMap<String, NetworkChannel<*>>()
+    private val map = HashMap<String, AsyncNetworkChannel<*>>()
 
-    override val channels: Collection<NetworkChannel<*>> = Collections.unmodifiableCollection(map.values)
+    override val channels: Collection<AsyncNetworkChannel<*>> = Collections.unmodifiableCollection(map.values)
 
-    override fun get(channel: String): NetworkChannel<*>? = map[channel]
+    override fun get(channel: String): AsyncNetworkChannel<*>? = map[channel]
 
-    override fun register(channel: NetworkChannel<*>) {
+    override fun register(channel: AsyncNetworkChannel<*>) {
         if (channel.name in map) {
             throw IllegalArgumentException("A network channel with name ${channel.name} is already registered.")
         }

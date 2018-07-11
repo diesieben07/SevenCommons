@@ -1,16 +1,16 @@
 package de.takeweiland.mods.commons.net.base
 
+import de.takeweiland.mods.commons.net.AnyMCPacket
 import io.netty.buffer.ByteBuf
+import net.minecraft.network.Packet as MCPacket
 
 /**
  * @author Take Weiland
  */
 interface NetworkSerializable {
 
-    fun write(buf: ByteBuf)
-
     val channel: String
 
-    val expectedSize: Int
+    fun getPacket(packetFactory: (String, ByteBuf) -> AnyMCPacket): AnyMCPacket
 
 }
