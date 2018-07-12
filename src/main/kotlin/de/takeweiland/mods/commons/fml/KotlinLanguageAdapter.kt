@@ -14,7 +14,7 @@ import java.lang.reflect.Modifier
 const val KOTLIN_LANGUAGE_ADAPTER = "de.takeweiland.mods.commons.fml.KotlinLanguageAdapter"
 
 @Suppress("unused")
-class KotlinLanguageAdapter : ILanguageAdapter {
+internal class KotlinLanguageAdapter : ILanguageAdapter {
 
     override fun getNewInstance(container: FMLModContainer, objectClass: Class<*>, classLoader: ClassLoader?, factoryMarkedAnnotation: Method?): Any {
         return getObjectInstance(objectClass)

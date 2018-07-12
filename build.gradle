@@ -14,10 +14,11 @@ plugins {
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'maven-publish'
 
 version = "0.0.1-alpha"
 group = "de.takeweiland.mods.commons"
-archivesBaseName = "Sevencommons"
+archivesBaseName = "SevenCommons"
 
 sourceCompatibility = targetCompatibility = '1.8'
 
@@ -30,7 +31,7 @@ minecraft {
     runDir = "run"
 
     mappings = "snapshot_20180629"
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
 dependencies {
@@ -82,5 +83,33 @@ processResources {
 kotlin {
     experimental {
         coroutines 'enable'
+    }
+}
+
+task deobfJar(type: Jar) {
+    from sourceSets.main.output
+    classifier = 'deobf'
+}
+
+task deobfSourceJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+tasks.jar.finalizedBy reobfJar
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact deobfJar {
+                classifier "deobf"
+            }
+
+            artifact deobfSourceJar {
+                classifier "sources"
+            }
+        }
     }
 }
