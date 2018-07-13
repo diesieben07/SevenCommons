@@ -8,7 +8,9 @@ import net.minecraft.network.NetworkManager
 /**
  * @author Take Weiland
  */
-abstract class PacketWithResponse<R : ResponsePacket> : PacketBase(), SimplePacket.WithResponse<R> {
+abstract class AnyPacketWithResponse<R : ResponsePacket> internal constructor() : PacketBase(), SimplePacket.WithResponse<R>
+
+abstract class PacketWithResponse<R : ResponsePacket> : AnyPacketWithResponse<R>() {
 
     abstract fun process(player: EntityPlayer): R
 
@@ -17,6 +19,19 @@ abstract class PacketWithResponse<R : ResponsePacket> : PacketBase(), SimplePack
         val deferred = CompletableDeferred<R>()
         channel.write(PacketBaseNetworkChannel.WithResponseWrapper(this, deferred), channel.voidPromise())
         return deferred
+    }
+
+    abstract class Async<R : ResponsePacket> : AnyPacketWithResponse<R>() {
+
+        abstract fun process(player: EntityPlayer): Deferred<R>
+
+        final override fun sendTo(network: NetworkManager): Deferred<R> {
+            val channel = network.channel()
+            val deferred = CompletableDeferred<R>()
+            channel.write(PacketBaseNetworkChannel.WithResponseWrapperAsync(this, deferred), channel.voidPromise())
+            return deferred
+        }
+
     }
 
 }

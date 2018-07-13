@@ -1,9 +1,6 @@
 package de.takeweiland.mods.commons.net.registry
 
-import de.takeweiland.mods.commons.net.Packet
-import de.takeweiland.mods.commons.net.PacketBase
-import de.takeweiland.mods.commons.net.PacketWithResponse
-import de.takeweiland.mods.commons.net.ResponsePacket
+import de.takeweiland.mods.commons.net.*
 import io.netty.buffer.ByteBuf
 
 /**
@@ -65,7 +62,7 @@ internal fun <T : Packet> getPlainPacketData(packetClass: Class<T>): SimplePacke
     return getAnyPacketData(packetClass) as SimplePacketData.Plain<T>
 }
 
-internal fun <T : PacketWithResponse<R>, R : ResponsePacket> getResponsePacketData(packetClass: Class<T>): SimplePacketData.WithResponse<T, R> {
+internal fun <T : AnyPacketWithResponse<R>, R : ResponsePacket> getResponsePacketData(packetClass: Class<T>): SimplePacketData.WithResponse<T, R> {
     @Suppress("UNCHECKED_CAST")
     return getAnyPacketData(packetClass) as SimplePacketData.WithResponse<T, R>
 }
@@ -92,7 +89,7 @@ sealed class SimplePacketData<T : PacketBase> {
             get() = listOf(packetClass)
     }
 
-    data class WithResponse<T : PacketWithResponse<R>, R : ResponsePacket>(
+    data class WithResponse<T : AnyPacketWithResponse<R>, R : ResponsePacket>(
         override val channel: String,
         override val id: Int,
         val packetClass: Class<T>, val responseClass: Class<R>,

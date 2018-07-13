@@ -20,13 +20,12 @@ internal class PacketBaseNetworkChannel(override val name: String, private val b
         return byId.getOrNull(id) ?: throw IllegalArgumentException("Unknown packet id $id received for channel $name")
     }
 
-    internal class WithResponseWrapper<R : ResponsePacket>(private val packet: PacketWithResponse<R>, private val deferred: CompletableDeferred<R>) :
-        NetworkSerializable {
+    internal abstract class BaseWithResponseWrapper<R : ResponsePacket, P : AnyPacketWithResponse<R>>(protected val packet: P, protected val deferred: CompletableDeferred<R>) : NetworkSerializable {
 
-        override val channel: String
+        final override val channel: String
             get() = getResponsePacketData(packet.javaClass).channel
 
-        override fun getPacket(packetFactory: (String, ByteBuf) -> AnyMCPacket): AnyMCPacket {
+        final override fun getPacket(packetFactory: (String, ByteBuf) -> AnyMCPacket): AnyMCPacket {
             // we are being sent over the network, reserve a tracking ID for the response
             // then store the Deferred under that ID
             val data = getResponsePacketData(packet.javaClass)
@@ -38,9 +37,26 @@ internal class PacketBaseNetworkChannel(override val name: String, private val b
             return packetFactory(data.channel, buf)
         }
 
-        fun handle(player: EntityPlayer) {
+        abstract suspend fun handle(player: EntityPlayer)
+
+    }
+
+    internal class WithResponseWrapper<R : ResponsePacket>(packet: PacketWithResponse<R>, deferred: CompletableDeferred<R>) :
+        BaseWithResponseWrapper<R, PacketWithResponse<R>>(packet, deferred) {
+
+        override suspend fun handle(player: EntityPlayer) {
             deferred.complete(packet.process(player))
         }
+    }
+
+    internal class WithResponseWrapperAsync<R : ResponsePacket>(packet: PacketWithResponse.Async<R>, deferred: CompletableDeferred<R>) :
+        BaseWithResponseWrapper<R, PacketWithResponse.Async<R>>(packet, deferred) {
+
+        override suspend fun handle(player: EntityPlayer) {
+            val result = packet.process(player)
+            deferred.complete(deferred.await())
+        }
+
     }
 
     override fun receive(buf: ByteBuf, side: Side, player: EntityPlayer?) {
@@ -59,10 +75,14 @@ internal class PacketBaseNetworkChannel(override val name: String, private val b
                     val response = data.responseFactory(buf)
                     getPacketResponseFutureAndRemove(responseId and RESPONSE_ID_MASK).complete(response)
                 } else {
-                    val packet: PacketWithResponse<*> = data.factory(buf)
+                    val packet: AnyPacketWithResponse<*> = data.factory(buf)
                     launch(side.mainThread) {
                         val actualPlayer = player.obtainForNetworkOnMainThread()
-                        val response = packet.process(actualPlayer)
+                        val response = if (packet is PacketWithResponse<*>) {
+                            packet.process(actualPlayer)
+                        } else {
+                            (packet as PacketWithResponse.Async<*>).process(actualPlayer).await()
+                        }
                         response.responseId = responseId and RESPONSE_ID_MASK
                         val ch = ((actualPlayer as? EntityPlayerMP)?.connection?.netManager ?: SevenCommons.proxy.clientToServerNetworkManager).channel()
                         ch.writeAndFlush(response, ch.voidPromise())
@@ -76,7 +96,7 @@ internal class PacketBaseNetworkChannel(override val name: String, private val b
         launch(side.mainThread) {
             when (message) {
                 is Packet -> message.process(player.obtainForNetworkOnMainThread())
-                is WithResponseWrapper<*> -> message.handle(player.obtainForNetworkOnMainThread())
+                is BaseWithResponseWrapper<*, *> -> message.handle(player.obtainForNetworkOnMainThread())
                 is ResponsePacket -> TODO()
             }
         }

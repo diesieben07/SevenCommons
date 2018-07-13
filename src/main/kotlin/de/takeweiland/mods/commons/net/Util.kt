@@ -6,6 +6,8 @@ import net.minecraft.entity.player.EntityPlayer
 /**
  * @author Take Weiland
  */
+internal const val MAX_PACKET_ID = 0b0111_1111
+
 internal typealias MCPacket<T> = net.minecraft.network.Packet<T>
 internal typealias AnyMCPacket = MCPacket<*>
 

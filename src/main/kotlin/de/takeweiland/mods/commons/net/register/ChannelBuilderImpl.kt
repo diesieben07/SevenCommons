@@ -1,9 +1,6 @@
 package de.takeweiland.mods.commons.net.register
 
-import de.takeweiland.mods.commons.net.Packet
-import de.takeweiland.mods.commons.net.PacketBaseNetworkChannel
-import de.takeweiland.mods.commons.net.PacketWithResponse
-import de.takeweiland.mods.commons.net.ResponsePacket
+import de.takeweiland.mods.commons.net.*
 import de.takeweiland.mods.commons.net.registry.SimplePacketData
 import de.takeweiland.mods.commons.net.registry.globalNetworkChannels
 import de.takeweiland.mods.commons.net.registry.registerPlainPacket
@@ -30,7 +27,14 @@ internal class ChannelBuilderImpl(val channel: String) : ChannelBuilderDslContex
 
     private val packets = HashMap<Int, Registration>()
 
+    private fun validateId(id: Int) {
+        if (id > MAX_PACKET_ID) {
+            throw IllegalArgumentException("Invalid packet ID $id for channel $channel, must be <= $MAX_PACKET_ID")
+        }
+    }
+
     private fun doRegister(id: Int, reg: Registration) {
+        validateId(id)
         if (packets.putIfAbsent(id, reg) != null) {
             throw IllegalArgumentException("Duplicate packet ID $id for channel $channel")
         }
