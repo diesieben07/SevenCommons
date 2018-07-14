@@ -18,7 +18,7 @@ internal class ChannelBuilderImpl(val channel: String) : ChannelBuilderDslContex
         data class RegisteredPacket<P : Packet>(val packetClass: Class<P>, val factory: (ByteBuf) -> P) : Registration() {
             override fun register(channel: String, id: Int): SimplePacketData<*> = registerPlainPacket(channel, id, packetClass, factory)
         }
-        data class RegisteredPacketWithResponse<P : PacketWithResponse<R>, R : ResponsePacket>(
+        data class RegisteredPacketWithResponse<P : AnyPacketWithResponse<R>, R : ResponsePacket>(
             val packetClass: Class<P>, val responseClass: Class<R>, val factory: (ByteBuf) -> P, val responseFactory: (ByteBuf) -> R
         ) : Registration() {
             override fun register(channel: String, id: Int): SimplePacketData<*> = registerResponsePacket(channel, id, packetClass, responseClass, factory, responseFactory)
@@ -44,7 +44,7 @@ internal class ChannelBuilderImpl(val channel: String) : ChannelBuilderDslContex
         doRegister(id, Registration.RegisteredPacket(packet, constructor))
     }
 
-    override fun <P : PacketWithResponse<R>, R : ResponsePacket> add(
+    override fun <P : AnyPacketWithResponse<R>, R : ResponsePacket> add(
         id: Int, packet: Class<P>, responsePacket: Class<R>, constructor: (ByteBuf) -> P, responseConstructor: (ByteBuf) -> R
     ) {
         doRegister(id, Registration.RegisteredPacketWithResponse(packet, responsePacket, constructor, responseConstructor))

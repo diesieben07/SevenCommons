@@ -9,9 +9,14 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.launch
 import net.minecraft.client.Minecraft
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.EnumConnectionState
+import net.minecraft.network.EnumPacketDirection
 import net.minecraft.network.NetworkManager
+import net.minecraft.network.play.client.CPacketCustomPayload
+import net.minecraft.network.play.server.SPacketCustomPayload
 import net.minecraft.util.EnumHand
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
+import net.minecraftforge.fml.common.FMLCommonHandler
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.SidedProxy
 import net.minecraftforge.fml.common.event.FMLInitializationEvent
@@ -32,6 +37,11 @@ object SevenCommons {
     @Mod.EventHandler
     internal fun preInit(event: FMLPreInitializationEvent) {
         SC_LOG = event.modLog
+
+        println("serverbound: " + EnumConnectionState.PLAY.getPacketId(EnumPacketDirection.SERVERBOUND, CPacketCustomPayload()))
+        println("clientbound: " + EnumConnectionState.PLAY.getPacketId(EnumPacketDirection.CLIENTBOUND, SPacketCustomPayload()))
+        FMLCommonHandler.instance().exitJava(0, false)
+
         networkChannel("SevenCommons") {
             packet(0, ::TestPacket)
             packet(1, ::TestPacketWithResponse, TestPacketWithResponse::Response)

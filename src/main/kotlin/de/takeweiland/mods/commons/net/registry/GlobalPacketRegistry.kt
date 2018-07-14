@@ -1,6 +1,9 @@
 package de.takeweiland.mods.commons.net.registry
 
-import de.takeweiland.mods.commons.net.*
+import de.takeweiland.mods.commons.net.AnyPacketWithResponse
+import de.takeweiland.mods.commons.net.Packet
+import de.takeweiland.mods.commons.net.PacketBase
+import de.takeweiland.mods.commons.net.ResponsePacket
 import io.netty.buffer.ByteBuf
 
 /**
@@ -51,7 +54,7 @@ internal fun <T : Packet> registerPlainPacket(channel: String, id: Int, cls: Cla
     return SimplePacketData.Plain(channel, id, cls, factory).also { register(it) }
 }
 
-internal fun <T : PacketWithResponse<R>, R : ResponsePacket> registerResponsePacket(
+internal fun <T : AnyPacketWithResponse<R>, R : ResponsePacket> registerResponsePacket(
     channel: String, id: Int, cls: Class<T>, responseClass: Class<R>, factory: (ByteBuf) -> T, responseFactory: (ByteBuf) -> R
 ): SimplePacketData<*> {
     return SimplePacketData.WithResponse(channel, id, cls, responseClass, factory, responseFactory).also { register(it) }
