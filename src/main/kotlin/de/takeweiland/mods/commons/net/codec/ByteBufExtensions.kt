@@ -38,12 +38,13 @@ fun ByteBuf.readVarInt(): Int {
 }
 
 /**
- * Write a small string (max. 127 UTF-8 bytes) in a way compatible with [PacketBuffer.readString], but more efficient.
+ * Write a "small string" in a way compatible with [PacketBuffer.readString], but more efficient than [PacketBuffer.writeString].
+ * The strings written by this method must only contain ASCII characters and must not exceed a length of 127.
  */
 internal fun ByteBuf.writeVanillaCompatibleSmallString(s: String) {
     writeZero(0) // reserve space for the length byte
     val wi = writerIndex
-    writeCharSequence(s, Charsets.UTF_8)
+    writeCharSequence(s, Charsets.US_ASCII)
     val byteLen = writerIndex - wi
     assert(byteLen <= 127) { "String too big." }
     setByte(wi - 1, byteLen)
