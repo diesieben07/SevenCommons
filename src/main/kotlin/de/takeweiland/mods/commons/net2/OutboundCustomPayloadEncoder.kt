@@ -8,8 +8,6 @@ import io.netty.channel.ChannelOutboundHandlerAdapter
 import io.netty.channel.ChannelPromise
 import io.netty.util.concurrent.Future
 import io.netty.util.concurrent.GenericFutureListener
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.ceil
 import kotlin.math.min
 
@@ -88,16 +86,34 @@ internal abstract class OutboundCustomPayloadEncoder : ChannelOutboundHandlerAda
         }
     }
 
-    private class PromiseCountdown(count: Int, private val finalPromise: ChannelPromise) : AtomicInteger(count), GenericFutureListener<Future<Void>> {
-        override fun operationComplete(future: Future<Void>?) {
-            if (decrementAndGet() == 0) {
-                finalPromise.setSuccess()
+    private class PromiseCountdown(private var count: Int, private val finalPromise: ChannelPromise) : GenericFutureListener<Future<Void>> {
+
+        private var exception: Throwable? = null
+
+        @Synchronized
+        override fun operationComplete(future: Future<Void>) {
+            if (!future.isSuccess) {
+                val ex = exception
+                if (ex != null) {
+                    ex.addSuppressed(future.cause())
+                } else {
+                    exception = future.cause()
+                }
+            }
+            if (--count == 0) {
+                val ex = exception
+                if (ex != null) {
+                    finalPromise.setFailure(ex)
+                } else {
+                    finalPromise.setSuccess()
+                }
             }
         }
+
     }
 
     private fun writeMultiPartRealPromise(ctx: ChannelHandlerContext, buf: ByteBuf, size: Int, promise: ChannelPromise) {
-        val countDown = PromiseCountdown(ceil(size.toDouble() / maxPayloadSize).toInt())
+        val countDown = PromiseCountdown(ceil(size.toDouble() / maxPayloadSize).toInt(), promise)
         val prefix = Unpooled.buffer(1 + 1 + SPLIT_PACKET_CHANNEL_BYTE_LEN)
         try {
             prefix.writeByte(vanillaPacketId)
