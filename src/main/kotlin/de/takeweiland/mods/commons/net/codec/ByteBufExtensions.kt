@@ -50,6 +50,13 @@ internal fun ByteBuf.writeVanillaCompatibleSmallString(s: String) {
     setByte(wi - 1, byteLen)
 }
 
+internal fun ByteBuf.readVanillaCompatibleString(): String {
+    val byteLen = readVarInt()
+    val s = toString(readerIndex, byteLen, Charsets.UTF_8)
+    readerIndex += byteLen
+    return s
+}
+
 fun ByteBuf.writeString(s: String) {
     writeZero(4)
     val wi = writerIndex
