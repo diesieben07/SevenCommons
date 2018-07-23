@@ -8,6 +8,6 @@ import net.minecraftforge.fml.relauncher.Side
  */
 interface CustomPayloadHandler {
 
-    fun handle(channel: String, buf: ByteBuf, side: Side)
+    fun handle(channel: String, buf: ByteBuf, side: Side): Boolean
 
 }
