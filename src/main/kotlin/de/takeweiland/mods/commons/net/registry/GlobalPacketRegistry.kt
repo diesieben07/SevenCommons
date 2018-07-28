@@ -5,14 +5,13 @@ import de.takeweiland.mods.commons.net.Packet
 import de.takeweiland.mods.commons.net.PacketBase
 import de.takeweiland.mods.commons.net.ResponsePacket
 import io.netty.buffer.ByteBuf
+import net.minecraftforge.fml.common.Loader
+import net.minecraftforge.fml.common.LoaderState
 
 /**
  * @author Take Weiland
  */
-internal var globalNetworkChannels: MutableNetworkChannelRegistry = MutableNetworkChannelRegistryImpl()
-
 private val registrationLock = Any()
-private var registrationsFrozen = false
 private var registrations: MutableList<SimplePacketData<*>> = ArrayList()
 
 internal object GlobalPacketRegistry : ClassValue<SimplePacketData<*>>() {
@@ -31,7 +30,7 @@ internal object GlobalPacketRegistry : ClassValue<SimplePacketData<*>>() {
 
 private fun register(data: SimplePacketData<*>) {
     synchronized(registrationLock) {
-        check(!registrationsFrozen) {
+        check(!Loader.instance().hasReachedState(LoaderState.INITIALIZATION)) {
             "Packet registrations are frozen. Packet registration must occur during the preInit phase."
         }
         require(registrations.none { it.channel == data.channel && it.id == data.id }) {
@@ -41,12 +40,6 @@ private fun register(data: SimplePacketData<*>) {
             data.packetClasses.none { dpc -> reg.packetClasses.contains(dpc) }
         })
         registrations.add(data)
-    }
-}
-
-internal fun freezePacketRegistry() {
-    synchronized(registrationLock) {
-        registrationsFrozen = true
     }
 }
 

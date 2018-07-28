@@ -1,4 +1,4 @@
-package de.takeweiland.mods.commons.net2
+package de.takeweiland.mods.commons.netbase
 
 /**
  * @author Take Weiland

@@ -1,5 +1,6 @@
 package de.takeweiland.mods.commons.net
 
+import de.takeweiland.mods.commons.netbase.SimplePacket
 import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.Deferred
 import net.minecraft.entity.player.EntityPlayer
@@ -17,7 +18,7 @@ abstract class PacketWithResponse<R : ResponsePacket> : AnyPacketWithResponse<R>
     final override fun sendTo(network: NetworkManager): Deferred<R> {
         val channel = network.channel()
         val deferred = CompletableDeferred<R>()
-        channel.write(PacketBaseNetworkChannel.WithResponseWrapper(this, deferred), channel.voidPromise())
+        channel.write(PacketBasePayloadHandler.WithResponseWrapper(this, deferred), channel.voidPromise())
         return deferred
     }
 
@@ -28,7 +29,7 @@ abstract class PacketWithResponse<R : ResponsePacket> : AnyPacketWithResponse<R>
         final override fun sendTo(network: NetworkManager): Deferred<R> {
             val channel = network.channel()
             val deferred = CompletableDeferred<R>()
-            channel.write(PacketBaseNetworkChannel.WithResponseWrapperAsync(this, deferred), channel.voidPromise())
+            channel.write(PacketBasePayloadHandler.WithResponseWrapperAsync(this, deferred), channel.voidPromise())
             return deferred
         }
 

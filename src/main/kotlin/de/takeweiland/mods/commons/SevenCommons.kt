@@ -2,21 +2,14 @@ package de.takeweiland.mods.commons
 
 import de.takeweiland.mods.commons.fml.KOTLIN_LANGUAGE_ADAPTER
 import de.takeweiland.mods.commons.net.register.networkChannel
-import de.takeweiland.mods.commons.net.registry.freezePacketRegistry
-import de.takeweiland.mods.commons.net.sendTo
+import de.takeweiland.mods.commons.netbase.sendTo
 import de.takeweiland.mods.commons.scheduler.MinecraftServerThread
-import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.launch
 import net.minecraft.client.Minecraft
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.network.EnumConnectionState
-import net.minecraft.network.EnumPacketDirection
 import net.minecraft.network.NetworkManager
-import net.minecraft.network.play.client.CPacketCustomPayload
-import net.minecraft.network.play.server.SPacketCustomPayload
 import net.minecraft.util.EnumHand
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
-import net.minecraftforge.fml.common.FMLCommonHandler
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.SidedProxy
 import net.minecraftforge.fml.common.event.FMLInitializationEvent
@@ -38,19 +31,24 @@ object SevenCommons {
     internal fun preInit(event: FMLPreInitializationEvent) {
         SC_LOG = event.modLog
 
-        println("serverbound: " + EnumConnectionState.PLAY.getPacketId(EnumPacketDirection.SERVERBOUND, CPacketCustomPayload()))
-        println("clientbound: " + EnumConnectionState.PLAY.getPacketId(EnumPacketDirection.CLIENTBOUND, SPacketCustomPayload()))
-        FMLCommonHandler.instance().exitJava(0, false)
-
         networkChannel("SevenCommons") {
             packet(0, ::TestPacket)
             packet(1, ::TestPacketWithResponse, TestPacketWithResponse::Response)
         }
+
+//        globalPayloadHandlerRegistry.register("SevenCommons", object : CustomPayloadHandler {
+//            override fun handle(
+//                channel: String, buf: ByteBuf, side: Side,
+//                player: EntityPlayer?
+//            ): Boolean {
+//                println("$channel received ${buf.readInt()} on $side")
+//                return true
+//            }
+//        })
     }
 
     @Mod.EventHandler
     internal fun init(event: FMLInitializationEvent) {
-        freezePacketRegistry()
 //        val asyncThing = async {
 //            delay(15, TimeUnit.SECONDS)
 //            println("other thread says hi!")
@@ -73,10 +71,25 @@ object SevenCommons {
         if (!event.entity.world.isRemote && event.hand == EnumHand.MAIN_HAND) {
             val number = Random().nextInt()
             println("server sending $number")
-            val response: Deferred<TestPacketWithResponse.Response> = TestPacketWithResponse(number).sendTo(event.entityPlayer)
+            val response = TestPacketWithResponse(number).sendTo(event.entityPlayer)
             launch(MinecraftServerThread) {
-                println("client responded with ${response.await().number}")
+                println("response: " + response.await().number)
             }
+//            object : CustomPayloadPacket {
+//
+//                override val expectedSize: Int
+//                    get() = 4
+//                override val channel: String
+//                    get() = "SevenCommons"
+//
+//                override fun writePayload(buf: ByteBuf) {
+//                    buf.writeInt(number)
+//                }
+//
+//                override fun handle(player: EntityPlayer?, side: Side) {
+//                    println("received $number directly on $side")
+//                }
+//            }.sendTo(event.entityPlayer)
         } else if (event.entity.world.isRemote && event.hand == EnumHand.MAIN_HAND) {
 //            TestPacket(456).sendToServer()
         }

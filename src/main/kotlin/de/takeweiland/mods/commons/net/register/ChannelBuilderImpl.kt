@@ -2,9 +2,9 @@ package de.takeweiland.mods.commons.net.register
 
 import de.takeweiland.mods.commons.net.*
 import de.takeweiland.mods.commons.net.registry.SimplePacketData
-import de.takeweiland.mods.commons.net.registry.globalNetworkChannels
 import de.takeweiland.mods.commons.net.registry.registerPlainPacket
 import de.takeweiland.mods.commons.net.registry.registerResponsePacket
+import de.takeweiland.mods.commons.netbase.globalPayloadHandlerRegistry
 import io.netty.buffer.ByteBuf
 
 /**
@@ -57,6 +57,6 @@ internal class ChannelBuilderImpl(val channel: String) : ChannelBuilderDslContex
             dataArray[id] = packet.register(channel, id)
         }
 
-        globalNetworkChannels.register(PacketBaseNetworkChannel(channel, dataArray))
+        globalPayloadHandlerRegistry.register(channel, PacketBasePayloadHandler(channel, dataArray))
     }
 }

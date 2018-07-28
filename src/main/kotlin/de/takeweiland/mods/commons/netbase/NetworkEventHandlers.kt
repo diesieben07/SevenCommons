@@ -1,7 +1,7 @@
 @file:Mod.EventBusSubscriber
-package de.takeweiland.mods.commons.net.handler
+package de.takeweiland.mods.commons.netbase
 
-import io.netty.channel.Channel
+import de.takeweiland.mods.commons.netbase.handler.*
 import net.minecraft.client.network.NetHandlerPlayClient
 import net.minecraft.network.NetHandlerPlayServer
 import net.minecraftforge.fml.common.Mod
@@ -19,8 +19,12 @@ internal fun clientConnectedToServer(event: FMLNetworkEvent.ClientConnectedToSer
     val nh = event.handler as NetHandlerPlayClient
     val channel = nh.networkManager.channel()
 
-    insertInboundHandler(channel, ClientInboundPacketHandler)
-    if (!nh.networkManager.isLocalChannel) insertOutboundHandler(channel, ClientOutboundPacketHandler)
+    if (event.isLocal) {
+        channel.pipeline().addBefore(VANILLA_PACKET_HANDLER, SC_INBOUND_HANDLER, ClientInboundDirectPayloadHandler)
+    } else {
+        channel.pipeline().addBefore(VANILLA_PACKET_HANDLER, SC_INBOUND_HANDLER, ClientInboundCustomPayloadHandler)
+        channel.pipeline().addAfter(VANILLA_PACKET_HANDLER, SC_OUTBOUND_HANDLER, ClientOutboundCustomPayloadEncoder)
+    }
 }
 
 @SubscribeEvent
@@ -28,18 +32,14 @@ internal fun serverConnectionFromClient(event: FMLNetworkEvent.ServerConnectionF
     val nh = event.handler as NetHandlerPlayServer
     val channel = nh.netManager.channel()
 
-    insertInboundHandler(channel, ServerInboundPacketHandler(nh.player))
-    if (!nh.netManager.isLocalChannel) insertOutboundHandler(channel, ServerOutboundPacketHandler)
+    if (event.isLocal) {
+        channel.pipeline().addBefore(VANILLA_PACKET_HANDLER, SC_INBOUND_HANDLER, ServerInboundDirectPayloadHandler(nh.player))
+    } else {
+        channel.pipeline().addBefore(VANILLA_PACKET_HANDLER, SC_INBOUND_HANDLER, ServerInboundCustomPayloadHandler(nh.player))
+        channel.pipeline().addAfter(VANILLA_PACKET_HANDLER, SC_OUTBOUND_HANDLER, ServerOutboundCustomPayloadEncoder)
+    }
 }
 
 private const val VANILLA_PACKET_HANDLER = "packet_handler"
 private const val SC_INBOUND_HANDLER = "sevencommons:inbound_handler"
 private const val SC_OUTBOUND_HANDLER = "sevencommons:outbound_handler"
-
-private fun insertInboundHandler(channel: Channel, handler: InboundPacketHandler) {
-    channel.pipeline().addBefore(VANILLA_PACKET_HANDLER, SC_INBOUND_HANDLER, handler)
-}
-
-private fun insertOutboundHandler(channel: Channel, handler: OutboundPacketHandler) {
-    channel.pipeline().addAfter(VANILLA_PACKET_HANDLER, SC_OUTBOUND_HANDLER, handler)
-}

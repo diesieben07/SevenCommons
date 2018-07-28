@@ -1,17 +1,21 @@
 package de.takeweiland.mods.commons.net
 
-import de.takeweiland.mods.commons.net.base.NetworkSerializable
 import de.takeweiland.mods.commons.net.codec.writeVarInt
 import de.takeweiland.mods.commons.net.registry.getPlainPacketData
+import de.takeweiland.mods.commons.netbase.BasicCustomPayloadPacket
+import de.takeweiland.mods.commons.netbase.SimplePacket
+import de.takeweiland.mods.commons.scheduler.mainThread
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
+import kotlinx.coroutines.experimental.launch
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.NetworkManager
+import net.minecraftforge.fml.relauncher.Side
 
 /**
  * @author Take Weiland
  */
-abstract class Packet : PacketBase(), NetworkSerializable, SimplePacket {
+abstract class Packet : PacketBase(), BasicCustomPayloadPacket, SimplePacket {
 
     abstract fun process(player: EntityPlayer)
 
@@ -20,14 +24,17 @@ abstract class Packet : PacketBase(), NetworkSerializable, SimplePacket {
         channel.writeAndFlush(this, channel.voidPromise())
     }
 
-    final override val channel: String
-        get() = getPlainPacketData(javaClass).channel
-
-    final override fun getPacket(packetFactory: (String, ByteBuf) -> AnyMCPacket): AnyMCPacket {
+    override fun <R> serialize(factory: (channel: String, buf: ByteBuf) -> R): R {
         val data = getPlainPacketData(javaClass)
         val buf = Unpooled.buffer(expectedSize + 1)
         buf.writeVarInt(data.id)
         write(buf)
-        return packetFactory(data.channel, buf)
+        return factory(data.channel, buf)
+    }
+
+    final override fun handle(player: EntityPlayer?, side: Side) {
+        launch(side.mainThread) {
+            process(player.obtainForNetworkOnMainThread())
+        }
     }
 }

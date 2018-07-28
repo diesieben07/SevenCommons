@@ -1,28 +1,31 @@
 package de.takeweiland.mods.commons.net
 
-import de.takeweiland.mods.commons.net.base.NetworkSerializable
 import de.takeweiland.mods.commons.net.codec.writeVarInt
 import de.takeweiland.mods.commons.net.registry.getResponsePacketData
+import de.takeweiland.mods.commons.netbase.BasicCustomPayloadPacket
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraftforge.fml.relauncher.Side
 
 /**
  * @author Take Weiland
  */
-abstract class ResponsePacket : PacketBase(), NetworkSerializable {
+abstract class ResponsePacket : PacketBase(), BasicCustomPayloadPacket {
 
     @JvmField
     internal var responseId = -1
 
-    final override val channel: String
-        get() = getResponsePacketData(javaClass).channel
-
-    final override fun getPacket(packetFactory: (String, ByteBuf) -> AnyMCPacket): AnyMCPacket {
+    override fun <R> serialize(factory: (channel: String, buf: ByteBuf) -> R): R {
         val data = getResponsePacketData(javaClass)
         val buf = Unpooled.buffer(expectedSize + 2)
         buf.writeVarInt(data.id)
         buf.writeByte(RESPONSE_MARKER_BIT or responseId)
         write(buf)
-        return packetFactory(data.channel, buf)
+        return factory(data.channel, buf)
+    }
+
+    override fun handle(player: EntityPlayer?, side: Side) {
+        throw IllegalStateException()
     }
 }

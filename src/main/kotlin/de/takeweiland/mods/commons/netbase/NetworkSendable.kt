@@ -1,4 +1,4 @@
-package de.takeweiland.mods.commons.net
+package de.takeweiland.mods.commons.netbase
 
 import kotlinx.coroutines.experimental.Deferred
 import net.minecraft.network.NetworkManager
@@ -38,7 +38,8 @@ interface NetworkMultiResultBuilder<out RESULT, out M_RESULT, out BUILDER : Netw
 /**
  * Base interface for implementing a packet without result (`Unit`).
  */
-interface SimplePacket : NetworkSendable<Unit, Unit, SimplePacket>, NetworkMultiResultBuilder<Unit, Unit, SimplePacket> {
+interface SimplePacket : NetworkSendable<Unit, Unit, SimplePacket>,
+    NetworkMultiResultBuilder<Unit, Unit, SimplePacket> {
 
     override fun newMultiResultBuilder(): SimplePacket = this
 
@@ -47,7 +48,8 @@ interface SimplePacket : NetworkSendable<Unit, Unit, SimplePacket>, NetworkMulti
     /**
      * Base interface for implementing a packet with results of type `Deferred<R>`. A multi-result is represented as `Map<NetworkManager, Deferred<R>>`.
      */
-    interface WithResponse<out R> : NetworkSendable<Deferred<R>, ResponseMultiResult<R>, WithResponseMultiBuilder<R>> {
+    interface WithResponse<out R> :
+        NetworkSendable<Deferred<R>, ResponseMultiResult<R>, WithResponseMultiBuilder<R>> {
 
         override fun newMultiResultBuilder(): WithResponseMultiBuilder<R> {
             return WithResponseMultiBuilderImpl(this)
@@ -60,7 +62,8 @@ interface SimplePacket : NetworkSendable<Unit, Unit, SimplePacket>, NetworkMulti
  * Base interface for implementing a multi-result builder for a packet with results of type `Deferred<R>`
  * ([SimplePacket.WithResponse] can be used to implement such a packet).
  */
-interface WithResponseMultiBuilder<out R> : NetworkMultiResultBuilder<Deferred<R>, ResponseMultiResult<R>, WithResponseMultiBuilder<R>>
+interface WithResponseMultiBuilder<out R> :
+    NetworkMultiResultBuilder<Deferred<R>, ResponseMultiResult<R>, WithResponseMultiBuilder<R>>
 
 private typealias ResponseMultiResult<R> = Map<NetworkManager, Deferred<R>>
 

@@ -8,7 +8,4 @@ import net.minecraft.entity.player.EntityPlayer
  */
 internal const val MAX_PACKET_ID = 0b0111_1111
 
-internal typealias MCPacket<T> = net.minecraft.network.Packet<T>
-internal typealias AnyMCPacket = MCPacket<*>
-
 internal fun EntityPlayer?.obtainForNetworkOnMainThread(): EntityPlayer = this ?: clientPlayer ?: throw IllegalStateException("Missing EntityPlayer when receiving packet?!")

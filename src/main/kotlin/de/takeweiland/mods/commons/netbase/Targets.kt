@@ -1,4 +1,4 @@
-package de.takeweiland.mods.commons.net
+package de.takeweiland.mods.commons.netbase
 
 import de.takeweiland.mods.commons.SevenCommons
 import de.takeweiland.mods.commons.util.allPlayers
